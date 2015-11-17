@@ -179,8 +179,8 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  CALLDATACOPY */
     public byte[] getDataCopy(DataWord offsetData, DataWord lengthData) {
 
-        int offset = offsetData.intValue();
-        int length = lengthData.intValue();
+        int offset = offsetData.intValueSafe();
+        int length = lengthData.intValueSafe();
 
         byte[] data = new byte[length];
 
