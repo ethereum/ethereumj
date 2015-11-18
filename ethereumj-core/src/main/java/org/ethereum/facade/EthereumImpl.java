@@ -242,17 +242,23 @@ public class EthereumImpl implements Ethereum {
 
         Block bestBlock = worldManager.getBlockchain().getBestBlock();
 
-        org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                (tx, bestBlock.getCoinbase(),(Repository) worldManager.getRepository(),
-                worldManager.getBlockStore(), programInvokeFactory, bestBlock)
-                .setLocalCall(true);
+        Repository repository = ((Repository) worldManager.getRepository()).startTracking();
 
-        executor.init();
-        executor.execute();
-        executor.go();
-        executor.finalization();
+        try {
+            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
+                    (tx, bestBlock.getCoinbase(), repository, worldManager.getBlockStore(),
+                    programInvokeFactory, bestBlock)
+                    .setLocalCall(true);
 
-        return executor.getResult();
+            executor.init();
+            executor.execute();
+            executor.go();
+            executor.finalization();
+
+            return executor.getResult();
+        } finally {
+            repository.rollback();
+        }
     }
 
     @Override
