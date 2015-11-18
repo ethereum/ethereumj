@@ -2,8 +2,6 @@ package org.ethereum.net.server;
 
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import org.ethereum.core.Blockchain;
-import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +25,6 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     @Autowired
     ChannelManager channelManager;
 
-    @Autowired
-    WorldManager worldManager;
-
     private String remoteId;
 
     private boolean peerDiscoveryMode = false;
@@ -44,16 +39,11 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             logger.info("Open connection, channel: {}", ch.toString());
 
             final Channel channel = ctx.getBean(Channel.class);
-            channel.init(ch.pipeline(), remoteId, peerDiscoveryMode);
+            channel.init(ch, remoteId, peerDiscoveryMode);
 
             if(!peerDiscoveryMode) {
                 channelManager.add(channel);
             }
-
-            // limit the size of receiving buffer to 1024
-            ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(16_777_216));
-            ch.config().setOption(ChannelOption.SO_RCVBUF, 16_777_216);
-            ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
 
             // be aware of channel closing
             ch.closeFuture().addListener(new ChannelFutureListener() {

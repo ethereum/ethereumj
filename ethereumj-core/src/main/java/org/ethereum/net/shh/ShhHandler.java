@@ -1,11 +1,10 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.MessageQueue;
+import org.ethereum.listener.EthereumListener;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.net.ProtocolHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,25 +19,20 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Scope("prototype")
-public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
+public class ShhHandler extends ProtocolHandler<ShhMessage> {
     private final static Logger logger = LoggerFactory.getLogger("net.shh");
     public final static byte VERSION = 3;
 
-    private MessageQueue msgQueue = null;
     private boolean active = false;
     private BloomFilter peerBloomFilter = BloomFilter.createAll();
 
     @Autowired
-    private WorldManager worldManager;
+    private EthereumListener ethereumListener;
 
     @Autowired
     private WhisperImpl whisper;
 
     public ShhHandler() {
-    }
-
-    public ShhHandler(MessageQueue msgQueue) {
-        this.msgQueue = msgQueue;
     }
 
     @Override
@@ -49,11 +43,13 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("ShhHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
+
+        onMessageReceived(msg);
 
         switch (msg.getCommand()) {
             case STATUS:
-                worldManager.getListener().trace("[Recv: " + msg + "]");
+                ethereumListener.trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
                 whisper.processEnvelope((ShhEnvelopeMessage) msg, this);
@@ -85,9 +81,36 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         logger.debug("handlerRemoved: ... ");
     }
 
-    public void activate() {
+    @Override
+    public boolean hasCommand(Enum msgCommand) {
+
+        return msgCommand instanceof ShhMessageCodes;
+    }
+
+    @Override
+    public byte getCommandCode(Enum msgCommand) {
+
+        return ((ShhMessageCodes)msgCommand).asByte();
+    }
+
+    @Override
+    public byte getMaxCommandCode() {
+
+        return (byte)ShhMessageCodes.max();
+    }
+
+    @Override
+    public boolean hasCommandCode(byte code) {
+
+        return ShhMessageCodes.inRange(code);
+    }
+
+    @Override
+    public void activate(String name) {
+        super.activate(name);
+        messageFactory = new ShhMessageFactory();
         logger.info("SHH protocol activated");
-        worldManager.getListener().trace("SHH protocol activated");
+        ethereumListener.trace("SHH protocol activated");
         whisper.addPeer(this);
         sendStatus();
         sendHostBloom();
@@ -117,14 +140,12 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     }
 
     void sendMessage(ShhMessage msg) {
-        msgQueue.sendMessage(msg);
+        messageQueue.sendMessage(msg);
+        onMessageSent(msg);
     }
 
     public boolean isActive() {
         return active;
     }
 
-    public void setMsgQueue(MessageQueue msgQueue) {
-        this.msgQueue = msgQueue;
-    }
 }

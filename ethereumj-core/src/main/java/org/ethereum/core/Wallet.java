@@ -1,14 +1,12 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.submit.WalletTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -32,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * New accounts can be generated and added to the wallet and existing accounts can be queried.
  */
 @Component
-@DependsOn("worldManager")
 public class Wallet {
 
     private Logger logger = LoggerFactory.getLogger("wallet");
@@ -50,16 +47,9 @@ public class Wallet {
     private long high;
 
     @Autowired
-    private WorldManager worldManager;
-
-    @Autowired
     private ApplicationContext context;
 
     private List<WalletListener> listeners = new ArrayList<>();
-
-    public void setWorldManager(WorldManager worldManager) {
-        this.worldManager = worldManager;
-    }
 
     public void addNewAccount() {
         Account account = new Account();

@@ -2,15 +2,10 @@ package org.ethereum.net.server;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.manager.WorldManager;
 
-import org.ethereum.sync.SyncManager;
-import org.ethereum.net.rlpx.discover.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -37,17 +32,7 @@ public class ChannelManager {
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
 
-    @Autowired
-    WorldManager worldManager;
-
-    @Autowired
-    SyncManager syncManager;
-
-    @Autowired
-    NodeManager nodeManager;
-
-    @Autowired
-    Ethereum ethereum;
+    ChannelManagerListener channelManagerListener = null;
 
     @PostConstruct
     public void init() {
@@ -57,6 +42,16 @@ public class ChannelManager {
                 processNewPeers();
             }
         }, 0, 1, TimeUnit.SECONDS);
+    }
+
+    public void setChannelManagerListener(ChannelManagerListener channelManagerListener) {
+
+        this.channelManagerListener = channelManagerListener;
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                this.channelManagerListener.onNewPeerChannel(peer);
+            }
+        }
     }
 
     private void processNewPeers() {
@@ -81,10 +76,9 @@ public class ChannelManager {
 
     private void process(Channel peer) {
         if(peer.hasEthStatusSucceeded()) {
-            if (syncManager.isSyncDone()) {
-                peer.onSyncDone();
+            if (channelManagerListener != null) {
+                channelManagerListener.onNewPeerChannel(peer);
             }
-            syncManager.addPeer(peer);
             activePeers.put(peer.getNodeIdWrapper(), peer);
         }
     }
@@ -104,7 +98,9 @@ public class ChannelManager {
     public void notifyDisconnect(Channel channel) {
         logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
         channel.onDisconnect();
-        syncManager.onDisconnect(channel);
+        if (channelManagerListener != null) {
+            channelManagerListener.onPeerChannelDisconnected(channel);
+        }
         activePeers.values().remove(channel);
         newPeers.remove(channel);
     }

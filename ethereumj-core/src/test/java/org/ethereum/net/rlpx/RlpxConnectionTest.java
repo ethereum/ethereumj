@@ -29,12 +29,12 @@ public class RlpxConnectionTest {
     public void setUp() throws Exception {
         ECKey remoteKey = new ECKey().decompress();
         ECKey myKey = new ECKey().decompress();
-        initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
-        responder = new EncryptionHandshake();
-        AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
+        initiator = new EncryptionHandshake(myKey, remoteKey.getPubKeyPoint());
+        responder = new EncryptionHandshake(myKey);
+        AuthInitiateMessage initiate = initiator.createAuthInitiate(null);
         byte[] initiatePacket = initiator.encryptAuthMessage(initiate);
         byte[] responsePacket = responder.handleAuthInitiate(initiatePacket, remoteKey);
-        initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
+        initiator.handleAuthResponse(initiatePacket, responsePacket);
         to = new PipedInputStream(1024*1024);
         toOut = new PipedOutputStream(to);
         from = new PipedInputStream(1024*1024);

@@ -66,8 +66,8 @@ public class Handshaker {
         Socket sock = new Socket(host, port);
         InputStream inp = sock.getInputStream();
         OutputStream out = sock.getOutputStream();
-        EncryptionHandshake initiator = new EncryptionHandshake(remotePublic);
-        AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null, myKey);
+        EncryptionHandshake initiator = new EncryptionHandshake(myKey, remotePublic);
+        AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null);
         byte[] initiatePacket = initiator.encryptAuthMessage(initiateMessage);
 
         out.write(initiatePacket);
@@ -76,7 +76,7 @@ public class Handshaker {
         if (n < responsePacket.length)
             throw new IOException("could not read, got " + n);
 
-        initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
+        initiator.handleAuthResponse(initiatePacket, responsePacket);
         byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
         new SHA3Digest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
         new SHA3Digest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);

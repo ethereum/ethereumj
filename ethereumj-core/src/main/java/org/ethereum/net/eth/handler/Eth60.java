@@ -61,7 +61,7 @@ public class Eth60 extends EthLegacy {
             changeState(DONE_HASH_RETRIEVING);
             logger.trace(
                     "Peer {}: got existing hash [{}]",
-                    channel.getPeerIdShort(),
+                    getPeerIdShort(),
                     Hex.toHexString(foundHash)
             );
         } else {

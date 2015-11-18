@@ -47,13 +47,12 @@ public class WorkerThread implements Runnable {
     private void processCommand() {
 
         try {
-
-            DiscoveryChannel discoveryChannel = ctx.getBean(DiscoveryChannel.class);
-            discoveryChannel.connect(peerInfo.getAddress().getHostAddress(), peerInfo.getPort());
+            DiscoveryClient discoveryClient = ctx.getBean(DiscoveryClient.class);
+            discoveryClient.connect(peerInfo.getAddress().getHostAddress(), peerInfo.getPort());
             peerInfo.setOnline(true);
 
-            peerInfo.setHandshakeHelloMessage(discoveryChannel.getHelloHandshake());
-            peerInfo.setStatusMessage(discoveryChannel.getStatusHandshake());
+            peerInfo.setHandshakeHelloMessage(discoveryClient.getHelloHandshake());
+            peerInfo.setStatusMessage(discoveryClient.getStatusHandshake());
 
             logger.info("Peer is online: [{}] ", peerInfo);
 

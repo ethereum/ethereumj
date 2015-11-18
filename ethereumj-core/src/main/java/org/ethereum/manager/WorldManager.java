@@ -137,6 +137,9 @@ public class WorldManager {
     }
 
     public PeerClient getActivePeer() {
+        if (activePeer == null) {
+            setActivePeer(new PeerClient());
+        }
         return activePeer;
     }
 

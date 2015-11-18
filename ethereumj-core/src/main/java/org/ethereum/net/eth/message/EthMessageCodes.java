@@ -4,6 +4,7 @@ import org.ethereum.net.eth.EthVersion;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.ethereum.net.eth.EthVersion.*;
 
@@ -208,7 +209,7 @@ public enum EthMessageCodes {
         });
 
         for (EthVersion v : EthVersion.values()) {
-            Map<Integer, EthMessageCodes> map = new HashMap<>();
+            TreeMap<Integer, EthMessageCodes> map = new TreeMap<>();
             intToTypeMap.put(v, map);
             for (EthMessageCodes code : values(v)) {
                 map.put(code.cmd, code);
@@ -233,6 +234,8 @@ public enum EthMessageCodes {
         EthMessageCodes[] codes = values(v);
         return code >= codes[0].asByte() && code <= codes[codes.length - 1].asByte();
     }
+
+    public static int max(EthVersion v) { return ((TreeMap<Integer, EthMessageCodes>)intToTypeMap.get(v)).lastKey(); }
 
     public byte asByte() {
         return (byte) (cmd);

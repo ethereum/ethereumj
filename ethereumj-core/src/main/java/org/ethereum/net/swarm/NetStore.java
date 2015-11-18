@@ -2,9 +2,7 @@ package org.ethereum.net.swarm;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -29,10 +27,6 @@ public class NetStore implements ChunkStore {
     public synchronized static NetStore getInstance() {
         return INST;
     }
-
-    @Autowired
-    WorldManager worldManager;
-
 
     public static PeerAddress createSelfAddress() {
         return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());

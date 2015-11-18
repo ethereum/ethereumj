@@ -1,7 +1,7 @@
 package org.ethereum.net.server;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -37,13 +37,10 @@ public class PeerServer {
     @Autowired
     private ApplicationContext ctx;
 
-    @Autowired
-    public ChannelManager channelManager;
-
     public EthereumChannelInitializer ethereumChannelInitializer;
 
     @Autowired
-    WorldManager worldManger;
+    EthereumListener ethereumListener;
 
     public PeerServer() {
     }
@@ -57,7 +54,7 @@ public class PeerServer {
 
         ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, "");
 
-        worldManger.getListener().trace("Listening on port " + port);
+        ethereumListener.trace("Listening on port " + port);
 
 
         try {
