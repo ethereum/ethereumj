@@ -1,11 +1,7 @@
 package org.ethereum.jsontestsuite.runners;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutor;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.core.Repository;
 import org.ethereum.jsontestsuite.Env;
 import org.ethereum.jsontestsuite.StateTestCase;
 import org.ethereum.jsontestsuite.TestProgramInvokeFactory;
@@ -14,6 +10,7 @@ import org.ethereum.jsontestsuite.validators.LogsValidator;
 import org.ethereum.jsontestsuite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,27 +24,24 @@ public class StateTestRunner {
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public static List<String> run(StateTestCase stateTestCase2) {
+        return new StateTestRunner(stateTestCase2).runImpl();
+    }
 
-        logger.info("");
-        Repository repository = RepositoryBuilder.build(stateTestCase2.getPre());
-        logger.info("loaded repository");
+    protected StateTestCase stateTestCase;
+    protected Repository repository;
+    protected Transaction transaction;
+    protected BlockchainImpl blockchain;
+    protected Env env;
+    protected ProgramInvokeFactory invokeFactory;
+    protected Block block;
 
-        Transaction transaction = TransactionBuilder.build(stateTestCase2.getTransaction());
-        logger.info("transaction: {}", transaction.toString());
+    public StateTestRunner(StateTestCase stateTestCase) {
+        this.stateTestCase = stateTestCase;
+    }
 
-        BlockchainImpl blockchain = new BlockchainImpl();
-        blockchain.setRepository(repository);
-
-        Env env = EnvBuilder.build(stateTestCase2.getEnv());
-        ProgramInvokeFactory invokeFactory = new TestProgramInvokeFactory(env);
-
-        Block block = BlockBuilder.build(env);
-
-        blockchain.setBestBlock(block);
-        blockchain.setProgramInvokeFactory(invokeFactory);
-        blockchain.startTracking();
-
+    protected ProgramResult executeTransaction(Transaction tx) {
         Repository track = repository.startTracking();
+
         TransactionExecutor executor =
                 new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
                         invokeFactory, blockchain.getBestBlock());
@@ -63,19 +57,45 @@ public class StateTestRunner {
         }
 
         track.commit();
+        return executor.getResult();
+    }
+
+    public List<String> runImpl() {
+
+        logger.info("");
+        repository = RepositoryBuilder.build(stateTestCase.getPre());
+        logger.info("loaded repository");
+
+        transaction = TransactionBuilder.build(stateTestCase.getTransaction());
+        logger.info("transaction: {}", transaction.toString());
+
+        blockchain = new BlockchainImpl();
+        blockchain.setRepository(repository);
+
+        env = EnvBuilder.build(stateTestCase.getEnv());
+        invokeFactory = new TestProgramInvokeFactory(env);
+
+        block = BlockBuilder.build(env);
+
+        blockchain.setBestBlock(block);
+        blockchain.setProgramInvokeFactory(invokeFactory);
+        blockchain.startTracking();
+
+        ProgramResult programResult = executeTransaction(transaction);
+
         repository.flushNoReconnect();
 
-        List<LogInfo> origLogs = executor.getResult().getLogInfoList();
-        List<LogInfo> postLogs = LogBuilder.build(stateTestCase2.getLogs());
+        List<LogInfo> origLogs = programResult.getLogInfoList();
+        List<LogInfo> postLogs = LogBuilder.build(stateTestCase.getLogs());
 
         List<String> logsResult = LogsValidator.valid(origLogs, postLogs);
 
-        Repository postRepository = RepositoryBuilder.build(stateTestCase2.getPost());
+        Repository postRepository = RepositoryBuilder.build(stateTestCase.getPost());
         List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
 
         logger.info("--------- POST Validation---------");
         List<String> outputResults =
-                OutputValidator.valid(Hex.toHexString(executor.getResult().getHReturn()), stateTestCase2.getOut());
+                OutputValidator.valid(Hex.toHexString(programResult.getHReturn()), stateTestCase.getOut());
 
         List<String> results = new ArrayList<>();
         results.addAll(repoResults);

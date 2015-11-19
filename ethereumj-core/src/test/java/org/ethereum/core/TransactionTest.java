@@ -3,8 +3,12 @@ package org.ethereum.core;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.jsontestsuite.StateTestSuite;
+import org.ethereum.jsontestsuite.runners.StateTestRunner;
 import org.ethereum.vm.LogInfo;
 
+import org.ethereum.vm.program.ProgramResult;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -22,6 +26,7 @@ import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.util.ByteUtil.toHexString;
 import static org.junit.Assert.*;
 
 @Ignore
@@ -300,5 +305,127 @@ public class TransactionTest {
 
         assertEquals(data,
                 Hex.toHexString(receipt.getEncoded()));
+    }
+
+    @Test
+    public void constantCallConflictTest() throws Exception {
+        /*
+          0x095e7baea6a6c7c4c2dfeb977efac326af552d87 contract is the following Solidity code:
+
+         contract Test {
+            uint a = 256;
+
+            function set(uint s) {
+                a = s;
+            }
+
+            function get() returns (uint) {
+                return a;
+            }
+        }
+        */
+        String json = "{ " +
+                "    'test1' : { " +
+                "        'env' : { " +
+                "            'currentCoinbase' : '2adc25665018aa1fe0e6bc666dac8fc2697ff9ba', " +
+                "            'currentDifficulty' : '0x0100', " +
+                "            'currentGasLimit' : '0x0f4240', " +
+                "            'currentNumber' : '0x00', " +
+                "            'currentTimestamp' : '0x01', " +
+                "            'previousHash' : '5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6' " +
+                "        }, " +
+                "        'logs' : [ " +
+                "        ], " +
+                "        'out' : '0x', " +
+                "        'post' : { " +
+                "            '095e7baea6a6c7c4c2dfeb977efac326af552d87' : { " +
+                "                'balance' : '0x0de0b6b3a76586a0', " +
+                "                'code' : '0x606060405260e060020a600035046360fe47b1811460245780636d4ce63c14602e575b005b6004356000556022565b6000546060908152602090f3', " +
+                "                'nonce' : '0x00', " +
+                "                'storage' : { " +
+                "                    '0x00' : '0x0400' " +
+                "                } " +
+                "            }, " +
+                "            '2adc25665018aa1fe0e6bc666dac8fc2697ff9ba' : { " +
+                "                'balance' : '0x67c3', " +
+                "                'code' : '0x', " +
+                "                'nonce' : '0x00', " +
+                "                'storage' : { " +
+                "                } " +
+                "            }, " +
+                "            'a94f5374fce5edbc8e2a8697c15331677e6ebf0b' : { " +
+                "                'balance' : '0x0DE0B6B3A762119D', " +
+                "                'code' : '0x', " +
+                "                'nonce' : '0x01', " +
+                "                'storage' : { " +
+                "                } " +
+                "            } " +
+                "        }, " +
+                "        'postStateRoot' : '17454a767e5f04461256f3812ffca930443c04a47d05ce3f38940c4a14b8c479', " +
+                "        'pre' : { " +
+                "            '095e7baea6a6c7c4c2dfeb977efac326af552d87' : { " +
+                "                'balance' : '0x0de0b6b3a7640000', " +
+                "                'code' : '0x606060405260e060020a600035046360fe47b1811460245780636d4ce63c14602e575b005b6004356000556022565b6000546060908152602090f3', " +
+                "                'nonce' : '0x00', " +
+                "                'storage' : { " +
+                "                    '0x00' : '0x02' " +
+                "                } " +
+                "            }, " +
+                "            'a94f5374fce5edbc8e2a8697c15331677e6ebf0b' : { " +
+                "                'balance' : '0x0de0b6b3a7640000', " +
+                "                'code' : '0x', " +
+                "                'nonce' : '0x00', " +
+                "                'storage' : { " +
+                "                } " +
+                "            } " +
+                "        }, " +
+                "        'transaction' : { " +
+                "            'data' : '0x60fe47b10000000000000000000000000000000000000000000000000000000000000400', " +
+                "            'gasLimit' : '0x061a80', " +
+                "            'gasPrice' : '0x01', " +
+                "            'nonce' : '0x00', " +
+                "            'secretKey' : '45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8', " +
+                "            'to' : '095e7baea6a6c7c4c2dfeb977efac326af552d87', " +
+                "            'value' : '0x0186a0' " +
+                "        } " +
+                "    } " +
+                "}";
+
+        StateTestSuite stateTestSuite = new StateTestSuite(json.replaceAll("'", "\""));
+
+        new StateTestRunner(stateTestSuite.getTestCases().get("test1")) {
+            @Override
+            protected ProgramResult executeTransaction(Transaction tx) {
+                // first emulating the constant call (Ethereum.callConstantFunction)
+                // to ensure it doesn't affect the final state
+
+                {
+                    Repository track = repository.startTracking();
+
+                    Transaction txConst = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
+                            "095e7baea6a6c7c4c2dfeb977efac326af552d87", 0, CallTransaction.Function.fromSignature("get"));
+                    txConst.sign(new byte[32]);
+
+                    Block bestBlock = block;
+
+                    org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
+                            (txConst, bestBlock.getCoinbase(),track, new BlockStoreDummy(),
+                                    invokeFactory, bestBlock)
+                            .setLocalCall(true);
+
+                    executor.init();
+                    executor.execute();
+                    executor.go();
+                    executor.finalization();
+
+                    track.rollback();
+
+                    System.out.println("Return value: " + new CallTransaction.IntType("uint").decode(executor.getResult().getHReturn()));
+                }
+
+                // now executing the JSON test transaction
+                return super.executeTransaction(tx);
+            }
+        }.runImpl();
     }
 }
