@@ -248,20 +248,23 @@ public class TransactionExecutor {
             if (CONFIG.playVM())
                 vm.play(program);
 
-            m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed())).longValue();
+            result = program.getResult();
+            m_endGas = toBI(tx.getGasLimit()).subtract(toBI(result.getGasUsed())).longValue();
 
             if (tx.isContractCreation()) {
 
-                int returnDataGasValue = getLength(program.getResult().getHReturn()) * GasCost.CREATE_DATA;
+                int returnDataGasValue = getLength(result.getHReturn()) * GasCost.CREATE_DATA;
                 if (returnDataGasValue <= m_endGas) {
-                    result = program.getResult();
+
                     m_endGas -= BigInteger.valueOf(returnDataGasValue).longValue();
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
                     if (currentBlock.isHomestead()) {
-                        throw Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                                returnDataGasValue, program);
+                        program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                                returnDataGasValue, program));
+                        result = program.getResult();
                     }
+                    result.setHReturn(EMPTY_BYTE_ARRAY);
                 }
             }
 
