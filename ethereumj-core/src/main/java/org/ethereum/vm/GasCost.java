@@ -49,6 +49,7 @@ public class GasCost {
     public final static int TX_NO_ZERO_DATA = 68;
     public final static int TX_ZERO_DATA = 4;
     public final static int TRANSACTION = 21000;
+    public final static int TRANSACTION_CREATE_CONTRACT = 53000;
     public final static int LOG_GAS = 375;
     public final static int LOG_DATA_GAS = 8;
     public final static int LOG_TOPIC_GAS = 375;

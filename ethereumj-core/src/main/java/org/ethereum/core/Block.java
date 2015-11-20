@@ -441,6 +441,10 @@ public class Block {
         return body;
     }
 
+    public boolean isHomestead() {
+        return getHeader().isHomestead();
+    }
+
     public String getShortHash() {
         if (!parsed) parseRLP();
         return Hex.toHexString(getHash()).substring(0, 6);

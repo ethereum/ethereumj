@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.Constants;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -106,7 +107,7 @@ public class TransactionExecutor {
             return;
         }
 
-        basicTxCost = tx.transactionCost();
+        basicTxCost = tx.transactionCost(currentBlock);
         if (basicTxCost > txGasLimit) {
 
             if (logger.isWarnEnabled())
@@ -140,6 +141,13 @@ public class TransactionExecutor {
 
             // TODO: save reason for failure
             return;
+        }
+
+        if (currentBlock.isHomestead() && tx.getSignature() != null) {
+            if (tx.getSignature().s.compareTo(Constants.SECP256K1N_HALF) >= 0) {
+                logger.warn("Transaction signature not accepted: " + tx.getSignature());
+                return;
+            }
         }
 
         readyToExecute = true;
@@ -235,23 +243,25 @@ public class TransactionExecutor {
         try {
 
             // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(), "TRANSACTION COST");
+            program.spendGas(tx.transactionCost(currentBlock), "TRANSACTION COST");
 
             if (CONFIG.playVM())
                 vm.play(program);
 
-            result = program.getResult();
-            m_endGas = toBI(tx.getGasLimit()).subtract(toBI(result.getGasUsed())).longValue();
+            m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed())).longValue();
 
             if (tx.isContractCreation()) {
 
-                int returnDataGasValue = getLength(result.getHReturn()) * GasCost.CREATE_DATA;
+                int returnDataGasValue = getLength(program.getResult().getHReturn()) * GasCost.CREATE_DATA;
                 if (returnDataGasValue <= m_endGas) {
-
+                    result = program.getResult();
                     m_endGas -= BigInteger.valueOf(returnDataGasValue).longValue();
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    result.setHReturn(EMPTY_BYTE_ARRAY);
+                    if (currentBlock.isHomestead()) {
+                        throw Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                                returnDataGasValue, program);
+                    }
                 }
             }
 

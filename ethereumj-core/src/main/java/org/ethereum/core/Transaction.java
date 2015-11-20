@@ -110,14 +110,19 @@ public class Transaction {
         this.signature = signature;
     }
 
-    public long transactionCost(){
+    public long transactionCost(Block block){
 
         if (!parsed) rlpParse();
 
         long nonZeroes = nonZeroDataBytes();
         long zeroVals  = getLength(data) - nonZeroes;
 
-        return GasCost.TRANSACTION + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
+        if (block.isHomestead()) {
+            return (isContractCreation() ? GasCost.TRANSACTION_CREATE_CONTRACT : GasCost.TRANSACTION)
+                    + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
+        } else {
+            return GasCost.TRANSACTION + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
+        }
     }
 
     public void rlpParse() {
