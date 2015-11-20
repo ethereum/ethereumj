@@ -30,7 +30,6 @@ import java.util.List;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.junit.Assert.*;
 
-@Ignore
 public class TransactionTest {
 
 
@@ -54,6 +53,7 @@ public class TransactionTest {
         System.out.println(signature);
     }
 
+    @Ignore
     @Test  /* achieve public key of the sender */
     public void test2() throws Exception {
 
@@ -99,6 +99,7 @@ public class TransactionTest {
     }
 
 
+    @Ignore
     @Test  /* achieve public key of the sender nonce: 01 */
     public void test3() throws Exception {
 
@@ -151,6 +152,7 @@ public class TransactionTest {
     byte[] testData = Hex.decode("");
     byte[] testInit = Hex.decode("");
 
+    @Ignore
     @Test
     public void testTransactionFromSignedRLP() throws Exception {
         Transaction txSigned = new Transaction(Hex.decode(RLP_ENCODED_SIGNED_TX));
@@ -169,6 +171,7 @@ public class TransactionTest {
         assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txSigned.getSignature().s)));
     }
 
+    @Ignore
     @Test
     public void testTransactionFromUnsignedRLP() throws Exception {
         Transaction txUnsigned = new Transaction(Hex.decode(RLP_ENCODED_UNSIGNED_TX));
@@ -189,6 +192,7 @@ public class TransactionTest {
         assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txUnsigned.getSignature().s)));
     }
 
+    @Ignore
     @Test
     public void testTransactionFromNew1() throws MissingPrivateKeyException {
         Transaction txNew = new Transaction(testNonce, testGasPrice, testGasLimit, testReceiveAddress, testValue, testData);
@@ -212,6 +216,7 @@ public class TransactionTest {
         assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txNew.getSignature().s)));
     }
 
+    @Ignore
     @Test
     public void testTransactionFromNew2() throws MissingPrivateKeyException {
         byte[] privKeyBytes = Hex.decode("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4");
@@ -284,6 +289,7 @@ public class TransactionTest {
     }
 
 
+    @Ignore
     @Test
     public void encodeReceiptTest() {
 
