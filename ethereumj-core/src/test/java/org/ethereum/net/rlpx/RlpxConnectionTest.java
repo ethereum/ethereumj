@@ -60,7 +60,7 @@ public class RlpxConnectionTest {
         new SecureRandom().nextBytes(payload);
         FrameCodec.Frame frame = new FrameCodec.Frame(12345, 123, new ByteArrayInputStream(payload));
         iCodec.writeFrame(frame, toOut);
-        FrameCodec.Frame frame1 = rCodec.readFrame(new DataInputStream(to));
+        FrameCodec.Frame frame1 = rCodec.readFrames(new DataInputStream(to)).get(0);
         byte[] payload1 = new byte[frame1.size];
         assertEquals(frame.size, frame1.size);
         frame1.payload.read(payload1);

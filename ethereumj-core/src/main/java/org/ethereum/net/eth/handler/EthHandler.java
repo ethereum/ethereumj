@@ -2,6 +2,7 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
@@ -20,10 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.sync.SyncStateName.*;
 
 /**
@@ -49,6 +50,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     private final static Logger loggerSync = LoggerFactory.getLogger("sync");
 
     protected static final int MAX_HASHES_TO_SEND = 65536;
+
+    @Autowired
+    protected SystemProperties config;
 
     @Autowired
     protected Blockchain blockchain;
@@ -89,7 +93,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * @see Eth62
      */
     protected byte[] lastHashToAsk;
-    protected int maxHashesAsk = CONFIG.maxHashesAsk();
+    protected int maxHashesAsk;
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
@@ -101,6 +105,11 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected EthHandler(EthVersion version) {
         this.version = version;
+    }
+
+    @PostConstruct
+    private void init() {
+        maxHashesAsk = config.maxHashesAsk();
     }
 
     @Override
@@ -171,7 +180,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
                 disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
                 ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
                 return;
-            } else if (msg.getNetworkId() != CONFIG.networkId()) {
+            } else if (msg.getNetworkId() != config.networkId()) {
                 ethState = EthState.STATUS_FAILED;
                 disconnect(ReasonCode.NULL_IDENTITY);
                 return;
@@ -194,7 +203,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected void sendStatus() {
         byte protocolVersion = version.getCode();
-        int networkId = CONFIG.networkId();
+        int networkId = config.networkId();
 
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = blockchain.getBestBlockHash();

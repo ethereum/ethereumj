@@ -5,10 +5,14 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
@@ -77,7 +81,19 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
-    private SystemProperties() {
+    public SystemProperties() {
+        this(ConfigFactory.empty());
+    }
+
+    public SystemProperties(File configFile) {
+        this(ConfigFactory.parseFile(configFile));
+    }
+
+    public SystemProperties(String configResource) {
+        this(ConfigFactory.parseResources(configResource));
+    }
+
+    public SystemProperties(Config apiConfig) {
         try {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
@@ -95,7 +111,9 @@ public class SystemProperties {
             Config cmdLineConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
+            logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = javaSystemProperties
+                    .withFallback(apiConfig)
                     .withFallback(cmdLineConfig)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
@@ -180,6 +198,13 @@ public class SystemProperties {
         }
     }
 
+    public <T> T getProperty(String propName, T defaultValue) {
+        if (!config.hasPath(propName)) return defaultValue;
+        String string = config.getString(propName);
+        if (string.trim().isEmpty()) return defaultValue;
+        return (T) config.getAnyRef(propName);
+    }
+
     @ValidateMe
     public boolean peerDiscovery() {
         return discoveryEnabled == null ? config.getBoolean("peer.discovery.enabled") : discoveryEnabled;
@@ -213,6 +238,17 @@ public class SystemProperties {
     public int peerConnectionTimeout() {
         return config.getInt("peer.connection.timeout") * 1000;
     }
+
+    @ValidateMe
+    public int defaultP2PVersion() {
+        return config.hasPath("peer.p2p.version") ? config.getInt("peer.p2p.version") : P2pHandler.VERSION;
+    }
+
+    @ValidateMe
+    public int rlpxMaxFrameSize() {
+        return config.hasPath("peer.p2p.framing.maxSize") ? config.getInt("peer.p2p.framing.maxSize") : MessageCodec.NO_FRAMING;
+    }
+
 
     @ValidateMe
     public int transactionApproveTimeout() {

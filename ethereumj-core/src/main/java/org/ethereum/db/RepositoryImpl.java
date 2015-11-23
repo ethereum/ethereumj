@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -16,6 +17,7 @@ import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
@@ -62,6 +64,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private final AtomicInteger accessCounter = new AtomicInteger();
 
     private boolean isSnapshot = false;
+
+//    @Autowired  TODO autowire
+    SystemProperties config = SystemProperties.CONFIG;
 
     public RepositoryImpl() {
 
@@ -261,17 +266,17 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
         dumpTrie(block);
 
-        if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
+        if (!(config.dumpFull() || config.dumpBlock() == block.getNumber()))
             return;
 
         // todo: dump block header and the relevant tx
 
         if (block.getNumber() == 0 && txNumber == 0)
-            if (CONFIG.dumpCleanOnRestart()) {
-                FileSystemUtils.deleteRecursively(new File(CONFIG.dumpDir()));
+            if (config.dumpCleanOnRestart()) {
+                FileSystemUtils.deleteRecursively(new File(config.dumpDir()));
             }
 
-        String dir = CONFIG.dumpDir() + "/";
+        String dir = config.dumpDir() + "/";
 
         String fileName = "";
         if (txHash != null)
@@ -327,11 +332,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     public void dumpTrie(Block block) {
 
-        if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
+        if (!(config.dumpFull() || config.dumpBlock() == block.getNumber()))
             return;
 
         String fileName = String.format("%07d_trie.dmp", block.getNumber());
-        String dir = CONFIG.dumpDir() + "/";
+        String dir = config.dumpDir() + "/";
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
         BufferedWriter bw = null;

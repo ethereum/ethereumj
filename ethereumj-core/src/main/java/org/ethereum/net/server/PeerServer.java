@@ -20,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 /**
  * This class establishes a listener for incoming connections.
  * See <a href="http://netty.io">http://netty.io</a>.
@@ -33,6 +31,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     private ApplicationContext ctx;
@@ -68,14 +69,14 @@ public class PeerServer {
 
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerConnectionTimeout());
 
             b.handler(new LoggingHandler());
             b.childHandler(ethereumChannelInitializer);
 
             // Start the client.
             logger.info("Listening for incoming connections, port: [{}] ", port);
-            logger.info("NodeId: [{}] ", Hex.toHexString(SystemProperties.CONFIG.nodeId()));
+            logger.info("NodeId: [{}] ", Hex.toHexString(config.nodeId()));
 
             ChannelFuture f = b.bind(port).sync();
 

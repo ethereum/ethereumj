@@ -1,5 +1,6 @@
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.core.ImportResult.IMPORTED_BEST;
@@ -51,6 +51,9 @@ public class SyncQueue {
     private BlockQueue blockQueue;
 
     @Autowired
+    SystemProperties config;
+
+    @Autowired
     private Blockchain blockchain;
 
     @Autowired
@@ -59,6 +62,9 @@ public class SyncQueue {
     @Autowired
     private BlockHeaderValidator headerValidator;
 
+    @Autowired
+    private MapDBFactory mapDBFactory;
+
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -66,8 +72,6 @@ public class SyncQueue {
     public void init() {
 
         logger.info("Start loading sync queue");
-
-        MapDBFactory mapDBFactory = new MapDBFactoryImpl();
 
         hashStore = new HashStoreImpl();
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
@@ -81,7 +85,7 @@ public class SyncQueue {
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 
-        if (!CONFIG.isSyncEnabled()) {
+        if (!config.isSyncEnabled()) {
             return;
         }
 
@@ -305,7 +309,7 @@ public class SyncQueue {
      * @return A list of hashes for which blocks need to be retrieved.
      */
     public List<byte[]> pollHashes() {
-        return hashStore.pollBatch(CONFIG.maxBlocksAsk());
+        return hashStore.pollBatch(config.maxBlocksAsk());
     }
 
     /**
@@ -355,7 +359,7 @@ public class SyncQueue {
      * @return list of headers
      */
     public List<BlockHeader> pollHeaders() {
-        return headerStore.pollBatch(CONFIG.maxBlocksAsk());
+        return headerStore.pollBatch(config.maxBlocksAsk());
     }
 
     // a bit ugly but really gives

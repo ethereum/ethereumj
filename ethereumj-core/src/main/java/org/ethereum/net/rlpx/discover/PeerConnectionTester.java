@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,26 +22,21 @@ import java.util.concurrent.*;
 public class PeerConnectionTester {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
-    private static final int ConnectThreads = SystemProperties.CONFIG.peerDiscoveryWorkers();
-    private static final long ReconnectPeriod = SystemProperties.CONFIG.peerDiscoveryTouchPeriod() * 1000;
-    private static final long ReconnectMaxPeers = SystemProperties.CONFIG.peerDiscoveryTouchMaxNodes();
+    private int ConnectThreads;
+    private long ReconnectPeriod;
+    private long ReconnectMaxPeers;
 
     @Autowired
     private WorldManager worldManager;
+
+    @Autowired
+    SystemProperties config = SystemProperties.CONFIG;
 
     // NodeHandler instance should be unique per Node instance
     private Map<NodeHandler, ?> connectedCandidates = new IdentityHashMap<>();
 
     // executor with Queue which picks up the Node with the best reputation
-    private ExecutorService peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
-            ConnectThreads, 0L, TimeUnit.SECONDS,
-            new MutablePriorityQueue<Runnable, ConnectTask>(new Comparator<ConnectTask>() {
-                @Override
-                public int compare(ConnectTask h1, ConnectTask h2) {
-                    return h2.nodeHandler.getNodeStatistics().getReputation() -
-                            h1.nodeHandler.getNodeStatistics().getReputation();
-                }
-            }));
+    private ExecutorService peerConnectionPool;
 
     private Timer reconnectTimer = new Timer("DiscoveryReconnectTimer");
     private int reconnectPeersCount = 0;
@@ -85,6 +81,22 @@ public class PeerConnectionTester {
     }
 
     public PeerConnectionTester() {
+    }
+
+    @PostConstruct
+    void init() {
+        ConnectThreads = config.peerDiscoveryWorkers();
+        ReconnectPeriod = config.peerDiscoveryTouchPeriod() * 1000;
+        ReconnectMaxPeers = config.peerDiscoveryTouchMaxNodes();
+        peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
+                ConnectThreads, 0L, TimeUnit.SECONDS,
+                new MutablePriorityQueue<Runnable, ConnectTask>(new Comparator<ConnectTask>() {
+                    @Override
+                    public int compare(ConnectTask h1, ConnectTask h2) {
+                        return h2.nodeHandler.getNodeStatistics().getReputation() -
+                                h1.nodeHandler.getNodeStatistics().getReputation();
+                    }
+                }));
     }
 
     public void nodeStatusChanged(final NodeHandler nodeHandler) {

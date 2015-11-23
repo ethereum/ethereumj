@@ -1,5 +1,6 @@
 package org.ethereum.net;
 
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
@@ -130,7 +131,7 @@ public class MessageQueue {
             EthereumListener listener = worldManager.getListener();
             listener.onSendMessage(msg);
 
-            ctx.writeAndFlush(msg);
+            ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
             if (msg.getAnswerMessage() == null)
                 messageQueue.remove();

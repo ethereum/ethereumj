@@ -1,16 +1,17 @@
 package org.ethereum.net.p2p;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.client.ConfigCapabilities;
 import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
-import org.ethereum.net.rlpx.HandshakeHelper;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Component;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,14 +57,16 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public final static byte VERSION = 4;
 
+    public final static byte[] SUPPORTED_VERSIONS = {4, 5};
+
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private static ScheduledExecutorService pingTimer =
             Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            return new Thread(r, "P2pPingTimer");
-        }
-    });
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "P2pPingTimer");
+                }
+            });
 
     private MessageQueue msgQueue;
 
@@ -76,8 +80,16 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Autowired
     WorldManager worldManager;
+
+    @Autowired
+    ConfigCapabilities configCapabilities;
+
+    @Autowired
+    SystemProperties config;
+
     private Channel channel;
     private ScheduledFuture<?> pingTask;
+
 
     public P2pHandler() {
 
@@ -226,11 +238,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.ethOutbound = channel.getNodeStatistics().ethOutbound.get();
 
         this.handshakeHelloMessage = msg;
-        if (msg.getP2PVersion() != VERSION) {
+        if (!isProtocolVersionSupported(msg.getP2PVersion())) {
             disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
         }
         else {
-            List<Capability> capInCommon = HandshakeHelper.getSupportedCapabilities(msg);
+            List<Capability> capInCommon = getSupportedCapabilities(msg);
             channel.initMessageCodes(capInCommon);
             for (Capability capability : capInCommon) {
                 if (capability.getName().equals(Capability.ETH)) {
@@ -297,7 +309,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             public void run() {
                 msgQueue.sendMessage(PING_MESSAGE);
             }
-        }, 2, 5, TimeUnit.SECONDS);
+        }, 2, config.getProperty("peer.p2p.pingInterval", 5), TimeUnit.SECONDS);
     }
 
     public void killTimers() {
@@ -313,4 +325,45 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void setChannel(Channel channel) {
         this.channel = channel;
     }
+
+    public static boolean isProtocolVersionSupported(byte ver) {
+        for (byte v : SUPPORTED_VERSIONS) {
+            if (v == ver) return true;
+        }
+        return false;
+    }
+
+    public List<Capability> getSupportedCapabilities(HelloMessage hello) {
+        List<Capability> configCaps = configCapabilities.getConfigCapabilities();
+        List<Capability> supported = new ArrayList<>();
+
+        List<Capability> eths = new ArrayList<>();
+
+        for (Capability cap : hello.getCapabilities()) {
+            if (configCaps.contains(cap)) {
+                if (cap.isEth()) {
+                    eths.add(cap);
+                } else {
+                    supported.add(cap);
+                }
+            }
+        }
+
+        if (eths.isEmpty()) {
+            return supported;
+        }
+
+        // we need to pick up
+        // the most recent Eth version
+        Capability highest = null;
+        for (Capability eth : eths) {
+            if (highest == null || highest.getVersion() < eth.getVersion()) {
+                highest = eth;
+            }
+        }
+
+        supported.add(highest);
+        return supported;
+    }
+
 }

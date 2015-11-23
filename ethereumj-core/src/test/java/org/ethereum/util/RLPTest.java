@@ -7,6 +7,7 @@ import com.cedarsoftware.util.DeepEquals;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.swarm.Util;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -26,6 +27,7 @@ import java.util.*;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.util.RLP.*;
 import static org.junit.Assert.*;
 import static org.ethereum.util.RlpTestData.*;
 
@@ -43,7 +45,7 @@ public class RLPTest {
 
         byte[] payload = Hex.decode(peersPacket);
 
-        byte[] ip = RLP.decodeIP4Bytes(payload, 5);
+        byte[] ip = decodeIP4Bytes(payload, 5);
 
         assertEquals(InetAddress.getByAddress(ip).toString(), ("/54.204.10.41"));
     }
@@ -59,7 +61,7 @@ public class RLPTest {
                 "17 08 9F EA F8 4C 21 B0";
 
         byte[] payload = Hex.decode(peersPacket);
-        int oneInt = RLP.decodeInt(payload, 11);
+        int oneInt = decodeInt(payload, 11);
 
         assertEquals(oneInt, 30303);
     }
@@ -82,39 +84,39 @@ public class RLPTest {
         byte[] payload = Hex.decode(peersPacket);
 
         int nextIndex = 5;
-        byte[] ip = RLP.decodeIP4Bytes(payload, nextIndex);
+        byte[] ip = decodeIP4Bytes(payload, nextIndex);
         assertEquals("/54.204.10.41", InetAddress.getByAddress(ip).toString());
 
-        nextIndex = RLP.getNextElementIndex(payload, nextIndex);
-        int port = RLP.decodeInt(payload, nextIndex);
+        nextIndex = getNextElementIndex(payload, nextIndex);
+        int port = decodeInt(payload, nextIndex);
         assertEquals(30303, port);
 
-        nextIndex = RLP.getNextElementIndex(payload, nextIndex);
-        BigInteger peerId = RLP.decodeBigInteger(payload, nextIndex);
+        nextIndex = getNextElementIndex(payload, nextIndex);
+        BigInteger peerId = decodeBigInteger(payload, nextIndex);
 
         BigInteger expectedPeerId =
                 new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
         assertEquals(expectedPeerId, peerId);
 
-        nextIndex = RLP.getNextElementIndex(payload, nextIndex);
-        nextIndex = RLP.getFirstListElement(payload, nextIndex);
-        ip = RLP.decodeIP4Bytes(payload, nextIndex);
+        nextIndex = getNextElementIndex(payload, nextIndex);
+        nextIndex = getFirstListElement(payload, nextIndex);
+        ip = decodeIP4Bytes(payload, nextIndex);
         assertEquals("/54.2.10.41", InetAddress.getByAddress(ip).toString());
 
-        nextIndex = RLP.getNextElementIndex(payload, nextIndex);
-        port = RLP.decodeInt(payload, nextIndex);
+        nextIndex = getNextElementIndex(payload, nextIndex);
+        port = decodeInt(payload, nextIndex);
         assertEquals(30303, port);
 
-        nextIndex = RLP.getNextElementIndex(payload, nextIndex);
-        peerId = RLP.decodeBigInteger(payload, nextIndex);
+        nextIndex = getNextElementIndex(payload, nextIndex);
+        peerId = decodeBigInteger(payload, nextIndex);
 
         expectedPeerId =
                 new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
 
         assertEquals(expectedPeerId, peerId);
 
-        nextIndex = RLP.getNextElementIndex(payload, nextIndex);
-        nextIndex = RLP.getFirstListElement(payload, nextIndex);
+        nextIndex = getNextElementIndex(payload, nextIndex);
+        nextIndex = getFirstListElement(payload, nextIndex);
         assertEquals(-1, nextIndex);
     }
 
@@ -123,15 +125,15 @@ public class RLPTest {
     public void test4() {
 
         byte[] expected = {(byte) 0x80};
-        byte[] data = RLP.encodeByte((byte) 0);
+        byte[] data = encodeByte((byte) 0);
         assertArrayEquals(expected, data);
 
         byte[] expected2 = {(byte) 0x78};
-        data = RLP.encodeByte((byte) 120);
+        data = encodeByte((byte) 120);
         assertArrayEquals(expected2, data);
 
         byte[] expected3 = {(byte) 0x7F};
-        data = RLP.encodeByte((byte) 127);
+        data = encodeByte((byte) 127);
         assertArrayEquals(expected3, data);
     }
 
@@ -140,27 +142,27 @@ public class RLPTest {
     public void test5() {
 
         byte[] expected = {(byte) 0x80};
-        byte[] data = RLP.encodeShort((byte) 0);
+        byte[] data = encodeShort((byte) 0);
         assertArrayEquals(expected, data);
 
         byte[] expected2 = {(byte) 0x78};
-        data = RLP.encodeShort((byte) 120);
+        data = encodeShort((byte) 120);
         assertArrayEquals(expected2, data);
 
         byte[] expected3 = { (byte) 0x7F};
-        data = RLP.encodeShort((byte) 127);
+        data = encodeShort((byte) 127);
         assertArrayEquals(expected3, data);
 
         byte[] expected4 = {(byte) 0x82, (byte) 0x76, (byte) 0x5F};
-        data = RLP.encodeShort((short) 30303);
+        data = encodeShort((short) 30303);
         assertArrayEquals(expected4, data);
 
         byte[] expected5 = {(byte) 0x82, (byte) 0x4E, (byte) 0xEA};
-        data = RLP.encodeShort((short) 20202);
+        data = encodeShort((short) 20202);
         assertArrayEquals(expected5, data);
 
         byte[] expected6 = {(byte) 0x82, (byte) 0x9D, (byte) 0x0A};
-        data = RLP.encodeShort((short) 40202);
+        data = encodeShort((short) 40202);
         assertArrayEquals(expected6, data);
     }
 
@@ -169,39 +171,39 @@ public class RLPTest {
     public void testEncodeInt() {
 
         byte[] expected = {(byte) 0x80};
-        byte[] data = RLP.encodeInt(0);
+        byte[] data = encodeInt(0);
         assertArrayEquals(expected, data);
 
         byte[] expected2 = {(byte) 0x78};
-        data = RLP.encodeInt(120);
+        data = encodeInt(120);
         assertArrayEquals(expected2, data);
 
         byte[] expected3 = {(byte) 0x7F};
-        data = RLP.encodeInt(127);
+        data = encodeInt(127);
         assertArrayEquals(expected3, data);
 
         byte[] expected4 = {(byte) 0x82, (byte) 0x76, (byte) 0x5F};
-        data = RLP.encodeInt(30303);
+        data = encodeInt(30303);
         assertArrayEquals(expected4, data);
 
         byte[] expected5 = {(byte) 0x82, (byte) 0x4E, (byte) 0xEA};
-        data = RLP.encodeInt(20202);
+        data = encodeInt(20202);
         assertArrayEquals(expected5, data);
 
         byte[] expected6 = {(byte) 0x83, 1, 0, 0};
-        data = RLP.encodeInt(65536);
+        data = encodeInt(65536);
         assertArrayEquals(expected6, data);
 
         byte[] expected7 = {(byte) 0x84, (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-        data = RLP.encodeInt(Integer.MIN_VALUE);
+        data = encodeInt(Integer.MIN_VALUE);
         assertArrayEquals(expected7, data);
 
         byte[] expected8 = {(byte) 0x84, (byte) 0x7F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-        data = RLP.encodeInt(Integer.MAX_VALUE);
+        data = encodeInt(Integer.MAX_VALUE);
         assertArrayEquals(expected8, data);
 
         byte[] expected9 = {(byte) 0x84, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-        data = RLP.encodeInt(0xFFFFFFFF);
+        data = encodeInt(0xFFFFFFFF);
         assertArrayEquals(expected9, data);
 
     }
@@ -211,7 +213,7 @@ public class RLPTest {
     public void test6() {
 
         byte[] expected = new byte[]{(byte) 0x80};
-        byte[] data = RLP.encodeBigInteger(BigInteger.ZERO);
+        byte[] data = encodeBigInteger(BigInteger.ZERO);
         assertArrayEquals(expected, data);
     }
 
@@ -219,7 +221,7 @@ public class RLPTest {
     /** encode string */
     public void test7() {
 
-        byte[] data = RLP.encodeString("");
+        byte[] data = encodeString("");
         assertArrayEquals(new byte[]{(byte) 0x80}, data);
 
         byte[] expected = {(byte) 0x90, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
@@ -227,7 +229,7 @@ public class RLPTest {
                 (byte) 0x69, (byte) 0x65, (byte) 0x6E, (byte) 0x74};
 
         String test = "EthereumJ Client";
-        data = RLP.encodeString(test);
+        data = encodeString(test);
 
         assertArrayEquals(expected, data);
 
@@ -241,7 +243,7 @@ public class RLPTest {
                 (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
                 (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
 
-        data = RLP.encodeString(test2);
+        data = encodeString(test2);
         assertArrayEquals(expected2, data);
 
         String test3 = "Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++";
@@ -263,7 +265,7 @@ public class RLPTest {
                 (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
                 (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
 
-        data = RLP.encodeString(test3);
+        data = encodeString(test3);
         assertArrayEquals(expected3, data);
     }
 
@@ -278,14 +280,14 @@ public class RLPTest {
 
         String expected = "b840" + byteArr;
 
-        assertEquals(expected, Hex.toHexString(RLP.encodeElement(byteArray)));
+        assertEquals(expected, Hex.toHexString(encodeElement(byteArray)));
     }
 
     @Test
     /** encode list */
     public void test9() {
 
-        byte[] actuals = RLP.encodeList();
+        byte[] actuals = encodeList();
         assertArrayEquals(new byte[]{(byte) 0xc0}, actuals);
     }
 
@@ -293,7 +295,7 @@ public class RLPTest {
     /** encode null value */
     public void testEncodeElementNull() {
 
-        byte[] actuals = RLP.encodeElement(null);
+        byte[] actuals = encodeElement(null);
         assertArrayEquals(new byte[]{(byte) 0x80}, actuals);
     }
 
@@ -301,7 +303,7 @@ public class RLPTest {
     /** encode single byte 0x00 */
     public void testEncodeElementZero() {
 
-        byte[] actuals = RLP.encodeElement(new byte[]{0x00});
+        byte[] actuals = encodeElement(new byte[]{0x00});
         assertArrayEquals(new byte[]{0x00}, actuals);
     }
 
@@ -309,7 +311,7 @@ public class RLPTest {
     /** encode single byte 0x01 */
     public void testEncodeElementOne() {
 
-        byte[] actuals = RLP.encodeElement(new byte[]{0x01});
+        byte[] actuals = encodeElement(new byte[]{0x01});
         assertArrayEquals(new byte[]{(byte) 0x01}, actuals);
     }
 
@@ -324,19 +326,19 @@ public class RLPTest {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        prevHash = RLP.encodeElement(prevHash);
+        prevHash = encodeElement(prevHash);
 
    /* 2 */
-        byte[] uncleList = HashUtil.sha3(RLP.encodeList(new byte[]{}));
+        byte[] uncleList = HashUtil.sha3(encodeList(new byte[]{}));
 
    /* 3 */
         byte[] coinbase =
                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00};
-        coinbase = RLP.encodeElement(coinbase);
+        coinbase = encodeElement(coinbase);
 
-        byte[] header = RLP.encodeList(
+        byte[] header = encodeList(
                 prevHash, uncleList, coinbase);
 
         assertEquals("f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
@@ -350,7 +352,7 @@ public class RLPTest {
         byte[] payload = Hex.decode(tx);
 
         Queue<Integer> index = new LinkedList<>();
-        RLP.fullTraverse(payload, 0, 0, payload.length, 1, index);
+        fullTraverse(payload, 0, 0, payload.length, 1, index);
 
         // TODO: assert lenght overflow while parsing list in RLP
     }
@@ -361,7 +363,7 @@ public class RLPTest {
         String tx = "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
         byte[] payload = Hex.decode(tx);
 
-        RLPList rlpList = RLP.decode2(payload);
+        RLPList rlpList = decode2(payload);
 
         RLPList.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
@@ -532,7 +534,7 @@ public class RLPTest {
                 "37 b1 38 d9 a5 f6 37 e6 72 ed b9 89 69 66 4c 4e 7f d1 c4 12 6d ef";
         byte[] payload = Hex.decode(peers);
 
-        RLPList rlpList = RLP.decode2(payload);
+        RLPList rlpList = decode2(payload);
 
         RLPList.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
@@ -544,7 +546,7 @@ public class RLPTest {
         String blocksMsg = "f91c1c13f90150f8c4a07df3d35d4df0a56fcf1d6344d5315cb56b9bf83bb96ad17c7b96a9cd14133c5da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a064afb6284fa35f26d7b2c5a26afaa5483072fbcb575221b34ce002a991b7a223a04a8abe6d802797dc80b497584f898c2d4fd561cc185828cfa1b92f6f38ee348e833fbfe484533f201c80a000000000000000000000000000000000000000000000000000cfccb5cfd4667cf887f8850380942d0aceee7e5ab874e22ccf8d1a649f59106d74e88609184e72a000822710a047617600000000000000000000000000000000000000000000000000000000001ca08691ab40e258de3c4f55c868c0c34e780e747158a1d96ca50186dfd3305abd78a042269c981d048a7b791aafc8f4e644232740c1a1cceb5b6d05568827a64c0664c0f8c8f8c4a0637c8a6cdb907fac6f752334ab79065bcc4e46cd4f4358dbc2a653544a20eb31a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a022a36c1a1e807e6afc22e6bb53a31111f56e7ee7dbb2ee571cefb152b514db4da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcfd784533f1cf980a0000000000000000000000000000000000000000000000000e153d743fa040b18c0c0f8c8f8c4a07b2536237cbf114a043b0f9b27c76f84ac160ea5b87b53e42c7e76148964d450a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07a3be0ee10ece4b03097bf74aabac628aa0fae617377d30ab1b97376ee31f41aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fbfe884533f1ce880a0000000000000000000000000000000000000000000000000f3deea84969b6e95c0c0f8c8f8c4a0d2ae3f5dd931926de428d99611980e7cdd7c1b838273e43fcad1b94da987cfb8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a00b5b11fcf4ee12c6812f9d01cf0dff07c72cd7e02e48b35682f67c595407be14a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833faffd84533f1ce280a00000000000000000000000000000000000000000000000005fcbc97b2eb8ffb3c0c0f8c8f8c4a094d615d3cb4b306d20985028c78f0c8413d509a75e8bb84eda95f734debad2a0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a04b8fd1b98cf5758bd303ff86393eb6d944c1058124bddce5d4e04b5395254d5ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fbfec84533f1c7680a000000000000000000000000000000000000000000000000079fe3710116b32aac0c0f8c8f8c4a09424a07a0e4c05bb872906c40844a75b76f6517467b79c12fa9cc6d79ae09934a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a02dbe9ff9cbbc4c5a6ff26971f75b405891141f4e9bce3c2dc4200a305138e584a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcfdf84533f1c3b80a0000000000000000000000000000000000000000000000000e0a6f8cf1d56031bc0c0f8c8f8c4a009aabea60cf7eaa9df4afdf4e1b5f3e684dab34fc9a9180a050085a4131ceedfa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0436da067f9683029e717edf92da46c3443e8c342974f47a563302a0678efe702a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfd684533f1bfc80a00000000000000000000000000000000000000000000000005bc88c041662ffdac0c0f8c8f8c4a0f8b104093483b7c0182e1bba2ce3340d14469d3a3ee7646821223a676c680ac1a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0d482e71cde61190a33ca5aeb88b6b06276984e5a14253a98df232e8767167221a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefd184533f1bce80a00000000000000000000000000000000000000000000000004aeb31823f6a1950c0c0f8c8f8c4a0dd1f0aba02c2bb3b5a2b6cb1cc907ea70912bd46dc7a78577f2cae6cdbcbe5f3a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a058ab6df33d7cbeb6a735a7e4ccf4f28143e6a1742e45dda8f8cf48af43cb66c0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd084533f1b9f80a0000000000000000000000000000000000000000000000000577042b0858b510bc0c0f8c8f8c4a0a287bb7da30f04344976abe569bd719f69c1cbea65533e5311ca5862e6eaa504a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07e0537009c23cb1152caf84a52272431f74b6140866b15805622b7bcb607cd42a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934783400fd384533f1b6180a000000000000000000000000000000000000000000000000083d31378a0993e1ac0c0f8c8f8c4a063483cff8fbd489e6ce273326d8dc1d54a31c67f936ca84bf500e5419d3e9805a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07737d08564819d51f8f834a6ee4278c23a0c2f29a3f485b21002c1f24f04d8e4a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd484533f1b5780a0000000000000000000000000000000000000000000000000bb586fe6de016e14c0c0f8c8f8c4a0975c8ed0c9197b7c018e02e1c95f315acf82b25e4a812140f4515e8bc827650ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ad51229abead59e93c80db5ba160f0939bc49dcee65d1c081f6eb040ff1f571fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefd984533f1b4e80a0000000000000000000000000000000000000000000000000548f02c6ceb26fd4c0c0f8c8f8c4a05844082e41f7c1f34485c7902afa0aa0979a6a849100fc553cd946f4a663929ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a01bc726443437c4c062be18d052278e4ef735b8fe84387c8a4fc85fb70d5078e0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd884533f1b1080a0000000000000000000000000000000000000000000000000cc1e528f54f22bdac0c0f8c8f8c4a0ba06ba81c93faaf98ea2d83cbdc0788958d938b29a9eb2a92ffbd4a628b3d52ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a05053bfe1c0f1f0dd341c6df35e5a659989be041e8521027cc90f7605eb15fbb9a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefdd84533f1b0380a0000000000000000000000000000000000000000000000000bcf9df2fec615ecac0c0f8c8f8c4a083732d997db15109e90464c24b7c959a78881d827c55a0d668a66a2736be5d87a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a054f4012cba33a2b80b0dca9dd52f56b2c588133bd71700863f8cb95127176634a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffdc84533f1a4680a00000000000000000000000000000000000000000000000006920a1dc9d915d0ec0c0f8c8f8c4a052e2fba761c2d0643170ef041c017391e781190fe715ae87cdae8eee1d45d95ba01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ee2c82f77d7afd1f8dbe4f791df8477496c23e5504b9d66814172077f65f81f2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefe184533f1a3880a0000000000000000000000000000000000000000000000000ae86da9012398fc4c0c0f8c8f8c4a055703ba09544f386966b6d63bfc31033b761a4d1a6bb86b0cf49b4bb0526744ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a01684c03a675b53786f0077d1651c3d169a009b13a6ee2b5047be6dbbe6d957ffa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfea84533f1a2f80a00000000000000000000000000000000000000000000000003247320d0eb639dfc0c0f8c8f8c4a05109a79b33d81f4ee4814b550fb0002f03368d67570f6d4e6105fce2874d8b72a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ae72e8c60a3dcfd53deecdb2790d18f0cc710f77cf2c1ed76e7da829bde619dca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcff784533f1a1d80a000000000000000000000000000000000000000000000000040e0bc9bc9bcf295c0c0f8c8f8c4a03961e4bbba5c95fad3db0cffa3a16b9106f9ea3e8957993eab576b683c22f416a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0e9c6cf457bbe64d6bda67852a276cdbadb4f384a36d496e81801a496cfd9b7b5a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfee84533f19df80a0000000000000000000000000000000000000000000000000dbb3fd6c816776d8c0c0f8c8f8c4a06b8265a357cb3ad744e19f04eb15377f660c10c900cc352d24f9b09073a363d6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07ba07e1bc6a20ffa44ae6080d30982b9faa148faf6b1ec15e32d89ac853ac291a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefe984533f198d80a00000000000000000000000000000000000000000000000005171325b6a2f17f1c0c0f8c8f8c4a0dcdc0347bb87ce72d49ac2e4e11f89069509b129a2536bf3d57c6bca30894032a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ca24447aa0cedb4b561c7810461eef19b16a827c27352e5e01f914e9d7c78247a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffe884533f194680a0000000000000000000000000000000000000000000000000da4714cfed9d8bbcc0c0f8c8f8c4a047f2dd6c15ea4082b3e11e5cf6b925b27e51d9de68051a093e52ef465cffbb8ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a05a7206edddf50fcfeeaa97348a7112fc6edd0b5eacb44cf43d6a6c6b6609b459a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefed84533f193e80a0000000000000000000000000000000000000000000000000ffafba4bf8dc944ec0c0f8c8f8c4a04d5ad6d860772145872f6660ecefcb0b0b2056e0aa3509a48bf4c175459e5121a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a00f4659d09bb2ced56e7fd9c4d3d90daca8b4f471307b7c4385fd34a41016b0b2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdff684533f192580a000000000000000000000000000000000000000000000000090620e5e59a39fe5c0c0f8c8f8c4a0c1725c58d1bf023af468e0088db3cf642ae097cf2c58c2ece2fc746980acc7e6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0be19a182ea1584050deb0a79abdc11be896ce8d00a282bcfaf9ffcd65fd64d6aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833feff184533f189080a000000000000000000000000000000000000000000000000076f17f4199bccd12c0c0f8c8f8c4a0bd521a20a18ca6ca7115065065a1aa20067ee580fb11e2963d1e3a681e8302afa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a011be45633350e39475a1a07712ba72de4602d9eebf639ccd5422a389095ccaf1a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdffa84533f187b80a00000000000000000000000000000000000000000000000000c71b81c4a4cb82cc0c0f8c8f8c4a07c6d2d56e9c87f1553e4d06705af61a7c19a6046d2c39f8ed1417988783d3b1da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a012f5f0668063509e33a45a64eb6a072b2d84aa19f430f49f159be5008a786b2ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fd00684533f186080a0000000000000000000000000000000000000000000000000b3f962892cfec9e6c0c0f8c8f8c4a07154f0f8ecc7f791d22eec06ec86d87a44b2704f015b3d2cff3571a3d01ae0f6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a079536abf8e163cf8aa97f0d52866d04363902d591fd7c36aa35fc983d45fefd6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdffd84533f182f80a0000000000000000000000000000000000000000000000000736716e42499890fc0c0f8c8f8c4a0bf2fb1ee988ac4e17eae221a24176649774333fab25b6fc96c6081527fb6f121a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a041578daae7bcccd4976340aeb19e4132d2fe4193a0d92f87744c82bfe113502fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fd00984533f182b80a00000000000000000000000000000000000000000000000001c62fa76645942c6c0c0f8c8f8c4a07f84873e2679d40458b9dda9900478a78871044e08f6b47dad659b9b60ff8d48a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0597d3f4160770c0492333f90bad739dc05117d0e478a91f09573742e432904e8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fe00184533f17f680a0000000000000000000000000000000000000000000000000e24d8b1140fb34d5c0c0f8c8f8c4a0fd77bd13a8cde1766537febe751a27a2a31310a04638a1afcd5e8ad3c5485453a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0473b2b248d91010ba9aec2696ffc93c11c415ed132832be0fd0578f184862e13a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833feffc84533f17ca80a0000000000000000000000000000000000000000000000000fb5b65bac3f0d947c0c0f8c8f8c4a0518916dfb79c390bd7bff75712174512c2f96bec42a3f573355507ad1588ce0ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a08599d2ec9e95ec62f41a4975b655d8445d6767035f94eb235ed5ebea976fb9eaa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fe00484533f17b880a0000000000000000000000000000000000000000000000000bc27f4b8a201476bc0c0f90319f8c4a0ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cfa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0990dc3b5acbee04124361d958fe51acb582593613fc290683940a0769549d3eda09bfe4817d274ea3eb8672e9fe848c3885b53bbbd1d7c26e6039f90fb96b942b0833ff00084533f16b780a000000000000000000000000000000000000000000000000077377adff6c227dbf9024ff89d80809400000000000000000000000000000000000000008609184e72a000822710b3606956330c0d630000003359366000530a0d630000003359602060005301356000533557604060005301600054630000000c5884336069571ca07f6eb94576346488c6253197bde6a7e59ddc36f2773672c849402aa9c402c3c4a06d254e662bf7450dd8d835160cbb053463fed0b53f2cdd7f3ea8731919c8e8ccf9010501809400000000000000000000000000000000000000008609184e72a000822710b85336630000002e59606956330c0d63000000155933ff33560d63000000275960003356576000335700630000005358600035560d630000003a590033560d63000000485960003356573360003557600035335700b84a7f4e616d65526567000000000000000000000000000000000000000000000000003057307f4e616d655265670000000000000000000000000000000000000000000000000057336069571ba04af15a0ec494aeac5b243c8a2690833faa74c0f73db1f439d521c49c381513e9a05802e64939be5a1f9d4d614038fbd5479538c48795614ef9c551477ecbdb49d2f8a6028094ccdeac59d35627b7de09332e819d5159e7bb72508609184e72a000822710b84000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d0aceee7e5ab874e22ccf8d1a649f59106d74e81ba0d05887574456c6de8f7a0d172342c2cbdd4cf7afe15d9dbb8b75b748ba6791c9a01e87172a861f6c37b5a9e3a5d0d7393152a7fbe41530e5bb8ac8f35433e5931bc0";
         byte[] payload = Hex.decode(blocksMsg);
 
-        RLPList rlpList = RLP.decode2(payload);
+        RLPList rlpList = decode2(payload);
 
         RLPList.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
@@ -560,7 +562,7 @@ public class RLPTest {
                 "aa 8e 20 42 18 f4 d8 e7 32 82 5b d7 80 cf 94 ed 5c c3";
         byte[] payload = Hex.decode(helloMsg);
 
-        RLPList rlpList = RLP.decode2(payload);
+        RLPList rlpList = decode2(payload);
 
         RLPList.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
@@ -573,17 +575,17 @@ public class RLPTest {
      */
     @Test(expected = RuntimeException.class)
     public void testEncodeNull() {
-        RLP.encode(null);
+        encode(null);
     }
 
     @Test
     public void testEncodeEmptyString() {
         String test = "";
         String expected = "80";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        String decodeResult = (String) RLP.decode(encoderesult, 0).getDecoded();
+        String decodeResult = (String) decode(encoderesult, 0).getDecoded();
         assertEquals(test, decodeResult);
     }
 
@@ -591,10 +593,10 @@ public class RLPTest {
     public void testEncodeShortString() {
         String test = "dog";
         String expected = "83646f67";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        byte[] decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         assertEquals(test, bytesToAscii(decodeResult));
     }
 
@@ -602,10 +604,10 @@ public class RLPTest {
     public void testEncodeSingleCharacter() {
         String test = "d";
         String expected = "64";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        byte[] decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         assertEquals(test, bytesToAscii(decodeResult));
     }
 
@@ -613,10 +615,10 @@ public class RLPTest {
     public void testEncodeLongString() {
         String test = "Lorem ipsum dolor sit amet, consectetur adipisicing elit"; // length = 56
         String expected = "b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        byte[] decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         assertEquals(test, bytesToAscii(decodeResult));
     }
 
@@ -624,10 +626,10 @@ public class RLPTest {
     public void testEncodeZero() {
         Integer test = 0;
         String expected = "80";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        String decodeResult = (String) RLP.decode(encoderesult, 0).getDecoded();
+        String decodeResult = (String) decode(encoderesult, 0).getDecoded();
         assertEquals("", decodeResult);
     }
 
@@ -635,10 +637,10 @@ public class RLPTest {
     public void testEncodeSmallInteger() {
         Integer test = 15;
         String expected = "0f";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        byte[] decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         int result = byteArrayToInt(decodeResult);
         assertEquals(test, Integer.valueOf(result));
     }
@@ -647,19 +649,19 @@ public class RLPTest {
     public void testEncodeMediumInteger() {
         Integer test = 1000;
         String expected = "8203e8";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        byte[] decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         int result = byteArrayToInt(decodeResult);
         assertEquals(test, Integer.valueOf(result));
 
         test = 1024;
         expected = "820400";
-        encoderesult = RLP.encode(test);
+        encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         result = byteArrayToInt(decodeResult);
         assertEquals(test, Integer.valueOf(result));
     }
@@ -668,10 +670,10 @@ public class RLPTest {
     public void testEncodeBigInteger() {
         BigInteger test = new BigInteger("100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", 16);
         String expected = "a0100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
+        byte[] decodeResult = (byte[]) decode(encoderesult, 0).getDecoded();
         assertEquals(test, new BigInteger(1, decodeResult));
     }
 
@@ -679,10 +681,10 @@ public class RLPTest {
     public void TestEncodeEmptyList() {
         Object[] test = new Object[0];
         String expected = "c0";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        Object[] decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertTrue(decodeResult.length == 0);
     }
 
@@ -690,19 +692,19 @@ public class RLPTest {
     public void testEncodeShortStringList() {
         String[] test = new String[]{"cat", "dog"};
         String expected = "c88363617483646f67";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        Object[] decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertEquals("cat", bytesToAscii((byte[]) decodeResult[0]));
         assertEquals("dog", bytesToAscii((byte[]) decodeResult[1]));
 
         test = new String[]{"dog", "god", "cat"};
         expected = "cc83646f6783676f6483636174";
-        encoderesult = RLP.encode(test);
+        encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertEquals("dog", bytesToAscii((byte[]) decodeResult[0]));
         assertEquals("god", bytesToAscii((byte[]) decodeResult[1]));
         assertEquals("cat", bytesToAscii((byte[]) decodeResult[2]));
@@ -714,10 +716,10 @@ public class RLPTest {
         String element2 = "Lorem ipsum dolor sit amet, consectetur adipisicing elit";
         String[] test = new String[]{element1, element2};
         String expected = "f83e83636174b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        Object[] decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertEquals(element1, bytesToAscii((byte[]) decodeResult[0]));
         assertEquals(element2, bytesToAscii((byte[]) decodeResult[1]));
     }
@@ -731,10 +733,10 @@ public class RLPTest {
     public void testEncodeMultiList() {
         Object[] test = new Object[]{1, new Object[]{"cat"}, "dog", new Object[]{2}};
         String expected = "cc01c48363617483646f67c102";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        Object[] decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertEquals(1, byteArrayToInt((byte[]) decodeResult[0]));
         assertEquals("cat", bytesToAscii(((byte[]) ((Object[]) decodeResult[1])[0])));
         assertEquals("dog", bytesToAscii((byte[]) decodeResult[2]));
@@ -742,10 +744,10 @@ public class RLPTest {
 
         test = new Object[]{new Object[]{"cat", "dog"}, new Object[]{1, 2}, new Object[]{}};
         expected = "cdc88363617483646f67c20102c0";
-        encoderesult = RLP.encode(test);
+        encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertEquals("cat", bytesToAscii(((byte[]) ((Object[]) decodeResult[0])[0])));
         assertEquals("dog", bytesToAscii(((byte[]) ((Object[]) decodeResult[0])[1])));
         assertEquals(1, byteArrayToInt(((byte[]) ((Object[]) decodeResult[1])[0])));
@@ -758,10 +760,10 @@ public class RLPTest {
         // list = [ [ [], [] ], [] ],
         Object[] test = new Object[]{new Object[]{new Object[]{}, new Object[]{}}, new Object[]{}};
         String expected = "c4c2c0c0c0";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        Object[] decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertTrue(decodeResult.length == 2);
         assertTrue(((Object[]) (decodeResult[0])).length == 2);
         assertTrue(((Object[]) (decodeResult[1])).length == 0);
@@ -775,10 +777,10 @@ public class RLPTest {
         //list: [ [], [[]], [ [], [[]] ] ]
         Object[] test = new Object[]{new Object[]{}, new Object[]{new Object[]{}}, new Object[]{new Object[]{}, new Object[]{new Object[]{}}}};
         String expected = "c7c0c1c0c3c0c1c0";
-        byte[] encoderesult = RLP.encode(test);
+        byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
-        Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
+        Object[] decodeResult = (Object[]) decode(encoderesult, 0).getDecoded();
         assertTrue(decodeResult.length == 3);
         assertTrue(((Object[]) (decodeResult[0])).length == 0);
         assertTrue(((Object[]) (decodeResult[1])).length == 1);
@@ -792,22 +794,22 @@ public class RLPTest {
     @Test
     public void testRlpEncode() {
 
-        assertEquals(result01, Hex.toHexString(RLP.encode(test01)));
-        assertEquals(result02, Hex.toHexString(RLP.encode(test02)));
-        assertEquals(result03, Hex.toHexString(RLP.encode(test03)));
-        assertEquals(result04, Hex.toHexString(RLP.encode(test04)));
-        assertEquals(result05, Hex.toHexString(RLP.encode(test05)));
-        assertEquals(result06, Hex.toHexString(RLP.encode(test06)));
-        assertEquals(result07, Hex.toHexString(RLP.encode(test07)));
-        assertEquals(result08, Hex.toHexString(RLP.encode(test08)));
-        assertEquals(result09, Hex.toHexString(RLP.encode(test09)));
-        assertEquals(result10, Hex.toHexString(RLP.encode(test10)));
-        assertEquals(result11, Hex.toHexString(RLP.encode(test11)));
-        assertEquals(result12, Hex.toHexString(RLP.encode(test12)));
-        assertEquals(result13, Hex.toHexString(RLP.encode(test13)));
-        assertEquals(result14, Hex.toHexString(RLP.encode(test14)));
-        assertEquals(result15, Hex.toHexString(RLP.encode(test15)));
-        assertEquals(result16, Hex.toHexString(RLP.encode(test16)));
+        assertEquals(result01, Hex.toHexString(encode(test01)));
+        assertEquals(result02, Hex.toHexString(encode(test02)));
+        assertEquals(result03, Hex.toHexString(encode(test03)));
+        assertEquals(result04, Hex.toHexString(encode(test04)));
+        assertEquals(result05, Hex.toHexString(encode(test05)));
+        assertEquals(result06, Hex.toHexString(encode(test06)));
+        assertEquals(result07, Hex.toHexString(encode(test07)));
+        assertEquals(result08, Hex.toHexString(encode(test08)));
+        assertEquals(result09, Hex.toHexString(encode(test09)));
+        assertEquals(result10, Hex.toHexString(encode(test10)));
+        assertEquals(result11, Hex.toHexString(encode(test11)));
+        assertEquals(result12, Hex.toHexString(encode(test12)));
+        assertEquals(result13, Hex.toHexString(encode(test13)));
+        assertEquals(result14, Hex.toHexString(encode(test14)));
+        assertEquals(result15, Hex.toHexString(encode(test15)));
+        assertEquals(result16, Hex.toHexString(encode(test16)));
     }
 
     @Test
@@ -817,61 +819,61 @@ public class RLPTest {
         byte[] decodedData;
         Object[] decodedList;
 
-        emptyString = (String) RLP.decode(Hex.decode(result01), pos).getDecoded();
+        emptyString = (String) decode(Hex.decode(result01), pos).getDecoded();
         assertEquals("", emptyString);
 
-        emptyString = (String) RLP.decode(Hex.decode(result02), pos).getDecoded();
+        emptyString = (String) decode(Hex.decode(result02), pos).getDecoded();
         assertEquals(test02, emptyString);
 
-        decodedData = (byte[]) RLP.decode(Hex.decode(result03), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result03), pos).getDecoded();
         assertEquals(test03, bytesToAscii(decodedData));
 
-        decodedData = (byte[]) RLP.decode(Hex.decode(result04), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result04), pos).getDecoded();
         assertEquals(test04, bytesToAscii(decodedData));
 
-        decodedData = (byte[]) RLP.decode(Hex.decode(result05), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result05), pos).getDecoded();
         assertEquals(test05, bytesToAscii(decodedData));
 
-        decodedList = (Object[]) RLP.decode(Hex.decode(result06), pos).getDecoded();
+        decodedList = (Object[]) decode(Hex.decode(result06), pos).getDecoded();
         assertEquals(test06[0], bytesToAscii((byte[]) decodedList[0]));
         assertEquals(test06[1], bytesToAscii((byte[]) decodedList[1]));
 
-        decodedList = (Object[]) RLP.decode(Hex.decode(result07), pos).getDecoded();
+        decodedList = (Object[]) decode(Hex.decode(result07), pos).getDecoded();
         assertEquals(test07[0], bytesToAscii((byte[]) decodedList[0]));
         assertEquals(test07[1], bytesToAscii((byte[]) decodedList[1]));
         assertEquals(test07[2], bytesToAscii((byte[]) decodedList[2]));
 
         // 1
-        decodedData = (byte[]) RLP.decode(Hex.decode(result08), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result08), pos).getDecoded();
         assertEquals(test08, byteArrayToInt(decodedData));
 
         // 10
-        decodedData = (byte[]) RLP.decode(Hex.decode(result09), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result09), pos).getDecoded();
         assertEquals(test09, byteArrayToInt(decodedData));
 
         // 100
-        decodedData = (byte[]) RLP.decode(Hex.decode(result10), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result10), pos).getDecoded();
         assertEquals(test10, byteArrayToInt(decodedData));
 
         // 1000
-        decodedData = (byte[]) RLP.decode(Hex.decode(result11), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result11), pos).getDecoded();
         assertEquals(test11, byteArrayToInt(decodedData));
 
-        decodedData = (byte[]) RLP.decode(Hex.decode(result12), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result12), pos).getDecoded();
         assertTrue(test12.compareTo(new BigInteger(1, decodedData)) == 0);
 
-        decodedData = (byte[]) RLP.decode(Hex.decode(result13), pos).getDecoded();
+        decodedData = (byte[]) decode(Hex.decode(result13), pos).getDecoded();
         assertTrue(test13.compareTo(new BigInteger(1, decodedData)) == 0);
 
         // Need to test with different expected value, because decoding doesn't recognize types
-        Object testObject1 = RLP.decode(Hex.decode(result14), pos).getDecoded();
+        Object testObject1 = decode(Hex.decode(result14), pos).getDecoded();
         assertTrue(DeepEquals.deepEquals(expected14, testObject1));
 
-        Object testObject2 = RLP.decode(Hex.decode(result15), pos).getDecoded();
+        Object testObject2 = decode(Hex.decode(result15), pos).getDecoded();
         assertTrue(DeepEquals.deepEquals(test15, testObject2));
 
         // Need to test with different expected value, because decoding doesn't recognize types
-        Object testObject3 = RLP.decode(Hex.decode(result16), pos).getDecoded();
+        Object testObject3 = decode(Hex.decode(result16), pos).getDecoded();
         assertTrue(DeepEquals.deepEquals(expected16, testObject3));
     }
 
@@ -881,14 +883,14 @@ public class RLPTest {
         // length < 56
         int length = 1;
         int offset = 128;
-        byte[] encodedLength = RLP.encodeLength(length, offset);
+        byte[] encodedLength = encodeLength(length, offset);
         String expected = "81";
         assertEquals(expected, Hex.toHexString(encodedLength));
 
         // 56 > length < 2^64
         length = 56;
         offset = 192;
-        encodedLength = RLP.encodeLength(length, offset);
+        encodedLength = encodeLength(length, offset);
         expected = "f838";
         assertEquals(expected, Hex.toHexString(encodedLength));
     }
@@ -906,7 +908,7 @@ public class RLPTest {
         double maxLength = Math.pow(256, 8);
 
         try {
-            encodedLength = RLP.encodeLength((int) maxLength, offset);
+            encodedLength = encodeLength((int) maxLength, offset);
             System.out.println("length: " + length + ", offset: " + offset + ", encoded: " + Arrays.toString(encodedLength));
 
             fail("Expecting RuntimeException: 'Input too long'");
@@ -942,13 +944,13 @@ public class RLPTest {
 
             long start1 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {
-                result = RLP.decode(payload, 0);
+                result = decode(payload, 0);
             }
             long end1 = System.currentTimeMillis();
 
             long start2 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {
-                list = RLP.decode2(payload);
+                list = decode2(payload);
             }
             long end2 = System.currentTimeMillis();
 
@@ -976,7 +978,7 @@ public class RLPTest {
         byte[] rlpKeysList = Hex.decode("c0");
         byte[] rlpValuesList = Hex.decode("c0");
         byte[] rlpCode = Hex.decode("b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557");
-        byte[] output = RLP.encodeList(rlpKeysList, rlpValuesList, rlpCode);
+        byte[] output = encodeList(rlpKeysList, rlpValuesList, rlpCode);
 
         assertEquals(expectedOutput, Hex.toHexString(output));
     }
@@ -986,22 +988,22 @@ public class RLPTest {
     public void encodeBigIntegerEdge_1() {
 
         BigInteger integer = new BigInteger("80", 10);
-        byte[] encodedData = RLP.encodeBigInteger(integer);
+        byte[] encodedData = encodeBigInteger(integer);
         System.out.println(Hex.toHexString(encodedData));
     }
 
     @Test
     public void testEncodeListHeader(){
 
-        byte[] header = RLP.encodeListHeader(10);
+        byte[] header = encodeListHeader(10);
         String expected_1 = "ca";
         assertEquals(expected_1, Hex.toHexString(header));
 
-        header = RLP.encodeListHeader(1000);
+        header = encodeListHeader(1000);
         String expected_2 = "f903e8";
         assertEquals(expected_2, Hex.toHexString(header));
 
-        header = RLP.encodeListHeader(1000000000);
+        header = encodeListHeader(1000000000);
         String expected_3 = "fb3b9aca00";
         assertEquals(expected_3, Hex.toHexString(header));
     }
@@ -1021,9 +1023,9 @@ public class RLPTest {
         data.add(element1);
         data.add(element2);
 
-        byte[] setEncoded = RLP.encodeSet(data);
+        byte[] setEncoded = encodeSet(data);
 
-        RLPList list = (RLPList)RLP.decode2(setEncoded).get(0);
+        RLPList list = (RLPList) decode2(setEncoded).get(0);
 
         byte[] element1_ = list.get(0).getRLPData();
         byte[] element2_ = list.get(1).getRLPData();
@@ -1036,20 +1038,20 @@ public class RLPTest {
     public void testEncodeSet_2(){
 
         Set<ByteArrayWrapper> data = new HashSet<>();
-        byte[] setEncoded = RLP.encodeSet(data);
+        byte[] setEncoded = encodeSet(data);
         assertEquals("c0", Hex.toHexString(setEncoded));
     }
 
     @Test
     public void testEncodeInt_7f(){
-        String result =  Hex.toHexString(RLP.encodeInt(0x7f));
+        String result =  Hex.toHexString(encodeInt(0x7f));
         String expected = "7f";
         assertEquals(expected, result);
     }
 
     @Test
     public void testEncodeInt_80(){
-        String result =  Hex.toHexString(RLP.encodeInt(0x80));
+        String result =  Hex.toHexString(encodeInt(0x80));
         String expected = "8180";
         assertEquals(expected, result);
     }
@@ -1057,7 +1059,7 @@ public class RLPTest {
 
     @Test
     public void testEncode_ED(){
-        String result =  Hex.toHexString(RLP.encode(0xED));
+        String result =  Hex.toHexString(encode(0xED));
         String expected = "81ed";
         assertEquals(expected, result);
     }
@@ -1097,5 +1099,13 @@ public class RLPTest {
 
         assertEquals("bzz", bzz);
         assertEquals(0x00, bzz_00);
+    }
+
+    @Test
+    public void partialDataParseTest() {
+        String hex = "000080c180000000000000000000000042699b1104e93abf0008be55f912c2ff";
+        RLPList el = (RLPList) decode2OneItem(Hex.decode(hex), 3);
+        assertEquals(1, el.size());
+        assertEquals(0, Util.rlpDecodeInt(el.get(0)));
     }
 }

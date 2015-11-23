@@ -5,6 +5,9 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.Map;
@@ -12,9 +15,14 @@ import java.util.Set;
 
 import static java.lang.System.getProperty;
 
+@Component
+@Scope("prototype")
 public class MapDBDataSource implements KeyValueDataSource {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
+
+    @Autowired
+    SystemProperties config;
 
     private DB db;
     private Map<byte[], byte[]> map;
@@ -23,7 +31,7 @@ public class MapDBDataSource implements KeyValueDataSource {
 
     @Override
     public void init() {
-        File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/" + name);
+        File dbFile = new File(getProperty("user.dir") + "/" + config.databaseDir() + "/" + name);
         if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
 
 

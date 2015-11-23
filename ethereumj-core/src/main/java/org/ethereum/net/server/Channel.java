@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
@@ -17,6 +18,7 @@ import org.ethereum.net.eth.message.Eth60MessageFactory;
 import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.*;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
@@ -24,14 +26,11 @@ import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageFactory;
-import org.ethereum.net.rlpx.FrameCodec;
-import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageFactory;
 import org.ethereum.net.swarm.bzz.BzzHandler;
-import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.swarm.bzz.BzzMessageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +44,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.EthVersion.V61;
-import static org.ethereum.net.eth.EthVersion.V62;
-
 /**
  * @author Roman Mandeleil
  * @since 01.11.2014
@@ -58,6 +53,9 @@ import static org.ethereum.net.eth.EthVersion.V62;
 public class Channel {
 
     private final static Logger logger = LoggerFactory.getLogger("net");
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     private MessageQueue msgQueue;
@@ -75,10 +73,16 @@ public class Channel {
     private MessageCodec messageCodec;
 
     @Autowired
+    private HandshakeHandler handshakeHandler;
+
+    @Autowired
     private NodeManager nodeManager;
 
     @Autowired
     private EthHandlerFactory ethHandlerFactory;
+
+    @Autowired
+    private StaticMessages staticMessages;
 
     private Eth eth = new EthAdapter();
 
@@ -92,19 +96,20 @@ public class Channel {
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
 
         pipeline.addLast("readTimeoutHandler",
-                new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-        pipeline.addLast("initiator", messageCodec.getInitiator());
-        pipeline.addLast("messageCodec", messageCodec);
+                new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
+        pipeline.addLast("handshakeHandler", handshakeHandler);
 
         this.discoveryMode = discoveryMode;
 
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
             // unexpected disconnect
-            messageCodec.generateTempKey();
+            handshakeHandler.generateTempKey();
         }
 
-        messageCodec.setRemoteId(remoteId, this);
+        handshakeHandler.setRemoteId(remoteId, this);
+
+        messageCodec.setChannel(this);
 
         p2pHandler.setMsgQueue(msgQueue);
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());
@@ -116,21 +121,40 @@ public class Channel {
         messageCodec.setBzzMessageFactory(new BzzMessageFactory());
     }
 
-    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
-        ctx.pipeline().addLast(Capability.P2P, p2pHandler);
+    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec,
+                                            HelloMessage helloRemote) throws IOException, InterruptedException {
 
-        p2pHandler.setChannel(this);
-        p2pHandler.setHandshake(helloRemote, ctx);
+        logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
+        if (P2pHandler.isProtocolVersionSupported(helloRemote.getP2PVersion())) {
 
-        getNodeStatistics().rlpxHandshake.add();
+            if (helloRemote.getP2PVersion() < 5) {
+                messageCodec.setSupportChunkedFrames(false);
+            }
+
+            FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
+            ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
+            ctx.pipeline().addLast("messageCodec", messageCodec);
+            ctx.pipeline().addLast(Capability.P2P, p2pHandler);
+
+            p2pHandler.setChannel(this);
+            p2pHandler.setHandshake(helloRemote, ctx);
+
+            getNodeStatistics().rlpxHandshake.add();
+        }
     }
 
-    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId) throws IOException, InterruptedException {
+    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId,
+                                 HelloMessage inboundHelloMessage) throws IOException, InterruptedException {
 
         // in discovery mode we are supplying fake port along with fake nodeID to not receive
         // incoming connections with fake public key
-        HelloMessage helloMessage = discoveryMode ? StaticMessages.createHelloMessage(nodeId, 9) :
-                StaticMessages.createHelloMessage(nodeId);
+        HelloMessage helloMessage = discoveryMode ? staticMessages.createHelloMessage(nodeId, 9) :
+                staticMessages.createHelloMessage(nodeId);
+
+        if (inboundHelloMessage != null && P2pHandler.isProtocolVersionSupported(inboundHelloMessage.getP2PVersion())) {
+            // the p2p version can be downgraded if requested by peer and supported by us
+            helloMessage.setP2pVersion(inboundHelloMessage.getP2PVersion());
+        }
 
         byte[] payload = helloMessage.getEncoded();
 

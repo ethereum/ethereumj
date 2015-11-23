@@ -26,7 +26,7 @@ import java.util.List;
 public class UDPListener {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
-    private final int port;
+    private int port;
     private String address;
     private String[] bootPeers;
 
@@ -36,12 +36,10 @@ public class UDPListener {
     @Autowired
     WorldManager worldManager;
 
+    @Autowired
+    SystemProperties config = SystemProperties.CONFIG;
+
     public UDPListener() {
-        this.address = SystemProperties.CONFIG.bindIp();
-        port = SystemProperties.CONFIG.listenPort();
-        if (SystemProperties.CONFIG.peerDiscovery()) {
-            bootPeers = SystemProperties.CONFIG.peerDiscoveryIPList().toArray(new String[0]);
-        }
     }
 
     public UDPListener(String address, int port) {
@@ -51,7 +49,12 @@ public class UDPListener {
 
     @PostConstruct
     void init() {
-        if (SystemProperties.CONFIG.peerDiscovery()) {
+        this.address = config.bindIp();
+        port = config.listenPort();
+        if (config.peerDiscovery()) {
+            bootPeers = config.peerDiscoveryIPList().toArray(new String[0]);
+        }
+        if (config.peerDiscovery()) {
             new Thread("UDPListener") {
                 @Override
                 public void run() {

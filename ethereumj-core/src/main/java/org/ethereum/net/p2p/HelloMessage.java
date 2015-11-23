@@ -146,6 +146,10 @@ public class HelloMessage extends P2pMessage {
         this.peerId = peerId;
     }
 
+    public void setP2pVersion(byte p2pVersion) {
+        this.p2pVersion = p2pVersion;
+    }
+
     @Override
     public Class<?> getAnswerMessage() {
         return null;

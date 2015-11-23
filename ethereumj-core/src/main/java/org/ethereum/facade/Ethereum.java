@@ -10,6 +10,7 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.net.shh.Whisper;
 import org.ethereum.vm.program.ProgramResult;
 
 import java.math.BigInteger;
@@ -166,6 +167,11 @@ public interface Ethereum {
     List<Transaction> getPendingStateTransactions();
 
     BlockLoader getBlockLoader();
+
+    /**
+     * @return Whisper implementation if the protocol is available
+     */
+    Whisper getWhisper();
 
     /**
      * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices

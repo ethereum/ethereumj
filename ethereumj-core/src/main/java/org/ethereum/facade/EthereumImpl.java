@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -12,6 +13,7 @@ import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
+import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
@@ -32,8 +34,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Roman Mandeleil
@@ -65,6 +65,12 @@ public class EthereumImpl implements Ethereum {
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
 
+    @Autowired
+    Whisper whisper;
+
+    @Autowired
+    SystemProperties config;
+
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
     public EthereumImpl() {
@@ -73,11 +79,11 @@ public class EthereumImpl implements Ethereum {
 
     @PostConstruct
     public void init() {
-        if (CONFIG.listenPort() > 0) {
+        if (config.listenPort() > 0) {
             Executors.newSingleThreadExecutor().submit(
                     new Runnable() {
                         public void run() {
-                            peerServer.start(CONFIG.listenPort());
+                            peerServer.start(config.listenPort());
                         }
                     }
             );
@@ -310,6 +316,11 @@ public class EthereumImpl implements Ethereum {
     @Override
     public BlockLoader getBlockLoader(){
         return  blockLoader;
+    }
+
+    @Override
+    public Whisper getWhisper() {
+        return whisper;
     }
 
     @Override
