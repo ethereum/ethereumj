@@ -6,9 +6,7 @@ import org.ethereum.trie.Trie;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +66,15 @@ public class BlockTest {
         assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
     }
 
+    String prev = CONFIG.genesisInfo();
+    @Before
+    public void beforeEach() {
+        CONFIG.setGenesisInfo("olympic.json");
+    }
+    @After
+    public void afterEach() {
+        CONFIG.setGenesisInfo(prev);
+    }
 
     @Test
     public void testGenesisFromNew() {
@@ -120,6 +127,7 @@ public class BlockTest {
     @Test
     public void testFrontierGenesis(){
 
+        String prev = CONFIG.genesisInfo();
         CONFIG.setGenesisInfo("frontier.json");
 
         Block genesis = GenesisLoader.loadGenesis();
@@ -130,7 +138,7 @@ public class BlockTest {
         assertEquals("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544", root);
         assertEquals("d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3", hash);
 
-        CONFIG.setGenesisInfo("olympic.json");
+        CONFIG.setGenesisInfo(prev);
     }
 
 
