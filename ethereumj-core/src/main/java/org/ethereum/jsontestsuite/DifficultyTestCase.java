@@ -74,7 +74,7 @@ public class DifficultyTestCase {
     public BlockHeader getCurrent() {
         return new BlockHeader(
                 EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                Long.valueOf(currentBlockNumber), 0, 0,
+                Long.valueOf(currentBlockNumber), new byte[] {0}, 0,
                 Long.valueOf(currentTimestamp),
                 EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
         );
@@ -84,7 +84,7 @@ public class DifficultyTestCase {
         return new BlockHeader(
                 EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 new BigInteger(parentDifficulty).toByteArray(),
-                Long.valueOf(currentBlockNumber) - 1, 0, 0,
+                Long.valueOf(currentBlockNumber) - 1, new byte[] {0}, 0,
                 Long.valueOf(parentTimestamp),
                 EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
         );

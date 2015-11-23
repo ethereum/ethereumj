@@ -22,7 +22,7 @@ public class BlockHeaderBuilder {
                 parseData(headerTck.getBloom()),
                 parseNumericData(headerTck.getDifficulty()),
                 new BigInteger(parseData(headerTck.getNumber())).longValue(),
-                new BigInteger(parseData(headerTck.getGasLimit())).longValue(),
+                parseData(headerTck.getGasLimit()),
                 new BigInteger(parseData(headerTck.getGasUsed())).longValue(),
                 new BigInteger(parseData(headerTck.getTimestamp())).longValue(),
                 parseData(headerTck.getExtraData()),

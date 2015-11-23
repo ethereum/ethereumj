@@ -85,7 +85,7 @@ public class Block {
     }
 
     public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-                 byte[] difficulty, long number, long gasLimit,
+                 byte[] difficulty, long number, byte[] gasLimit,
                  long gasUsed, long timestamp, byte[] extraData,
                  byte[] mixHash, byte[] nonce, byte[] receiptsRoot,
                  byte[] transactionsRoot, byte[] stateRoot,
@@ -105,7 +105,7 @@ public class Block {
 
 
     public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-                 byte[] difficulty, long number, long gasLimit,
+                 byte[] difficulty, long number, byte[] gasLimit,
                  long gasUsed, long timestamp,
                  byte[] extraData, byte[] mixHash, byte[] nonce,
                  List<Transaction> transactionsList, List<BlockHeader> uncleList) {
@@ -231,7 +231,7 @@ public class Block {
         return this.header.getNumber();
     }
 
-    public long getGasLimit() {
+    public byte[] getGasLimit() {
         if (!parsed) parseRLP();
         return this.header.getGasLimit();
     }

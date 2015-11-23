@@ -65,7 +65,7 @@ public class RunTck {
         for (String key : summary.keySet()){
 
             if (summary.get(key)) ++pass; else ++fails;
-            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "PASS" : "FAIL")).
+            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
                     replace(' ', '.').
                     replace("^", " ");
             logger.info(sumTest);

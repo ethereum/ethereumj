@@ -27,6 +27,7 @@ import java.util.*;
 import static java.lang.StrictMath.min;
 import static java.lang.String.format;
 import static java.math.BigInteger.ZERO;
+import static java.math.BigInteger.valueOf;
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -556,7 +557,7 @@ public class Program {
     public void spendGas(long gasValue, String cause) {
         gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
-        if ((getGas().longValue() - gasValue) < 0) {
+        if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -627,7 +628,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGas().longValue() - getResult().getGasUsed());
+        return new DataWord(invoke.getGas().value().subtract(valueOf(getResult().getGasUsed())).toByteArray());
     }
 
     public DataWord getCallValue() {
