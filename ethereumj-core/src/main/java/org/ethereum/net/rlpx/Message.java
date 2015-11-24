@@ -74,8 +74,8 @@ public abstract class Message {
         signature.v -= 27;
 
         byte[] sigBytes =
-                merge(BigIntegers.asUnsignedByteArray(signature.r),
-                        BigIntegers.asUnsignedByteArray(signature.s), new byte[]{signature.v});
+                merge(BigIntegers.asUnsignedByteArray(32, signature.r),
+                        BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{signature.v});
 
         // [3] calculate MDC
         byte[] forSha = merge(sigBytes, type, data);

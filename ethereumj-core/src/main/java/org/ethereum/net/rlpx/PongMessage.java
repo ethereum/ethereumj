@@ -45,8 +45,10 @@ public class PongMessage extends Message {
     }
 
     public static PongMessage create(byte[] token, ECKey privKey) {
+        return create(token, privKey, 3 + System.currentTimeMillis() / 1000);
+    }
 
-        long expiration = 3 + System.currentTimeMillis() / 1000;
+    static PongMessage create(byte[] token, ECKey privKey, long expiration) {
 
         /* RLP Encode data */
         byte[] rlpToken = RLP.encodeElement(token);

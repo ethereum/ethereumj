@@ -225,16 +225,11 @@ public class RLPXTest {
         PongMessage msg1 = (PongMessage)Message.decode(wire);
 
         ECKey key = ECKey.fromPrivate(BigInteger.TEN);
-        PongMessage msg2 = PongMessage.create(msg1.getToken(), key);
+        PongMessage msg2 = PongMessage.create(msg1.getToken(), key, 1448375807);
 
-        PongMessage msg3 = (PongMessage)Message.decode(msg2.getPacket());
-        assertEquals( Hex.toHexString(msg1.getToken()), Hex.toHexString(msg3.getToken()));
+        PongMessage msg3 = (PongMessage) Message.decode(msg2.getPacket());
+        assertEquals(Hex.toHexString(msg1.getToken()), Hex.toHexString(msg3.getToken()));
     }
-
-
-
-
-
 }
 
 
