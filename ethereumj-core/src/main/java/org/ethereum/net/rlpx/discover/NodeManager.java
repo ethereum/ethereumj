@@ -3,6 +3,7 @@ package org.ethereum.net.rlpx.discover;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
@@ -51,7 +52,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     MapDBFactory mapDBFactory;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
 
     @Autowired
     SystemProperties config = SystemProperties.CONFIG;
@@ -210,7 +211,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             ret = new NodeHandler(n ,this);
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret);
-            worldManager.getListener().onNodeDiscovered(ret.getNode());
+            ethereumListener.onNodeDiscovered(ret.getNode());
         }
         return ret;
     }

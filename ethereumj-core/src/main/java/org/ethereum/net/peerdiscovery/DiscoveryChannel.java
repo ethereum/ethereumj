@@ -5,7 +5,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.EthHandler;
@@ -40,7 +40,7 @@ public class DiscoveryChannel {
     private boolean peerDiscoveryMode = false;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
 
     @Autowired
     MessageQueue messageQueue;
@@ -68,7 +68,7 @@ public class DiscoveryChannel {
     public void connect(String host, int port) {
 
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        worldManager.getListener().trace("Connecting to: " + host + ":" + port);
+        ethereumListener.trace("Connecting to: " + host + ":" + port);
 
         try {
             Bootstrap b = new Bootstrap();

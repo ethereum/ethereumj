@@ -7,7 +7,7 @@ import org.ethereum.core.*;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
@@ -61,7 +61,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected SyncQueue queue;
 
     @Autowired
-    protected WorldManager worldManager;
+    protected EthereumListener ethereumListener;
+
+    @Autowired
+    protected Wallet wallet;
 
     @Autowired
     protected PendingState pendingState;
@@ -118,7 +121,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
             loggerNet.trace("EthHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 
         channel.getNodeStatistics().ethInbound.add();
 
@@ -153,7 +156,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     public void activate() {
         loggerNet.info("ETH protocol activated");
-        worldManager.getListener().trace("ETH protocol activated");
+        ethereumListener.trace("ETH protocol activated");
         sendStatus();
     }
 
@@ -170,7 +173,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      */
     private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
         channel.getNodeStatistics().ethHandshake(msg);
-        worldManager.getListener().onEthStatusUpdated(channel.getNode(), msg);
+        ethereumListener.onEthStatusUpdated(channel.getNode(), msg);
 
         try {
             if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
@@ -232,7 +235,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         pendingState.addWireTransactions(txSet);
 
         for (Transaction tx : txSet) {
-            worldManager.getWallet().addTransaction(tx);
+            wallet.addTransaction(tx);
         }
     }
 

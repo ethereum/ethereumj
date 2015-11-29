@@ -1,6 +1,6 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -29,7 +29,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     private BloomFilter peerBloomFilter = BloomFilter.createAll();
 
     @Autowired
-    private WorldManager worldManager;
+    private EthereumListener ethereumListener;
 
     @Autowired
     private WhisperImpl whisper;
@@ -49,11 +49,11 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("ShhHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case STATUS:
-                worldManager.getListener().trace("[Recv: " + msg + "]");
+                ethereumListener.trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
                 whisper.processEnvelope((ShhEnvelopeMessage) msg, this);
@@ -87,7 +87,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     public void activate() {
         logger.info("SHH protocol activated");
-        worldManager.getListener().trace("SHH protocol activated");
+        ethereumListener.trace("SHH protocol activated");
         whisper.addPeer(this);
         sendStatus();
         sendHostBloom();

@@ -3,7 +3,6 @@ package org.ethereum.net;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
@@ -52,7 +51,7 @@ public class MessageQueue {
     private ChannelHandlerContext ctx = null;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
     boolean hasPing = false;
     private ScheduledFuture<?> timerTask;
 
@@ -92,7 +91,7 @@ public class MessageQueue {
 
     public void receivedMessage(Message msg) throws InterruptedException {
 
-        worldManager.getListener().trace("[Recv: " + msg + "]");
+        ethereumListener.trace("[Recv: " + msg + "]");
 
         if (messageQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = messageQueue.peek();
@@ -128,8 +127,7 @@ public class MessageQueue {
 
             Message msg = messageRoundtrip.getMsg();
 
-            EthereumListener listener = worldManager.getListener();
-            listener.onSendMessage(msg);
+            ethereumListener.onSendMessage(msg);
 
             ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
