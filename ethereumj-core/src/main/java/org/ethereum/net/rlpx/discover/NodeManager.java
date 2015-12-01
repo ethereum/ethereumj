@@ -99,7 +99,11 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             public void run() {
                 logger.trace("Statistics:\n {}", dumpAllStatistics());
             }
-        }, 1 * 1000, 10 * 1000);
+        }, 1 * 1000, 60 * 1000);
+
+        for (Node node : SystemProperties.CONFIG.peerActive()) {
+            getNodeHandler(node).getNodeStatistics().setPredefined(true);
+        }
     }
 
     void setBootNodes(List<Node> bootNodes) {
@@ -136,10 +140,6 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
             for (Node node : bootNodes) {
                 getNodeHandler(node);
-            }
-
-            for (Node node : SystemProperties.CONFIG.peerActive()) {
-                getNodeHandler(node).getNodeStatistics().setPredefined(true);
             }
         }
     }
@@ -272,7 +272,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     public void stateChanged(NodeHandler nodeHandler, NodeHandler.State oldState, NodeHandler.State newState) {
-        peerConnectionManager.nodeStatusChanged(nodeHandler);
+        if (discoveryEnabled) {
+            peerConnectionManager.nodeStatusChanged(nodeHandler);
+        }
     }
 
     public synchronized List<NodeHandler> getNodes(int minReputation) {
@@ -309,10 +311,13 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return getNodes(new Functional.Predicate<NodeHandler>() {
             @Override
             public boolean test(NodeHandler handler) {
-                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                if (usedIds.contains(handler.getNode().getHexId())) {
                     return false;
                 }
-                if (usedIds.contains(handler.getNode().getHexId())) {
+
+                if (handler.getNodeStatistics().isPredefined()) return true;
+
+                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
                     return false;
                 }
                 return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;

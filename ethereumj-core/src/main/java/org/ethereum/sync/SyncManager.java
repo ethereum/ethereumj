@@ -135,10 +135,6 @@ public class SyncManager {
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
 
-                for (Node node : config.peerActive()) {
-                    pool.connect(node);
-                }
-
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
                 }
