@@ -9,6 +9,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -28,6 +29,9 @@ import static org.ethereum.db.IndexedBlockStore.BLOCK_INFO_SERIALIZER;
 @Configuration
 @Import(CommonConfig.class)
 public class DefaultConfig {
+
+    @Autowired
+    ApplicationContext appCtx;
 
     @Autowired
     CommonConfig commonConfig;
@@ -54,7 +58,7 @@ public class DefaultConfig {
                 .counterEnable()
                 .makeOrGet();
 
-        KeyValueDataSource blocksDB = levelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = appCtx.getBean(LevelDbDataSource.class, "blocks");
         blocksDB.init();
 
 
