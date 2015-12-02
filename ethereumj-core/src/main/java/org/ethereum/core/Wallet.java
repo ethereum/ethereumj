@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.submit.WalletTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,16 +49,9 @@ public class Wallet {
     private long high;
 
     @Autowired
-    private WorldManager worldManager;
-
-    @Autowired
     private ApplicationContext context;
 
     private List<WalletListener> listeners = new ArrayList<>();
-
-    public void setWorldManager(WorldManager worldManager) {
-        this.worldManager = worldManager;
-    }
 
     public void addNewAccount() {
         Account account = new Account();
