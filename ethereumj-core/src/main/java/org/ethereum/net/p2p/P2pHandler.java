@@ -3,6 +3,7 @@ package org.ethereum.net.p2p;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
@@ -11,6 +12,7 @@ import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
@@ -79,7 +81,10 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private int ethOutbound;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
+
+    @Autowired
+    PeerDiscovery peerDiscovery;
 
     @Autowired
     ConfigCapabilities configCapabilities;
@@ -101,9 +106,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
-    public void setWorldManager(WorldManager worldManager) {
-        this.worldManager = worldManager;
-    }
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
         this.peerDiscoveryMode = peerDiscoveryMode;
@@ -114,7 +116,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         logger.info("P2P protocol activated");
         msgQueue.activate(ctx);
-        worldManager.getListener().trace("P2P protocol activated");
+        ethereumListener.trace("P2P protocol activated");
         startTimers();
     }
 
@@ -125,7 +127,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.trace("P2PHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format("P2PHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("P2PHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case HELLO:
@@ -202,7 +204,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     }
 
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
-        worldManager.getPeerDiscovery().addPeers(peersMessage.getPeers());
+        peerDiscovery.addPeers(peersMessage.getPeers());
     }
 
     private void sendGetPeers() {
@@ -211,7 +213,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private void sendPeers() {
 
-        Set<PeerInfo> peers = worldManager.getPeerDiscovery().getPeers();
+        Set<PeerInfo> peers = peerDiscovery.getPeers();
 
         if (lastPeersSent != null && peers.equals(lastPeersSent)) {
             logger.info("No new peers discovered don't answer for GetPeers");
@@ -271,8 +273,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
 
             //todo calculate the Offsets
-            worldManager.getPeerDiscovery().getPeers().add(confirmedPeer);
-            worldManager.getListener().onHandShakePeer(channel.getNode(), msg);
+            peerDiscovery.getPeers().add(confirmedPeer);
+            ethereumListener.onHandShakePeer(channel.getNode(), msg);
 
         }
     }

@@ -2,8 +2,6 @@ package org.ethereum.net.server;
 
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import org.ethereum.core.Blockchain;
-import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +24,6 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
     @Autowired
     ChannelManager channelManager;
-
-    @Autowired
-    WorldManager worldManager;
 
     private String remoteId;
 

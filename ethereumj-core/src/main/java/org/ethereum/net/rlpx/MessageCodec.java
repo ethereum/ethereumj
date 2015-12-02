@@ -6,7 +6,6 @@ import io.netty.handler.codec.MessageToMessageCodec;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
@@ -56,7 +55,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     private EthVersion ethVersion;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
 
     @Autowired
     SystemProperties config;
@@ -139,8 +138,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg.toString());
 
-        EthereumListener listener = worldManager.getListener();
-        listener.onRecvMessage(msg);
+        ethereumListener.onRecvMessage(msg);
 
         channel.getNodeStatistics().rlpxInMessages.add();
         return msg;
@@ -149,7 +147,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> out) throws Exception {
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
-        worldManager.getListener().trace(output);
+        ethereumListener.trace(output);
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("To: \t{} \tSend: \t{}", channel, msg);

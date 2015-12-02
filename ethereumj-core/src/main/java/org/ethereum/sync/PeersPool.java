@@ -1,7 +1,7 @@
 package org.ethereum.sync;
 
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Ethereum;
+import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
@@ -10,6 +10,7 @@ import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -55,7 +56,7 @@ public class PeersPool implements Iterable<Channel> {
     private final Map<String, Long> pendingConnections = new HashMap<>();
 
     @Autowired
-    private Ethereum ethereum;
+    private ApplicationContext ctx;
 
     @PostConstruct
     public void init() {
@@ -179,7 +180,7 @@ public class PeersPool implements Iterable<Channel> {
         }
     }
 
-    public void connect(Node node) {
+    public void connect(final Node node) {
         if (logger.isTraceEnabled()) logger.trace(
                 "Peer {}: initiate connection",
                 node.getHexIdShort()
@@ -193,7 +194,13 @@ public class PeersPool implements Iterable<Channel> {
         }
 
         synchronized (pendingConnections) {
-            ethereum.connect(node);
+            Executors.newSingleThreadExecutor().submit(new Runnable() {
+                @Override
+                public void run() {
+                    PeerClient peerClient = ctx.getBean(PeerClient.class);
+                    peerClient.connect(node.getHost(), node.getPort(), node.getHexId());
+                }
+            });
             pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
         }
     }
