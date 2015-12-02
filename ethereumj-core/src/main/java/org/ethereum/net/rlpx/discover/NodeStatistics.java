@@ -172,6 +172,10 @@ public class NodeStatistics {
         this.isPredefined = isPredefined;
     }
 
+    public boolean isPredefined() {
+        return isPredefined;
+    }
+
     public StatusMessage getEthLastInboundStatusMsg() {
         return ethLastInboundStatusMsg;
     }

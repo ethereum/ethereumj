@@ -115,7 +115,23 @@ public class ByteUtil {
         return stripLeadingZeroes(data);
     }
 
+    /**
+     * Converts int value into a byte array.
+     *
+     * @param val - int value to convert
+     * @return <code>byte[]</code> of length 4, representing the int value
+     */
     public static byte[] intToBytes(int val){
+        return ByteBuffer.allocate(4).putInt(val).array();
+    }
+
+    /**
+     * Converts a int value into a byte array.
+     *
+     * @param val - int value to convert
+     * @return value with leading byte that are zeroes striped
+     */
+    public static byte[] intToBytesNoLeadZeros(int val){
 
         if (val == 0) return EMPTY_BYTE_ARRAY;
 
