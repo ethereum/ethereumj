@@ -1,7 +1,7 @@
 package org.ethereum.sync;
 
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Ethereum;
+import org.ethereum.net.client.PeerClientManager;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
@@ -55,7 +55,7 @@ public class PeersPool implements Iterable<Channel> {
     private final Map<String, Long> pendingConnections = new HashMap<>();
 
     @Autowired
-    private Ethereum ethereum;
+    PeerClientManager peerClientManager;
 
     @PostConstruct
     public void init() {
@@ -193,7 +193,7 @@ public class PeersPool implements Iterable<Channel> {
         }
 
         synchronized (pendingConnections) {
-            ethereum.connect(node);
+            peerClientManager.connect(node);
             pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
         }
     }

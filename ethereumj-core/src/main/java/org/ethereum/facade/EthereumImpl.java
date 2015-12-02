@@ -9,6 +9,7 @@ import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.client.PeerClientManager;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
@@ -70,6 +71,9 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     SystemProperties config;
+
+    @Autowired
+    PeerClientManager peerClientManager;
 
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
@@ -166,14 +170,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public void connect(final String ip, final int port, final String remoteId) {
-        logger.info("Connecting to: {}:{}", ip, port);
-        final PeerClient peerClient = ctx.getBean(PeerClient.class);
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-                peerClient.connect(ip, port, remoteId);
-            }
-        });
+        peerClientManager.connect(ip, port, remoteId);
     }
 
     @Override
@@ -199,18 +196,18 @@ public class EthereumImpl implements Ethereum {
     @Override
     public PeerClient getDefaultPeer() {
 
-        PeerClient peer = worldManager.getActivePeer();
+        PeerClient peer = peerClientManager.getDefaultPeerClient();
         if (peer == null) {
 
             peer = new PeerClient();
-            worldManager.setActivePeer(peer);
+            peerClientManager.setDefaultPeerClient(peer);
         }
         return peer;
     }
 
     @Override
     public boolean isConnected() {
-        return worldManager.getActivePeer() != null;
+        return peerClientManager.getDefaultPeerClient() != null;
     }
 
     @Override

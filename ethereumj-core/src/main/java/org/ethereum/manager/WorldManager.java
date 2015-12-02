@@ -50,9 +50,6 @@ public class WorldManager {
     private Wallet wallet;
 
     @Autowired
-    private PeerClient activePeer;
-
-    @Autowired
     private PeerDiscovery peerDiscovery;
 
     @Autowired
@@ -133,14 +130,6 @@ public class WorldManager {
 
     public Wallet getWallet() {
         return wallet;
-    }
-
-    public void setActivePeer(PeerClient peer) {
-        this.activePeer = peer;
-    }
-
-    public PeerClient getActivePeer() {
-        return activePeer;
     }
 
     public BlockStore getBlockStore() {
