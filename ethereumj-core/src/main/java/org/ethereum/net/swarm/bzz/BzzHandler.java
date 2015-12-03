@@ -2,7 +2,7 @@ package org.ethereum.net.swarm.bzz;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.swarm.NetStore;
 import org.ethereum.util.Functional;
@@ -30,7 +30,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
     BzzProtocol bzzProtocol;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
 
     @Autowired
     NetStore netStore;
@@ -50,7 +50,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
         if (BzzMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("BzzHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format("BzzHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("BzzHandler invoke: [%s]", msg.getCommand()));
 
         if (bzzProtocol != null) {
             bzzProtocol.accept(msg);
@@ -77,7 +77,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
 
     public void activate() {
         logger.info("BZZ protocol activated");
-        worldManager.getListener().trace("BZZ protocol activated");
+        ethereumListener.trace("BZZ protocol activated");
         createBzzProtocol();
         this.active = true;
     }
