@@ -3,11 +3,12 @@ package org.ethereum.mine;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Random;
 
 import static java.lang.System.arraycopy;
 import static java.math.BigInteger.valueOf;
-import static java.util.Arrays.copyOfRange;
 import static org.ethereum.crypto.HashUtil.sha512;
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.*;
@@ -23,6 +24,16 @@ public class Ethash {
         return params;
     }
 
+    // Little-Endian !
+    static long getWord(byte[] arr, int wordOff) {
+        return ByteBuffer.wrap(arr, wordOff * 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt() & 0xFFFFFFFFL;
+    }
+    static void setWord(byte[] arr, int wordOff, long val) {
+        ByteBuffer bb = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt((int) val);
+        bb.rewind();
+        bb.get(arr, wordOff * 4, 4);
+    }
+
     public byte[][] makeCache(long cacheSize, byte[] seed) {
         int n = (int) (cacheSize / params.HASH_BYTES);
         byte[][] o = new byte[n][];
@@ -33,7 +44,7 @@ public class Ethash {
 
         for (int _ = 0; _ < params.CACHE_ROUNDS; _++) {
             for (int i = 0; i < n; i++) {
-                int v = (int) (byteArrayToLong(copyOfRange(o[i], 0, 4)) % n);
+                int v = (int) (getWord(o[i], 0) % n);
                 o[i] = sha512(xor(o[(i - 1 + n) % n], o[v]));
             }
         }
@@ -50,10 +61,9 @@ public class Ethash {
 
         byte[] ret = new byte[b1.length];
         for (int i = 0; i < b1.length / 4; i++) {
-            long i1 = byteArrayToLong(copyOfRange(b1, i * 4, (i + 1) * 4));
-            long i2 = byteArrayToLong(copyOfRange(b2, i * 4, (i + 1) * 4));
-            byte[] bytes = longToBytes(fnv(i1, i2));
-            arraycopy(bytes, 4, ret, i * 4, 4);
+            long i1 = getWord(b1, i);
+            long i2 = getWord(b2, i);
+            setWord(ret, i, fnv(i1, i2));
         }
         return ret;
     }
@@ -63,12 +73,10 @@ public class Ethash {
         int r = params.HASH_BYTES / params.WORD_BYTES;
         byte[] mix = cache[i % n].clone();
 
-        byte[] xor = xor(copyOfRange(mix, 0, 4), intToBytes(i));
-        arraycopy(xor, 0, mix, 0, 4);
+        setWord(mix, 0, i ^ getWord(mix, 0));
         mix = sha512(mix);
         for (int j = 0; j < params.DATASET_PARENTS; j++) {
-            int idx = 4 * (j % r);
-            long cacheIdx = fnv(i ^ j, byteArrayToLong(copyOfRange(mix, idx, idx + 4)));
+            long cacheIdx = fnv(i ^ j, getWord(mix, j % r));
             mix = fnv(mix, cache[(int) (cacheIdx % n)]);
         }
         return sha512(mix);
@@ -96,13 +104,12 @@ public class Ethash {
             arraycopy(s, 0, mix, i * s.length, s.length);
         }
 
+        int numFullPages = (int) (fullSize / params.MIX_BYTES);
         for (int i = 0; i < params.ACCESSES; i++) {
-            long p = fnv(i ^ byteArrayToLong(copyOfRange(s, 0 ,4)),
-                        byteArrayToLong(copyOfRange(mix, i % w , i % w + 4)))
-                    % ((n / mixhashes) * mixhashes);
+            long p = fnv(i ^ getWord(s, 0), getWord(mix, i % w)) % numFullPages;
             byte[] newData = new byte[params.MIX_BYTES];
             for (int j = 0; j < mixhashes; j++) {
-                byte[] lookup1 = lookup.lookup((int) (p + j));
+                byte[] lookup1 = lookup.lookup((int) (p * mixhashes + j));
                 arraycopy(lookup1, 0, newData, j * lookup1.length, lookup1.length);
             }
             mix = fnv(mix, newData);
@@ -110,13 +117,10 @@ public class Ethash {
 
         byte[] cmix = new byte[mix.length / 4];
         for (int i = 0; i < mix.length / 4; i += 4 /* ? */) {
-            long fnv1 = fnv(byteArrayToLong(copyOfRange(mix, i * 4, (i + 1) * 4)),
-                            byteArrayToLong(copyOfRange(mix, (i + 1) * 4, (i + 2) * 4)));
-            long fnv2 = fnv(fnv1,
-                    byteArrayToLong(copyOfRange(mix, (i + 2) * 4, (i + 3) * 4)));
-            long fnv3 = fnv(fnv2,
-                    byteArrayToLong(copyOfRange(mix, (i + 3) * 4, (i + 4) * 4)));
-            arraycopy(longToBytes(fnv3), 4, cmix, i, 4);
+            long fnv1 = fnv(getWord(mix, i), getWord(mix, i + 1));
+            long fnv2 = fnv(fnv1, getWord(mix, i + 2));
+            long fnv3 = fnv(fnv2, getWord(mix, i + 3));
+            setWord(cmix, i / 4, fnv3);
         }
 
         return Pair.of(cmix, sha3(merge(s, cmix)));
