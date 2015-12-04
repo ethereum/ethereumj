@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import javax.annotation.PostConstruct;
 
@@ -42,9 +39,14 @@ public class ChannelManager {
         mainWorker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                processNewPeers();
+                try {
+                    processNewPeers();
+                } catch (Throwable t) {
+                    logger.error("Error", t);
+                }
             }
         }, 0, 1, TimeUnit.SECONDS);
+
     }
 
     private void processNewPeers() {
