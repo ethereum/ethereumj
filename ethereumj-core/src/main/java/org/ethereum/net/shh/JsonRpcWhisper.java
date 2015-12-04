@@ -44,7 +44,7 @@ public class JsonRpcWhisper extends Whisper {
                 try {
                     pollFilters();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Unhandled exception", e);
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);

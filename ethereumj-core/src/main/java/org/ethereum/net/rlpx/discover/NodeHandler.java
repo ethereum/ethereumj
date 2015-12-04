@@ -232,9 +232,13 @@ public class NodeHandler {
 
         pongTimer.schedule(new Runnable() {
             public void run() {
-                if (waitForPong) {
-                    waitForPong = false;
-                    handleTimedOut();
+                try {
+                    if (waitForPong) {
+                        waitForPong = false;
+                        handleTimedOut();
+                    }
+                } catch (Throwable t) {
+                    logger.error("Unhandled exception", t);
                 }
             }
         }, PingTimeout, TimeUnit.MILLISECONDS);

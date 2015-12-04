@@ -309,7 +309,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         pingTask = pingTimer.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                msgQueue.sendMessage(PING_MESSAGE);
+                try {
+                    msgQueue.sendMessage(PING_MESSAGE);
+                } catch (Throwable t) {
+                    logger.error("Unhandled exception", t);
+                }
             }
         }, 2, config.getProperty("peer.p2p.pingInterval", 5), TimeUnit.SECONDS);
     }

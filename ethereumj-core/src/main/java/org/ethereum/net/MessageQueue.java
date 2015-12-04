@@ -62,7 +62,11 @@ public class MessageQueue {
         this.ctx = ctx;
         timerTask = timer.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                nudgeQueue();
+                try {
+                    nudgeQueue();
+                } catch (Throwable t) {
+                    logger.error("Unhandled exception", t);
+                }
             }
         }, 10, 10, TimeUnit.MILLISECONDS);
     }

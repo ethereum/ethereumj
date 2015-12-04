@@ -63,8 +63,12 @@ public class PeersPool implements Iterable<Channel> {
                 new Runnable() {
                     @Override
                     public void run() {
-                        releaseBans();
-                        processConnections();
+                        try {
+                            releaseBans();
+                            processConnections();
+                        } catch (Throwable t) {
+                            logger.error("Unhandled exception", t);
+                        }
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
         );
