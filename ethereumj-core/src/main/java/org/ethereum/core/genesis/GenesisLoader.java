@@ -3,7 +3,9 @@ package org.ethereum.core.genesis;
 import com.google.common.io.ByteStreams;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.jsontestsuite.Utils;
@@ -25,12 +27,14 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class GenesisLoader {
 
-    public static Genesis loadGenesis()  {
+    public static Block loadGenesis() {
+        return loadGenesis(CONFIG);
+    }
 
-
+    public static Genesis loadGenesis(SystemProperties config)  {
         try {
 
-            String genesisFile = CONFIG.genesisInfo();
+            String genesisFile = config.genesisInfo();
 
             InputStream is = ClassLoader.getSystemResourceAsStream("genesis/" + genesisFile);
             String json = new String(ByteStreams.toByteArray(is));
@@ -52,6 +56,7 @@ public class GenesisLoader {
             return genesis;
         } catch (Throwable e) {
             System.err.println("Genesis block configuration is corrupted or not found ./resources/genesis/...");
+            e.printStackTrace();
             System.exit(-1);
         }
 
@@ -91,7 +96,7 @@ public class GenesisLoader {
             BigInteger balance = new BigInteger(alloc.get(key).getBalance());
             AccountState acctState = new AccountState(ZERO, balance);
 
-            premine.put(wrap(Hex.decode(key)) , acctState);
+            premine.put(wrap(Hex.decode(key)), acctState);
         }
 
         return premine;
@@ -107,4 +112,5 @@ public class GenesisLoader {
 
         return state.getRootHash();
     }
+
 }

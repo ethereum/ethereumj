@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
@@ -54,8 +55,12 @@ public class Genesis extends Block {
     }
 
     public static Block getInstance() {
+        return getInstance(SystemProperties.CONFIG);
+    }
+
+    public static Block getInstance(SystemProperties config) {
         if (instance == null) {
-            instance = GenesisLoader.loadGenesis();
+            instance = GenesisLoader.loadGenesis(config);
         }
         return instance;
     }

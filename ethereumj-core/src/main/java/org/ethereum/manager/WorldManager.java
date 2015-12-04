@@ -160,7 +160,7 @@ public class WorldManager {
         if (bestBlock == null) {
             logger.info("DB is empty - adding Genesis");
 
-            Genesis genesis = (Genesis)Genesis.getInstance();
+            Genesis genesis = (Genesis)Genesis.getInstance(config);
             for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
                 repository.createAccount(key.getData());
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
