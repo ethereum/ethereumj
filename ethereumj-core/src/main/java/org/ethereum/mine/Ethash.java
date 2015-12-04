@@ -7,6 +7,7 @@ import org.ethereum.util.FastByteComparisons;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeros;
 
 /**
  * More high level validator/miner class which keeps a cache for the last requested block epoch
@@ -86,20 +87,32 @@ public class Ethash {
 
     /**
      *  Mines the nonce for the specified BlockHeader with difficulty BlockHeader.getDifficulty()
+     *  When mined the BlockHeader 'nonce' and 'mixHash' fields are updated
      *  Uses the full dataset i.e. it faster but takes > 1Gb of memory
+     *  @return mined nonce
      */
     public long mine(BlockHeader header) {
-        return getEthashAlgo().mine(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
+        long nonce = getEthashAlgo().mine(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
                 ByteUtil.byteArrayToLong(header.getDifficulty()));
+        Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
+        header.setNonce(intToBytesNoLeadZeros((int) nonce));
+        header.setMixHash(pair.getLeft());
+        return nonce;
     }
 
     /**
      *  Mines the nonce for the specified BlockHeader with difficulty BlockHeader.getDifficulty()
+     *  When mined the BlockHeader 'nonce' and 'mixHash' fields are updated
      *  Uses the light cache i.e. it slower but takes only ~16Mb of memory
+     *  @return mined nonce
      */
     public long mineLight(BlockHeader header) {
-        return getEthashAlgo().mineLight(getFullSize(), getCacheLight(), sha3(header.getEncodedWithoutNonce()),
+        long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(), sha3(header.getEncodedWithoutNonce()),
                 ByteUtil.byteArrayToLong(header.getDifficulty()));
+        Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
+        header.setNonce(intToBytesNoLeadZeros((int) nonce));
+        header.setMixHash(pair.getLeft());
+        return nonce;
     }
 
     /**

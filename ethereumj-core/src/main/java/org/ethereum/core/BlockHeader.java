@@ -230,6 +230,10 @@ public class BlockHeader {
         return mixHash;
     }
 
+    public void setMixHash(byte[] mixHash) {
+        this.mixHash = mixHash;
+    }
+
     public byte[] getExtraData() {
         return extraData;
     }
