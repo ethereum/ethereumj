@@ -471,7 +471,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public BigInteger getNonce(byte[] addr) {
-        return getAccountStateOrCreateNew(addr).getNonce();
+        AccountState accountState = getAccountState(addr);
+        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
     }
 
     @Nonnull
