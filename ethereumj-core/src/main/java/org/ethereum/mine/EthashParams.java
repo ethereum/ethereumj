@@ -5,40 +5,40 @@ package org.ethereum.mine;
  */
 public class EthashParams {
     // bytes in word
-    public final int WORD_BYTES = 4;
+    private final int WORD_BYTES = 4;
 
     // bytes in dataset at genesis
-    public final long DATASET_BYTES_INIT = 1L << 30;
+    private final long DATASET_BYTES_INIT = 1L << 30;
 
     // dataset growth per epoch
-    public final long DATASET_BYTES_GROWTH = 1L << 23;
+    private final long DATASET_BYTES_GROWTH = 1L << 23;
 
     //  bytes in dataset at genesis
-    public final long CACHE_BYTES_INIT = 1L << 24;
+    private final long CACHE_BYTES_INIT = 1L << 24;
 
     // cache growth per epoch
-    public final long CACHE_BYTES_GROWTH = 1L << 17;
+    private final long CACHE_BYTES_GROWTH = 1L << 17;
 
     //  Size of the DAG relative to the cache
-    public final long CACHE_MULTIPLIER = 1024;
+    private final long CACHE_MULTIPLIER = 1024;
 
     //  blocks per epoch
-    public final long EPOCH_LENGTH = 30000;
+    private final long EPOCH_LENGTH = 30000;
 
     // width of mix
-    public final int MIX_BYTES = 128;
+    private final int MIX_BYTES = 128;
 
     //  hash length in bytes
-    public final int HASH_BYTES = 64;
+    private final int HASH_BYTES = 64;
 
     // number of parents of each dataset element
-    public final long DATASET_PARENTS = 256;
+    private final long DATASET_PARENTS = 256;
 
     // number of rounds in cache production
-    public final long CACHE_ROUNDS = 3;
+    private final long CACHE_ROUNDS = 3;
 
     //  number of accesses in hashimoto loop
-    public final long ACCESSES = 64;
+    private final long ACCESSES = 64;
 
     /**
      * The parameters for Ethash's cache and dataset depend on the block number.
@@ -72,12 +72,52 @@ public class EthashParams {
         return true;
     }
 
-    public static void main(String[] args) throws Exception {
-        for (int i = 0; i < 1_000_000; i += 30000) {
-            System.out.println(new EthashParams().getCacheSize(i));
-            System.out.println(new EthashParams().getFullSize(i));
-            System.out.println();
-        }
+    public int getWORD_BYTES() {
+        return WORD_BYTES;
+    }
+
+    public long getDATASET_BYTES_INIT() {
+        return DATASET_BYTES_INIT;
+    }
+
+    public long getDATASET_BYTES_GROWTH() {
+        return DATASET_BYTES_GROWTH;
+    }
+
+    public long getCACHE_BYTES_INIT() {
+        return CACHE_BYTES_INIT;
+    }
+
+    public long getCACHE_BYTES_GROWTH() {
+        return CACHE_BYTES_GROWTH;
+    }
+
+    public long getCACHE_MULTIPLIER() {
+        return CACHE_MULTIPLIER;
+    }
+
+    public long getEPOCH_LENGTH() {
+        return EPOCH_LENGTH;
+    }
+
+    public int getMIX_BYTES() {
+        return MIX_BYTES;
+    }
+
+    public int getHASH_BYTES() {
+        return HASH_BYTES;
+    }
+
+    public long getDATASET_PARENTS() {
+        return DATASET_PARENTS;
+    }
+
+    public long getCACHE_ROUNDS() {
+        return CACHE_ROUNDS;
+    }
+
+    public long getACCESSES() {
+        return ACCESSES;
     }
 }
 

@@ -1,166 +1,114 @@
 package org.ethereum.mine;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Random;
-
-import static java.lang.System.arraycopy;
-import static java.math.BigInteger.valueOf;
-import static org.ethereum.crypto.HashUtil.sha512;
-import static org.ethereum.crypto.SHA3Helper.sha3;
-import static org.ethereum.util.ByteUtil.*;
-import static org.spongycastle.util.Arrays.reverse;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
 
 /**
- * Created by Anton Nashatyrev on 27.11.2015.
+ * More high level validator/miner class which keeps a cache for the last requested block epoch
+ *
+ * Created by Anton Nashatyrev on 04.12.2015.
  */
 public class Ethash {
-    EthashParams params = new EthashParams();
+    private static EthashParams ethashParams = new EthashParams();
 
-    public EthashParams getParams() {
-        return params;
-    }
+    private static Ethash cachedInstance = null;
+    private static long cachedBlockEpoch = 0;
 
-    // Little-Endian !
-    static long getWord(byte[] arr, int wordOff) {
-        return ByteBuffer.wrap(arr, wordOff * 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt() & 0xFFFFFFFFL;
-    }
-    static void setWord(byte[] arr, int wordOff, long val) {
-        ByteBuffer bb = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt((int) val);
-        bb.rewind();
-        bb.get(arr, wordOff * 4, 4);
-    }
-
-    public byte[][] makeCache(long cacheSize, byte[] seed) {
-        int n = (int) (cacheSize / params.HASH_BYTES);
-        byte[][] o = new byte[n][];
-        o[0] = sha512(seed);
-        for (int i = 1; i < n; i++) {
-            o[i] = sha512(o[i - 1]);
+    /**
+     * Returns instance for the specified block number either from cache or calculates a new one
+     */
+    public static Ethash getForBlock(long blockNumber) {
+        long epoch = blockNumber / ethashParams.getEPOCH_LENGTH();
+        if (cachedInstance == null || epoch != cachedBlockEpoch) {
+            cachedInstance = new Ethash(blockNumber);
+            cachedBlockEpoch = epoch;
         }
+        return cachedInstance;
+    }
 
-        for (int _ = 0; _ < params.CACHE_ROUNDS; _++) {
-            for (int i = 0; i < n; i++) {
-                int v = (int) (getWord(o[i], 0) % n);
-                o[i] = sha512(xor(o[(i - 1 + n) % n], o[v]));
-            }
+    private EthashAlgo ethashAlgo = new EthashAlgo(ethashParams);
+
+    private long blockNumber;
+    private byte[][] cacheLight = null;
+    private byte[][] fullData = null;
+
+    public Ethash(long blockNumber) {
+        this.blockNumber = blockNumber;
+    }
+
+    private byte[][] getCacheLight() {
+        if (cacheLight == null) {
+            cacheLight = getEthashAlgo().makeCache(getEthashAlgo().getParams().getCacheSize(blockNumber),
+                    getEthashAlgo().getSeedHash(blockNumber));
         }
-        return o;
+        return cacheLight;
     }
 
-    private static final long FNV_PRIME = 0x01000193;
-    long fnv(long v1, long v2) {
-        return ((v1 * FNV_PRIME) ^ v2) % (1L << 32); // TODO change to &
-    }
-
-    byte[] fnv(byte[] b1, byte[] b2) {
-        if (b1.length != b2.length || b1.length % 4 != 0) throw new RuntimeException();
-
-        byte[] ret = new byte[b1.length];
-        for (int i = 0; i < b1.length / 4; i++) {
-            long i1 = getWord(b1, i);
-            long i2 = getWord(b2, i);
-            setWord(ret, i, fnv(i1, i2));
+    private byte[][] getFullDataset() {
+        if (fullData == null) {
+            fullData = getEthashAlgo().calcDataset(getFullSize(), getCacheLight());
         }
-        return ret;
+        return fullData;
     }
 
-    public byte[] calcDatasetItem(byte[][] cache, int i) {
-        int n = cache.length;
-        int r = params.HASH_BYTES / params.WORD_BYTES;
-        byte[] mix = cache[i % n].clone();
-
-        setWord(mix, 0, i ^ getWord(mix, 0));
-        mix = sha512(mix);
-        for (int j = 0; j < params.DATASET_PARENTS; j++) {
-            long cacheIdx = fnv(i ^ j, getWord(mix, j % r));
-            mix = fnv(mix, cache[(int) (cacheIdx % n)]);
-        }
-        return sha512(mix);
+    private long getFullSize() {
+        return getEthashAlgo().getParams().getFullSize(blockNumber);
     }
 
-    public byte[][] calcDataset(long fullSize, byte[][] cache) {
-        byte[][] ret = new byte[(int) (fullSize / params.HASH_BYTES)][];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = calcDatasetItem(cache, i);
-        }
-        return ret;
+    private EthashAlgo getEthashAlgo() {
+        return ethashAlgo;
     }
 
-    interface DatasetLookup {
-        byte[] lookup(int idx);
+    /**
+     *  See {@link EthashAlgo#hashimotoLight(long, byte[][], byte[], byte[])}
+     */
+    public Pair<byte[], byte[]> hashimotoLight(BlockHeader header, long nonce) {
+        return hashimotoLight(header, intToBytes((int) nonce));
     }
 
-    public Pair<byte[], byte[]> hashimoto(byte[] blockHeaderTruncHash, byte[] nonce, long fullSize, DatasetLookup lookup) {
-        int n = (int) (fullSize / params.HASH_BYTES);
-        int w = params.MIX_BYTES / params.WORD_BYTES;
-        int mixhashes = params.MIX_BYTES / params.HASH_BYTES;
-        byte[] s = sha512(merge(blockHeaderTruncHash, reverse(nonce)));
-        byte[] mix = new byte[params.MIX_BYTES];
-        for (int i = 0; i < mixhashes; i++) {
-            arraycopy(s, 0, mix, i * s.length, s.length);
-        }
-
-        int numFullPages = (int) (fullSize / params.MIX_BYTES);
-        for (int i = 0; i < params.ACCESSES; i++) {
-            long p = fnv(i ^ getWord(s, 0), getWord(mix, i % w)) % numFullPages;
-            byte[] newData = new byte[params.MIX_BYTES];
-            for (int j = 0; j < mixhashes; j++) {
-                byte[] lookup1 = lookup.lookup((int) (p * mixhashes + j));
-                arraycopy(lookup1, 0, newData, j * lookup1.length, lookup1.length);
-            }
-            mix = fnv(mix, newData);
-        }
-
-        byte[] cmix = new byte[mix.length / 4];
-        for (int i = 0; i < mix.length / 4; i += 4 /* ? */) {
-            long fnv1 = fnv(getWord(mix, i), getWord(mix, i + 1));
-            long fnv2 = fnv(fnv1, getWord(mix, i + 2));
-            long fnv3 = fnv(fnv2, getWord(mix, i + 3));
-            setWord(cmix, i / 4, fnv3);
-        }
-
-        return Pair.of(cmix, sha3(merge(s, cmix)));
+    private  Pair<byte[], byte[]> hashimotoLight(BlockHeader header, byte[] nonce) {
+        return getEthashAlgo().hashimotoLight(getFullSize(), getCacheLight(),
+                sha3(header.getEncodedWithoutNonce()), nonce);
     }
 
-    public Pair<byte[], byte[]> hashimotoLight(long fullSize, final byte[][] cache, byte[] blockHeaderTruncHash, byte[]  nonce) {
-        return hashimoto(blockHeaderTruncHash, nonce, fullSize, new DatasetLookup() {
-            @Override
-            public byte[] lookup(int idx) {
-                return calcDatasetItem(cache, idx);
-            }
-        });
+    /**
+     *  See {@link EthashAlgo#hashimotoFull(long, byte[][], byte[], byte[])}
+     */
+    public Pair<byte[], byte[]> hashimotoFull(BlockHeader header, long nonce) {
+        return getEthashAlgo().hashimotoFull(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
+                intToBytes((int) nonce));
     }
 
-    public Pair<byte[], byte[]> hashimotoFull(long fullSize, final byte[][] dataset, byte[] blockHeaderTruncHash, byte[]  nonce) {
-        return hashimoto(blockHeaderTruncHash, nonce, fullSize, new DatasetLookup() {
-            @Override
-            public byte[] lookup(int idx) {
-                return dataset[idx];
-            }
-        });
+    /**
+     *  Mines the nonce for the specified BlockHeader with difficulty BlockHeader.getDifficulty()
+     *  Uses the full dataset i.e. it faster but takes > 1Gb of memory
+     */
+    public long mine(BlockHeader header) {
+        return getEthashAlgo().mine(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
+                ByteUtil.byteArrayToLong(header.getDifficulty()));
     }
 
-    public long mine(long fullSize, byte[][] dataset, byte[] blockHeaderTruncHash, long difficulty) {
-        BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
-        long nonce = new Random().nextLong();
-        while(true) {
-            nonce++;
-            Pair<byte[], byte[]> pair = hashimotoFull(fullSize, dataset, blockHeaderTruncHash, longToBytes(nonce));
-            BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
-        }
-        return nonce;
+    /**
+     *  Mines the nonce for the specified BlockHeader with difficulty BlockHeader.getDifficulty()
+     *  Uses the light cache i.e. it slower but takes only ~16Mb of memory
+     */
+    public long mineLight(BlockHeader header) {
+        return getEthashAlgo().mineLight(getFullSize(), getCacheLight(), sha3(header.getEncodedWithoutNonce()),
+                ByteUtil.byteArrayToLong(header.getDifficulty()));
     }
 
-    public byte[] getSeedHash(long blockNumber) {
-        byte[] ret = new byte[32];
-        for (int i = 0; i < blockNumber / params.EPOCH_LENGTH; i++) {
-            ret = sha3(ret);
-        }
-        return ret;
+    /**
+     *  Validates the BlockHeader against its getDifficulty() and getNonce()
+     */
+    public boolean validate(BlockHeader header) {
+        byte[] boundary = header.getPowBoundary();
+        byte[] hash = hashimotoLight(header, header.getNonce()).getRight();
+
+        return FastByteComparisons.compareTo(hash, 0, 32, boundary, 0, 32) < 0;
     }
 }

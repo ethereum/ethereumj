@@ -3,29 +3,27 @@ package org.ethereum.miner;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.Block;
 import org.ethereum.mine.Ethash;
+import org.ethereum.mine.EthashAlgo;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
-
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.ByteUtil.longToBytes;
-import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.*;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Created by Anton Nashatyrev on 02.12.2015.
  */
-public class ValidateTest {
+public class EthashTest {
     @Test // check exact values
     public void test_0() {
         byte[] rlp = Hex.decode("f9021af90215a0809870664d9a43cf1827aa515de6374e2fad1bf64290a9f261dd49c525d6a0efa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794f927a40c8b7f6e07c5af7fa2155b4864a4112b13a010c8ec4f62ecea600c616443bcf527d97e5b1c5bb4a9769c496d1bf32636c95da056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000086015a1c28ae5e82bf958302472c808455c4e47b99476574682f76312e302e312f6c696e75782f676f312e342e32a0788ac534cb2f6a226a01535e29b11a96602d447aed972463b5cbcc7dd5d633f288e2ff1b6435006517c0c0");
         Block b = new Block(rlp);
 
-        Ethash ethash = new Ethash();
+        EthashAlgo ethash = new EthashAlgo();
         long cacheSize = ethash.getParams().getCacheSize(b.getNumber());
         long fullSize = ethash.getParams().getFullSize(b.getNumber());
         byte[] seedHash = ethash.getSeedHash(b.getNumber());
@@ -33,12 +31,16 @@ public class ValidateTest {
         byte[] blockTrunkHash = sha3(b.getHeader().getEncodedWithoutNonce());
 
         long nonce = ByteUtil.byteArrayToLong(b.getNonce());
+        long timeSum = 0;
         for (int i = 0; i < 100; i++) {
             long s = System.currentTimeMillis();
             Pair<byte[], byte[]> pair = ethash.hashimotoLight(fullSize, cache, blockTrunkHash, longToBytes(nonce));
+            timeSum += System.currentTimeMillis() - s;
             System.out.println("Time: " + (System.currentTimeMillis() - s));
             nonce++;
         }
+
+        Assert.assertTrue("hashimotoLigt took > 500ms in avrg", timeSum / 100 < 500);
 
         Pair<byte[], byte[]> pair = ethash.hashimotoLight(fullSize, cache, blockTrunkHash, b.getNonce());
 
@@ -55,7 +57,7 @@ public class ValidateTest {
 
     @Test
     public void cacheTest() {
-        Ethash ethash = new Ethash();
+        EthashAlgo ethash = new EthashAlgo();
         byte[] seed = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~".getBytes();
         long cacheSize = 1024;
         long fullSize = 1024 * 32;
@@ -78,4 +80,41 @@ public class ValidateTest {
         System.out.println(Hex.toHexString(pair.getRight()));
     }
 
+    @Test
+    public void realBlockValidateTest() {
+        byte[] rlp = Hex.decode("f9021af90215a0809870664d9a43cf1827aa515de6374e2fad1bf64290a9f261dd49c525d6a0efa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794f927a40c8b7f6e07c5af7fa2155b4864a4112b13a010c8ec4f62ecea600c616443bcf527d97e5b1c5bb4a9769c496d1bf32636c95da056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000086015a1c28ae5e82bf958302472c808455c4e47b99476574682f76312e302e312f6c696e75782f676f312e342e32a0788ac534cb2f6a226a01535e29b11a96602d447aed972463b5cbcc7dd5d633f288e2ff1b6435006517c0c0");
+
+        Block b = new Block(rlp);
+
+        EthashAlgo ethash = new EthashAlgo();
+        long cacheSize = ethash.getParams().getCacheSize(b.getNumber());
+        long fullSize = ethash.getParams().getFullSize(b.getNumber());
+        byte[] seedHash = ethash.getSeedHash(b.getNumber());
+        long s = System.currentTimeMillis();
+        byte[][] cache = ethash.makeCache(cacheSize, seedHash);
+        System.out.println("Cache generation took: " + (System.currentTimeMillis() - s) + " ms");
+        byte[] blockTruncHash = sha3(b.getHeader().getEncodedWithoutNonce());
+
+        Pair<byte[], byte[]> pair = ethash.hashimotoLight(fullSize, cache, blockTruncHash, b.getNonce());
+
+        System.out.println(Hex.toHexString(pair.getLeft()));
+        System.out.println(Hex.toHexString(pair.getRight()));
+
+        byte[] boundary = b.getHeader().getPowBoundary();
+
+        Assert.assertTrue(FastByteComparisons.compareTo(pair.getRight(), 0, 32, boundary, 0, 32) < 0);
+    }
+
+
+    @Test
+    public void blockMineTest() {
+       byte[] rlp = Hex.decode("f9021af90215a0809870664d9a43cf1827aa515de6374e2fad1bf64290a9f261dd49c525d6a0efa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794f927a40c8b7f6e07c5af7fa2155b4864a4112b13a010c8ec4f62ecea600c616443bcf527d97e5b1c5bb4a9769c496d1bf32636c95da056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008600000000010082bf958302472c808455c4e47b99476574682f76312e302e312f6c696e75782f676f312e342e32a0788ac534cb2f6a226a01535e29b11a96602d447aed972463b5cbcc7dd5d633f288e2ff1b6435006517c0c0");
+        Block b = new Block(rlp);
+
+        long nonce = Ethash.getForBlock(b.getNumber()).mineLight(b.getHeader());
+        b.setNonce(intToBytes((int) nonce));
+
+        Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+
+    }
 }
