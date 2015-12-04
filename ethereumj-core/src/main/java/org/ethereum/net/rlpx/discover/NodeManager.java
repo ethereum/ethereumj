@@ -102,7 +102,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }, 1 * 1000, 60 * 1000);
 
-        for (Node node : SystemProperties.CONFIG.peerActive()) {
+        for (Node node : config.peerActive()) {
             getNodeHandler(node).getNodeStatistics().setPredefined(true);
         }
     }
