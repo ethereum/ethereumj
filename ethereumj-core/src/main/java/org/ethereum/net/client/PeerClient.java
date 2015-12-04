@@ -2,8 +2,6 @@ package org.ethereum.net.client;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.server.Channel;
-import org.ethereum.net.server.ChannelInitializerListener;
 import org.ethereum.net.server.EthereumChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
@@ -34,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Component
 @Scope("prototype")
-public class PeerClient implements ChannelInitializerListener {
+public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
@@ -46,8 +44,6 @@ public class PeerClient implements ChannelInitializerListener {
 
     @Autowired
     EthereumListener ethereumListener;
-
-    PeerClientListener peerClientListener = null;
 
     private static EventLoopGroup workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
         AtomicInteger cnt = new AtomicInteger(0);
@@ -67,7 +63,6 @@ public class PeerClient implements ChannelInitializerListener {
 
         EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
         ethereumChannelInitializer.setPeerDiscoveryMode(discoveryMode);
-        ethereumChannelInitializer.setChannelListener(this);
 
         try {
             Bootstrap b = new Bootstrap();
@@ -99,24 +94,6 @@ public class PeerClient implements ChannelInitializerListener {
                     logger.error("Exception:", e);
                 }
             }
-        }
-    }
-
-    public void setPeerClientListener(PeerClientListener peerClientListener) {
-        this.peerClientListener = peerClientListener;
-    }
-
-    @Override
-    public void onChannelInit(Channel channel) {
-        if (peerClientListener != null) {
-            peerClientListener.onChannelInit(this, channel);
-        }
-    }
-
-    @Override
-    public void onChannelClose(Channel channel) {
-        if (peerClientListener != null) {
-            peerClientListener.onChannelClose(this, channel);
         }
     }
 }

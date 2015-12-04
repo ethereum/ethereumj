@@ -22,11 +22,12 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     @Autowired
     private ApplicationContext ctx;
 
+    @Autowired
+    ChannelManager channelManager;
+
     private String remoteId;
 
     private boolean peerDiscoveryMode = false;
-
-    protected ChannelInitializerListener channelListener = null;
 
     public EthereumChannelInitializer(String remoteId) {
         this.remoteId = remoteId;
@@ -41,7 +42,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             channel.init(ch.pipeline(), remoteId, peerDiscoveryMode);
 
             if(!peerDiscoveryMode) {
-                onChannelInit(channel);
+                channelManager.add(channel);
             }
 
             // limit the size of receiving buffer to 1024
@@ -54,7 +55,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (!peerDiscoveryMode) {
-                        onChannelClose(channel);
+                        channelManager.notifyDisconnect(channel);
                     }
                 }
             });
@@ -66,21 +67,5 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
         this.peerDiscoveryMode = peerDiscoveryMode;
-    }
-
-    public void setChannelListener(ChannelInitializerListener channelListener) {
-        this.channelListener = channelListener;
-    }
-
-    protected void onChannelClose(Channel channel) {
-        if (channelListener != null) {
-            channelListener.onChannelClose(channel);
-        }
-    }
-
-    protected void onChannelInit(Channel channel) {
-        if (channelListener != null) {
-            channelListener.onChannelInit(channel);
-        }
     }
 }

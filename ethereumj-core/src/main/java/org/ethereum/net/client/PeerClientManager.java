@@ -40,21 +40,6 @@ public class PeerClientManager {
     public void connect(String ip, int port, String remoteId) {
         logger.info("Connecting to: {}:{}", ip, port);
         final PeerClient peerClient = ctx.getBean(PeerClient.class);
-        peerClient.setPeerClientListener(new PeerClientListener() {
-            @Override
-            public void onChannelInit(PeerClient peerClient, Channel channel) {
-                channelManager.add(channel);
-            }
-
-            @Override
-            public void onChannelClose(PeerClient peerClient, Channel channel) {
-                channelManager.notifyDisconnect(channel);
-            }
-
-            @Override
-            public void onConnectException(PeerClient peerClient) {
-            }
-        });
         Executors.newSingleThreadExecutor().submit(new ConnectTask(peerClient, ip, port, remoteId));
     }
 

@@ -34,6 +34,8 @@ public class ChannelManager {
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
 
+    private List<ChannelListener> listeners = new CopyOnWriteArrayList<>();
+
     @Autowired
     SyncManager syncManager;
 
@@ -87,6 +89,7 @@ public class ChannelManager {
 
     public void add(Channel peer) {
         newPeers.add(peer);
+        notifyInit(peer);
     }
 
     public void notifyDisconnect(Channel channel) {
@@ -95,6 +98,10 @@ public class ChannelManager {
         syncManager.onDisconnect(channel);
         activePeers.values().remove(channel);
         newPeers.remove(channel);
+
+        for (ChannelListener listener : listeners) {
+            listener.onChannelClose(channel);
+        }
     }
 
     public void onSyncDone() {
@@ -102,6 +109,20 @@ public class ChannelManager {
         synchronized (activePeers) {
             for (Channel channel : activePeers.values())
                 channel.onSyncDone();
+        }
+    }
+
+    public void addChannelListener(ChannelListener l) {
+        listeners.add(l);
+    }
+
+    public void removeChannelListener(ChannelListener l) {
+        listeners.remove(l);
+    }
+
+    private void notifyInit(Channel ch) {
+        for (ChannelListener listener : listeners) {
+            listener.onChannelInit(ch);
         }
     }
 }
