@@ -7,7 +7,7 @@ import org.ethereum.util.FastByteComparisons;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeros;
+import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
 
 /**
  * More high level validator/miner class which keeps a cache for the last requested block epoch
@@ -95,7 +95,7 @@ public class Ethash {
         long nonce = getEthashAlgo().mine(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
                 ByteUtil.byteArrayToLong(header.getDifficulty()));
         Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
-        header.setNonce(intToBytesNoLeadZeros((int) nonce));
+        header.setNonce(intToBytesNoLeadZeroes((int) nonce));
         header.setMixHash(pair.getLeft());
         return nonce;
     }
@@ -110,7 +110,7 @@ public class Ethash {
         long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(), sha3(header.getEncodedWithoutNonce()),
                 ByteUtil.byteArrayToLong(header.getDifficulty()));
         Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
-        header.setNonce(intToBytesNoLeadZeros((int) nonce));
+        header.setNonce(intToBytesNoLeadZeroes((int) nonce));
         header.setMixHash(pair.getLeft());
         return nonce;
     }

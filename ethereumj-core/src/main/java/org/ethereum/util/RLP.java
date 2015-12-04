@@ -700,7 +700,7 @@ public class RLP {
         } else if (length < MAX_ITEM_LENGTH) {
             byte[] binaryLength;
             if (length > 0xFF)
-                binaryLength = intToBytesNoLeadZeros(length);
+                binaryLength = intToBytesNoLeadZeroes(length);
             else
                 binaryLength = new byte[]{(byte) length};
             byte firstByte = (byte) (binaryLength.length + offset + SIZE_THRESHOLD - 1);

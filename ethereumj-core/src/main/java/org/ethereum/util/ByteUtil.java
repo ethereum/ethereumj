@@ -131,7 +131,7 @@ public class ByteUtil {
      * @param val - int value to convert
      * @return value with leading byte that are zeroes striped
      */
-    public static byte[] intToBytesNoLeadZeros(int val){
+    public static byte[] intToBytesNoLeadZeroes(int val){
 
         if (val == 0) return EMPTY_BYTE_ARRAY;
 
@@ -139,7 +139,7 @@ public class ByteUtil {
 
         int tmpVal = val;
         while (tmpVal != 0){
-            tmpVal = tmpVal >> 8;
+            tmpVal = tmpVal >>> 8;
             ++lenght;
         }
 
@@ -149,7 +149,7 @@ public class ByteUtil {
         while(val != 0){
 
             result[index] = (byte)(val & 0xFF);
-            val = val >> 8;
+            val = val >>> 8;
             index -= 1;
         }
 

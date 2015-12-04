@@ -325,4 +325,43 @@ public class ByteUtilTest {
         assertTrue(found.get(1) == 24);
         assertTrue(found.get(2) == 25);
     }
+
+    @Test
+    public void numToBytesTest() {
+        byte[] bytes = ByteUtil.intToBytesNoLeadZeroes(-1);
+        assertArrayEquals(bytes, Hex.decode("ffffffff"));
+        bytes = ByteUtil.intToBytesNoLeadZeroes(1);
+        assertArrayEquals(bytes, Hex.decode("01"));
+        bytes = ByteUtil.intToBytesNoLeadZeroes(255);
+        assertArrayEquals(bytes, Hex.decode("ff"));
+        bytes = ByteUtil.intToBytesNoLeadZeroes(256);
+        assertArrayEquals(bytes, Hex.decode("0100"));
+
+        bytes = ByteUtil.intToBytes(-1);
+        assertArrayEquals(bytes, Hex.decode("ffffffff"));
+        bytes = ByteUtil.intToBytes(1);
+        assertArrayEquals(bytes, Hex.decode("00000001"));
+        bytes = ByteUtil.intToBytes(255);
+        assertArrayEquals(bytes, Hex.decode("000000ff"));
+        bytes = ByteUtil.intToBytes(256);
+        assertArrayEquals(bytes, Hex.decode("00000100"));
+        
+        bytes = ByteUtil.longToBytesNoLeadZeroes(-1);
+        assertArrayEquals(bytes, Hex.decode("ffffffffffffffff"));
+        bytes = ByteUtil.longToBytesNoLeadZeroes(1);
+        assertArrayEquals(bytes, Hex.decode("01"));
+        bytes = ByteUtil.longToBytesNoLeadZeroes(255);
+        assertArrayEquals(bytes, Hex.decode("ff"));
+        bytes = ByteUtil.longToBytesNoLeadZeroes(1L << 32);
+        assertArrayEquals(bytes, Hex.decode("0100000000"));
+
+        bytes = ByteUtil.longToBytes(-1);
+        assertArrayEquals(bytes, Hex.decode("ffffffffffffffff"));
+        bytes = ByteUtil.longToBytes(1);
+        assertArrayEquals(bytes, Hex.decode("0000000000000001"));
+        bytes = ByteUtil.longToBytes(255);
+        assertArrayEquals(bytes, Hex.decode("00000000000000ff"));
+        bytes = ByteUtil.longToBytes(256);
+        assertArrayEquals(bytes, Hex.decode("0000000000000100"));
+    }
 }
