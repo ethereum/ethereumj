@@ -272,6 +272,10 @@ public class Channel {
         return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
     }
 
+    public Eth getEthHandler() {
+        return eth;
+    }
+
     public boolean hasEthStatusSucceeded() {
         return eth.hasStatusSucceeded();
     }
