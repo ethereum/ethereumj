@@ -3,7 +3,6 @@ package org.ethereum.net.server;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
-import org.ethereum.sync.SyncManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +34,6 @@ public class ChannelManager {
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
 
     private List<ChannelListener> listeners = new CopyOnWriteArrayList<>();
-
-    @Autowired
-    SyncManager syncManager;
 
     @PostConstruct
     public void init() {
@@ -71,10 +67,7 @@ public class ChannelManager {
 
     private void process(Channel peer) {
         if(peer.hasEthStatusSucceeded()) {
-            if (syncManager.isSyncDone()) {
-                peer.onSyncDone();
-            }
-            syncManager.addPeer(peer);
+            notifyActive(peer);
             activePeers.put(peer.getNodeIdWrapper(), peer);
         }
     }
@@ -95,7 +88,6 @@ public class ChannelManager {
     public void notifyDisconnect(Channel channel) {
         logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
         channel.onDisconnect();
-        syncManager.onDisconnect(channel);
         activePeers.values().remove(channel);
         newPeers.remove(channel);
 
@@ -112,17 +104,23 @@ public class ChannelManager {
         }
     }
 
-    public void addChannelListener(ChannelListener l) {
-        listeners.add(l);
+    public void addChannelListener(ChannelListener listener) {
+        listeners.add(listener);
     }
 
-    public void removeChannelListener(ChannelListener l) {
-        listeners.remove(l);
+    public void removeChannelListener(ChannelListener listener) {
+        listeners.remove(listener);
     }
 
-    private void notifyInit(Channel ch) {
+    private void notifyInit(Channel channel) {
         for (ChannelListener listener : listeners) {
-            listener.onChannelInit(ch);
+            listener.onChannelInit(channel);
+        }
+    }
+
+    private void notifyActive(Channel channel) {
+        for (ChannelListener listener : listeners) {
+            listener.onChannelActive(channel);
         }
     }
 }

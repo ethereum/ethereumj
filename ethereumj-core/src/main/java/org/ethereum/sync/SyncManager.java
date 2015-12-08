@@ -12,6 +12,7 @@ import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
+import org.ethereum.net.server.ChannelListener;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -74,6 +75,32 @@ public class SyncManager {
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
 
+    private ChannelListener channelListener = new ChannelListener() {
+        @Override
+        public void onChannelInit(Channel channel) {
+
+        }
+
+        @Override
+        public void onChannelActive(Channel peer) {
+            if (isSyncDone()) {
+                peer.onSyncDone();
+            }
+            addPeer(peer);
+        }
+
+        @Override
+        public void onChannelClose(Channel peer) {
+            // if master peer has been disconnected
+            // we need to process data it sent
+            if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
+                changeState(BLOCK_RETRIEVING);
+            }
+
+            pool.onDisconnect(peer);
+        }
+    };
+
     @Autowired
     Blockchain blockchain;
 
@@ -101,6 +128,8 @@ public class SyncManager {
 
                 // sync queue
                 queue.init();
+
+                channelManager.addChannelListener(channelListener);
 
                 if (!config.isSyncEnabled()) {
                     logger.info("Sync Manager: OFF");
@@ -194,17 +223,6 @@ public class SyncManager {
         updateHighestKnownDifficulty(peerTotalDifficulty);
 
         pool.add(peer);
-    }
-
-    public void onDisconnect(Channel peer) {
-
-        // if master peer has been disconnected
-        // we need to process data it sent
-        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
-            changeState(BLOCK_RETRIEVING);
-        }
-
-        pool.onDisconnect(peer);
     }
 
     public void tryGapRecovery(BlockWrapper wrapper) {

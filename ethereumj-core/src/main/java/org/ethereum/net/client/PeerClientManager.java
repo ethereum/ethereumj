@@ -2,8 +2,6 @@ package org.ethereum.net.client;
 
 
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
-import org.ethereum.net.server.ChannelManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +17,6 @@ import java.util.concurrent.Executors;
 public class PeerClientManager {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
-
-    @Autowired
-    ChannelManager channelManager;
 
     @Autowired
     ApplicationContext ctx;
