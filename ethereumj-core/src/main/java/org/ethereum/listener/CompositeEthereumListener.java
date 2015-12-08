@@ -8,6 +8,7 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.Channel;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -84,9 +85,9 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onHandShakePeer(Node node, HelloMessage helloMessage) {
+    public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
         for (EthereumListener listener : listeners) {
-            listener.onHandShakePeer(node, helloMessage);
+            listener.onHandShakePeer(channel, helloMessage);
         }
     }
 
@@ -105,9 +106,9 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onEthStatusUpdated(Node node, StatusMessage status) {
+    public void onEthStatusUpdated(Channel channel, StatusMessage status) {
         for (EthereumListener listener : listeners) {
-            listener.onEthStatusUpdated(node, status);
+            listener.onEthStatusUpdated(channel, status);
         }
     }
 

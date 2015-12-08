@@ -8,6 +8,7 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.Channel;
 import org.ethereum.vm.program.InternalTransaction;
 
 import java.util.List;
@@ -21,11 +22,17 @@ public interface EthereumListener {
 
     void trace(String output);
 
-    void onBlock(Block block, List<TransactionReceipt> receipts);
+    void onNodeDiscovered(Node node);
+
+    void onHandShakePeer(Channel channel, HelloMessage helloMessage);
+
+    void onEthStatusUpdated(Channel channel, StatusMessage status);
 
     void onRecvMessage(Message message);
 
     void onSendMessage(Message message);
+
+    void onBlock(Block block, List<TransactionReceipt> receipts);
 
     void onPeerDisconnect(String host, long port);
 
@@ -35,13 +42,7 @@ public interface EthereumListener {
 
     void onNoConnections();
 
-    void onHandShakePeer(Node node, HelloMessage helloMessage);
-
     void onVMTraceCreated(String transactionHash, String trace);
 
     void onTransactionExecuted(TransactionExecutionSummary summary);
-
-    void onNodeDiscovered(Node node);
-
-    void onEthStatusUpdated(Node node, StatusMessage status);
 }

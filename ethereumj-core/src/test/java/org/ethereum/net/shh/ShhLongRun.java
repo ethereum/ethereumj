@@ -8,6 +8,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.Channel;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -94,7 +95,7 @@ public class ShhLongRun extends Thread {
             System.out.println("========= init");
             worldManager.addListener(new EthereumListenerAdapter() {
                 @Override
-                public void onHandShakePeer(Node node, HelloMessage helloMessage) {
+                public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
                     System.out.println("========= onHandShakePeer");
                     if (!isAlive()) {
                         start();

@@ -173,7 +173,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      */
     private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
         channel.getNodeStatistics().ethHandshake(msg);
-        ethereumListener.onEthStatusUpdated(channel.getNode(), msg);
+        ethereumListener.onEthStatusUpdated(channel, msg);
 
         try {
             if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)

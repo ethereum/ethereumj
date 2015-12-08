@@ -8,6 +8,7 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.Channel;
 
 import java.util.List;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onHandShakePeer(Node node, HelloMessage helloMessage) {
+    public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
 
     }
 
@@ -69,7 +70,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onEthStatusUpdated(Node node, StatusMessage statusMessage) {
+    public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
 
     }
 
