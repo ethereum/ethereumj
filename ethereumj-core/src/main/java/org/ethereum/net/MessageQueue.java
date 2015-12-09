@@ -7,6 +7,7 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,7 @@ public class MessageQueue {
     EthereumListener ethereumListener;
     boolean hasPing = false;
     private ScheduledFuture<?> timerTask;
+    private Channel channel;
 
     public MessageQueue() {
     }
@@ -69,6 +71,10 @@ public class MessageQueue {
                 }
             }
         }, 10, 10, TimeUnit.MILLISECONDS);
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public void sendMessage(Message msg) {
@@ -131,7 +137,7 @@ public class MessageQueue {
 
             Message msg = messageRoundtrip.getMsg();
 
-            ethereumListener.onSendMessage(msg);
+            ethereumListener.onSendMessage(channel, msg);
 
             ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 

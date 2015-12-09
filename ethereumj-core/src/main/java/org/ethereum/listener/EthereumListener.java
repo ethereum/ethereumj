@@ -28,9 +28,9 @@ public interface EthereumListener {
 
     void onEthStatusUpdated(Channel channel, StatusMessage status);
 
-    void onRecvMessage(Message message);
+    void onRecvMessage(Channel channel, Message message);
 
-    void onSendMessage(Message message);
+    void onSendMessage(Channel channel, Message message);
 
     void onBlock(Block block, List<TransactionReceipt> receipts);
 

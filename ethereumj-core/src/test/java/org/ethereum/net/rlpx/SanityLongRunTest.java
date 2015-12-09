@@ -11,15 +11,14 @@ import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
+import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.MessageWatcher;
-import org.ethereum.net.shh.Topic;
 import org.ethereum.net.shh.WhisperMessage;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -98,7 +97,7 @@ public class SanityLongRunTest {
 
         ethereum2.addListener(new EthereumListenerAdapter() {
             @Override
-            public void onRecvMessage(Message message) {
+            public void onRecvMessage(Channel channel, Message message) {
                 if (message instanceof StatusMessage) {
                     System.out.println("=== Status received: " + message);
                     semaphore.countDown();

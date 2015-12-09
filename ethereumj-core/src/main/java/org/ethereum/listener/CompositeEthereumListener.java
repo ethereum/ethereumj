@@ -43,16 +43,16 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onRecvMessage(Message message) {
+    public void onRecvMessage(Channel channel, Message message) {
         for (EthereumListener listener : listeners) {
-            listener.onRecvMessage(message);
+            listener.onRecvMessage(channel, message);
         }
     }
 
     @Override
-    public void onSendMessage(Message message) {
+    public void onSendMessage(Channel channel, Message message) {
         for (EthereumListener listener : listeners) {
-            listener.onSendMessage(message);
+            listener.onSendMessage(channel, message);
         }
     }
 

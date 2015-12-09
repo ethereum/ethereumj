@@ -111,6 +111,8 @@ public class Channel {
 
         messageCodec.setChannel(this);
 
+        msgQueue.setChannel(this);
+
         p2pHandler.setMsgQueue(msgQueue);
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());
 

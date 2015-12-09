@@ -7,6 +7,7 @@ import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
+import org.ethereum.net.server.Channel;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
@@ -82,7 +83,7 @@ public class FramingTest {
 
         ethereum1.addListener(new EthereumListenerAdapter() {
             @Override
-            public void onRecvMessage(Message message) {
+            public void onRecvMessage(Channel channel, Message message) {
                 if (message instanceof StatusMessage) {
                     System.out.println("1: -> " + message);
                     semaphore.countDown();
@@ -91,7 +92,7 @@ public class FramingTest {
         });
         ethereum2.addListener(new EthereumListenerAdapter() {
             @Override
-            public void onRecvMessage(Message message) {
+            public void onRecvMessage(Channel channel, Message message) {
                 if (message instanceof StatusMessage) {
                     System.out.println("2: -> " + message);
                     semaphore.countDown();

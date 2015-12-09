@@ -138,7 +138,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg.toString());
 
-        ethereumListener.onRecvMessage(msg);
+        ethereumListener.onRecvMessage(channel, msg);
 
         channel.getNodeStatistics().rlpxInMessages.add();
         return msg;

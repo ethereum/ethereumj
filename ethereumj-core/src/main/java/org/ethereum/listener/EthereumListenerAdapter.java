@@ -28,11 +28,11 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onRecvMessage(Message message) {
+    public void onRecvMessage(Channel channel, Message message) {
     }
 
     @Override
-    public void onSendMessage(Message message) {
+    public void onSendMessage(Channel channel, Message message) {
     }
 
     @Override
