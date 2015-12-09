@@ -89,7 +89,7 @@ public class Eth62 extends EthHandler {
         return sendGetBlockBodies();
     }
 
-    private void processNewBlockHashes(NewBlockHashes62Message msg) {
+    protected void processNewBlockHashes(NewBlockHashes62Message msg) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing NewBlockHashes, size [{}]",
@@ -119,7 +119,7 @@ public class Eth62 extends EthHandler {
         }
     }
 
-    private void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+    protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
         List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(
                 msg.getBlockIdentifier(),
                 msg.getSkipBlocks(),
@@ -131,7 +131,7 @@ public class Eth62 extends EthHandler {
         sendMessage(response);
     }
 
-    private void processBlockHeaders(BlockHeadersMessage msg) {
+    protected void processBlockHeaders(BlockHeadersMessage msg) {
 
         // todo check if remote peer responds with same headers on different GET_BLOCK_HEADERS
 
@@ -171,6 +171,7 @@ public class Eth62 extends EthHandler {
                 }
             }
 
+            logger.debug("Adding " + adding.size() + " headers to the queue.");
             queue.addAndValidateHeaders(adding, channel.getNodeId());
         }
 
@@ -190,14 +191,14 @@ public class Eth62 extends EthHandler {
         }
     }
 
-    private void processGetBlockBodies(GetBlockBodiesMessage msg) {
+    protected void processGetBlockBodies(GetBlockBodiesMessage msg) {
         List<byte[]> bodies = blockchain.getListOfBodiesByHashes(msg.getBlockHashes());
 
         BlockBodiesMessage response = new BlockBodiesMessage(bodies);
         sendMessage(response);
     }
 
-    private void processBlockBodies(BlockBodiesMessage msg) {
+    protected void processBlockBodies(BlockBodiesMessage msg) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: process BlockBodies, size [{}]",
@@ -267,7 +268,7 @@ public class Eth62 extends EthHandler {
         }
     }
 
-    private void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk) {
+    protected void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
@@ -281,7 +282,21 @@ public class Eth62 extends EthHandler {
         sendMessage(msg);
     }
 
-    private boolean sendGetBlockBodies() {
+    protected void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: send GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
+                channel.getPeerIdShort(),
+                "0x" + Hex.toHexString(blockHash).substring(0, 8),
+                maxBlocksAsk, skip, reverse
+        );
+
+        GetBlockHeadersMessage msg = new GetBlockHeadersMessage(0, blockHash, maxBlocksAsk, skip, reverse);
+
+        sendMessage(msg);
+    }
+
+    protected boolean sendGetBlockBodies() {
 
         List<BlockHeader> headers = queue.pollHeaders();
         if (headers.isEmpty()) {
@@ -339,15 +354,24 @@ public class Eth62 extends EthHandler {
 
         logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
-        long bestNumber = blockchain.getBestBlock().getNumber();
-        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
-        sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
+        if (syncManager.getGapBlock() == null) {
+            long bestNumber = blockchain.getBestBlock().getNumber();
+            long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
+            sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
+        } else {
+            sendGetBlockHeaders(syncManager.getGapBlock().getHash(), FORK_COVER_BATCH_SIZE, 1, true);
+        }
     }
 
     private void maintainForkCoverage(List<BlockHeader> received) {
 
         long blockNumber = max(0, received.get(0).getNumber() - FORK_COVER_BATCH_SIZE);
+        BlockHeader startBlock = null;
 
+        if (received.size() > 1 && received.get(0).getNumber() > received.get(1).getNumber()) {
+            received = new ArrayList<>(received);
+            Collections.reverse(received);
+        }
         // start downloading hashes from blockNumber of the block with known hash
         ListIterator<BlockHeader> it = received.listIterator(received.size());
         while (it.hasPrevious()) {
@@ -355,7 +379,6 @@ public class Eth62 extends EthHandler {
             if (blockchain.isBlockExist(header.getHash())) {
                 commonAncestorFound = true;
                 blockNumber = header.getNumber() + 1;
-
                 logger.trace(
                         "Peer {}: common ancestor found: block.number {}, block.hash {}",
                         channel.getPeerIdShort(),
@@ -365,13 +388,18 @@ public class Eth62 extends EthHandler {
 
                 break;
             }
+            startBlock = header;
         }
 
 
         if (commonAncestorFound) {
 
             // start header sync
-            sendGetBlockHeaders(blockNumber, maxHashesAsk);
+            if (startBlock == null) {
+                sendGetBlockHeaders(blockNumber, maxHashesAsk);
+            } else {
+                sendGetBlockHeaders(startBlock.getHash(), maxHashesAsk, 0, false);
+            }
 
         } else {
 

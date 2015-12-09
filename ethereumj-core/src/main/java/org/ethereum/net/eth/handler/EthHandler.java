@@ -8,6 +8,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
@@ -56,6 +57,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Autowired
     protected Blockchain blockchain;
+
+    @Autowired
+    protected SyncManager syncManager;
 
     @Autowired
     protected SyncQueue queue;
