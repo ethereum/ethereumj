@@ -754,7 +754,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         long bestNumber = bestBlock.getNumber();
 
-        int qty = getQty(blockNumber, bestNumber, limit);
+        int qty = getQty(blockNumber, bestNumber, limit, reverse);
 
         byte[] startHash = getStartHash(blockNumber, skip, qty, reverse);
 
@@ -772,12 +772,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return headers;
     }
 
-    private int getQty(long blockNumber, long bestNumber, int limit) {
-
-        if (blockNumber + limit - 1 > bestNumber) {
-            return (int) (bestNumber - blockNumber + 1);
+    private int getQty(long blockNumber, long bestNumber, int limit, boolean reverse) {
+        if (reverse) {
+            return blockNumber - limit + 1 < 0 ? (int) (blockNumber + 1) : limit;
         } else {
-            return limit;
+            if (blockNumber + limit - 1 > bestNumber) {
+                return (int) (bestNumber - blockNumber + 1);
+            } else {
+                return limit;
+            }
         }
     }
 
