@@ -5,6 +5,11 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.intToBytes;
 import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
@@ -19,6 +24,7 @@ public class Ethash {
 
     private static Ethash cachedInstance = null;
     private static long cachedBlockEpoch = 0;
+    private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
     /**
      * Returns instance for the specified block number either from cache or calculates a new one
@@ -89,30 +95,40 @@ public class Ethash {
      *  Mines the nonce for the specified BlockHeader with difficulty BlockHeader.getDifficulty()
      *  When mined the BlockHeader 'nonce' and 'mixHash' fields are updated
      *  Uses the full dataset i.e. it faster but takes > 1Gb of memory
-     *  @return mined nonce
+     *  @return the task which may be cancelled. On success returns nonce
      */
-    public long mine(BlockHeader header) {
-        long nonce = getEthashAlgo().mine(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
-                ByteUtil.byteArrayToLong(header.getDifficulty()));
-        Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
-        header.setNonce(intToBytesNoLeadZeroes((int) nonce));
-        header.setMixHash(pair.getLeft());
-        return nonce;
+    public Future<Long> mine(final BlockHeader header) {
+        return executor.submit(new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                long nonce = getEthashAlgo().mine(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
+                        ByteUtil.byteArrayToLong(header.getDifficulty()));
+                Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
+                header.setNonce(intToBytesNoLeadZeroes((int) nonce));
+                header.setMixHash(pair.getLeft());
+                return nonce;
+            }
+        });
     }
 
     /**
      *  Mines the nonce for the specified BlockHeader with difficulty BlockHeader.getDifficulty()
      *  When mined the BlockHeader 'nonce' and 'mixHash' fields are updated
      *  Uses the light cache i.e. it slower but takes only ~16Mb of memory
-     *  @return mined nonce
+     *  @return the task which may be cancelled. On success returns nonce
      */
-    public long mineLight(BlockHeader header) {
-        long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(), sha3(header.getEncodedWithoutNonce()),
-                ByteUtil.byteArrayToLong(header.getDifficulty()));
-        Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
-        header.setNonce(intToBytesNoLeadZeroes((int) nonce));
-        header.setMixHash(pair.getLeft());
-        return nonce;
+    public Future<Long> mineLight(final BlockHeader header) {
+        return executor.submit(new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(), sha3(header.getEncodedWithoutNonce()),
+                        ByteUtil.byteArrayToLong(header.getDifficulty()));
+                Pair<byte[], byte[]> pair = hashimotoLight(header, nonce);
+                header.setNonce(intToBytesNoLeadZeroes((int) nonce));
+                header.setMixHash(pair.getLeft());
+                return nonce;
+            }
+        });
     }
 
     /**

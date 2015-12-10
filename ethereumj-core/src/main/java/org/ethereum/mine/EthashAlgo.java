@@ -100,10 +100,6 @@ public class EthashAlgo {
         return ret;
     }
 
-    interface DatasetLookup {
-        byte[] lookup(int idx);
-    }
-
     public Pair<byte[], byte[]> hashimoto(byte[] blockHeaderTruncHash, byte[] nonce, long fullSize, DatasetLookup lookup) {
 //        if (nonce.length != 4) throw new RuntimeException("nonce.length != 4");
 
@@ -137,7 +133,8 @@ public class EthashAlgo {
         return Pair.of(cmix, sha3(merge(s, cmix)));
     }
 
-    public Pair<byte[], byte[]> hashimotoLight(long fullSize, final byte[][] cache, byte[] blockHeaderTruncHash, byte[]  nonce) {
+    public Pair<byte[], byte[]> hashimotoLight(long fullSize, final byte[][] cache, byte[] blockHeaderTruncHash,
+                                               byte[]  nonce) {
         return hashimoto(blockHeaderTruncHash, nonce, fullSize, new DatasetLookup() {
             @Override
             public byte[] lookup(int idx) {
@@ -146,7 +143,8 @@ public class EthashAlgo {
         });
     }
 
-    public Pair<byte[], byte[]> hashimotoFull(long fullSize, final byte[][] dataset, byte[] blockHeaderTruncHash, byte[]  nonce) {
+    public Pair<byte[], byte[]> hashimotoFull(long fullSize, final byte[][] dataset, byte[] blockHeaderTruncHash,
+                                              byte[]  nonce) {
         return hashimoto(blockHeaderTruncHash, nonce, fullSize, new DatasetLookup() {
             @Override
             public byte[] lookup(int idx) {
@@ -158,7 +156,7 @@ public class EthashAlgo {
     public long mine(long fullSize, byte[][] dataset, byte[] blockHeaderTruncHash, long difficulty) {
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
         long nonce = new Random().nextLong();
-        while(true) {
+        while(!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoFull(fullSize, dataset, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
@@ -174,7 +172,7 @@ public class EthashAlgo {
     public long mineLight(long fullSize, final byte[][] cache, byte[] blockHeaderTruncHash, long difficulty) {
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
         long nonce = new Random().nextLong();
-        while(true) {
+        while(!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, intToBytes((int) nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
@@ -189,5 +187,9 @@ public class EthashAlgo {
             ret = sha3(ret);
         }
         return ret;
+    }
+
+    private interface DatasetLookup {
+        byte[] lookup(int idx);
     }
 }
