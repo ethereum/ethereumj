@@ -3,8 +3,8 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
-import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
+import org.ethereum.validator.BestNumberRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +64,8 @@ public class SyncQueue {
 
     @Autowired
     private MapDBFactory mapDBFactory;
+
+    private BestNumberRule bestNumberRule = new BestNumberRule();
 
     /**
      * Loads HashStore and BlockQueue from disk,
@@ -439,6 +441,14 @@ public class SyncQueue {
      * @return true if block is valid, false otherwise
      */
     private boolean isValid(BlockHeader header) {
+
+        if (!bestNumberRule.validate(header, blockchain.getBestBlock().getHeader())) {
+
+            if (logger.isErrorEnabled())
+                bestNumberRule.logErrors(logger);
+
+            return false;
+        }
 
         if (!headerValidator.validate(header)) {
 
