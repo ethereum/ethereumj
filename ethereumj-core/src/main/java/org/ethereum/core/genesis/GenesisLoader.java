@@ -32,12 +32,16 @@ public class GenesisLoader {
     }
 
     public static Genesis loadGenesis(SystemProperties config)  {
+        String genesisFile = config.genesisInfo();
+
+        InputStream is = ClassLoader.getSystemResourceAsStream("genesis/" + genesisFile);
+        return loadGenesis(is);
+    }
+
+    public static Genesis loadGenesis(InputStream genesisJsonIS)  {
         try {
 
-            String genesisFile = config.genesisInfo();
-
-            InputStream is = ClassLoader.getSystemResourceAsStream("genesis/" + genesisFile);
-            String json = new String(ByteStreams.toByteArray(is));
+            String json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
             ObjectMapper mapper = new ObjectMapper();
             JavaType type = mapper.getTypeFactory().constructType(GenesisJson.class);
