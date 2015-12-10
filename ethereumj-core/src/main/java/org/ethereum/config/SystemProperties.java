@@ -20,6 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
@@ -591,6 +592,31 @@ public class SystemProperties {
 
     public void setGenesisInfo(String genesisInfo){
         this.genesisInfo = genesisInfo;
+    }
+
+    @ValidateMe
+    public byte[] getMinerCoinbase() {
+        String sc = config.getString("mine.coinbase");
+        byte[] c = Hex.decode(sc);
+        if (c.length != 20) throw new RuntimeException("mine.coinbase has invalid value: '" + sc + "'");
+        return c;
+    }
+
+    @ValidateMe
+    public byte[] getMineExtraData() {
+        byte[] bytes;
+        if (config.hasPath("mine.extraDataHex")) {
+            bytes = Hex.decode(config.getString("mine.extraDataHex"));
+        } else {
+            bytes = config.getString("mine.extraData").getBytes();
+        }
+        if (bytes.length > 32) throw new RuntimeException("mine.extraData exceed 32 bytes length: " + bytes.length);
+        return bytes;
+    }
+
+    @ValidateMe
+    public BigInteger getMineMinGasPrice() {
+        return new BigInteger(config.getString("mine.minGasPrice"));
     }
 
     public String dump() {
