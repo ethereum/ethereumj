@@ -5,6 +5,8 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 
+import java.util.List;
+
 /**
  * Describes interface required by Eth peer clients
  *
@@ -112,7 +114,7 @@ public interface Eth {
      *
      * @param tx sending transaction
      */
-    void sendTransaction(Transaction tx);
+    void sendTransaction(List<Transaction> tx);
 
     /**
      * @return protocol version

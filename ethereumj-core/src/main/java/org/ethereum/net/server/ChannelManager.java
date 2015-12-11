@@ -79,11 +79,13 @@ public class ChannelManager {
         }
     }
 
-    public void sendTransaction(Transaction tx) {
-
+    public void sendTransaction(List<Transaction> tx, Channel receivedFrom) {
         synchronized (activePeers) {
-            for (Channel channel : activePeers.values())
-                channel.sendTransaction(tx);
+            for (Channel channel : activePeers.values()) {
+                if (channel != receivedFrom) {
+                    channel.sendTransaction(tx);
+                }
+            }
         }
     }
 

@@ -8,6 +8,7 @@ import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 import static java.lang.Thread.sleep;
@@ -34,7 +35,7 @@ public class TransactionTask implements Callable<Transaction> {
         try {
             logger.info("submit tx: {}", tx.toString());
             ChannelManager channelManager = worldManager.getChannelManager();
-            channelManager.sendTransaction(tx);
+            channelManager.sendTransaction(Collections.singletonList(tx), null);
             return tx;
 
         } catch (Throwable th) {

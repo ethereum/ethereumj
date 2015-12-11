@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author Mikhail Kalinin
@@ -20,7 +20,7 @@ public interface PendingState extends org.ethereum.facade.PendingState {
      *
      * @param transactions txs received from the net
      */
-    void addWireTransactions(Set<Transaction> transactions);
+    void addWireTransactions(List<Transaction> transactions);
 
     /**
      * Adds transaction to the list of pending state txs  <br>

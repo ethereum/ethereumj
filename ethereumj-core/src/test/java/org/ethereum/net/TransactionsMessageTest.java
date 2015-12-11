@@ -14,10 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -177,8 +174,7 @@ public class TransactionsMessageTest {
         tx.sign(privKey);
         tx.getEncoded();
 
-        Set<Transaction> txs = new HashSet<>(Arrays.asList(tx));
-        TransactionsMessage transactionsMessage = new TransactionsMessage(txs);
+        TransactionsMessage transactionsMessage = new TransactionsMessage(Collections.singletonList(tx));
 
         assertEquals(expected, Hex.toHexString(transactionsMessage.getEncoded()));
     }

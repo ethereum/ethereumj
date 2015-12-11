@@ -159,7 +159,7 @@ public interface Ethereum {
     /**
      * @return - currently pending transactions received from the net
      */
-    Set<Transaction> getWireTransactions();
+    List<Transaction> getWireTransactions();
 
     /**
      * @return - currently pending transactions sent to the net

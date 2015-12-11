@@ -8,6 +8,7 @@ import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -73,7 +74,7 @@ public class TransactionBomb extends EthereumListenerAdapter {
         byte[] privKey = sha3("cow".getBytes());
         tx.sign(privKey);
 
-        ethereum.getChannelManager().sendTransaction(tx);
+        ethereum.getChannelManager().sendTransaction(Collections.singletonList(tx), null);
         System.err.println("Sending tx: " + Hex.toHexString(tx.getHash()));
     }
 

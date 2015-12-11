@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Roman Mandeleil
@@ -64,7 +63,7 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onPendingTransactionsReceived(Set<Transaction> transactions) {
+    public void onPendingTransactionsReceived(List<Transaction> transactions) {
         for (EthereumListener listener : listeners) {
             listener.onPendingTransactionsReceived(transactions);
         }

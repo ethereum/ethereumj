@@ -19,7 +19,7 @@ public interface PendingState {
     /**
      * @return currently pending transactions received from the net
      */
-    Set<Transaction> getWireTransactions();
+    List<Transaction> getWireTransactions();
 
     /**
      * @return list of pending transactions

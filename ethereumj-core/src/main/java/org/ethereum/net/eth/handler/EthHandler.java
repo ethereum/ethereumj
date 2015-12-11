@@ -8,6 +8,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
@@ -72,6 +73,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Autowired
     protected PendingState pendingState;
+
+    @Autowired
+    protected ChannelManager channelManager;
 
     protected Channel channel;
 
@@ -224,8 +228,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * sends it to the net.
      */
     @Override
-    public void sendTransaction(Transaction transaction) {
-        Set<Transaction> txs = Collections.singleton(transaction);
+    public void sendTransaction(List<Transaction> txs) {
         TransactionsMessage msg = new TransactionsMessage(txs);
         sendMessage(msg);
     }
@@ -235,7 +238,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             return;
         }
 
-        Set<Transaction> txSet = msg.getTransactions();
+        List<Transaction> txSet = msg.getTransactions();
         pendingState.addWireTransactions(txSet);
 
         for (Transaction tx : txSet) {

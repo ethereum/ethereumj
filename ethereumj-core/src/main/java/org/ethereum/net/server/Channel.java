@@ -338,7 +338,7 @@ public class Channel {
         eth.disableTransactions();
     }
 
-    public void sendTransaction(Transaction tx) {
+    public void sendTransaction(List<Transaction> tx) {
         eth.sendTransaction(tx);
     }
 

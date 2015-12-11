@@ -5,6 +5,8 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 
+import java.util.List;
+
 import static org.ethereum.net.eth.EthVersion.*;
 
 /**
@@ -101,7 +103,7 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void sendTransaction(Transaction tx) {
+    public void sendTransaction(List<Transaction> tx) {
     }
 
     @Override
