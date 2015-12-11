@@ -1,5 +1,6 @@
 package org.ethereum.net.eth.handler;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncStateName;
@@ -104,6 +105,10 @@ public class EthAdapter implements Eth {
 
     @Override
     public void sendTransaction(List<Transaction> tx) {
+    }
+
+    @Override
+    public void sendNewBlock(Block newBlock) {
     }
 
     @Override

@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
@@ -340,6 +341,10 @@ public class Channel {
 
     public void sendTransaction(List<Transaction> tx) {
         eth.sendTransaction(tx);
+    }
+
+    public void sendNewBlock(Block block) {
+        eth.sendNewBlock(block);
     }
 
     public EthVersion getEthVersion() {
