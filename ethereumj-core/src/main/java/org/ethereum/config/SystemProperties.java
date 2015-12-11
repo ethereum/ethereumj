@@ -619,6 +619,11 @@ public class SystemProperties {
         return new BigInteger(config.getString("mine.minGasPrice"));
     }
 
+    @ValidateMe
+    public long getMinBlockTimeoutMsec() {
+        return config.getLong("mine.minBlockTimeoutMsec");
+    }
+
     public String dump() {
         return config.root().render(ConfigRenderOptions.defaults().setComments(false));
     }
