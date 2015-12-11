@@ -25,6 +25,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.concurrent.FutureAdapter;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
@@ -32,6 +33,7 @@ import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -235,7 +237,15 @@ public class EthereumImpl implements Ethereum {
 
         TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
 
-        return TransactionExecutor.instance.submitTransaction(transactionTask);
+        final Future<List<Transaction>> listFuture =
+                TransactionExecutor.instance.submitTransaction(transactionTask);
+
+        return new FutureAdapter<Transaction, List<Transaction>>(listFuture) {
+            @Override
+            protected Transaction adapt(List<Transaction> adapteeResult) throws ExecutionException {
+                return adapteeResult.get(0);
+            }
+        };
     }
 
 

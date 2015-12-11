@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static java.lang.Thread.sleep;
@@ -17,25 +18,29 @@ import static java.lang.Thread.sleep;
  * @author Roman Mandeleil
  * @since 23.05.2014
  */
-public class TransactionTask implements Callable<Transaction> {
+public class TransactionTask implements Callable<List<Transaction>> {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    private final Transaction tx;
+    private final List<Transaction> tx;
     private final WorldManager worldManager;
 
     public TransactionTask(Transaction tx, WorldManager worldManager) {
+        this(Collections.singletonList(tx), worldManager);
+    }
+
+    public TransactionTask(List<Transaction> tx, WorldManager worldManager) {
         this.tx = tx;
         this.worldManager = worldManager;
     }
 
     @Override
-    public Transaction call() throws Exception {
+    public List<Transaction> call() throws Exception {
 
         try {
             logger.info("submit tx: {}", tx.toString());
             ChannelManager channelManager = worldManager.getChannelManager();
-            channelManager.sendTransaction(Collections.singletonList(tx), null);
+            channelManager.sendTransaction(tx, null);
             return tx;
 
         } catch (Throwable th) {
