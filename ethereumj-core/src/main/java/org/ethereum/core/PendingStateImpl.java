@@ -12,10 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.math.BigInteger.ZERO;
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -49,7 +46,7 @@ public class PendingStateImpl implements PendingState {
 
     @Resource
     @Qualifier("wireTransactions")
-    private final Set<PendingTransaction> wireTransactions = new HashSet<>();
+    private final Set<PendingTransaction> wireTransactions = new LinkedHashSet<>();
 
     @Resource
     @Qualifier("pendingStateTransactions")
