@@ -235,7 +235,7 @@ public class EthereumImpl implements Ethereum {
     @Override
     public Future<Transaction> submitTransaction(Transaction transaction) {
 
-        TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
+        TransactionTask transactionTask = new TransactionTask(transaction, channelManager);
 
         final Future<List<Transaction>> listFuture =
                 TransactionExecutor.instance.submitTransaction(transactionTask);

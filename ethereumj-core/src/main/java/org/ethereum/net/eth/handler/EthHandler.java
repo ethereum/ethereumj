@@ -3,12 +3,15 @@ package org.ethereum.net.eth.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.PendingState;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.net.submit.TransactionExecutor;
+import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
@@ -244,6 +247,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         for (Transaction tx : txSet) {
             wallet.addTransaction(tx);
         }
+
+        // broadcasting received transaction to other peers
+        TransactionExecutor.instance.submitTransaction(new TransactionTask(txSet, channelManager, channel));
     }
 
     public void sendNewBlock(Block block) {
