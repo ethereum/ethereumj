@@ -20,7 +20,7 @@ public class Constants {
     public static int UNCLE_GENERATION_LIMIT = 7;
     public static int UNCLE_LIST_LIMIT = 2;
 
-    public static int BEST_NUMBER_DIFF_LIMIT = 1000;
+    public static int BEST_NUMBER_DIFF_LIMIT = 100;
 
     public static final BigInteger SECP256K1N = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
     public static final BigInteger SECP256K1N_HALF = SECP256K1N.divide(BigInteger.valueOf(2));
