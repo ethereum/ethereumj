@@ -5,6 +5,7 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.ethereum.util.TimeUtils.secondsToMillis;
@@ -90,6 +91,10 @@ public class BlockWrapper {
 
     public byte[] getNodeId() {
         return nodeId;
+    }
+
+    public boolean sentBy(byte[] nodeId) {
+        return Arrays.equals(this.nodeId, nodeId);
     }
 
     public void importFailed() {

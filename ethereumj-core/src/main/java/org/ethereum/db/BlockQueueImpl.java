@@ -253,6 +253,30 @@ public class BlockQueueImpl implements BlockQueue {
         return hashes.contains(new ByteArrayWrapper(hash));
     }
 
+    @Override
+    public void drop(byte[] nodeId, int scanLimit) {
+        awaitInit();
+
+        int i = 0;
+        synchronized (index) {
+
+            List<Long> removed = new ArrayList<>();
+
+            for (Long idx : index) {
+                if (++i > scanLimit) break;
+
+                BlockWrapper b = blocks.get(idx);
+                if (b.sentBy(nodeId)) removed.add(idx);
+            }
+
+            blocks.keySet().removeAll(removed);
+            index.removeAll(removed);
+        }
+
+        db.commit();
+    }
+
+
     private void awaitInit() {
         initLock.lock();
         try {
@@ -275,7 +299,7 @@ public class BlockQueueImpl implements BlockQueue {
         this.mapDBFactory = mapDBFactory;
     }
 
-    public interface Index {
+    public interface Index extends Iterable<Long> {
 
         void addAll(Collection<Long> nums);
 
@@ -292,6 +316,8 @@ public class BlockQueueImpl implements BlockQueue {
         int size();
 
         void clear();
+
+        void removeAll(Collection<Long> indexes);
     }
 
     public static class ArrayListIndex implements Index {
@@ -349,6 +375,15 @@ public class BlockQueueImpl implements BlockQueue {
 
         private void sort() {
             Collections.sort(index);
+        }
+
+        @Override
+        public Iterator<Long> iterator() {
+            return index.iterator();
+        }
+
+        public synchronized void removeAll(Collection<Long> indexes) {
+            index.removeAll(indexes);
         }
     }
 }

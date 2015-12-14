@@ -158,10 +158,64 @@ public class BlockQueueTest {
     @Test // concurrency
     public void test2() throws InterruptedException {
         new Thread(new Writer(1)).start();
+        new Thread(new Dropper(1)).start();
         new Thread(new Reader(1)).start();
         Thread r2 = new Thread(new Reader(2));
         r2.start();
         r2.join();
+    }
+
+    @Test // test dropping
+    public void test3() {
+        Random rnd = new Random(System.currentTimeMillis());
+        byte[] nodeA = new byte[32];
+        byte[] nodeB = new byte[32];
+        rnd.nextBytes(nodeA);
+        rnd.nextBytes(nodeB);
+
+        // main flow
+        blockQueue.add(new BlockWrapper(blocks.get(0), nodeB));
+        for (int i = 1; i < 11; i++) {
+            blockQueue.add(new BlockWrapper(blocks.get(i), nodeA));
+        }
+        blockQueue.add(new BlockWrapper(blocks.get(11), nodeB));
+
+        blockQueue.drop(nodeA, 10);
+
+        assertArrayEquals(nodeB, blockQueue.take().getNodeId());
+        assertArrayEquals(nodeA, blockQueue.take().getNodeId());
+        assertArrayEquals(nodeB, blockQueue.take().getNodeId());
+
+        // close/open
+        blockQueue.add(new BlockWrapper(blocks.get(0), nodeA));
+        blockQueue.add(new BlockWrapper(blocks.get(1), nodeB));
+        blockQueue.drop(nodeA, 10);
+
+        blockQueue.close();
+        blockQueue.open();
+
+        assertArrayEquals(nodeB, blockQueue.take().getNodeId());
+        assertNull(blockQueue.peek());
+    }
+
+    private class Dropper implements Runnable {
+
+        private int index;
+
+        public Dropper(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(2000);
+                blockQueue.drop(new byte[32], 1000);
+                logger.info("dropper {}: finished", index);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
     private class Reader implements Runnable {
