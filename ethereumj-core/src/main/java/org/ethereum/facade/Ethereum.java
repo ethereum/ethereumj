@@ -6,6 +6,7 @@ import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
+import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
@@ -172,6 +173,11 @@ public interface Ethereum {
      * @return Whisper implementation if the protocol is available
      */
     Whisper getWhisper();
+
+    /**
+     *  Gets the Miner component
+     */
+    BlockMiner getBlockMiner();
 
     /**
      * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
