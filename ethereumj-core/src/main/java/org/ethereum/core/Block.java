@@ -98,7 +98,7 @@ public class Block {
         this(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit,
                 gasUsed, timestamp, extraData, mixHash, nonce, transactionsList, uncleList);
 
-        this.header.setTransactionsRoot(calcTxTrie(transactionsList));
+        this.header.setTransactionsRoot(BlockchainImpl.calcTxTrie(transactionsList));
         if (!Hex.toHexString(transactionsRoot).
                 equals(Hex.toHexString(this.header.getTxTrieRoot())))
             logger.error("Transaction root miss-calculate, block: {}", getNumber());
@@ -267,6 +267,16 @@ public class Block {
         rlpEncoded = null;
     }
 
+    public void setMixHash(byte[] hash) {
+        this.header.setMixHash(hash);
+        rlpEncoded = null;
+    }
+
+    public void setExtraData(byte[] data) {
+        this.header.setExtraData(data);
+        rlpEncoded = null;
+    }
+
     public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
         return transactionsList;
@@ -293,13 +303,27 @@ public class Block {
         toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
 
-        toStringBuff.append("\nUncles [\n");
-        for (BlockHeader uncle : getUncleList()) {
-            toStringBuff.append(uncle.toString());
-            toStringBuff.append("\n");
+        if (!getUncleList().isEmpty()) {
+            toStringBuff.append("Uncles [\n");
+            for (BlockHeader uncle : getUncleList()) {
+                toStringBuff.append(uncle.toString());
+                toStringBuff.append("\n");
+            }
+            toStringBuff.append("]\n");
+        } else {
+            toStringBuff.append("Uncles []\n");
+        }
+        if (!getTransactionsList().isEmpty()) {
+            toStringBuff.append("Txs [\n");
+            for (Transaction tx : getTransactionsList()) {
+                toStringBuff.append(tx);
+                toStringBuff.append("\n");
+            }
+            toStringBuff.append("]\n");
+        } else {
+            toStringBuff.append("Txs []\n");
         }
         toStringBuff.append("]");
-        toStringBuff.append("\n]");
 
         return toStringBuff.toString();
     }
@@ -319,20 +343,6 @@ public class Block {
 
         toStringBuff.append("]");
         return toStringBuff.toString();
-    }
-
-
-    private byte[] calcTxTrie(List<Transaction> transactions){
-
-        this.txsState = new TrieImpl(null);
-
-        if (transactions == null || transactions.isEmpty())
-            return HashUtil.EMPTY_TRIE_HASH;
-
-        for (int i = 0; i < transactions.size(); i++) {
-            this.txsState.update(RLP.encodeInt(i), transactions.get(i).getEncoded());
-        }
-        return txsState.getRootHash();
     }
 
     private void parseTxs(RLPList txTransactions) {

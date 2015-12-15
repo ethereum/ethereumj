@@ -246,6 +246,14 @@ public class BlockHeader {
         this.nonce = nonce;
     }
 
+    public void setLogsBloom(byte[] logsBloom) {
+        this.logsBloom = logsBloom;
+    }
+
+    public void setExtraData(byte[] extraData) {
+        this.extraData = extraData;
+    }
+
     public byte[] getHash() {
         return HashUtil.sha3(getEncoded());
     }
