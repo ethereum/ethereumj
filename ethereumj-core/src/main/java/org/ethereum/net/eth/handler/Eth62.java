@@ -359,7 +359,7 @@ public class Eth62 extends EthHandler {
             long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
             sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
         } else {
-            sendGetBlockHeaders(syncManager.getGapBlock().getHash(), FORK_COVER_BATCH_SIZE, 1, true);
+            sendGetBlockHeaders(syncManager.getGapBlock().getHash(), FORK_COVER_BATCH_SIZE, 0, true);
         }
     }
 
