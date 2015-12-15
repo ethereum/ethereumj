@@ -144,7 +144,7 @@ public class EthashTest {
         Block b = new Block(rlp);
 
         long nonce = Ethash.getForBlock(b.getNumber()).mineLight(b).get();
-        b.setNonce(intToBytes((int) nonce));
+        b.setNonce(longToBytes(nonce));
 
         Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
 
