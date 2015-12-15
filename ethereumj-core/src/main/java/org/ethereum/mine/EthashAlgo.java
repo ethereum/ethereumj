@@ -174,7 +174,7 @@ public class EthashAlgo {
         long nonce = new Random().nextLong();
         while(!Thread.currentThread().isInterrupted()) {
             nonce++;
-            Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, intToBytes((int) nonce));
+            Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
             if (h.compareTo(target) < 0) break;
         }

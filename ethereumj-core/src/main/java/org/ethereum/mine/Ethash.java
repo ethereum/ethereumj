@@ -76,7 +76,7 @@ public class Ethash {
      *  See {@link EthashAlgo#hashimotoLight(long, byte[][], byte[], byte[])}
      */
     public Pair<byte[], byte[]> hashimotoLight(BlockHeader header, long nonce) {
-        return hashimotoLight(header, intToBytes((int) nonce));
+        return hashimotoLight(header, longToBytes(nonce));
     }
 
     private  Pair<byte[], byte[]> hashimotoLight(BlockHeader header, byte[] nonce) {
@@ -89,7 +89,7 @@ public class Ethash {
      */
     public Pair<byte[], byte[]> hashimotoFull(BlockHeader header, long nonce) {
         return getEthashAlgo().hashimotoFull(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
-                intToBytes((int) nonce));
+                longToBytes(nonce));
     }
 
     /**
