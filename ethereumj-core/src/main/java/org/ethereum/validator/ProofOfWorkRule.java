@@ -19,7 +19,7 @@ public class ProofOfWorkRule extends BlockHeaderRule {
         byte[] proof = header.calcPowValue();
         byte[] boundary = header.getPowBoundary();
 
-        if (FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) > 0) {
+        if (!header.isGenesis() && FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) > 0) {
             errors.add(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
             return false;
         }

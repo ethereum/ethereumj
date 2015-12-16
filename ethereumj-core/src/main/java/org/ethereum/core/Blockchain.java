@@ -2,7 +2,6 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Set;
 
 public interface Blockchain {
 
@@ -53,4 +52,6 @@ public interface Blockchain {
     List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
+
+    Block createNewBlock(Block parent, List<Transaction> transactions);
 }

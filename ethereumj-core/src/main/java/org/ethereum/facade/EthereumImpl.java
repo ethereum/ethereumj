@@ -2,12 +2,14 @@ package org.ethereum.facade;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.GasPriceTracker;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
@@ -25,6 +27,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.concurrent.FutureAdapter;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
@@ -32,6 +35,7 @@ import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -67,6 +71,9 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     Whisper whisper;
+
+    @Autowired
+    PendingState pendingState;
 
     @Autowired
     SystemProperties config;
@@ -186,6 +193,19 @@ public class EthereumImpl implements Ethereum {
         return (org.ethereum.facade.Blockchain)worldManager.getBlockchain();
     }
 
+    public ImportResult addNewMinedBlock(Block block) {
+        ImportResult importResult = worldManager.getBlockchain().tryToConnect(block);
+        if (importResult == ImportResult.IMPORTED_BEST) {
+            channelManager.sendNewBlock(block, null);
+        }
+        return importResult;
+    }
+
+    @Override
+    public BlockMiner getBlockMiner() {
+        return ctx.getBean(BlockMiner.class);
+    }
+
     @Override
     public void addListener(EthereumListener listener) {
         worldManager.addListener(listener);
@@ -233,9 +253,19 @@ public class EthereumImpl implements Ethereum {
     @Override
     public Future<Transaction> submitTransaction(Transaction transaction) {
 
-        TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
+        TransactionTask transactionTask = new TransactionTask(transaction, channelManager);
 
-        return TransactionExecutor.instance.submitTransaction(transactionTask);
+        final Future<List<Transaction>> listFuture =
+                TransactionExecutor.instance.submitTransaction(transactionTask);
+
+        pendingState.addPendingTransaction(transaction);
+
+        return new FutureAdapter<Transaction, List<Transaction>>(listFuture) {
+            @Override
+            protected Transaction adapt(List<Transaction> adapteeResult) throws ExecutionException {
+                return adapteeResult.get(0);
+            }
+        };
     }
 
 
@@ -304,7 +334,7 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Set<Transaction> getWireTransactions() {
+    public List<Transaction> getWireTransactions() {
         return worldManager.getPendingState().getWireTransactions();
     }
 

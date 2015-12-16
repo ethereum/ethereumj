@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public class TransactionsMessage extends EthMessage {
 
-    private Set<Transaction> transactions;
+    private List<Transaction> transactions;
 
     public TransactionsMessage(byte[] encoded) {
         super(encoded);
@@ -24,12 +24,12 @@ public class TransactionsMessage extends EthMessage {
 
     public TransactionsMessage(Transaction transaction) {
 
-        transactions = new HashSet<>();
+        transactions = new ArrayList<>();
         transactions.add(transaction);
         parsed = true;
     }
 
-    public TransactionsMessage(Set<Transaction> transactionList) {
+    public TransactionsMessage(List<Transaction> transactionList) {
         this.transactions = transactionList;
         parsed = true;
     }
@@ -37,7 +37,7 @@ public class TransactionsMessage extends EthMessage {
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        transactions = new HashSet<>();
+        transactions = new ArrayList<>();
         for (int i = 1; i < paramsList.size(); ++i) {
             RLPList rlpTxData = (RLPList) paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData.getRLPData());
@@ -61,7 +61,7 @@ public class TransactionsMessage extends EthMessage {
     }
 
 
-    public Set<Transaction> getTransactions() {
+    public List<Transaction> getTransactions() {
         if (!parsed) parse();
         return transactions;
     }

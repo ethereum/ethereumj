@@ -1,9 +1,12 @@
 package org.ethereum.net.eth.handler;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
+
+import java.util.List;
 
 /**
  * Describes interface required by Eth peer clients
@@ -112,7 +115,12 @@ public interface Eth {
      *
      * @param tx sending transaction
      */
-    void sendTransaction(Transaction tx);
+    void sendTransaction(List<Transaction> tx);
+
+    /**
+     * Sends new block to the wire
+     */
+    void sendNewBlock(Block newBlock);
 
     /**
      * @return protocol version

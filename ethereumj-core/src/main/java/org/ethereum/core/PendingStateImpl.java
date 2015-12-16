@@ -12,10 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.math.BigInteger.ZERO;
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -49,7 +46,7 @@ public class PendingStateImpl implements PendingState {
 
     @Resource
     @Qualifier("wireTransactions")
-    private final Set<PendingTransaction> wireTransactions = new HashSet<>();
+    private final List<PendingTransaction> wireTransactions = new ArrayList<>();
 
     @Resource
     @Qualifier("pendingStateTransactions")
@@ -79,9 +76,9 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public Set<Transaction> getWireTransactions() {
+    public List<Transaction> getWireTransactions() {
 
-        Set<Transaction> txs = new HashSet<>();
+        List<Transaction> txs = new ArrayList<>();
 
         for (PendingTransaction tx : wireTransactions) {
             txs.add(tx.getTransaction());
@@ -91,7 +88,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public void addWireTransactions(Set<Transaction> transactions) {
+    public void addWireTransactions(List<Transaction> transactions) {
 
         if (transactions.isEmpty()) return;
 
@@ -121,6 +118,7 @@ public class PendingStateImpl implements PendingState {
     public void addPendingTransaction(Transaction tx) {
         pendingStateTransactions.add(tx);
         executeTx(tx);
+        listener.onPendingTransactionsReceived(Collections.singletonList(tx));
     }
 
     @Override
@@ -138,6 +136,8 @@ public class PendingStateImpl implements PendingState {
         clearPendingState(block.getTransactionsList());
 
         updateState();
+
+        listener.onPendingTransactionsReceived(Collections.<Transaction>emptyList());
     }
 
     private void clearOutdated(final long blockNumber) {

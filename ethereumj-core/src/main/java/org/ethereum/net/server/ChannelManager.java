@@ -1,5 +1,6 @@
 package org.ethereum.net.server;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
@@ -79,11 +80,37 @@ public class ChannelManager {
         }
     }
 
-    public void sendTransaction(Transaction tx) {
-
+    /**
+     * Propagates the transactions message across active peers with exclusion of
+     * 'receivedFrom' peer.
+     * @param tx  transactions to be sent
+     * @param receivedFrom the peer which sent original message or null if
+     *                     the transactions were originated by this peer
+     */
+    public void sendTransaction(List<Transaction> tx, Channel receivedFrom) {
         synchronized (activePeers) {
-            for (Channel channel : activePeers.values())
-                channel.sendTransaction(tx);
+            for (Channel channel : activePeers.values()) {
+                if (channel != receivedFrom) {
+                    channel.sendTransaction(tx);
+                }
+            }
+        }
+    }
+
+    /**
+     * Propagates the new block message across active peers with exclusion of
+     * 'receivedFrom' peer.
+     * @param block  new Block to be sent
+     * @param receivedFrom the peer which sent original message or null if
+     *                     the block has been mined by us
+     */
+    public void sendNewBlock(Block block, Channel receivedFrom) {
+        synchronized (activePeers) {
+            for (Channel channel : activePeers.values()) {
+                if (channel != receivedFrom) {
+                    channel.sendNewBlock(block);
+                }
+            }
         }
     }
 
