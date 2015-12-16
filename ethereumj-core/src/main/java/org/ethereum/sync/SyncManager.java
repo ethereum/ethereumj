@@ -6,8 +6,6 @@ import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -53,6 +51,10 @@ public class SyncManager {
     @Resource
     @Qualifier("syncStates")
     private Map<SyncStateName, SyncState> syncStates;
+
+    @Autowired
+    private StateInitiator stateInitiator;
+
     private SyncState state;
     private final Object stateMutex = new Object();
 
@@ -118,7 +120,7 @@ public class SyncManager {
 
                 updateDifficulties();
 
-                changeState(initialState());
+                changeState(stateInitiator.initiate());
 
                 addBestKnownNodeListener();
 
@@ -385,15 +387,6 @@ public class SyncManager {
     private void updateHighestKnownDifficulty(BigInteger difficulty) {
         if (difficulty.compareTo(highestKnownDifficulty) > 0) {
             highestKnownDifficulty = difficulty;
-        }
-    }
-
-    private SyncStateName initialState() {
-        if (queue.hasSolidBlocks()) {
-            logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
-            return BLOCK_RETRIEVING;
-        } else {
-            return HASH_RETRIEVING;
         }
     }
 
