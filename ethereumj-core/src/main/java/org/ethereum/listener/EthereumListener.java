@@ -45,4 +45,6 @@ public interface EthereumListener {
     void onVMTraceCreated(String transactionHash, String trace);
 
     void onTransactionExecuted(TransactionExecutionSummary summary);
+
+    void onPeerAddedToSyncPool(Channel peer);
 }

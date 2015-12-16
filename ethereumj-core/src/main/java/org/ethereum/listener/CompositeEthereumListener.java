@@ -117,4 +117,11 @@ public class CompositeEthereumListener implements EthereumListener {
             listener.onTransactionExecuted(summary);
         }
     }
+
+    @Override
+    public void onPeerAddedToSyncPool(Channel peer) {
+        for (EthereumListener listener : listeners) {
+            listener.onPeerAddedToSyncPool(peer);
+        }
+    }
 }

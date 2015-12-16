@@ -77,4 +77,9 @@ public class EthereumListenerAdapter implements EthereumListener {
     public void onTransactionExecuted(TransactionExecutionSummary summary) {
 
     }
+
+    @Override
+    public void onPeerAddedToSyncPool(Channel peer) {
+
+    }
 }

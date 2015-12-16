@@ -2,6 +2,7 @@ package org.ethereum.sync;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
@@ -57,6 +58,9 @@ public class PeersPool implements Iterable<Channel> {
     @Autowired
     private Ethereum ethereum;
 
+    @Autowired
+    private EthereumListener ethereumListener;
+
     @PostConstruct
     public void init() {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
@@ -85,6 +89,8 @@ public class PeersPool implements Iterable<Channel> {
         synchronized (bans) {
             bans.remove(peer.getPeerId());
         }
+
+        ethereumListener.onPeerAddedToSyncPool(peer);
 
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
     }
