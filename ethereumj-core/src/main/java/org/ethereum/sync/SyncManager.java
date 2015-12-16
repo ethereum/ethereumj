@@ -6,6 +6,7 @@ import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -28,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.ethereum.net.eth.EthVersion.*;
+import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
@@ -254,17 +256,16 @@ public class SyncManager {
         return syncDone;
     }
 
-    public void reportInvalidBlock(byte[] nodeId) {
+    public void reportBadAction(byte[] nodeId) {
 
         Channel peer = pool.getByNodeId(nodeId);
 
-        if (peer == null) {
-            return;
+        if (peer != null) {
+            logger.info("Peer {}: received invalid block, drop it", peer.getPeerIdShort());
+            peer.disconnect(USELESS_PEER);
         }
 
-        logger.info("Peer {}: received invalid block, drop it", peer.getPeerIdShort());
-
-        pool.ban(peer);
+        queue.dropBlocks(nodeId);
 
         // TODO decrease peer's reputation
 

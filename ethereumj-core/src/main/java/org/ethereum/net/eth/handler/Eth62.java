@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.net.eth.message.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import java.util.*;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Collections.reverse;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -343,7 +345,7 @@ public class Eth62 extends EthHandler {
         sentHeaders.clear();
     }
 
-    /************************
+    /*************************
      *     Fork Coverage     *
      *************************/
 
@@ -351,6 +353,14 @@ public class Eth62 extends EthHandler {
     private void startForkCoverage() {
 
         commonAncestorFound = false;
+
+        if (isNegativeGap()) {
+
+            logger.trace("Peer {}: start fetching remote fork", channel.getPeerIdShort());
+            BlockWrapper gap = syncManager.getGapBlock();
+            sendGetBlockHeaders(gap.getHash(), FORK_COVER_BATCH_SIZE, 0, true);
+            return;
+        }
 
         logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
@@ -361,15 +371,27 @@ public class Eth62 extends EthHandler {
 
     private void maintainForkCoverage(List<BlockHeader> received) {
 
-        long blockNumber = max(0, received.get(0).getNumber() - FORK_COVER_BATCH_SIZE);
+        if (!isNegativeGap()) reverse(received);
+
+        ListIterator<BlockHeader> it = received.listIterator();
+
+        if (isNegativeGap()) {
+
+            BlockWrapper gap = syncManager.getGapBlock();
+
+            // gap block didn't come, drop remote peer
+            if (!Arrays.equals(it.next().getHash(), gap.getHash())) {
+                syncManager.reportBadAction(channel.getNodeId());
+                return;
+            }
+        }
 
         // start downloading hashes from blockNumber of the block with known hash
-        ListIterator<BlockHeader> it = received.listIterator(received.size());
-        while (it.hasPrevious()) {
-            BlockHeader header = it.previous();
+        List<BlockHeader> headers = new ArrayList<>();
+        while (it.hasNext()) {
+            BlockHeader header = it.next();
             if (blockchain.isBlockExist(header.getHash())) {
                 commonAncestorFound = true;
-                blockNumber = header.getNumber() + 1;
                 logger.trace(
                         "Peer {}: common ancestor found: block.number {}, block.hash {}",
                         channel.getPeerIdShort(),
@@ -379,20 +401,35 @@ public class Eth62 extends EthHandler {
 
                 break;
             }
+            headers.add(header);
         }
 
+        if (!commonAncestorFound) {
 
-        if (commonAncestorFound) {
-
-            // start header sync
-            sendGetBlockHeaders(blockNumber, maxHashesAsk);
-
-        } else {
-
-            // continue fork coverage
-            logger.trace("Peer {}: common ancestor is not found yet", channel.getPeerIdShort());
-            sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
+            logger.trace("Peer {}: common ancestor is not found, drop", channel.getPeerIdShort());
+            syncManager.reportBadAction(channel.getNodeId());
 
         }
+
+        // add missed headers
+        queue.addAndValidateHeaders(headers, channel.getNodeId());
+
+        if (isNegativeGap()) {
+
+            // fork headers should already be fetched here
+            logger.trace("Peer {}: remote fork is fetched", channel.getPeerIdShort());
+            changeState(DONE_HASH_RETRIEVING);
+            return;
+        }
+
+        // start header sync
+        sendGetBlockHeaders(blockchain.getBestBlock().getNumber() + 1, maxHashesAsk);
+    }
+
+    private boolean isNegativeGap() {
+
+        if (syncManager.getGapBlock() == null) return false;
+
+        return syncManager.getGapBlock().getNumber() <= blockchain.getBestBlock().getNumber();
     }
 }

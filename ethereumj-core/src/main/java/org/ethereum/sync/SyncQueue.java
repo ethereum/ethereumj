@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.db.*;
-import org.ethereum.validator.BestNumberRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +31,8 @@ import static org.ethereum.core.ImportResult.IMPORTED_BEST;
 public class SyncQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
+
+    private static final int SCAN_BLOCKS_LIMIT = 1000;
 
     /**
      * Store holding a list of hashes of the heaviest chain on the network,
@@ -64,8 +65,6 @@ public class SyncQueue {
 
     @Autowired
     private MapDBFactory mapDBFactory;
-
-    private BestNumberRule bestNumberRule = new BestNumberRule();
 
     /**
      * Loads HashStore and BlockQueue from disk,
@@ -163,7 +162,7 @@ public class SyncQueue {
                     logger.debug("Invalid block RLP: {}", Hex.toHexString(b.getEncoded()));
                 }
 
-                syncManager.reportInvalidBlock(nodeId);
+                syncManager.reportBadAction(nodeId);
                 return;
             }
         }
@@ -207,7 +206,7 @@ public class SyncQueue {
 
         // run basic checks
         if (!isValid(block.getHeader())) {
-            syncManager.reportInvalidBlock(nodeId);
+            syncManager.reportBadAction(nodeId);
             return;
         }
 
@@ -333,7 +332,7 @@ public class SyncQueue {
                     logger.debug("Invalid header RLP: {}", Hex.toHexString(header.getEncoded()));
                 }
 
-                syncManager.reportInvalidBlock(nodeId);
+                syncManager.reportBadAction(nodeId);
                 return;
             }
 
@@ -405,6 +404,16 @@ public class SyncQueue {
     }
 
     /**
+     * Scans {@link #SCAN_BLOCKS_LIMIT} first blocks in the queue
+     * and removes blocks sent by given peer
+     *
+     * @param nodeId peer's node id
+     */
+    public void dropBlocks(byte[] nodeId) {
+        blockQueue.drop(nodeId, SCAN_BLOCKS_LIMIT);
+    }
+
+    /**
      * Checks whether BlockQueue contains solid blocks or not. <br>
      * Block is assumed to be solid in two cases:
      * <ul>
@@ -441,14 +450,6 @@ public class SyncQueue {
      * @return true if block is valid, false otherwise
      */
     private boolean isValid(BlockHeader header) {
-
-        if (!bestNumberRule.validate(header, blockchain.getBestBlock().getHeader())) {
-
-            if (logger.isErrorEnabled())
-                bestNumberRule.logErrors(logger);
-
-            return false;
-        }
 
         if (!headerValidator.validate(header)) {
 
