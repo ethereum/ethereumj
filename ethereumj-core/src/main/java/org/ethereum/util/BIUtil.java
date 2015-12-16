@@ -104,19 +104,10 @@ public class BIUtil {
         return (value.compareTo(new BigInteger(Long.MAX_VALUE + ""))) > -1;
     }
 
-    public static boolean isIn20PercentRange(BigInteger first, BigInteger second){
-
-        if (isMoreThan(first, second)) return true;
-
-        BigInteger gap = second.subtract(first);
-        BigInteger onePercent = first.divide(BigInteger.valueOf(100));
-        BigInteger ratio = gap.divide(onePercent);
-
-        if (ratio.doubleValue() <= 20){
-            return true;
-        }
-
-        return false;
+    public static boolean isIn20PercentRange(BigInteger first, BigInteger second) {
+        BigInteger five = BigInteger.valueOf(5);
+        BigInteger limit = first.add(first.divide(five));
+        return !isMoreThan(second, limit);
     }
 
     public static BigInteger max(BigInteger first, BigInteger second) {
