@@ -97,6 +97,10 @@ public class BlockWrapper {
         return Arrays.equals(this.nodeId, nodeId);
     }
 
+    public boolean isEqual(BlockWrapper wrapper) {
+        return wrapper != null && block.isEqual(wrapper.getBlock());
+    }
+
     public void importFailed() {
         if (importFailedAt == 0) {
             importFailedAt = System.currentTimeMillis();

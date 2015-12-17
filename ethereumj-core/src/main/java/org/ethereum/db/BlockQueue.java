@@ -13,9 +13,11 @@ import java.util.Set;
  */
 public interface BlockQueue extends DiskStore {
 
-    void addAll(Collection<BlockWrapper> blockList);
+    void addOrReplaceAll(Collection<BlockWrapper> blockList);
 
     void add(BlockWrapper block);
+
+    void addOrReplace(BlockWrapper block);
 
     BlockWrapper poll();
 

@@ -92,18 +92,23 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
-    public void addAll(Collection<BlockWrapper> blockList) {
+    public void addOrReplaceAll(Collection<BlockWrapper> blockList) {
         awaitInit();
         synchronized (writeMutex) {
             List<Long> numbers = new ArrayList<>(blockList.size());
             Set<ByteArrayWrapper> newHashes = new HashSet<>();
             for (BlockWrapper b : blockList) {
-                if(!index.contains(b.getNumber()) &&
-                   !numbers.contains(b.getNumber())) {
 
-                    blocks.put(b.getNumber(), b);
-                    numbers.add(b.getNumber());
-                    newHashes.add(new ByteArrayWrapper(b.getHash()));
+                if (!index.contains(b.getNumber())) {
+
+                    if (!numbers.contains(b.getNumber())) {
+                        numbers.add(b.getNumber());
+                        blocks.put(b.getNumber(), b);
+                        newHashes.add(new ByteArrayWrapper(b.getHash()));
+                    }
+
+                } else  {
+                    replaceInner(b);
                 }
             }
             hashes.addAll(newHashes);
@@ -123,21 +128,54 @@ public class BlockQueueImpl implements BlockQueue {
     public void add(BlockWrapper block) {
         awaitInit();
         synchronized (writeMutex) {
-            if (index.contains(block.getNumber())) {
-                return;
-            }
-            blocks.put(block.getNumber(), block);
-            hashes.add(new ByteArrayWrapper(block.getHash()));
 
-            takeLock.lock();
-            try {
-                index.add(block.getNumber());
-                notEmpty.signalAll();
-            } finally {
-                takeLock.unlock();
+            if (!index.contains(block.getNumber())) {
+                addInner(block);
+            }
+
+        }
+        db.commit();
+    }
+
+    @Override
+    public void addOrReplace(BlockWrapper block) {
+        awaitInit();
+        synchronized (writeMutex) {
+
+            if (!index.contains(block.getNumber())) {
+                addInner(block);
+            } else {
+                replaceInner(block);
             }
         }
         db.commit();
+    }
+
+    private void replaceInner(BlockWrapper block) {
+
+        BlockWrapper old = blocks.get(block.getNumber());
+
+        if (block.isEqual(old)) return;
+
+        if (old != null) {
+            hashes.remove(new ByteArrayWrapper(old.getHash()));
+        }
+
+        blocks.put(block.getNumber(), block);
+        hashes.add(new ByteArrayWrapper(block.getHash()));
+    }
+
+    private void addInner(BlockWrapper block) {
+        blocks.put(block.getNumber(), block);
+        hashes.add(new ByteArrayWrapper(block.getHash()));
+
+        takeLock.lock();
+        try {
+            index.add(block.getNumber());
+            notEmpty.signalAll();
+        } finally {
+            takeLock.unlock();
+        }
     }
 
     @Override

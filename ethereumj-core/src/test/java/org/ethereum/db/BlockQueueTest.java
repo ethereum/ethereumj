@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Genesis;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -111,8 +112,8 @@ public class BlockQueueTest {
 
         blockQueue.take();
 
-        // testing: addAll(), close(), open()
-        blockQueue.addAll(CollectionUtils.collectList(blocks, new Functional.Function<Block, BlockWrapper>() {
+        // testing: addOrReplaceAll(), close(), open()
+        blockQueue.addOrReplaceAll(CollectionUtils.collectList(blocks, new Functional.Function<Block, BlockWrapper>() {
             @Override
             public BlockWrapper apply(Block block) {
                 BlockWrapper wrapper = new BlockWrapper(block, nodeId);
@@ -153,6 +154,25 @@ public class BlockQueueTest {
             assertTrue(block.getNumber() > prevNumber);
             prevNumber = block.getNumber();
         }
+
+        // testing addOrReplace()
+        Block b1 = blocks.get(0);
+        Block b1_ = blocks.get(1);
+        BlockHeader header = b1_.getHeader();
+        header.setNumber(b1.getNumber());
+        b1_ = new Block(header, b1_.getTransactionsList(), b1_.getUncleList());
+
+        blockQueue.add(new BlockWrapper(b1, nodeId));
+        assertTrue(b1.isEqual(blockQueue.peek().getBlock()));
+
+        blockQueue.add(new BlockWrapper(b1_, nodeId));
+        assertTrue(b1.isEqual(blockQueue.peek().getBlock()));
+        assertTrue(blockQueue.filterExisting(Arrays.asList(b1.getHash())).isEmpty());
+
+        blockQueue.addOrReplace(new BlockWrapper(b1_, nodeId));
+        assertTrue(b1_.isEqual(blockQueue.peek().getBlock()));
+        assertFalse(blockQueue.filterExisting(Arrays.asList(b1.getHash())).isEmpty());
+        assertTrue(blockQueue.filterExisting(Arrays.asList(b1_.getHash())).isEmpty());
     }
 
     @Test // concurrency
