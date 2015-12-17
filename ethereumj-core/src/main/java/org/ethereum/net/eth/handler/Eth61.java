@@ -2,6 +2,8 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.net.eth.message.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import static java.lang.Math.*;
+import static java.util.Collections.reverse;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.eth.message.EthMessageCodes.GET_BLOCK_HASHES_BY_NUMBER;
 import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
@@ -115,7 +118,7 @@ public class Eth61 extends EthLegacy {
         lastAskedNumber = blockNumber;
     }
 
-    private void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
+    protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(
                 msg.getBlockNumber(),
                 min(msg.getMaxBlocks(), config.maxHashesAsk())
@@ -154,55 +157,84 @@ public class Eth61 extends EthLegacy {
 
         commonAncestorFound = false;
 
+        if (isNegativeGap()) {
+
+            logger.trace("Peer {}: start fetching remote fork", channel.getPeerIdShort());
+            BlockWrapper gap = syncManager.getGapBlock();
+            sendGetBlockHashes(gap.getHash(), FORK_COVER_BATCH_SIZE);
+            return;
+        }
+
         logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
         long bestNumber = blockchain.getBestBlock().getNumber();
-        long blockNumber = max(1, bestNumber - FORK_COVER_BATCH_SIZE);
-        sendGetBlockHashesByNumber(blockNumber, FORK_COVER_BATCH_SIZE);
-
+        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
+        sendGetBlockHashesByNumber(blockNumber, min(FORK_COVER_BATCH_SIZE, (int) (bestNumber - blockNumber + 1)));
     }
 
     private void maintainForkCoverage(List<byte[]> received) {
 
-        long blockNumber = max(1, lastAskedNumber - FORK_COVER_BATCH_SIZE);
+        if (!isNegativeGap()) reverse(received);
 
-        if (lastAskedNumber > 1) {
+        ListIterator<byte[]> it = received.listIterator();
 
-            // start downloading hashes from blockNumber of the block with known hash
-            ListIterator<byte[]> it = received.listIterator(received.size());
-            while (it.hasPrevious()) {
-                byte[] hash = it.previous();
-                if (blockchain.isBlockExist(hash)) {
-                    commonAncestorFound = true;
-                    Block block = blockchain.getBlockByHash(hash);
-                    blockNumber = block.getNumber() + 1;
+        if (isNegativeGap()) {
 
-                    logger.trace(
+            BlockWrapper gap = syncManager.getGapBlock();
+
+            // gap block didn't come, drop remote peer
+            if (!Arrays.equals(it.next(), gap.getHash())) {
+
+                logger.trace("Peer {}: gap block is missed in response, drop", channel.getPeerIdShort());
+                syncManager.reportBadAction(channel.getNodeId());
+                return;
+            }
+        }
+
+        // start downloading hashes from blockNumber of the block with known hash
+        List<byte[]> hashes = new ArrayList<>();
+        while (it.hasNext()) {
+            byte[] hash = it.next();
+            if (blockchain.isBlockExist(hash)) {
+                commonAncestorFound = true;
+                if (logger.isTraceEnabled()) logger.trace(
                             "Peer {}: common ancestor found: block.number {}, block.hash {}",
                             channel.getPeerIdShort(),
-                            block.getNumber(),
-                            block.getShortHash()
+                            blockchain.getBlockByHash(hash).getNumber(),
+                            Hex.toHexString(hash)
                     );
 
-                    break;
-                }
+                break;
             }
-
-        } else {
-            commonAncestorFound = true;
+            hashes.add(hash);
         }
 
-        if (commonAncestorFound) {
+        if (!commonAncestorFound) {
 
-            // start hash sync
-            sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
-
-        } else {
-
-            // continue fork coverage
-            logger.trace("Peer {}: common ancestor is not found yet", channel.getPeerIdShort());
-            sendGetBlockHashesByNumber(blockNumber, FORK_COVER_BATCH_SIZE);
-
+            logger.trace("Peer {}: common ancestor is not found, drop", channel.getPeerIdShort());
+            syncManager.reportBadAction(channel.getNodeId());
+            return;
         }
+
+        // add missed headers
+        queue.addHashes(hashes);
+
+        if (isNegativeGap()) {
+
+            // fork headers should already be fetched here
+            logger.trace("Peer {}: remote fork is fetched", channel.getPeerIdShort());
+            changeState(DONE_HASH_RETRIEVING);
+            return;
+        }
+
+        // start header sync
+        sendGetBlockHashesByNumber(blockchain.getBestBlock().getNumber() + 1, maxHashesAsk);
+    }
+
+    private boolean isNegativeGap() {
+
+        if (syncManager.getGapBlock() == null) return false;
+
+        return syncManager.getGapBlock().getNumber() <= blockchain.getBestBlock().getNumber();
     }
 }

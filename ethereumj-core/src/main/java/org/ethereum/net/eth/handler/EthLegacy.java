@@ -99,7 +99,7 @@ public abstract class EthLegacy extends EthHandler {
         queue.addNewBlockHashes(hashes);
     }
 
-    private void processGetBlockHashes(GetBlockHashesMessage msg) {
+    protected void processGetBlockHashes(GetBlockHashesMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFrom(
                 msg.getBestHash(),
                 min(msg.getMaxBlocks(), MAX_HASHES_TO_SEND)
@@ -123,8 +123,7 @@ public abstract class EthLegacy extends EthHandler {
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
 
         // treat empty hashes response as end of hash sync
-        // only if main sync done
-        if (receivedHashes.isEmpty() && (syncDone || blockchain.isBlockExist(bestHash))) {
+        if (receivedHashes.isEmpty()) {
             changeState(DONE_HASH_RETRIEVING);
         } else {
             syncStats.addHashes(receivedHashes.size());
@@ -216,13 +215,6 @@ public abstract class EthLegacy extends EthHandler {
             List<Block> regularBlocks = new ArrayList<>(blockList.size());
 
             for (Block block : blockList) {
-
-                // update TD and best hash
-                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
-                    bestHash = block.getHash();
-                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
-                }
-
                 if (block.getNumber() < newBlockLowerNumber) {
                     regularBlocks.add(block);
                 } else {
@@ -242,6 +234,10 @@ public abstract class EthLegacy extends EthHandler {
     }
 
     protected void sendGetBlockHashes() {
+        sendGetBlockHashes(lastHashToAsk, maxHashesAsk);
+    }
+
+    protected void sendGetBlockHashes(byte[] lastHashToAsk, int maxHashesAsk) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get block hashes, hash [{}], maxHashesAsk [{}]",
                 channel.getPeerIdShort(),

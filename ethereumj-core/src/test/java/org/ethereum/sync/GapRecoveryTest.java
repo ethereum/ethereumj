@@ -10,12 +10,10 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.net.eth.handler.Eth61;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
-import org.ethereum.net.eth.message.BlockHeadersMessage;
-import org.ethereum.net.eth.message.GetBlockHeadersMessage;
-import org.ethereum.net.eth.message.NewBlockMessage;
-import org.ethereum.net.eth.message.StatusMessage;
+import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
@@ -35,6 +33,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
+import static java.lang.Math.min;
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.ethereum.net.eth.EthVersion.V61;
@@ -128,6 +127,7 @@ public class GapRecoveryTest {
         recursiveDelete(testDbA);
         recursiveDelete(testDbB);
         SysPropConfigA.eth62 = null;
+        SysPropConfigA.eth61 = null;
     }
 
     // positive gap, A on main, B on main
@@ -539,6 +539,19 @@ public class GapRecoveryTest {
                 sendMessage(response);
             }
         };
+        SysPropConfigA.eth61 = new Eth61() {
+            @Override
+            protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
+
+                List<byte[]> hashes = new ArrayList<>();
+                for (int i = 7; i < mainB1B10.size(); i++) {
+                    hashes.add(mainB1B10.get(i).getHash());
+                }
+
+                BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
+                sendMessage(msgHashes);
+            }
+        };
 
         setupPeers();
 
@@ -581,6 +594,7 @@ public class GapRecoveryTest {
 
         // back to usual handler
         SysPropConfigA.eth62 = null;
+        SysPropConfigA.eth61 = null;
 
         for (Block b : mainB1B10) {
             blockchainA.tryToConnect(b);
@@ -641,6 +655,19 @@ public class GapRecoveryTest {
                 sendMessage(response);
             }
         };
+        SysPropConfigA.eth61 = new Eth61() {
+            @Override
+            protected void processGetBlockHashes(GetBlockHashesMessage msg) {
+
+                List<byte[]> hashes = new ArrayList<>();
+                for (int i = 0; i < forkB1B5B8_.size() - 1; i++) {
+                    hashes.add(forkB1B5B8_.get(i).getHash());
+                }
+
+                BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
+                sendMessage(msgHashes);
+            }
+        };
 
         setupPeers();
 
@@ -683,6 +710,7 @@ public class GapRecoveryTest {
 
         // back to usual handler
         SysPropConfigA.eth62 = null;
+        SysPropConfigA.eth61 = null;
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         ethereumB.addListener(new EthereumListenerAdapter() {
@@ -753,6 +781,7 @@ public class GapRecoveryTest {
     public static class SysPropConfigA {
         static SystemProperties props = new SystemProperties();
         static Eth62 eth62 = null;
+        static Eth61 eth61 = null;
 
         @Bean
         public SystemProperties systemProperties() {
@@ -764,6 +793,13 @@ public class GapRecoveryTest {
         public Eth62 eth62() throws IllegalAccessException, InstantiationException {
             if (eth62 != null) return eth62;
             return new Eth62();
+        }
+
+        @Bean
+        @Scope("prototype")
+        public Eth61 eth61() throws IllegalAccessException, InstantiationException {
+            if (eth61 != null) return eth61;
+            return new Eth61();
         }
     }
 
