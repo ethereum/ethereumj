@@ -418,15 +418,13 @@ public class SyncManager {
     }
 
     private void removeUselessPeers() {
-        List<Channel> removed = new ArrayList<>();
         for (Channel peer : pool) {
             if (peer.hasBlocksLack()) {
-                logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
-                removed.add(peer);
+                logger.info("Peer {}: has no more blocks, ban", Utils.getNodeIdShort(peer.getPeerId()));
+                pool.ban(peer);
                 updateLowerUsefulDifficulty(peer.getTotalDifficulty());
             }
         }
-        pool.removeAll(removed);
     }
 
     private void fillUpPeersPool() {

@@ -39,7 +39,7 @@ public class PeersPool implements Iterable<Channel> {
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
     private static final int DISCONNECT_HITS_THRESHOLD = 5;
-    private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(30);
+    private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(1);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
 
     private final Map<ByteArrayWrapper, Channel> activePeers = new HashMap<>();
