@@ -263,7 +263,7 @@ public class SyncManager {
         Channel peer = pool.getByNodeId(nodeId);
 
         if (peer != null) {
-            logger.info("Peer {}: received invalid block, drop it", peer.getPeerIdShort());
+            logger.info("Peer {}: bad action, drop it", peer.getPeerIdShort());
             peer.disconnect(USELESS_PEER);
         }
 
