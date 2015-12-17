@@ -33,9 +33,9 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-import static java.lang.Math.min;
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.net.eth.EthVersion.V60;
 import static org.ethereum.net.eth.EthVersion.V61;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -414,7 +414,6 @@ public class GapRecoveryTest {
         setupPeers();
 
         Block b4 = mainB1B10.get(3);
-        final Block b5 = mainB1B10.get(4);
 
         // A == B == genesis
 
@@ -455,6 +454,7 @@ public class GapRecoveryTest {
         });
 
         ethA.sendNewBlock(b8_);
+        ethA.sendNewBlock(b10);
 
         semaphore.await(20, SECONDS);
 
@@ -524,6 +524,11 @@ public class GapRecoveryTest {
     // expected: B drops A and all its blocks => B on main
     @Test
     public void test9() throws InterruptedException {
+
+        // not for Eth60 logic
+        if (Integer.valueOf(V60.getCode()).equals(SysPropConfigA.props.syncVersion())) {
+            return;
+        }
 
         // handler which don't send an ancestor
         SysPropConfigA.eth62 = new Eth62() {
@@ -640,6 +645,11 @@ public class GapRecoveryTest {
     // expected: B drops A and all its blocks => B on main
     @Test
     public void test10() throws InterruptedException {
+
+        // not for Eth60 logic
+        if (Integer.valueOf(V60.getCode()).equals(SysPropConfigA.props.syncVersion())) {
+            return;
+        }
 
         // handler which don't send a gap block
         SysPropConfigA.eth62 = new Eth62() {

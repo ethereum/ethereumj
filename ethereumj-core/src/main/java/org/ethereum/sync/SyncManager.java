@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.SyncStateName.*;
@@ -391,6 +392,11 @@ public class SyncManager {
     }
 
     private EthVersion initialMasterVersion() {
+
+        if (CONFIG.syncVersion() != null) {
+            return EthVersion.fromCode(CONFIG.syncVersion());
+        }
+
         if (!queue.isHeadersEmpty() || queue.isHashesEmpty()) {
             return V62;
         } else {
