@@ -258,9 +258,9 @@ public class BlockQueueImpl implements BlockQueue {
         awaitInit();
 
         int i = 0;
-        synchronized (index) {
+        List<Long> removed = new ArrayList<>();
 
-            List<Long> removed = new ArrayList<>();
+        synchronized (index) {
 
             for (Long idx : index) {
                 if (++i > scanLimit) break;
@@ -274,6 +274,14 @@ public class BlockQueueImpl implements BlockQueue {
         }
 
         db.commit();
+
+        if (logger.isDebugEnabled()) {
+            if (removed.isEmpty()) {
+                logger.debug("0 blocks are dropped out");
+            } else {
+                logger.debug("[{}..{}] blocks are dropped out", removed.get(0), removed.get(removed.size() - 1));
+            }
+        }
     }
 
 
