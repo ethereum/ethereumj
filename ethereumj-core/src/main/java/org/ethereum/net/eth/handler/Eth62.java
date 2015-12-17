@@ -145,16 +145,11 @@ public class Eth62 extends EthHandler {
 
         List<BlockHeader> received = msg.getBlockHeaders();
 
-        // treat empty headers response as end of hash sync
-        // only if main sync done
-        if (received.isEmpty() && (syncDone || blockchain.isBlockExist(bestHash))) {
+        // treat empty headers response as end of header sync
+        if (received.isEmpty()) {
             changeState(DONE_HASH_RETRIEVING);
         } else {
             syncStats.addHashes(received.size());
-
-            if (received.isEmpty()) {
-                return;
-            }
 
             if (syncState == HASH_RETRIEVING && !commonAncestorFound) {
                 maintainForkCoverage(received);
@@ -245,13 +240,6 @@ public class Eth62 extends EthHandler {
             List<Block> regularBlocks = new ArrayList<>(blocks.size());
 
             for (Block block : blocks) {
-
-                // update TD and best hash
-                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
-                    bestHash = block.getHash();
-                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
-                }
-
                 if (block.getNumber() < newBlockLowerNumber) {
                     regularBlocks.add(block);
                 } else {
@@ -366,7 +354,7 @@ public class Eth62 extends EthHandler {
 
         long bestNumber = blockchain.getBestBlock().getNumber();
         long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
-        sendGetBlockHeaders(blockNumber, min(FORK_COVER_BATCH_SIZE, (int) (bestNumber - blockNumber)));
+        sendGetBlockHeaders(blockNumber, min(FORK_COVER_BATCH_SIZE, (int) (bestNumber - blockNumber + 1)));
     }
 
     private void maintainForkCoverage(List<BlockHeader> received) {

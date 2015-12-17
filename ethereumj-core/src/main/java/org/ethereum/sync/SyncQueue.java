@@ -187,7 +187,7 @@ public class SyncQueue {
             wrappers.add(new BlockWrapper(b, nodeId));
         }
 
-        blockQueue.addAll(wrappers);
+        blockQueue.addOrReplaceAll(wrappers);
 
         if (logger.isDebugEnabled()) logger.debug(
                 "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
@@ -213,7 +213,7 @@ public class SyncQueue {
         BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
         wrapper.setReceivedAt(System.currentTimeMillis());
 
-        blockQueue.add(wrapper);
+        blockQueue.addOrReplace(wrapper);
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),

@@ -35,12 +35,12 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-import static java.lang.Math.min;
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.ethereum.net.eth.EthVersion.V61;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
+import static org.ethereum.sync.SyncStateName.HASH_RETRIEVING;
 import static org.ethereum.sync.SyncStateName.IDLE;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.fail;
@@ -50,7 +50,7 @@ import static org.spongycastle.util.encoders.Hex.decode;
  * @author Mikhail Kalinin
  * @since 14.12.2015
  */
-@Ignore
+@Ignore("Long network tests")
 public class GapRecoveryTest {
 
     private static BigInteger minDifficultyBackup;
@@ -409,7 +409,6 @@ public class GapRecoveryTest {
     // A does a re-branch to main
     // expected: B downloads main blocks from A => B on main
     @Test
-    @Ignore
     public void test7() throws InterruptedException {
 
         setupPeers();
@@ -432,23 +431,6 @@ public class GapRecoveryTest {
         }
 
         // A == b8', B == b4
-        final CountDownLatch semaphoreB5 = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b5)) {
-                    semaphoreB5.countDown();
-                }
-            }
-        });
-
-        ethA.sendNewBlock(b5);
-
-        // waiting until sync is done
-        semaphoreB5.await(20, SECONDS);
-        if(semaphoreB5.getCount() > 0) {
-            fail("PeerB didn't finish main sync");
-        }
 
         ethereumB.addListener(new EthereumListenerAdapter() {
             @Override
@@ -486,12 +468,12 @@ public class GapRecoveryTest {
     // A does a re-branch to main
     // expected: B downloads A's fork and imports it as NOT_BEST => B on main
     @Test
-    @Ignore
     public void test8() throws InterruptedException {
 
         setupPeers();
 
-        Block b9 = mainB1B10.get(8);
+        final Block b7_ = forkB1B5B8_.get(6);
+        Block b8 = mainB1B10.get(7);
 
         // A == B == genesis
 
@@ -500,40 +482,33 @@ public class GapRecoveryTest {
 
         for (Block b : forkB1B5B8_) {
             blockchainA.tryToConnect(b);
+            if (b.isEqual(b7_)) break;
         }
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b9)) break;
+            if (b.isEqual(b8)) break;
         }
 
-        // A == b8', B == b9
-
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof NewBlockMessage) {
-                    if (((NewBlockMessage) message).getBlock().getNumber() == 8) {
-                        // it's time to do a re-branch
-                        for (Block b : mainB1B10) {
-                            blockchainA.tryToConnect(b);
-                        }
-                    }
-                }
-            }
-        });
+        // A == b7', B == b8
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         ethereumB.addListener(new EthereumListenerAdapter() {
             @Override
             public void onBlock(Block block, List<TransactionReceipt> receipts) {
+                if (block.isEqual(b7_)) {
+                    // it's time to do a re-branch
+                    for (Block b : mainB1B10) {
+                        blockchainA.tryToConnect(b);
+                    }
+                }
                 if (block.isEqual(b10)) {
                     semaphore.countDown();
                 }
             }
         });
 
-        ethA.sendNewBlock(b8_);
+        ethA.sendNewBlock(b7_);
         ethA.sendNewBlock(b10);
 
         semaphore.await(20, SECONDS);
@@ -818,7 +793,7 @@ public class GapRecoveryTest {
         public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
 
             Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
-            states.put(SyncStateName.IDLE, new IdleState(){
+            states.put(IDLE, new AbstractSyncState(IDLE) {
                 @Override
                 public void doMaintain() {
 
@@ -834,8 +809,8 @@ public class GapRecoveryTest {
                     }
                 }
             });
-            states.put(SyncStateName.HASH_RETRIEVING, new HashRetrievingState());
-            states.put(SyncStateName.BLOCK_RETRIEVING, new BlockRetrievingState());
+            states.put(HASH_RETRIEVING, new HashRetrievingState());
+            states.put(BLOCK_RETRIEVING, new BlockRetrievingState());
 
             for (SyncState state : states.values()) {
                 ((AbstractSyncState)state).setSyncManager(syncManager);
