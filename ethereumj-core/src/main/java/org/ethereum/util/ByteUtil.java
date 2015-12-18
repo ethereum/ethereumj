@@ -494,4 +494,61 @@ public class ByteUtil {
         }
         return result;
     }
+
+    public static byte[] intsToBytes(int[] arr, boolean bigEndian) {
+        byte[] ret = new byte[arr.length * 4];
+        intsToBytes(arr,ret, bigEndian);
+        return ret;
+    }
+
+    public static int[] bytesToInts(byte[] arr, boolean bigEndian) {
+        int[] ret = new int[arr.length / 4];
+        bytesToInts(arr, ret, bigEndian);
+        return ret;
+    }
+
+    public static void bytesToInts(byte[] b, int[] arr, boolean bigEndian) {
+        if (!bigEndian) {
+            int off = 0;
+            for (int i = 0; i < arr.length; i++) {
+                int ii = b[off++] & 0x000000FF;
+                ii |= (b[off++] << 8) & 0x0000FF00;
+                ii |= (b[off++] << 16) & 0x00FF0000;
+                ii |= (b[off++] << 24);
+                arr[i] = ii;
+            }
+        } else {
+            int off = 0;
+            for (int i = 0; i < arr.length; i++) {
+                int ii = b[off++] << 24;
+                ii |= (b[off++] << 16) & 0x00FF0000;
+                ii |= (b[off++] << 8) & 0x0000FF00;
+                ii |= b[off++] & 0x000000FF;
+                arr[i] = ii;
+            }
+        }
+    }
+
+    public static void intsToBytes(int[] arr, byte[] b, boolean bigEndian) {
+        if (!bigEndian) {
+            int off = 0;
+            for (int i = 0; i < arr.length; i++) {
+                int ii = arr[i];
+                b[off++] = (byte) (ii & 0xFF);
+                b[off++] = (byte) ((ii >> 8) & 0xFF);
+                b[off++] = (byte) ((ii >> 16) & 0xFF);
+                b[off++] = (byte) ((ii >> 24) & 0xFF);
+            }
+        } else {
+            int off = 0;
+            for (int i = 0; i < arr.length; i++) {
+                int ii = arr[i];
+                b[off++] = (byte) ((ii >> 24) & 0xFF);
+                b[off++] = (byte) ((ii >> 16) & 0xFF);
+                b[off++] = (byte) ((ii >> 8) & 0xFF);
+                b[off++] = (byte) (ii & 0xFF);
+            }
+        }
+    }
+
 }
