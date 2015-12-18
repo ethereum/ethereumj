@@ -165,12 +165,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
+    public synchronized List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
         return blockStore.getListHashesEndWith(hash, qty);
     }
 
     @Override
-    public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
+    public synchronized List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
         long bestNumber = bestBlock.getNumber();
 
         if (blockNumber > bestNumber) {
@@ -237,7 +237,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         stateStack.pop();
     }
 
-    public ImportResult tryConnectAndFork(Block block) {
+    public synchronized ImportResult tryConnectAndFork(Block block) {
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
@@ -282,7 +282,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
 
-    public ImportResult tryToConnect(Block block) {
+    public synchronized ImportResult tryToConnect(Block block) {
 
         if (logger.isInfoEnabled())
             logger.info("Try connect block hash: {}, number: {}",
@@ -326,7 +326,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return NO_PARENT;
     }
 
-    public Block createNewBlock(Block parent, List<Transaction> transactions) {
+    public synchronized Block createNewBlock(Block parent, List<Transaction> transactions) {
         List<BlockHeader> uncles = new ArrayList<>();
         ArrayList<Transaction> txs = new ArrayList<>(transactions);
 
@@ -379,7 +379,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public void add(Block block) {
+    public synchronized void add(Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + getBestBlock().getNumber());
@@ -671,7 +671,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public void storeBlock(Block block, List<TransactionReceipt> receipts) {
+    public synchronized void storeBlock(Block block, List<TransactionReceipt> receipts) {
 
         /* Debug check to see if the state is still as expected */
         String blockStateRootHash = Hex.toHexString(block.getStateRoot());
@@ -744,7 +744,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public void updateTotalDifficulty(Block block) {
+    public synchronized void updateTotalDifficulty(Block block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
         logger.info("TD: updated to {}", totalDifficulty);
     }
@@ -838,7 +838,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+    public synchronized List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
         long blockNumber = identifier.getNumber();
 
         if (identifier.getHash() != null) {
@@ -903,7 +903,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
+    public synchronized List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
         List<byte[]> bodies = new ArrayList<>(hashes.size());
 
         for (byte[] hash : hashes) {
