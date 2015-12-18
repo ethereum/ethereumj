@@ -150,7 +150,9 @@ public abstract class EthLegacy extends EthHandler {
         List<Block> blocks = new ArrayList<>(hashes.size());
         for (byte[] hash : hashes) {
             Block block = blockchain.getBlockByHash(hash);
-            blocks.add(block);
+            if (block != null) {
+                blocks.add(block);
+            }
         }
 
         BlocksMessage bm = new BlocksMessage(blocks);
