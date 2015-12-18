@@ -620,8 +620,18 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public long getMinBlockTimeoutMsec() {
+    public long getMineMinBlockTimeoutMsec() {
         return config.getLong("mine.minBlockTimeoutMsec");
+    }
+
+    @ValidateMe
+    public int getMineCpuThreads() {
+        return config.getInt("mine.cpuMineThreads");
+    }
+
+    @ValidateMe
+    public boolean isMineFullDataset() {
+        return config.getBoolean("mine.fullDataSet");
     }
 
     public String dump() {
