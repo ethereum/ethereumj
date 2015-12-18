@@ -8,6 +8,7 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
+import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.submit.TransactionExecutor;
@@ -61,6 +62,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Autowired
     protected Blockchain blockchain;
+
+    @Autowired
+    protected BlockStore blockstore;
 
     @Autowired
     protected SyncManager syncManager;
@@ -253,7 +257,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     public void sendNewBlock(Block block) {
-        NewBlockMessage msg = new NewBlockMessage(block, block.getDifficulty());
+        BigInteger parentTD = blockstore.getTotalDifficultyForHash(block.getParentHash());
+        byte[] td = ByteUtil.bigIntegerToBytes(parentTD.add(new BigInteger(1, block.getDifficulty())));
+        NewBlockMessage msg = new NewBlockMessage(block, td);
         sendMessage(msg);
     }
 
