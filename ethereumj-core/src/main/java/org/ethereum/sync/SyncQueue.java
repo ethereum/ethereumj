@@ -275,7 +275,7 @@ public class SyncQueue {
 
         List<byte[]> notInChain = new ArrayList<>();
         for (byte[] hash : notInQueue) {
-            if (blockchain.isBlockExist(hash)) {
+            if (!blockchain.isBlockExist(hash)) {
                 notInChain.add(hash);
             }
         }
