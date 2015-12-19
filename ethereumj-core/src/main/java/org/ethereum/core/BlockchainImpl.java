@@ -30,6 +30,7 @@ import java.util.*;
 
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ZERO;
+import static java.util.Collections.emptyList;
 import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
@@ -174,7 +175,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         long bestNumber = bestBlock.getNumber();
 
         if (blockNumber > bestNumber) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         if (blockNumber + qty - 1 > bestNumber) {
@@ -845,7 +846,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             Block block = getBlockByHash(identifier.getHash());
 
             if (block == null) {
-                return Collections.emptyList();
+                return emptyList();
             }
 
             blockNumber = block.getNumber();
@@ -853,12 +854,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         long bestNumber = bestBlock.getNumber();
 
+        if (bestNumber < blockNumber) {
+            return emptyList();
+        }
+
         int qty = getQty(blockNumber, bestNumber, limit, reverse);
 
         byte[] startHash = getStartHash(blockNumber, skip, qty, reverse);
 
         if (startHash == null) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
