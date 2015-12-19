@@ -1,5 +1,7 @@
 package org.ethereum.mine;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -47,22 +49,35 @@ public class BlockMiner {
 
     private BigInteger minGasPrice;
     private long minBlockTimeout;
+    private int cpuThreads;
+    private boolean fullMining = true;
+
     private boolean isMining;
 
     private Block miningBlock;
-    private Future<Long> ethashTask;
+    private ListenableFuture<Long> ethashTask;
     private long lastBlockMinedTime;
 
     @PostConstruct
     private void init() {
         minGasPrice = config.getMineMinGasPrice();
-        minBlockTimeout = config.getMinBlockTimeoutMsec();
+        minBlockTimeout = config.getMineMinBlockTimeoutMsec();
+        cpuThreads = config.getMineCpuThreads();
+        fullMining = config.isMineFullDataset();
         listener.addListener(new EthereumListenerAdapter() {
             @Override
             public void onPendingTransactionsReceived(List<Transaction> transactions) {
                 BlockMiner.this.onPendingTransactionsReceived(transactions);
             }
         });
+    }
+
+    public void setFullMining(boolean fullMining) {
+        this.fullMining = fullMining;
+    }
+
+    public void setCpuThreads(int cpuThreads) {
+        this.cpuThreads = cpuThreads;
     }
 
     public void startMining() {
@@ -128,21 +143,26 @@ public class BlockMiner {
     protected void restartMining(List<Transaction> txs) {
         cancelCurrentBlock();
         miningBlock = blockchain.createNewBlock(blockchain.getBestBlock(), txs);
-        ethashTask = Ethash.getForBlock(miningBlock.getNumber()).mineLight(miningBlock);
+        ethashTask = fullMining ?
+                Ethash.getForBlock(miningBlock.getNumber()).mine(miningBlock, cpuThreads) :
+                Ethash.getForBlock(miningBlock.getNumber()).mineLight(miningBlock, cpuThreads)
+        ;
         fireBlockStarted(miningBlock);
         logger.debug("New block mining started: {}", miningBlock.getShortHash());
-        executor.submit(new Runnable() {
+        ethashTask.addListener(new Runnable() {
             @Override
             public void run() {
                 try {
                     ethashTask.get();
                     // wow, block mined!
                     blockMined(miningBlock);
-                } catch (InterruptedException|ExecutionException e) {
+                } catch (InterruptedException | CancellationException e) {
                     // OK, we've been cancelled, just exit
+                } catch (Exception e) {
+                    logger.warn("Exception during mining: ", e);
                 }
             }
-        });
+        }, MoreExecutors.sameThreadExecutor());
     }
 
     protected void blockMined(Block newBlock) throws InterruptedException {

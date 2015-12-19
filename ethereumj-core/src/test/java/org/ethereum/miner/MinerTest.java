@@ -1,35 +1,26 @@
 package org.ethereum.miner;
 
 import com.typesafe.config.ConfigFactory;
-import org.ethereum.config.Constants;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.mine.Ethash;
 import org.ethereum.mine.MinerListener;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.message.*;
-import org.ethereum.net.server.Channel;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 
 import java.io.FileNotFoundException;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -74,7 +65,7 @@ public class MinerTest {
 
     @BeforeClass
     public static void setup() {
-        Constants.MINIMUM_DIFFICULTY = BigInteger.valueOf(1);
+//        Constants.MINIMUM_DIFFICULTY = BigInteger.valueOf(1);
     }
 
     @Test
@@ -85,7 +76,7 @@ public class MinerTest {
                         "peer.networkId = 555 \n" +
                         "peer.active = [{ url = \"enode://b23b3b9f38f1d314b27e63c63f3e45a6ea5f82c83f282e2d38f2f01c22165e897656fe2e5f9f18616b81f41cbcf2e9100fc9f8dad099574f3d84cf9623de2fc9@localhost:20301\" }] \n" +
                         "sync.enabled = true \n" +
-                        "genesis = genesis-light.json \n" +
+                        "genesis = genesis-harder.json \n" +
 //                        "genesis = frontier.json \n" +
                         "database.dir = testDB-1 \n"));
 
@@ -111,6 +102,13 @@ public class MinerTest {
         Thread.sleep(100000000L);
     }
 
+
+    static String blockInfo(Block b) {
+        boolean ours = Hex.toHexString(b.getExtraData()).startsWith("cccccccccc");
+        return (ours ? "###" : "  #") + b.getNumber() +
+                " (" + b.getShortHash() + " <~ " + Hex.toHexString(b.getParentHash()).substring(0, 6) + ")";
+    }
+
     @Test
     public void startMiningTest() throws FileNotFoundException, InterruptedException {
         SysPropConfig1.props.overrideParams(ConfigFactory.parseString(
@@ -119,9 +117,10 @@ public class MinerTest {
                         "peer.networkId = 555 \n" +
                         "peer.active = [{ url = \"enode://b23b3b9f38f1d314b27e63c63f3e45a6ea5f82c83f282e2d38f2f01c22165e897656fe2e5f9f18616b81f41cbcf2e9100fc9f8dad099574f3d84cf9623de2fc9@localhost:20301\" }] \n" +
                         "sync.enabled = true \n" +
-                        "genesis = genesis-light.json \n" +
+                        "genesis = genesis-harder.json \n" +
 //                        "genesis = frontier.json \n" +
-                        "database.dir = testDB-2 \n"));
+                        "database.dir = testDB-2 \n" +
+                        "mine.extraDataHex = cccccccccccccccccccc"));
 
 //        SysPropConfig2.props.overrideParams(ConfigFactory.parseString(
 //                "peer.listen.port = 30336 \n" +
@@ -140,7 +139,7 @@ public class MinerTest {
         ethereum1.addListener(new EthereumListenerAdapter() {
             @Override
             public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                System.out.println("=== New block: " + block.getShortHash());
+                System.out.println("=== New block: " + blockInfo(block));
             }
 
             @Override
@@ -180,20 +179,23 @@ public class MinerTest {
 
             @Override
             public void blockMiningStarted(Block block) {
-                System.out.println("=== MinerTest.blockMiningStarted");
+                System.out.println("=== MinerTest.blockMiningStarted " + blockInfo(block));
             }
 
             @Override
             public void blockMined(Block block) {
                 boolean validate = Ethash.getForBlock(block.getNumber()).validate(block.getHeader());
+                System.out.println("=== MinerTest.blockMined " + blockInfo(block));
                 System.out.println("=== MinerTest.blockMined: " + validate);
             }
 
             @Override
             public void blockMiningCanceled(Block block) {
-                System.out.println("=== MinerTest.blockMiningCanceled");
+                System.out.println("=== MinerTest.blockMiningCanceled " + blockInfo(block));
             }
         });
+        Ethash.fileCacheEnabled = true;
+        blockMiner.setFullMining(true);
         blockMiner.startMining();
 
 //        System.out.println("======= Waiting for block #4");
@@ -205,22 +207,22 @@ public class MinerTest {
 //        System.out.println("======= Sending forked block without parent...");
 
 
-        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
-        byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+//        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+//        byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+//
+//        for (int i = ethereum1.getRepository().getNonce(senderKey.getAddress()).intValue(), j = 0; j < 200; i++, j++) {
+//            {
+//                Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
+//                        ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
+//                        receiverAddr, new byte[]{77}, new byte[0]);
+//                tx.sign(senderKey.getPrivKeyBytes());
+//                System.out.println("=== Submitting tx: " + tx);
+//                ethereum1.submitTransaction(tx);
+//            }
+//            Thread.sleep(7000);
+//        }
 
-        for (int i = ethereum1.getRepository().getNonce(senderKey.getAddress()).intValue(), j = 0; j < 200; i++, j++) {
-            {
-                Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
-                        ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
-                        receiverAddr, new byte[]{77}, new byte[0]);
-                tx.sign(senderKey.getPrivKeyBytes());
-                System.out.println("=== Submitting tx: " + tx);
-                ethereum1.submitTransaction(tx);
-            }
-            Thread.sleep(7000);
-        }
-
-        Thread.sleep(10000000);
+        Thread.sleep(1000000000);
 
         ethereum1.close();
 
