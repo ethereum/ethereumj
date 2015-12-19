@@ -17,6 +17,7 @@ import java.util.*;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Collections.reverse;
+import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -73,6 +74,14 @@ public class Eth62 extends EthHandler {
             default:
                 break;
         }
+    }
+
+    @Override
+    public void sendNewBlockHashes(Block block) {
+
+        BlockIdentifier identifier = new BlockIdentifier(block.getHash(), block.getNumber());
+        NewBlockHashes62Message msg = new NewBlockHashes62Message(singletonList(identifier));
+        sendMessage(msg);
     }
 
     @Override

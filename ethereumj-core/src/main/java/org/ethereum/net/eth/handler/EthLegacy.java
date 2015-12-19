@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.lang.Math.min;
+import static java.util.Collections.singletonList;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -67,6 +68,13 @@ public abstract class EthLegacy extends EthHandler {
             default:
                 break;
         }
+    }
+
+    @Override
+    public void sendNewBlockHashes(Block block) {
+
+        NewBlockHashesMessage msg = new NewBlockHashesMessage(singletonList(block.getHash()));
+        sendMessage(msg);
     }
 
     @Override

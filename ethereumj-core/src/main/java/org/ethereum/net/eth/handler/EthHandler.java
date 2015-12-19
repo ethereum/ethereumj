@@ -22,6 +22,7 @@ import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.sync.SyncStateName.*;
+import static org.ethereum.util.BIUtil.isLessThan;
 
 /**
  * Process the messages between peers with 'eth' capability on the network<br>
@@ -263,11 +265,23 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         sendMessage(msg);
     }
 
+    public abstract void sendNewBlockHashes(Block block);
+
     private void processNewBlock(NewBlockMessage newBlockMessage) {
 
         Block newBlock = newBlockMessage.getBlock();
 
         loggerSync.info("New block received: block.index [{}]", newBlock.getNumber());
+
+        // skip new block if TD is lower than ours
+        if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
+            loggerSync.trace(
+                    "New block difficulty lower than ours: [{}] vs [{}], skip",
+                    newBlockMessage.getDifficultyAsBigInt(),
+                    blockchain.getTotalDifficulty()
+            );
+            return;
+        }
 
         channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
         bestHash = newBlock.getHash();
