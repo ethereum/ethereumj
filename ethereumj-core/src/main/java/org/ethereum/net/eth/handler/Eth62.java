@@ -17,6 +17,7 @@ import java.util.*;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Collections.reverse;
+import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -73,6 +74,14 @@ public class Eth62 extends EthHandler {
             default:
                 break;
         }
+    }
+
+    @Override
+    public void sendNewBlockHashes(Block block) {
+
+        BlockIdentifier identifier = new BlockIdentifier(block.getHash(), block.getNumber());
+        NewBlockHashes62Message msg = new NewBlockHashes62Message(singletonList(identifier));
+        sendMessage(msg);
     }
 
     @Override
@@ -353,7 +362,7 @@ public class Eth62 extends EthHandler {
         logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
         long bestNumber = blockchain.getBestBlock().getNumber();
-        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
+        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE + 1);
         sendGetBlockHeaders(blockNumber, min(FORK_COVER_BATCH_SIZE, (int) (bestNumber - blockNumber + 1)));
     }
 

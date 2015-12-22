@@ -168,7 +168,7 @@ public class Eth61 extends EthLegacy {
         logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
         long bestNumber = blockchain.getBestBlock().getNumber();
-        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
+        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE + 1);
         sendGetBlockHashesByNumber(blockNumber, min(FORK_COVER_BATCH_SIZE, (int) (bestNumber - blockNumber + 1)));
     }
 

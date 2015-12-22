@@ -57,7 +57,7 @@ public class NewBlockMessage extends EthMessage {
     }
 
     public BigInteger getDifficultyAsBigInt() {
-        return new BigInteger(difficulty);
+        return new BigInteger(1, difficulty);
     }
 
     @Override

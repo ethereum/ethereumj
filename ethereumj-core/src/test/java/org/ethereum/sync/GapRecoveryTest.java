@@ -159,7 +159,7 @@ public class GapRecoveryTest {
 
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -197,7 +197,7 @@ public class GapRecoveryTest {
 
         ethA.sendNewBlock(b8_);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b8'
         if(semaphore.getCount() > 0) {
@@ -239,7 +239,7 @@ public class GapRecoveryTest {
 
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -254,7 +254,7 @@ public class GapRecoveryTest {
 
         setupPeers();
 
-        Block b5 = mainB1B10.get(4);
+        final Block b5 = mainB1B10.get(4);
         Block b9 = mainB1B10.get(8);
 
         // A == B == genesis
@@ -284,10 +284,17 @@ public class GapRecoveryTest {
             }
         });
 
-        ethA.sendNewBlock(b5);
+        ethA.sendNewBlockHashes(b5);
+
+        for (Block b : mainB1B10) {
+            blockchainA.tryToConnect(b);
+        }
+
+        // A == b10
+
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -322,19 +329,35 @@ public class GapRecoveryTest {
         // A == b8', B == b9
 
         final CountDownLatch semaphore = new CountDownLatch(1);
+        final CountDownLatch semaphoreB8_ = new CountDownLatch(1);
         ethereumB.addListener(new EthereumListenerAdapter() {
             @Override
             public void onBlock(Block block, List<TransactionReceipt> receipts) {
                 if (block.isEqual(b10)) {
                     semaphore.countDown();
                 }
+                if (block.isEqual(b8_)) {
+                    semaphoreB8_.countDown();
+                }
             }
         });
 
-        ethA.sendNewBlock(b8_);
+        ethA.sendNewBlockHashes(b8_);
+
+        semaphoreB8_.await(10, SECONDS);
+        if(semaphoreB8_.getCount() > 0) {
+            fail("PeerB didn't import b8'");
+        }
+
+        for (Block b : mainB1B10) {
+            blockchainA.tryToConnect(b);
+        }
+
+        // A == b10
+
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -381,9 +404,9 @@ public class GapRecoveryTest {
             }
         });
 
-        ethA.sendNewBlock(b7);
+        ethA.sendNewBlockHashes(b7);
 
-        semaphoreB7.await(20, SECONDS);
+        semaphoreB7.await(10, SECONDS);
 
         // check if B == b7
         if(semaphoreB7.getCount() > 0) {
@@ -397,7 +420,7 @@ public class GapRecoveryTest {
         // A == b10
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -456,7 +479,7 @@ public class GapRecoveryTest {
         ethA.sendNewBlock(b8_);
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -493,6 +516,7 @@ public class GapRecoveryTest {
         // A == b7', B == b8
 
         final CountDownLatch semaphore = new CountDownLatch(1);
+        final CountDownLatch semaphoreB7_ = new CountDownLatch(1);
         ethereumB.addListener(new EthereumListenerAdapter() {
             @Override
             public void onBlock(Block block, List<TransactionReceipt> receipts) {
@@ -501,6 +525,8 @@ public class GapRecoveryTest {
                     for (Block b : mainB1B10) {
                         blockchainA.tryToConnect(b);
                     }
+
+                    semaphoreB7_.countDown();
                 }
                 if (block.isEqual(b10)) {
                     semaphore.countDown();
@@ -508,10 +534,16 @@ public class GapRecoveryTest {
             }
         });
 
-        ethA.sendNewBlock(b7_);
+        ethA.sendNewBlockHashes(b7_);
+
+        semaphoreB7_.await(10, SECONDS);
+        if(semaphoreB7_.getCount() > 0) {
+            fail("PeerB didn't import b7'");
+        }
+
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -590,7 +622,7 @@ public class GapRecoveryTest {
             }
         });
 
-        semaphoreDisconnect.await(20, SECONDS);
+        semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
         if(semaphoreDisconnect.getCount() > 0) {
@@ -625,14 +657,14 @@ public class GapRecoveryTest {
         ethereumB.connect(nodeA);
 
         // await connection
-        semaphoreConnect.await(20, SECONDS);
+        semaphoreConnect.await(10, SECONDS);
         if(semaphoreConnect.getCount() > 0) {
             fail("PeerB is not able to connect to PeerA");
         }
 
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
@@ -655,6 +687,11 @@ public class GapRecoveryTest {
         SysPropConfigA.eth62 = new Eth62() {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+
+                if (msg.getBlockNumber() == b8_.getNumber() && msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
 
                 List<BlockHeader> headers = new ArrayList<>();
                 for (int i = 0; i < forkB1B5B8_.size() - 1; i++) {
@@ -699,7 +736,7 @@ public class GapRecoveryTest {
 
         // A == b8', B == b9
 
-        ethA.sendNewBlock(b8_);
+        ethA.sendNewBlockHashes(b8_);
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
         ethereumA.addListener(new EthereumListenerAdapter() {
@@ -711,7 +748,7 @@ public class GapRecoveryTest {
             }
         });
 
-        semaphoreDisconnect.await(20, SECONDS);
+        semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
         if(semaphoreDisconnect.getCount() > 0) {
@@ -742,20 +779,91 @@ public class GapRecoveryTest {
         ethereumB.connect(nodeA);
 
         // await connection
-        semaphoreConnect.await(20, SECONDS);
+        semaphoreConnect.await(10, SECONDS);
         if(semaphoreConnect.getCount() > 0) {
             fail("PeerB is not able to connect to PeerA");
         }
 
+        for (Block b : mainB1B10) {
+            blockchainA.tryToConnect(b);
+        }
+
+        // A == b10
+
         ethA.sendNewBlock(b10);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
+
+    // A sends block with low TD to B
+    // expected: B skips this block
+    @Test
+    public void test11() throws InterruptedException {
+
+        Block b5 = mainB1B10.get(4);
+        final Block b6_ = forkB1B5B8_.get(5);
+
+        setupPeers();
+
+        // A == B == genesis
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+        final Blockchain blockchainB = (Blockchain) ethereumB.getBlockchain();
+
+        for (Block b : forkB1B5B8_) {
+            blockchainA.tryToConnect(b);
+        }
+
+        for (Block b : mainB1B10) {
+            blockchainB.tryToConnect(b);
+            if (b.isEqual(b5)) break;
+        }
+
+        // A == b8', B == b5
+
+        final CountDownLatch semaphore1 = new CountDownLatch(1);
+        final CountDownLatch semaphore2 = new CountDownLatch(1);
+        ethereumB.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onBlock(Block block, List<TransactionReceipt> receipts) {
+                if (block.isEqual(b6_)) {
+                    if (semaphore1.getCount() > 0) {
+                        semaphore1.countDown();
+                    } else {
+                        semaphore2.countDown();
+                    }
+                }
+            }
+        });
+
+        ethA.sendNewBlock(b6_);
+        semaphore1.await(10, SECONDS);
+
+        if(semaphore1.getCount() > 0) {
+            fail("PeerB doesn't accept block with higher TD");
+        }
+
+        for (Block b : mainB1B10) {
+            blockchainB.tryToConnect(b);
+        }
+
+        // B == b10
+
+        ethA.sendNewBlock(b6_);
+
+        semaphore2.await(5, SECONDS);
+
+        // check if B skips b6'
+        if(semaphore2.getCount() == 0) {
+            fail("PeerB doesn't skip block with lower TD");
+        }
+    }
+
 
     private void setupPeers() throws InterruptedException {
 
@@ -780,7 +888,7 @@ public class GapRecoveryTest {
 
         ethereumB.connect(nodeA);
 
-        semaphore.await(20, SECONDS);
+        semaphore.await(10, SECONDS);
         if(semaphore.getCount() > 0) {
             fail("Failed to set up peers");
         }
