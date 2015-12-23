@@ -1,6 +1,8 @@
 package org.ethereum.core;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -47,6 +49,9 @@ public class PendingStateImpl implements PendingState {
     @Resource
     @Qualifier("wireTransactions")
     private final List<PendingTransaction> wireTransactions = new ArrayList<>();
+    // to filter out the transactions we have already processed
+    // transactions could be sent by peers even if they were already included into blocks
+    private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(5000);
 
     @Resource
     @Qualifier("pendingStateTransactions")
@@ -94,11 +99,20 @@ public class PendingStateImpl implements PendingState {
 
         logger.info("Wire transaction list added: size: [{}]", transactions.size());
 
-        listener.onPendingTransactionsReceived(transactions);
-
         long number = blockchain.getBestBlock().getNumber();
+        List<Transaction> newTxs = new ArrayList<>();
         for (Transaction tx : transactions) {
-            if (isValid(tx)) wireTransactions.add(new PendingTransaction(tx, number));
+            ByteArrayWrapper hash = new ByteArrayWrapper(tx.getHash());
+
+            if (!redceivedTxs.containsKey(hash) && isValid(tx)) {
+                redceivedTxs.put(hash, null);
+                wireTransactions.add(new PendingTransaction(tx, number));
+                newTxs.add(tx);
+            }
+        }
+
+        if (!newTxs.isEmpty()) {
+            listener.onPendingTransactionsReceived(newTxs);
         }
     }
 
