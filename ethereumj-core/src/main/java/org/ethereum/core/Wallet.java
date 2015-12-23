@@ -1,6 +1,8 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.submit.WalletTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
+import javax.annotation.PostConstruct;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -51,7 +54,22 @@ public class Wallet {
     @Autowired
     private ApplicationContext context;
 
+    @Autowired
+    private CompositeEthereumListener listener;
+
     private List<WalletListener> listeners = new ArrayList<>();
+
+    @PostConstruct
+    private void init() {
+        listener.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onPendingTransactionsReceived(List<Transaction> transactions) {
+                if (!transactions.isEmpty()) {
+                    addTransactions(transactions);
+                }
+            }
+        });
+    }
 
     public void addNewAccount() {
         Account account = new Account();
@@ -119,9 +137,8 @@ public class Wallet {
         else {
             walletTransaction = new WalletTransaction(transaction);
             this.walletTransactions.put(hash, walletTransaction);
+            this.applyTransaction(transaction);
         }
-
-        this.applyTransaction(transaction);
 
         return walletTransaction;
     }

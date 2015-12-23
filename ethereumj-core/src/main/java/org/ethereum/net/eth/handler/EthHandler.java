@@ -249,13 +249,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         List<Transaction> txSet = msg.getTransactions();
         pendingState.addWireTransactions(txSet);
-
-        for (Transaction tx : txSet) {
-            wallet.addTransaction(tx);
-        }
-
-        // broadcasting received transaction to other peers
-        TransactionExecutor.instance.submitTransaction(new TransactionTask(txSet, channelManager, channel));
     }
 
     public void sendNewBlock(Block block) {
