@@ -87,7 +87,7 @@ public class BlockHeadersMessage extends EthMessage {
         if (logger.isDebugEnabled()) {
             payload.append(" ");
             for (BlockHeader header : blockHeaders) {
-                payload.append(Hex.toHexString(header.getEncoded())).append(" | ");
+                payload.append(Hex.toHexString(header.getHash()).substring(0, 6)).append(" | ");
             }
             if (!blockHeaders.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());

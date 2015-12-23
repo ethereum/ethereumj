@@ -81,7 +81,7 @@ public class GetBlockBodiesMessage extends EthMessage {
 
         if (logger.isDebugEnabled()) {
             for (byte[] hash : blockHashes) {
-                payload.append(Hex.toHexString(hash)).append(" | ");
+                payload.append(Hex.toHexString(hash).substring(0, 6)).append(" | ");
             }
             if (!blockHashes.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());
