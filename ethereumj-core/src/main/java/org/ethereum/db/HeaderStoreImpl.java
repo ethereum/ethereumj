@@ -33,8 +33,7 @@ public class HeaderStoreImpl implements HeaderStore {
     private final ReentrantLock initLock = new ReentrantLock();
     private final Condition init = initLock.newCondition();
 
-    private final Object writeMutex = new Object();
-    private final Object readMutex = new Object();
+    private final Object mutex = new Object();
 
     @Override
     public void open() {
@@ -81,11 +80,12 @@ public class HeaderStoreImpl implements HeaderStore {
     public void add(BlockHeader header) {
         awaitInit();
 
-        synchronized (writeMutex) {
+        synchronized (mutex) {
             if (index.contains(header.getNumber())) {
                 return;
             }
             headers.put(header.getNumber(), header);
+            index.add(header.getNumber());
         }
 
         db.commit();
@@ -94,7 +94,7 @@ public class HeaderStoreImpl implements HeaderStore {
     @Override
     public void addBatch(Collection<BlockHeader> headers) {
         awaitInit();
-        synchronized (writeMutex) {
+        synchronized (mutex) {
             List<Long> numbers = new ArrayList<>(headers.size());
             for (BlockHeader b : headers) {
                 if(!index.contains(b.getNumber()) &&
@@ -114,7 +114,7 @@ public class HeaderStoreImpl implements HeaderStore {
     public BlockHeader peek() {
         awaitInit();
 
-        synchronized (readMutex) {
+        synchronized (mutex) {
             if(index.isEmpty()) {
                 return null;
             }
@@ -135,6 +135,7 @@ public class HeaderStoreImpl implements HeaderStore {
 
     @Override
     public List<BlockHeader> pollBatch(int qty) {
+        awaitInit();
 
         if (index.isEmpty()) {
             return Collections.emptyList();
@@ -188,7 +189,7 @@ public class HeaderStoreImpl implements HeaderStore {
     }
 
     private BlockHeader pollInner() {
-        synchronized (readMutex) {
+        synchronized (mutex) {
             if (index.isEmpty()) {
                 return null;
             }
