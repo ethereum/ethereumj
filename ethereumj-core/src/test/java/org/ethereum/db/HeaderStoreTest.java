@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -24,11 +25,13 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class HeaderStoreTest {
 
-    static BlockHeader[] createHeaders(int cnt) {
-        BlockHeader[] ret = new BlockHeader[cnt];
+    static AtomicInteger cnt = new AtomicInteger();
+
+    static BlockHeader[] createHeaders(int headCnt) {
+        BlockHeader[] ret = new BlockHeader[headCnt];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = new BlockHeader(new byte[0], new byte[0], new byte[0], new byte[0], new byte[0], i, 0, 0, 0,
-                    new byte[0], new byte[0], new byte[0]);
+            ret[i] = new BlockHeader(new byte[0], new byte[0], new byte[0], new byte[0], new byte[0],
+                    cnt.getAndIncrement(), 0, 0, 0, new byte[0], new byte[0], new byte[0]);
         }
         return ret;
     }
