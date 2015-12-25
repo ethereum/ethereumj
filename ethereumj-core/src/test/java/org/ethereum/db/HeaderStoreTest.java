@@ -63,9 +63,13 @@ public class HeaderStoreTest {
         List<BlockHeader> bhs = hs.pollBatch(1000);
         Assert.assertEquals(10, bhs.size());
 
-        hs.add(createHeaders(2)[1]);
+        BlockHeader[] headers = createHeaders(2);
+        hs.add(headers[1]);
+        hs.add(headers[0]);
         BlockHeader bh = hs.poll();
-        Assert.assertEquals(1, bh.getNumber());
+        Assert.assertEquals(headers[0].getNumber(), bh.getNumber());
+        bh = hs.poll();
+        Assert.assertEquals(headers[1].getNumber(), bh.getNumber());
     }
 
     @Test
