@@ -1,15 +1,20 @@
 package org.ethereum.core;
 
+import org.ethereum.core.genesis.GenesisLoader;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -77,5 +82,56 @@ public class PendingStateTest {
 
         pendingState.processBest(block);
         assertEquals(pendingState.getPendingTransactions().size(), 0);
+    }
+
+
+    ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+    byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+
+    private Transaction createTx(int nonce, int val) {
+        Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(nonce),
+                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
+                ByteUtil.longToBytesNoLeadZeroes(0xfffff),
+                receiverAddr, ByteUtil.intToBytesNoLeadZeroes(val), new byte[0]);
+        tx.sign(senderKey.getPrivKeyBytes());
+        return tx;
+    }
+
+    @Test
+    public void changeForkTest() {
+        // testing that PendingState correctly handles situation when the best fork switches
+        // and the new block contains another set of transactions
+
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
+
+        PendingStateImpl pendingState = new PendingStateImpl(
+                new EthereumListenerAdapter(),
+                blockchain.getRepository(),
+                blockchain.getBlockStore(),
+                new ProgramInvokeFactoryImpl()
+        );
+        pendingState.setBlockchain(blockchain);
+        pendingState.init();
+
+        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+        byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+
+        Transaction tx1 = createTx(2, 77);
+        Block b1 = blockchain.createNewBlock(blockchain.getBestBlock(), Arrays.asList(tx1), Collections.EMPTY_LIST);
+
+        pendingState.addPendingTransaction(tx1);
+        assertEquals(pendingState.getPendingTransactions().size(), 1);
+
+        pendingState.processBest(b1);
+        assertEquals(pendingState.getPendingTransactions().size(), 0);
+
+        Block b1_ = blockchain.createNewBlock(blockchain.getBestBlock(), Arrays.<Transaction>asList(), Collections.EMPTY_LIST);
+        pendingState.processBest(b1_);
+        // b1_ has no transactions but it is now the BEST instead of b1 so the tx1 should be returned
+        // back to the pending state
+        assertEquals(pendingState.getWireTransactions().size(), 1);
+        assertTrue(Arrays.equals(pendingState.getWireTransactions().get(0).getHash(), tx1.getHash()));
     }
 }
