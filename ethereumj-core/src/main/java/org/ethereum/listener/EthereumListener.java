@@ -1,9 +1,6 @@
 package org.ethereum.listener;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -37,6 +34,8 @@ public interface EthereumListener {
     void onPeerDisconnect(String host, long port);
 
     void onPendingTransactionsReceived(List<Transaction> transactions);
+
+    void onPendingStateChanged(PendingState pendingState);
 
     void onSyncDone();
 

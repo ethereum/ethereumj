@@ -1,9 +1,6 @@
 package org.ethereum.listener;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -40,6 +37,10 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     @Override
     public void onPendingTransactionsReceived(List<Transaction> transactions) {
+    }
+
+    @Override
+    public void onPendingStateChanged(PendingState pendingState) {
     }
 
     @Override

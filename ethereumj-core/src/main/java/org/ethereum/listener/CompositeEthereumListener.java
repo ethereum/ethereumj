@@ -1,9 +1,6 @@
 package org.ethereum.listener;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -66,6 +63,13 @@ public class CompositeEthereumListener implements EthereumListener {
     public void onPendingTransactionsReceived(List<Transaction> transactions) {
         for (EthereumListener listener : listeners) {
             listener.onPendingTransactionsReceived(transactions);
+        }
+    }
+
+    @Override
+    public void onPendingStateChanged(PendingState pendingState) {
+        for (EthereumListener listener : listeners) {
+            listener.onPendingStateChanged(pendingState);
         }
     }
 
