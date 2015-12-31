@@ -4,6 +4,8 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,23 @@ import static org.ethereum.util.BIUtil.toBI;
 @Component
 public class PendingStateImpl implements PendingState {
 
+    public static class TransactionSortedSet extends TreeSet<Transaction> {
+        public TransactionSortedSet() {
+            super(new Comparator<Transaction>() {
+
+                @Override
+                public int compare(Transaction tx1, Transaction tx2) {
+                    long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
+                            ByteUtil.byteArrayToLong(tx2.getNonce());
+                    if (nonceDiff != 0) {
+                        return nonceDiff > 0 ? 1 : -1;
+                    }
+                    return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
+                }
+            });
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger("state");
 
     @Autowired
@@ -46,18 +65,20 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     private ProgramInvokeFactory programInvokeFactory;
 
-    @Resource
-    @Qualifier("wireTransactions")
+//    @Resource
+//    @Qualifier("wireTransactions")
     private final List<PendingTransaction> wireTransactions = new ArrayList<>();
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
-    private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(5000);
+    private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(500000);
 
     @Resource
     @Qualifier("pendingStateTransactions")
     private final List<Transaction> pendingStateTransactions = new ArrayList<>();
 
     private Repository pendingState;
+
+    private Block best = null;
 
     public PendingStateImpl() {
     }
@@ -81,7 +102,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public List<Transaction> getWireTransactions() {
+    public synchronized List<Transaction> getWireTransactions() {
 
         List<Transaction> txs = new ArrayList<>();
 
@@ -92,36 +113,54 @@ public class PendingStateImpl implements PendingState {
         return txs;
     }
 
+    public Block getBestBlock() {
+        return best;
+    }
+
     @Override
-    public void addWireTransactions(List<Transaction> transactions) {
+    public synchronized void addWireTransactions(List<Transaction> transactions) {
+
+        final List<Transaction> newTxs = new ArrayList<>();
+        int unknownTx = 0;
 
         if (transactions.isEmpty()) return;
 
-        logger.info("Wire transaction list added: size: [{}]", transactions.size());
-
         long number = blockchain.getBestBlock().getNumber();
-        List<Transaction> newTxs = new ArrayList<>();
         for (Transaction tx : transactions) {
             ByteArrayWrapper hash = new ByteArrayWrapper(tx.getHash());
 
-            if (!redceivedTxs.containsKey(hash) && isValid(tx)) {
+            if (!redceivedTxs.containsKey(hash)) {
+                unknownTx++;
                 redceivedTxs.put(hash, null);
-                wireTransactions.add(new PendingTransaction(tx, number));
-                newTxs.add(tx);
+                if (isValid(tx)) {
+                    wireTransactions.add(new PendingTransaction(tx, number));
+                    newTxs.add(tx);
+                } else {
+                    logger.info("Non valid TX: " + tx);
+                }
             }
         }
 
         if (!newTxs.isEmpty()) {
-            listener.onPendingTransactionsReceived(newTxs);
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onPendingTransactionsReceived(newTxs);
+                    listener.onPendingStateChanged(PendingStateImpl.this);
+                }
+            });
         }
+        logger.info("Wire transaction list added: {} new, {} valid of received {}, #of known txs: {}", unknownTx, newTxs.size(), transactions.size(), redceivedTxs.size());
     }
 
     private boolean isValid(Transaction tx) {
+        logger.info("isValid called");
 
         BigInteger txNonce = toBI(tx.getNonce());
 
-        if (repository.isExist(tx.getSender())) {
-            BigInteger currNonce = repository.getAccountState(tx.getSender()).getNonce();
+        byte[] txSender = tx.getSender();
+        if (repository.isExist(txSender)) {
+            BigInteger currNonce = repository.getAccountState(txSender).getNonce();
             return currNonce.equals(txNonce);
         } else {
             return txNonce.equals(ZERO);
@@ -129,10 +168,16 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public void addPendingTransaction(Transaction tx) {
+    public synchronized void addPendingTransaction(final Transaction tx) {
         pendingStateTransactions.add(tx);
         executeTx(tx);
-        listener.onPendingTransactionsReceived(Collections.singletonList(tx));
+        EventDispatchThread.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                listener.onPendingTransactionsReceived(Collections.singletonList(tx));
+                listener.onPendingStateChanged(PendingStateImpl.this);
+            }
+        });
     }
 
     @Override
@@ -140,18 +185,85 @@ public class PendingStateImpl implements PendingState {
         return pendingStateTransactions;
     }
 
+    private Block findCommonAncestor(Block b1, Block b2) {
+        while(!b1.isEqual(b2)) {
+            if (b1.getNumber() >= b2.getNumber()) {
+                b1 = blockchain.getBlockByHash(b1.getParentHash());
+            }
+
+            if (b1.getNumber() < b2.getNumber()) {
+                b2 = blockchain.getBlockByHash(b2.getParentHash());
+            }
+            if (b1 == null || b2 == null) {
+                // shouldn't happen
+                throw new RuntimeException("Pending state can't find common ancestor: one of blocks has a gap");
+            }
+        }
+        return b1;
+    }
+
     @Override
-    public void processBest(Block block) {
+    public synchronized void processBest(Block newBlock) {
+
+        if (best != null && !best.isParentOf(newBlock)) {
+            // need to switch the state to another fork
+
+            Block commonAncestor = findCommonAncestor(best, newBlock);
+
+            if (logger.isDebugEnabled()) logger.debug("New best block from another fork: "
+                    + newBlock.getShortDescr() + ", old best: " + best.getShortDescr()
+                    + ", ancestor: " + commonAncestor.getShortDescr());
+
+            // first return back the transactions from forked block
+            Block rollback = best;
+            while(!rollback.isEqual(commonAncestor)) {
+                List<PendingTransaction> l = new ArrayList<>();
+                for (Transaction tx : rollback.getTransactionsList()) {
+                    logger.debug("Returning transaction back to pending: " + tx);
+                    l.add(new PendingTransaction(tx, commonAncestor.getNumber()));
+                }
+                wireTransactions.addAll(l);
+                rollback = blockchain.getBlockByHash(rollback.getParentHash());
+            }
+
+            // rollback the state snapshot to the ancestor
+            pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
+
+            // next process blocks from new fork
+            Block main = newBlock;
+            List<Block> mainFork = new ArrayList<>();
+            while(!main.isEqual(commonAncestor)) {
+                mainFork.add(main);
+                main = blockchain.getBlockByHash(main.getParentHash());
+            }
+
+            // processing blocks from ancestor to new block
+            for (int i = mainFork.size() - 1; i >= 0; i--) {
+                processBestInternal(mainFork.get(i));
+            }
+        } else {
+            logger.debug("PendingStateImpl.processBest: " + newBlock.getShortDescr());
+            processBestInternal(newBlock);
+        }
+
+        best = newBlock;
+
+        updateState();
+
+        EventDispatchThread.invokeLater(new Runnable() {
+            public void run() {
+                listener.onPendingStateChanged(PendingStateImpl.this);
+            }
+        });
+    }
+
+    private void processBestInternal(Block block) {
 
         clearWire(block.getTransactionsList());
 
         clearOutdated(block.getNumber());
 
         clearPendingState(block.getTransactionsList());
-
-        updateState();
-
-        listener.onPendingTransactionsReceived(Collections.<Transaction>emptyList());
     }
 
     private void clearOutdated(final long blockNumber) {
