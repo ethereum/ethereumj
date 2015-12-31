@@ -11,6 +11,7 @@ import org.ethereum.util.FileUtil;
 import org.ethereum.util.Functional;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.junit.Assert.*;
@@ -185,6 +189,78 @@ public class BlockQueueTest {
         r2.join();
     }
 
+    @Ignore
+    @Test // concurrency
+    public void testConcurrency2() throws InterruptedException {
+        // Reproduce the 'Block for index ### is null' problem
+        // The error detected in logs only
+
+        final CountDownLatch waiter = new CountDownLatch(3);
+
+        for (int i = 0; i < 10; i++) {
+            BlockWrapper blockWrapper = new BlockWrapper(blocks.get(10 + i), nodeId);
+            blockQueue.add(blockWrapper);
+        }
+
+        new Thread("a") {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i < 10; i++) {
+                        BlockWrapper blockWrapper = new BlockWrapper(blocks.get(i % blocks.size()), nodeId);
+                        blockQueue.addOrReplace(blockWrapper);
+                        System.out.println("Write " + i);
+//                        Thread.sleep(100);
+                    }
+                    System.out.println("Written");
+                    waiter.countDown();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+        new Thread("b") {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i < 10; i++) {
+                        BlockWrapper blockWrapper = new BlockWrapper(blocks.get(i % blocks.size()), nodeId);
+                        blockQueue.addOrReplace(blockWrapper);
+                        System.out.println("Write " + i);
+//                        Thread.sleep(100);
+                    }
+                    System.out.println("Written");
+                    waiter.countDown();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
+        final AtomicInteger cnt = new AtomicInteger();
+        final AtomicInteger readCnt = new AtomicInteger();
+
+        new Thread("c") {
+            @Override
+            public void run() {
+                try {
+                    while(cnt.get() < 20) {
+                        BlockWrapper poll = blockQueue.take();
+                        System.out.println("Read: " + poll);
+                        readCnt.incrementAndGet();
+                    }
+                    System.out.println("Read complete");
+                    waiter.countDown();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
+        waiter.await(20, TimeUnit.SECONDS);
+        assertTrue(waiter.getCount() == 0);
+    }
+
     @Test // test dropping
     public void test3() {
         Random rnd = new Random(System.currentTimeMillis());
@@ -248,9 +324,9 @@ public class BlockQueueTest {
 
         @Override
         public void run() {
-            try {
+//            try {
                 int nullsCount = 0;
-                while (nullsCount < 10) {
+                while (nullsCount < 1000) {
                     BlockWrapper b = blockQueue.poll();
                     logger.info("reader {}: {}", index, b == null ? null : b.getShortHash());
                     if(b == null) {
@@ -258,11 +334,11 @@ public class BlockQueueTest {
                     } else {
                         nullsCount = 0;
                     }
-                    Thread.sleep(50);
+//                    Thread.sleep(50);
                 }
-            } catch (InterruptedException e) {
-                logger.error(e.getMessage());
-            }
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage());
+//            }
         }
     }
 
@@ -276,16 +352,16 @@ public class BlockQueueTest {
 
         @Override
         public void run() {
-            try {
-                for(int i = 0; i < 50; i++) {
+//            try {
+                for(int i = 0; i < 5000; i++) {
                     Block b = blocks.get(i);
                     blockQueue.add(new BlockWrapper(b, nodeId));
                     logger.info("writer {}: {}", index, b.getShortHash());
-                    Thread.sleep(50);
+//                    Thread.sleep(50);
                 }
-            } catch (InterruptedException e) {
-                logger.error(e.getMessage());
-            }
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage());
+//            }
         }
     }
 }
