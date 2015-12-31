@@ -460,6 +460,12 @@ public class Block {
         return Hex.toHexString(getHash()).substring(0, 6);
     }
 
+    public String getShortDescr() {
+        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
+                + Hex.toHexString(getParentHash()).substring(0,6) + ") Txs:" + getTransactionsList().size() +
+                ", Unc: " + getUncleList().size();
+    }
+
     public static class Builder {
 
         private BlockHeader header;
