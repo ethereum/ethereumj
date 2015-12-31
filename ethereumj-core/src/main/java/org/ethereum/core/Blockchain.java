@@ -9,7 +9,7 @@ public interface Blockchain {
 
     public long getSize();
 
-    public void add(Block block);
+    public boolean add(Block block);
 
     public ImportResult tryToConnect(Block block);
 
@@ -53,5 +53,5 @@ public interface Blockchain {
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 
-    Block createNewBlock(Block parent, List<Transaction> transactions);
+    Block createNewBlock(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);
 }
