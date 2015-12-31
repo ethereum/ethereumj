@@ -5,6 +5,7 @@ public enum ImportResult {
     IMPORTED_NOT_BEST,
     EXIST,
     NO_PARENT,
+    INVALID_BLOCK,
     CONSENSUS_BREAK;
 
     public boolean isSuccessful() {
