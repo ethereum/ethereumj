@@ -128,14 +128,14 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
      * This invocation created for contract call contract
      */
     @Override
-    public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
+    public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
                                              DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
                                              Repository repository, BlockStore blockStore, boolean byTestingSuite) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
-        DataWord caller = program.getOwnerAddress();
+        DataWord caller = callerAddress;
 
         DataWord balance = new DataWord(balanceInt.toByteArray());
         DataWord gasPrice = program.getGasPrice();

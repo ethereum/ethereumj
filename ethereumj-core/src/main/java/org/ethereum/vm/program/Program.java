@@ -381,7 +381,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
+                this, new DataWord(newAddress), getOwnerAddress(), DataWord.ZERO, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
@@ -460,7 +460,7 @@ public class Program {
         // FETCH THE SAVED STORAGE
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         byte[] senderAddress = getOwnerAddress().getLast20Bytes();
-        byte[] contextAddress = (msg.getType() == MsgType.STATELESS) ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
 
         if (logger.isInfoEnabled())
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
@@ -499,10 +499,10 @@ public class Program {
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                    this, new DataWord(contextAddress), msg.getEndowment(),
+                    this, new DataWord(contextAddress),
+                    msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
+                    msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
-
-
 
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke, internalTx);
@@ -1014,7 +1014,7 @@ public class Program {
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType() == MsgType.STATELESS ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
 
 
         BigInteger endowment = msg.getEndowment().value();

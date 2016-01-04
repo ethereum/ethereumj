@@ -336,8 +336,13 @@ public class BlockHeader {
     }
 
     public boolean isHomestead() {
-        return CONFIG.isFrontier() && getNumber() >= HOMESTEAD_FORK_BLKNUM;
+        return isHomestead(getNumber());
     }
+
+    public static boolean isHomestead(long blockNumber) {
+        return CONFIG.isFrontier() && blockNumber >= HOMESTEAD_FORK_BLKNUM;
+    }
+
     public String toString() {
         return toStringWithSuffix("\n");
     }

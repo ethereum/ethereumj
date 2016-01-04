@@ -1,6 +1,7 @@
 package org.ethereum.vm;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
@@ -82,7 +83,12 @@ public class VM {
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
             }
-
+            if (op == DELEGATECALL) {
+                // opcode since Homestead release only
+                if (!BlockHeader.isHomestead(program.getNumber().longValue())) {
+                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                }
+            }
 
             program.setLastOp(op.val());
             program.verifyStackSize(op.require());
@@ -174,6 +180,7 @@ public class VM {
                     break;
                 case CALL:
                 case CALLCODE:
+                case DELEGATECALL:
 
                     gasCost = GasCost.CALL;
                     DataWord callGasWord = stack.get(stack.size() - 1);
@@ -193,8 +200,9 @@ public class VM {
                     if (!stack.get(stack.size() - 3).isZero() )
                         gasCost += GasCost.VT_CALL;
 
-                    BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
-                    BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
+                    int opOff = op == DELEGATECALL ? 3 : 4;
+                    BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
+                    BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
                     newMemSize = in.max(out);
                     break;
                 case CREATE:
@@ -1057,10 +1065,12 @@ public class VM {
                 }
                 break;
                 case CALL:
-                case CALLCODE: {
+                case CALLCODE:
+                case DELEGATECALL: {
                     DataWord gas = program.stackPop();
                     DataWord codeAddress = program.stackPop();
-                    DataWord value = program.stackPop();
+                    DataWord value = !op.equals(DELEGATECALL) ?
+                            program.stackPop() : DataWord.ZERO;
 
                     if( !value.isZero()) {
                         gas.add(new DataWord(GasCost.STIPEND_CALL));
@@ -1086,7 +1096,7 @@ public class VM {
                     program.memoryExpand(outDataOffs, outDataSize);
 
                     MessageCall msg = new MessageCall(
-                            op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
+                            MsgType.fromOpcode(op),
                             gas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
 
