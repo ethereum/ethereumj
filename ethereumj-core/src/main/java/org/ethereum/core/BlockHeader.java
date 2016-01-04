@@ -10,10 +10,8 @@ import org.spongycastle.util.BigIntegers;
 import java.math.BigInteger;
 import java.util.List;
 
-import static org.ethereum.config.Constants.DIFFICULTY_BOUND_DIVISOR;
-import static org.ethereum.config.Constants.DURATION_LIMIT;
-import static org.ethereum.config.Constants.EXP_DIFFICULTY_PERIOD;
-import static org.ethereum.config.Constants.MINIMUM_DIFFICULTY;
+import static org.ethereum.config.Constants.*;
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.BIUtil.max;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -316,7 +314,16 @@ public class BlockHeader {
         BigInteger pd = parent.getDifficultyBI();
         BigInteger quotient = pd.divide(DIFFICULTY_BOUND_DIVISOR);
 
-        BigInteger fromParent = timestamp >= parent.timestamp + DURATION_LIMIT ? pd.subtract(quotient) : pd.add(quotient);
+        BigInteger sign;
+        if (isHomestead()) {
+            // block_diff = parent_diff + parent_diff // 2048 * max(1 - 2 * (block_timestamp - parent_timestamp) // 16, -99)
+            sign = BigInteger.valueOf(Math.max(1 - 2 * (timestamp - parent.timestamp) / 16, -99));
+        } else {
+            // block_diff = parent_diff + parent_diff // 2048 * (1 if block_timestamp - parent_timestamp < 13 else -1)
+            sign = BigInteger.valueOf(timestamp >= parent.timestamp + DURATION_LIMIT ? -1 : 1);
+        }
+
+        BigInteger fromParent = pd.add(quotient.multiply(sign));
         BigInteger difficulty = max(MINIMUM_DIFFICULTY, fromParent);
 
         int periodCount = (int) (number / EXP_DIFFICULTY_PERIOD);
@@ -328,6 +335,9 @@ public class BlockHeader {
         return difficulty;
     }
 
+    public boolean isHomestead() {
+        return CONFIG.isFrontier() && getNumber() >= HOMESTEAD_FORK_BLKNUM;
+    }
     public String toString() {
         return toStringWithSuffix("\n");
     }
