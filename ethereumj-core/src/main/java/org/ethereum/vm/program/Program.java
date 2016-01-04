@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -393,19 +394,6 @@ public class Program {
             result = program.getResult();
 
             getResult().addInternalTransactions(result.getInternalTransactions());
-
-            if (result.getException() != null) {
-                logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                        Hex.toHexString(newAddress),
-                        result.getException());
-
-                internalTx.reject();
-                result.rejectInternalTransactions();
-
-                track.rollback();
-                stackPushZero();
-                return;
-            }
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
@@ -414,10 +402,28 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+            if (BlockHeader.isHomestead(getNumber().longValue())) {
+                result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                        storageCost, this));
+            } else {
+                track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+            }
         } else {
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
+        }
+
+        if (result.getException() != null) {
+            logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+                    Hex.toHexString(newAddress),
+                    result.getException());
+
+            internalTx.reject();
+            result.rejectInternalTransactions();
+
+            track.rollback();
+            stackPushZero();
+            return;
         }
 
         track.commit();
