@@ -316,8 +316,8 @@ public class BlockHeader {
 
         BigInteger sign;
         if (isHomestead()) {
-            // block_diff = parent_diff + parent_diff // 2048 * max(1 - 2 * (block_timestamp - parent_timestamp) // 16, -99)
-            sign = BigInteger.valueOf(Math.max(1 - 2 * (timestamp - parent.timestamp) / 16, -99));
+            // block_diff = parent_diff + parent_diff // 2048 * max(1 - (block_timestamp - parent_timestamp) // 10, -99)
+            sign = BigInteger.valueOf(Math.max(1 - (timestamp - parent.timestamp) / 10, -99));
         } else {
             // block_diff = parent_diff + parent_diff // 2048 * (1 if block_timestamp - parent_timestamp < 13 else -1)
             sign = BigInteger.valueOf(timestamp >= parent.timestamp + DURATION_LIMIT ? -1 : 1);
