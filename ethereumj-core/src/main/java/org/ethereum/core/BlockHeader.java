@@ -320,7 +320,7 @@ public class BlockHeader {
             sign = BigInteger.valueOf(Math.max(1 - (timestamp - parent.timestamp) / 10, -99));
         } else {
             // block_diff = parent_diff + parent_diff // 2048 * (1 if block_timestamp - parent_timestamp < 13 else -1)
-            sign = BigInteger.valueOf(timestamp >= parent.timestamp + DURATION_LIMIT ? -1 : 1);
+            sign = BigInteger.valueOf(timestamp >= parent.timestamp + getDURATION_LIMIT() ? -1 : 1);
         }
 
         BigInteger fromParent = pd.add(quotient.multiply(sign));
