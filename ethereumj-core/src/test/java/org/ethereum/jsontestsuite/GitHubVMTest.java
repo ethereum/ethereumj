@@ -17,8 +17,7 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    //Last known good commit: 5af1002b96f34cd2c9252c1a6636826d47411ccd
-    public String shacommit = "25912e023e7cf25c33ed6dff078df0c941f2c7d6";
+    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
     @Test
     public void runSingle() throws ParseException {

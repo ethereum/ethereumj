@@ -19,7 +19,7 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "25912e023e7cf25c33ed6dff078df0c941f2c7d6";
+    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
 
     @Ignore
@@ -38,10 +38,56 @@ public class GitHubStateTest {
     }
 
     @Test
+    public void stCallCodes() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/stCallCodes.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallCodes.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stCallDelegateCodes() throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallDelegateCodes.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stCallDelegateCodesCallCode() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallDelegateCodesCallCode.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stHomeSteadSpecific() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stHomeSteadSpecific.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallCreateCallCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stDelegatecallTest() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/stDelegatecallTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -50,6 +96,8 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stInitCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stInitCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -57,13 +105,19 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stLogTests.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stLogTests.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stPreCompiledContracts() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
 
+        excluded.add("CallEcrecoverCheckLengthWrongV"); // TODO: investigate https://github.com/ethereum/tests/commit/aaf284fa888468f92c7686c754b5dd0b5437f849
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -75,20 +129,30 @@ public class GitHubStateTest {
         excluded.add("mload32bitBound_Msize"); // The test extends memory to 4Gb which can't be handled with Java arrays
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stMemoryStressTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stMemoryTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
 
+        String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stMemoryTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stQuadraticComplexityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("StateTests/stQuadraticComplexityTest.json", shacommit);
+
+        // leaving only Homestead version since the test runs too long
+//        String json = JSONReader.loadJSONFromCommit("StateTests/stQuadraticComplexityTest.json", shacommit);
+//        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stQuadraticComplexityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -104,6 +168,8 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stRecursiveCreate.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stRecursiveCreate.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -112,6 +178,8 @@ public class GitHubStateTest {
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stRefundTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stRefundTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -119,6 +187,8 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSpecialTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stSpecialTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -130,17 +200,47 @@ public class GitHubStateTest {
 
     @Test
     public void stSystemOperationsTest() throws IOException {
-
         Set<String> excluded = new HashSet<>();
+
+        excluded.add("suicideSendEtherPostDeath"); // TODO investigate: https://github.com/ethereum/tests/commit/0ff495059d6ffba8408376f872d426cb38e19444
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stTransactionTest() throws ParseException, IOException {
-
         Set<String> excluded = new HashSet<>();
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransactionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stTransitionTest() throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/stTransitionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransitionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stWalletTest() throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/stWalletTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stWalletTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
