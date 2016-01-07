@@ -137,6 +137,7 @@ public class SyncQueue {
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),
                             wrapper.getBlock().getTransactionsList().size());
 
+                if (logger.isDebugEnabled()) logger.debug(Hex.toHexString(wrapper.getBlock().getEncoded()));
 
             } catch (Throwable e) {
                 logger.error("Error: {} ", e);
