@@ -79,8 +79,18 @@ public class TransactionsMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
         final StringBuilder sb = new StringBuilder();
-        for (Transaction transaction : transactions)
-            sb.append("\n   ").append(transaction);
+        if (transactions.size() < 8) {
+            for (Transaction transaction : transactions)
+                sb.append("\n   ").append(transaction);
+        } else {
+            for (int i = 0; i < 3; i++) {
+                sb.append("\n   ").append(transactions.get(i));
+            }
+            sb.append("\n   ").append("[Skipped " + (transactions.size() - 6) + " transactions]");
+            for (int i = transactions.size() - 3; i < transactions.size(); i++) {
+                sb.append("\n   ").append(transactions.get(i));
+            }
+        }
         return "[" + getCommand().name() + " num:"
                 + transactions.size() + " " + sb.toString() + "]";
     }
