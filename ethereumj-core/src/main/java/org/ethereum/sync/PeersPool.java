@@ -153,11 +153,6 @@ public class PeersPool implements Iterable<Channel> {
     }
 
     public void onDisconnect(Channel peer) {
-        if (logger.isTraceEnabled()) logger.trace(
-                "Peer {}: disconnected",
-                peer.getPeerIdShort()
-        );
-
         if (peer.getNodeId() == null) {
             return;
         }
@@ -173,6 +168,8 @@ public class PeersPool implements Iterable<Channel> {
         if (!existed) {
             return;
         }
+
+        logger.info("Peer {}: disconnected", peer.getPeerIdShort());
 
         synchronized (disconnectHits) {
             Integer hits = disconnectHits.get(peer.getPeerId());
