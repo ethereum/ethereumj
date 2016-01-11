@@ -408,6 +408,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + getBestBlock().getNumber());
+            repository.flush();
+            blockStore.flush();
             System.exit(-1);
         }
 

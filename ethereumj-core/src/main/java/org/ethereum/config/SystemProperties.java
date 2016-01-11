@@ -496,7 +496,7 @@ public class SystemProperties {
      * This can be a blocking call with long timeout (thus no ValidateMe)
      */
     public String bindIp() {
-        if (!config.hasPath("peer.bind.ip") || config.getString("peer.bind.ip").trim().isEmpty()) {
+        if (!config.hasPath("peer.discovery.bind.ip") || config.getString("peer.discovery.bind.ip").trim().isEmpty()) {
             if (bindIp == null) {
                 logger.info("Bind address wasn't set, Punching to identify it...");
                 try {
@@ -510,7 +510,7 @@ public class SystemProperties {
             }
             return bindIp;
         } else {
-            return config.getString("peer.bind.ip").trim();
+            return config.getString("peer.discovery.bind.ip").trim();
         }
     }
 

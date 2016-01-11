@@ -23,6 +23,11 @@ public class BlockStoreDummy implements BlockStore {
     }
 
     @Override
+    public byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash) {
+        return getBlockHashByNumber(blockNumber);
+    }
+
+    @Override
     public Block getChainBlockByNumber(long blockNumber) {
         return null;
     }
