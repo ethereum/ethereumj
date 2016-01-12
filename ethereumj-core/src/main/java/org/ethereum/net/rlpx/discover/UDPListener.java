@@ -86,6 +86,9 @@ public class UDPListener {
 
 
         try {
+            DiscoveryExecutor discoveryExecutor = new DiscoveryExecutor(nodeManager);
+            discoveryExecutor.start();
+
             while(true) {
                 Bootstrap b = new Bootstrap();
                 b.group(group)
@@ -102,9 +105,6 @@ public class UDPListener {
                         });
 
                 Channel channel = b.bind(address, port).sync().channel();
-
-                DiscoveryExecutor discoveryExecutor = new DiscoveryExecutor(nodeManager);
-                discoveryExecutor.discover();
 
                 channel.closeFuture().sync();
                 logger.warn("UDP channel closed. Recreating after 5 sec pause...");
