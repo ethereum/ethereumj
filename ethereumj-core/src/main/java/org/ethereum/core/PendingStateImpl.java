@@ -94,6 +94,7 @@ public class PendingStateImpl implements PendingState {
     @Override
     public void init() {
         this.pendingState = repository.startTracking();
+        best = blockchain.getBestBlock();
     }
 
     @Override
@@ -117,28 +118,45 @@ public class PendingStateImpl implements PendingState {
         return best;
     }
 
+    private boolean addNewTxIfNotExist(Transaction tx) {
+        ByteArrayWrapper hash = new ByteArrayWrapper(tx.getHash());
+        synchronized (redceivedTxs) {
+            if (!redceivedTxs.containsKey(hash)) {
+                redceivedTxs.put(hash, null);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
     @Override
-    public synchronized void addWireTransactions(List<Transaction> transactions) {
+    public void addWireTransactions(List<Transaction> transactions) {
 
         final List<Transaction> newTxs = new ArrayList<>();
+        final List<PendingTransaction> newPTxs = new ArrayList<>();
         int unknownTx = 0;
 
         if (transactions.isEmpty()) return;
 
-        long number = blockchain.getBestBlock().getNumber();
+        long number = best.getNumber();
         for (Transaction tx : transactions) {
-            ByteArrayWrapper hash = new ByteArrayWrapper(tx.getHash());
 
-            if (!redceivedTxs.containsKey(hash)) {
+            if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                redceivedTxs.put(hash, null);
                 if (isValid(tx)) {
-                    wireTransactions.add(new PendingTransaction(tx, number));
+                    newPTxs.add(new PendingTransaction(tx, number));
                     newTxs.add(tx);
                 } else {
                     logger.info("Non valid TX: " + tx);
                 }
             }
+        }
+
+        // tight synchronization here since a lot of duplicate transactions can arrive from many peers
+        // and isValid(tx) call is very expensive
+        synchronized (this) {
+            wireTransactions.addAll(newPTxs);
         }
 
         if (!newTxs.isEmpty()) {
@@ -154,13 +172,12 @@ public class PendingStateImpl implements PendingState {
     }
 
     private boolean isValid(Transaction tx) {
-        logger.info("isValid called");
-
         BigInteger txNonce = toBI(tx.getNonce());
 
         byte[] txSender = tx.getSender();
-        if (repository.isExist(txSender)) {
-            BigInteger currNonce = repository.getAccountState(txSender).getNonce();
+        AccountState accountState = repository.getAccountState(txSender);
+        if (accountState != null) {
+            BigInteger currNonce = accountState.getNonce();
             return currNonce.equals(txNonce);
         } else {
             return txNonce.equals(ZERO);

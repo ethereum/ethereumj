@@ -221,7 +221,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return programInvokeFactory;
     }
 
-    public State pushState(byte[] bestBlockHash) {
+    private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
         this.bestBlock = blockStore.getBlockByHash(bestBlockHash);
         totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlockHash);
@@ -229,7 +229,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return push;
     }
 
-    public void popState() {
+    private void popState() {
         State state = stateStack.pop();
         this.repository = state.savedRepo;
         this.bestBlock = state.savedBest;
