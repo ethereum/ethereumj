@@ -1,9 +1,12 @@
 package org.ethereum.net.server;
 
+import org.apache.commons.collections4.map.LRUMap;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.SyncManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,12 +14,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
 
 import javax.annotation.PostConstruct;
 
 import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
+import static org.ethereum.net.message.ReasonCode.TOO_MANY_PEERS;
 
 /**
  * @author Roman Mandeleil
@@ -31,12 +36,19 @@ public class ChannelManager {
     private final Map<ByteArrayWrapper, Channel> activePeers = Collections.synchronizedMap(new HashMap<ByteArrayWrapper, Channel>());
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
+    private int maxActivePeers;
+    private int inboundConnectionBanTimeout = 60 * 1000;
+    private Map<InetAddress, Date> recentlyDisconnected = Collections.synchronizedMap(new LRUMap<InetAddress, Date>(500));
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     SyncManager syncManager;
 
     @PostConstruct
     public void init() {
+        maxActivePeers = config.maxActivePeers();
         mainWorker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -47,27 +59,53 @@ public class ChannelManager {
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
-
     }
 
     private void processNewPeers() {
+        if (newPeers.isEmpty()) return;
+
         List<Channel> processed = new ArrayList<>();
+
+        int addCnt = 0;
         for(Channel peer : newPeers) {
 
             if(peer.isProtocolsInitialized()) {
 
                 if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
-                    process(peer);
+                    if (activePeers.size() >= maxActivePeers) {
+                        disconnect(peer, TOO_MANY_PEERS);
+                    } else {
+                        process(peer);
+                        addCnt++;
+                    }
                 } else {
-                    peer.disconnect(DUPLICATE_PEER);
+                    disconnect(peer, DUPLICATE_PEER);
                 }
 
                 processed.add(peer);
             }
-
         }
 
+        logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
+
         newPeers.removeAll(processed);
+    }
+
+    private void disconnect(Channel peer, ReasonCode reason) {
+        logger.debug("Disconnecting peer with reason " + reason + ": " + peer);
+        peer.disconnect(reason);
+        recentlyDisconnected.put(peer.getInetSocketAddress().getAddress(), new Date());
+    }
+
+    public boolean isRecentlyDisconnected(InetAddress peerAddr) {
+        Date disconnectTime = recentlyDisconnected.get(peerAddr);
+        if (disconnectTime != null &&
+                System.currentTimeMillis() - disconnectTime.getTime() < inboundConnectionBanTimeout) {
+            return true;
+        } else {
+            recentlyDisconnected.remove(peerAddr);
+            return false;
+        }
     }
 
     private void process(Channel peer) {

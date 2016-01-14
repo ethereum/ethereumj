@@ -36,7 +36,16 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     @Override
     public void initChannel(NioSocketChannel ch) throws Exception {
         try {
-            logger.info("Open connection, channel: {}", ch.toString());
+            if (!peerDiscoveryMode) {
+                logger.info("Open {} connection, channel: {}", isInbound() ? "inbound" : "outbound", ch.toString());
+            }
+
+            if (isInbound() && channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
+                // avoid too frequent connection attempts
+                logger.info("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
+                ch.disconnect();
+                return;
+            }
 
             final Channel channel = ctx.getBean(Channel.class);
             channel.init(ch.pipeline(), remoteId, peerDiscoveryMode);
@@ -63,6 +72,10 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         } catch (Exception e) {
             logger.error("Unexpected error: ", e);
         }
+    }
+
+    private boolean isInbound() {
+        return remoteId == null || remoteId.isEmpty();
     }
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {

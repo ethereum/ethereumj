@@ -487,6 +487,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public int maxActivePeers() {
+        return config.getInt("peer.maxAcivePeers");
+    }
+
+    @ValidateMe
     public int listenPort() {
         return config.getInt("peer.listen.port");
     }
