@@ -11,8 +11,6 @@ import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
@@ -308,6 +306,26 @@ public class SystemProperties {
         }
         return ret;
     }
+
+    @ValidateMe
+    public NodeFilter peerTrusted() {
+        List<? extends ConfigObject> list = config.getObjectList("peer.trusted");
+        NodeFilter ret = new NodeFilter();
+
+        for (ConfigObject configObject : list) {
+            byte[] nodeId = null;
+            String ipMask = null;
+            if (configObject.get("nodeId") != null) {
+                nodeId = Hex.decode(configObject.toConfig().getString("nodeId").trim());
+            }
+            if (configObject.get("ip") != null) {
+                ipMask = configObject.toConfig().getString("ip").trim();
+            }
+            ret.add(nodeId, ipMask);
+        }
+        return ret;
+    }
+
 
     public String samplesDir() {
         return config.getString("samples.dir");

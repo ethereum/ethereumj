@@ -1,6 +1,7 @@
 package org.ethereum.net.server;
 
 import org.apache.commons.collections4.map.LRUMap;
+import org.ethereum.config.NodeFilter;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
@@ -32,13 +33,18 @@ public class ChannelManager {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
+    // If the inbound peer connection was dropped by us with a reason message
+    // then we ban that peer IP on any connections for some time to protect from
+    // too active peers
+    private static final int inboundConnectionBanTimeout = 10 * 1000;
+
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
     private final Map<ByteArrayWrapper, Channel> activePeers = Collections.synchronizedMap(new HashMap<ByteArrayWrapper, Channel>());
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
     private int maxActivePeers;
-    private int inboundConnectionBanTimeout = 60 * 1000;
     private Map<InetAddress, Date> recentlyDisconnected = Collections.synchronizedMap(new LRUMap<InetAddress, Date>(500));
+    private NodeFilter trustedPeers;
 
     @Autowired
     SystemProperties config;
@@ -49,6 +55,7 @@ public class ChannelManager {
     @PostConstruct
     public void init() {
         maxActivePeers = config.maxActivePeers();
+        trustedPeers = config.peerTrusted();
         mainWorker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -72,7 +79,12 @@ public class ChannelManager {
             if(peer.isProtocolsInitialized()) {
 
                 if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
-                    if (activePeers.size() >= maxActivePeers) {
+                    if (!peer.isActive() &&
+                        activePeers.size() >= maxActivePeers &&
+                        !trustedPeers.accept(peer.getNode())) {
+
+                        // restricting inbound connections unless this is a trusted peer
+
                         disconnect(peer, TOO_MANY_PEERS);
                     } else {
                         process(peer);

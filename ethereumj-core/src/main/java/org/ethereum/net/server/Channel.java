@@ -93,8 +93,11 @@ public class Channel {
     private NodeStatistics nodeStatistics;
 
     private boolean discoveryMode;
+    private boolean isActive;
 
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
+
+        isActive = remoteId != null && !remoteId.isEmpty();
 
         pipeline.addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
@@ -255,6 +258,13 @@ public class Channel {
 
     public byte[] getNodeId() {
         return node == null ? null : node.getId();
+    }
+
+    /**
+     * Indicates whether this connection was initiated by our peer
+     */
+    public boolean isActive() {
+        return isActive;
     }
 
     public ByteArrayWrapper getNodeIdWrapper() {
