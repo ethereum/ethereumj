@@ -88,7 +88,7 @@ public class HeaderStoreImpl implements HeaderStore {
             index.add(header.getNumber());
         }
 
-        db.commit();
+        dbCommit("add");
     }
 
     @Override
@@ -107,7 +107,7 @@ public class HeaderStoreImpl implements HeaderStore {
 
             index.addAll(numbers);
         }
-        db.commit();
+        dbCommit("addBatch: " + headers.size());
     }
 
     @Override
@@ -129,7 +129,7 @@ public class HeaderStoreImpl implements HeaderStore {
         awaitInit();
 
         BlockHeader header = pollInner();
-        db.commit();
+        dbCommit("poll");
         return header;
     }
 
@@ -150,7 +150,7 @@ public class HeaderStoreImpl implements HeaderStore {
             headers.add(header);
         }
 
-        db.commit();
+        dbCommit("pollBatch: " + headers.size());
 
         return headers;
     }
@@ -174,7 +174,17 @@ public class HeaderStoreImpl implements HeaderStore {
         headers.clear();
         index.clear();
 
+        dbCommit();
+    }
+
+    private void dbCommit() {
+        dbCommit("");
+    }
+
+    private void dbCommit(String info) {
+        long s = System.currentTimeMillis();
         db.commit();
+        logger.debug("HashStoreImpl: db.commit took " + (System.currentTimeMillis() - s) + " ms (" + info + ") " + Thread.currentThread().getName());
     }
 
     private void awaitInit() {

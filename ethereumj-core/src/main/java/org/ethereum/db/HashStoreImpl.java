@@ -81,14 +81,14 @@ public class HashStoreImpl implements HashStore {
     public void add(byte[] hash) {
         awaitInit();
         addInner(false, hash);
-        db.commit();
+        dbCommit("add");
     }
 
     @Override
     public void addFirst(byte[] hash) {
         awaitInit();
         addInner(true, hash);
-        db.commit();
+        dbCommit("addFirst");
     }
 
     @Override
@@ -97,7 +97,7 @@ public class HashStoreImpl implements HashStore {
         for (byte[] hash : hashes) {
             addInner(false, hash);
         }
-        db.commit();
+        dbCommit("addBatch: " + hashes.size());
     }
 
     @Override
@@ -106,7 +106,7 @@ public class HashStoreImpl implements HashStore {
         for (byte[] hash : hashes) {
             addInner(true, hash);
         }
-        db.commit();
+        dbCommit("addFirstBatch: " + hashes.size());
     }
 
     private synchronized void addInner(boolean first, byte[] hash) {
@@ -131,7 +131,7 @@ public class HashStoreImpl implements HashStore {
     public byte[] poll() {
         awaitInit();
         byte[] hash = pollInner();
-        db.commit();
+        dbCommit();
         return hash;
     }
 
@@ -149,7 +149,7 @@ public class HashStoreImpl implements HashStore {
             }
             hashes.add(hash);
         }
-        db.commit();
+        dbCommit("pollBatch: " + hashes.size());
         return hashes;
     }
 
@@ -193,7 +193,7 @@ public class HashStoreImpl implements HashStore {
             index.clear();
             hashes.clear();
         }
-        db.commit();
+        dbCommit();
     }
 
     @Override
@@ -215,7 +215,17 @@ public class HashStoreImpl implements HashStore {
         for(Long idx : removed) {
             hashes.remove(idx);
         }
+        dbCommit();
+    }
+
+    private void dbCommit() {
+        dbCommit("");
+    }
+
+    private void dbCommit(String info) {
+        long s = System.currentTimeMillis();
         db.commit();
+        logger.debug("HashStoreImpl: db.commit took " + (System.currentTimeMillis() - s) + " ms (" + info + ") " + Thread.currentThread().getName());
     }
 
     private Long createIndex(boolean first) {
