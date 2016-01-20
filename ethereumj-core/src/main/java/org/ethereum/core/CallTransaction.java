@@ -416,16 +416,19 @@ public class CallTransaction {
     }
 
     public static class Param {
+        public boolean indexed;
         public String name;
         public Type type;
     }
 
     enum FunctionType {
         constructor,
-        function
+        function,
+        event
     }
 
     public static class Function {
+        public boolean anonymous;
         public boolean constant;
         public String name;
         public Param[] inputs;
@@ -548,4 +551,5 @@ public class CallTransaction {
 
         public Function[] functions;
     }
+
 }
