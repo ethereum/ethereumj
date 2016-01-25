@@ -10,6 +10,7 @@ import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -807,7 +808,7 @@ public class RepositoryTest {
 
         repository.delete(horse);
 
-        assertEquals(true,  repoTrack2.isExist(cow));
+        assertEquals(true, repoTrack2.isExist(cow));
         assertEquals(false, repoTrack2.isExist(horse));
         assertEquals(false, repoTrack2.isExist(pig));
         assertEquals(false, repoTrack2.isExist(precompiled));
@@ -920,6 +921,7 @@ public class RepositoryTest {
 
 
     @Test // testing for snapshot
+    @Ignore
     public void testMultiThread() throws InterruptedException {
         final RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
