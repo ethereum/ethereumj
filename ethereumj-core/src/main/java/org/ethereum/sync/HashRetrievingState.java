@@ -25,6 +25,11 @@ public class HashRetrievingState extends AbstractSyncState {
 
         super.doMaintain();
 
+        if (!syncManager.queue.isMoreBlocksNeeded() && !syncManager.queue.noParent) {
+            syncManager.changeState(IDLE);
+            return;
+        }
+
         Channel master = null;
         for (Channel peer : syncManager.pool) {
             // if hash retrieving is done all we need to do is just change state and quit

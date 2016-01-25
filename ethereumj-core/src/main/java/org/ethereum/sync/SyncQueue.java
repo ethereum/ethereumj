@@ -33,6 +33,7 @@ public class SyncQueue {
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
     private static final int SCAN_BLOCKS_LIMIT = 1000;
+    private static final int BLOCK_QUEUE_LIMIT = 20000;
 
     /**
      * Store holding a list of hashes of the heaviest chain on the network,
@@ -50,6 +51,8 @@ public class SyncQueue {
      * Queue with blocks to be validated and added to the blockchain
      */
     private BlockQueue blockQueue;
+
+    public boolean noParent = false;
 
     @Autowired
     SystemProperties config;
@@ -74,16 +77,20 @@ public class SyncQueue {
 
         logger.info("Start loading sync queue");
 
-        hashStore = new HashStoreImpl();
-        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
+        hashStore = new HashStoreMem();
+        headerStore = new HeaderStoreMem();
+        blockQueue = new BlockQueueMem();
+
+//        hashStore = new HashStoreImpl();
+//        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
+//        headerStore = new HeaderStoreImpl();
+//        ((HeaderStoreImpl)headerStore).setMapDBFactory(mapDBFactory);
+//        blockQueue = new BlockQueueImpl();
+//        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
+
+
         hashStore.open();
-
-        headerStore = new HeaderStoreImpl();
-        ((HeaderStoreImpl)headerStore).setMapDBFactory(mapDBFactory);
         headerStore.open();
-
-        blockQueue = new BlockQueueImpl();
-        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 
         if (!config.isSyncEnabled()) {
@@ -121,7 +128,10 @@ public class SyncQueue {
                     wrapper.importFailed();
                     syncManager.tryGapRecovery(wrapper);
                     blockQueue.add(wrapper);
+                    noParent = true;
                     sleep(2000);
+                } else {
+                    noParent = false;
                 }
 
                 if (wrapper.isNewBlock() && importResult.isSuccessful())
@@ -386,6 +396,10 @@ public class SyncQueue {
 
     public boolean isBlocksEmpty() {
         return blockQueue.isEmpty();
+    }
+
+    public boolean isMoreBlocksNeeded() {
+        return blockQueue.size() < BLOCK_QUEUE_LIMIT;
     }
 
     public void clearHashes() {

@@ -26,14 +26,15 @@ public class IdleState extends AbstractSyncState {
 
         super.doMaintain();
 
-        if ((!syncManager.queue.isHashesEmpty()  && syncManager.pool.hasCompatible(V61)) ||
-            (!syncManager.queue.isHeadersEmpty() && syncManager.pool.hasCompatible(V62))) {
+        if ((syncManager.queue.isMoreBlocksNeeded() || syncManager.queue.noParent) &&
+                ((!syncManager.queue.isHashesEmpty()  && syncManager.pool.hasCompatible(V61)) ||
+                (!syncManager.queue.isHeadersEmpty() && syncManager.pool.hasCompatible(V62)))) {
 
             // there are new hashes in the store
             // it's time to download blocks
             syncManager.changeState(BLOCK_RETRIEVING);
 
-        } else if (syncManager.queue.isBlocksEmpty() && !syncManager.isSyncDone()) {
+        } else if ((syncManager.queue.isBlocksEmpty() || syncManager.queue.noParent) && !syncManager.isSyncDone()) {
 
             // queue is empty and sync not done yet
             // try to download hashes again
