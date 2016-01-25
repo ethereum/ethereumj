@@ -175,12 +175,7 @@ public class EthereumImpl implements Ethereum {
     public void connect(final String ip, final int port, final String remoteId) {
         logger.info("Connecting to: {}:{}", ip, port);
         final PeerClient peerClient = ctx.getBean(PeerClient.class);
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-                peerClient.connect(ip, port, remoteId);
-            }
-        });
+        peerClient.connectAsync(ip, port, remoteId, false);
     }
 
     @Override

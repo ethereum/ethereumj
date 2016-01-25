@@ -58,29 +58,18 @@ public class PeerClient {
         connect(host, port, remoteId, false);
     }
 
+    /**
+     *  Connects to the node and returns only upon connection close
+     */
     public void connect(String host, int port, String remoteId, boolean discoveryMode) {
-        ethereumListener.trace("Connecting to: " + host + ":" + port);
-
-        EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
-        ethereumChannelInitializer.setPeerDiscoveryMode(discoveryMode);
-
         try {
-            Bootstrap b = new Bootstrap();
-            b.group(workerGroup);
-            b.channel(NioSocketChannel.class);
+            ChannelFuture f = connectAsync(host, port, remoteId, discoveryMode);
 
-            b.option(ChannelOption.SO_KEEPALIVE, true);
-            b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerConnectionTimeout());
-            b.remoteAddress(host, port);
-
-            b.handler(ethereumChannelInitializer);
-
-            // Start the client.
-            ChannelFuture f = b.connect().sync();
+            f.sync();
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
+
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
@@ -95,5 +84,26 @@ public class PeerClient {
                 }
             }
         }
+    }
+
+    public ChannelFuture connectAsync(String host, int port, String remoteId, boolean discoveryMode) {
+        ethereumListener.trace("Connecting to: " + host + ":" + port);
+
+        EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
+        ethereumChannelInitializer.setPeerDiscoveryMode(discoveryMode);
+
+        Bootstrap b = new Bootstrap();
+        b.group(workerGroup);
+        b.channel(NioSocketChannel.class);
+
+        b.option(ChannelOption.SO_KEEPALIVE, true);
+        b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
+        b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerConnectionTimeout());
+        b.remoteAddress(host, port);
+
+        b.handler(ethereumChannelInitializer);
+
+        // Start the client.
+        return b.connect();
     }
 }
