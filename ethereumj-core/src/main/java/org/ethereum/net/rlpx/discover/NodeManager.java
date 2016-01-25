@@ -66,7 +66,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private List<Node> bootNodes;
 
     // option to handle inbounds only from known peers (i.e. which were discovered by ourselves)
-    boolean inboundOnlyFromKnownNodes = true;
+    boolean inboundOnlyFromKnownNodes = false;
 
     private boolean discoveryEnabled;
 
@@ -182,9 +182,11 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         }
     }
 
-    private synchronized void dbWrite() {
-        for (NodeHandler handler : nodeHandlerMap.values()) {
-            nodeStatsDB.put(handler.getNode(), handler.getNodeStatistics().getPersistent());
+    private void dbWrite() {
+        synchronized (this) {
+            for (NodeHandler handler : nodeHandlerMap.values()) {
+                nodeStatsDB.put(handler.getNode(), handler.getNodeStatistics().getPersistent());
+            }
         }
         db.commit();
         logger.info("Write Node statistics to DB: " + nodeStatsDB.size() + " nodes.");
