@@ -3,10 +3,7 @@ package org.ethereum.datasource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.iq80.leveldb.DBException;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.ethereum.util.ByteUtil.wrap;
 
@@ -16,19 +13,19 @@ public class HashMapDB implements KeyValueDataSource {
 
 
     @Override
-    public void delete(byte[] arg0) throws DBException {
+    public synchronized void delete(byte[] arg0) throws DBException {
         storage.remove(wrap(arg0));
     }
 
 
     @Override
-    public byte[] get(byte[] arg0) throws DBException {
+    public synchronized byte[] get(byte[] arg0) throws DBException {
         return storage.get(wrap(arg0));
     }
 
 
     @Override
-    public byte[] put(byte[] key, byte[] value) throws DBException {
+    public synchronized byte[] put(byte[] key, byte[] value) throws DBException {
         return storage.put(wrap(key), value);
     }
 
@@ -37,7 +34,7 @@ public class HashMapDB implements KeyValueDataSource {
      *
      * @return int
      */
-    public int getAddedItems() {
+    public synchronized int getAddedItems() {
         return storage.size();
     }
 
@@ -62,7 +59,7 @@ public class HashMapDB implements KeyValueDataSource {
     }
 
     @Override
-    public Set<byte[]> keys() {
+    public synchronized Set<byte[]> keys() {
         Set<byte[]> keys = new HashSet<>();
         for (ByteArrayWrapper key : storage.keySet()){
             keys.add(key.getData());
@@ -71,14 +68,14 @@ public class HashMapDB implements KeyValueDataSource {
     }
 
     @Override
-    public void updateBatch(Map<byte[], byte[]> rows) {
+    public synchronized void updateBatch(Map<byte[], byte[]> rows) {
         for (byte[] key :  rows.keySet()){
             storage.put(wrap(key), rows.get(key));
         }
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         this.storage.clear();
     }
 }
