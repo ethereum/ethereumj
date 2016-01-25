@@ -479,7 +479,7 @@ public class SyncManager {
         Set<String> nodesInUse = pool.nodesInUse();
 
         List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
-        if (pool.isEmpty() && newNodes.isEmpty()) {
+        if (lackSize > 0 && newNodes.isEmpty()) {
             newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
         }
 
