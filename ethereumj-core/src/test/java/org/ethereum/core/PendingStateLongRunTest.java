@@ -123,12 +123,7 @@ public class PendingStateLongRunTest {
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(
-                listener,
-                repository,
-                blockStore,
-                programInvokeFactory
-        );
+        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
 
         pendingState.init();
 

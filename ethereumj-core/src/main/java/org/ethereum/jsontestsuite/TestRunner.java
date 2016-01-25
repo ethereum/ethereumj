@@ -77,11 +77,11 @@ public class TestRunner {
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, repository, blockStore, programInvokeFactory);
-        pendingState.init();
-
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
         blockchain.byTest = true;
+
+        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        pendingState.init();
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());

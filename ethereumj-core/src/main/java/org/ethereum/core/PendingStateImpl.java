@@ -83,12 +83,12 @@ public class PendingStateImpl implements PendingState {
     public PendingStateImpl() {
     }
 
-    public PendingStateImpl(EthereumListener listener, Repository repository,
-                            BlockStore blockStore, ProgramInvokeFactory programInvokeFactory) {
+    public PendingStateImpl(EthereumListener listener, BlockchainImpl blockchain) {
         this.listener = listener;
-        this.repository = repository;
-        this.blockStore = blockStore;
-        this.programInvokeFactory = programInvokeFactory;
+        this.blockchain = blockchain;
+        this.repository = blockchain.getRepository();
+        this.blockStore = blockchain.getBlockStore();
+        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
     }
 
     @Override

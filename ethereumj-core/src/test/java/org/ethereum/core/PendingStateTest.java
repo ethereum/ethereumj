@@ -6,6 +6,7 @@ import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
@@ -42,13 +43,8 @@ public class PendingStateTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        blockchain = new BlockchainImpl();
-        PendingStateImpl pendingState = new PendingStateImpl(
-                listener,
-                repository,
-                blockStore,
-                programInvokeFactory
-        );
+        blockchain = new BlockchainImpl(blockStore, repository, new Wallet(), new AdminInfo(), listener);
+        PendingStateImpl pendingState = new PendingStateImpl(listener, (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 
@@ -106,12 +102,7 @@ public class PendingStateTest {
                 ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
 
-        PendingStateImpl pendingState = new PendingStateImpl(
-                new EthereumListenerAdapter(),
-                blockchain.getRepository(),
-                blockchain.getBlockStore(),
-                new ProgramInvokeFactoryImpl()
-        );
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 
