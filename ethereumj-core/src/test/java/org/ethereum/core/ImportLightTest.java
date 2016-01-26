@@ -72,7 +72,7 @@ public class ImportLightTest {
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
 
         System.out.println("Mining #3' ...");
-        Block b3_ = blockchain.createNewBlock(b2_, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        Block b3_ = blockchain.createNewBlock(b2_, Collections.EMPTY_LIST, Collections.singletonList(b2.getHeader()));
         Ethash.getForBlock(b3_.getNumber()).mineLight(b3_).get();
         importResult = blockchain.tryToConnect(b3_);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());

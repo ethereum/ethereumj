@@ -375,7 +375,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 calcTxTrie(txs),    // TransactionsRoot - computed after running all transactions
                 new byte[] {0}, // stateRoot - computed after running all transactions
                 txs,
-                Collections.EMPTY_LIST);  // uncle list
+                null);  // uncle list
 
         for (BlockHeader uncle : uncles) {
             block.addUncle(uncle);
