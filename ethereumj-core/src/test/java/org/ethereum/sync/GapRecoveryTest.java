@@ -34,8 +34,6 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.net.eth.EthVersion.V61;
-import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
 import static org.ethereum.sync.SyncStateName.HASH_RETRIEVING;
 import static org.ethereum.sync.SyncStateName.IDLE;
@@ -904,8 +902,7 @@ public class GapRecoveryTest {
 
                     super.doMaintain();
 
-                    if ((!syncManager.queue.isHashesEmpty()  && syncManager.pool.hasCompatible(V61)) ||
-                            (!syncManager.queue.isHeadersEmpty() && syncManager.pool.hasCompatible(V62))) {
+                    if (!syncManager.queue.isHeadersEmpty()) {
 
                         // there are new hashes in the store
                         // it's time to download blocks

@@ -386,10 +386,6 @@ public class SyncQueue {
         logger.debug("Headers list size: [{}]", headerStore.size());
     }
 
-    public boolean isHashesEmpty() {
-        return hashStore.isEmpty();
-    }
-
     public boolean isHeadersEmpty() {
         return headerStore.isEmpty();
     }
@@ -400,11 +396,6 @@ public class SyncQueue {
 
     public boolean isMoreBlocksNeeded() {
         return blockQueue.size() < BLOCK_QUEUE_LIMIT;
-    }
-
-    public void clearHashes() {
-        if (!hashStore.isEmpty())
-            hashStore.clear();
     }
 
     public void clearHeaders() {

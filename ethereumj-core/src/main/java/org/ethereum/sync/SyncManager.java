@@ -1,11 +1,9 @@
 package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -26,8 +24,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
@@ -58,11 +54,6 @@ public class SyncManager {
 
     private SyncState state;
     private final Object stateMutex = new Object();
-
-    /**
-     * master peer version
-     */
-    EthVersion masterVersion = V62;
 
     /**
      * block which gap recovery is running for
@@ -116,8 +107,6 @@ public class SyncManager {
 
                 // set IDLE state at the beginning
                 state = syncStates.get(IDLE);
-
-                masterVersion = initialMasterVersion();
 
                 updateDifficulties();
 
@@ -274,11 +263,6 @@ public class SyncManager {
 
     }
 
-    private int gapSize(BlockWrapper block) {
-        Block bestBlock = blockchain.getBestBlock();
-        return (int) (block.getNumber() - bestBlock.getNumber());
-    }
-
     private void onSyncDone() {
         channelManager.onSyncDone();
         ethereumListener.onSyncDone();
@@ -291,12 +275,6 @@ public class SyncManager {
             return false;
         }
 
-        // no peers compatible with latest master left, we're stuck
-        if (!pool.hasCompatible(masterVersion)) {
-            logger.trace("No peers compatible with {}, recover the gap", masterVersion);
-            return true;
-        }
-
         // gap for this block is being recovered
         if (block.equals(gapBlock) && !state.is(IDLE)) {
             logger.trace("Gap recovery is already in progress for block.number [{}]", gapBlock.getNumber());
@@ -304,8 +282,8 @@ public class SyncManager {
         }
 
         // ALL blocks are downloaded, we definitely have a gap
-        if (!hasBlockHashes()) {
-            logger.trace("No hashes/headers left, recover the gap", masterVersion);
+        if (queue.isHeadersEmpty()) {
+            logger.trace("No headers left, recover the gap");
             return true;
         }
 
@@ -345,13 +323,10 @@ public class SyncManager {
     void startMaster(Channel master) {
         pool.changeState(IDLE);
 
-        masterVersion = master.getEthVersion();
-
         if (gapBlock != null) {
             master.setLastHashToAsk(gapBlock.getHash());
         } else {
             master.setLastHashToAsk(master.getBestKnownHash());
-            queue.clearHashes();
             queue.clearHeaders();
         }
 
@@ -364,14 +339,6 @@ public class SyncManager {
                 Hex.toHexString(master.getLastHashToAsk()),
                 master.getMaxHashesAsk()
         );
-    }
-
-    boolean hasBlockHashes() {
-        if (masterVersion.isCompatible(V62)) {
-            return !queue.isHeadersEmpty();
-        } else {
-            return !queue.isHashesEmpty();
-        }
     }
 
     private void updateDifficulties() {
@@ -388,19 +355,6 @@ public class SyncManager {
     private void updateHighestKnownDifficulty(BigInteger difficulty) {
         if (difficulty.compareTo(highestKnownDifficulty) > 0) {
             highestKnownDifficulty = difficulty;
-        }
-    }
-
-    private EthVersion initialMasterVersion() {
-
-        if (CONFIG.syncVersion() != null) {
-            return EthVersion.fromCode(CONFIG.syncVersion());
-        }
-
-        if (!queue.isHeadersEmpty() || queue.isHashesEmpty()) {
-            return V62;
-        } else {
-            return V61;
         }
     }
 

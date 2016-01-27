@@ -76,9 +76,7 @@ public class HashRetrievingState extends AbstractSyncState {
             syncManager.startMaster(master);
         }
 
-        // Since Eth V61 it makes sense to download blocks and hashes simultaneously
-        if (master.getEthVersion().getCode() > V60.getCode()) {
-            syncManager.pool.changeStateForIdles(BLOCK_RETRIEVING, syncManager.masterVersion);
-        }
+        // Downloading blocks and headers simultaneously
+        syncManager.pool.changeStateForIdles(BLOCK_RETRIEVING);
     }
 }

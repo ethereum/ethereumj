@@ -1,6 +1,5 @@
 package org.ethereum.sync;
 
-import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.sync.SyncStateName.*;
 
 /**
@@ -27,8 +26,7 @@ public class IdleState extends AbstractSyncState {
         super.doMaintain();
 
         if ((syncManager.queue.isMoreBlocksNeeded() || syncManager.queue.noParent) &&
-                ((!syncManager.queue.isHashesEmpty()  && syncManager.pool.hasCompatible(V61)) ||
-                (!syncManager.queue.isHeadersEmpty() && syncManager.pool.hasCompatible(V62)))) {
+                !syncManager.queue.isHeadersEmpty()) {
 
             // there are new hashes in the store
             // it's time to download blocks

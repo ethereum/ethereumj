@@ -19,9 +19,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.IDLE;
-import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.TimeUtils.*;
 
@@ -46,8 +44,6 @@ public class PeersPool implements Iterable<Channel> {
     private static final int DISCONNECT_HITS_THRESHOLD = 5;
     private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(1);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
-
-    private static final int MIN_PEERS_COUNT = 3;
 
     private final Map<ByteArrayWrapper, Channel> activePeers = new HashMap<>();
     private final Set<Channel> bannedPeers = new HashSet<>();
@@ -110,40 +106,14 @@ public class PeersPool implements Iterable<Channel> {
                 return null;
             }
 
-            Channel best61 = null;
-            Channel best62 = null;
-            int count62 = 0;
-            int count61 = 0;
+            Channel best = null;
 
-            for (Channel peer : activePeers.values()) {
-
-                if (peer.getEthVersion().getCode() >= V62.getCode()) {
-
-                    if (best62 == null || isMoreThan(peer.getTotalDifficulty(), best62.getTotalDifficulty())) {
-                        best62 = peer;
-                    }
-                    count62++;
-                } else {
-
-                    if (best61 == null || isMoreThan(peer.getTotalDifficulty(), best61.getTotalDifficulty())) {
-                        best61 = peer;
-                    }
-                    count61++;
+            for (Channel peer : activePeers.values())
+                if (best == null || isMoreThan(peer.getTotalDifficulty(), best.getTotalDifficulty())) {
+                    best = peer;
                 }
 
-            }
-
-            if (best61 == null) return best62;
-            if (best62 == null) return best61;
-
-            if (count62 >= MIN_PEERS_COUNT) return best62;
-            if (count61 >= MIN_PEERS_COUNT) return best61;
-
-            if (isIn20PercentRange(best62.getTotalDifficulty(), best61.getTotalDifficulty())) {
-                return best62;
-            } else {
-                return best61;
-            }
+            return best;
         }
     }
 
@@ -245,16 +215,6 @@ public class PeersPool implements Iterable<Channel> {
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
                 peer.changeSyncState(newState);
-            }
-        }
-    }
-
-    public void changeStateForIdles(SyncStateName newState, EthVersion compatibleVersion) {
-
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
-                if (peer.isIdle() && peer.getEthVersion().isCompatible(compatibleVersion))
-                    peer.changeSyncState(newState);
             }
         }
     }
