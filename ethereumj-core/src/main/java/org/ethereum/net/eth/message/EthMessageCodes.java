@@ -56,16 +56,6 @@ public enum EthMessageCodes {
     TRANSACTIONS(0x02),
 
     /**
-     * {@code [+0x03, [hash : B_32, maxBlocks: P] } <br>
-     *
-     * Requests a BlockHashes message of at most maxBlocks entries,
-     * of block hashes from the blockchain, starting at the parent of block hash.
-     * Does not require the peer to give maxBlocks hashes -
-     * they could give somewhat fewer.
-     */
-    GET_BLOCK_HASHES(0x03),
-
-    /**
      * {@code [+0x03: P, block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ] } <br>
      *
      * Replaces GetBlockHashes since PV 62. <br>
@@ -77,15 +67,6 @@ public enum EthMessageCodes {
      * and with at most maxHeaders items.
      */
     GET_BLOCK_HEADERS(0x03),
-
-    /**
-     * {@code [+0x04, [hash_0: B_32, hash_1: B_32, ....] } <br>
-     *
-     * Gives a series of hashes
-     * of blocks (each the child of the next). This implies that the blocks
-     * are ordered from youngest to oldest.
-     */
-    BLOCK_HASHES(0x04),
 
     /**
      * {@code [+0x04, blockHeader_0, blockHeader_1, ...] } <br>
@@ -102,16 +83,6 @@ public enum EthMessageCodes {
     BLOCK_HEADERS(0x04),
 
     /**
-     * {@code [+0x05, [hash_0: B_32, hash_1: B_32, ....] } <br>
-     *
-     * Requests a Blocks message
-     * detailing a number of blocks to be sent, each referred to by a hash. <br>
-     * <b>Note:</b> Don't expect that the peer necessarily give you all these blocks
-     * in a single message - you might have to re-request them.
-     */
-    GET_BLOCKS(0x05),
-
-    /**
      * {@code [+0x05, hash_0: B_32, hash_1: B_32, ...] } <br>
      *
      * Replaces GetBlocks since PV 62. <br>
@@ -120,15 +91,6 @@ public enum EthMessageCodes {
      * Specify the set of blocks that we're interested in with the hashes.
      */
     GET_BLOCK_BODIES(0x05),
-
-    /**
-     * {@code [+0x06, [block_header, transaction_list, uncle_list], ...] } <br>
-     *
-     * Specify (a) block(s) that the peer should know about.
-     * The items in the list (following the first item, 0x13)
-     * are blocks in the format described in the main Ethereum specification.
-     */
-    BLOCKS(0x06),
 
     /**
      * {@code [+0x06, [transactions_0, uncles_0] , ...] } <br>
@@ -150,21 +112,7 @@ public enum EthMessageCodes {
      * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification.
      */
-    NEW_BLOCK(0x07),
-
-    /**
-     * {@code [+0x08, [number: P, maxBlocks: P] } <br>
-     *
-     * Supported in PV 61 only. <br>
-     *
-     * Requires peer to reply with a BlockHashes message.
-     * Message should contain block with that of number number on the canonical chain.
-     * Should also be followed by subsequent blocks, on the same chain,
-     * detailing a number of the first block hash and a total of hashes to be sent.
-     * Returned hash list must be ordered by block number in ascending order.
-     */
-    GET_BLOCK_HASHES_BY_NUMBER(0x08);
-
+    NEW_BLOCK(0x07);
 
     private int cmd;
 
@@ -172,29 +120,6 @@ public enum EthMessageCodes {
     private static final Map<EthVersion, EthMessageCodes[]> versionToValuesMap = new HashMap<>();
 
     static {
-
-        versionToValuesMap.put(V60, new EthMessageCodes[]{
-                STATUS,
-                NEW_BLOCK_HASHES,
-                TRANSACTIONS,
-                GET_BLOCK_HASHES,
-                BLOCK_HASHES,
-                GET_BLOCKS,
-                BLOCKS,
-                NEW_BLOCK
-        });
-
-        versionToValuesMap.put(V61, new EthMessageCodes[]{
-                STATUS,
-                NEW_BLOCK_HASHES,
-                TRANSACTIONS,
-                GET_BLOCK_HASHES,
-                BLOCK_HASHES,
-                GET_BLOCKS,
-                BLOCKS,
-                NEW_BLOCK,
-                GET_BLOCK_HASHES_BY_NUMBER
-        });
 
         versionToValuesMap.put(V62, new EthMessageCodes[]{
                 STATUS,

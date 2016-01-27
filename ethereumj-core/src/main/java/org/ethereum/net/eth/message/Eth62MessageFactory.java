@@ -19,7 +19,7 @@ public class Eth62MessageFactory implements MessageFactory {
             case STATUS:
                 return new StatusMessage(encoded);
             case NEW_BLOCK_HASHES:
-                return new NewBlockHashes62Message(encoded);
+                return new NewBlockHashesMessage(encoded);
             case TRANSACTIONS:
                 return new TransactionsMessage(encoded);
             case GET_BLOCK_HEADERS:

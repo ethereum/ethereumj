@@ -11,8 +11,6 @@ import org.ethereum.core.Wallet;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.net.submit.TransactionExecutor;
-import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
@@ -22,7 +20,6 @@ import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,17 +37,6 @@ import static org.ethereum.util.BIUtil.isLessThan;
  * Contains common logic to all supported versions
  * delegating version specific stuff to its descendants
  *
- * Peers with 'eth' capability can send/receive:
- * <ul>
- * <li>STATUS                           :   Announce their status to the peer</li>
- * <li>NEW_BLOCK_HASHES                 :   Send a list of NEW block hashes</li>
- * <li>TRANSACTIONS                     :   Send a list of pending transactions</li>
- * <li>GET_BLOCK_HASHES                 :   Request a list of known block hashes</li>
- * <li>BLOCK_HASHES                     :   Send a list of known block hashes</li>
- * <li>GET_BLOCKS                       :   Request a list of blocks</li>
- * <li>BLOCKS                           :   Send a list of blocks</li>
- * <li>GET_BLOCK_HASHES_BY_NUMBER       :   Request list of know block hashes starting from the block</li>
- * </ul>
  */
 public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> implements Eth {
 
@@ -108,8 +94,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * Last block hash to be asked from the peer,
      * its usage depends on Eth version
      *
-     * @see Eth60
-     * @see Eth61
      * @see Eth62
      */
     protected byte[] lastHashToAsk;

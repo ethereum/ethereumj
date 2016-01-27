@@ -21,7 +21,6 @@ import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
-import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
  * Eth 62
@@ -57,7 +56,7 @@ public class Eth62 extends EthHandler {
 
         switch (msg.getCommand()) {
             case NEW_BLOCK_HASHES:
-                processNewBlockHashes((NewBlockHashes62Message) msg);
+                processNewBlockHashes((NewBlockHashesMessage) msg);
                 break;
             case GET_BLOCK_HEADERS:
                 processGetBlockHeaders((GetBlockHeadersMessage) msg);
@@ -80,7 +79,7 @@ public class Eth62 extends EthHandler {
     public void sendNewBlockHashes(Block block) {
 
         BlockIdentifier identifier = new BlockIdentifier(block.getHash(), block.getNumber());
-        NewBlockHashes62Message msg = new NewBlockHashes62Message(singletonList(identifier));
+        NewBlockHashesMessage msg = new NewBlockHashesMessage(singletonList(identifier));
         sendMessage(msg);
     }
 
@@ -100,7 +99,7 @@ public class Eth62 extends EthHandler {
         return sendGetBlockBodies();
     }
 
-    protected void processNewBlockHashes(NewBlockHashes62Message msg) {
+    protected void processNewBlockHashes(NewBlockHashesMessage msg) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing NewBlockHashes, size [{}]",
