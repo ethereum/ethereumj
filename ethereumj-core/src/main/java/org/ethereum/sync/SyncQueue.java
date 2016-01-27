@@ -36,12 +36,6 @@ public class SyncQueue {
     private static final int BLOCK_QUEUE_LIMIT = 20000;
 
     /**
-     * Store holding a list of hashes of the heaviest chain on the network,
-     * for which this client doesn't have the blocks yet
-     */
-    private HashStore hashStore;
-
-    /**
      * Store holding a list of block headers of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet
      */
@@ -77,7 +71,6 @@ public class SyncQueue {
 
         logger.info("Start loading sync queue");
 
-        hashStore = new HashStoreMem();
         headerStore = new HeaderStoreMem();
         blockQueue = new BlockQueueMem();
 
@@ -89,7 +82,6 @@ public class SyncQueue {
 //        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
 
 
-        hashStore.open();
         headerStore.open();
         blockQueue.open();
 
@@ -159,31 +151,6 @@ public class SyncQueue {
     }
 
     /**
-     * Add a list of blocks to the processing queue. <br>
-     * Runs BlockHeader validation before adding
-     *
-     * @param blocks the blocks received from a peer to be added to the queue
-     * @param nodeId of the remote peer which these blocks are received from
-     */
-    public void addAndValidate(List<Block> blocks, byte[] nodeId) {
-
-        // run basic checks
-        for (Block b : blocks) {
-            if (!isValid(b.getHeader())) {
-
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Invalid block RLP: {}", Hex.toHexString(b.getEncoded()));
-                }
-
-                syncManager.reportBadAction(nodeId);
-                return;
-            }
-        }
-
-        addList(blocks, nodeId);
-    }
-
-    /**
      * Adds a list of blocks to the queue
      *
      * @param blocks block list received from remote peer and be added to the queue
@@ -231,99 +198,6 @@ public class SyncQueue {
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
                 wrapper.getNumber());
-    }
-
-    /**
-     * Adds hash to the beginning of HashStore queue
-     *
-     * @param hash hash to be added
-     */
-    public void addHash(byte[] hash) {
-        hashStore.addFirst(hash);
-        if (logger.isTraceEnabled()) logger.trace(
-                "Adding hash to a hashQueue: [{}], hash queue size: {} ",
-                Hex.toHexString(hash).substring(0, 6),
-                hashStore.size()
-        );
-    }
-
-    /**
-     * Adds list of hashes to the end of HashStore queue. <br>
-     * Sorts out those hashes which blocks are already added to BlockQueue
-     *
-     * @param hashes hashes
-     */
-    public void addHashesLast(List<byte[]> hashes) {
-        List<byte[]> filtered = blockQueue.filterExisting(hashes);
-
-        hashStore.addBatch(filtered);
-
-        if(logger.isDebugEnabled())
-            logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
-    }
-
-    /**
-     * Adds list of hashes to the beginning of HashStore queue. <br>
-     * Sorts out those hashes which blocks are already added to BlockQueue
-     *
-     * @param hashes hashes
-     */
-    public void addHashes(List<byte[]> hashes) {
-        List<byte[]> filtered = blockQueue.filterExisting(hashes);
-        hashStore.addFirstBatch(filtered);
-
-        if (logger.isDebugEnabled())
-            logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
-    }
-
-    /**
-     * Adds hashes received in NEW_BLOCK_HASHES message. <br>
-     * Excludes hashes representing already imported blocks,
-     * hashes are added to the end of HashStore queue
-     *
-     * @param hashes list of hashes
-     */
-    public void addNewBlockHashes(List<byte[]> hashes) {
-        List<byte[]> notInQueue = blockQueue.filterExisting(hashes);
-
-        List<byte[]> notInChain = new ArrayList<>();
-        for (byte[] hash : notInQueue) {
-            if (!blockchain.isBlockExist(hash)) {
-                notInChain.add(hash);
-            }
-        }
-
-        hashStore.addBatch(notInChain);
-    }
-
-    /**
-     * Puts back given hashes. <br>
-     * Hashes are added to the beginning of queue
-     *
-     * @param hashes returning hashes
-     */
-    public void returnHashes(List<ByteArrayWrapper> hashes) {
-
-        if (hashes.isEmpty()) return;
-
-        ListIterator iterator = hashes.listIterator(hashes.size());
-        while (iterator.hasPrevious()) {
-
-            byte[] hash = ((ByteArrayWrapper) iterator.previous()).getData();
-
-            if (logger.isDebugEnabled())
-                logger.debug("Return hash: [{}]", Hex.toHexString(hash));
-            hashStore.addFirst(hash);
-        }
-    }
-
-    /**
-     * Return a list of hashes from blocks that still need to be downloaded.
-     *
-     * @return A list of hashes for which blocks need to be retrieved.
-     */
-    public List<byte[]> pollHashes() {
-        return hashStore.pollBatch(config.maxBlocksAsk());
     }
 
     /**
@@ -376,12 +250,6 @@ public class SyncQueue {
         return headerStore.pollBatch(config.maxBlocksAsk());
     }
 
-    // a bit ugly but really gives
-    // good result
-    public void logHashesSize() {
-        logger.debug("Hashes list size: [{}]", hashStore.size());
-    }
-
     public void logHeadersSize() {
         logger.debug("Headers list size: [{}]", headerStore.size());
     }
@@ -401,10 +269,6 @@ public class SyncQueue {
     public void clearHeaders() {
         if (!headerStore.isEmpty())
             headerStore.clear();
-    }
-
-    public int hashStoreSize() {
-        return hashStore.size();
     }
 
     public int headerStoreSize() {
