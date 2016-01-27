@@ -10,7 +10,6 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.net.eth.handler.Eth61;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
@@ -35,7 +34,6 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.net.eth.EthVersion.V60;
 import static org.ethereum.net.eth.EthVersion.V61;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -127,7 +125,6 @@ public class GapRecoveryTest {
         recursiveDelete(testDbA);
         recursiveDelete(testDbB);
         SysPropConfigA.eth62 = null;
-        SysPropConfigA.eth61 = null;
     }
 
     // positive gap, A on main, B on main
@@ -557,11 +554,6 @@ public class GapRecoveryTest {
     @Test
     public void test9() throws InterruptedException {
 
-        // not for Eth60 logic
-        if (Integer.valueOf(V60.getCode()).equals(SysPropConfigA.props.syncVersion())) {
-            return;
-        }
-
         // handler which don't send an ancestor
         SysPropConfigA.eth62 = new Eth62() {
             @Override
@@ -574,19 +566,6 @@ public class GapRecoveryTest {
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
-            }
-        };
-        SysPropConfigA.eth61 = new Eth61() {
-            @Override
-            protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
-
-                List<byte[]> hashes = new ArrayList<>();
-                for (int i = 7; i < mainB1B10.size(); i++) {
-                    hashes.add(mainB1B10.get(i).getHash());
-                }
-
-                BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
-                sendMessage(msgHashes);
             }
         };
 
@@ -631,7 +610,6 @@ public class GapRecoveryTest {
 
         // back to usual handler
         SysPropConfigA.eth62 = null;
-        SysPropConfigA.eth61 = null;
 
         for (Block b : mainB1B10) {
             blockchainA.tryToConnect(b);
@@ -678,11 +656,6 @@ public class GapRecoveryTest {
     @Test
     public void test10() throws InterruptedException {
 
-        // not for Eth60 logic
-        if (Integer.valueOf(V60.getCode()).equals(SysPropConfigA.props.syncVersion())) {
-            return;
-        }
-
         // handler which don't send a gap block
         SysPropConfigA.eth62 = new Eth62() {
             @Override
@@ -700,19 +673,6 @@ public class GapRecoveryTest {
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
-            }
-        };
-        SysPropConfigA.eth61 = new Eth61() {
-            @Override
-            protected void processGetBlockHashes(GetBlockHashesMessage msg) {
-
-                List<byte[]> hashes = new ArrayList<>();
-                for (int i = 0; i < forkB1B5B8_.size() - 1; i++) {
-                    hashes.add(forkB1B5B8_.get(i).getHash());
-                }
-
-                BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
-                sendMessage(msgHashes);
             }
         };
 
@@ -757,7 +717,6 @@ public class GapRecoveryTest {
 
         // back to usual handler
         SysPropConfigA.eth62 = null;
-        SysPropConfigA.eth61 = null;
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         ethereumB.addListener(new EthereumListenerAdapter() {
@@ -899,7 +858,6 @@ public class GapRecoveryTest {
     public static class SysPropConfigA {
         static SystemProperties props = new SystemProperties();
         static Eth62 eth62 = null;
-        static Eth61 eth61 = null;
 
         @Bean
         public SystemProperties systemProperties() {
@@ -911,13 +869,6 @@ public class GapRecoveryTest {
         public Eth62 eth62() throws IllegalAccessException, InstantiationException {
             if (eth62 != null) return eth62;
             return new Eth62();
-        }
-
-        @Bean
-        @Scope("prototype")
-        public Eth61 eth61() throws IllegalAccessException, InstantiationException {
-            if (eth61 != null) return eth61;
-            return new Eth61();
         }
     }
 
