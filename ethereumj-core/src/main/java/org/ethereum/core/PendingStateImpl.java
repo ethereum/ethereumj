@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigInteger;
 import java.util.*;
@@ -91,7 +92,7 @@ public class PendingStateImpl implements PendingState {
         this.programInvokeFactory = blockchain.getProgramInvokeFactory();
     }
 
-    @Override
+    @PostConstruct
     public void init() {
         this.pendingState = repository.startTracking();
         best = blockchain.getBestBlock();

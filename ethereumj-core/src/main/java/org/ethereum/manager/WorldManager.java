@@ -89,7 +89,6 @@ public class WorldManager {
 
         // must be initialized after blockchain is loaded
         syncManager.init();
-        pendingState.init();
     }
 
     public void addListener(EthereumListener listener) {
