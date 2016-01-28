@@ -3,6 +3,8 @@ package org.ethereum.db;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
+import org.ethereum.db.index.ArrayListIndex;
+import org.ethereum.db.index.Index;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
@@ -27,7 +29,7 @@ public class HeaderStoreImpl implements HeaderStore {
 
     private DB db;
     private Map<Long, BlockHeader> headers;
-    private BlockQueueImpl.Index index;
+    private Index index;
 
     private boolean initDone = false;
     private final ReentrantLock initLock = new ReentrantLock();
@@ -53,7 +55,7 @@ public class HeaderStoreImpl implements HeaderStore {
                         db.commit();
                     }
 
-                    index = new BlockQueueImpl.ArrayListIndex(headers.keySet());
+                    index = new ArrayListIndex(headers.keySet());
                     initDone = true;
                     init.signalAll();
 

@@ -2,7 +2,6 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.db.*;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -60,9 +59,6 @@ public class SyncQueue {
     @Autowired
     private BlockHeaderValidator headerValidator;
 
-    @Autowired
-    private MapDBFactory mapDBFactory;
-
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -73,14 +69,6 @@ public class SyncQueue {
 
         headerStore = new HeaderStoreMem();
         blockQueue = new BlockQueueMem();
-
-//        hashStore = new HashStoreImpl();
-//        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
-//        headerStore = new HeaderStoreImpl();
-//        ((HeaderStoreImpl)headerStore).setMapDBFactory(mapDBFactory);
-//        blockQueue = new BlockQueueImpl();
-//        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
-
 
         headerStore.open();
         blockQueue.open();
