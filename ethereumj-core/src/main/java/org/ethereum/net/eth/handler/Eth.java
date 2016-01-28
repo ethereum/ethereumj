@@ -3,6 +3,7 @@ package org.ethereum.net.eth.handler;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 
@@ -123,6 +124,11 @@ public interface Eth {
     void sendNewBlock(Block newBlock);
 
     /**
+     * Sends new block hashes message to the wire
+     */
+    void sendNewBlockHashes(Block block);
+
+    /**
      * @return protocol version
      */
     EthVersion getVersion();
@@ -131,4 +137,9 @@ public interface Eth {
      * Fires inner logic related to main sync done event
      */
     void onSyncDone();
+
+    /**
+     * Sends {@link EthMessageCodes#STATUS} message
+     */
+    void sendStatus();
 }

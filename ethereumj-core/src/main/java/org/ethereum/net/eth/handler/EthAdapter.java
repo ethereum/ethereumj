@@ -112,11 +112,21 @@ public class EthAdapter implements Eth {
     }
 
     @Override
+    public void sendNewBlockHashes(Block block) {
+
+    }
+
+    @Override
     public EthVersion getVersion() {
         return fromCode(UPPER);
     }
 
     @Override
     public void onSyncDone() {
+    }
+
+    @Override
+    public void sendStatus() {
+
     }
 }

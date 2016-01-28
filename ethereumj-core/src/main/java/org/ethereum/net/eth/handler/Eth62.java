@@ -1,17 +1,26 @@
 package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockIdentifier;
-import org.ethereum.core.BlockWrapper;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.*;
+import org.ethereum.db.BlockStore;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
+import org.ethereum.net.message.ReasonCode;
+import org.ethereum.sync.SyncManager;
+import org.ethereum.sync.SyncQueue;
+import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.SyncStatistics;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.math.BigInteger;
 import java.util.*;
 
 import static java.lang.Math.max;
@@ -21,6 +30,7 @@ import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
+import static org.ethereum.util.BIUtil.isLessThan;
 
 /**
  * Eth 62
@@ -33,12 +43,59 @@ import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
 public class Eth62 extends EthHandler {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
+    private final static Logger loggerNet = LoggerFactory.getLogger("net");
 
-    private static final int FORK_COVER_BATCH_SIZE = 192;
+    @Autowired
+    protected SystemProperties config;
+
+    @Autowired
+    protected Blockchain blockchain;
+
+    @Autowired
+    protected BlockStore blockstore;
+
+    @Autowired
+    protected SyncManager syncManager;
+
+    @Autowired
+    protected SyncQueue queue;
+
+    @Autowired
+    protected PendingState pendingState;
+
+    protected EthState ethState = EthState.INIT;
+
+    protected static final int MAX_HASHES_TO_SEND = 65536;
+
+    private static final int BLOCKS_LACK_MAX_HITS = 5;
+    private int blocksLackHits = 0;
+
+    protected SyncStateName syncState = IDLE;
+    protected boolean syncDone = false;
+    protected boolean processTransactions = false;
+
+    protected byte[] bestHash;
 
     /**
-     * Header list sent in GET_BLOC_BODIES message,
-     * useful if returned BLOCKS msg doesn't cover all sent hashes
+     * Last block hash to be asked from the peer,
+     * its usage depends on Eth version
+     *
+     * @see Eth62
+     */
+    protected byte[] lastHashToAsk;
+    protected int maxHashesAsk;
+
+    protected final SyncStatistics syncStats = new SyncStatistics();
+
+    /**
+     * The number above which blocks are treated as NEW,
+     * filled by data gained from NewBlockHashes and NewBlock messages
+     */
+    protected long newBlockLowerNumber = Long.MAX_VALUE;
+
+    /**
+     * Header list sent in GET_BLOCK_BODIES message,
+     * useful if returned BLOCK_BODIES msg doesn't cover all sent hashes
      * or in case when peer is disconnected
      */
     private final List<BlockHeader> sentHeaders = Collections.synchronizedList(new ArrayList<BlockHeader>());
@@ -49,14 +106,25 @@ public class Eth62 extends EthHandler {
         super(V62);
     }
 
+    @PostConstruct
+    private void init() {
+        maxHashesAsk = config.maxHashesAsk();
+    }
+
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
         super.channelRead0(ctx, msg);
 
         switch (msg.getCommand()) {
+            case STATUS:
+                processStatus((StatusMessage) msg, ctx);
+                break;
             case NEW_BLOCK_HASHES:
                 processNewBlockHashes((NewBlockHashesMessage) msg);
+                break;
+            case TRANSACTIONS:
+                processTransactions((TransactionsMessage) msg);
                 break;
             case GET_BLOCK_HEADERS:
                 processGetBlockHeaders((GetBlockHeadersMessage) msg);
@@ -70,9 +138,28 @@ public class Eth62 extends EthHandler {
             case BLOCK_BODIES:
                 processBlockBodies((BlockBodiesMessage) msg);
                 break;
+            case NEW_BLOCK:
+                processNewBlock((NewBlockMessage) msg);
+                break;
             default:
                 break;
         }
+    }
+
+    /*************************
+     *    Message Sending    *
+     *************************/
+
+    @Override
+    public void sendStatus() {
+        byte protocolVersion = version.getCode();
+        int networkId = config.networkId();
+
+        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+        byte[] bestHash = blockchain.getBestBlockHash();
+        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
+        sendMessage(msg);
     }
 
     @Override
@@ -84,19 +171,114 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public void onShutdown() {
-        super.onShutdown();
-        returnHeaders();
+    public void sendTransaction(List<Transaction> txs) {
+        TransactionsMessage msg = new TransactionsMessage(txs);
+        sendMessage(msg);
+    }
+
+    protected void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk) {
+
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: send GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
+                channel.getPeerIdShort(),
+                blockNumber,
+                maxBlocksAsk
+        );
+
+        GetBlockHeadersMessage msg = new GetBlockHeadersMessage(blockNumber, maxBlocksAsk);
+
+        sendMessage(msg);
+    }
+
+    protected void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: send GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
+                channel.getPeerIdShort(),
+                "0x" + Hex.toHexString(blockHash).substring(0, 8),
+                maxBlocksAsk, skip, reverse
+        );
+
+        GetBlockHeadersMessage msg = new GetBlockHeadersMessage(0, blockHash, maxBlocksAsk, skip, reverse);
+
+        sendMessage(msg);
+    }
+
+    protected boolean sendGetBlockBodies() {
+
+        List<BlockHeader> headers = queue.pollHeaders();
+        if (headers.isEmpty()) {
+            if(logger.isInfoEnabled()) logger.trace(
+                    "Peer {}: no more headers in queue, idle",
+                    channel.getPeerIdShort()
+            );
+            return false;
+        }
+
+        sentHeaders.clear();
+        sentHeaders.addAll(headers);
+
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: send GetBlockBodies, hashes.count [{}]",
+                channel.getPeerIdShort(),
+                sentHeaders.size()
+        );
+
+        List<byte[]> hashes = new ArrayList<>(headers.size());
+        for (BlockHeader header : headers) {
+            hashes.add(header.getHash());
+        }
+
+        GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
+
+        sendMessage(msg);
+
+        return true;
     }
 
     @Override
-    protected void startHashRetrieving() {
-        startForkCoverage();
+    public void sendNewBlock(Block block) {
+        BigInteger parentTD = blockstore.getTotalDifficultyForHash(block.getParentHash());
+        byte[] td = ByteUtil.bigIntegerToBytes(parentTD.add(new BigInteger(1, block.getDifficulty())));
+        NewBlockMessage msg = new NewBlockMessage(block, td);
+        sendMessage(msg);
     }
 
-    @Override
-    protected boolean startBlockRetrieving() {
-        return sendGetBlockBodies();
+    /*************************
+     *  Message Processing   *
+     *************************/
+
+    protected void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
+        channel.getNodeStatistics().ethHandshake(msg);
+        ethereumListener.onEthStatusUpdated(channel, msg);
+
+        try {
+            if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
+                    || msg.getProtocolVersion() != version.getCode()) {
+                loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
+                ethState = EthState.STATUS_FAILED;
+                disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
+                ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
+                return;
+            } else if (msg.getNetworkId() != config.networkId()) {
+                ethState = EthState.STATUS_FAILED;
+                disconnect(ReasonCode.NULL_IDENTITY);
+                return;
+            } else if (peerDiscoveryMode) {
+                loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
+                disconnect(ReasonCode.REQUESTED);
+                ctx.close().sync();
+                ctx.disconnect().sync();
+                return;
+            }
+        } catch (NoSuchElementException e) {
+            loggerNet.debug("EthHandler already removed");
+            return;
+        }
+
+        ethState = EthState.STATUS_SUCCEEDED;
+
+        bestHash = msg.getBestHash();
     }
 
     protected void processNewBlockHashes(NewBlockHashesMessage msg) {
@@ -127,6 +309,15 @@ public class Eth62 extends EthHandler {
             int maxBlocksAsk = (int) (lastBlockNumber - firstBlockNumber + 1);
             sendGetBlockHeaders(firstBlockNumber, maxBlocksAsk);
         }
+    }
+
+    protected void processTransactions(TransactionsMessage msg) {
+        if(!processTransactions) {
+            return;
+        }
+
+        List<Transaction> txSet = msg.getTransactions();
+        pendingState.addWireTransactions(txSet);
     }
 
     protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
@@ -266,65 +457,76 @@ public class Eth62 extends EthHandler {
         }
     }
 
-    protected void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk) {
+    protected void processNewBlock(NewBlockMessage newBlockMessage) {
 
-        if(logger.isTraceEnabled()) logger.trace(
-                "Peer {}: send GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
-                channel.getPeerIdShort(),
-                blockNumber,
-                maxBlocksAsk
-        );
+        Block newBlock = newBlockMessage.getBlock();
 
-        GetBlockHeadersMessage msg = new GetBlockHeadersMessage(blockNumber, maxBlocksAsk);
+        logger.info("New block received: block.index [{}]", newBlock.getNumber());
 
-        sendMessage(msg);
-    }
-
-    protected void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
-
-        if(logger.isTraceEnabled()) logger.trace(
-                "Peer {}: send GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
-                channel.getPeerIdShort(),
-                "0x" + Hex.toHexString(blockHash).substring(0, 8),
-                maxBlocksAsk, skip, reverse
-        );
-
-        GetBlockHeadersMessage msg = new GetBlockHeadersMessage(0, blockHash, maxBlocksAsk, skip, reverse);
-
-        sendMessage(msg);
-    }
-
-    protected boolean sendGetBlockBodies() {
-
-        List<BlockHeader> headers = queue.pollHeaders();
-        if (headers.isEmpty()) {
-            if(logger.isInfoEnabled()) logger.trace(
-                    "Peer {}: no more headers in queue, idle",
-                    channel.getPeerIdShort()
+        // skip new block if TD is lower than ours
+        if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
+            logger.trace(
+                    "New block difficulty lower than ours: [{}] vs [{}], skip",
+                    newBlockMessage.getDifficultyAsBigInt(),
+                    blockchain.getTotalDifficulty()
             );
-            changeState(IDLE);
-            return false;
+            return;
         }
 
-        sentHeaders.clear();
-        sentHeaders.addAll(headers);
+        channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
+        bestHash = newBlock.getHash();
 
-        if(logger.isTraceEnabled()) logger.trace(
-                "Peer {}: send GetBlockBodies, hashes.count [{}]",
+        // adding block to the queue
+        // there will be decided how to
+        // connect it to the chain
+        queue.addNew(newBlock, channel.getNodeId());
+
+        if (newBlockLowerNumber == Long.MAX_VALUE) {
+            newBlockLowerNumber = newBlock.getNumber();
+        }
+    }
+
+    /*************************
+     *    Sync Management    *
+     *************************/
+
+    @Override
+    public void changeState(SyncStateName newState) {
+
+        if (syncState == newState) {
+            return;
+        }
+
+        logger.trace(
+                "Peer {}: changing state from {} to {}",
                 channel.getPeerIdShort(),
-                sentHeaders.size()
+                syncState,
+                newState
         );
 
-        List<byte[]> hashes = new ArrayList<>(headers.size());
-        for (BlockHeader header : headers) {
-            hashes.add(header.getHash());
+        if (newState == HASH_RETRIEVING) {
+            syncStats.reset();
+            startHashRetrieving();
         }
+        if (newState == BLOCK_RETRIEVING) {
+            syncStats.reset();
+            if (!sendGetBlockBodies()) {
+                newState = IDLE;
+            }
+        }
+        if (newState == BLOCKS_LACK) {
+            if (syncDone || ++blocksLackHits < BLOCKS_LACK_MAX_HITS) {
+                return;
+            }
+            blocksLackHits = 0; // reset
+        }
+        syncState = newState;
+    }
 
-        GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
-
-        sendMessage(msg);
-
-        return true;
+    @Override
+    public void onShutdown() {
+        changeState(IDLE);
+        returnHeaders();
     }
 
     private void returnHeaders() {
@@ -345,8 +547,10 @@ public class Eth62 extends EthHandler {
      *     Fork Coverage     *
      *************************/
 
+    private static final int FORK_COVER_BATCH_SIZE = 192;
 
-    private void startForkCoverage() {
+
+    protected void startHashRetrieving() {
 
         commonAncestorFound = false;
 
@@ -429,5 +633,131 @@ public class Eth62 extends EthHandler {
         if (syncManager.getGapBlock() == null) return false;
 
         return syncManager.getGapBlock().getNumber() <= blockchain.getBestBlock().getNumber();
+    }
+
+
+    /*************************
+     *   Getters, setters    *
+     *************************/
+
+    @Override
+    public boolean isHashRetrievingDone() {
+        return syncState == DONE_HASH_RETRIEVING;
+    }
+
+    @Override
+    public boolean isHashRetrieving() {
+        return syncState == HASH_RETRIEVING;
+    }
+
+    @Override
+    public boolean hasBlocksLack() {
+        return syncState == BLOCKS_LACK;
+    }
+
+    @Override
+    public boolean hasStatusPassed() {
+        return ethState != EthState.INIT;
+    }
+
+    @Override
+    public boolean hasStatusSucceeded() {
+        return ethState == EthState.STATUS_SUCCEEDED;
+    }
+
+    @Override
+    public boolean isIdle() {
+        return syncState == IDLE;
+    }
+
+    @Override
+    public byte[] getBestKnownHash() {
+        return bestHash;
+    }
+
+    @Override
+    public void setMaxHashesAsk(int maxHashesAsk) {
+        this.maxHashesAsk = maxHashesAsk;
+    }
+
+    @Override
+    public int getMaxHashesAsk() {
+        return maxHashesAsk;
+    }
+
+    @Override
+    public void setLastHashToAsk(byte[] lastHashToAsk) {
+        this.lastHashToAsk = lastHashToAsk;
+    }
+
+    @Override
+    public byte[] getLastHashToAsk() {
+        return lastHashToAsk;
+    }
+
+    @Override
+    public void enableTransactions() {
+        processTransactions = true;
+    }
+
+    @Override
+    public void disableTransactions() {
+        processTransactions = false;
+    }
+
+    @Override
+    public SyncStatistics getStats() {
+        return syncStats;
+    }
+
+    @Override
+    public EthVersion getVersion() {
+        return version;
+    }
+
+    @Override
+    public void onSyncDone() {
+        syncDone = true;
+    }
+
+    /*************************
+     *       Logging         *
+     *************************/
+
+    @Override
+    public void logSyncStats() {
+        if(!logger.isInfoEnabled()) {
+            return;
+        }
+        switch (syncState) {
+            case BLOCK_RETRIEVING: logger.info(
+                    "Peer {}: [ {}, state {}, blocks count {} ]",
+                    version,
+                    channel.getPeerIdShort(),
+                    syncState,
+                    syncStats.getBlocksCount()
+            );
+                break;
+            case HASH_RETRIEVING: logger.info(
+                    "Peer {}: [ {}, state {}, hashes count {} ]",
+                    version,
+                    channel.getPeerIdShort(),
+                    syncState,
+                    syncStats.getHashesCount()
+            );
+                break;
+            default: logger.info(
+                    "Peer {}: [ {}, state {} ]",
+                    version,
+                    channel.getPeerIdShort(),
+                    syncState
+            );
+        }
+    }
+
+    protected enum EthState {
+        INIT,
+        STATUS_SUCCEEDED,
+        STATUS_FAILED
     }
 }
