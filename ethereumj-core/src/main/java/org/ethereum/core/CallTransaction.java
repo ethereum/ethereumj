@@ -493,16 +493,25 @@ public class CallTransaction {
         }
 
         public static Function fromSignature(String funcName, String ... paramTypes) {
+            return fromSignature(funcName, paramTypes, new String[0]);
+        }
+
+        public static Function fromSignature(String funcName, String[] paramTypes, String[] resultTypes) {
             Function ret = new Function();
             ret.name = funcName;
             ret.constant = false;
             ret.type = FunctionType.function;
-            ret.outputs = new Param[0];
             ret.inputs = new Param[paramTypes.length];
             for (int i = 0; i < paramTypes.length; i++) {
                 ret.inputs[i] = new Param();
                 ret.inputs[i].name = "param" + i;
                 ret.inputs[i].type = Type.getType(paramTypes[i]);
+            }
+            ret.outputs = new Param[resultTypes.length];
+            for (int i = 0; i < resultTypes.length; i++) {
+                ret.outputs[i] = new Param();
+                ret.outputs[i].name = "res" + i;
+                ret.outputs[i].type = Type.getType(paramTypes[i]);
             }
             return ret;
         }
