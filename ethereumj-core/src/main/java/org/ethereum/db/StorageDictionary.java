@@ -231,7 +231,11 @@ public class StorageDictionary {
                     compChild.type = child.type;
                     compChild.key = child.key;
                     compChild.hashKey = grandChild.hashKey;
-                    compChild.children = grandChild.children;
+                    compChild.children = new TreeMap<>();
+                    for (PathElement ggCh : grandChild.children.keySet()) {
+                        PathElement ggChCopy = ggCh.copyWithNewParent(compChild);
+                        compChild.children.put(ggChCopy, ggChCopy);
+                    }
                     compChild.parent = this;
                     compactedChildren.add(compChild);
                 }
@@ -256,6 +260,17 @@ public class StorageDictionary {
                 }
             }
             return canCompact;
+        }
+
+        private PathElement copyWithNewParent(PathElement newParent) {
+            PathElement ret = new PathElement();
+            ret.type = type;
+            ret.key = key;
+            ret.hashKey = hashKey;
+            ret.children = children;
+            ret.isValid = isValid;
+            ret.parent = newParent;
+            return ret;
         }
 
         public List<PathElement> getChildren(int from, int maxLen) {
