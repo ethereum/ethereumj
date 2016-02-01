@@ -12,12 +12,10 @@ import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.Functional;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
@@ -27,8 +25,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -60,8 +58,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private KeyValueDataSource detailsDS = null;
     private KeyValueDataSource stateDS = null;
 
-    private final ReentrantLock lock = new ReentrantLock();
-    private final AtomicInteger accessCounter = new AtomicInteger();
+    ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private boolean isSnapshot = false;
 
@@ -103,39 +100,38 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public void reset() {
-        doWithLockedAccess(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
-                close();
+        rwLock.writeLock().lock();
+        try {
+            close();
 
-                detailsDS.init();
-                detailsDB = new DatabaseImpl(detailsDS);
+            detailsDS.init();
+            detailsDB = new DatabaseImpl(detailsDS);
 
-                stateDS.init();
-                stateDB = new DatabaseImpl(stateDS);
-                worldState = new SecureTrie(stateDB.getDb());
-            }
-        });
+            stateDS.init();
+            stateDB = new DatabaseImpl(stateDS);
+            worldState = new SecureTrie(stateDB.getDb());
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     @Override
     public void close() {
-        doWithLockedAccess(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
-
-                if (detailsDB != null) {
-                    detailsDB.close();
-                    detailsDB = null;
-                }
-
-
-                if (stateDB != null) {
-                    stateDB.close();
-                    stateDB = null;
-                }
+        rwLock.writeLock().lock();
+        try {
+            if (detailsDB != null) {
+                detailsDB.close();
+                detailsDB = null;
             }
-        });
+
+
+            if (stateDB != null) {
+                stateDB.close();
+                stateDB = null;
+            }
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -144,7 +140,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
+    public synchronized void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
         logger.info("updatingBatch: detailsCache.size: {}", detailsCache.size());
@@ -197,44 +193,45 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         detailsCache.clear();
     }
 
-    private void updateContractDetails(final byte[] address, final ContractDetails contractDetails) {
-        doWithAccessCounting(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
-                dds.update(address, contractDetails);
-            }
-        });
+    private synchronized void updateContractDetails(final byte[] address, final ContractDetails contractDetails) {
+        rwLock.readLock().lock();
+        try {
+            dds.update(address, contractDetails);
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
     public void flushNoReconnect() {
-        doWithLockedAccess(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
-                gLogger.info("flushing to disk");
+        rwLock.writeLock().lock();
+        try {
+                gLogger.debug("flushing to disk");
+                long s = System.currentTimeMillis();
 
                 dds.flush();
                 worldState.sync();
-            }
-        });
+                gLogger.info("RepositoryImpl.flushNoReconnect took " + (System.currentTimeMillis() - s) + " ms");
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
 
     @Override
-    public void flush() {
-        doWithLockedAccess(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
-                gLogger.info("flushing to disk");
+    public synchronized void flush() {
+        rwLock.writeLock().lock();
+        try {
+                gLogger.debug("flushing to disk");
+                long s = System.currentTimeMillis();
 
                 dds.flush();
                 worldState.sync();
 
-                byte[] root = worldState.getRootHash();
-                reset();
-                worldState.setRoot(root);
-            }
-        });
+                gLogger.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -248,22 +245,22 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public void syncToRoot(final byte[] root) {
-        doWithAccessCounting(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
+    public synchronized void syncToRoot(final byte[] root) {
+        rwLock.readLock().lock();
+        try {
                 worldState.setRoot(root);
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public Repository startTracking() {
+    public synchronized Repository startTracking() {
         return new RepositoryTrack(this);
     }
 
     @Override
-    public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
+    public synchronized void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
         dumpTrie(block);
 
         if (!(config.dumpFull() || config.dumpBlock() == block.getNumber()))
@@ -321,16 +318,16 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         }
     }
 
-    public String getTrieDump() {
-        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<String>() {
-            @Override
-            public String invoke() {
+    public synchronized String getTrieDump() {
+        rwLock.readLock().lock();
+        try {
                 return worldState.getTrieDump();
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
-    public void dumpTrie(Block block) {
+    public synchronized void dumpTrie(Block block) {
 
         if (!(config.dumpFull() || config.dumpBlock() == block.getNumber()))
             return;
@@ -367,10 +364,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
 
     @Override
-    public Set<byte[]> getAccountsKeys() {
-        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<Set<byte[]>>() {
-            @Override
-            public Set<byte[]> invoke() {
+    public synchronized Set<byte[]> getAccountsKeys() {
+        rwLock.readLock().lock();
+        try {
                 Set<byte[]> result = new HashSet<>();
                 for (ByteArrayWrapper key : dds.keys()) {
 
@@ -379,12 +375,13 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                 }
 
                 return result;
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public BigInteger addBalance(byte[] addr, BigInteger value) {
+    public synchronized BigInteger addBalance(byte[] addr, BigInteger value) {
 
         AccountState account = getAccountStateOrCreateNew(addr);
 
@@ -395,37 +392,37 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public BigInteger getBalance(byte[] addr) {
+    public synchronized BigInteger getBalance(byte[] addr) {
         AccountState account = getAccountState(addr);
         return (account == null) ? BigInteger.ZERO : account.getBalance();
     }
 
     @Override
-    public DataWord getStorageValue(byte[] addr, DataWord key) {
+    public synchronized DataWord getStorageValue(byte[] addr, DataWord key) {
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? null : details.get(key);
     }
 
     @Override
-    public int getStorageSize(byte[] addr) {
+    public synchronized int getStorageSize(byte[] addr) {
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? 0 : details.getStorageSize();
     }
 
     @Override
-    public Set<DataWord> getStorageKeys(byte[] addr) {
+    public synchronized Set<DataWord> getStorageKeys(byte[] addr) {
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? Collections.EMPTY_SET : details.getStorageKeys();
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage(byte[] addr, Collection<DataWord> keys) {
+    public synchronized Map<DataWord, DataWord> getStorage(byte[] addr, Collection<DataWord> keys) {
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? Collections.EMPTY_MAP : details.getStorage(keys);
     }
 
     @Override
-    public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
+    public synchronized void addStorageRow(byte[] addr, DataWord key, DataWord value) {
         ContractDetails details = getContractDetails(addr);
         if (details == null) {
             createAccount(addr);
@@ -438,7 +435,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public byte[] getCode(byte[] addr) {
+    public synchronized byte[] getCode(byte[] addr) {
 
         if (!isExist(addr))
             return EMPTY_BYTE_ARRAY;
@@ -452,7 +449,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public void saveCode(byte[] addr, byte[] code) {
+    public synchronized void saveCode(byte[] addr, byte[] code) {
         ContractDetails details = getContractDetails(addr);
 
         if (details == null) {
@@ -470,19 +467,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
 
     @Override
-    public BigInteger getNonce(byte[] addr) {
+    public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
         return accountState == null ? BigInteger.ZERO : accountState.getNonce();
     }
 
     @Nonnull
-    private AccountState getAccountStateOrCreateNew(byte[] addr) {
+    private synchronized AccountState getAccountStateOrCreateNew(byte[] addr) {
         AccountState account = getAccountState(addr);
         return (account == null) ? createAccount(addr) : account;
     }
 
     @Override
-    public BigInteger increaseNonce(byte[] addr) {
+    public synchronized BigInteger increaseNonce(byte[] addr) {
         AccountState account = getAccountStateOrCreateNew(addr);
 
         account.incrementNonce();
@@ -491,16 +488,16 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         return account.getNonce();
     }
 
-    private void updateAccountState(final byte[] addr, final AccountState accountState) {
-        doWithAccessCounting(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
+    private synchronized void updateAccountState(final byte[] addr, final AccountState accountState) {
+        rwLock.readLock().lock();
+        try {
                 worldState.update(addr, accountState.getEncoded());
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
-    public BigInteger setNonce(final byte[] addr, final BigInteger nonce) {
+    public synchronized BigInteger setNonce(final byte[] addr, final BigInteger nonce) {
         AccountState account = getAccountStateOrCreateNew(addr);
 
         account.setNonce(nonce);
@@ -510,22 +507,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public void delete(final byte[] addr) {
-        doWithAccessCounting(new Functional.InvokeWrapper() {
-            @Override
-            public void invoke() {
+    public synchronized void delete(final byte[] addr) {
+        rwLock.readLock().lock();
+        try {
                 worldState.delete(addr);
-//                dds.remove(addr);
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public ContractDetails getContractDetails(final byte[] addr) {
-        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<ContractDetails>() {
-            @Override
-            public ContractDetails invoke() {
-
+    public synchronized ContractDetails getContractDetails(final byte[] addr) {
+        rwLock.readLock().lock();
+        try {
                 // That part is important cause if we have
                 // to sync details storage according the trie root
                 // saved in the account
@@ -539,15 +533,15 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                     details = details.getSnapshotTo(storageRoot);
 
                 return  details;
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public AccountState getAccountState(final byte[] addr) {
-        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<AccountState>() {
-            @Override
-            public AccountState invoke() {
+    public synchronized AccountState getAccountState(final byte[] addr) {
+        rwLock.readLock().lock();
+        try {
                 AccountState result = null;
                 byte[] accountData = worldState.get(addr);
 
@@ -555,12 +549,13 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                     result = new AccountState(accountData);
 
                 return result;
-            }
-        });
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public AccountState createAccount(final byte[] addr) {
+    public synchronized AccountState createAccount(final byte[] addr) {
         AccountState accountState = new AccountState();
 
         updateAccountState(addr, accountState);
@@ -575,7 +570,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public void loadAccount(byte[] addr,
+    public synchronized void loadAccount(byte[] addr,
                             HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                             HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
 
@@ -592,62 +587,12 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
-    public byte[] getRoot() {
+    public synchronized byte[] getRoot() {
         return worldState.getRootHash();
     }
 
-    private void doWithLockedAccess(Functional.InvokeWrapper wrapper) {
-        lock.lock();
-        try {
-            while (accessCounter.get() > 0) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("waiting for access ...");
-                }
-                try {
-                    sleep(100);
-                } catch (InterruptedException e) {
-                    logger.error("Error occurred during access waiting: ", e);
-                }
-            }
-
-            wrapper.invoke();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public <R> R doWithAccessCounting(Functional.InvokeWrapperWithResult<R> wrapper) {
-        while (lock.isLocked()) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("waiting for lock releasing ...");
-            }
-            try {
-                sleep(100);
-            } catch (InterruptedException e) {
-                logger.error("Error occurred during locked access waiting: ", e);
-            }
-        }
-        accessCounter.incrementAndGet();
-        try {
-            return wrapper.invoke();
-        } finally {
-            accessCounter.decrementAndGet();
-        }
-    }
-
-    public void doWithAccessCounting(final Functional.InvokeWrapper wrapper) {
-        doWithAccessCounting(new Functional.InvokeWrapperWithResult<Object>() {
-            @Override
-            public Object invoke() {
-                wrapper.invoke();
-                return null;
-            }
-        });
-    }
-
-
     @Override
-    public Repository getSnapshotTo(byte[] root){
+    public synchronized Repository getSnapshotTo(byte[] root){
 
         TrieImpl trie = new SecureTrie(stateDS);
         trie.setRoot(root);

@@ -46,69 +46,80 @@ public class RepositoryTrack implements Repository {
     @Override
     public AccountState createAccount(byte[] addr) {
 
-        logger.trace("createAccount: [{}]", Hex.toHexString(addr));
+        synchronized (repository) {
+            logger.trace("createAccount: [{}]", Hex.toHexString(addr));
 
-        AccountState accountState = new AccountState();
-        cacheAccounts.put(wrap(addr), accountState);
+            AccountState accountState = new AccountState();
+            cacheAccounts.put(wrap(addr), accountState);
 
-        ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
-        contractDetails.setDirty(true);
-        cacheDetails.put(wrap(addr), contractDetails);
+            ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
+            contractDetails.setDirty(true);
+            cacheDetails.put(wrap(addr), contractDetails);
 
-        return accountState;
+            return accountState;
+        }
     }
 
     @Override
     public AccountState getAccountState(byte[] addr) {
 
-        AccountState accountState = cacheAccounts.get(wrap(addr));
+        synchronized (repository) {
 
-        if (accountState == null) {
-            repository.loadAccount(addr, cacheAccounts, cacheDetails);
+            AccountState accountState = cacheAccounts.get(wrap(addr));
 
-            accountState = cacheAccounts.get(wrap(addr));
+            if (accountState == null) {
+                repository.loadAccount(addr, cacheAccounts, cacheDetails);
+
+                accountState = cacheAccounts.get(wrap(addr));
+            }
+            return accountState;
         }
-        return accountState;
     }
 
     @Override
     public boolean isExist(byte[] addr) {
 
-        AccountState accountState = cacheAccounts.get(wrap(addr));
-        if (accountState != null) return !accountState.isDeleted();
+        synchronized (repository) {
+            AccountState accountState = cacheAccounts.get(wrap(addr));
+            if (accountState != null) return !accountState.isDeleted();
 
-        return repository.isExist(addr);
+            return repository.isExist(addr);
+        }
     }
 
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
 
-        ContractDetails contractDetails = cacheDetails.get(wrap(addr));
+        synchronized (repository) {
+            ContractDetails contractDetails = cacheDetails.get(wrap(addr));
 
-        if (contractDetails == null) {
-            repository.loadAccount(addr, cacheAccounts, cacheDetails);
-            contractDetails = cacheDetails.get(wrap(addr));
+            if (contractDetails == null) {
+                repository.loadAccount(addr, cacheAccounts, cacheDetails);
+                contractDetails = cacheDetails.get(wrap(addr));
+            }
+
+            return contractDetails;
         }
-
-        return contractDetails;
     }
 
     @Override
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                             HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
 
-        AccountState accountState = this.cacheAccounts.get(wrap(addr));
-        ContractDetails contractDetails = this.cacheDetails.get(wrap(addr));
+        synchronized (repository) {
+            AccountState accountState = this.cacheAccounts.get(wrap(addr));
+            ContractDetails contractDetails = this.cacheDetails.get(wrap(addr));
 
-        if (accountState == null) {
-            repository.loadAccount(addr, this.cacheAccounts, this.cacheDetails);
-            accountState = this.cacheAccounts.get(wrap(addr));
-            contractDetails = this.cacheDetails.get(wrap(addr));
+            if (accountState == null) {
+                repository.loadAccount(addr, this.cacheAccounts, this.cacheDetails);
+                accountState = this.cacheAccounts.get(wrap(addr));
+                contractDetails = this.cacheDetails.get(wrap(addr));
+            }
+
+            cacheAccounts.put(wrap(addr), accountState.clone());
+            ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
+            cacheDetails.put(wrap(addr), contractDetailsLvl2);
         }
-
-        cacheAccounts.put(wrap(addr), accountState.clone());
-        ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
-        cacheDetails.put(wrap(addr), contractDetailsLvl2);
     }
 
 
@@ -116,45 +127,50 @@ public class RepositoryTrack implements Repository {
     public void delete(byte[] addr) {
         logger.trace("delete account: [{}]", Hex.toHexString(addr));
 
-        getAccountState(addr).setDeleted(true);
-        getContractDetails(addr).setDeleted(true);
+        synchronized (repository) {
+            getAccountState(addr).setDeleted(true);
+            getContractDetails(addr).setDeleted(true);
+        }
     }
 
     @Override
     public BigInteger increaseNonce(byte[] addr) {
 
-        AccountState accountState = getAccountState(addr);
+        synchronized (repository) {
+            AccountState accountState = getAccountState(addr);
 
-        if (accountState == null)
-            accountState = createAccount(addr);
+            if (accountState == null)
+                accountState = createAccount(addr);
 
-        getContractDetails(addr).setDirty(true);
+            getContractDetails(addr).setDirty(true);
 
-        BigInteger saveNonce = accountState.getNonce();
-        accountState.incrementNonce();
+            BigInteger saveNonce = accountState.getNonce();
+            accountState.incrementNonce();
 
-        logger.trace("increase nonce addr: [{}], from: [{}], to: [{}]", Hex.toHexString(addr),
-                saveNonce, accountState.getNonce());
+            logger.trace("increase nonce addr: [{}], from: [{}], to: [{}]", Hex.toHexString(addr),
+                    saveNonce, accountState.getNonce());
 
-        return accountState.getNonce();
+            return accountState.getNonce();
+        }
     }
 
     public BigInteger setNonce(byte[] addr, BigInteger bigInteger) {
-        AccountState accountState = getAccountState(addr);
+        synchronized (repository) {
+            AccountState accountState = getAccountState(addr);
 
-        if (accountState == null)
-            accountState = createAccount(addr);
+            if (accountState == null)
+                accountState = createAccount(addr);
 
-        getContractDetails(addr).setDirty(true);
+            getContractDetails(addr).setDirty(true);
 
-        BigInteger saveNonce = accountState.getNonce();
-        accountState.setNonce(bigInteger);
+            BigInteger saveNonce = accountState.getNonce();
+            accountState.setNonce(bigInteger);
 
-        logger.trace("increase nonce addr: [{}], from: [{}], to: [{}]", Hex.toHexString(addr),
-                saveNonce, accountState.getNonce());
+            logger.trace("increase nonce addr: [{}], from: [{}], to: [{}]", Hex.toHexString(addr),
+                    saveNonce, accountState.getNonce());
 
-        return accountState.getNonce();
-
+            return accountState.getNonce();
+        }
     }
 
 
@@ -173,40 +189,46 @@ public class RepositoryTrack implements Repository {
     @Override
     public BigInteger addBalance(byte[] addr, BigInteger value) {
 
-        AccountState accountState = getAccountState(addr);
-        if (accountState == null) {
-            accountState = createAccount(addr);
+        synchronized (repository) {
+            AccountState accountState = getAccountState(addr);
+            if (accountState == null) {
+                accountState = createAccount(addr);
+            }
+
+            getContractDetails(addr).setDirty(true);
+            BigInteger newBalance = accountState.addToBalance(value);
+
+            logger.trace("adding to balance addr: [{}], balance: [{}], delta: [{}]", Hex.toHexString(addr),
+                    newBalance, value);
+
+            return newBalance;
         }
-
-        getContractDetails(addr).setDirty(true);
-        BigInteger newBalance = accountState.addToBalance(value);
-
-        logger.trace("adding to balance addr: [{}], balance: [{}], delta: [{}]", Hex.toHexString(addr),
-                newBalance, value);
-
-        return newBalance;
     }
 
     @Override
     public void saveCode(byte[] addr, byte[] code) {
         logger.trace("saving code addr: [{}], code: [{}]", Hex.toHexString(addr),
                 Hex.toHexString(code));
-        getContractDetails(addr).setCode(code);
-        getContractDetails(addr).setDirty(true);
-        getAccountState(addr).setCodeHash(sha3(code));
+        synchronized (repository) {
+            getContractDetails(addr).setCode(code);
+            getContractDetails(addr).setDirty(true);
+            getAccountState(addr).setCodeHash(sha3(code));
+        }
     }
 
     @Override
     public byte[] getCode(byte[] addr) {
 
-        if (!isExist(addr))
-            return EMPTY_BYTE_ARRAY;
+        synchronized (repository) {
+            if (!isExist(addr))
+                return EMPTY_BYTE_ARRAY;
 
-        byte[] codeHash = getAccountState(addr).getCodeHash();
-        if ( Arrays.equals(codeHash, EMPTY_DATA_HASH) )
-            return EMPTY_BYTE_ARRAY;
+            byte[] codeHash = getAccountState(addr).getCodeHash();
+            if (Arrays.equals(codeHash, EMPTY_DATA_HASH))
+                return EMPTY_BYTE_ARRAY;
 
-        return getContractDetails(addr).getCode();
+            return getContractDetails(addr).getCode();
+        }
     }
 
     @Override
@@ -215,12 +237,16 @@ public class RepositoryTrack implements Repository {
         logger.trace("add storage row, addr: [{}], key: [{}] val: [{}]", Hex.toHexString(addr),
                 key.toString(), value.toString());
 
-        getContractDetails(addr).put(key, value);
+        synchronized (repository) {
+            getContractDetails(addr).put(key, value);
+        }
     }
 
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
-        return getContractDetails(addr).get(key);
+        synchronized (repository) {
+            return getContractDetails(addr).get(key);
+        }
     }
 
 
@@ -263,16 +289,18 @@ public class RepositoryTrack implements Repository {
     @Override
     public void commit() {
 
-        for (ContractDetails contractDetails : cacheDetails.values()) {
+        synchronized (repository) {
+            for (ContractDetails contractDetails : cacheDetails.values()) {
 
-            ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl)contractDetails;
-            contractDetailsCache.commit();
+                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetails;
+                contractDetailsCache.commit();
+            }
+
+            repository.updateBatch(cacheAccounts, cacheDetails);
+            cacheAccounts.clear();
+            cacheDetails.clear();
+            logger.debug("committed changes");
         }
-
-        repository.updateBatch(cacheAccounts, cacheDetails);
-        cacheAccounts.clear();
-        cacheDetails.clear();
-        logger.debug("committed changes");
     }
 
 
@@ -293,17 +321,19 @@ public class RepositoryTrack implements Repository {
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
                             HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
 
-        for (ByteArrayWrapper hash : accountStates.keySet()) {
-            cacheAccounts.put(hash, accountStates.get(hash));
-        }
+        synchronized (repository) {
+            for (ByteArrayWrapper hash : accountStates.keySet()) {
+                cacheAccounts.put(hash, accountStates.get(hash));
+            }
 
-        for (ByteArrayWrapper hash : contractDetailes.keySet()) {
+            for (ByteArrayWrapper hash : contractDetailes.keySet()) {
 
-            ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetailes.get(hash);
-            if (contractDetailsCache.origContract != null && !(contractDetailsCache.origContract instanceof ContractDetailsImpl))
-                cacheDetails.put(hash, contractDetailsCache.origContract);
-            else
-                cacheDetails.put(hash, contractDetailsCache);
+                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetailes.get(hash);
+                if (contractDetailsCache.origContract != null && !(contractDetailsCache.origContract instanceof ContractDetailsImpl))
+                    cacheDetails.put(hash, contractDetailsCache.origContract);
+                else
+                    cacheDetails.put(hash, contractDetailsCache);
+            }
         }
     }
 
