@@ -228,4 +228,18 @@ public class StorageDictionaryTest {
         }
         return ret;
     }
+
+//    @Test
+//    public void aa() {
+//        StorageDictionaryDb db = new StorageDictionaryDb();
+//        db.init(new File("D:\\ws\\work\\q8\\b\\storagedict"));
+//        StorageDictionary sd = db.getOrCreate(StorageDictionaryDb.Layout.Solidity, Hex.decode("99b28a25e94d4fc009d4fcbc2f6b91440afb901d"));
+//        System.out.println(sd.dump());
+//        StorageDictionary sdc = sd.compactAndFilter(null);
+//        System.out.println(sdc.dump());
+//        StorageDictionary.PathElement pathElement = sdc.getByPath("1", "000000000000000000000000640eb8074d09975f11d756985e4fe0863e52c393");
+//        System.out.println(Arrays.toString(pathElement.getFullPath()));
+//        StorageDictionary.PathElement pathElement1 = sdc.getByPath("1", "000000000000000000000000640eb8074d09975f11d756985e4fe0863e52c393", "0");
+//        System.out.println(Arrays.toString(pathElement1.getFullPath()));
+//    }
 }
