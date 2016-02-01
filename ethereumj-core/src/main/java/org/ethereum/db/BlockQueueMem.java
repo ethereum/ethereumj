@@ -39,65 +39,70 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void addOrReplaceAll(Collection<BlockWrapper> blockList) {
-        synchronized (mutex) {
-            List<Long> numbers = new ArrayList<>(blockList.size());
-            Set<ByteArrayWrapper> newHashes = new HashSet<>();
-            for (BlockWrapper b : blockList) {
 
-                if (!index.contains(b.getNumber())) {
+        List<Long> numbers = new ArrayList<>(blockList.size());
+        Map<Long, BlockWrapper> newBlocks = new HashMap<>();
+        Set<ByteArrayWrapper> newHashes = new HashSet<>();
+        Set<ByteArrayWrapper> replacedHashes = new HashSet<>();
 
-                    if (!numbers.contains(b.getNumber())) {
-                        numbers.add(b.getNumber());
-                        blocks.put(b.getNumber(), b);
-                        newHashes.add(new ByteArrayWrapper(b.getHash()));
-                    }
+        for (BlockWrapper b : blockList) {
 
-                } else  {
-                    replaceInner(b);
-                }
+            if (index.contains(b.getNumber())) {
+                BlockWrapper old = blocks.get(b.getNumber());
+                if (old != null)
+                    replacedHashes.add(new ByteArrayWrapper(old.getHash()));
+            } else {
+                // do not add same block twice
+                if (numbers.contains(b.getNumber()))
+                    continue;
+                numbers.add(b.getNumber());
             }
-            hashes.addAll(newHashes);
 
-            logger.debug("Added: " + blockList.size() + ", BlockQueue size: " + blocks.size());
-
-            takeLock.lock();
-            try {
-                index.addAll(numbers);
-                notEmpty.signalAll();
-            } finally {
-                takeLock.unlock();
-            }
+            newBlocks.put(b.getNumber(), b);
+            newHashes.add(new ByteArrayWrapper(b.getHash()));
         }
+
+        synchronized (mutex) {
+            blocks.putAll(newBlocks);
+            hashes.removeAll(replacedHashes);
+            hashes.addAll(newHashes);
+            index.addAll(numbers);
+        }
+
+        fireNotEmpty();
+
+        logger.debug("Added: " + blockList.size() + ", BlockQueue size: " + blocks.size());
     }
 
     @Override
     public void add(BlockWrapper block) {
+
+        if (index.contains(block.getNumber())) return;
+
         synchronized (mutex) {
-
-            if (!index.contains(block.getNumber())) {
-                addInner(block);
-            }
-
+            addInner(block);
         }
+
+        fireNotEmpty();
     }
 
     @Override
     public void addOrReplace(BlockWrapper block) {
-        synchronized (mutex) {
 
+        synchronized (mutex) {
             if (!index.contains(block.getNumber())) {
                 addInner(block);
             } else {
                 replaceInner(block);
             }
         }
+
+        fireNotEmpty();
     }
 
     private void replaceInner(BlockWrapper block) {
 
         BlockWrapper old = blocks.get(block.getNumber());
-
-        if (block.isEqual(old)) return;
 
         if (old != null) {
             hashes.remove(new ByteArrayWrapper(old.getHash()));
@@ -108,16 +113,10 @@ public class BlockQueueMem implements BlockQueue {
     }
 
     private void addInner(BlockWrapper block) {
+
         blocks.put(block.getNumber(), block);
         hashes.add(new ByteArrayWrapper(block.getHash()));
-
-        takeLock.lock();
-        try {
-            index.add(block.getNumber());
-            notEmpty.signalAll();
-        } finally {
-            takeLock.unlock();
-        }
+        index.add(block.getNumber());
     }
 
     @Override
@@ -242,6 +241,15 @@ public class BlockQueueMem implements BlockQueue {
             } else {
                 logger.debug("[{}..{}] blocks are dropped out", removed.get(0), removed.get(removed.size() - 1));
             }
+        }
+    }
+
+    private void fireNotEmpty() {
+        takeLock.lock();
+        try {
+            notEmpty.signalAll();
+        } finally {
+            takeLock.unlock();
         }
     }
 }
