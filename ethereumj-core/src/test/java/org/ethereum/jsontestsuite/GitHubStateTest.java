@@ -1,9 +1,8 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.Constants;
 import org.json.simple.parser.ParseException;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
@@ -21,6 +20,20 @@ public class GitHubStateTest {
     //SHACOMMIT of tested commit, ethereum/tests.git
     public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
+
+    private long oldForkValue;
+
+    @Before
+    public void setup() {
+        // for this JSON test commit the Homestead block was defined as 900000
+        oldForkValue = Constants.HOMESTEAD_FORK_BLKNUM;
+        Constants.HOMESTEAD_FORK_BLKNUM = 900_000;
+    }
+
+    @After
+    public void clean() {
+        Constants.HOMESTEAD_FORK_BLKNUM = oldForkValue;
+    }
 
     @Ignore
     @Test // this method is mostly for hands-on convenient testing
