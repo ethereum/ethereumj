@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
+import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
@@ -86,6 +87,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BlockStore blockStore;
 
     private Block bestBlock;
+    private volatile Block actualBestBlock;
+    private Object bestBlockMonitor = new Object();
+
     private BigInteger totalDifficulty = ZERO;
 
     @Autowired
@@ -143,7 +147,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public synchronized byte[] getBestBlockHash() {
+    public byte[] getBestBlockHash() {
         return getBestBlock().getHash();
     }
 
@@ -223,7 +227,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
-        this.bestBlock = blockStore.getBlockByHash(bestBlockHash);
+        Block newBest = blockStore.getBlockByHash(bestBlockHash);
+        synchronized (bestBlockMonitor) {
+            actualBestBlock = this.bestBlock;
+            this.bestBlock = newBest;
+        }
         totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlockHash);
         this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
@@ -232,11 +240,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void popState() {
         State state = stateStack.pop();
         this.repository = state.savedRepo;
-        this.bestBlock = state.savedBest;
+        synchronized (bestBlockMonitor) {
+            this.bestBlock = state.savedBest;
+            actualBestBlock = null;
+        }
         this.totalDifficulty = state.savedTD;
     }
 
     public void dropState() {
+        actualBestBlock = null;
         stateStack.pop();
     }
 
@@ -407,7 +419,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     public synchronized boolean add(Block block) {
 
         if (exitOn < block.getNumber()) {
-            System.out.print("Exiting after block.number: " + getBestBlock().getNumber());
+            System.out.print("Exiting after block.number: " + bestBlock.getNumber());
             repository.flush();
             blockStore.flush();
             System.exit(-1);
@@ -424,7 +436,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return false;
 
         // keep chain continuity
-        if (!Arrays.equals(getBestBlock().getHash(),
+        if (!Arrays.equals(bestBlock.getHash(),
                 block.getParentHash())) return false;
 
         if (block.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
@@ -562,34 +574,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //              return false;
             }
 
-
-            String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
-            String unclesListHash = Hex.toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
-
-            if (!unclesHash.equals(unclesListHash)) {
-                logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
-                return false;
-            }
-
-
-            if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
-                logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
-                return false;
-            }
-
-
-            for (BlockHeader uncle : block.getUncleList()) {
-
-                // - They are valid headers (not necessarily valid blocks)
-                if (!isValid(uncle)) return false;
-
-                //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
-                isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
-                if (!isValid) {
-                    logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
-                    return false;
-                }
-            }
+            if (!validateUncles(block)) return false;
 
             List<Transaction> txs = block.getTransactionsList();
             if (!txs.isEmpty()) {
@@ -619,6 +604,94 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         return isValid;
+    }
+
+    public boolean validateUncles(Block block) {
+        String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
+        String unclesListHash = Hex.toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
+
+        if (!unclesHash.equals(unclesListHash)) {
+            logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+            return false;
+        }
+
+
+        if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
+            logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
+            return false;
+        }
+
+
+        Set<ByteArrayWrapper> ancestors = getAncestors(blockStore, block, UNCLE_GENERATION_LIMIT + 1, false);
+        Set<ByteArrayWrapper> usedUncles = getUsedUncles(blockStore, block, false);
+
+        for (BlockHeader uncle : block.getUncleList()) {
+
+            // - They are valid headers (not necessarily valid blocks)
+            if (!isValid(uncle)) return false;
+
+            //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
+            boolean isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
+            if (!isValid) {
+                logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
+                return false;
+            }
+
+            ByteArrayWrapper uncleHash = new ByteArrayWrapper(uncle.getHash());
+            if (ancestors.contains(uncleHash)) {
+                logger.error("Uncle is direct ancestor: " + Hex.toHexString(uncle.getHash()));
+                return false;
+            }
+
+            if (usedUncles.contains(uncleHash)) {
+                logger.error("Uncle is not unique: " + Hex.toHexString(uncle.getHash()));
+                return false;
+            }
+
+            Block uncleParent = blockStore.getBlockByHash(uncle.getParentHash());
+            if (!ancestors.contains(new ByteArrayWrapper(uncleParent.getHash()))) {
+                logger.error("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
+                return false;
+            }
+
+            if (!isValid(uncle)) {
+                logger.error("Invalid uncle header: " + uncle);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    public static Set<ByteArrayWrapper> getAncestors(BlockStore blockStore, Block testedBlock, int limitNum, boolean isParentBlock) {
+        Set<ByteArrayWrapper> ret = new HashSet<>();
+        limitNum = (int) max(0, testedBlock.getNumber() - limitNum);
+        Block it = testedBlock;
+        if (!isParentBlock) {
+            it = blockStore.getBlockByHash(it.getParentHash());
+        }
+        while(it != null && it.getNumber() >= limitNum) {
+            ret.add(new ByteArrayWrapper(it.getHash()));
+            it = blockStore.getBlockByHash(it.getParentHash());
+        }
+        return ret;
+    }
+
+    public static Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
+        Set<ByteArrayWrapper> ret = new HashSet<>();
+        long limitNum = max(0, testedBlock.getNumber() - UNCLE_GENERATION_LIMIT);
+        Block it = testedBlock;
+        if (!isParentBlock) {
+            it = blockStore.getBlockByHash(it.getParentHash());
+        }
+        while(it.getNumber() > limitNum) {
+            for (BlockHeader uncle : it.getUncleList()) {
+                ret.add(new ByteArrayWrapper(uncle.getHash()));
+            }
+            it = blockStore.getBlockByHash(it.getParentHash());
+        }
+        return ret;
     }
 
     private List<TransactionReceipt> processBlock(Block block) {
@@ -784,7 +857,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public Block getBestBlock() {
-        return bestBlock;
+        synchronized (bestBlockMonitor) {
+            if (actualBestBlock == null) {
+                return bestBlock;
+            } else {
+                return actualBestBlock;
+            }
+        }
     }
 
     @Override
@@ -972,7 +1051,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return bodies;
     }
 
-    public class State {
+    private class State {
         Repository savedRepo = repository;
         Block savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
