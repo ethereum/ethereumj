@@ -88,8 +88,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BlockStore blockStore;
 
     private Block bestBlock;
-    private volatile Block actualBestBlock;
-    private Object bestBlockMonitor = new Object();
 
     private BigInteger totalDifficulty = ZERO;
 
@@ -229,11 +227,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
-        Block newBest = blockStore.getBlockByHash(bestBlockHash);
-        synchronized (bestBlockMonitor) {
-            actualBestBlock = this.bestBlock;
-            this.bestBlock = newBest;
-        }
+        this.bestBlock = blockStore.getBlockByHash(bestBlockHash);
         totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlockHash);
         this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
@@ -242,15 +236,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void popState() {
         State state = stateStack.pop();
         this.repository = state.savedRepo;
-        synchronized (bestBlockMonitor) {
-            this.bestBlock = state.savedBest;
-            actualBestBlock = null;
-        }
         this.totalDifficulty = state.savedTD;
     }
 
     public void dropState() {
-        actualBestBlock = null;
         stateStack.pop();
     }
 
@@ -858,14 +847,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public Block getBestBlock() {
-        synchronized (bestBlockMonitor) {
-            if (actualBestBlock == null) {
-                return bestBlock;
-            } else {
-                return actualBestBlock;
-            }
-        }
+    public synchronized Block getBestBlock() {
+        // the method is synchronized since the bestBlock might be
+        // temporarily switched to the fork while importing non-best block
+        return bestBlock;
     }
 
     @Override

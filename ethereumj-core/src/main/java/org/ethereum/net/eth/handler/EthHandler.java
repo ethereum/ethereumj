@@ -3,13 +3,11 @@ package org.ethereum.net.eth.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.PendingState;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
@@ -75,7 +73,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected SyncQueue queue;
 
     @Autowired
-    protected EthereumListener ethereumListener;
+    protected CompositeEthereumListener ethereumListener;
 
     @Autowired
     protected Wallet wallet;
@@ -104,6 +102,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected byte[] bestHash;
 
+    protected Block bestBlock;
+
     /**
      * Last block hash to be asked from the peer,
      * its usage depends on Eth version
@@ -130,6 +130,13 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @PostConstruct
     private void init() {
         maxHashesAsk = config.maxHashesAsk();
+        bestBlock = blockchain.getBestBlock();
+        ethereumListener.addListener(new EthereumListenerAdapter() {
+             @Override
+             public void onBlock(Block block, List<TransactionReceipt> receipts) {
+                 bestBlock = block;
+             }
+         });
     }
 
     @Override
@@ -226,7 +233,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         int networkId = config.networkId();
 
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
-        byte[] bestHash = blockchain.getBestBlockHash();
+        byte[] bestHash = bestBlock.getHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
         sendMessage(msg);
