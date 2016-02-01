@@ -6,6 +6,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
@@ -22,6 +23,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static java.lang.Math.max;
 import static org.ethereum.config.Constants.UNCLE_GENERATION_LIMIT;
 import static org.ethereum.config.Constants.UNCLE_LIST_LIMIT;
 
@@ -155,26 +157,33 @@ public class BlockMiner {
         }
     }
 
-    protected List<BlockHeader> getUncles(Block best) {
+    protected List<BlockHeader> getUncles(Block mineBest) {
         List<BlockHeader> ret = new ArrayList<>();
-        long miningNum = best.getNumber() + 1;
-        long uncleNum = miningNum - 1;
+        long miningNum = mineBest.getNumber() + 1;
+        Block mineChain = mineBest;
+
+        long limitNum = max(0, miningNum - UNCLE_GENERATION_LIMIT);
+        Set<ByteArrayWrapper> ancestors = BlockchainImpl.getAncestors(blockStore, mineBest, UNCLE_GENERATION_LIMIT + 1, true);
+        Set<ByteArrayWrapper> knownUncles = BlockchainImpl.getUsedUncles(blockStore, mineBest, true);
+        knownUncles.addAll(ancestors);
+        knownUncles.add(new ByteArrayWrapper(mineBest.getHash()));
 
         outer:
-        while(uncleNum > miningNum - UNCLE_GENERATION_LIMIT) {
-            List<Block> genBlocks = blockStore.getBlocksByNumber(uncleNum);
+        while(mineChain.getNumber() > limitNum) {
+            List<Block> genBlocks = blockStore.getBlocksByNumber(mineChain.getNumber());
             if (genBlocks.size() > 1) {
-                Block mainBlock = blockStore.getChainBlockByNumber(uncleNum);
                 for (Block uncleCandidate : genBlocks) {
-                    if (!uncleCandidate.isEqual(mainBlock)) {
+                    if (!knownUncles.contains(new ByteArrayWrapper(uncleCandidate.getHash())) &&
+                        ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate.getParentHash()).getHash()))) {
+
                         ret.add(uncleCandidate.getHeader());
-                        if (ret.size() > UNCLE_LIST_LIMIT) {
+                        if (ret.size() >= UNCLE_LIST_LIMIT) {
                             break outer;
                         }
                     }
                 }
             }
-            uncleNum--;
+            mineChain = blockStore.getBlockByHash(mineChain.getParentHash());
         }
         return ret;
     }
