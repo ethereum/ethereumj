@@ -13,6 +13,8 @@ public abstract class AbstractSyncState implements SyncState {
 
     protected SyncManager syncManager;
 
+    protected SyncQueue queue;
+
     protected SyncStateName name;
 
     protected AbstractSyncState(SyncStateName name) {
@@ -41,5 +43,9 @@ public abstract class AbstractSyncState implements SyncState {
 
     public void setSyncManager(SyncManager syncManager) {
         this.syncManager = syncManager;
+    }
+
+    public void setQueue(SyncQueue queue) {
+        this.queue = queue;
     }
 }

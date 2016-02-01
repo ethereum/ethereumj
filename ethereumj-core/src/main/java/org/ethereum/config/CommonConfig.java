@@ -148,7 +148,7 @@ public class CommonConfig {
     }
 
     @Bean
-    public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
+    public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager, SyncQueue syncQueue) {
 
         Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
         states.put(SyncStateName.IDLE, new IdleState());
@@ -157,6 +157,7 @@ public class CommonConfig {
 
         for (SyncState state : states.values()) {
             ((AbstractSyncState)state).setSyncManager(syncManager);
+            ((AbstractSyncState)state).setQueue(syncQueue);
         }
 
         return states;

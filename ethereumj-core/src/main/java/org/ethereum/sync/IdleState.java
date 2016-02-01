@@ -25,20 +25,18 @@ public class IdleState extends AbstractSyncState {
 
         super.doMaintain();
 
-        if ((syncManager.queue.isMoreBlocksNeeded() || syncManager.queue.noParent) &&
-                !syncManager.queue.isHeadersEmpty()) {
+        if (!syncManager.queue.isHeadersEmpty()) {
 
             // there are new hashes in the store
             // it's time to download blocks
             syncManager.changeState(BLOCK_RETRIEVING);
 
-        } else if ((syncManager.queue.isBlocksEmpty() || syncManager.queue.noParent) && !syncManager.isSyncDone()) {
+        } else if (syncManager.queue.isBlocksEmpty() && !syncManager.isSyncDone()) {
 
             // queue is empty and sync not done yet
             // try to download hashes again
             syncManager.resetGapRecovery();
             syncManager.changeState(HASH_RETRIEVING);
-
         }
     }
 }

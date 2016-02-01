@@ -251,7 +251,8 @@ public class SyncQueue {
     }
 
     public boolean isMoreBlocksNeeded() {
-        return blockQueue.size() < BLOCK_QUEUE_LIMIT;
+        int blockCount = headerStore.size() + blockQueue.size();
+        return blockCount < BLOCK_QUEUE_LIMIT;
     }
 
     public void clearHeaders() {

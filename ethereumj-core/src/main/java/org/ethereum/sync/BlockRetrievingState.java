@@ -25,11 +25,6 @@ public class BlockRetrievingState extends AbstractSyncState {
 
         super.doMaintain();
 
-        if (!syncManager.queue.isMoreBlocksNeeded()) {
-            syncManager.changeState(IDLE);
-            return;
-        }
-        
         if (syncManager.queue.isHeadersEmpty()) {
 
             syncManager.changeState(IDLE);

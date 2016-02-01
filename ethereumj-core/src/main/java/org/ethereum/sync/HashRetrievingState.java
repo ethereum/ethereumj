@@ -1,11 +1,9 @@
 package org.ethereum.sync;
 
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.sync.SyncStateName.*;
 
 /**
@@ -25,8 +23,10 @@ public class HashRetrievingState extends AbstractSyncState {
 
         super.doMaintain();
 
-        if (!syncManager.queue.isMoreBlocksNeeded() && !syncManager.queue.noParent) {
-            syncManager.changeState(IDLE);
+        // stop header downloading if we don't need more blocks
+        if ((!syncManager.isSyncDone() || !queue.noParent) && !queue.isMoreBlocksNeeded()) {
+            logger.info("Blockqueue limit exceeded, process downloaded blocks");
+            syncManager.changeState(BLOCK_RETRIEVING);
             return;
         }
 
