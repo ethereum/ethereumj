@@ -39,7 +39,7 @@ public class CommonConfig {
     @Autowired
     private MapDBFactory mapDBFactory;
     @Autowired
-    SystemProperties config;
+    SystemProperties config = SystemProperties.CONFIG;
 
 
     @Bean

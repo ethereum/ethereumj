@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -179,7 +180,8 @@ public class ImportLightTest {
                 repository,
                 new Wallet(),
                 new AdminInfo(),
-                listener
+                listener,
+                new CommonConfig().parentHeaderValidator()
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);

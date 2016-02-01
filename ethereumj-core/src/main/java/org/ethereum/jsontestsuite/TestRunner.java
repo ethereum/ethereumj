@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.core.*;
 
 import org.ethereum.datasource.HashMapDB;

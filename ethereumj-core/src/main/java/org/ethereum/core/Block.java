@@ -432,10 +432,6 @@ public class Block {
         return this.header.getEncodedWithoutNonce();
     }
 
-    public boolean isHomestead() {
-        return getHeader().isHomestead();
-    }
-
     public byte[] getEncodedBody() {
         List<byte[]> body = getBodyElements();
         byte[][] elements = body.toArray(new byte[body.size()][]);

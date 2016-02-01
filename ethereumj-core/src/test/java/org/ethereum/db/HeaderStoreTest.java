@@ -31,7 +31,7 @@ public class HeaderStoreTest {
         BlockHeader[] ret = new BlockHeader[headCnt];
         for (int i = 0; i < ret.length; i++) {
             ret[i] = new BlockHeader(new byte[0], new byte[0], new byte[0], new byte[0], new byte[0],
-                    cnt.getAndIncrement(), 0, 0, 0, new byte[0], new byte[0], new byte[0]);
+                    cnt.getAndIncrement(), new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]);
         }
         return ret;
     }

@@ -73,20 +73,20 @@ public class DifficultyTestCase {
 
     public BlockHeader getCurrent() {
         return new BlockHeader(
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Utils.parseLong(currentBlockNumber), new byte[] {0}, 0,
                 Utils.parseLong(currentTimestamp),
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
         );
     }
 
     public BlockHeader getParent() {
         return new BlockHeader(
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Utils.parseNumericData(parentDifficulty),
                 Utils.parseLong(currentBlockNumber) - 1, new byte[] {0}, 0,
                 Utils.parseLong(parentTimestamp),
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
         );
     }
 
