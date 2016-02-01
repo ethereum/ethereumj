@@ -73,25 +73,25 @@ public class DifficultyTestCase {
 
     public BlockHeader getCurrent() {
         return new BlockHeader(
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
-                Long.valueOf(currentBlockNumber), 0, 0,
-                Long.valueOf(currentTimestamp),
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
+                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+                Utils.parseLong(currentBlockNumber), new byte[] {0}, 0,
+                Utils.parseLong(currentTimestamp),
+                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
         );
     }
 
     public BlockHeader getParent() {
         return new BlockHeader(
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
-                new BigInteger(parentDifficulty).toByteArray(),
-                Long.valueOf(currentBlockNumber) - 1, 0, 0,
-                Long.valueOf(parentTimestamp),
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
+                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+                Utils.parseNumericData(parentDifficulty),
+                Utils.parseLong(currentBlockNumber) - 1, new byte[] {0}, 0,
+                Utils.parseLong(parentTimestamp),
+                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
         );
     }
 
     public BigInteger getExpectedDifficulty() {
-        return new BigInteger(currentDifficulty);
+        return new BigInteger(1, Utils.parseNumericData(currentDifficulty));
     }
 
     @Override

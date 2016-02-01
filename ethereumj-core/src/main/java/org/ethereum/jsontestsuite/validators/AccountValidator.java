@@ -8,6 +8,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+
 public class AccountValidator {
 
 
@@ -45,7 +47,9 @@ public class AccountValidator {
             results.add(formattedString);
         }
 
-        if (!Arrays.equals(expectedDetails.getCode(), currentDetails.getCode())) {
+        byte[] code = Arrays.equals(currentState.getCodeHash(), EMPTY_DATA_HASH) ?
+                new byte[0] : currentDetails.getCode();
+        if (!Arrays.equals(expectedDetails.getCode(), code)) {
             String formattedString = String.format("Account: %s: has unexpected code, expected code: %s found code: %s",
                     address, Hex.toHexString(expectedDetails.getCode()), Hex.toHexString(currentDetails.getCode()));
             results.add(formattedString);

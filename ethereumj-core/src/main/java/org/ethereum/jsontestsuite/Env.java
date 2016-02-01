@@ -47,14 +47,15 @@ public class Env {
         String difficulty = env.get("currentDifficulty").toString();
         String timestamp = env.get("currentTimestamp").toString();
         String number = env.get("currentNumber").toString();
-        String gasLimit = Utils.parseUnidentifiedBase( env.get("currentGasLimit").toString() );
-        String prevHash = env.get("previousHash").toString();
+        String gasLimit = Utils.parseUnidentifiedBase(env.get("currentGasLimit").toString());
+        Object previousHash = env.get("previousHash");
+        String prevHash = previousHash == null ? "" : previousHash.toString();
 
         this.currentCoinbase = Hex.decode(coinbase);
-        this.currentDifficulty = BigIntegers.asUnsignedByteArray( new BigInteger(difficulty) );
-        this.currentGasLimit =   BigIntegers.asUnsignedByteArray(new BigInteger(gasLimit));
-        this.currentNumber = new BigInteger(number).toByteArray();
-        this.currentTimestamp = new BigInteger(timestamp).toByteArray();
+        this.currentDifficulty = BigIntegers.asUnsignedByteArray(TestCase.toBigInt(difficulty) );
+        this.currentGasLimit =   BigIntegers.asUnsignedByteArray(TestCase.toBigInt(gasLimit));
+        this.currentNumber = TestCase.toBigInt(number).toByteArray();
+        this.currentTimestamp = TestCase.toBigInt(timestamp).toByteArray();
         this.previousHash = Hex.decode(prevHash);
 
     }

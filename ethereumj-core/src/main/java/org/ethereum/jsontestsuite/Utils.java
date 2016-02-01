@@ -44,7 +44,10 @@ public class Utils {
     }
 
     public static long parseLong(String data) {
-        return data.equals("") ? 0 : Long.parseLong(data);
+        boolean hex = data.startsWith("0x");
+        if (hex) data = data.substring(2);
+        if (data.equals("")) return 0;
+        return new BigInteger(data, hex ? 16 : 10).longValue();
     }
 
     public static byte parseByte(String data) {

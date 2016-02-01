@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -18,14 +19,12 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "28bc05a2e2b60b8d99bc99313047c239d53aa298";
+    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
 
     @Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
-
-        String shacommit = "28bc05a2e2b60b8d99bc99313047c239d53aa298";
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, "suicideSendEtherPostDeath");
     }
@@ -39,17 +38,56 @@ public class GitHubStateTest {
     }
 
     @Test
+    public void stCallCodes() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/stCallCodes.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallCodes.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stCallDelegateCodes() throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallDelegateCodes.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stCallDelegateCodesCallCode() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallDelegateCodesCallCode.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stHomeSteadSpecific() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stHomeSteadSpecific.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("createJS_ExampleContract"); //FIXME Bug on CPP testrunner, storage/SSTORE
-        excluded.add("Callcode1024OOG");
-        excluded.add("Call1024OOG");
-        excluded.add("callcodeWithHighValue");
-        excluded.add("callWithHighValue");
-        excluded.add("Call1024PreCalls");
-        excluded.add("CallRecursiveBombPreCall"); // FIXME gas not BI limit
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stCallCreateCallCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stDelegatecallTest() throws ParseException, IOException {
+
+        Set<String> excluded = new HashSet<>();
+        String json = JSONReader.loadJSONFromCommit("StateTests/stDelegatecallTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -58,6 +96,8 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stInitCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stInitCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -65,49 +105,60 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stLogTests.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stLogTests.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stPreCompiledContracts() throws ParseException, IOException {
-
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallEcrecoverPointAtInfinity");
+
+        excluded.add("CallEcrecoverCheckLengthWrongV"); // TODO: investigate https://github.com/ethereum/tests/commit/aaf284fa888468f92c7686c754b5dd0b5437f849
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stMemoryStressTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("mload32bitBound_return2");//FIXME memorySave must support long
-        excluded.add("mload32bitBound_return"); //FIXME memorySave must support long
-        excluded.add("mload32bitBound_Msize"); //FIXME memoryChunk must support long
+        excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
+        excluded.add("mload32bitBound_return"); // The test extends memory to 4Gb which can't be handled with Java arrays
+        excluded.add("mload32bitBound_Msize"); // The test extends memory to 4Gb which can't be handled with Java arrays
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stMemoryStressTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stMemoryTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("codecopy_dejavu2");  // FIXME: codeOffset has to be bigint inorder for CODECOPY to work correct in that test
 
+        String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stMemoryTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
-    @Ignore
     @Test
     public void stQuadraticComplexityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("StateTests/stQuadraticComplexityTest.json", shacommit);
+
+        // leaving only Homestead version since the test runs too long
+//        String json = JSONReader.loadJSONFromCommit("StateTests/stQuadraticComplexityTest.json", shacommit);
+//        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stQuadraticComplexityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stSolidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("TestBlockAndTransactionProperties"); //TODO proper BigInt block support needed
         String json = JSONReader.loadJSONFromCommit("StateTests/stSolidityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -117,24 +168,27 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stRecursiveCreate.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stRecursiveCreate.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stRefundTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("refund_multiple_internal_call_plus_suicide");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stRefundTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stRefundTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stSpecialTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("JUMPDEST_AttackwithJump"); //  (!!!) FIXME fix them as soon as possible
-        excluded.add("JUMPDEST_Attack"); //  (!!!) FIXME fix them as soon as possible
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSpecialTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stSpecialTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -146,25 +200,47 @@ public class GitHubStateTest {
 
     @Test
     public void stSystemOperationsTest() throws IOException {
-
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //FIXME hitting VM limits
-        excluded.add("Call10"); //FIXME gaslimit as biginteger
-        excluded.add("createNameRegistratorZeroMem2"); // FIXME: Heap ???
 
-        excluded.add("suicideSendEtherPostDeath"); // FIXME: find the correct algo
+        excluded.add("suicideSendEtherPostDeath"); // TODO investigate: https://github.com/ethereum/tests/commit/0ff495059d6ffba8408376f872d426cb38e19444
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
     public void stTransactionTest() throws ParseException, IOException {
-
         Set<String> excluded = new HashSet<>();
-        excluded.add("OverflowGasRequire");    //FIXME wont work until we use gaslimit as long
-        excluded.add("EmptyTransaction2"); // Buggy testcase
-        excluded.add("TransactionSendingToEmpty");
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransactionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stTransitionTest() throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/stTransitionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransitionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+    }
+
+    @Test
+    public void stWalletTest() throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/stWalletTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stWalletTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 

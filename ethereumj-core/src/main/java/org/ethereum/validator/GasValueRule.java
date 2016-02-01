@@ -2,6 +2,7 @@ package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -17,8 +18,8 @@ public class GasValueRule extends BlockHeaderRule {
 
         errors.clear();
 
-        if (header.getGasLimit() < header.getGasUsed()) {
-            errors.add(String.format("#%d: header.getGasLimit() < header.getGasUsed()", header.getNumber()));
+        if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(header.getGasUsed())) < 0) {
+            errors.add("header.getGasLimit() < header.getGasUsed()");
             return false;
         }
 

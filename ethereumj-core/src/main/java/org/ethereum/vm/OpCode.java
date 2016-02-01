@@ -562,6 +562,14 @@ public enum OpCode {
      * (0xf3) Halt execution returning output data
      */
     RETURN(0xf3, 2, 0, ZeroTier),
+
+    /**
+     * (0xf4)  similar in idea to CALLCODE, except that it propagates the sender and value
+     *  from the parent scope to the child scope, ie. the call created has the same sender
+     *  and value as the original call.
+     *  also the Value parameter is omitted for this opCode
+     */
+    DELEGATECALL(0xf4, 6, 1, SpecialTier),
     /**
      * (0xff) Halt execution and register account for
      * later deletion

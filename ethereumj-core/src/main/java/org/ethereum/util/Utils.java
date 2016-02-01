@@ -162,6 +162,12 @@ public class Utils {
         return ret;
     }
 
+    public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
+        if (targetLen <= s.length()) return s;
+        String alignString = repeat("" + fillChar, targetLen - s.length());
+        return alignRight ? alignString + s : s + alignString;
+
+    }
     public static String repeat(String s, int n) {
         if (s.length() == 1) {
             byte[] bb = new byte[n];
@@ -172,12 +178,5 @@ public class Utils {
             for (int i = 0; i < n; i++) ret.append(s);
             return ret.toString();
         }
-    }
-
-    public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
-        if (targetLen <= s.length()) return s;
-        String alignString = repeat("" + fillChar, targetLen - s.length());
-        return alignRight ? alignString + s : s + alignString;
-
     }
 }

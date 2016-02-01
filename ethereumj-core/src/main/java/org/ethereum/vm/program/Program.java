@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -27,6 +28,7 @@ import java.util.*;
 import static java.lang.StrictMath.min;
 import static java.lang.String.format;
 import static java.math.BigInteger.ZERO;
+import static java.math.BigInteger.valueOf;
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -380,7 +382,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
+                this, new DataWord(newAddress), getOwnerAddress(), DataWord.ZERO, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
@@ -392,19 +394,6 @@ public class Program {
             result = program.getResult();
 
             getResult().addInternalTransactions(result.getInternalTransactions());
-
-            if (result.getException() != null) {
-                logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                        Hex.toHexString(newAddress),
-                        result.getException());
-
-                internalTx.reject();
-                result.rejectInternalTransactions();
-
-                track.rollback();
-                stackPushZero();
-                return;
-            }
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
@@ -413,10 +402,28 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+            if (BlockHeader.isHomestead(getNumber().longValue())) {
+                result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                        storageCost, this));
+            } else {
+                track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+            }
         } else {
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
+        }
+
+        if (result.getException() != null) {
+            logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+                    Hex.toHexString(newAddress),
+                    result.getException());
+
+            internalTx.reject();
+            result.rejectInternalTransactions();
+
+            track.rollback();
+            stackPushZero();
+            return;
         }
 
         track.commit();
@@ -459,7 +466,7 @@ public class Program {
         // FETCH THE SAVED STORAGE
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         byte[] senderAddress = getOwnerAddress().getLast20Bytes();
-        byte[] contextAddress = (msg.getType() == MsgType.STATELESS) ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
 
         if (logger.isInfoEnabled())
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
@@ -498,10 +505,10 @@ public class Program {
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                    this, new DataWord(contextAddress), msg.getEndowment(),
+                    this, new DataWord(contextAddress),
+                    msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
+                    msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
-
-
 
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke, internalTx);
@@ -556,7 +563,7 @@ public class Program {
     public void spendGas(long gasValue, String cause) {
         gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
-        if ((getGas().longValue() - gasValue) < 0) {
+        if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -627,7 +634,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGas().longValue() - getResult().getGasUsed());
+        return new DataWord(invoke.getGas().value().subtract(valueOf(getResult().getGasUsed())).toByteArray());
     }
 
     public DataWord getCallValue() {
@@ -893,11 +900,11 @@ public class Program {
         }
 
         public OpCode getCurOpcode() {
-            return OpCode.code(code[pc]);
+            return pc < code.length ? OpCode.code(code[pc]) : null;
         }
 
         public boolean isPush() {
-            return getCurOpcode().name().startsWith("PUSH");
+            return getCurOpcode() != null ? getCurOpcode().name().startsWith("PUSH") : false;
         }
 
         public byte[] getCurOpcodeArg() {
@@ -990,10 +997,15 @@ public class Program {
         this.listener = listener;
     }
 
-    public void verifyJumpDest(int nextPC) {
-        if (!jumpdest.contains(nextPC)) {
-            throw Program.Exception.badJumpDestination(nextPC);
+    public int verifyJumpDest(DataWord nextPC) {
+        if (nextPC.bytesOccupied() > 4) {
+            throw Program.Exception.badJumpDestination(-1);
         }
+        int ret = nextPC.intValue();
+        if (!jumpdest.contains(ret)) {
+            throw Program.Exception.badJumpDestination(ret);
+        }
+        return ret;
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
@@ -1008,7 +1020,7 @@ public class Program {
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType() == MsgType.STATELESS ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
 
 
         BigInteger endowment = msg.getEndowment().value();

@@ -16,11 +16,11 @@ import static org.junit.Assert.assertArrayEquals;
 public class GitHubPowTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
+    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
     @Test
     public void runEthashTest() throws IOException {
 
-        String shacommit = "c6d96293710a37489fa3b074a9fc228e0393f152";
         String json = JSONReader.loadJSONFromCommit("PoWTests/ethash_tests.json", shacommit);
 
         EthashTestSuite testSuite = new EthashTestSuite(json);

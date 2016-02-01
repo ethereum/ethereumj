@@ -32,7 +32,8 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
     }
 
     @Override
-    public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord inValue, DataWord inGas,
+    public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
+                                             DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
                                              Repository repository, BlockStore blockStore, boolean byTestingSuite) {
         return null;
@@ -87,7 +88,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
         byte[] difficulty = env.getCurrentDifficulty();
 
         /*** GASLIMIT op ***/
-        long gaslimit = ByteUtil.byteArrayToLong(env.getCurrentGasLimit());
+        byte[] gaslimit = env.getCurrentGasLimit();
 
         return new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, data, lastHash, coinbase,
