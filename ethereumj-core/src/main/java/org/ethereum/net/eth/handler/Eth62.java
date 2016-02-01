@@ -208,10 +208,11 @@ public class Eth62 extends EthHandler {
 
         List<BlockHeader> headers = queue.pollHeaders();
         if (headers.isEmpty()) {
-            if(logger.isInfoEnabled()) logger.trace(
+            if(logger.isTraceEnabled()) logger.trace(
                     "Peer {}: no more headers in queue, idle",
                     channel.getPeerIdShort()
             );
+            changeState(IDLE);
             return false;
         }
 
