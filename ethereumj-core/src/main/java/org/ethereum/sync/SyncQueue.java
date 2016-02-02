@@ -31,7 +31,6 @@ public class SyncQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
-    private static final int SCAN_BLOCKS_LIMIT = 1000;
     private static final int BLOCK_QUEUE_LIMIT = 20000;
 
     /**
@@ -264,13 +263,12 @@ public class SyncQueue {
     }
 
     /**
-     * Scans {@link #SCAN_BLOCKS_LIMIT} first blocks in the queue
-     * and removes blocks sent by given peer
+     * Removes blocks sent by given peer
      *
      * @param nodeId peer's node id
      */
     public void dropBlocks(byte[] nodeId) {
-        blockQueue.drop(nodeId, SCAN_BLOCKS_LIMIT);
+        blockQueue.drop(nodeId, 0);
     }
 
     /**

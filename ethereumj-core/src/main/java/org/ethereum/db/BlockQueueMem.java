@@ -181,14 +181,11 @@ public class BlockQueueMem implements BlockQueue {
     @Override
     public void drop(byte[] nodeId, int scanLimit) {
 
-        int i = 0;
         List<Long> removed = new ArrayList<>();
 
         synchronized (index) {
 
             for (Long idx : index) {
-                if (++i > scanLimit) break;
-
                 BlockWrapper b = blocks.get(idx);
                 if (b.sentBy(nodeId)) removed.add(idx);
             }
