@@ -798,6 +798,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (!blockStateRootHash.equals(worldStateRootHash)) {
 
                 stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+                stateLogger.info("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
 //                stateLogger.error("DO ROLLBACK !!!");
                 adminInfo.lostConsensus();
 
