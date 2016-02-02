@@ -197,7 +197,6 @@ public class SyncQueue {
      * @param nodeId remote host nodeId
      */
     public void addAndValidateHeaders(List<BlockHeader> headers, byte[] nodeId) {
-        List<BlockHeader> filtered = blockQueue.filterExistingHeaders(headers);
 
         for (BlockHeader header : headers) {
 
@@ -216,7 +215,7 @@ public class SyncQueue {
         headerStore.addBatch(headers);
 
         if (logger.isDebugEnabled())
-            logger.debug("{} headers filtered out, {} added", headers.size() - filtered.size(), filtered.size());
+            logger.debug("{} headers added", headers.size());
     }
 
     /**
@@ -289,17 +288,6 @@ public class SyncQueue {
     public boolean hasSolidBlocks() {
         BlockWrapper wrapper = blockQueue.peek();
         return wrapper != null && wrapper.isSolidBlock();
-    }
-
-    /**
-     * Checks if block exists in the queue
-     *
-     * @param hash block hash
-     *
-     * @return true if block exists, false otherwise
-     */
-    public boolean isBlockExist(byte[] hash) {
-        return blockQueue.isBlockExist(hash);
     }
 
     /**

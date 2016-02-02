@@ -20,7 +20,6 @@ public class BlockQueueMem implements BlockQueue {
     private final static Logger logger = LoggerFactory.getLogger("blockqueue");
 
     private Map<Long, BlockWrapper> blocks = Collections.synchronizedMap(new HashMap<Long, BlockWrapper>());
-    private Set<ByteArrayWrapper> hashes = Collections.synchronizedSet(new HashSet<ByteArrayWrapper>());
     private final Index index = new ArrayListIndex(Collections.<Long>emptyList());
 
     private final ReentrantLock takeLock = new ReentrantLock();
@@ -42,30 +41,20 @@ public class BlockQueueMem implements BlockQueue {
 
         List<Long> numbers = new ArrayList<>(blockList.size());
         Map<Long, BlockWrapper> newBlocks = new HashMap<>();
-        Set<ByteArrayWrapper> newHashes = new HashSet<>();
-        Set<ByteArrayWrapper> replacedHashes = new HashSet<>();
 
         for (BlockWrapper b : blockList) {
 
-            if (index.contains(b.getNumber())) {
-                BlockWrapper old = blocks.get(b.getNumber());
-                if (old != null)
-                    replacedHashes.add(new ByteArrayWrapper(old.getHash()));
-            } else {
-                // do not add same block twice
-                if (numbers.contains(b.getNumber()))
-                    continue;
+            // do not add existing number to index
+            if (!index.contains(b.getNumber()) &&
+                    !numbers.contains(b.getNumber())) {
                 numbers.add(b.getNumber());
             }
 
             newBlocks.put(b.getNumber(), b);
-            newHashes.add(new ByteArrayWrapper(b.getHash()));
         }
 
         synchronized (mutex) {
             blocks.putAll(newBlocks);
-            hashes.removeAll(replacedHashes);
-            hashes.addAll(newHashes);
             index.addAll(numbers);
         }
 
@@ -101,21 +90,11 @@ public class BlockQueueMem implements BlockQueue {
     }
 
     private void replaceInner(BlockWrapper block) {
-
-        BlockWrapper old = blocks.get(block.getNumber());
-
-        if (old != null) {
-            hashes.remove(new ByteArrayWrapper(old.getHash()));
-        }
-
         blocks.put(block.getNumber(), block);
-        hashes.add(new ByteArrayWrapper(block.getHash()));
     }
 
     private void addInner(BlockWrapper block) {
-
         blocks.put(block.getNumber(), block);
-        hashes.add(new ByteArrayWrapper(block.getHash()));
         index.add(block.getNumber());
     }
 
@@ -134,9 +113,7 @@ public class BlockQueueMem implements BlockQueue {
             BlockWrapper block = blocks.get(idx);
             blocks.remove(idx);
 
-            if (block != null) {
-                hashes.remove(new ByteArrayWrapper(block.getHash()));
-            } else {
+            if (block == null) {
                 logger.error("Block for index {} is null", idx);
             }
 
@@ -183,37 +160,22 @@ public class BlockQueueMem implements BlockQueue {
     @Override
     public void clear() {
         blocks.clear();
-        hashes.clear();
         index.clear();
     }
 
     @Override
     public List<byte[]> filterExisting(final Collection<byte[]> hashList) {
-        List<byte[]> filtered = new ArrayList<>();
-        for (byte[] hash : hashList) {
-            if (!hashes.contains(new ByteArrayWrapper(hash))) {
-                filtered.add(hash);
-            }
-        }
-
-        return filtered;
+        return (List<byte[]>) hashList;
     }
 
     @Override
     public List<BlockHeader> filterExistingHeaders(Collection<BlockHeader> headers) {
-        List<BlockHeader> filtered = new ArrayList<>();
-        for (BlockHeader header : headers) {
-            if (!hashes.contains(new ByteArrayWrapper(header.getHash()))) {
-                filtered.add(header);
-            }
-        }
-
-        return filtered;
+        return (List<BlockHeader>) headers;
     }
 
     @Override
     public boolean isBlockExist(byte[] hash) {
-        return hashes.contains(new ByteArrayWrapper(hash));
+        return false;
     }
 
     @Override
