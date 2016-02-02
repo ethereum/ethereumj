@@ -86,9 +86,6 @@ public class WorldManager {
         wallet.importKey(cbAddr);
 
         loadBlockchain();
-
-        // must be initialized after blockchain is loaded
-        syncManager.init();
     }
 
     public void addListener(EthereumListener listener) {
