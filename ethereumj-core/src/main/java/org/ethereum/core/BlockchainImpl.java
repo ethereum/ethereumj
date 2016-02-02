@@ -236,6 +236,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void popState() {
         State state = stateStack.pop();
         this.repository = state.savedRepo;
+        this.bestBlock = state.savedBest;
         this.totalDifficulty = state.savedTD;
     }
 
@@ -798,11 +799,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (!blockStateRootHash.equals(worldStateRootHash)) {
 
                 stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-                stateLogger.info("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+                stateLogger.error("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
 //                stateLogger.error("DO ROLLBACK !!!");
                 adminInfo.lostConsensus();
 
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber());
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
                 System.exit(1);
                 // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
