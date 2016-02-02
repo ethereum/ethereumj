@@ -102,7 +102,13 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected byte[] bestHash;
 
-    protected Block bestBlock;
+    private Block bestBlock;
+    private EthereumListener listener = new EthereumListenerAdapter() {
+        @Override
+        public void onBlock(Block block, List<TransactionReceipt> receipts) {
+            bestBlock = block;
+        }
+    };
 
     /**
      * Last block hash to be asked from the peer,
@@ -131,12 +137,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     private void init() {
         maxHashesAsk = config.maxHashesAsk();
         bestBlock = blockchain.getBestBlock();
-        ethereumListener.addListener(new EthereumListenerAdapter() {
-             @Override
-             public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                 bestBlock = block;
-             }
-         });
+        ethereumListener.addListener(listener);
     }
 
     @Override
@@ -175,6 +176,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         loggerNet.debug("handlerRemoved: kill timers in EthHandler");
+        ethereumListener.removeListener(listener);
         onShutdown();
     }
 
