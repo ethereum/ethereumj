@@ -54,7 +54,7 @@ public class PeerTest {
         assertEquals(false, peer.equals(null));
 
         //hashCode
-        assertEquals(-1, peer.hashCode());
+        assertEquals(-1218913009, peer.hashCode());
     }
 }
 
