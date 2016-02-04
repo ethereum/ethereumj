@@ -1,6 +1,6 @@
-package org.ethereum.sync;
+package org.ethereum.sync.state;
 
-import static org.ethereum.sync.SyncStateName.*;
+import static org.ethereum.sync.state.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -17,7 +17,7 @@ public class IdleState extends AbstractSyncState {
 
         super.doOnTransition();
 
-        syncManager.pool.changeState(IDLE);
+        pool.changeState(IDLE);
     }
 
     @Override
@@ -25,13 +25,13 @@ public class IdleState extends AbstractSyncState {
 
         super.doMaintain();
 
-        if (!syncManager.queue.isHeadersEmpty()) {
+        if (!queue.isHeadersEmpty()) {
 
             // there are new hashes in the store
             // it's time to download blocks
             syncManager.changeState(BLOCK_RETRIEVING);
 
-        } else if (syncManager.queue.isBlocksEmpty() && !syncManager.isSyncDone()) {
+        } else if (queue.isBlocksEmpty() && !syncManager.isSyncDone()) {
 
             // queue is empty and sync not done yet
             // try to download hashes again

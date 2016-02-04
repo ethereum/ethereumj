@@ -1,12 +1,13 @@
-package org.ethereum.sync;
+package org.ethereum.sync.state;
 
+import org.ethereum.sync.SyncQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
-import static org.ethereum.sync.SyncStateName.HASH_RETRIEVING;
+import static org.ethereum.sync.state.SyncStateName.BLOCK_RETRIEVING;
+import static org.ethereum.sync.state.SyncStateName.HASH_RETRIEVING;
 
 /**
  * @author Mikhail Kalinin

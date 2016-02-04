@@ -3,6 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.*;
+import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,9 @@ public class SyncQueue {
     @Autowired
     private BlockHeaderValidator headerValidator;
 
+    @Autowired
+    private CompositeSyncListener compositeSyncListener;
+
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -104,9 +108,10 @@ public class SyncQueue {
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
-                    wrapper.importFailed();
-                    syncManager.tryGapRecovery(wrapper);
+
                     blockQueue.add(wrapper);
+                    compositeSyncListener.onNoParent(wrapper);
+
                     noParent = true;
                     sleep(2000);
                 } else {
@@ -127,7 +132,7 @@ public class SyncQueue {
                             wrapper.getBlock().getTransactionsList().size());
 
                 if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
-                    if (logger.isDebugEnabled()) logger.debug(Hex.toHexString(wrapper.getBlock().getEncoded()));
+                    if (logger.isTraceEnabled()) logger.trace(Hex.toHexString(wrapper.getBlock().getEncoded()));
                 }
 
             } catch (Throwable e) {
@@ -168,13 +173,15 @@ public class SyncQueue {
      *
      * @param block new block
      * @param nodeId nodeId of the remote peer which this block is received from
+     *
+     * @return true if block passed validations and was added to the queue,
+     *         otherwise it returns false
      */
-    public void addNew(Block block, byte[] nodeId) {
+    public boolean validateAndAddNewBlock(Block block, byte[] nodeId) {
 
         // run basic checks
         if (!isValid(block.getHeader())) {
-            syncManager.reportBadAction(nodeId);
-            return;
+            return false;
         }
 
         BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
@@ -185,6 +192,8 @@ public class SyncQueue {
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
                 wrapper.getNumber());
+
+        return true;
     }
 
     /**
@@ -194,8 +203,13 @@ public class SyncQueue {
      *
      * @param headers list of headers got from remote host
      * @param nodeId remote host nodeId
+     *
+     * @return true if blocks passed validation and were added to the queue,
+     *          otherwise it returns false
      */
-    public void addAndValidateHeaders(List<BlockHeader> headers, byte[] nodeId) {
+    public boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
+
+        List<BlockHeaderWrapper> wrappers = new ArrayList<>(headers.size());
 
         for (BlockHeader header : headers) {
 
@@ -205,16 +219,19 @@ public class SyncQueue {
                     logger.debug("Invalid header RLP: {}", Hex.toHexString(header.getEncoded()));
                 }
 
-                syncManager.reportBadAction(nodeId);
-                return;
+                return false;
             }
 
+            wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        headerStore.addBatch(headers);
+        headerStore.addBatch(wrappers);
 
-        if (logger.isDebugEnabled())
-            logger.debug("{} headers added", headers.size());
+        compositeSyncListener.onHeadersAdded();
+
+        logger.debug("{} headers added", headers.size());
+
+        return true;
     }
 
     /**
@@ -223,8 +240,9 @@ public class SyncQueue {
      *
      * @param headers list of headers
      */
-    public void returnHeaders(List<BlockHeader> headers) {
+    public void returnHeaders(List<BlockHeaderWrapper> headers) {
         headerStore.addBatch(headers);
+        compositeSyncListener.onHeadersAdded();
     }
 
     /**
@@ -232,12 +250,10 @@ public class SyncQueue {
      *
      * @return list of headers
      */
-    public List<BlockHeader> pollHeaders() {
+    public List<BlockHeaderWrapper> pollHeaders() {
+        if (logger.isDebugEnabled() && !headerStore.isEmpty())
+            logger.debug("Headers list size: {}", headerStore.size());
         return headerStore.pollBatch(config.maxBlocksAsk());
-    }
-
-    public void logHeadersSize() {
-        logger.debug("Headers list size: [{}]", headerStore.size());
     }
 
     public boolean isHeadersEmpty() {
@@ -248,14 +264,16 @@ public class SyncQueue {
         return blockQueue.isEmpty();
     }
 
-    public boolean isMoreBlocksNeeded() {
-        int blockCount = headerStore.size() + blockQueue.size();
-        return blockCount < BLOCK_QUEUE_LIMIT;
+    public boolean isLimitExceeded() {
+        return expectedBlocksCount() > BLOCK_QUEUE_LIMIT;
     }
 
-    public void clearHeaders() {
-        if (!headerStore.isEmpty())
-            headerStore.clear();
+    public boolean isMoreBlocksNeeded() {
+        return expectedBlocksCount() < BLOCK_QUEUE_LIMIT;
+    }
+
+    private int expectedBlocksCount() {
+        return headerStore.size() + blockQueue.size();
     }
 
     public int headerStoreSize() {
@@ -269,6 +287,15 @@ public class SyncQueue {
      */
     public void dropBlocks(byte[] nodeId) {
         blockQueue.drop(nodeId, 0);
+    }
+
+    /**
+     * Removes headers sent by given peer
+     *
+     * @param nodeId peer's node id
+     */
+    public void dropHeaders(byte[] nodeId) {
+        headerStore.drop(nodeId);
     }
 
     /**
@@ -289,6 +316,22 @@ public class SyncQueue {
     }
 
     /**
+     * @return number of last block in the queue
+     */
+    public long getLastBlockNumber() {
+        return blockQueue.getLastNumber();
+    }
+
+    /**
+     * Polls block from the queue
+     *
+     * @return block
+     */
+    public BlockWrapper pollBlock() {
+        return blockQueue.poll();
+    }
+
+    /**
      * Runs checks against block's header. <br>
      * All these checks make sense before block is added to queue
      * in front of checks running by {@link BlockchainImpl#isValid(BlockHeader)}
@@ -300,13 +343,10 @@ public class SyncQueue {
 
         if (!headerValidator.validate(header)) {
 
-            if (logger.isErrorEnabled())
-                headerValidator.logErrors(logger);
-
+            headerValidator.logErrors(logger);
             return false;
         }
 
         return true;
     }
-
 }

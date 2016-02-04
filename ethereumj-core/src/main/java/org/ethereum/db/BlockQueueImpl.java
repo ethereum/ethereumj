@@ -324,6 +324,12 @@ public class BlockQueueImpl implements BlockQueue {
         }
     }
 
+    @Override
+    public long getLastNumber() {
+        Long num = index.lastNumber();
+        return num == null ? 0 : num;
+    }
+
 
     private void awaitInit() {
         initLock.lock();

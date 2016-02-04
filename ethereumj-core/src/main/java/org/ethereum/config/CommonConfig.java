@@ -9,6 +9,7 @@ import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.sync.*;
+import org.ethereum.sync.state.*;
 import org.ethereum.validator.*;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -22,7 +23,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static java.util.Arrays.asList;
 
 @Configuration
@@ -148,7 +148,7 @@ public class CommonConfig {
     }
 
     @Bean
-    public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager, SyncQueue syncQueue) {
+    public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager, SyncQueue syncQueue, SyncPool syncPool) {
 
         Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
         states.put(SyncStateName.IDLE, new IdleState());
@@ -158,6 +158,7 @@ public class CommonConfig {
         for (SyncState state : states.values()) {
             ((AbstractSyncState)state).setSyncManager(syncManager);
             ((AbstractSyncState)state).setQueue(syncQueue);
+            ((AbstractSyncState)state).setPool(syncPool);
         }
 
         return states;

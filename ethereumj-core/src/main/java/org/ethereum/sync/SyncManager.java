@@ -4,29 +4,27 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.rlpx.discover.DiscoverListener;
-import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.Functional;
-import org.ethereum.util.Utils;
+import org.ethereum.sync.listener.CompositeSyncListener;
+import org.ethereum.sync.listener.SyncListener;
+import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.sync.state.StateInitiator;
+import org.ethereum.sync.state.SyncState;
+import org.ethereum.sync.state.SyncStateName;
+import org.ethereum.sync.strategy.LongSync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
-import static org.ethereum.sync.SyncStateName.*;
-import static org.ethereum.util.BIUtil.isIn20PercentRange;
+import static org.ethereum.sync.state.SyncStateName.*;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
 
 /**
@@ -38,8 +36,11 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
+    private static final long FORWARD_SWITCH_LIMIT = 100;
+    private static final long BACKWARD_SWITCH_LIMIT = 200;
+
     private static final long WORKER_TIMEOUT = secondsToMillis(1);
-    private static final long PEER_STUCK_TIMEOUT = secondsToMillis(60);
+    private static final long PEER_STUCK_TIMEOUT = secondsToMillis(20);
     private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
 
     @Autowired
@@ -65,9 +66,6 @@ public class SyncManager {
      */
     private boolean syncDone = false;
 
-    private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
-    private BigInteger highestKnownDifficulty = BigInteger.ZERO;
-
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
@@ -83,10 +81,16 @@ public class SyncManager {
     EthereumListener ethereumListener;
 
     @Autowired
-    PeersPool pool;
+    SyncPool pool;
 
     @Autowired
     ChannelManager channelManager;
+
+    @Autowired
+    LongSync longSync;
+
+    @Autowired
+    CompositeSyncListener compositeSyncListener;
 
     public void init() {
 
@@ -105,29 +109,62 @@ public class SyncManager {
 
                 logger.info("Sync Manager: ON");
 
-                // set IDLE state at the beginning
-                state = syncStates.get(IDLE);
+                // sync pool
+                pool.init();
 
-                updateDifficulties();
-
-                changeState(stateInitiator.initiate());
-
-                addBestKnownNodeListener();
-
-                worker.scheduleWithFixedDelay(new Runnable() {
+                // fore block retrieving if new headers are added
+                compositeSyncListener.add(new SyncListenerAdapter() {
                     @Override
-                    public void run() {
-                        try {
-                            updateDifficulties();
-                            removeUselessPeers();
-                            fillUpPeersPool();
-                            maintainState();
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            logger.error("Exception in main sync worker", t);
+                    public void onHeadersAdded() {
+                        pool.changeStateForIdles(BLOCK_RETRIEVING);
+                    }
+                });
+
+                // switch between Long and Short
+                compositeSyncListener.add(new SyncListenerAdapter() {
+                    @Override
+                    public void onNewBlockNumber(long number) {
+
+                        long bestNumber = blockchain.getBestBlock().getNumber();
+                        long diff = number - bestNumber;
+
+                        if (diff < 0) return;
+
+                        if (diff <= FORWARD_SWITCH_LIMIT) {
+
+                            longSync.stop();
+                            onSyncDone(true);
+
+                        } else if (diff > BACKWARD_SWITCH_LIMIT) {
+                            longSync.start();
+                            onSyncDone(false);
                         }
                     }
-                }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
+                });
+
+                // recover a gap
+                compositeSyncListener.add(new SyncListenerAdapter() {
+                    @Override
+                    public void onNoParent(BlockWrapper block) {
+
+                        // recover gap only during Short sync
+                        if (!syncDone) return;
+
+                        Channel master = pool.getByNodeId(block.getNodeId());
+
+                        // drop the block if there is no peer sent it
+                        if (master == null) {
+                            queue.pollBlock();
+                            return;
+                        }
+
+                        master.recoverGap(block);
+                    }
+                });
+
+                // starting from long sync
+                logger.info("Start Long sync");
+                longSync.start();
 
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
@@ -137,68 +174,14 @@ public class SyncManager {
         }).start();
     }
 
-    public void addPeer(Channel peer) {
-        if (!config.isSyncEnabled()) {
-            return;
-        }
-
-        if (logger.isTraceEnabled()) logger.trace(
-                "Peer {}: adding",
-                peer.getPeerIdShort()
-        );
-
-        BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
-
-        if (!isIn20PercentRange(peerTotalDifficulty, lowerUsefulDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: difficulty significantly lower than ours: {} vs {}, skipping",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    lowerUsefulDifficulty.toString()
-            );
-            // TODO report low total difficulty
-            return;
-        }
-
-        if (state.is(HASH_RETRIEVING) && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: its chain is better than previously known: {} vs {}, rotate master peer",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    highestKnownDifficulty.toString()
-            );
-
-            Channel master = pool.findOne(new Functional.Predicate<Channel>() {
-                @Override
-                public boolean test(Channel peer) {
-                    return peer.isHashRetrieving() || peer.isHashRetrievingDone();
-                }
-            });
-
-            if (master == null || master.isEthCompatible(peer)) {
-
-                // should be synchronized with HASH_RETRIEVING state maintenance
-                // to avoid double master peer initializing
-                synchronized (stateMutex) {
-                    startMaster(peer);
-                }
-            }
-        }
-
-        updateHighestKnownDifficulty(peerTotalDifficulty);
-
-        pool.add(peer);
-    }
 
     public void onDisconnect(Channel peer) {
 
         // if master peer has been disconnected
         // we need to process data it sent
-        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
+        if (peer.isMaster()) {
             changeState(BLOCK_RETRIEVING);
         }
-
-        pool.onDisconnect(peer);
     }
 
     public void tryGapRecovery(BlockWrapper wrapper) {
@@ -221,7 +204,7 @@ public class SyncManager {
         return gapBlock;
     }
 
-    void resetGapRecovery() {
+    public void resetGapRecovery() {
         this.gapBlock = null;
     }
 
@@ -231,8 +214,7 @@ public class SyncManager {
         }
 
         if (!wrapper.isSolidBlock()) {
-            syncDone = true;
-            onSyncDone();
+            onSyncDone(true);
 
             logger.debug("NEW block.number [{}] imported", wrapper.getNumber());
         } else if (logger.isInfoEnabled()) {
@@ -248,25 +230,16 @@ public class SyncManager {
         return syncDone;
     }
 
-    public void reportBadAction(byte[] nodeId) {
+    private void onSyncDone(boolean done) {
 
-        Channel peer = pool.getByNodeId(nodeId);
+        syncDone = done;
 
-        if (peer != null) {
-            logger.info("Peer {}: bad action, drop it", peer.getPeerIdShort());
-            peer.disconnect(USELESS_PEER);
+        channelManager.onSyncDone(done);
+
+        if (done) {
+            ethereumListener.onSyncDone();
+            logger.info("Long synchronization is finished");
         }
-
-        queue.dropBlocks(nodeId);
-
-        // TODO decrease peer's reputation
-
-    }
-
-    private void onSyncDone() {
-        channelManager.onSyncDone();
-        ethereumListener.onSyncDone();
-        logger.info("Main synchronization is finished");
     }
 
     private boolean isGapRecoveryAllowed(BlockWrapper block) {
@@ -298,7 +271,7 @@ public class SyncManager {
         }
     }
 
-    void changeState(SyncStateName newStateName) {
+    public void changeState(SyncStateName newStateName) {
         SyncState newState = syncStates.get(newStateName);
 
         if (state == newState) {
@@ -313,79 +286,17 @@ public class SyncManager {
         }
     }
 
-    boolean isPeerStuck(Channel peer) {
+    public boolean isPeerStuck(Channel peer) {
         SyncStatistics stats = peer.getSyncStats();
 
         return stats.millisSinceLastUpdate() > PEER_STUCK_TIMEOUT
                 || stats.getEmptyResponsesCount() > 0;
     }
 
-    void startMaster(Channel master) {
+    public void startMaster(Channel master) {
+
         pool.changeState(IDLE);
-
-        if (gapBlock != null) {
-            master.setLastHashToAsk(gapBlock.getHash());
-        } else {
-            master.setLastHashToAsk(master.getBestKnownHash());
-            queue.clearHeaders();
-        }
-
         master.changeSyncState(HASH_RETRIEVING);
-
-        if (logger.isInfoEnabled()) logger.info(
-                "Peer {}: {} initiated, lastHashToAsk [{}], askLimit [{}]",
-                master.getPeerIdShort(),
-                state,
-                Hex.toHexString(master.getLastHashToAsk()),
-                master.getMaxHashesAsk()
-        );
-    }
-
-    private void updateDifficulties() {
-        updateLowerUsefulDifficulty(blockchain.getTotalDifficulty());
-        updateHighestKnownDifficulty(blockchain.getTotalDifficulty());
-    }
-
-    private void updateLowerUsefulDifficulty(BigInteger difficulty) {
-        if (difficulty.compareTo(lowerUsefulDifficulty) > 0) {
-            lowerUsefulDifficulty = difficulty;
-        }
-    }
-
-    private void updateHighestKnownDifficulty(BigInteger difficulty) {
-        if (difficulty.compareTo(highestKnownDifficulty) > 0) {
-            highestKnownDifficulty = difficulty;
-        }
-    }
-
-    private void addBestKnownNodeListener() {
-        nodeManager.addDiscoverListener(
-                new DiscoverListener() {
-                    @Override
-                    public void nodeAppeared(NodeHandler handler) {
-                        if (logger.isTraceEnabled()) logger.trace(
-                                "Peer {}: new best chain peer discovered: {} vs {}",
-                                handler.getNode().getHexIdShort(),
-                                handler.getNodeStatistics().getEthTotalDifficulty(),
-                                highestKnownDifficulty
-                        );
-                        pool.connect(handler.getNode());
-                    }
-
-                    @Override
-                    public void nodeDisappeared(NodeHandler handler) {
-                    }
-                },
-                new Functional.Predicate<NodeStatistics>() {
-                    @Override
-                    public boolean test(NodeStatistics nodeStatistics) {
-                        if (nodeStatistics.getEthTotalDifficulty() == null) {
-                            return false;
-                        }
-                        return !isIn20PercentRange(highestKnownDifficulty, nodeStatistics.getEthTotalDifficulty());
-                    }
-                }
-        );
     }
 
     // WORKER
@@ -405,60 +316,6 @@ public class SyncManager {
                 }
             }
         }, 0, 30, TimeUnit.SECONDS);
-    }
-
-    private void removeUselessPeers() {
-        List<Channel> removed = new ArrayList<>();
-        for (Channel peer : pool) {
-            if (peer.hasBlocksLack()) {
-                logger.info("Peer {}: has no more blocks, ban", peer.getPeerIdShort());
-                removed.add(peer);
-                updateLowerUsefulDifficulty(peer.getTotalDifficulty());
-            }
-        }
-
-        // todo decrease peers' reputation
-
-        for (Channel peer : removed) {
-            pool.ban(peer);
-        }
-    }
-
-    private void fillUpPeersPool() {
-        int lackSize = config.syncPeerCount() - pool.activeCount();
-        if(lackSize <= 0) {
-            return;
-        }
-
-        Set<String> nodesInUse = pool.nodesInUse();
-
-        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
-        if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
-        }
-
-        if (logger.isTraceEnabled()) {
-            logDiscoveredNodes(newNodes);
-        }
-
-        for(NodeHandler n : newNodes) {
-            pool.connect(n.getNode());
-        }
-    }
-
-    private void logDiscoveredNodes(List<NodeHandler> nodes) {
-        StringBuilder sb = new StringBuilder();
-        for(NodeHandler n : nodes) {
-            sb.append(Utils.getNodeIdShort(Hex.toHexString(n.getNode().getId())));
-            sb.append(", ");
-        }
-        if(sb.length() > 0) {
-            sb.delete(sb.length() - 2, sb.length());
-        }
-        logger.trace(
-                "Node list obtained from discovery: {}",
-                nodes.size() > 0 ? sb.toString() : "empty"
-        );
     }
 
     private void maintainState() {

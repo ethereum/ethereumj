@@ -1,10 +1,10 @@
-package org.ethereum.sync;
+package org.ethereum.sync.state;
 
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.ethereum.sync.SyncStateName.*;
+import static org.ethereum.sync.state.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -31,7 +31,7 @@ public class HashRetrievingState extends AbstractSyncState {
         }
 
         Channel master = null;
-        for (Channel peer : syncManager.pool) {
+        for (Channel peer : pool) {
             // if hash retrieving is done all we need to do is just change state and quit
             if (peer.isHashRetrievingDone()) {
                 syncManager.changeState(BLOCK_RETRIEVING);
@@ -48,7 +48,7 @@ public class HashRetrievingState extends AbstractSyncState {
         if (master != null) {
             // if master is stuck ban it and process data it sent
             if(syncManager.isPeerStuck(master)) {
-                syncManager.pool.ban(master);
+                pool.ban(master);
                 logger.info("Master peer {}: banned due to stuck timeout exceeding", master.getPeerIdShort());
 
                 // let's see what do we have
@@ -63,11 +63,11 @@ public class HashRetrievingState extends AbstractSyncState {
 
             // recovering gap with gap block peer
             if (syncManager.getGapBlock() != null) {
-                master = syncManager.pool.getByNodeId(syncManager.getGapBlock().getNodeId());
+                master = pool.getByNodeId(syncManager.getGapBlock().getNodeId());
             }
 
             if (master == null) {
-                master = syncManager.pool.getMaster();
+                master = pool.getMaster();
             }
 
             if (master == null) {
@@ -77,6 +77,6 @@ public class HashRetrievingState extends AbstractSyncState {
         }
 
         // Downloading blocks and headers simultaneously
-        syncManager.pool.changeStateForIdles(BLOCK_RETRIEVING);
+        pool.changeStateForIdles(BLOCK_RETRIEVING);
     }
 }

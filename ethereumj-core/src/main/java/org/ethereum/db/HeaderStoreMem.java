@@ -1,6 +1,6 @@
 package org.ethereum.db;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.db.index.ArrayListIndex;
 import org.ethereum.db.index.Index;
 import org.slf4j.Logger;
@@ -16,8 +16,8 @@ public class HeaderStoreMem implements HeaderStore {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
-    private Map<Long, BlockHeader> headers = Collections.synchronizedMap(new HashMap<Long, BlockHeader>());
-    private Index index = new ArrayListIndex(Collections.<Long>emptySet());
+    private Map<Long, BlockHeaderWrapper> headers = Collections.synchronizedMap(new HashMap<Long, BlockHeaderWrapper>());
+    private final Index index = new ArrayListIndex(Collections.<Long>emptySet());
 
     private final Object mutex = new Object();
 
@@ -31,7 +31,7 @@ public class HeaderStoreMem implements HeaderStore {
     }
 
     @Override
-    public void add(BlockHeader header) {
+    public void add(BlockHeaderWrapper header) {
 
         synchronized (mutex) {
             if (index.contains(header.getNumber())) {
@@ -43,11 +43,11 @@ public class HeaderStoreMem implements HeaderStore {
     }
 
     @Override
-    public void addBatch(Collection<BlockHeader> headers) {
+    public void addBatch(Collection<BlockHeaderWrapper> headers) {
 
         synchronized (mutex) {
             List<Long> numbers = new ArrayList<>(headers.size());
-            for (BlockHeader b : headers) {
+            for (BlockHeaderWrapper b : headers) {
                 if(!index.contains(b.getNumber()) &&
                         !numbers.contains(b.getNumber())) {
 
@@ -61,7 +61,7 @@ public class HeaderStoreMem implements HeaderStore {
     }
 
     @Override
-    public BlockHeader peek() {
+    public BlockHeaderWrapper peek() {
 
         synchronized (mutex) {
             if(index.isEmpty()) {
@@ -74,20 +74,20 @@ public class HeaderStoreMem implements HeaderStore {
     }
 
     @Override
-    public BlockHeader poll() {
+    public BlockHeaderWrapper poll() {
         return pollInner();
     }
 
     @Override
-    public List<BlockHeader> pollBatch(int qty) {
+    public List<BlockHeaderWrapper> pollBatch(int qty) {
 
         if (index.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<BlockHeader> headers = new ArrayList<>(qty > size() ? qty : size());
+        List<BlockHeaderWrapper> headers = new ArrayList<>(qty > size() ? qty : size());
         while (headers.size() < qty) {
-            BlockHeader header = pollInner();
+            BlockHeaderWrapper header = pollInner();
             if(header == null) {
                 break;
             }
@@ -113,14 +113,39 @@ public class HeaderStoreMem implements HeaderStore {
         index.clear();
     }
 
-    private BlockHeader pollInner() {
+    @Override
+    public void drop(byte[] nodeId) {
+
+        List<Long> removed = new ArrayList<>();
+
+        synchronized (index) {
+
+            for (Long idx : index) {
+                BlockHeaderWrapper h = headers.get(idx);
+                if (h.sentBy(nodeId)) removed.add(idx);
+            }
+
+            headers.keySet().removeAll(removed);
+            index.removeAll(removed);
+        }
+
+        if (logger.isDebugEnabled()) {
+            if (removed.isEmpty()) {
+                logger.debug("0 headers are dropped out");
+            } else {
+                logger.debug("[{}..{}] headers are dropped out", removed.get(0), removed.get(removed.size() - 1));
+            }
+        }
+    }
+
+    private BlockHeaderWrapper pollInner() {
         synchronized (mutex) {
             if (index.isEmpty()) {
                 return null;
             }
 
             Long idx = index.poll();
-            BlockHeader header = headers.get(idx);
+            BlockHeaderWrapper header = headers.get(idx);
             headers.remove(idx);
 
             if (header == null) {

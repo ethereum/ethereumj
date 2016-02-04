@@ -25,4 +25,6 @@ public interface Index extends Iterable<Long> {
     void clear();
 
     void removeAll(Collection<Long> indexes);
+
+    Long lastNumber();
 }

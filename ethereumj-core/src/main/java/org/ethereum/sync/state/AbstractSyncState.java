@@ -1,5 +1,6 @@
-package org.ethereum.sync;
+package org.ethereum.sync.state;
 
+import org.ethereum.sync.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,8 @@ public abstract class AbstractSyncState implements SyncState {
     protected SyncManager syncManager;
 
     protected SyncQueue queue;
+
+    protected SyncPool pool;
 
     protected SyncStateName name;
 
@@ -47,5 +50,9 @@ public abstract class AbstractSyncState implements SyncState {
 
     public void setQueue(SyncQueue queue) {
         this.queue = queue;
+    }
+
+    public void setPool(SyncPool pool) {
+        this.pool = pool;
     }
 }

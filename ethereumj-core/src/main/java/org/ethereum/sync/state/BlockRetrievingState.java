@@ -1,6 +1,6 @@
-package org.ethereum.sync;
+package org.ethereum.sync.state;
 
-import static org.ethereum.sync.SyncStateName.*;
+import static org.ethereum.sync.state.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -17,7 +17,7 @@ public class BlockRetrievingState extends AbstractSyncState {
 
         super.doOnTransition();
 
-        syncManager.pool.changeState(BLOCK_RETRIEVING);
+        pool.changeState(BLOCK_RETRIEVING);
     }
 
     @Override
@@ -25,12 +25,12 @@ public class BlockRetrievingState extends AbstractSyncState {
 
         super.doMaintain();
 
-        if (syncManager.queue.isHeadersEmpty()) {
+        if (queue.isHeadersEmpty()) {
 
             syncManager.changeState(IDLE);
             return;
         }
 
-        syncManager.pool.changeStateForIdles(BLOCK_RETRIEVING);
+        pool.changeStateForIdles(BLOCK_RETRIEVING);
     }
 }

@@ -1,6 +1,6 @@
 package org.ethereum.db;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
 import org.ethereum.db.index.ArrayListIndex;
@@ -28,7 +28,7 @@ public class HeaderStoreImpl implements HeaderStore {
     private MapDBFactory mapDBFactory;
 
     private DB db;
-    private Map<Long, BlockHeader> headers;
+    private Map<Long, BlockHeaderWrapper> headers;
     private Index index;
 
     private boolean initDone = false;
@@ -47,7 +47,7 @@ public class HeaderStoreImpl implements HeaderStore {
                     db = mapDBFactory.createTransactionalDB(dbName());
                     headers = db.hashMapCreate(STORE_NAME)
                             .keySerializer(Serializer.LONG)
-                            .valueSerializer(Serializers.BLOCK_HEADER)
+                            .valueSerializer(Serializers.BLOCK_HEADER_WRAPPER)
                             .makeOrGet();
 
                     if(CONFIG.databaseReset()) {
@@ -79,7 +79,7 @@ public class HeaderStoreImpl implements HeaderStore {
     }
 
     @Override
-    public void add(BlockHeader header) {
+    public void add(BlockHeaderWrapper header) {
         awaitInit();
 
         synchronized (mutex) {
@@ -94,11 +94,11 @@ public class HeaderStoreImpl implements HeaderStore {
     }
 
     @Override
-    public void addBatch(Collection<BlockHeader> headers) {
+    public void addBatch(Collection<BlockHeaderWrapper> headers) {
         awaitInit();
         synchronized (mutex) {
             List<Long> numbers = new ArrayList<>(headers.size());
-            for (BlockHeader b : headers) {
+            for (BlockHeaderWrapper b : headers) {
                 if(!index.contains(b.getNumber()) &&
                         !numbers.contains(b.getNumber())) {
 
@@ -113,7 +113,7 @@ public class HeaderStoreImpl implements HeaderStore {
     }
 
     @Override
-    public BlockHeader peek() {
+    public BlockHeaderWrapper peek() {
         awaitInit();
 
         synchronized (mutex) {
@@ -127,25 +127,25 @@ public class HeaderStoreImpl implements HeaderStore {
     }
 
     @Override
-    public BlockHeader poll() {
+    public BlockHeaderWrapper poll() {
         awaitInit();
 
-        BlockHeader header = pollInner();
+        BlockHeaderWrapper header = pollInner();
         dbCommit("poll");
         return header;
     }
 
     @Override
-    public List<BlockHeader> pollBatch(int qty) {
+    public List<BlockHeaderWrapper> pollBatch(int qty) {
         awaitInit();
 
         if (index.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<BlockHeader> headers = new ArrayList<>(qty > size() ? qty : size());
+        List<BlockHeaderWrapper> headers = new ArrayList<>(qty > size() ? qty : size());
         while (headers.size() < qty) {
-            BlockHeader header = pollInner();
+            BlockHeaderWrapper header = pollInner();
             if(header == null) {
                 break;
             }
@@ -179,6 +179,35 @@ public class HeaderStoreImpl implements HeaderStore {
         dbCommit();
     }
 
+    @Override
+    public void drop(byte[] nodeId) {
+        awaitInit();
+
+        int i = 0;
+        List<Long> removed = new ArrayList<>();
+
+        synchronized (index) {
+
+            for (Long idx : index) {
+                BlockHeaderWrapper h = headers.get(idx);
+                if (h.sentBy(nodeId)) removed.add(idx);
+            }
+
+            headers.keySet().removeAll(removed);
+            index.removeAll(removed);
+        }
+
+        db.commit();
+
+        if (logger.isDebugEnabled()) {
+            if (removed.isEmpty()) {
+                logger.debug("0 headers are dropped out");
+            } else {
+                logger.debug("[{}..{}] headers are dropped out", removed.get(0), removed.get(removed.size() - 1));
+            }
+        }
+    }
+
     private void dbCommit() {
         dbCommit("");
     }
@@ -200,14 +229,14 @@ public class HeaderStoreImpl implements HeaderStore {
         }
     }
 
-    private BlockHeader pollInner() {
+    private BlockHeaderWrapper pollInner() {
         synchronized (mutex) {
             if (index.isEmpty()) {
                 return null;
             }
 
             Long idx = index.poll();
-            BlockHeader header = headers.get(idx);
+            BlockHeaderWrapper header = headers.get(idx);
             headers.remove(idx);
 
             if (header == null) {

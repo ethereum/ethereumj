@@ -1,4 +1,4 @@
-package org.ethereum.sync;
+package org.ethereum.sync.state;
 
 /**
  * @author Mikhail Kalinin
@@ -12,6 +12,5 @@ public enum SyncStateName {
     BLOCK_RETRIEVING,
 
     // Peer
-    DONE_HASH_RETRIEVING,
-    BLOCKS_LACK
+    DONE_HASH_RETRIEVING
 }

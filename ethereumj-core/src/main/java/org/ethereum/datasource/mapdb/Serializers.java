@@ -2,6 +2,7 @@ package org.ethereum.datasource.mapdb;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.mapdb.Serializer;
@@ -17,6 +18,21 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  * @since 09.07.2015
  */
 public class Serializers {
+
+    public static final Serializer<BlockHeaderWrapper> BLOCK_HEADER_WRAPPER = new Serializer<BlockHeaderWrapper>() {
+
+        @Override
+        public void serialize(DataOutput out, BlockHeaderWrapper wrapper) throws IOException {
+            byte[] bytes = getBytes(wrapper);
+            BYTE_ARRAY.serialize(out, bytes);
+        }
+
+        @Override
+        public BlockHeaderWrapper deserialize(DataInput in, int available) throws IOException {
+            byte[] bytes = BYTE_ARRAY.deserialize(in, available);
+            return bytes.length > 0 ? new BlockHeaderWrapper(bytes) : null;
+        }
+    };
 
     public static final Serializer<BlockHeader> BLOCK_HEADER = new Serializer<BlockHeader>() {
 
@@ -87,6 +103,10 @@ public class Serializers {
     }
 
     private static byte[] getBytes(BlockWrapper wrapper) {
+        return wrapper == null ? EMPTY_BYTE_ARRAY : wrapper.getBytes();
+    }
+
+    private static byte[] getBytes(BlockHeaderWrapper wrapper) {
         return wrapper == null ? EMPTY_BYTE_ARRAY : wrapper.getBytes();
     }
 }

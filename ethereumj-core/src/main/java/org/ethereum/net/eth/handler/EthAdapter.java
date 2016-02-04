@@ -1,9 +1,10 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.state.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 
 import java.util.List;
@@ -48,11 +49,6 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public boolean hasBlocksLack() {
-        return false;
-    }
-
-    @Override
     public boolean isHashRetrievingDone() {
         return false;
     }
@@ -65,29 +61,6 @@ public class EthAdapter implements Eth {
     @Override
     public boolean isIdle() {
         return true;
-    }
-
-    @Override
-    public void setMaxHashesAsk(int maxHashesAsk) {
-    }
-
-    @Override
-    public int getMaxHashesAsk() {
-        return 0;
-    }
-
-    @Override
-    public void setLastHashToAsk(byte[] lastHashToAsk) {
-    }
-
-    @Override
-    public byte[] getLastHashToAsk() {
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] getBestKnownHash() {
-        return new byte[0];
     }
 
     @Override
@@ -122,11 +95,14 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void onSyncDone() {
+    public void onSyncDone(boolean done) {
     }
 
     @Override
     public void sendStatus() {
+    }
 
+    @Override
+    public void recoverGap(BlockWrapper block) {
     }
 }

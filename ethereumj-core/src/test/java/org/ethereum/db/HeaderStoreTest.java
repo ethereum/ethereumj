@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.util.FileUtil;
 import org.junit.After;
@@ -27,11 +28,11 @@ public class HeaderStoreTest {
 
     static AtomicInteger cnt = new AtomicInteger();
 
-    static BlockHeader[] createHeaders(int headCnt) {
-        BlockHeader[] ret = new BlockHeader[headCnt];
+    static BlockHeaderWrapper[] createHeaders(int headCnt) {
+        BlockHeaderWrapper[] ret = new BlockHeaderWrapper[headCnt];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = new BlockHeader(new byte[0], new byte[0], new byte[0], new byte[0], new byte[0],
-                    cnt.getAndIncrement(), 0, 0, 0, new byte[0], new byte[0], new byte[0]);
+            ret[i] = new BlockHeaderWrapper(new BlockHeader(new byte[0], new byte[0], new byte[0], new byte[0], new byte[0],
+                    cnt.getAndIncrement(), 0, 0, 0, new byte[0], new byte[0], new byte[0]), null);
         }
         return ret;
     }
@@ -60,13 +61,13 @@ public class HeaderStoreTest {
     @Test
     public void test1() {
         hs.addBatch(Arrays.asList(createHeaders(10)));
-        List<BlockHeader> bhs = hs.pollBatch(1000);
+        List<BlockHeaderWrapper> bhs = hs.pollBatch(1000);
         Assert.assertEquals(10, bhs.size());
 
-        BlockHeader[] headers = createHeaders(2);
+        BlockHeaderWrapper[] headers = createHeaders(2);
         hs.add(headers[1]);
         hs.add(headers[0]);
-        BlockHeader bh = hs.poll();
+        BlockHeaderWrapper bh = hs.poll();
         Assert.assertEquals(headers[0].getNumber(), bh.getNumber());
         bh = hs.poll();
         Assert.assertEquals(headers[1].getNumber(), bh.getNumber());
@@ -90,7 +91,7 @@ public class HeaderStoreTest {
             @Override
             public void run() {
                 while (cnt < 10 * 10) {
-                    List<BlockHeader> ret = hs.pollBatch(100000);
+                    List<BlockHeaderWrapper> ret = hs.pollBatch(100000);
                     if (ret.size() > 0) {
                         System.out.println("Polled " + ret.size());
                     }
