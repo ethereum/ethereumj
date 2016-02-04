@@ -44,7 +44,7 @@ public class DetailsDataStore {
             float out = ((float) data.length) / 1048576;
             if (out > 10) {
                 String sizeFmt = format("%02.2f", out);
-                System.out.println("loaded: key: " + Hex.toHexString(key) + " size: " + sizeFmt + "MB");
+                gLogger.debug("loaded: key: " + Hex.toHexString(key) + " size: " + sizeFmt + "MB");
             }
         }
 
