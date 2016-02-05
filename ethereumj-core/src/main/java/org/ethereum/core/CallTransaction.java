@@ -511,7 +511,7 @@ public class CallTransaction {
             for (int i = 0; i < resultTypes.length; i++) {
                 ret.outputs[i] = new Param();
                 ret.outputs[i].name = "res" + i;
-                ret.outputs[i].type = Type.getType(paramTypes[i]);
+                ret.outputs[i].type = Type.getType(resultTypes[i]);
             }
             return ret;
         }
