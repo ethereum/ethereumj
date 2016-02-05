@@ -288,7 +288,9 @@ public class TransactionExecutor {
         cacheTrack.commit();
 
         TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
-                .gasLeftover(m_endGas);
+                .gasLeftover(m_endGas)
+                .logs(result.getLogInfoList())
+                .result(result.getHReturn());
 
         if (result != null) {
             // Accumulate refunds for suicides
