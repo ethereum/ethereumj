@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.GasPriceTracker;
 import org.ethereum.manager.AdminInfo;
@@ -78,6 +79,9 @@ public class EthereumImpl implements Ethereum {
     @Autowired
     SystemProperties config;
 
+    @Autowired
+    CompositeEthereumListener compositeEthereumListener;
+
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
     public EthereumImpl() {
@@ -95,7 +99,7 @@ public class EthereumImpl implements Ethereum {
                     }
             );
         }
-        addListener(gasPriceTracker);
+        compositeEthereumListener.addListener(gasPriceTracker);
     }
 
     /**
