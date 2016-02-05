@@ -148,6 +148,10 @@ public class Utils {
         return javaTime / 1000;
     }
 
+    public static long fromUnixTime(long unixTime) {
+        return unixTime * 1000;
+    }
+
     public static <T> T[] mergeArrays(T[] ... arr) {
         int size = 0;
         for (T[] ts : arr) {
