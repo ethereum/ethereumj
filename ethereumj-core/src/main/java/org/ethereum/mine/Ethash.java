@@ -9,6 +9,8 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.concurrent.*;
@@ -22,6 +24,7 @@ import static org.ethereum.util.ByteUtil.longToBytes;
  * Created by Anton Nashatyrev on 04.12.2015.
  */
 public class Ethash {
+    private static final Logger logger = LoggerFactory.getLogger("mine");
     private static EthashParams ethashParams = new EthashParams();
 
     private static Ethash cachedInstance = null;
@@ -30,7 +33,7 @@ public class Ethash {
     private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(
         new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
 
-    public static boolean fileCacheEnabled = false;
+    public static boolean fileCacheEnabled = true;
 
     /**
      * Returns instance for the specified block number either from cache or calculates a new one
@@ -54,7 +57,7 @@ public class Ethash {
         this.blockNumber = blockNumber;
     }
 
-    private synchronized int[] getCacheLight() {
+    public synchronized int[] getCacheLight() {
         if (cacheLight == null) {
             cacheLight = getEthashAlgo().makeCache(getEthashAlgo().getParams().getCacheSize(blockNumber),
                     getEthashAlgo().getSeedHash(blockNumber));
@@ -62,14 +65,14 @@ public class Ethash {
         return cacheLight;
     }
 
-    private synchronized int[] getFullDataset() {
+    public synchronized int[] getFullDataset() {
         if (fullData == null) {
             File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag.dat");
             if (fileCacheEnabled && file.canRead()) {
                 try {
-                    System.out.println("Loading dataset from " + file.getAbsolutePath());
+                    logger.info("Loading dataset from " + file.getAbsolutePath());
                     fullData = (int[]) new ObjectInputStream(new FileInputStream(file)).readObject();
-                    System.out.println("Dataset loaded.");
+                    logger.info("Dataset loaded.");
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -80,7 +83,7 @@ public class Ethash {
                     try {
                         file.getParentFile().mkdirs();
                         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
-                        System.out.println("Writing dataset to " + file.getAbsolutePath());
+                        logger.info("Writing dataset to " + file.getAbsolutePath());
                         oos.writeObject(fullData);
                         oos.close();
                     } catch (IOException e) {
