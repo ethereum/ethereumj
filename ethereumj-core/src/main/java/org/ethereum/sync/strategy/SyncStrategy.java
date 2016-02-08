@@ -1,5 +1,7 @@
 package org.ethereum.sync.strategy;
 
+import org.ethereum.sync.SyncState;
+
 /**
  * Interface of sync strategy<br/>
  *
@@ -16,4 +18,6 @@ public interface SyncStrategy {
     void stop();
 
     boolean inProgress();
+
+    SyncState getState();
 }

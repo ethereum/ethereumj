@@ -27,6 +27,7 @@ public class LongSync extends AbstractSyncStrategy {
 
     private SyncState state = HASH_RETRIEVING;
 
+    @Override
     public SyncState getState() {
         return state;
     }

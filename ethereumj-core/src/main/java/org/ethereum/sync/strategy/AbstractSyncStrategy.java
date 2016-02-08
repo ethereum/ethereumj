@@ -2,6 +2,7 @@ package org.ethereum.sync.strategy;
 
 import org.ethereum.sync.SyncPool;
 import org.ethereum.sync.SyncQueue;
+import org.ethereum.sync.SyncState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,11 @@ public abstract class AbstractSyncStrategy implements SyncStrategy {
     @Override
     public boolean inProgress() {
         return inProgress;
+    }
+
+    @Override
+    public SyncState getState() {
+        return null;
     }
 
     abstract protected void doWork();

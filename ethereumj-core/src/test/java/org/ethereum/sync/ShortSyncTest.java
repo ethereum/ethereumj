@@ -17,6 +17,9 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.sync.strategy.AbstractSyncStrategy;
+import org.ethereum.sync.strategy.LongSync;
+import org.ethereum.sync.strategy.SyncStrategy;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +46,7 @@ import static org.spongycastle.util.encoders.Hex.decode;
  * @since 14.12.2015
  */
 @Ignore("Long network tests")
-public class GapRecoveryTest {
+public class ShortSyncTest {
 
     private static BigInteger minDifficultyBackup;
     private static Node nodeA;
@@ -554,6 +557,12 @@ public class GapRecoveryTest {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
 
+                // process init header request correctly
+                if (msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
+
                 List<BlockHeader> headers = new ArrayList<>();
                 for (int i = 7; i < mainB1B10.size(); i++) {
                     headers.add(mainB1B10.get(i).getHeader());
@@ -656,7 +665,7 @@ public class GapRecoveryTest {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
 
-                if (msg.getBlockNumber() == b8_.getNumber() && msg.getMaxHeaders() == 1) {
+                if (msg.getMaxHeaders() == 1) {
                     super.processGetBlockHeaders(msg);
                     return;
                 }
@@ -875,6 +884,20 @@ public class GapRecoveryTest {
         @Bean
         public SystemProperties systemProperties() {
             return props;
+        }
+
+        @Bean
+        public SyncStrategy longSync() {
+            return new AbstractSyncStrategy() {
+                @Override
+                protected void doWork() {
+                }
+
+                @Override
+                public boolean inProgress() {
+                    return false;
+                }
+            };
         }
     }
 }

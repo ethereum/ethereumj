@@ -85,7 +85,7 @@ public class Eth62 extends EthHandler {
      */
     protected BlockIdentifier bestKnownBlock;
 
-    protected boolean commonAncestorFound = false;
+    protected boolean commonAncestorFound = true;
 
     /**
      * Header list sent in GET_BLOCK_BODIES message,
@@ -294,6 +294,8 @@ public class Eth62 extends EthHandler {
 
         updateBestBlock(identifiers);
 
+        compositeSyncListener.onNewBlockNumber(bestKnownBlock.getNumber());
+
         // queueing new blocks doesn't make sense
         // while Long sync is in progress
         if (!syncDone) return;
@@ -413,6 +415,8 @@ public class Eth62 extends EthHandler {
         channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
 
         updateBestBlock(newBlock);
+
+        compositeSyncListener.onNewBlockNumber(newBlock.getNumber());
 
         // queueing new blocks doesn't make sense
         // while Long sync is in progress
@@ -553,6 +557,7 @@ public class Eth62 extends EthHandler {
     protected void startHeaderRetrieving() {
 
         lastHashToAsk = null;
+        commonAncestorFound = true;
 
         if (logger.isInfoEnabled()) logger.info(
                 "Peer {}: HASH_RETRIEVING initiated, askLimit [{}]",
@@ -580,22 +585,16 @@ public class Eth62 extends EthHandler {
 
     private void updateBestBlock(Block block) {
         bestKnownBlock = new BlockIdentifier(block.getHash(), block.getNumber());
-        compositeSyncListener.onNewBlockNumber(bestKnownBlock.getNumber());
     }
 
     private void updateBestBlock(BlockHeader header) {
         bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
-        compositeSyncListener.onNewBlockNumber(bestKnownBlock.getNumber());
     }
 
     private void updateBestBlock(List<BlockIdentifier> identifiers) {
 
-        if (bestKnownBlock == null) return;
-
-        compositeSyncListener.onNewBlockNumber(bestKnownBlock.getNumber());
-
         for (BlockIdentifier id : identifiers)
-            if (id.getNumber() > bestKnownBlock.getNumber()) {
+            if (bestKnownBlock == null || id.getNumber() > bestKnownBlock.getNumber()) {
                 bestKnownBlock = id;
             }
     }
@@ -683,7 +682,7 @@ public class Eth62 extends EthHandler {
 
             // fork headers should already be fetched here
             logger.trace("Peer {}: remote fork is fetched", channel.getPeerIdShort());
-            changeState(DONE_HASH_RETRIEVING);
+            changeState(BLOCK_RETRIEVING);
             return;
         }
 

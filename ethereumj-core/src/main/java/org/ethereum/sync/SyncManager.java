@@ -10,6 +10,7 @@ import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.sync.listener.SyncListener;
 import org.ethereum.sync.listener.SyncListenerAdapter;
 import org.ethereum.sync.strategy.LongSync;
+import org.ethereum.sync.strategy.SyncStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,7 @@ public class SyncManager {
     ChannelManager channelManager;
 
     @Autowired
-    LongSync longSync;
+    SyncStrategy longSync;
 
     @Autowired
     CompositeSyncListener compositeSyncListener;
@@ -130,14 +131,14 @@ public class SyncManager {
 
             if (diff < 0) return;
 
-            if (diff <= FORWARD_SWITCH_LIMIT) {
+            if (longSync.inProgress() && diff <= FORWARD_SWITCH_LIMIT) {
 
                 logger.debug("Switch to Short sync, best {} vs new {}", bestNumber, newNumber);
 
                 longSync.stop();
                 onSyncDone(true);
 
-            } else if (diff > BACKWARD_SWITCH_LIMIT) {
+            } else if (!longSync.inProgress() && diff > BACKWARD_SWITCH_LIMIT) {
 
                 logger.debug("Switch to Long sync, best {} vs new {}", bestNumber, newNumber);
 
