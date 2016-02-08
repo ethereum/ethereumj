@@ -9,7 +9,7 @@ import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.sync.listener.CompositeSyncListener;
-import org.ethereum.sync.state.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
@@ -29,8 +29,8 @@ import static java.util.Collections.reverse;
 import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
-import static org.ethereum.sync.state.SyncStateName.*;
-import static org.ethereum.sync.state.SyncStateName.BLOCK_RETRIEVING;
+import static org.ethereum.sync.SyncState.*;
+import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
@@ -69,7 +69,7 @@ public class Eth62 extends EthHandler {
 
     protected EthState ethState = EthState.INIT;
 
-    protected SyncStateName syncState = IDLE;
+    protected SyncState syncState = IDLE;
     protected boolean syncDone = false;
     protected boolean processTransactions = false;
 
@@ -428,7 +428,7 @@ public class Eth62 extends EthHandler {
      *************************/
 
     @Override
-    public void changeState(SyncStateName newState) {
+    public void changeState(SyncState newState) {
 
         if (syncState == newState) {
             return;

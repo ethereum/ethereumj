@@ -175,7 +175,6 @@ public class ChannelManager {
     public void notifyDisconnect(Channel channel) {
         logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
         channel.onDisconnect();
-        syncManager.onDisconnect(channel);
         syncPool.onDisconnect(channel);
         activePeers.values().remove(channel);
         newPeers.remove(channel);

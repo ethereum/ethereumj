@@ -8,8 +8,6 @@ import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.db.RepositoryImpl;
-import org.ethereum.sync.*;
-import org.ethereum.sync.state.*;
 import org.ethereum.validator.*;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -145,23 +143,6 @@ public class CommonConfig {
 
         return ds;
 
-    }
-
-    @Bean
-    public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager, SyncQueue syncQueue, SyncPool syncPool) {
-
-        Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
-        states.put(SyncStateName.IDLE, new IdleState());
-        states.put(SyncStateName.HASH_RETRIEVING, new HashRetrievingState());
-        states.put(SyncStateName.BLOCK_RETRIEVING, new BlockRetrievingState());
-
-        for (SyncState state : states.values()) {
-            ((AbstractSyncState)state).setSyncManager(syncManager);
-            ((AbstractSyncState)state).setQueue(syncQueue);
-            ((AbstractSyncState)state).setPool(syncPool);
-        }
-
-        return states;
     }
 
     @Bean

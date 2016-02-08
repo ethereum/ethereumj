@@ -4,7 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.sync.state.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.util.List;
@@ -45,7 +45,7 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void changeState(SyncStateName newState) {
+    public void changeState(SyncState newState) {
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.sync.state.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.util.List;
@@ -46,7 +46,7 @@ public interface Eth {
      *
      * @param newState new state
      */
-    void changeState(SyncStateName newState);
+    void changeState(SyncState newState);
 
     /**
      * @return true if syncState is DONE_HASH_RETRIEVING, false otherwise

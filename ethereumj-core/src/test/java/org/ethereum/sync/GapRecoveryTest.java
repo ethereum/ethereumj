@@ -17,7 +17,6 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.ethereum.sync.state.*;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,9 +34,6 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.sync.state.SyncStateName.BLOCK_RETRIEVING;
-import static org.ethereum.sync.state.SyncStateName.HASH_RETRIEVING;
-import static org.ethereum.sync.state.SyncStateName.IDLE;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.fail;
 import static org.spongycastle.util.encoders.Hex.decode;
@@ -879,47 +875,6 @@ public class GapRecoveryTest {
         @Bean
         public SystemProperties systemProperties() {
             return props;
-        }
-
-        // don't allow sync to change its initial state during the sync
-        @Bean
-        public StateInitiator stateInitiator() {
-            return new StateInitiator() {
-                @Override
-                public SyncStateName initiate() {
-                    return IDLE;
-                }
-            };
-        }
-
-        // do not transfer from IDLE state implicitly
-        @Bean
-        public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
-
-            Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
-            states.put(IDLE, new AbstractSyncState(IDLE) {
-                @Override
-                public void doMaintain() {
-
-                    super.doMaintain();
-
-                    if (!syncManager.queue.isHeadersEmpty()) {
-
-                        // there are new hashes in the store
-                        // it's time to download blocks
-                        syncManager.changeState(BLOCK_RETRIEVING);
-
-                    }
-                }
-            });
-            states.put(HASH_RETRIEVING, new HashRetrievingState());
-            states.put(BLOCK_RETRIEVING, new BlockRetrievingState());
-
-            for (SyncState state : states.values()) {
-                ((AbstractSyncState)state).setSyncManager(syncManager);
-            }
-
-            return states;
         }
     }
 }

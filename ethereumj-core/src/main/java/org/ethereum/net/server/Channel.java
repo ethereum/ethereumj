@@ -19,7 +19,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
-import org.ethereum.sync.state.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.StaticMessages;
@@ -308,7 +308,7 @@ public class Channel {
         return nodeStatistics.getEthTotalDifficulty();
     }
 
-    public void changeSyncState(SyncStateName newState) {
+    public void changeSyncState(SyncState newState) {
         eth.changeState(newState);
     }
 

@@ -1,13 +1,12 @@
 package org.ethereum.sync.strategy;
 
 import org.ethereum.net.server.Channel;
-import org.ethereum.sync.SyncQueue;
-import org.ethereum.sync.state.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.springframework.stereotype.Component;
 
-import static org.ethereum.sync.state.SyncStateName.BLOCK_RETRIEVING;
-import static org.ethereum.sync.state.SyncStateName.HASH_RETRIEVING;
-import static org.ethereum.sync.state.SyncStateName.IDLE;
+import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
+import static org.ethereum.sync.SyncState.HASH_RETRIEVING;
+import static org.ethereum.sync.SyncState.IDLE;
 
 /**
  * Implements long sync algorithm <br/>
@@ -26,7 +25,11 @@ public class LongSync extends AbstractSyncStrategy {
 
     private static final int ROTATION_LIMIT = 100;
 
-    private SyncStateName state = HASH_RETRIEVING;
+    private SyncState state = HASH_RETRIEVING;
+
+    public SyncState getState() {
+        return state;
+    }
 
     protected void doWork() {
         maintainState();
@@ -70,7 +73,7 @@ public class LongSync extends AbstractSyncStrategy {
 
             logger.trace("HASH_RETRIEVING is in progress, start master peer");
 
-            master = pool.getMaster();
+            master = pool.getHighestDifficulty();
 
             if (master == null) return;
 
@@ -93,7 +96,12 @@ public class LongSync extends AbstractSyncStrategy {
         if (queue.isMoreBlocksNeeded()) changeState(HASH_RETRIEVING);
     }
 
-    private void changeState(SyncStateName newState) {
+    private void changeState(SyncState newState) {
+
+        if (state == newState) {
+            return;
+        }
+
         logger.info("Change state from {} to {}", state, newState);
 
         if (newState == BLOCK_RETRIEVING) {

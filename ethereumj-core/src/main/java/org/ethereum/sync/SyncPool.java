@@ -10,7 +10,6 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
-import org.ethereum.sync.state.SyncStateName;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.sync.state.SyncStateName.IDLE;
+import static org.ethereum.sync.SyncState.IDLE;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.TimeUtils.*;
@@ -142,6 +141,20 @@ public class SyncPool implements Iterable<Channel> {
 
         synchronized (activePeers) {
 
+            for (Channel peer : activePeers.values())
+                if (peer.isMaster()) {
+                    return peer;
+                }
+
+            return null;
+        }
+    }
+
+    @Nullable
+    public Channel getHighestDifficulty() {
+
+        synchronized (activePeers) {
+
             if (activePeers.isEmpty()) {
                 return null;
             }
@@ -251,7 +264,7 @@ public class SyncPool implements Iterable<Channel> {
         return nodesInUse().contains(nodeId);
     }
 
-    public void changeState(SyncStateName newState) {
+    public void changeState(SyncState newState) {
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
                 peer.changeSyncState(newState);
@@ -259,7 +272,7 @@ public class SyncPool implements Iterable<Channel> {
         }
     }
 
-    public void changeStateForIdles(SyncStateName newState) {
+    public void changeStateForIdles(SyncState newState) {
 
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {

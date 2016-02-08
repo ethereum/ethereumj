@@ -118,9 +118,6 @@ public class SyncQueue {
                     noParent = false;
                 }
 
-                if (wrapper.isNewBlock() && importResult.isSuccessful())
-                    syncManager.notifyNewBlockImported(wrapper);
-
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {} ",
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),

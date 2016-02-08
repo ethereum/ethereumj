@@ -1,10 +1,10 @@
-package org.ethereum.sync.state;
+package org.ethereum.sync;
 
 /**
  * @author Mikhail Kalinin
  * @since 14.07.2015
  */
-public enum SyncStateName {
+public enum SyncState {
 
     // Common
     IDLE,
