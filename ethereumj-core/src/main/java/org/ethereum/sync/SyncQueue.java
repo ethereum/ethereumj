@@ -153,8 +153,8 @@ public class SyncQueue {
                 }
 
             } catch (Throwable e) {
-                logger.error("Error processing block {}: {} ", wrapper.getBlock().getShortDescr(), e);
-                logger.error("Block dump: ", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
+                logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
             }
 
         }
