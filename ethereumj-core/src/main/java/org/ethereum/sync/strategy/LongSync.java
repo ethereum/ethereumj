@@ -15,7 +15,7 @@ import static org.ethereum.sync.SyncState.IDLE;
  * and tries to reach the end of block chain <br/>
  *
  * After it reaches the end or block near to it
- * it's switched to {@link ShortSync}
+ * it's switched to Short Sync algorithm
  *
  * @author Mikhail Kalinin
  * @since 02.02.2016

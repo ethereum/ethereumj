@@ -76,10 +76,6 @@ public class SyncQueue {
         headerStore.open();
         blockQueue.open();
 
-        if (!config.isSyncEnabled()) {
-            return;
-        }
-
         Runnable queueProducer = new Runnable(){
 
             @Override

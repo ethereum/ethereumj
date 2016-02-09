@@ -63,15 +63,15 @@ public class SyncManager {
             @Override
             public void run() {
 
-                // sync queue
-                queue.init();
-
                 if (!config.isSyncEnabled()) {
                     logger.info("Sync Manager: OFF");
                     return;
                 }
 
                 logger.info("Sync Manager: ON");
+
+                // sync queue
+                queue.init();
 
                 // sync pool
                 pool.init();
