@@ -298,6 +298,7 @@ public class ContractDetailsImpl implements ContractDetails {
         snapStorage.setCache(this.storageTrie.getCache());
 
         ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, this.code);
+        details.externalStorage = this.externalStorage;
         details.keys = this.keys;
 
         return details;
