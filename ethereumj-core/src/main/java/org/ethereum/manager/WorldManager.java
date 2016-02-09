@@ -88,7 +88,6 @@ public class WorldManager {
         loadBlockchain();
 
         // must be initialized after blockchain is loaded
-        syncManager.init();
         pendingState.init();
     }
 
