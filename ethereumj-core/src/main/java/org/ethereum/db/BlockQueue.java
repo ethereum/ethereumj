@@ -40,4 +40,6 @@ public interface BlockQueue extends DiskStore {
     void drop(byte[] nodeId, int scanLimit);
 
     long getLastNumber();
+
+    BlockWrapper getLastBlock();
 }

@@ -81,6 +81,12 @@ public class Eth62 extends EthHandler {
     protected int maxHashesAsk;
 
     /**
+     * Hash of the eldest header fetched from remote peer
+     * It's updated each time when new header message processed
+     */
+    protected byte[] eldestHash;
+
+    /**
      * Number and hash of best known remote block
      */
     protected BlockIdentifier bestKnownBlock;
@@ -498,8 +504,9 @@ public class Eth62 extends EthHandler {
         }
 
         if (syncState == HASH_RETRIEVING) {
-            long lastNumber = received.get(received.size() - 1).getNumber();
-            sendGetBlockHeaders(lastNumber + 1, maxHashesAsk);
+            BlockHeader latest = received.get(received.size() - 1);
+            eldestHash = latest.getHash();
+            sendGetBlockHeaders(latest.getNumber() + 1, maxHashesAsk);
         }
 
         if (syncState == DONE_HASH_RETRIEVING) {
@@ -565,7 +572,14 @@ public class Eth62 extends EthHandler {
                 maxHashesAsk
         );
 
-        long blockNumber = max(blockchain.getBestBlock().getNumber(), queue.getLastBlockNumber());
+        Block latest = queue.getLastBlock();
+        if (latest == null) {
+            latest = blockchain.getBestBlock();
+        }
+
+        eldestHash = latest.getHash();
+        long blockNumber = latest.getNumber();
+
         sendGetBlockHeaders(blockNumber + 1, maxHashesAsk);
     }
 
@@ -618,6 +632,7 @@ public class Eth62 extends EthHandler {
         );
 
         commonAncestorFound = false;
+        eldestHash = null;
 
         if (isNegativeGap()) {
 
@@ -909,20 +924,44 @@ public class Eth62 extends EthHandler {
                 return false;
             }
 
+            // parent of the first block
+            // check in long sync only
+            if (!syncDone && eldestHash != null) {
+
+                if (!Arrays.equals(eldestHash, first.getParentHash())) {
+                    if (logger.isInfoEnabled()) logger.info(
+                            "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
+                            channel.getPeerIdShort(), headersRequest, headers.get(0).getNumber(),
+                            toHexString(headers.get(0).getParentHash()), eldestHash
+                    );
+                    return false;
+                }
+            }
         }
 
-        // numbers
+        // numbers and ancestors
         if (headersRequest.isReverse()) {
 
             for (int i = 1; i < headers.size(); i++) {
 
-                long num = headers.get(i).getNumber();
-                long expectedNum = headers.get(i - 1).getNumber() - 1;
+                BlockHeader cur = headers.get(i);
+                BlockHeader prev = headers.get(i - 1);
+
+                long num = cur.getNumber();
+                long expectedNum = prev.getNumber() - 1;
 
                 if (num != expectedNum) {
                     if (logger.isInfoEnabled()) logger.info(
                             "Peer {}: invalid response to {}, got #{}, expected #{}",
                             channel.getPeerIdShort(), headersRequest, num, expectedNum
+                    );
+                    return false;
+                }
+
+                if (!Arrays.equals(prev.getParentHash(), cur.getHash())) {
+                    if (logger.isInfoEnabled()) logger.info(
+                            "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
+                            channel.getPeerIdShort(), headersRequest, prev.getParentHash(), prev.getNumber(), cur.getHash()
                     );
                     return false;
                 }
@@ -931,8 +970,11 @@ public class Eth62 extends EthHandler {
 
             for (int i = 1; i < headers.size(); i++) {
 
-                long num = headers.get(i).getNumber();
-                long expectedNum = headers.get(i - 1).getNumber() + 1;
+                BlockHeader cur = headers.get(i);
+                BlockHeader prev = headers.get(i - 1);
+
+                long num = cur.getNumber();
+                long expectedNum = prev.getNumber() + 1;
 
                 if (num != expectedNum) {
                     if (logger.isInfoEnabled()) logger.info(
@@ -941,9 +983,16 @@ public class Eth62 extends EthHandler {
                     );
                     return false;
                 }
+
+                if (!Arrays.equals(cur.getParentHash(), prev.getHash())) {
+                    if (logger.isInfoEnabled()) logger.info(
+                            "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
+                            channel.getPeerIdShort(), headersRequest, cur.getParentHash(), cur.getNumber(), prev.getHash()
+                    );
+                    return false;
+                }
             }
         }
-
 
         return true;
     }

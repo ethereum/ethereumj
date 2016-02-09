@@ -330,6 +330,14 @@ public class BlockQueueImpl implements BlockQueue {
         return num == null ? 0 : num;
     }
 
+    @Override
+    public BlockWrapper getLastBlock() {
+
+        synchronized (readMutex) {
+            Long num = index.lastNumber();
+            return blocks.get(num);
+        }
+    }
 
     private void awaitInit() {
         initLock.lock();

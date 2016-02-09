@@ -209,6 +209,15 @@ public class BlockQueueMem implements BlockQueue {
         return num == null ? 0 : num;
     }
 
+    @Override
+    public BlockWrapper getLastBlock() {
+
+        synchronized (mutex) {
+            Long num = index.lastNumber();
+            return blocks.get(num);
+        }
+    }
+
     private void fireNotEmpty() {
         takeLock.lock();
         try {

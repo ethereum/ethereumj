@@ -38,12 +38,12 @@ public class SyncQueue {
      * Store holding a list of block headers of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet
      */
-    private HeaderStore headerStore;
+    private HeaderStore headerStore = new HeaderStoreMem();
 
     /**
      * Queue with blocks to be validated and added to the blockchain
      */
-    private BlockQueue blockQueue;
+    private BlockQueue blockQueue = new BlockQueueMem();
 
     public boolean noParent = false;
 
@@ -52,9 +52,6 @@ public class SyncQueue {
 
     @Autowired
     private Blockchain blockchain;
-
-    @Autowired
-    private SyncManager syncManager;
 
     @Autowired
     private BlockHeaderValidator headerValidator;
@@ -69,9 +66,6 @@ public class SyncQueue {
     public void init() {
 
         logger.info("Start loading sync queue");
-
-        headerStore = new HeaderStoreMem();
-        blockQueue = new BlockQueueMem();
 
         headerStore.open();
         blockQueue.open();
@@ -234,8 +228,13 @@ public class SyncQueue {
      * @param headers list of headers
      */
     public void returnHeaders(List<BlockHeaderWrapper> headers) {
-        headerStore.addBatch(headers);
-        compositeSyncListener.onHeadersAdded();
+        try {
+            headerStore.addBatch(headers);
+            compositeSyncListener.onHeadersAdded();
+
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+        }
     }
 
     /**
@@ -313,6 +312,14 @@ public class SyncQueue {
      */
     public long getLastBlockNumber() {
         return blockQueue.getLastNumber();
+    }
+
+    /**
+     * @return latest block in the queue
+     */
+    public Block getLastBlock() {
+        BlockWrapper wrapper = blockQueue.getLastBlock();
+        return wrapper == null ? null : wrapper.getBlock();
     }
 
     /**

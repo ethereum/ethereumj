@@ -32,11 +32,8 @@ public class LongSync extends AbstractSyncStrategy {
         return state;
     }
 
+    @Override
     protected void doWork() {
-        maintainState();
-    }
-
-    private void maintainState() {
 
         logger.trace("Maintain {} state", state);
 
