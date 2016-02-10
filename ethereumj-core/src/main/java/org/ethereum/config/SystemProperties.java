@@ -479,11 +479,35 @@ public class SystemProperties {
 
     @ValidateMe
     public String privateKey() {
-        String key = config.getString("peer.privateKey");
-        if (key.length() != 64) {
-            throw new RuntimeException("The peer.privateKey needs to be Hex encoded and 32 byte length");
+        if (config.hasPath("peer.privateKey")) {
+            String key = config.getString("peer.privateKey");
+            if (key.length() != 64) {
+                throw new RuntimeException("The peer.privateKey needs to be Hex encoded and 32 byte length");
+            }
+            return key;
+        } else {
+            return getGeneratedNodePrivateKey();
         }
-        return key;
+    }
+
+    private String getGeneratedNodePrivateKey() {
+        try {
+            File file = new File(databaseDir(), "nodeId.properties");
+            Properties props = new Properties();
+            if (file.canRead()) {
+                props.load(new FileReader(file));
+            } else {
+                ECKey key = new ECKey().decompress();
+                props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
+                props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
+                props.store(new FileWriter(file), "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
+                logger.info("New nodeID generated: " + props.getProperty("nodeId"));
+                logger.info("Generated nodeID and its private key stored in " + file);
+            }
+            return props.getProperty("nodeIdPrivateKey");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @ValidateMe
