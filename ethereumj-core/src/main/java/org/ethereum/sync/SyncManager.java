@@ -90,6 +90,8 @@ public class SyncManager {
                 logger.info("Start Long sync");
                 longSync.start();
 
+                ethereumListener.onLongSyncDone();
+
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
                 }
@@ -108,7 +110,10 @@ public class SyncManager {
 
         if (done) {
             ethereumListener.onSyncDone();
+            ethereumListener.onLongSyncDone();
             logger.info("Long sync is finished");
+        } else {
+            ethereumListener.onLongSyncStarted();
         }
     }
 
