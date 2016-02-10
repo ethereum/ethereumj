@@ -827,6 +827,184 @@ public class ShortSyncTest {
         }
     }
 
+    // bodies validation: A doesn't send bodies corresponding to headers which were sent previously
+    // expected: B drops A
+    @Test
+    public void test12() throws InterruptedException {
+
+        SysPropConfigA.eth62 = new Eth62() {
+
+            @Override
+            protected void processGetBlockBodies(GetBlockBodiesMessage msg) {
+                List<byte[]> bodies = Arrays.asList(
+                        mainB1B10.get(0).getEncodedBody()
+                );
+
+                BlockBodiesMessage response = new BlockBodiesMessage(bodies);
+                sendMessage(response);
+            }
+        };
+
+        setupPeers();
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+
+        for (Block b : mainB1B10) {
+            blockchainA.tryToConnect(b);
+        }
+
+        // A == b10, B == genesis
+
+        final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
+        ethereumA.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onRecvMessage(Channel channel, Message message) {
+                if (message instanceof DisconnectMessage) {
+                    semaphoreDisconnect.countDown();
+                }
+            }
+        });
+
+        ethA.sendNewBlock(b10);
+
+        semaphoreDisconnect.await(10, SECONDS);
+
+        // check if peer was dropped
+        if(semaphoreDisconnect.getCount() > 0) {
+            fail("PeerA is not dropped");
+        }
+    }
+
+    // bodies validation: headers order is incorrect in the response, reverse = true
+    // expected: B drops A
+    @Test
+    public void test13() throws InterruptedException {
+
+        Block b9 = mainB1B10.get(8);
+
+        SysPropConfigA.eth62 = new Eth62() {
+
+            @Override
+            protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+
+                if (msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
+
+                List<BlockHeader> headers = Arrays.asList(
+                        forkB1B5B8_.get(7).getHeader(),
+                        forkB1B5B8_.get(6).getHeader(),
+                        forkB1B5B8_.get(4).getHeader(),
+                        forkB1B5B8_.get(5).getHeader()
+                );
+
+                BlockHeadersMessage response = new BlockHeadersMessage(headers);
+                sendMessage(response);
+            }
+
+        };
+
+        setupPeers();
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+        Blockchain blockchainB = (Blockchain) ethereumB.getBlockchain();
+
+        for (Block b : forkB1B5B8_) {
+            blockchainA.tryToConnect(b);
+        }
+        for (Block b : mainB1B10) {
+            blockchainB.tryToConnect(b);
+            if (b.isEqual(b9)) break;
+        }
+
+        // A == b8', B == b10
+
+        final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
+        ethereumA.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onRecvMessage(Channel channel, Message message) {
+                if (message instanceof DisconnectMessage) {
+                    semaphoreDisconnect.countDown();
+                }
+            }
+        });
+
+        ethA.sendNewBlockHashes(b8_);
+
+        semaphoreDisconnect.await(10, SECONDS);
+
+        // check if peer was dropped
+        if(semaphoreDisconnect.getCount() > 0) {
+            fail("PeerA is not dropped");
+        }
+    }
+
+    // bodies validation: ancestor's parent hash and header's hash does not match, reverse = true
+    // expected: B drops A
+    @Test
+    public void test14() throws InterruptedException {
+
+        Block b9 = mainB1B10.get(8);
+
+        SysPropConfigA.eth62 = new Eth62() {
+
+            @Override
+            protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+
+                if (msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
+
+                List<BlockHeader> headers = Arrays.asList(
+                        forkB1B5B8_.get(7).getHeader(),
+                        forkB1B5B8_.get(6).getHeader(),
+                        new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
+                                6, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
+                        forkB1B5B8_.get(4).getHeader()
+                );
+
+                BlockHeadersMessage response = new BlockHeadersMessage(headers);
+                sendMessage(response);
+            }
+
+        };
+
+        setupPeers();
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+        Blockchain blockchainB = (Blockchain) ethereumB.getBlockchain();
+
+        for (Block b : forkB1B5B8_) {
+            blockchainA.tryToConnect(b);
+        }
+        for (Block b : mainB1B10) {
+            blockchainB.tryToConnect(b);
+            if (b.isEqual(b9)) break;
+        }
+
+        // A == b8', B == b10
+
+        final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
+        ethereumA.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onRecvMessage(Channel channel, Message message) {
+                if (message instanceof DisconnectMessage) {
+                    semaphoreDisconnect.countDown();
+                }
+            }
+        });
+
+        ethA.sendNewBlockHashes(b8_);
+
+        semaphoreDisconnect.await(10, SECONDS);
+
+        // check if peer was dropped
+        if(semaphoreDisconnect.getCount() > 0) {
+            fail("PeerA is not dropped");
+        }
+    }
 
     private void setupPeers() throws InterruptedException {
 

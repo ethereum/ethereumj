@@ -3,6 +3,7 @@ package org.ethereum.core;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +69,7 @@ public class BlockHeaderWrapper {
     public String toString() {
         return "BlockHeaderWrapper {" +
                 "header=" + header +
-                ", nodeId=" + Arrays.toString(nodeId) +
+                ", nodeId=" + Hex.toHexString(nodeId) +
                 '}';
     }
 }
