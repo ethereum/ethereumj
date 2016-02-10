@@ -125,7 +125,7 @@ public class SystemProperties {
                     setComments(false).setJson(false)));
 
             Properties props = new Properties();
-            InputStream is = ClassLoader.getSystemResourceAsStream("version.properties");
+            InputStream is = getClass().getResourceAsStream("/version.properties");
             props.load(is);
             this.projectVersion = props.getProperty("versionNumber");
             this.projectVersion = this.projectVersion.replaceAll("'", "");
