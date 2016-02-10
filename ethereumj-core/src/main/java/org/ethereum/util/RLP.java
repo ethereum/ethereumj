@@ -598,6 +598,8 @@ public class RLP {
             }
         } catch (Exception e) {
             throw new RuntimeException("RLP wrong encoding (" + Hex.toHexString(msgData, startPos, endPos - startPos) + ")", e);
+        } catch (OutOfMemoryError e) {
+            throw new RuntimeException("Invalid RLP (excessive mem allocation while parsing) (" + Hex.toHexString(msgData, startPos, endPos - startPos) + ")", e);
         }
     }
 

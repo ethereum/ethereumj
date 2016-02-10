@@ -42,7 +42,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private boolean PERSIST;
 
     private static final long LISTENER_REFRESH_RATE = 1000;
-    private static final long DB_COMMIT_RATE = 10000;
+    private static final long DB_COMMIT_RATE = 1 * 60 * 1000;
     private static final int DB_MAX_LOAD_NODES = 100;
 
     @Autowired

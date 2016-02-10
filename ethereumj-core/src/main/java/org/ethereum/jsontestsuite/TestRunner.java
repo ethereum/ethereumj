@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.core.*;
 
 import org.ethereum.datasource.HashMapDB;
@@ -77,7 +78,8 @@ public class TestRunner {
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener,
+                new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
@@ -183,7 +185,7 @@ public class TestRunner {
             long timestamp = ByteUtil.byteArrayToLong(env.getCurrentTimestamp());
             long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
             byte[] difficulty = env.getCurrentDifficulty();
-            long gaslimit = new BigInteger(env.getCurrentGasLimit()).longValue();
+            byte[] gaslimit = env.getCurrentGasLimit();
 
             // Origin and caller need to exist in order to be able to execute
             if (repository.getAccountState(origin) == null)

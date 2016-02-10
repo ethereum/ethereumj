@@ -72,6 +72,10 @@ public class ByteUtil {
         return data;
     }
 
+    public static BigInteger bytesToBigInteger(byte[] bb) {
+        return new BigInteger(1, bb);
+    }
+
     /**
      * Returns the amount of nibbles that match each other from 0 ...
      * amount will never be larger than smallest input

@@ -2,6 +2,8 @@ package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
 
+import java.math.BigInteger;
+
 import static org.ethereum.config.Constants.GAS_LIMIT_BOUND_DIVISOR;
 
 /**
@@ -18,9 +20,11 @@ public class ParentGasLimitRule extends DependentBlockHeaderRule {
     public boolean validate(BlockHeader header, BlockHeader parent) {
 
         errors.clear();
+        BigInteger headerGasLimit = new BigInteger(1, header.getGasLimit());
+        BigInteger parentGasLimit = new BigInteger(1, parent.getGasLimit());
 
-        if (header.getGasLimit() < parent.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
-            header.getGasLimit() > parent.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
+        if (headerGasLimit.compareTo(parentGasLimit.multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR - 1)).divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR))) < 0 ||
+            headerGasLimit.compareTo(parentGasLimit.multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR + 1)).divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR))) > 0) {
 
             errors.add(String.format(
                     "#%d: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR",

@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
 import org.springframework.util.Assert;
 
@@ -24,6 +25,9 @@ public class TransactionExecutionSummary {
     private List<DataWord> deletedAccounts = emptyList();
     private List<InternalTransaction> internalTransactions = emptyList();
     private Map<DataWord, DataWord> storageDiff = emptyMap();
+
+    private byte[] result;
+    private List<LogInfo> logs;
 
     private boolean failed;
 
@@ -87,6 +91,14 @@ public class TransactionExecutionSummary {
         return failed;
     }
 
+    public byte[] getResult() {
+        return result;
+    }
+
+    public List<LogInfo> getLogs() {
+        return logs;
+    }
+
     public static Builder builderFor(Transaction transaction) {
         return new Builder(transaction);
     }
@@ -137,6 +149,16 @@ public class TransactionExecutionSummary {
 
         public Builder markAsFailed() {
             summary.failed = true;
+            return this;
+        }
+
+        public Builder logs(List<LogInfo> logs) {
+            summary.logs = logs;
+            return this;
+        }
+
+        public Builder result(byte[] result) {
+            summary.result = result;
             return this;
         }
 

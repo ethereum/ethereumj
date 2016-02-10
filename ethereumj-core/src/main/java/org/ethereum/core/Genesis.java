@@ -5,9 +5,11 @@ import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
+import org.ethereum.util.ByteUtil;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -50,7 +52,7 @@ public class Genesis extends Block {
                    long gasUsed, long timestamp,
                    byte[] extraData, byte[] mixHash, byte[] nonce){
         super(parentHash, unclesHash, coinbase, logsBloom, difficulty,
-                number, gasLimit, gasUsed, timestamp, extraData,
+                number, ByteUtil.longToBytesNoLeadZeroes(gasLimit), gasUsed, timestamp, extraData,
                 mixHash, nonce, null, null);
     }
 

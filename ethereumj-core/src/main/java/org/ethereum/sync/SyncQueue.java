@@ -89,9 +89,10 @@ public class SyncQueue {
 
         while (1==1){
 
+            BlockWrapper wrapper = null;
             try {
-                BlockWrapper wrapper = blockQueue.take();
-                logger.info("BlockQueue size: {}", blockQueue.size());
+                wrapper = blockQueue.take();
+                logger.debug("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
 
                 // In case we don't have a parent on the chain
@@ -123,7 +124,8 @@ public class SyncQueue {
                 }
 
             } catch (Throwable e) {
-                logger.error("Error: {} ", e);
+                logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
+                logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
             }
 
         }

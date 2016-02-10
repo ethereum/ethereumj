@@ -2,7 +2,6 @@ package org.ethereum.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
@@ -10,8 +9,14 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
+import static org.apache.commons.lang3.StringUtils.stripEnd;
+import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 /**
@@ -166,8 +171,13 @@ public class CallTransaction {
         }
 
         @Override
-        public Object decode(byte[] encoded, int offset) {
-            throw new UnsupportedOperationException();
+        public Object[] decode(byte[] encoded, int offset) {
+            Object[] result = new Object[size];
+            for (int i = 0; i < size; i++) {
+                result[i] = elementType.decode(encoded, offset + i * elementType.getFixedSize());
+            }
+
+            return result;
         }
 
         @Override
@@ -406,16 +416,19 @@ public class CallTransaction {
     }
 
     public static class Param {
+        public boolean indexed;
         public String name;
         public Type type;
     }
 
     enum FunctionType {
         constructor,
-        function
+        function,
+        event
     }
 
     public static class Function {
+        public boolean anonymous;
         public boolean constant;
         public String name;
         public Param[] inputs;
@@ -459,29 +472,48 @@ public class CallTransaction {
             return ByteUtil.merge(bb);
         }
 
-        public Object[] decodeResult(byte[] encodedRet) {
-            Object[] ret = new Object[outputs.length];
+        private Object[] decode(byte[] encoded, Param[] params) {
+            Object[] ret = new Object[params.length];
 
             int off = 0;
-            for (int i = 0; i < outputs.length; i++) {
-                if (outputs[i].type.isDynamicType()) {
-                    ret[i] = outputs[i].type.decode(encodedRet, IntType.decodeInt(encodedRet, off).intValue());
+            for (int i = 0; i < params.length; i++) {
+                if (params[i].type.isDynamicType()) {
+                    ret[i] = params[i].type.decode(encoded, IntType.decodeInt(encoded, off).intValue());
                 } else {
-                    ret[i] = outputs[i].type.decode(encodedRet, off);
+                    ret[i] = params[i].type.decode(encoded, off);
                 }
-                off += outputs[i].type.getFixedSize();
+                off += params[i].type.getFixedSize();
             }
             return ret;
         }
 
-        public byte[] encodeSignature() {
-            String sig = name + "(";
-            for (Param input : inputs) {
-                sig += input.type.getCanonicalName() + ",";
+        public Object[] decode(byte[] encoded) {
+            return decode(subarray(encoded, 4, encoded.length), inputs);
+        }
+
+        public Object[] decodeResult(byte[] encodedRet) {
+            return decode(encodedRet, outputs);
+        }
+
+        public String formatSignature() {
+            StringBuilder paramsTypes = new StringBuilder();
+            for (Param param : inputs) {
+                paramsTypes.append(param.type.getCanonicalName()).append(",");
             }
-            sig = sig.endsWith(",") ? sig.substring(0, sig.length() - 1) : sig;
-            sig = sig + ")";
-            return Arrays.copyOfRange(SHA3Helper.sha3(sig.getBytes()), 0, 4);
+
+            return format("%s(%s)", name, stripEnd(paramsTypes.toString(), ","));
+        }
+
+        public byte[] encodeSignature() {
+            String signature = formatSignature();
+            byte[] sha3Fingerprint = sha3(signature.getBytes());
+
+            return Arrays.copyOfRange(sha3Fingerprint, 0, 4);
+        }
+
+        @Override
+        public String toString() {
+            return formatSignature();
         }
 
         public static Function fromJsonInterface(String json) {
@@ -493,16 +525,25 @@ public class CallTransaction {
         }
 
         public static Function fromSignature(String funcName, String ... paramTypes) {
+            return fromSignature(funcName, paramTypes, new String[0]);
+        }
+
+        public static Function fromSignature(String funcName, String[] paramTypes, String[] resultTypes) {
             Function ret = new Function();
             ret.name = funcName;
             ret.constant = false;
             ret.type = FunctionType.function;
-            ret.outputs = new Param[0];
             ret.inputs = new Param[paramTypes.length];
             for (int i = 0; i < paramTypes.length; i++) {
                 ret.inputs[i] = new Param();
                 ret.inputs[i].name = "param" + i;
                 ret.inputs[i].type = Type.getType(paramTypes[i]);
+            }
+            ret.outputs = new Param[resultTypes.length];
+            for (int i = 0; i < resultTypes.length; i++) {
+                ret.outputs[i] = new Param();
+                ret.outputs[i].name = "res" + i;
+                ret.outputs[i].type = Type.getType(resultTypes[i]);
             }
             return ret;
         }
@@ -519,4 +560,5 @@ public class CallTransaction {
 
         public Function[] functions;
     }
+
 }

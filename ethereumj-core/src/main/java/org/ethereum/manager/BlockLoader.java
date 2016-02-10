@@ -3,7 +3,11 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Blockchain;
+import org.ethereum.validator.BlockHeaderValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +18,10 @@ import java.util.Scanner;
 
 @Component
 public class BlockLoader {
+    private static final Logger logger = LoggerFactory.getLogger("blockqueue");
+
+    @Autowired
+    private BlockHeaderValidator headerValidator;
 
     @Autowired
     SystemProperties config;
@@ -41,6 +49,11 @@ public class BlockLoader {
 
                 long t1 = System.nanoTime();
                 if (block.getNumber() >= blockchain.getBestBlock().getNumber()){
+
+                    if (block.getNumber() > 0 && !isValid(block.getHeader())) {
+                        break;
+                    };
+
                     blockchain.tryToConnect(block);
                     long t1_ = System.nanoTime();
 
@@ -63,5 +76,18 @@ public class BlockLoader {
         }
 
         System.out.println(" * Done * ");
+    }
+
+    private boolean isValid(BlockHeader header) {
+
+        if (!headerValidator.validate(header)) {
+
+            if (logger.isErrorEnabled())
+                headerValidator.logErrors(logger);
+
+            return false;
+        }
+
+        return true;
     }
 }

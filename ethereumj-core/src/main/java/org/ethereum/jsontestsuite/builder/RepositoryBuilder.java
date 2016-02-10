@@ -34,7 +34,8 @@ public class RepositoryBuilder {
             detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
-        RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB().setClearOnClose(false),
+                new HashMapDB().setClearOnClose(false));
         Repository track = repositoryDummy.startTracking();
         track.updateBatch(stateBatch, detailsBatch);
         track.commit();

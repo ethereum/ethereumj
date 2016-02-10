@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -38,7 +39,7 @@ public class ImportLightTest {
     public void createFork() throws Exception {
         // importing forked chain
         BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
-                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
 
@@ -84,7 +85,7 @@ public class ImportLightTest {
         // Testing that blocks containing tx with invalid nonce are rejected
 
         BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
-                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
 
@@ -179,7 +180,8 @@ public class ImportLightTest {
                 repository,
                 new Wallet(),
                 new AdminInfo(),
-                listener
+                listener,
+                new CommonConfig().parentHeaderValidator()
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);

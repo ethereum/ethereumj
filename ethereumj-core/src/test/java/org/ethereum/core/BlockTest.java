@@ -60,26 +60,16 @@ public class BlockTest {
         // from RLP encoding
         byte[] genesisBytes = Hex.decode(GENESIS_RLP);
         Block genesisFromRLP = new Block(genesisBytes);
-        Block genesis = Genesis.getInstance();
+        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
         assertEquals(Hex.toHexString(genesis.getHash()),   Hex.toHexString(genesisFromRLP.getHash()));
         assertEquals(Hex.toHexString(genesis.getParentHash()), Hex.toHexString(genesisFromRLP.getParentHash()));
         assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
     }
 
-    String prev = CONFIG.genesisInfo();
-    @Before
-    public void beforeEach() {
-        CONFIG.setGenesisInfo("olympic.json");
-    }
-    @After
-    public void afterEach() {
-        CONFIG.setGenesisInfo(prev);
-    }
-
     @Test
     public void testGenesisFromNew() {
 
-        Block genesis = GenesisLoader.loadGenesis();
+        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
         logger.info(genesis.toString());
 
         logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));
@@ -91,7 +81,7 @@ public class BlockTest {
 
     @Test
     public void testGenesisPremineData() {
-        Genesis genesis = (Genesis) Genesis.getInstance();
+        Genesis genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
         Collection<AccountState> accounts = genesis.getPremine().values();
         assertTrue(accounts.size() == 12);
     }

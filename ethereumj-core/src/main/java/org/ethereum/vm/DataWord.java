@@ -102,6 +102,17 @@ public class DataWord implements Comparable<DataWord> {
     }
 
     /**
+     * In case of int overflow returns Integer.MAX_VALUE
+     * otherwise works as #intValue()
+     */
+    public int intValueSafe() {
+        int bytesOccupied = bytesOccupied();
+        int intValue = intValue();
+        if (bytesOccupied > 4 || intValue < 0) return Integer.MAX_VALUE;
+        return intValue;
+    }
+
+    /**
      * Converts this DataWord to a long, checking for lost information.
      * If this DataWord is out of the possible range for a long result
      * then an ArithmeticException is thrown.
@@ -120,6 +131,16 @@ public class DataWord implements Comparable<DataWord> {
         return longVal;
     }
 
+    /**
+     * In case of long overflow returns Long.MAX_VALUE
+     * otherwise works as #longValue()
+     */
+    public long longValueSafe() {
+        int bytesOccupied = bytesOccupied();
+        long longValue = longValue();
+        if (bytesOccupied > 8 || longValue < 0) return Long.MAX_VALUE;
+        return longValue;
+    }
 
     public BigInteger sValue() {
         return new BigInteger(data);

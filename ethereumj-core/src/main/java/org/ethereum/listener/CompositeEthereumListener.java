@@ -8,8 +8,8 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author Roman Mandeleil
@@ -18,10 +18,13 @@ import java.util.List;
 @Component(value = "EthereumListener")
 public class CompositeEthereumListener implements EthereumListener {
 
-    List<EthereumListener> listeners = new ArrayList<>();
+    List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
 
     public void addListener(EthereumListener listener) {
         listeners.add(listener);
+    }
+    public void removeListener(EthereumListener listener) {
+        listeners.remove(listener);
     }
 
     @Override

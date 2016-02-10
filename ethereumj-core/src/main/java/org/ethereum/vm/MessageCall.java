@@ -2,18 +2,36 @@ package org.ethereum.vm;
 
 /**
  * A wrapper for a message call from a contract to another account.
- * This can either be a normal CALL, STATELESS call or POST call.
+ * This can either be a normal CALL, CALLCODE, DELEGATECALL or POST call.
  */
 public class MessageCall {
 
     public enum MsgType {
         CALL,
-        STATELESS,
-        POST
+        CALLCODE,
+        DELEGATECALL,
+        POST;
+
+        /**
+         *  Indicates that the code is executed in the context of the caller
+         */
+        public boolean isStateless() {
+            return this == CALLCODE || this == DELEGATECALL;
+        }
+
+        public static MsgType fromOpcode(OpCode opCode) {
+            switch (opCode) {
+                case CALL: return CALL;
+                case CALLCODE: return CALLCODE;
+                case DELEGATECALL: return DELEGATECALL;
+                default:
+                    throw new RuntimeException("Invalid call opCode: " + opCode);
+            }
+        }
     }
 
     /**
-     * Type of internal call. Either CALL, STATELESS or POST
+     * Type of internal call. Either CALL, CALLCODE or POST
      */
     private final MsgType type;
 

@@ -9,7 +9,6 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.sync.listener.SyncListener;
 import org.ethereum.sync.listener.SyncListenerAdapter;
-import org.ethereum.sync.strategy.LongSync;
 import org.ethereum.sync.strategy.SyncStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

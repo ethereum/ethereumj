@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
@@ -43,7 +44,7 @@ public class PendingStateTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        blockchain = new BlockchainImpl(blockStore, repository, new Wallet(), new AdminInfo(), listener);
+        blockchain = new BlockchainImpl(blockStore, repository, new Wallet(), new AdminInfo(), listener, new CommonConfig().parentHeaderValidator());
         PendingStateImpl pendingState = new PendingStateImpl(listener, (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
@@ -99,7 +100,7 @@ public class PendingStateTest {
         // and the new block contains another set of transactions
 
         BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
-                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
 
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);

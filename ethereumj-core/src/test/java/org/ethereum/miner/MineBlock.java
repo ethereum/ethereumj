@@ -29,7 +29,7 @@ public class MineBlock {
     @Test
     public void mine1() throws Exception {
         BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
-                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
 

@@ -32,7 +32,7 @@ public class HeaderStoreTest {
         BlockHeaderWrapper[] ret = new BlockHeaderWrapper[headCnt];
         for (int i = 0; i < ret.length; i++) {
             ret[i] = new BlockHeaderWrapper(new BlockHeader(new byte[0], new byte[0], new byte[0], new byte[0], new byte[0],
-                    cnt.getAndIncrement(), 0, 0, 0, new byte[0], new byte[0], new byte[0]), null);
+                    cnt.getAndIncrement(), new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]), null);
         }
         return ret;
     }

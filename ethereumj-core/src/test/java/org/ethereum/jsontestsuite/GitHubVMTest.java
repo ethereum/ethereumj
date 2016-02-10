@@ -17,17 +17,14 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    //Last known good commit: 5af1002b96f34cd2c9252c1a6636826d47411ccd
-    public String shacommit = "5af1002b96f34cd2c9252c1a6636826d47411ccd";
+    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
-    //@Ignore
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, "balance0");
     }
 
-    //@Ignore
     @Test
     public void testArithmeticFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -37,7 +34,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -45,7 +41,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testBlockInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -53,16 +48,13 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("env1");
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -94,7 +86,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testVMLogGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -102,7 +93,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore
     @Test // testing full suite
     public void testPerformanceFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -110,7 +100,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testPushDupSwapFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -118,7 +107,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testShaFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -135,7 +123,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testVMGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -143,12 +130,11 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    //@Ignore
     @Test // testing full suite
     public void testRandomVMGitHub() throws ParseException {
 
-        String sha = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
-        List<String> fileNames = getFileNamesForTreeSha(sha);
+        String shacommit = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
+        List<String> fileNames = getFileNamesForTreeSha(shacommit);
         List<String> excludedFiles =
                 Arrays.asList(
                         ""

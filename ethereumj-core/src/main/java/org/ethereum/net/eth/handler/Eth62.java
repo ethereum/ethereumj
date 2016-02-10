@@ -1,7 +1,6 @@
 package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.net.eth.EthVersion;
@@ -50,12 +49,6 @@ public class Eth62 extends EthHandler {
     private final static Logger loggerNet = LoggerFactory.getLogger("net");
 
     @Autowired
-    protected SystemProperties config;
-
-    @Autowired
-    protected Blockchain blockchain;
-
-    @Autowired
     protected BlockStore blockstore;
 
     @Autowired
@@ -78,7 +71,6 @@ public class Eth62 extends EthHandler {
      * is set on header retrieving start
      */
     protected byte[] lastHashToAsk;
-    protected int maxHashesAsk;
 
     /**
      * Hash of the eldest header fetched from remote peer
@@ -584,7 +576,7 @@ public class Eth62 extends EthHandler {
 
         Block latest = queue.getLastBlock();
         if (latest == null) {
-            latest = blockchain.getBestBlock();
+            latest = bestBlock;
         }
 
         eldestHash = latest.getHash();
@@ -653,7 +645,7 @@ public class Eth62 extends EthHandler {
 
         logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
-        long bestNumber = blockchain.getBestBlock().getNumber();
+        long bestNumber = bestBlock.getNumber();
         long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE + 1);
         sendGetBlockHeaders(blockNumber, min(FORK_COVER_BATCH_SIZE, (int) (bestNumber - blockNumber + 1)));
     }
@@ -712,14 +704,14 @@ public class Eth62 extends EthHandler {
         }
 
         // start header sync
-        sendGetBlockHeaders(blockchain.getBestBlock().getNumber() + 1, maxHashesAsk);
+        sendGetBlockHeaders(bestBlock.getNumber() + 1, maxHashesAsk);
     }
 
     private boolean isNegativeGap() {
 
         if (gapBlock == null) return false;
 
-        return gapBlock.getNumber() <= blockchain.getBestBlock().getNumber();
+        return gapBlock.getNumber() <= bestBlock.getNumber();
     }
 
     /*************************

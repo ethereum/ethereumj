@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -115,7 +116,8 @@ public class PendingStateLongRunTest {
                 repository,
                 new Wallet(),
                 new AdminInfo(),
-                listener
+                listener,
+                new CommonConfig().parentHeaderValidator()
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
