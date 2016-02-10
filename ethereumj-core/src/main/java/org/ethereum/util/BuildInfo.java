@@ -15,7 +15,7 @@ public class BuildInfo {
     public static void printInfo(){
         try {
             Properties props = new Properties();
-            InputStream is = ClassLoader.getSystemResourceAsStream("build-info.properties");
+            InputStream is = BuildInfo.class.getResourceAsStream("/build-info.properties");
 
             if (is != null) {
                 props.load(is);

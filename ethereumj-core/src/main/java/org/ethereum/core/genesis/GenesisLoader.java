@@ -34,7 +34,7 @@ public class GenesisLoader {
     public static Genesis loadGenesis(SystemProperties config)  {
         String genesisFile = config.genesisInfo();
 
-        InputStream is = ClassLoader.getSystemResourceAsStream("genesis/" + genesisFile);
+        InputStream is = GenesisLoader.class.getResourceAsStream("/genesis/" + genesisFile);
         return loadGenesis(is);
     }
 

@@ -39,7 +39,7 @@ public class ImportLightTest {
     public void createFork() throws Exception {
         // importing forked chain
         BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
-                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
 
@@ -85,7 +85,7 @@ public class ImportLightTest {
         // Testing that blocks containing tx with invalid nonce are rejected
 
         BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
-                ClassLoader.getSystemResourceAsStream("genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
 
