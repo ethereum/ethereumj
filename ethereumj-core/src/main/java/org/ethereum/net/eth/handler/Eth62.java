@@ -355,6 +355,8 @@ public class Eth62 extends EthHandler {
             processInitHeaders(received);
         else if (!syncDone)
             processHeaderRetrieving(received);
+        else if (syncState != HASH_RETRIEVING)
+            processNewBlockHeaders(received);
         else if (!commonAncestorFound)
             processForkCoverage(received);
         else
@@ -516,6 +518,14 @@ public class Eth62 extends EthHandler {
                     queue.headerStoreSize()
             );
         }
+    }
+
+    protected void processNewBlockHeaders(List<BlockHeader> received) {
+
+        logger.debug("Adding " + received.size() + " headers to the queue.");
+
+        if (!queue.validateAndAddHeaders(received, channel.getNodeId()))
+            dropConnection();
     }
 
     protected void processGapRecovery(List<BlockHeader> received) {
@@ -931,13 +941,18 @@ public class Eth62 extends EthHandler {
                 if (!Arrays.equals(eldestHash, first.getParentHash())) {
                     if (logger.isInfoEnabled()) logger.info(
                             "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
-                            channel.getPeerIdShort(), headersRequest, headers.get(0).getNumber(),
-                            toHexString(headers.get(0).getParentHash()), eldestHash
+                            channel.getPeerIdShort(), headersRequest, toHexString(headers.get(0).getParentHash()),
+                            headers.get(0).getNumber(), toHexString(eldestHash)
                     );
                     return false;
                 }
             }
         }
+
+        // if peer is not in HASH_RETRIEVING state
+        // then it must be a response after new block hashes come
+        // skip next checks
+        if (syncState != HASH_RETRIEVING) return true;
 
         // numbers and ancestors
         if (headersRequest.isReverse()) {
@@ -961,8 +976,9 @@ public class Eth62 extends EthHandler {
                 if (!Arrays.equals(prev.getParentHash(), cur.getHash())) {
                     if (logger.isInfoEnabled()) logger.info(
                             "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
-                            channel.getPeerIdShort(), headersRequest, prev.getParentHash(), prev.getNumber(), cur.getHash()
-                    );
+                            channel.getPeerIdShort(), headersRequest, toHexString(prev.getParentHash()),
+                            prev.getNumber(), toHexString(cur.getHash())
+                            );
                     return false;
                 }
             }
