@@ -57,14 +57,11 @@ public class Genesis extends Block {
     }
 
     public static Block getInstance() {
-        return getInstance(SystemProperties.CONFIG);
+        return SystemProperties.CONFIG.getGenesis();
     }
 
     public static Block getInstance(SystemProperties config) {
-        if (instance == null) {
-            instance = GenesisLoader.loadGenesis(config);
-        }
-        return instance;
+        return config.getGenesis();
     }
 
 

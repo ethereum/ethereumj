@@ -5,8 +5,6 @@ import java.util.List;
 
 public interface Blockchain {
 
-    public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
-
     public long getSize();
 
     public boolean add(Block block);

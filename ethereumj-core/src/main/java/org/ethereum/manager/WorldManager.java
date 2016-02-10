@@ -162,13 +162,13 @@ public class WorldManager {
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
 
-            blockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
 
-            blockchain.setBestBlock(Genesis.getInstance());
-            blockchain.setTotalDifficulty(Genesis.getInstance().getCumulativeDifficulty());
+            blockchain.setBestBlock(Genesis.getInstance(config));
+            blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
 
-            listener.onBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>() );
-            repository.dumpState(Genesis.getInstance(), 0, 0, null);
+            listener.onBlock(Genesis.getInstance(config), new ArrayList<TransactionReceipt>() );
+            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");
         } else {

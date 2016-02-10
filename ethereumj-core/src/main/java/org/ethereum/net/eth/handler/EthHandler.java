@@ -202,7 +202,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         ethereumListener.onEthStatusUpdated(channel, msg);
 
         try {
-            if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
+            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())
                     || msg.getProtocolVersion() != version.getCode()) {
                 loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 ethState = EthState.STATUS_FAILED;
@@ -237,7 +237,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = bestBlock.getHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
         sendMessage(msg);
     }
 

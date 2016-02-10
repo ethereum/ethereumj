@@ -4,6 +4,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.MessageCodec;
@@ -79,6 +81,8 @@ public class SystemProperties {
 
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
+
+    private Genesis genesis;
 
     public SystemProperties() {
         this(ConfigFactory.empty());
@@ -679,6 +683,13 @@ public class SystemProperties {
     @ValidateMe
     public boolean isMineFullDataset() {
         return config.getBoolean("mine.fullDataSet");
+    }
+
+    public Genesis getGenesis() {
+        if (genesis == null) {
+            genesis = GenesisLoader.loadGenesis(this);
+        }
+        return genesis;
     }
 
     public String dump() {
