@@ -40,7 +40,7 @@ public class BlockMiner {
     private Blockchain blockchain;
 
     @Autowired
-    private IndexedBlockStore blockStore;
+    private BlockStore blockStore;
 
     @Autowired
     private Ethereum ethereum;
@@ -179,22 +179,26 @@ public class BlockMiner {
         knownUncles.addAll(ancestors);
         knownUncles.add(new ByteArrayWrapper(mineBest.getHash()));
 
-        outer:
-        while(mineChain.getNumber() > limitNum) {
-            List<Block> genBlocks = blockStore.getBlocksByNumber(mineChain.getNumber());
-            if (genBlocks.size() > 1) {
-                for (Block uncleCandidate : genBlocks) {
-                    if (!knownUncles.contains(new ByteArrayWrapper(uncleCandidate.getHash())) &&
-                        ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate.getParentHash()).getHash()))) {
+        if (blockStore instanceof IndexedBlockStore) {
+            outer:
+            while (mineChain.getNumber() > limitNum) {
+                List<Block> genBlocks = ((IndexedBlockStore) blockStore).getBlocksByNumber(mineChain.getNumber());
+                if (genBlocks.size() > 1) {
+                    for (Block uncleCandidate : genBlocks) {
+                        if (!knownUncles.contains(new ByteArrayWrapper(uncleCandidate.getHash())) &&
+                                ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate.getParentHash()).getHash()))) {
 
-                        ret.add(uncleCandidate.getHeader());
-                        if (ret.size() >= UNCLE_LIST_LIMIT) {
-                            break outer;
+                            ret.add(uncleCandidate.getHeader());
+                            if (ret.size() >= UNCLE_LIST_LIMIT) {
+                                break outer;
+                            }
                         }
                     }
                 }
+                mineChain = blockStore.getBlockByHash(mineChain.getParentHash());
             }
-            mineChain = blockStore.getBlockByHash(mineChain.getParentHash());
+        } else {
+            logger.warn("BlockStore is not instance of IndexedBlockStore: miner can't include uncles");
         }
         return ret;
     }
