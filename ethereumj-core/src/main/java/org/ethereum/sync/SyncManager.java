@@ -456,6 +456,7 @@ public class SyncManager {
     }
 
     private void removeUselessPeers() {
+        List<Channel> removed = new ArrayList<>();
         for (Channel peer : pool) {
             if (peer.hasBlocksLack()) {
                 logger.info("Peer {}: has no more blocks, ban", peer.getPeerIdShort());
