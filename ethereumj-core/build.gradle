@@ -26,6 +26,10 @@ sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
 applicationDefaultJvmArgs = ["-server", "-Xss32m", "-Xms3g", "-XX:+UseCompressedOops", "-XX:-OmitStackTraceInFastThrow"]
+if (project.hasProperty("mainClass")) {
+    mainClassName = mainClass
+}
+
 
 ext.generatedSrcDir = file('src/gen/java')
 
