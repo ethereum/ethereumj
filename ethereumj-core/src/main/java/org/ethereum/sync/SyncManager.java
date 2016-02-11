@@ -141,12 +141,20 @@ public class SyncManager {
 
                 logger.debug("Switch to Short sync, best {} vs new {}", bestNumber, newNumber);
 
+                // stop master
+                Channel master = pool.getMaster();
+                if (master != null) master.changeSyncState(IDLE);
+
                 longSync.stop();
                 onSyncDone(true);
 
             } else if (!longSync.inProgress() && diff > BACKWARD_SWITCH_LIMIT) {
 
                 logger.debug("Switch to Long sync, best {} vs new {}", bestNumber, newNumber);
+
+                // stop master
+                Channel master = pool.getMaster();
+                if (master != null) master.changeSyncState(IDLE);
 
                 longSync.start();
                 onSyncDone(false);
