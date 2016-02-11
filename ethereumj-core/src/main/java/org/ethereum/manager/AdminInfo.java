@@ -43,7 +43,7 @@ public class AdminInfo {
 
     public Long getExecAvg(){
 
-        if (blockExecTime.size() == 0) return 0L;
+        if (blockExecTime.isEmpty()) return 0L;
 
         long sum = 0;
         for (int i = 0; i < blockExecTime.size(); ++i){
