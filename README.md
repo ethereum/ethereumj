@@ -8,11 +8,71 @@
 ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level information about Ethereum and its goals, visit [ethereum.org](https://ethereum.org). The [ethereum white paper](https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper) provides a complete conceptual overview, and the [yellow paper](http://gavwood.com/Paper.pdf) provides a formal definition of the protocol.
 
 # Check our blog 
-
 http://ethereumj.io
 
+# Running EthereumJ
+
+##### Adding as maven artifact to your project: 
+```
+   <repositories>
+     <repository>
+       <id>oss.jfrog.org</id>
+       <name>Repository from Bintray</name>
+       <url>http://dl.bintray.com/ethereum/maven</url>
+     </repository>
+   </repositories>
+ 
+   <dependency>
+     <groupId>org.ethereum</groupId>
+     <artifactId>ethereumj-core</artifactId>
+     <version>1.1.0-RELEASE</version>
+     <type>zip</type>
+   </dependency>
+```
+
+or gradle: 
+```
+   repositories {
+       maven {url "http://dl.bintray.com/ethereum/maven"}
+   }
+   compile ("org.ethereum:ethereumj-core:1.1.0-RELEASE")
+```
+
+As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
+
+##### Running from command line:
+```
+> git clone https://github.com/ethereum/ethereumj
+> cd ethereumj
+> gradlew run [-PmainClass=<sample class>]
+```
+
+##### Importing project to IntelliJ IDEA: 
+```
+> git clone https://github.com/ethereum/ethereumj
+> cd ethereumj
+> gradlew build
+```
+  IDEA: 
+* File -> New -> Project from existing sources…
+* Select ethereumj/build.gradle
+* Dialog “Import Project from gradle”: press “OK”
+* After building run either `org.ethereum.Start`, one of `org.ethereum.samples.*` or create your own main. 
+
+# Configuring EthereumJ
+
+For reference on all existing options, their description and defaults you may refer to the default config `ethereumj.conf` (you may find it in either the library jar or in the source tree `ethereum-core/src/main/resources`) 
+To override needed options you may use one of the following ways: 
+* put your options to the `<working dir>/config/ethereumj.conf` file
+* put `user.conf` to the root of your classpath (as a resource) 
+* put your options to any file and supply it via `-Dethereumj.conf.file=<your config>`
+* programmatically by using `SystemProperties.CONFIG.override*()`
+* programmatically using by overriding Spring `SystemProperties` bean 
+
+Note that don’t need to put all the options to your custom config, just those you want to override. 
 # Contact
 Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj)
 
 # License
 ethereumj is released under the [MIT license](LICENSE).
+
