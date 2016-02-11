@@ -30,7 +30,6 @@ import static org.ethereum.config.Constants.UNCLE_LIST_LIMIT;
 /**
  * Created by Anton Nashatyrev on 10.12.2015.
  */
-@Lazy
 @Component
 public class BlockMiner {
     private static final Logger logger = LoggerFactory.getLogger("mine");
@@ -79,7 +78,20 @@ public class BlockMiner {
             public void onPendingStateChanged(PendingState pendingState) {
                 BlockMiner.this.onPendingStateChanged();
             }
+
+            @Override
+            public void onSyncDone() {
+                if (config.minerStart() && config.isSyncEnabled()) {
+                    logger.info("Sync complete, start mining...");
+                    startMining();
+                }
+            }
         });
+
+        if (config.minerStart() && !config.isSyncEnabled()) {
+            logger.info("Sync disabled, start mining now...");
+            startMining();
+        }
     }
 
     public void setFullMining(boolean fullMining) {
@@ -105,7 +117,6 @@ public class BlockMiner {
     }
 
     protected List<Transaction> getAllPendingTransactions() {
-//        List<Transaction> ret = new ArrayList<>();
         PendingStateImpl.TransactionSortedSet ret = new PendingStateImpl.TransactionSortedSet();
         ret.addAll(pendingState.getPendingTransactions());
         ret.addAll(pendingState.getWireTransactions());

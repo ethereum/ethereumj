@@ -647,6 +647,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean minerStart() {
+        return config.getBoolean("mine.start");
+    }
+
+    @ValidateMe
     public byte[] getMinerCoinbase() {
         String sc = config.getString("mine.coinbase");
         byte[] c = Hex.decode(sc);
