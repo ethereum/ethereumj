@@ -14,6 +14,7 @@ import java.util.HashSet;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
+@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
