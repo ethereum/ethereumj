@@ -504,6 +504,7 @@ public class SystemProperties {
                 ECKey key = new ECKey().decompress();
                 props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
                 props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
+                file.getParentFile().mkdirs();
                 props.store(new FileWriter(file), "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
                 logger.info("New nodeID generated: " + props.getProperty("nodeId"));
                 logger.info("Generated nodeID and its private key stored in " + file);
