@@ -185,9 +185,15 @@ public class BlockQueueMem implements BlockQueue {
 
         synchronized (index) {
 
+            boolean hasSent = false;
+
             for (Long idx : index) {
                 BlockWrapper b = blocks.get(idx);
-                if (b.sentBy(nodeId)) removed.add(idx);
+
+                if (!hasSent) {
+                    hasSent = b.sentBy(nodeId);
+                }
+                if (hasSent) removed.add(idx);
             }
 
             blocks.keySet().removeAll(removed);
@@ -198,7 +204,7 @@ public class BlockQueueMem implements BlockQueue {
             if (removed.isEmpty()) {
                 logger.debug("0 blocks are dropped out");
             } else {
-                logger.debug("[{}..{}] blocks are dropped out", removed.get(0), removed.get(removed.size() - 1));
+                logger.debug("{} blocks [{}..{}] are dropped out", removed.size(), removed.get(0), removed.get(removed.size() - 1));
             }
         }
     }

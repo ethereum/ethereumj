@@ -120,9 +120,14 @@ public class HeaderStoreMem implements HeaderStore {
 
         synchronized (index) {
 
+            boolean hasSent = false;
+
             for (Long idx : index) {
                 BlockHeaderWrapper h = headers.get(idx);
-                if (h.sentBy(nodeId)) removed.add(idx);
+                if (!hasSent) {
+                    hasSent = h.sentBy(nodeId);
+                }
+                if (hasSent) removed.add(idx);
             }
 
             headers.keySet().removeAll(removed);
@@ -133,7 +138,7 @@ public class HeaderStoreMem implements HeaderStore {
             if (removed.isEmpty()) {
                 logger.debug("0 headers are dropped out");
             } else {
-                logger.debug("[{}..{}] headers are dropped out", removed.get(0), removed.get(removed.size() - 1));
+                logger.debug("{} headers [{}..{}] are dropped out", removed.size(), removed.get(0), removed.get(removed.size() - 1));
             }
         }
     }

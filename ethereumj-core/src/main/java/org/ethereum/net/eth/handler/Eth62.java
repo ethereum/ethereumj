@@ -988,10 +988,6 @@ public class Eth62 extends EthHandler {
         // todo: reduce reputation
 
         logger.info("Peer {}: is a bad one, drop", channel.getPeerIdShort());
-
-        queue.dropHeaders(channel.getNodeId());
-        queue.dropBlocks(channel.getNodeId());
-
         disconnect(USELESS_PEER);
     }
 
