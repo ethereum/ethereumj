@@ -216,7 +216,9 @@ bintray {
 }
 
 bintrayUpload.onlyIf {
-    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+    // comment 'false' and uncomment the next line to publish next release
+//    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+    false
 }
 
 install {
