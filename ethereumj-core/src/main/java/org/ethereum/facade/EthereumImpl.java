@@ -48,6 +48,7 @@ import java.util.concurrent.Future;
 public class EthereumImpl implements Ethereum {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
+    private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     @Autowired
     WorldManager worldManager;
@@ -100,6 +101,8 @@ public class EthereumImpl implements Ethereum {
             );
         }
         compositeEthereumListener.addListener(gasPriceTracker);
+
+        gLogger.info("EthereumJ node started: enode://" + Hex.toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
     }
 
     /**

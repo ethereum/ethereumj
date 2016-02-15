@@ -95,7 +95,6 @@ public class PendingStateImpl implements PendingState {
     @PostConstruct
     public void init() {
         this.pendingState = repository.startTracking();
-        best = blockchain.getBestBlock();
     }
 
     @Override
@@ -116,6 +115,9 @@ public class PendingStateImpl implements PendingState {
     }
 
     public Block getBestBlock() {
+        if (best == null) {
+            best = blockchain.getBestBlock();
+        }
         return best;
     }
 
@@ -140,13 +142,14 @@ public class PendingStateImpl implements PendingState {
 
         if (transactions.isEmpty()) return;
 
-        long number = best.getNumber();
+        long number = getBestBlock().getNumber();
         for (Transaction tx : transactions) {
 
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                if (isValid(tx)) {
-                    newPTxs.add(new PendingTransaction(tx, number));
+                PendingTransaction ptx = new PendingTransaction(tx, number);
+                if (isValid(ptx)) {
+                    newPTxs.add(ptx);
                     newTxs.add(tx);
                 } else {
                     logger.info("Non valid TX: " + tx);
@@ -172,17 +175,26 @@ public class PendingStateImpl implements PendingState {
         logger.info("Wire transaction list added: {} new, {} valid of received {}, #of known txs: {}", unknownTx, newTxs.size(), transactions.size(), redceivedTxs.size());
     }
 
-    private boolean isValid(Transaction tx) {
-        BigInteger txNonce = toBI(tx.getNonce());
+    private boolean isValid(PendingTransaction tx) {
+        BigInteger txNonce = toBI(tx.getTransaction().getNonce());
 
         byte[] txSender = tx.getSender();
         AccountState accountState = repository.getAccountState(txSender);
         if (accountState != null) {
             BigInteger currNonce = accountState.getNonce();
-            return currNonce.equals(txNonce);
-        } else {
-            return txNonce.equals(ZERO);
+            if (currNonce.equals(txNonce)) return true;
         }
+        for (int i = wireTransactions.size() - 1; i >=0; i--) {
+            if (Arrays.equals(wireTransactions.get(i).getSender(), txSender)) {
+                long pendingNonce = ByteUtil.byteArrayToLong(wireTransactions.get(i).getTransaction().getNonce());
+                if (txNonce.longValue() == pendingNonce + 1) {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+        }
+        return txNonce.equals(ZERO);
     }
 
     @Override
@@ -223,17 +235,17 @@ public class PendingStateImpl implements PendingState {
     @Override
     public synchronized void processBest(Block newBlock) {
 
-        if (best != null && !best.isParentOf(newBlock)) {
+        if (getBestBlock() != null && !getBestBlock().isParentOf(newBlock)) {
             // need to switch the state to another fork
 
-            Block commonAncestor = findCommonAncestor(best, newBlock);
+            Block commonAncestor = findCommonAncestor(getBestBlock(), newBlock);
 
             if (logger.isDebugEnabled()) logger.debug("New best block from another fork: "
-                    + newBlock.getShortDescr() + ", old best: " + best.getShortDescr()
+                    + newBlock.getShortDescr() + ", old best: " + getBestBlock().getShortDescr()
                     + ", ancestor: " + commonAncestor.getShortDescr());
 
             // first return back the transactions from forked block
-            Block rollback = best;
+            Block rollback = getBestBlock();
             while(!rollback.isEqual(commonAncestor)) {
                 List<PendingTransaction> l = new ArrayList<>();
                 for (Transaction tx : rollback.getTransactionsList()) {

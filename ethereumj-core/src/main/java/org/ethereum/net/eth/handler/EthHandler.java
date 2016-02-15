@@ -56,6 +56,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected int maxHashesAsk;
 
+    protected boolean processTransactions = false;
+
     protected EthHandler(EthVersion version) {
         this.version = version;
     }
@@ -65,6 +67,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         maxHashesAsk = config.maxHashesAsk();
         bestBlock = blockchain.getBestBlock();
         ethereumListener.addListener(listener);
+        // when sync enabled we delay transactions processing until sync is complete
+        processTransactions = !config.isSyncEnabled();
     }
 
     @Override

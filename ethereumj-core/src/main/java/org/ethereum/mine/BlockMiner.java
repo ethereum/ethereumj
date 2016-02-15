@@ -30,7 +30,6 @@ import static org.ethereum.config.Constants.UNCLE_LIST_LIMIT;
 /**
  * Created by Anton Nashatyrev on 10.12.2015.
  */
-@Lazy
 @Component
 public class BlockMiner {
     private static final Logger logger = LoggerFactory.getLogger("mine");
@@ -41,7 +40,7 @@ public class BlockMiner {
     private Blockchain blockchain;
 
     @Autowired
-    private IndexedBlockStore blockStore;
+    private BlockStore blockStore;
 
     @Autowired
     private Ethereum ethereum;
@@ -79,7 +78,20 @@ public class BlockMiner {
             public void onPendingStateChanged(PendingState pendingState) {
                 BlockMiner.this.onPendingStateChanged();
             }
+
+            @Override
+            public void onSyncDone() {
+                if (config.minerStart() && config.isSyncEnabled()) {
+                    logger.info("Sync complete, start mining...");
+                    startMining();
+                }
+            }
         });
+
+        if (config.minerStart() && !config.isSyncEnabled()) {
+            logger.info("Sync disabled, start mining now...");
+            startMining();
+        }
     }
 
     public void setFullMining(boolean fullMining) {
@@ -105,7 +117,6 @@ public class BlockMiner {
     }
 
     protected List<Transaction> getAllPendingTransactions() {
-//        List<Transaction> ret = new ArrayList<>();
         PendingStateImpl.TransactionSortedSet ret = new PendingStateImpl.TransactionSortedSet();
         ret.addAll(pendingState.getPendingTransactions());
         ret.addAll(pendingState.getWireTransactions());
@@ -168,22 +179,26 @@ public class BlockMiner {
         knownUncles.addAll(ancestors);
         knownUncles.add(new ByteArrayWrapper(mineBest.getHash()));
 
-        outer:
-        while(mineChain.getNumber() > limitNum) {
-            List<Block> genBlocks = blockStore.getBlocksByNumber(mineChain.getNumber());
-            if (genBlocks.size() > 1) {
-                for (Block uncleCandidate : genBlocks) {
-                    if (!knownUncles.contains(new ByteArrayWrapper(uncleCandidate.getHash())) &&
-                        ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate.getParentHash()).getHash()))) {
+        if (blockStore instanceof IndexedBlockStore) {
+            outer:
+            while (mineChain.getNumber() > limitNum) {
+                List<Block> genBlocks = ((IndexedBlockStore) blockStore).getBlocksByNumber(mineChain.getNumber());
+                if (genBlocks.size() > 1) {
+                    for (Block uncleCandidate : genBlocks) {
+                        if (!knownUncles.contains(new ByteArrayWrapper(uncleCandidate.getHash())) &&
+                                ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate.getParentHash()).getHash()))) {
 
-                        ret.add(uncleCandidate.getHeader());
-                        if (ret.size() >= UNCLE_LIST_LIMIT) {
-                            break outer;
+                            ret.add(uncleCandidate.getHeader());
+                            if (ret.size() >= UNCLE_LIST_LIMIT) {
+                                break outer;
+                            }
                         }
                     }
                 }
+                mineChain = blockStore.getBlockByHash(mineChain.getParentHash());
             }
-            mineChain = blockStore.getBlockByHash(mineChain.getParentHash());
+        } else {
+            logger.warn("BlockStore is not instance of IndexedBlockStore: miner can't include uncles");
         }
         return ret;
     }

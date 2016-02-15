@@ -126,6 +126,7 @@ public class ChannelManager {
 
     private void process(Channel peer) {
         if(peer.hasEthStatusSucceeded()) {
+            // prohibit transactions processing until main sync is done
             if (syncManager.isSyncDone()) {
                 peer.onSyncDone(true);
             }

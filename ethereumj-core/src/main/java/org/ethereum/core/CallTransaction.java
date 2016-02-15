@@ -558,6 +558,15 @@ public class CallTransaction {
             }
         }
 
+        public Function getByName(String name) {
+            for (Function function : functions) {
+                if (name.equals(function.name)) {
+                    return function;
+                }
+            }
+            return null;
+        }
+
         public Function[] functions;
     }
 

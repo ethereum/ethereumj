@@ -64,7 +64,6 @@ public class Eth62 extends EthHandler {
 
     protected SyncState syncState = IDLE;
     protected boolean syncDone = false;
-    protected boolean processTransactions = false;
 
     /**
      * Last block hash to be asked from the peer,
@@ -149,7 +148,7 @@ public class Eth62 extends EthHandler {
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = blockchain.getBestBlockHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
         sendMessage(msg);
     }
 
@@ -245,7 +244,7 @@ public class Eth62 extends EthHandler {
         ethereumListener.onEthStatusUpdated(channel, msg);
 
         try {
-            if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
+            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())
                     || msg.getProtocolVersion() != version.getCode()) {
                 loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 ethState = EthState.STATUS_FAILED;

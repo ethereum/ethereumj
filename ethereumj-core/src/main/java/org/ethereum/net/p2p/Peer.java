@@ -73,6 +73,9 @@ public class Peer {
 
     @Override
     public int hashCode() {
-        return -1; // override for equals function
+        int result = peerId.hashCode();
+        result = 31 * result + address.hashCode();
+        result = 31 * result + port;
+        return result;
     }
 }

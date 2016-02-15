@@ -13,7 +13,7 @@ allprojects {
 subprojects {
     apply plugin: 'java'
 
-    def config = new ConfigSlurper().parse(new File("ethereumj-core/src/main/resources/version.properties").toURI().toURL())
+    def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
 
     group = 'org.ethereum'
 

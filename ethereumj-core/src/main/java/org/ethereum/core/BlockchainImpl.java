@@ -110,7 +110,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private PendingState pendingState;
 
     @Autowired
-    SystemProperties config;
+    SystemProperties config = SystemProperties.CONFIG;
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -431,7 +431,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (!Arrays.equals(bestBlock.getHash(),
                 block.getParentHash())) return false;
 
-        if (block.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
+        if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
             AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
         }
 
@@ -479,10 +479,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     private boolean needFlush(Block block) {
-        if (CONFIG.cacheFlushMemory() > 0) {
-            return needFlushByMemory(CONFIG.cacheFlushMemory());
-        } else if (CONFIG.cacheFlushBlocks() > 0) {
-            return block.getNumber() % CONFIG.cacheFlushBlocks() == 0;
+        if (config.cacheFlushMemory() > 0) {
+            return needFlushByMemory(config.cacheFlushMemory());
+        } else if (config.cacheFlushBlocks() > 0) {
+            return block.getNumber() % config.cacheFlushBlocks() == 0;
         } else {
             return needFlushByMemory(.7);
         }
@@ -690,7 +690,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         List<TransactionReceipt> receipts = new ArrayList<>();
         if (!block.isGenesis()) {
-            if (!CONFIG.blockChainOnly()) {
+            if (!config.blockChainOnly()) {
 //                wallet.addTransactions(block.getTransactionsList());
                 receipts = applyBlock(block);
 //                wallet.processBlock(block);
@@ -737,7 +737,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (stateLogger.isInfoEnabled())
                 stateLogger.info("tx[{}].receipt: [{}] ", i, Hex.toHexString(receipt.getEncoded()));
 
-            if (block.getNumber() >= CONFIG.traceStartBlock())
+            if (block.getNumber() >= config.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
             receipts.add(receipt);
@@ -753,7 +753,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 Hex.toHexString(repository.getRoot()));
 
 
-        if (block.getNumber() >= CONFIG.traceStartBlock())
+        if (block.getNumber() >= config.traceStartBlock())
             repository.dumpState(block, totalGasUsed, 0, null);
 
         long totalTime = System.nanoTime() - saveTime;
@@ -795,7 +795,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String blockStateRootHash = Hex.toHexString(block.getStateRoot());
         String worldStateRootHash = Hex.toHexString(repository.getRoot());
 
-        if (!SystemProperties.CONFIG.blockChainOnly())
+        if (!config.blockChainOnly())
             if (!blockStateRootHash.equals(worldStateRootHash)) {
 
                 stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
@@ -877,9 +877,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private void recordBlock(Block block) {
 
-        if (!CONFIG.recordBlocks()) return;
+        if (!config.recordBlocks()) return;
 
-        String dumpDir = CONFIG.databaseDir() + "/" + CONFIG.dumpDir();
+        String dumpDir = config.databaseDir() + "/" + config.dumpDir();
 
         File dumpFile = new File(dumpDir + "/blocks-rec.dmp");
         FileWriter fw = null;
