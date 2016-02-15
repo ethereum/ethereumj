@@ -851,6 +851,13 @@ public class Eth62 extends EthHandler {
 
     private boolean isValid(BlockHeadersMessage response) {
 
+        // if peer is not in HASH_RETRIEVING state
+        // then it must be a response after new block hashes come
+        // skip all checks
+        // cause NEW_BLOCK_HASHES comes randomly and we can't be sure
+        // that saved headersRequest corresponds to validating response
+        if (syncState != HASH_RETRIEVING) return true;
+
         List<BlockHeader> headers = response.getBlockHeaders();
 
         // max headers
@@ -916,11 +923,6 @@ public class Eth62 extends EthHandler {
                 return false;
             }
         }
-
-        // if peer is not in HASH_RETRIEVING state
-        // then it must be a response after new block hashes come
-        // skip next checks
-        if (syncState != HASH_RETRIEVING) return true;
 
         // numbers and ancestors
         if (headersRequest.isReverse()) {
