@@ -126,8 +126,6 @@ public class GitHubStateTest {
     public void stPreCompiledContracts() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
 
-        excluded.add("CallEcrecoverCheckLengthWrongV"); // TODO: investigate https://github.com/ethereum/tests/commit/aaf284fa888468f92c7686c754b5dd0b5437f849
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stPreCompiledContracts.json", shacommit);

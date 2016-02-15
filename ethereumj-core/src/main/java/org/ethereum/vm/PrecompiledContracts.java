@@ -134,9 +134,11 @@ public class PrecompiledContracts {
             } catch (Throwable any) {
             }
 
-            if (out == null) out = new DataWord(0);
-
-            return out.getData();
+            if (out == null) {
+                return new byte[0];
+            } else {
+                return out.getData();
+            }
         }
     }
 
