@@ -6,6 +6,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
 import org.ethereum.vm.MessageCall.MsgType;
@@ -311,7 +312,13 @@ public class Program {
 
         addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
 
-        transfer(getStorage(), owner, obtainer, balance);
+        if (FastByteComparisons.compareTo(owner, 0, 20, obtainer, 0, 20) == 0) {
+            // if owner == obtainer just zeroing account according to Yellow Paper
+            getStorage().addBalance(owner, balance.negate());
+        } else {
+            transfer(getStorage(), owner, obtainer, balance);
+        }
+
         getResult().addDeleteAccount(this.getOwnerAddress());
     }
 

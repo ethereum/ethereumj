@@ -213,8 +213,6 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws IOException {
         Set<String> excluded = new HashSet<>();
 
-        excluded.add("suicideSendEtherPostDeath"); // TODO investigate: https://github.com/ethereum/tests/commit/0ff495059d6ffba8408376f872d426cb38e19444
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
