@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.StorageDictionaryHandler;
@@ -97,6 +98,30 @@ public class StorageDictionary {
             this.key = key;
         }
 
+        public void serialize(ObjectOutputStream oos) throws IOException {
+            oos.writeObject(type);
+            oos.writeObject(key);
+            oos.writeObject(hashKey == null ? null : hashKey.getData());
+            oos.writeInt(children.size());
+            for (PathElement pathElement : children.values()) {
+                pathElement.serialize(oos);
+            }
+        }
+
+        public static PathElement deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+            PathElement pe = new PathElement();
+            pe.type = (Type) ois.readObject();
+            pe.key = (String) ois.readObject();
+            byte[] bb = (byte[]) ois.readObject();
+            pe.hashKey = bb == null ? new DataWord(new byte[0]) : new DataWord(bb);
+            int size = ois.readInt();
+            for (int i = 0; i < size; i++) {
+                PathElement child = deserialize(ois);
+                pe.children.put(child, child);
+            }
+            return pe;
+        }
+
         public void add(PathElement[] path, DataWord key) {
             if (path.length == 0) {
                 if (this.hashKey != null) {
@@ -113,10 +138,10 @@ public class StorageDictionary {
 
             PathElement child = children.get(path[0]);
             if (child == null) {
-                if (children.size() >= 10000) {
-                    // TODO: for a while don't exceed storage threshold
-                    return;
-                }
+//                if (children.size() >= 10000) {
+//                    // TODO: for a while don't exceed storage threshold
+//                    return;
+//                }
                 child = path[0];
                 child.parent = this;
                 children.put(child, child);
@@ -367,6 +392,8 @@ public class StorageDictionary {
         }
     }
 
+    KeyValueDataSource storageDb;
+
     PathElement root = new PathElement(Type.Root, 0);
 
     public StorageDictionary() {}
@@ -438,6 +465,30 @@ public class StorageDictionary {
         StorageDictionary.PathElement root = om.readValue(json, StorageDictionary.PathElement.class);
         installRoots(root);
         return new StorageDictionary(root);
+    }
+
+    public synchronized byte[] serialize() {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            root.serialize(oos);
+            oos.close();
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static StorageDictionary deserialize(byte[] bb) {
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(bb);
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            PathElement ret = PathElement.deserialize(ois);
+            ois.close();
+            installRoots(ret);
+            return new StorageDictionary(ret);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void installRoots(PathElement el) {

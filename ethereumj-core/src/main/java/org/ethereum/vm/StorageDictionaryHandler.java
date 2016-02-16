@@ -7,6 +7,7 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.db.StorageDictionary;
 import org.ethereum.db.StorageDictionaryDb;
 import org.ethereum.util.Utils;
+import org.ethereum.vm.program.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -19,10 +20,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 /**
  * Created by Anton Nashatyrev on 04.09.2015.
  */
-public class StorageDictionaryHandler {
+public class StorageDictionaryHandler implements VMHook {
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
     static class Entry {
@@ -266,4 +269,33 @@ public class StorageDictionaryHandler {
             // ignore exception to not halt VM execution
         }
     }
+
+    @Override
+    public void startPlay(Program program) {
+        vmStartPlayNotify();
+    }
+
+    @Override
+    public void stopPlay(Program program) {
+        vmEndPlayNotify(program.getStorage().getContractDetails(program.getOwnerAddress().getLast20Bytes()));
+    }
+
+    public void step(Program program, OpCode opcode) {
+        switch (opcode) {
+            case SSTORE:
+                DataWord addr = program.getStack().get(0);
+                DataWord value = program.getStack().get(1);
+                vmSStoreNotify(addr, value);
+                break;
+            case SHA3:
+                DataWord memOffsetData = program.getStack().get(0);
+                DataWord lengthData = program.getStack().get(1);
+                byte[] buffer = program.memoryChunk(memOffsetData.intValue(), lengthData.intValue());
+                byte[] encoded = sha3(buffer);
+                DataWord word = new DataWord(encoded);
+                vmSha3Notify(buffer, word);
+                break;
+        }
+    }
+
 }

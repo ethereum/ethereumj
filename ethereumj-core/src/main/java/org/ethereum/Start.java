@@ -25,10 +25,12 @@ public class Start {
             CONFIG.setDiscoveryEnabled(false);
         }
 
-        Ethereum ethereum = EthereumFactory.createEthereum();
+        System.out.println("Hello from Start!!!");
 
-        if (!CONFIG.blocksLoader().equals(""))
-            ethereum.getBlockLoader().loadBlocks();
+//        Ethereum ethereum = EthereumFactory.createEthereum();
+//
+//        if (!CONFIG.blocksLoader().equals(""))
+//            ethereum.getBlockLoader().loadBlocks();
     }
 
 }

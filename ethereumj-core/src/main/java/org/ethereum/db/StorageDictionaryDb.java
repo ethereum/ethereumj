@@ -51,15 +51,21 @@ public class StorageDictionaryDb {
     private static final Serializer<StorageDictionary> SERIALIZER = new Serializer<StorageDictionary>() {
         @Override
         public void serialize(DataOutput out, StorageDictionary value) throws IOException {
-            byte[] bytes = VMUtils.compress(value.serializeToJson());
-            BYTE_ARRAY.serialize(out, bytes);
+//            byte[] bytes = VMUtils.compress(value.serializeToJson());
+            long s = System.currentTimeMillis();
+            BYTE_ARRAY.serialize(out, VMUtils.compress(value.serialize()));
+            System.out.println("Serialize took " + (System.currentTimeMillis() - s) + " ms");
         }
 
         @Override
         public StorageDictionary deserialize(DataInput in, int available) throws IOException {
             byte[] bytes = BYTE_ARRAY.deserialize(in, available);
-            String json = new String(VMUtils.decompress(bytes), StandardCharsets.UTF_8);
-            return StorageDictionary.deserializeFromJson(json);
+            long s = System.currentTimeMillis();
+//            String json = new String(VMUtils.decompress(bytes), StandardCharsets.UTF_8);
+//            return StorageDictionary.deserializeFromJson(json);
+            byte[] decompress = VMUtils.decompress(bytes);
+            System.out.println("Deserialize took " + (System.currentTimeMillis() - s) + " ms");
+            return StorageDictionary.deserialize(decompress);
         }
     };
 

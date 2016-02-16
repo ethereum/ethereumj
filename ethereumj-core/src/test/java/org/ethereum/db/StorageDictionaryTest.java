@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.junit.Assert;
 import org.junit.Test;
@@ -227,6 +228,48 @@ public class StorageDictionaryTest {
             ret[i] = new StorageDictionary.PathElement(s1);
         }
         return ret;
+    }
+
+    @Test
+    public void largeStorageTest() throws Exception {
+
+        for (int k = 0; k < 5; k++) {
+            StorageDictionaryDb db = StorageDictionaryDb.INST;
+            byte[] contractAddr = ByteUtil.intToBytes(k);
+
+            StorageDictionary kp = new StorageDictionary();
+            for (int i = 0; i < 1000000; i++) {
+                kp.addPath(new DataWord(1 + i), createPath("0/" + i));
+
+//                if (i % 1000 == 0) {
+//                    long s = System.currentTimeMillis();
+//                    db.put(StorageDictionaryDb.Layout.Solidity, contractAddr, kp);
+//                    System.out.println("Put " + i + " took " + (System.currentTimeMillis() - s) + " ms");
+//                }
+            }
+
+            Assert.assertFalse(kp.isValid());
+
+            long s = System.currentTimeMillis();
+            db.put(StorageDictionaryDb.Layout.Solidity, contractAddr, kp);
+            System.out.println("Put took " + (System.currentTimeMillis() - s) + " ms");
+        }
+
+        for (int k = 0; k < 5; k++) {
+
+            long s = System.currentTimeMillis();
+            StorageDictionary kp = StorageDictionaryDb.INST.get(StorageDictionaryDb.Layout.Solidity, ByteUtil.intToBytes(k));
+            System.out.println("Get took " + (System.currentTimeMillis() - s) + " ms");
+            logger.info(kp.root.toString(null, 0));
+        }
+
+//        ObjectMapper om = new ObjectMapper();
+//        String s = om.writerWithDefaultPrettyPrinter().writeValueAsString(kp.root);
+//
+//        logger.info(s);
+//
+//        StorageDictionary.PathElement root = om.readValue(s, StorageDictionary.PathElement.class);
+//        logger.info(root.toString(null, 0));
     }
 
 //    @Test
