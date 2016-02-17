@@ -186,6 +186,10 @@ public class Eth62 extends EthHandler {
         sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, false);
     }
 
+    protected void sendGetNewBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+        sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, true);
+    }
+
     protected void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
 
         if(logger.isTraceEnabled()) logger.trace(
@@ -302,7 +306,7 @@ public class Eth62 extends EthHandler {
             BlockIdentifier first = identifiers.get(0);
             long lastBlockNumber = identifiers.get(identifiers.size() - 1).getNumber();
             int maxBlocksAsk = (int) (lastBlockNumber - first.getNumber() + 1);
-            sendGetBlockHeaders(first.getHash(), maxBlocksAsk, 0, false);
+            sendGetNewBlockHeaders(first.getHash(), maxBlocksAsk, 0, false);
         }
     }
 
