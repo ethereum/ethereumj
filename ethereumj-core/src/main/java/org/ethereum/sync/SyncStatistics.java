@@ -9,8 +9,9 @@ package org.ethereum.sync;
 public class SyncStatistics {
     private long updatedAt;
     private long blocksCount;
-    private long hashesCount;
+    private long headersCount;
     private int emptyResponsesCount;
+    private int headerBunchesCount;
 
     public SyncStatistics() {
         reset();
@@ -19,8 +20,9 @@ public class SyncStatistics {
     public void reset() {
         updatedAt = System.currentTimeMillis();
         blocksCount = 0;
-        hashesCount = 0;
+        headersCount = 0;
         emptyResponsesCount = 0;
+        headerBunchesCount = 0;
     }
 
     public void addBlocks(long cnt) {
@@ -28,8 +30,9 @@ public class SyncStatistics {
         fixCommon(cnt);
     }
 
-    public void addHashes(long cnt) {
-        hashesCount += cnt;
+    public void addHeaders(long cnt) {
+        headerBunchesCount++;
+        headersCount += cnt;
         fixCommon(cnt);
     }
 
@@ -44,8 +47,8 @@ public class SyncStatistics {
         return blocksCount;
     }
 
-    public long getHashesCount() {
-        return hashesCount;
+    public long getHeadersCount() {
+        return headersCount;
     }
 
     public long millisSinceLastUpdate() {
@@ -54,5 +57,9 @@ public class SyncStatistics {
 
     public int getEmptyResponsesCount() {
         return emptyResponsesCount;
+    }
+
+    public int getHeaderBunchesCount() {
+        return headerBunchesCount;
     }
 }

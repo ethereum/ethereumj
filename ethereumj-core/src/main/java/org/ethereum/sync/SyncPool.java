@@ -1,26 +1,30 @@
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.NodeHandler;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.net.eth.EthVersion.V62;
-import static org.ethereum.sync.SyncStateName.IDLE;
+import static org.ethereum.sync.SyncState.IDLE;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.TimeUtils.*;
@@ -37,7 +41,7 @@ import static org.ethereum.util.TimeUtils.*;
  * @since 10.08.2015
  */
 @Component
-public class PeersPool implements Iterable<Channel> {
+public class SyncPool implements Iterable<Channel> {
 
     public static final Logger logger = LoggerFactory.getLogger("sync");
 
@@ -47,13 +51,13 @@ public class PeersPool implements Iterable<Channel> {
     private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(1);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
 
-    private static final int MIN_PEERS_COUNT = 3;
-
     private final Map<ByteArrayWrapper, Channel> activePeers = new HashMap<>();
     private final Set<Channel> bannedPeers = new HashSet<>();
     private final Map<String, Integer> disconnectHits = new HashMap<>();
     private final Map<String, Long> bans = new HashMap<>();
     private final Map<String, Long> pendingConnections = new HashMap<>();
+
+    private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
 
     @Autowired
     private Ethereum ethereum;
@@ -61,8 +65,19 @@ public class PeersPool implements Iterable<Channel> {
     @Autowired
     private EthereumListener ethereumListener;
 
-    @PostConstruct
+    @Autowired
+    private Blockchain blockchain;
+
+    @Autowired
+    private SystemProperties config;
+
+    @Autowired
+    private NodeManager nodeManager;
+
     public void init() {
+
+        updateLowerUsefulDifficulty();
+
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
                 new Runnable() {
                     @Override
@@ -70,6 +85,8 @@ public class PeersPool implements Iterable<Channel> {
                         try {
                             releaseBans();
                             processConnections();
+                            updateLowerUsefulDifficulty();
+                            fillUp();
                         } catch (Throwable t) {
                             logger.error("Unhandled exception", t);
                         }
@@ -79,6 +96,24 @@ public class PeersPool implements Iterable<Channel> {
     }
 
     public void add(Channel peer) {
+
+        if (!config.isSyncEnabled()) return;
+
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: adding",
+                peer.getPeerIdShort()
+        );
+
+        if (!isIn20PercentRange(peer.getTotalDifficulty(), lowerUsefulDifficulty)) {
+            if(logger.isInfoEnabled()) logger.info(
+                    "Peer {}: difficulty significantly lower than ours: {} vs {}, skipping",
+                    Utils.getNodeIdShort(peer.getPeerId()),
+                    peer.getTotalDifficulty().toString(),
+                    lowerUsefulDifficulty.toString()
+            );
+            return;
+        }
+
         synchronized (activePeers) {
             activePeers.put(peer.getNodeIdWrapper(), peer);
             bannedPeers.remove(peer);
@@ -106,44 +141,32 @@ public class PeersPool implements Iterable<Channel> {
 
         synchronized (activePeers) {
 
+            for (Channel peer : activePeers.values())
+                if (peer.isMaster()) {
+                    return peer;
+                }
+
+            return null;
+        }
+    }
+
+    @Nullable
+    public Channel getHighestDifficulty() {
+
+        synchronized (activePeers) {
+
             if (activePeers.isEmpty()) {
                 return null;
             }
 
-            Channel best61 = null;
-            Channel best62 = null;
-            int count62 = 0;
-            int count61 = 0;
+            Channel best = null;
 
-            for (Channel peer : activePeers.values()) {
-
-                if (peer.getEthVersion().getCode() >= V62.getCode()) {
-
-                    if (best62 == null || isMoreThan(peer.getTotalDifficulty(), best62.getTotalDifficulty())) {
-                        best62 = peer;
-                    }
-                    count62++;
-                } else {
-
-                    if (best61 == null || isMoreThan(peer.getTotalDifficulty(), best61.getTotalDifficulty())) {
-                        best61 = peer;
-                    }
-                    count61++;
+            for (Channel peer : activePeers.values())
+                if (best == null || isMoreThan(peer.getTotalDifficulty(), best.getTotalDifficulty())) {
+                    best = peer;
                 }
 
-            }
-
-            if (best61 == null) return best62;
-            if (best62 == null) return best61;
-
-            if (count62 >= MIN_PEERS_COUNT) return best62;
-            if (count61 >= MIN_PEERS_COUNT) return best61;
-
-            if (isIn20PercentRange(best62.getTotalDifficulty(), best61.getTotalDifficulty())) {
-                return best62;
-            } else {
-                return best61;
-            }
+            return best;
         }
     }
 
@@ -241,7 +264,7 @@ public class PeersPool implements Iterable<Channel> {
         return nodesInUse().contains(nodeId);
     }
 
-    public void changeState(SyncStateName newState) {
+    public void changeState(SyncState newState) {
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
                 peer.changeSyncState(newState);
@@ -249,17 +272,7 @@ public class PeersPool implements Iterable<Channel> {
         }
     }
 
-    public void changeStateForIdles(SyncStateName newState, EthVersion compatibleVersion) {
-
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
-                if (peer.isIdle() && peer.getEthVersion().isCompatible(compatibleVersion))
-                    peer.changeSyncState(newState);
-            }
-        }
-    }
-
-    public void changeStateForIdles(SyncStateName newState) {
+    public void changeStateForIdles(SyncState newState) {
 
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
@@ -377,5 +390,49 @@ public class PeersPool implements Iterable<Channel> {
             }
         }
         return exceeded;
+    }
+
+    private void fillUp() {
+        int lackSize = config.syncPeerCount() - activeCount();
+        if(lackSize <= 0) {
+            return;
+        }
+
+        Set<String> nodesInUse = nodesInUse();
+
+        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
+        if (lackSize > 0 && newNodes.isEmpty()) {
+            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
+        }
+
+        if (logger.isTraceEnabled()) {
+            logDiscoveredNodes(newNodes);
+        }
+
+        for(NodeHandler n : newNodes) {
+            connect(n.getNode());
+        }
+    }
+
+    private void logDiscoveredNodes(List<NodeHandler> nodes) {
+        StringBuilder sb = new StringBuilder();
+        for(NodeHandler n : nodes) {
+            sb.append(Utils.getNodeIdShort(Hex.toHexString(n.getNode().getId())));
+            sb.append(", ");
+        }
+        if(sb.length() > 0) {
+            sb.delete(sb.length() - 2, sb.length());
+        }
+        logger.trace(
+                "Node list obtained from discovery: {}",
+                nodes.size() > 0 ? sb.toString() : "empty"
+        );
+    }
+
+    private void updateLowerUsefulDifficulty() {
+        BigInteger td = blockchain.getTotalDifficulty();
+        if (td.compareTo(lowerUsefulDifficulty) > 0) {
+            lowerUsefulDifficulty = td;
+        }
     }
 }

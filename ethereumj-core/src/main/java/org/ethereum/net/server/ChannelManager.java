@@ -9,6 +9,7 @@ import org.ethereum.db.ByteArrayWrapper;
 
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.SyncManager;
+import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,9 @@ public class ChannelManager {
 
     @Autowired
     SyncManager syncManager;
+
+    @Autowired
+    SyncPool syncPool;
 
     @PostConstruct
     public void init() {
@@ -124,9 +128,9 @@ public class ChannelManager {
         if(peer.hasEthStatusSucceeded()) {
             // prohibit transactions processing until main sync is done
             if (syncManager.isSyncDone()) {
-                peer.onSyncDone();
+                peer.onSyncDone(true);
             }
-            syncManager.addPeer(peer);
+            syncPool.add(peer);
             activePeers.put(peer.getNodeIdWrapper(), peer);
         }
     }
@@ -172,16 +176,16 @@ public class ChannelManager {
     public void notifyDisconnect(Channel channel) {
         logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
         channel.onDisconnect();
-        syncManager.onDisconnect(channel);
+        syncPool.onDisconnect(channel);
         activePeers.values().remove(channel);
         newPeers.remove(channel);
     }
 
-    public void onSyncDone() {
+    public void onSyncDone(boolean done) {
 
         synchronized (activePeers) {
             for (Channel channel : activePeers.values())
-                channel.onSyncDone();
+                channel.onSyncDone(done);
         }
     }
 }

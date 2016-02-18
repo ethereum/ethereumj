@@ -38,4 +38,8 @@ public interface BlockQueue extends DiskStore {
     boolean isBlockExist(byte[] hash);
 
     void drop(byte[] nodeId, int scanLimit);
+
+    long getLastNumber();
+
+    BlockWrapper getLastBlock();
 }

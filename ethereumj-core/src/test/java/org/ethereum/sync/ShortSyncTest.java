@@ -10,7 +10,6 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.net.eth.handler.Eth61;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
@@ -18,6 +17,9 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.sync.strategy.AbstractSyncStrategy;
+import org.ethereum.sync.strategy.LongSync;
+import org.ethereum.sync.strategy.SyncStrategy;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,12 +37,6 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.net.eth.EthVersion.V60;
-import static org.ethereum.net.eth.EthVersion.V61;
-import static org.ethereum.net.eth.EthVersion.V62;
-import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
-import static org.ethereum.sync.SyncStateName.HASH_RETRIEVING;
-import static org.ethereum.sync.SyncStateName.IDLE;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.fail;
 import static org.spongycastle.util.encoders.Hex.decode;
@@ -50,7 +46,7 @@ import static org.spongycastle.util.encoders.Hex.decode;
  * @since 14.12.2015
  */
 @Ignore("Long network tests")
-public class GapRecoveryTest {
+public class ShortSyncTest {
 
     private static BigInteger minDifficultyBackup;
     private static Node nodeA;
@@ -127,7 +123,6 @@ public class GapRecoveryTest {
         recursiveDelete(testDbA);
         recursiveDelete(testDbB);
         SysPropConfigA.eth62 = null;
-        SysPropConfigA.eth61 = null;
     }
 
     // positive gap, A on main, B on main
@@ -557,15 +552,16 @@ public class GapRecoveryTest {
     @Test
     public void test9() throws InterruptedException {
 
-        // not for Eth60 logic
-        if (Integer.valueOf(V60.getCode()).equals(SysPropConfigA.props.syncVersion())) {
-            return;
-        }
-
         // handler which don't send an ancestor
         SysPropConfigA.eth62 = new Eth62() {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+
+                // process init header request correctly
+                if (msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
 
                 List<BlockHeader> headers = new ArrayList<>();
                 for (int i = 7; i < mainB1B10.size(); i++) {
@@ -574,19 +570,6 @@ public class GapRecoveryTest {
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
-            }
-        };
-        SysPropConfigA.eth61 = new Eth61() {
-            @Override
-            protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
-
-                List<byte[]> hashes = new ArrayList<>();
-                for (int i = 7; i < mainB1B10.size(); i++) {
-                    hashes.add(mainB1B10.get(i).getHash());
-                }
-
-                BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
-                sendMessage(msgHashes);
             }
         };
 
@@ -631,7 +614,6 @@ public class GapRecoveryTest {
 
         // back to usual handler
         SysPropConfigA.eth62 = null;
-        SysPropConfigA.eth61 = null;
 
         for (Block b : mainB1B10) {
             blockchainA.tryToConnect(b);
@@ -678,17 +660,12 @@ public class GapRecoveryTest {
     @Test
     public void test10() throws InterruptedException {
 
-        // not for Eth60 logic
-        if (Integer.valueOf(V60.getCode()).equals(SysPropConfigA.props.syncVersion())) {
-            return;
-        }
-
         // handler which don't send a gap block
         SysPropConfigA.eth62 = new Eth62() {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
 
-                if (msg.getBlockNumber() == b8_.getNumber() && msg.getMaxHeaders() == 1) {
+                if (msg.getMaxHeaders() == 1) {
                     super.processGetBlockHeaders(msg);
                     return;
                 }
@@ -700,19 +677,6 @@ public class GapRecoveryTest {
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
-            }
-        };
-        SysPropConfigA.eth61 = new Eth61() {
-            @Override
-            protected void processGetBlockHashes(GetBlockHashesMessage msg) {
-
-                List<byte[]> hashes = new ArrayList<>();
-                for (int i = 0; i < forkB1B5B8_.size() - 1; i++) {
-                    hashes.add(forkB1B5B8_.get(i).getHash());
-                }
-
-                BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
-                sendMessage(msgHashes);
             }
         };
 
@@ -757,7 +721,6 @@ public class GapRecoveryTest {
 
         // back to usual handler
         SysPropConfigA.eth62 = null;
-        SysPropConfigA.eth61 = null;
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         ethereumB.addListener(new EthereumListenerAdapter() {
@@ -864,6 +827,184 @@ public class GapRecoveryTest {
         }
     }
 
+    // bodies validation: A doesn't send bodies corresponding to headers which were sent previously
+    // expected: B drops A
+    @Test
+    public void test12() throws InterruptedException {
+
+        SysPropConfigA.eth62 = new Eth62() {
+
+            @Override
+            protected void processGetBlockBodies(GetBlockBodiesMessage msg) {
+                List<byte[]> bodies = Arrays.asList(
+                        mainB1B10.get(0).getEncodedBody()
+                );
+
+                BlockBodiesMessage response = new BlockBodiesMessage(bodies);
+                sendMessage(response);
+            }
+        };
+
+        setupPeers();
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+
+        for (Block b : mainB1B10) {
+            blockchainA.tryToConnect(b);
+        }
+
+        // A == b10, B == genesis
+
+        final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
+        ethereumA.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onRecvMessage(Channel channel, Message message) {
+                if (message instanceof DisconnectMessage) {
+                    semaphoreDisconnect.countDown();
+                }
+            }
+        });
+
+        ethA.sendNewBlock(b10);
+
+        semaphoreDisconnect.await(10, SECONDS);
+
+        // check if peer was dropped
+        if(semaphoreDisconnect.getCount() > 0) {
+            fail("PeerA is not dropped");
+        }
+    }
+
+    // bodies validation: headers order is incorrect in the response, reverse = true
+    // expected: B drops A
+    @Test
+    public void test13() throws InterruptedException {
+
+        Block b9 = mainB1B10.get(8);
+
+        SysPropConfigA.eth62 = new Eth62() {
+
+            @Override
+            protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+
+                if (msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
+
+                List<BlockHeader> headers = Arrays.asList(
+                        forkB1B5B8_.get(7).getHeader(),
+                        forkB1B5B8_.get(6).getHeader(),
+                        forkB1B5B8_.get(4).getHeader(),
+                        forkB1B5B8_.get(5).getHeader()
+                );
+
+                BlockHeadersMessage response = new BlockHeadersMessage(headers);
+                sendMessage(response);
+            }
+
+        };
+
+        setupPeers();
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+        Blockchain blockchainB = (Blockchain) ethereumB.getBlockchain();
+
+        for (Block b : forkB1B5B8_) {
+            blockchainA.tryToConnect(b);
+        }
+        for (Block b : mainB1B10) {
+            blockchainB.tryToConnect(b);
+            if (b.isEqual(b9)) break;
+        }
+
+        // A == b8', B == b10
+
+        final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
+        ethereumA.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onRecvMessage(Channel channel, Message message) {
+                if (message instanceof DisconnectMessage) {
+                    semaphoreDisconnect.countDown();
+                }
+            }
+        });
+
+        ethA.sendNewBlockHashes(b8_);
+
+        semaphoreDisconnect.await(10, SECONDS);
+
+        // check if peer was dropped
+        if(semaphoreDisconnect.getCount() > 0) {
+            fail("PeerA is not dropped");
+        }
+    }
+
+    // bodies validation: ancestor's parent hash and header's hash does not match, reverse = true
+    // expected: B drops A
+    @Test
+    public void test14() throws InterruptedException {
+
+        Block b9 = mainB1B10.get(8);
+
+        SysPropConfigA.eth62 = new Eth62() {
+
+            @Override
+            protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+
+                if (msg.getMaxHeaders() == 1) {
+                    super.processGetBlockHeaders(msg);
+                    return;
+                }
+
+                List<BlockHeader> headers = Arrays.asList(
+                        forkB1B5B8_.get(7).getHeader(),
+                        forkB1B5B8_.get(6).getHeader(),
+                        new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
+                                6, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
+                        forkB1B5B8_.get(4).getHeader()
+                );
+
+                BlockHeadersMessage response = new BlockHeadersMessage(headers);
+                sendMessage(response);
+            }
+
+        };
+
+        setupPeers();
+
+        Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
+        Blockchain blockchainB = (Blockchain) ethereumB.getBlockchain();
+
+        for (Block b : forkB1B5B8_) {
+            blockchainA.tryToConnect(b);
+        }
+        for (Block b : mainB1B10) {
+            blockchainB.tryToConnect(b);
+            if (b.isEqual(b9)) break;
+        }
+
+        // A == b8', B == b10
+
+        final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
+        ethereumA.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onRecvMessage(Channel channel, Message message) {
+                if (message instanceof DisconnectMessage) {
+                    semaphoreDisconnect.countDown();
+                }
+            }
+        });
+
+        ethA.sendNewBlockHashes(b8_);
+
+        semaphoreDisconnect.await(10, SECONDS);
+
+        // check if peer was dropped
+        if(semaphoreDisconnect.getCount() > 0) {
+            fail("PeerA is not dropped");
+        }
+    }
 
     private void setupPeers() throws InterruptedException {
 
@@ -899,7 +1040,6 @@ public class GapRecoveryTest {
     public static class SysPropConfigA {
         static SystemProperties props = new SystemProperties();
         static Eth62 eth62 = null;
-        static Eth61 eth61 = null;
 
         @Bean
         public SystemProperties systemProperties() {
@@ -911,13 +1051,6 @@ public class GapRecoveryTest {
         public Eth62 eth62() throws IllegalAccessException, InstantiationException {
             if (eth62 != null) return eth62;
             return new Eth62();
-        }
-
-        @Bean
-        @Scope("prototype")
-        public Eth61 eth61() throws IllegalAccessException, InstantiationException {
-            if (eth61 != null) return eth61;
-            return new Eth61();
         }
     }
 
@@ -931,46 +1064,18 @@ public class GapRecoveryTest {
             return props;
         }
 
-        // don't allow sync to change its initial state during the sync
         @Bean
-        public StateInitiator stateInitiator() {
-            return new StateInitiator() {
+        public SyncStrategy longSync() {
+            return new AbstractSyncStrategy() {
                 @Override
-                public SyncStateName initiate() {
-                    return IDLE;
+                protected void doWork() {
+                }
+
+                @Override
+                public boolean inProgress() {
+                    return false;
                 }
             };
-        }
-
-        // do not transfer from IDLE state implicitly
-        @Bean
-        public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
-
-            Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
-            states.put(IDLE, new AbstractSyncState(IDLE) {
-                @Override
-                public void doMaintain() {
-
-                    super.doMaintain();
-
-                    if ((!syncManager.queue.isHashesEmpty()  && syncManager.pool.hasCompatible(V61)) ||
-                            (!syncManager.queue.isHeadersEmpty() && syncManager.pool.hasCompatible(V62))) {
-
-                        // there are new hashes in the store
-                        // it's time to download blocks
-                        syncManager.changeState(BLOCK_RETRIEVING);
-
-                    }
-                }
-            });
-            states.put(HASH_RETRIEVING, new HashRetrievingState());
-            states.put(BLOCK_RETRIEVING, new BlockRetrievingState());
-
-            for (SyncState state : states.values()) {
-                ((AbstractSyncState)state).setSyncManager(syncManager);
-            }
-
-            return states;
         }
     }
 }

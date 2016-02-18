@@ -6,6 +6,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
@@ -15,12 +16,10 @@ import org.ethereum.net.eth.handler.EthAdapter;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.Eth60MessageFactory;
-import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
-import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.StaticMessages;
@@ -194,8 +193,6 @@ public class Channel {
 
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
-            case V60:   return new Eth60MessageFactory();
-            case V61:   return new Eth61MessageFactory();
             case V62:   return new Eth62MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
@@ -239,9 +236,15 @@ public class Channel {
     public void onDisconnect() {
     }
 
-    public void onSyncDone() {
-        eth.enableTransactions();
-        eth.onSyncDone();
+    public void onSyncDone(boolean done) {
+
+        if (done) {
+            eth.enableTransactions();
+        } else {
+            eth.disableTransactions();
+        }
+
+        eth.onSyncDone(done);
     }
 
     public boolean isDiscoveryMode() {
@@ -281,6 +284,10 @@ public class Channel {
 
     // ETH sub protocol
 
+    public void recoverGap(BlockWrapper block) {
+        eth.recoverGap(block);
+    }
+
     public boolean isEthCompatible(Channel peer) {
         return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
     }
@@ -301,32 +308,8 @@ public class Channel {
         return nodeStatistics.getEthTotalDifficulty();
     }
 
-    public void changeSyncState(SyncStateName newState) {
+    public void changeSyncState(SyncState newState) {
         eth.changeState(newState);
-    }
-
-    public boolean hasBlocksLack() {
-        return eth.hasBlocksLack();
-    }
-
-    public void setMaxHashesAsk(int maxHashesAsk) {
-        eth.setMaxHashesAsk(maxHashesAsk);
-    }
-
-    public int getMaxHashesAsk() {
-        return eth.getMaxHashesAsk();
-    }
-
-    public void setLastHashToAsk(byte[] lastHashToAsk) {
-        eth.setLastHashToAsk(lastHashToAsk);
-    }
-
-    public byte[] getLastHashToAsk() {
-        return eth.getLastHashToAsk();
-    }
-
-    public byte[] getBestKnownHash() {
-        return eth.getBestKnownHash();
     }
 
     public SyncStatistics getSyncStats() {
@@ -339,6 +322,10 @@ public class Channel {
 
     public boolean isHashRetrieving() {
         return eth.isHashRetrieving();
+    }
+
+    public boolean isMaster() {
+        return eth.isHashRetrieving() || eth.isHashRetrievingDone();
     }
 
     public boolean isIdle() {
