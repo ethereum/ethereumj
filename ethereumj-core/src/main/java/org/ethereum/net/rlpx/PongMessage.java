@@ -69,8 +69,7 @@ public class PongMessage extends Message {
 
     @Override
     public void parse(byte[] data) {
-        RLPList list = RLP.decode2(data);
-        list = (RLPList) list.get(0);
+        RLPList list = (RLPList) RLP.decode2OneItem(data, 0);
 
         this.token = list.get(0).getRLPData();
         RLPItem expires = (RLPItem) list.get(1);
