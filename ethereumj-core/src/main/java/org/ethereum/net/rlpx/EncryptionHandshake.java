@@ -144,6 +144,14 @@ public class EncryptionHandshake {
         return response;
     }
 
+    public AuthResponseMessageV4 handleAuthResponseV4(ECKey myKey, byte[] initiatePacket, byte[] responsePacket) {
+        AuthResponseMessageV4 response = decryptAuthResponseV4(responsePacket, myKey);
+        remoteEphemeralKey = response.ephemeralPublicKey;
+        responderNonce = response.nonce;
+        agreeSecret(initiatePacket, responsePacket);
+        return response;
+    }
+
     byte[] encryptAuthEIP8(byte[] msg) {
 
         short size = (short) (msg.length + ECIESCoder.getOverhead());

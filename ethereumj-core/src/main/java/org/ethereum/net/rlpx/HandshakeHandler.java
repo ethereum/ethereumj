@@ -13,6 +13,7 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -28,6 +29,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
+import static org.ethereum.util.ByteUtil.bigEndianToShort;
+import static org.ethereum.util.ByteUtil.merge;
 
 /**
  * The Netty handler which manages initial negotiation with peer
@@ -100,8 +103,8 @@ public class HandshakeHandler extends ByteToMessageDecoder {
         remotePublicBytes[0] = 0x04; // uncompressed
         ECPoint remotePublic = ECKey.fromPublicOnly(remotePublicBytes).getPubKeyPoint();
         handshake = new EncryptionHandshake(remotePublic);
-        AuthInitiateMessage initiateMessage = handshake.createAuthInitiate(null, myKey);
-        initiatePacket = handshake.encryptAuthMessage(initiateMessage);
+        AuthInitiateMessageV4 initiateMessage = handshake.createAuthInitiateV4(myKey);
+        initiatePacket = handshake.encryptAuthInitiateV4(initiateMessage);
 
         final ByteBuf byteBufMsg = ctx.alloc().buffer(initiatePacket.length);
         byteBufMsg.writeBytes(initiatePacket);
@@ -118,12 +121,26 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
         if (handshake.isInitiator()) {
             if (frameCodec == null) {
-                byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
-                if (!buffer.isReadable(responsePacket.length))
-                    return;
-                buffer.readBytes(responsePacket);
 
-                AuthResponseMessage response = this.handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
+                // handles only EIP-8 responses
+
+                byte[] sizeBytes = new byte[2];
+                if (!buffer.isReadable(sizeBytes.length))
+                    return;
+
+                buffer.readBytes(sizeBytes);
+                int size = bigEndianToShort(sizeBytes);
+                if (size < AuthResponseMessage.getLength() + ECIESCoder.getOverhead())
+                    throw new IllegalArgumentException("AuthResponse packet size is too low");
+
+                if (!buffer.isReadable(size))
+                    return;
+
+                byte[] responsePacket = new byte[size + 2];
+                buffer.readBytes(responsePacket, 2, size);
+                System.arraycopy(sizeBytes, 0, responsePacket, 0, sizeBytes.length);
+
+                AuthResponseMessageV4 response = this.handshake.handleAuthResponseV4(myKey, initiatePacket, responsePacket);
                 if (loggerNet.isInfoEnabled())
                     loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), response);
 
@@ -163,22 +180,39 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                 this.handshake = new EncryptionHandshake();
 
-                AuthInitiateMessage initiateMessage;
+                byte[] responsePacket;
+
                 try {
-                    initiateMessage = handshake.decryptAuthInitiate(authInitPacket, myKey);
-                } catch (InvalidCipherTextException ce) {
-                    loggerNet.warn("Can't decrypt AuthInitiateMessage from " + ctx.channel().remoteAddress() +
-                            ". Most likely the remote peer used wrong public key (NodeID) to encrypt message.");
-                    return;
+
+                    // trying to decode as pre-EIP-8
+                    AuthInitiateMessage initiateMessage = handshake.decryptAuthInitiate(authInitPacket, myKey);
+                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), initiateMessage);
+
+                    AuthResponseMessage response = handshake.makeAuthInitiate(initiateMessage, myKey);
+                    loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), response);
+                    responsePacket = handshake.encryptAuthResponse(response);
+
+                } catch (Throwable t) {
+
+                    // it must be format defined by EIP-8 then
+                    try {
+
+                        authInitPacket = readEIP8Packet(buffer, authInitPacket);
+
+                        AuthInitiateMessageV4 initiateMessage = handshake.decryptAuthInitiateV4(authInitPacket, myKey);
+                        loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), initiateMessage);
+
+                        AuthResponseMessageV4 response = handshake.makeAuthInitiateV4(initiateMessage, myKey);
+                        loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), response);
+                        responsePacket = handshake.encryptAuthResponseV4(response);
+
+                    } catch (InvalidCipherTextException ce) {
+                        loggerNet.warn("Can't decrypt AuthInitiateMessage from " + ctx.channel().remoteAddress() +
+                                ". Most likely the remote peer used wrong public key (NodeID) to encrypt message.");
+                        return;
+                    }
                 }
 
-                loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), initiateMessage);
-
-                AuthResponseMessage response = handshake.makeAuthInitiate(initiateMessage, myKey);
-
-                loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), response);
-
-                byte[] responsePacket = handshake.encryptAuthResponse(response);
                 handshake.agreeSecret(authInitPacket, responsePacket);
 
                 EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
@@ -223,6 +257,27 @@ public class HandshakeHandler extends ByteToMessageDecoder {
             }
         }
         channel.getNodeStatistics().rlpxInHello.add();
+    }
+
+    private byte[] readEIP8Packet(ByteBuf buffer, byte[] plainPacket) {
+
+        int size = bigEndianToShort(plainPacket);
+        if (size < plainPacket.length)
+            throw new IllegalArgumentException("AuthResponse packet size is too low");
+
+        int bytesLeft = size - plainPacket.length + 2;
+        byte[] restBytes = new byte[bytesLeft];
+
+        if (!buffer.isReadable(restBytes.length))
+            return null;
+
+        buffer.readBytes(restBytes);
+
+        byte[] fullResponse = new byte[size + 2];
+        System.arraycopy(plainPacket, 0, fullResponse, 0, plainPacket.length);
+        System.arraycopy(restBytes, 0, fullResponse, plainPacket.length, restBytes.length);
+
+        return fullResponse;
     }
 
     public void setRemoteId(String remoteId, Channel channel){
