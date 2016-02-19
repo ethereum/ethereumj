@@ -3,7 +3,6 @@ package org.ethereum.net.rlpx;
 import com.google.common.io.ByteStreams;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
@@ -179,7 +178,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                 loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), response);
 
-                byte[] responsePacket = handshake.encryptAuthReponse(response);
+                byte[] responsePacket = handshake.encryptAuthResponse(response);
                 handshake.agreeSecret(authInitPacket, responsePacket);
 
                 EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();

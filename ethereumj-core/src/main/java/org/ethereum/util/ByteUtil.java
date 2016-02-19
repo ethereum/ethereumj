@@ -555,4 +555,18 @@ public class ByteUtil {
         }
     }
 
+    public static short bigEndianToShort(byte[] bs) {
+        return bigEndianToShort(bs, 0);
+    }
+
+    public static short bigEndianToShort(byte[] bs, int off) {
+        int n = bs[off] << 8;
+        ++off;
+        n |= bs[off] & 0xFF;
+        return (short) n;
+    }
+
+    public static byte[] shortToBytes(short n) {
+        return ByteBuffer.allocate(2).putShort(n).array();
+    }
 }

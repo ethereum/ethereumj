@@ -31,8 +31,11 @@ public class ECIESCoder {
 
     public static final int KEY_SIZE = 128;
 
-
     public static byte[] decrypt(BigInteger privKey, byte[] cipher) throws IOException, InvalidCipherTextException {
+        return decrypt(privKey, cipher, null);
+    }
+
+    public static byte[] decrypt(BigInteger privKey, byte[] cipher, byte[] macData) throws IOException, InvalidCipherTextException {
 
         byte[] plaintext;
 
@@ -46,12 +49,12 @@ public class ECIESCoder {
         byte[] cipherBody = new byte[is.available()];
         is.read(cipherBody);
 
-        plaintext = decrypt(ephem, privKey, IV, cipherBody);
+        plaintext = decrypt(ephem, privKey, IV, cipherBody, macData);
 
         return plaintext;
     }
 
-    public static byte[] decrypt(ECPoint ephem, BigInteger prv, byte[] IV, byte[] cipher) throws InvalidCipherTextException {
+    public static byte[] decrypt(ECPoint ephem, BigInteger prv, byte[] IV, byte[] cipher, byte[] macData) throws InvalidCipherTextException {
         AESFastEngine aesFastEngine = new AESFastEngine();
 
         EthereumIESEngine iesEngine = new EthereumIESEngine(
@@ -71,7 +74,7 @@ public class ECIESCoder {
 
         iesEngine.init(false, new ECPrivateKeyParameters(prv, CURVE), new ECPublicKeyParameters(ephem, CURVE), parametersWithIV);
 
-        return iesEngine.processBlock(cipher, 0, cipher.length);
+        return iesEngine.processBlock(cipher, 0, cipher.length, macData);
     }
 
     /**
@@ -105,6 +108,10 @@ public class ECIESCoder {
     }
 
     public static byte[] encrypt(ECPoint toPub, byte[] plaintext) {
+        return encrypt(toPub, plaintext, null);
+    }
+
+    public static byte[] encrypt(ECPoint toPub, byte[] plaintext, byte[] macData) {
 
         ECKeyPairGenerator eGen = new ECKeyPairGenerator();
         SecureRandom random = new SecureRandom();
@@ -130,7 +137,7 @@ public class ECIESCoder {
 
         byte[] cipher;
         try {
-            cipher = iesEngine.processBlock(plaintext, 0, plaintext.length);
+            cipher = iesEngine.processBlock(plaintext, 0, plaintext.length, macData);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bos.write(pub.getEncoded(false));
             bos.write(IV);
