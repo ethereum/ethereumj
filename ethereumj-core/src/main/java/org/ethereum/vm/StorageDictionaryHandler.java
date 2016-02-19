@@ -19,6 +19,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
@@ -129,28 +132,29 @@ public class StorageDictionaryHandler implements VMHook {
         if (entry == null) {
             StorageDictionary.PathElement[] storageIndex = guessPathElement(key);
             storageIndex[0].type = StorageDictionary.Type.StorageIndex;
+            storageIndex[0].storageKey = key;
             return  storageIndex;
         } else {
             byte[] subKey = Arrays.copyOfRange(entry.input, 0, entry.input.length - 32); // subkey.length == 0 for dyn arrays
             long offset = new BigInteger(key).subtract(new BigInteger(entry.hashValue.clone().getData())).longValue();
             return Utils.mergeArrays(
                     getKeyOriginSolidity(Arrays.copyOfRange(entry.input, entry.input.length - 32, entry.input.length)),
-                    guessPathElement(subKey),
-                    new StorageDictionary.PathElement[] {new StorageDictionary.PathElement
-                            (subKey.length == 0 ? StorageDictionary.Type.ArrayIndex : StorageDictionary.Type.Offset, (int) offset)});
+                    guessPathElement(subKey), // hashKey = key - 1
+                    new StorageDictionary.PathElement[] {new StorageDictionary.PathElement // hashKey = key
+                            (subKey.length == 0 ? StorageDictionary.Type.ArrayIndex : StorageDictionary.Type.Offset, (int) offset, key)});
         }
     }
 
-    public StorageDictionary.PathElement[] guessPathElement(byte[] bytes) {
-        if (bytes.length == 0) return new StorageDictionary.PathElement[0];
-        Object value = guessValue(bytes);
+    public StorageDictionary.PathElement[] guessPathElement(byte[] key) {
+        if (key.length == 0) return new StorageDictionary.PathElement[0];
+        Object value = guessValue(key);
         StorageDictionary.PathElement el = null;
         if (value instanceof String) {
-            el = new StorageDictionary.PathElement((String) value);
+            el = new StorageDictionary.PathElement((String) value, key);
         } else if (value instanceof BigInteger) {
             BigInteger bi = (BigInteger) value;
-            if (bi.bitLength() < 32) el = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, bi.intValue());
-            else el = new StorageDictionary.PathElement("0x" + bi.toString(16));
+            if (bi.bitLength() < 32) el = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, bi.intValue(), key);
+            else el = new StorageDictionary.PathElement("0x" + bi.toString(16), key);
         }
         return new StorageDictionary.PathElement[] {el};
     }
@@ -185,77 +189,80 @@ public class StorageDictionaryHandler implements VMHook {
 
     private static Map<ByteArrayWrapper, StorageDictionary> seContracts = new HashMap<>();
 
-    public StorageDictionary testDump(StorageDictionaryDb.Layout layout) {
-        StorageDictionary dict = new StorageDictionary();
-        for (ByteArrayWrapper key : storeKeys.keySet()) {
 
-            dict.addPath(new DataWord(key.getData()), getKeyOriginSolidity(key.getData()));
-        }
-        return dict;
-    }
+    static ExecutorService executor = Executors.newSingleThreadExecutor();
+    static AtomicInteger cnt = new AtomicInteger();
+    static int lastExecuted;
+    public void dumpKeys(final ContractDetails storage) {
+        System.out.println("== StorageDictionaryHandler.dumpKeys: cur queue size: " + (cnt.get() - lastExecuted) + ", executed: " + lastExecuted);
 
-    public void dumpKeys(ContractDetails storage) {
+        executor.execute(new Runnable() {
+            int id = cnt.getAndIncrement();
+            @Override
+            public void run() {
+                StorageDictionary solidityDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Solidity,
+                        contractAddress);
+                StorageDictionary serpentDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Serpent,
+                        contractAddress);
 
-        StorageDictionary solidityDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Solidity,
-                contractAddress);
-        StorageDictionary serpentDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Serpent,
-                contractAddress);
-
-        for (ByteArrayWrapper key : storeKeys.keySet()) {
-            solidityDict.addPath(new DataWord(key.getData()), getKeyOriginSolidity(key.getData()));
-            serpentDict.addPath(new DataWord(key.getData()), getKeyOriginSerpent(key.getData()));
-        }
-
-        if (SystemProperties.CONFIG.getConfig().hasPath("vm.structured.storage.dictionary.dump")) {
-            // for debug purposes only
-            if (!solidityDict.isValid()) {
-                File f = new File("json");
-                f.mkdirs();
-                f = new File(f, Hex.toHexString(contractAddress) + ".sol.txt");
-                try {
-                    BufferedWriter w = new BufferedWriter(new FileWriter(f));
-                    String s = solidityDict.compactAndFilter(null).dump(storage);
-                    w.write(s);
-                    w.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                for (ByteArrayWrapper key : storeKeys.keySet()) {
+                    solidityDict.addPath(getKeyOriginSolidity(key.getData()));
+                    serpentDict.addPath(getKeyOriginSerpent(key.getData()));
                 }
+
+                if (SystemProperties.CONFIG.getConfig().hasPath("vm.structured.storage.dictionary.dump")) {
+                    // for debug purposes only
+                    if (solidityDict.hasChanges()) {
+                        File f = new File("json");
+                        f.mkdirs();
+                        f = new File(f, Hex.toHexString(contractAddress) + ".sol.txt");
+                        try {
+                            BufferedWriter w = new BufferedWriter(new FileWriter(f));
+                            String s = solidityDict.dump(storage);
+                            w.write(s);
+                            w.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if (serpentDict.hasChanges()) {
+                        File f = new File("json", Hex.toHexString(contractAddress) + ".se.txt");
+                        f.getParentFile().mkdirs();
+                        try {
+                            BufferedWriter w = new BufferedWriter(new FileWriter(f));
+                            String s = serpentDict.dump(storage);
+                            w.write(s);
+                            w.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    File f = new File("json", Hex.toHexString(contractAddress) + ".hash.txt");
+                    f.getParentFile().mkdirs();
+                    try {
+                        BufferedWriter w = new BufferedWriter(new FileWriter(f, true));
+                        w.write("\nHashes:\n");
+                        for (Entry entry : hashes.values()) {
+                            w.write(entry + "\n");
+                        }
+                        w.write("\nSSTORE:\n");
+                        for (Map.Entry<ByteArrayWrapper, DataWord> entry : storeKeys.entrySet()) {
+                            w.write(entry + "\n");
+                        }
+
+                        w.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+//                StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Solidity, contractAddress, solidityDict);
+//                StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Serpent, contractAddress, serpentDict);
+                lastExecuted = id;
             }
-
-            if (!serpentDict.isValid()) {
-                File f = new File("json", Hex.toHexString(contractAddress) + ".se.txt");
-                f.getParentFile().mkdirs();
-                try {
-                    BufferedWriter w = new BufferedWriter(new FileWriter(f));
-                    String s = serpentDict.dump(storage);
-                    w.write(s);
-                    w.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            File f = new File("json", Hex.toHexString(contractAddress) + ".hash.txt");
-            f.getParentFile().mkdirs();
-            try {
-                BufferedWriter w = new BufferedWriter(new FileWriter(f, true));
-                w.write("\nHashes:\n");
-                for (Entry entry : hashes.values()) {
-                    w.write(entry + "\n");
-                }
-                w.write("\nSSTORE:\n");
-                for (Map.Entry<ByteArrayWrapper, DataWord> entry : storeKeys.entrySet()) {
-                    w.write(entry + "\n");
-                }
-
-                w.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Solidity, contractAddress, solidityDict);
-        StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Serpent, contractAddress, serpentDict);
+        });
     }
 
     public void vmStartPlayNotify() {

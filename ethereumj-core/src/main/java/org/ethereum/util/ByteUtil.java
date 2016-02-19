@@ -440,6 +440,23 @@ public class ByteUtil {
     }
 
     /**
+     * XORs byte arrays of different lengths by aligning length of the shortest via adding zeros at beginning
+     */
+    public static byte[] xorAlignRight(byte[] b1, byte[] b2) {
+        if (b1.length > b2.length) {
+            byte[] b2_ = new byte[b1.length];
+            System.arraycopy(b2, 0, b2_, b1.length - b2.length, b2.length);
+            b2 = b2_;
+        } else if (b2.length > b1.length) {
+            byte[] b1_ = new byte[b2.length];
+            System.arraycopy(b1, 0, b1_, b2.length - b1.length, b1.length);
+            b1 = b1_;
+        }
+
+        return xor(b1, b2);
+    }
+
+    /**
      * @param arrays - arrays to merge
      * @return - merged array
      */

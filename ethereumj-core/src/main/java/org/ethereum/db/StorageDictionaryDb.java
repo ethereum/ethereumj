@@ -1,7 +1,9 @@
 package org.ethereum.db;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.crypto.SHA3Helper;
+import org.ethereum.datasource.*;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.VMUtils;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -10,17 +12,17 @@ import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static java.lang.System.getProperty;
 
@@ -32,6 +34,9 @@ import static java.lang.System.getProperty;
 //@Component
 public class StorageDictionaryDb {
     private static final Logger logger = LoggerFactory.getLogger("repository");
+
+    @Autowired
+    ApplicationContext appCtx;
 
     public enum Layout {
         Solidity("solidity"),
@@ -48,107 +53,44 @@ public class StorageDictionaryDb {
         }
     }
 
-    private static final Serializer<StorageDictionary> SERIALIZER = new Serializer<StorageDictionary>() {
-        @Override
-        public void serialize(DataOutput out, StorageDictionary value) throws IOException {
-//            byte[] bytes = VMUtils.compress(value.serializeToJson());
-            long s = System.currentTimeMillis();
-            BYTE_ARRAY.serialize(out, VMUtils.compress(value.serialize()));
-            System.out.println("Serialize took " + (System.currentTimeMillis() - s) + " ms");
-        }
-
-        @Override
-        public StorageDictionary deserialize(DataInput in, int available) throws IOException {
-            byte[] bytes = BYTE_ARRAY.deserialize(in, available);
-            long s = System.currentTimeMillis();
-//            String json = new String(VMUtils.decompress(bytes), StandardCharsets.UTF_8);
-//            return StorageDictionary.deserializeFromJson(json);
-            byte[] decompress = VMUtils.decompress(bytes);
-            System.out.println("Deserialize took " + (System.currentTimeMillis() - s) + " ms");
-            return StorageDictionary.deserialize(decompress);
-        }
-    };
-
-    private static final Serializer<ByteArrayWrapper> KEY_SERIALIZER = new Serializer<ByteArrayWrapper>() {
-        @Override
-        public void serialize(DataOutput out, ByteArrayWrapper value) throws IOException {
-            BYTE_ARRAY.serialize(out, value.getData());
-        }
-
-        @Override
-        public ByteArrayWrapper deserialize(DataInput in, int available) throws IOException {
-            byte[] bytes = BYTE_ARRAY.deserialize(in, available);
-            return new ByteArrayWrapper(bytes);
-        }
-    };
-
     public static StorageDictionaryDb INST = new StorageDictionaryDb().init();
 
     private DB storagekeysDb;
     Map<Layout, HTreeMap<ByteArrayWrapper, StorageDictionary>> layoutDbs = new HashMap<>();
 
+    KeyValueDataSource db;
+    CachingDataSource cachingDb;
+
     private StorageDictionaryDb() {
     }
 
-    @PostConstruct
+//    @PostConstruct
     StorageDictionaryDb init() {
-        File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/metadata/storagedict");
-        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-        storagekeysDb = DBMaker.fileDB(dbFile)
-                .closeOnJvmShutdown()
-                .make();
-
-//        Timer timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                storagekeysDb.commit();
-//            }
-//        }, 1000, 1000);
-
+//        db = appCtx.getBean(LevelDbDataSource.class, "storageDict");
+        db = new LevelDbDataSource("storageDict");
+//        db = new HashMapDB();
+        db.init();
+        cachingDb = new CachingDataSource(db);
         return this;
     }
 
-    HTreeMap<ByteArrayWrapper, StorageDictionary> getLayoutTable(Layout layout) {
-        HTreeMap<ByteArrayWrapper, StorageDictionary> ret = layoutDbs.get(layout);
-        if (ret == null) {
-            ret = storagekeysDb.hashMapCreate(layout.getDbName())
-                    .keySerializer(KEY_SERIALIZER)
-                    .valueSerializer(SERIALIZER)
-                    .makeOrGet();
-            layoutDbs.put(layout, ret);
-        }
-        return ret;
+    public void flush() {
+        cachingDb.flush();
     }
 
     public void close() {
-        storagekeysDb.close();
-        layoutDbs.clear();
+        flush();
+        db.close();
     }
 
     public StorageDictionary get(Layout layout, byte[] contractAddress) {
-        return getLayoutTable(layout).get(new ByteArrayWrapper(contractAddress));
+        StorageDictionary storageDictionary = getOrCreate(layout, contractAddress);
+        return storageDictionary.isExist() ? storageDictionary : null;
     }
 
     public StorageDictionary getOrCreate(Layout layout, byte[] contractAddress) {
-        StorageDictionary ret = get(layout, contractAddress);
-        if (ret == null) {
-            ret = new StorageDictionary();
-            put(layout, contractAddress, ret);
-        }
-        return ret;
-    }
-
-    public void put(Layout layout, byte[] contractAddress, StorageDictionary keys) {
-        logger.debug("Update storage dictionary for contract " + Hex.toHexString(contractAddress));
-        if (!keys.isValid()) {
-            getLayoutTable(layout).put(new ByteArrayWrapper(contractAddress), keys);
-
-            logger.debug("Storage dictionary changed. Committing to DB: " + Hex.toHexString(contractAddress));
-
-            storagekeysDb.commit();
-
-            keys.validate();
-        }
+        byte[] key = ByteUtil.xorAlignRight(SHA3Helper.sha3(layout.getDbName().getBytes()), contractAddress);
+        XorDataSource dataSource = new XorDataSource(cachingDb, key);
+        return new StorageDictionary(dataSource);
     }
 }
