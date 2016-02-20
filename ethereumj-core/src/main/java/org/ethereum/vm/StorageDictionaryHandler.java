@@ -8,6 +8,7 @@ import org.ethereum.db.StorageDictionary;
 import org.ethereum.db.StorageDictionaryDb;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -28,7 +29,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 /**
  * Created by Anton Nashatyrev on 04.09.2015.
  */
-public class StorageDictionaryHandler implements VMHook {
+public class StorageDictionaryHandler {
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
     static class Entry {
@@ -114,7 +115,8 @@ public class StorageDictionaryHandler implements VMHook {
                 int pathLength = entry.input.length / 32;
                 StorageDictionary.PathElement[] ret = new StorageDictionary.PathElement[pathLength];
                 for (int i = 0; i < ret.length; i++) {
-                    ret[i] = guessPathElement(Arrays.copyOfRange(entry.input, i * 32, (i+1) * 32))[0];
+                    byte[] storageKey = SHA3Helper.sha3(entry.input, 0, (i + 1) * 32);
+                    ret[i] = guessPathElement(Arrays.copyOfRange(entry.input, i * 32, (i+1) * 32), storageKey)[0];
                     ret[i].type = StorageDictionary.Type.MapKey;
                 }
                 return ret;
@@ -122,7 +124,7 @@ public class StorageDictionaryHandler implements VMHook {
                 // not a Serenity contract
             }
         }
-        StorageDictionary.PathElement[] storageIndex = guessPathElement(key);
+        StorageDictionary.PathElement[] storageIndex = guessPathElement(key, key);
         storageIndex[0].type = StorageDictionary.Type.StorageIndex;
         return  storageIndex;
     }
@@ -130,7 +132,7 @@ public class StorageDictionaryHandler implements VMHook {
     public StorageDictionary.PathElement[] getKeyOriginSolidity(byte[] key) {
         Entry entry = findHash(key);
         if (entry == null) {
-            StorageDictionary.PathElement[] storageIndex = guessPathElement(key);
+            StorageDictionary.PathElement[] storageIndex = guessPathElement(key, key);
             storageIndex[0].type = StorageDictionary.Type.StorageIndex;
             storageIndex[0].storageKey = key;
             return  storageIndex;
@@ -139,22 +141,22 @@ public class StorageDictionaryHandler implements VMHook {
             long offset = new BigInteger(key).subtract(new BigInteger(entry.hashValue.clone().getData())).longValue();
             return Utils.mergeArrays(
                     getKeyOriginSolidity(Arrays.copyOfRange(entry.input, entry.input.length - 32, entry.input.length)),
-                    guessPathElement(subKey), // hashKey = key - 1
+                    guessPathElement(subKey, StorageDictionary.PathElement.getVirtualStorageKey(entry.hashValue.getData())), // hashKey = key - 1
                     new StorageDictionary.PathElement[] {new StorageDictionary.PathElement // hashKey = key
                             (subKey.length == 0 ? StorageDictionary.Type.ArrayIndex : StorageDictionary.Type.Offset, (int) offset, key)});
         }
     }
 
-    public StorageDictionary.PathElement[] guessPathElement(byte[] key) {
+    public StorageDictionary.PathElement[] guessPathElement(byte[] key, byte[] storageKey) {
         if (key.length == 0) return new StorageDictionary.PathElement[0];
         Object value = guessValue(key);
         StorageDictionary.PathElement el = null;
         if (value instanceof String) {
-            el = new StorageDictionary.PathElement((String) value, key);
+            el = new StorageDictionary.PathElement((String) value, storageKey);
         } else if (value instanceof BigInteger) {
             BigInteger bi = (BigInteger) value;
-            if (bi.bitLength() < 32) el = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, bi.intValue(), key);
-            else el = new StorageDictionary.PathElement("0x" + bi.toString(16), key);
+            if (bi.bitLength() < 32) el = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, bi.intValue(), storageKey);
+            else el = new StorageDictionary.PathElement("0x" + bi.toString(16), storageKey);
         }
         return new StorageDictionary.PathElement[] {el};
     }
@@ -194,19 +196,26 @@ public class StorageDictionaryHandler implements VMHook {
     static AtomicInteger cnt = new AtomicInteger();
     static int lastExecuted;
     public void dumpKeys(final ContractDetails storage) {
-        System.out.println("== StorageDictionaryHandler.dumpKeys: cur queue size: " + (cnt.get() - lastExecuted) + ", executed: " + lastExecuted);
+//        System.out.println("== StorageDictionaryHandler.dumpKeys: cur queue size: " + (cnt.get() - lastExecuted) + ", executed: " + lastExecuted);
 
-        executor.execute(new Runnable() {
-            int id = cnt.getAndIncrement();
-            @Override
-            public void run() {
+//        executor.execute(new Runnable() {
+//            int id = cnt.getAndIncrement();
+//
+//            @Override
+//            public void run() {
                 StorageDictionary solidityDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Solidity,
                         contractAddress);
                 StorageDictionary serpentDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Serpent,
                         contractAddress);
 
+                String prevDump = null;
                 for (ByteArrayWrapper key : storeKeys.keySet()) {
                     solidityDict.addPath(getKeyOriginSolidity(key.getData()));
+//                    try {
+//                        prevDump = solidityDict.dump();
+//                    } catch (Throwable e) {
+//                        throw new RuntimeException(e);
+//                    }
                     serpentDict.addPath(getKeyOriginSerpent(key.getData()));
                 }
 
@@ -260,9 +269,12 @@ public class StorageDictionaryHandler implements VMHook {
 
 //                StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Solidity, contractAddress, solidityDict);
 //                StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Serpent, contractAddress, serpentDict);
-                lastExecuted = id;
-            }
-        });
+                solidityDict.store();
+                serpentDict.store();
+                StorageDictionaryDb.INST.flush();
+//                lastExecuted = id;
+//            }
+//        });
     }
 
     public void vmStartPlayNotify() {
@@ -277,32 +289,52 @@ public class StorageDictionaryHandler implements VMHook {
         }
     }
 
-    @Override
-    public void startPlay(Program program) {
-        vmStartPlayNotify();
-    }
-
-    @Override
-    public void stopPlay(Program program) {
-        vmEndPlayNotify(program.getStorage().getContractDetails(program.getOwnerAddress().getLast20Bytes()));
-    }
-
-    public void step(Program program, OpCode opcode) {
-        switch (opcode) {
-            case SSTORE:
-                DataWord addr = program.getStack().get(0);
-                DataWord value = program.getStack().get(1);
-                vmSStoreNotify(addr, value);
-                break;
-            case SHA3:
-                DataWord memOffsetData = program.getStack().get(0);
-                DataWord lengthData = program.getStack().get(1);
-                byte[] buffer = program.memoryChunk(memOffsetData.intValue(), lengthData.intValue());
-                byte[] encoded = sha3(buffer);
-                DataWord word = new DataWord(encoded);
-                vmSha3Notify(buffer, word);
-                break;
+    public static VMHook HOOK = new VMHook() {
+        java.util.Stack<StorageDictionaryHandler> handlerStack = new java.util.Stack<>();
+        @Override
+        public void startPlay(Program program) {
+            try {
+//                System.out.println("Start play: " + program.getOwnerAddress());
+                handlerStack.push(new StorageDictionaryHandler(program.getOwnerAddress()));
+//                System.out.println("Started play: " + program.getOwnerAddress());
+                handlerStack.peek().vmStartPlayNotify();
+            } catch (Exception e) {
+                logger.error("Error within handler: ", e);
+            }
         }
-    }
+
+        @Override
+        public void stopPlay(Program program) {
+            try {
+//                System.out.println("Stop play: " + handler);
+                handlerStack.pop().vmEndPlayNotify(program.getStorage().getContractDetails(program.getOwnerAddress().getLast20Bytes()));
+            } catch (Exception e) {
+                logger.error("Error within handler: ", e);
+            }
+        }
+
+        public void step(Program program, OpCode opcode) {
+            try {
+                Stack stack = program.getStack();
+                switch (opcode) {
+                    case SSTORE:
+                        DataWord addr = stack.get(stack.size() - 1);
+                        DataWord value = stack.get(stack.size() - 2);
+                        handlerStack.peek().vmSStoreNotify(addr, value);
+                        break;
+                    case SHA3:
+                        DataWord memOffsetData = stack.get(stack.size() - 1);
+                        DataWord lengthData = stack.get(stack.size() - 2);
+                        byte[] buffer = program.memoryChunk(memOffsetData.intValue(), lengthData.intValue());
+                        byte[] encoded = sha3(buffer);
+                        DataWord word = new DataWord(encoded);
+                        handlerStack.peek().vmSha3Notify(buffer, word);
+                        break;
+                }
+            } catch (Exception e) {
+                logger.error("Error within handler: ", e);
+            }
+        }
+    };
 
 }

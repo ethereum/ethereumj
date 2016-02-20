@@ -89,6 +89,9 @@ import static java.lang.Math.min;
  */
 public class StorageDictionary {
 
+    private static final int MAX_CHILDREN_TO_SORT = 100;
+    private static final boolean SORT_MAP_KEYS = false;
+
     public enum Type {
         Root,
         StorageIndex,  // top-level Contract field index
@@ -180,16 +183,48 @@ public class StorageDictionary {
                 return existingChild;
             }
 
-            if (childrenCount == 0) {
-                firstChildHash = newChild.getHash();
+            if (childrenCount > MAX_CHILDREN_TO_SORT || (!SORT_MAP_KEYS && newChild.type == Type.MapKey)) {
+                // no more sorting just add to the end
+                insertChild(getLastChild(), newChild);
             } else {
-                PathElement lastChild = getLastChild();
-                lastChild.nextSiblingHash = newChild.getHash();
-                lastChild.invalidate();
+                Iterator<PathElement> chIt = getChildrenIterator();
+                PathElement insertAfter = null;
+                while(chIt.hasNext()) {
+                    PathElement next = chIt.next();
+                    if (newChild.compareTo(next) < 0) {
+                        break;
+                    }
+                    insertAfter = next;
+                }
+                insertChild(insertAfter, newChild);
             }
-            lastChildHash = newChild.getHash();
-            newChild.parentHash = this.getHash();
 
+            return newChild;
+        }
+
+        private boolean isMapping() {
+            return getFirstChild().type == Type.MapKey;
+        }
+
+        public PathElement insertChild(PathElement insertAfter, PathElement newChild) {
+            if (insertAfter == null) {
+                // first element
+                newChild.nextSiblingHash = firstChildHash;
+                firstChildHash = newChild.storageKey;
+                if (childrenCount == 0) {
+                    lastChildHash = firstChildHash;
+                }
+            } else if (insertAfter.nextSiblingHash == null) {
+                // last element
+                insertAfter.nextSiblingHash = newChild.storageKey;
+                insertAfter.invalidate();
+                lastChildHash = newChild.storageKey;
+            } else {
+                insertAfter.nextSiblingHash = newChild.storageKey;
+                insertAfter.invalidate();
+            }
+
+            newChild.parentHash = this.storageKey;
             sd.put(newChild);
             newChild.invalidate();
             childrenCount++;
@@ -270,7 +305,7 @@ public class StorageDictionary {
             return new PathElement[]{parent, child};
         }
 
-        private static byte[] getVirtualStorageKey(byte[] childStorageKey) {
+        public static byte[] getVirtualStorageKey(byte[] childStorageKey) {
             BigInteger i = ByteUtil.bytesToBigInteger(childStorageKey).subtract(BigInteger.ONE);
             return ByteUtil.bigIntegerToBytes(i, 32);
         }
@@ -422,6 +457,14 @@ public class StorageDictionary {
                     RLP.encodeElement(encodeHash(lastChildHash))
                 );
         }
+
+        PathElement copyLight() {
+            PathElement ret = new PathElement();
+            ret.type = type;
+            ret.key = key;
+            ret.storageKey = storageKey;
+            return ret;
+        }
 //        public byte[] serialize() {
 //            try {
 //                ObjectMapper om = new ObjectMapper();
@@ -464,13 +507,28 @@ public class StorageDictionary {
         dirtyNodes.clear();
     }
 
-    KeyValueDataSource storageDb;
-    Map<ByteArrayWrapper, PathElement> cache = new HashMap<>();
+    public StorageDictionary getFiltered(Set<DataWord> hashFilter) {
+        HashMapDB filterSource = new HashMapDB();
+        StorageDictionary ret = new StorageDictionary(filterSource);
+        for (DataWord hash : hashFilter) {
+            PathElement pathElement = get(hash.getData());
+            ArrayList<PathElement> path = new ArrayList<>();
+            while(pathElement.type != Type.Root) {
+                path.add(0, pathElement.copyLight());
+                pathElement = pathElement.getParent();
+            }
+            ret.addPath(path.toArray(new PathElement[0]));
+        }
+        return ret;
+    }
 
-    List<PathElement> dirtyNodes = new ArrayList<>();
+    private KeyValueDataSource storageDb;
+    private Map<ByteArrayWrapper, PathElement> cache = new HashMap<>();
 
-    PathElement root;
-    boolean exist;
+    private List<PathElement> dirtyNodes = new ArrayList<>();
+
+    private PathElement root;
+    private boolean exist;
 
     public StorageDictionary(KeyValueDataSource storageDb) {
         this.storageDb = storageDb;
@@ -533,15 +591,6 @@ public class StorageDictionary {
         ret.lastChildHash= decodeHash(list.get(8).getRLPData());
         return ret;
     }
-//    public PathElement deserializePathElement(byte[] bb) {
-//        try {
-//            ObjectMapper om = new ObjectMapper();
-//            PathElement ret = om.readValue(new String(bb), PathElement.class);
-//            return ret;
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
     public static byte[] toStorageKey(String hex) {
         return Hex.decode(Utils.align(hex, '0', 64, false));

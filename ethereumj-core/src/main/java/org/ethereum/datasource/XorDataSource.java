@@ -20,7 +20,7 @@ public class XorDataSource implements KeyValueDataSource {
     }
 
     private byte[] convertKey(byte[] key) {
-        return ByteUtil.xor(key, subKey);
+        return ByteUtil.xorAlignRight(key, subKey);
     }
 
     @Override
