@@ -151,6 +151,10 @@ public class Eth62 extends EthHandler {
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
         sendMessage(msg);
+
+        ethState = EthState.STATUS_SENT;
+
+        sendNextHeaderRequest();
     }
 
     @Override
@@ -349,7 +353,7 @@ public class Eth62 extends EthHandler {
 
         List<BlockHeader> received = msg.getBlockHeaders();
 
-        if (ethState == EthState.INIT)
+        if (ethState == EthState.STATUS_SENT)
             processInitHeaders(received);
         else if (!syncDone)
             processHeaderRetrieving(received);
@@ -479,6 +483,9 @@ public class Eth62 extends EthHandler {
     }
 
     protected void sendNextHeaderRequest() {
+
+        // do not send header requests if status hasn't been passed yet
+        if (ethState == EthState.INIT) return;
 
         GetBlockHeadersMessageWrapper wrapper = headerRequests.peek();
 
@@ -745,7 +752,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public boolean hasStatusPassed() {
-        return ethState != EthState.INIT;
+        return ethState.ordinal() > EthState.STATUS_SENT.ordinal();
     }
 
     @Override
@@ -893,7 +900,7 @@ public class Eth62 extends EthHandler {
         if (headers.isEmpty()) {
 
             // initial call after handshake
-            if (ethState == EthState.INIT) {
+            if (ethState == EthState.STATUS_SENT) {
                 if (logger.isInfoEnabled()) logger.info(
                         "Peer {}: invalid response to initial {}, empty",
                         channel.getPeerIdShort(), request
@@ -1051,6 +1058,7 @@ public class Eth62 extends EthHandler {
 
     protected enum EthState {
         INIT,
+        STATUS_SENT,
         STATUS_SUCCEEDED,
         STATUS_FAILED
     }

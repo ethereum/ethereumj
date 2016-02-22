@@ -132,8 +132,8 @@ public class MessageQueue {
         // remove last answered message on the queue
         removeAnsweredMessage(requestQueue.peek());
         // Now send the next message
-        sendToWire(requestQueue.peek());
         sendToWire(respondQueue.poll());
+        sendToWire(requestQueue.peek());
     }
 
     private void sendToWire(MessageRoundtrip messageRoundtrip) {
