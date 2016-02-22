@@ -279,6 +279,7 @@ public class Eth62 extends EthHandler {
         }
 
         // update bestKnownBlock info
+        Thread.sleep(1000);
         sendGetBlockHeaders(msg.getBestHash(), 1, 0, false);
     }
 

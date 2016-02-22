@@ -103,8 +103,17 @@ public class HandshakeHandler extends ByteToMessageDecoder {
         remotePublicBytes[0] = 0x04; // uncompressed
         ECPoint remotePublic = ECKey.fromPublicOnly(remotePublicBytes).getPubKeyPoint();
         handshake = new EncryptionHandshake(remotePublic);
-        AuthInitiateMessageV4 initiateMessage = handshake.createAuthInitiateV4(myKey);
-        initiatePacket = handshake.encryptAuthInitiateV4(initiateMessage);
+
+        Object msg;
+        if (config.eip8()) {
+            AuthInitiateMessageV4 initiateMessage = handshake.createAuthInitiateV4(myKey);
+            initiatePacket = handshake.encryptAuthInitiateV4(initiateMessage);
+            msg = initiateMessage;
+        } else {
+            AuthInitiateMessage initiateMessage = handshake.createAuthInitiate(null, myKey);
+            initiatePacket = handshake.encryptAuthMessage(initiateMessage);
+            msg = initiateMessage;
+        }
 
         final ByteBuf byteBufMsg = ctx.alloc().buffer(initiatePacket.length);
         byteBufMsg.writeBytes(initiatePacket);
@@ -113,7 +122,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
         channel.getNodeStatistics().rlpxAuthMessagesSent.add();
 
         if (loggerNet.isInfoEnabled())
-            loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), initiateMessage);
+            loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
     }
 
     // consume handshake, producing no resulting message to upper layers
@@ -122,27 +131,29 @@ public class HandshakeHandler extends ByteToMessageDecoder {
         if (handshake.isInitiator()) {
             if (frameCodec == null) {
 
-                // handles only EIP-8 responses
-
-                byte[] sizeBytes = new byte[2];
-                if (!buffer.isReadable(sizeBytes.length))
+                byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
+                if (!buffer.isReadable(responsePacket.length))
                     return;
+                buffer.readBytes(responsePacket);
 
-                buffer.readBytes(sizeBytes);
-                int size = bigEndianToShort(sizeBytes);
-                if (size < AuthResponseMessage.getLength() + ECIESCoder.getOverhead())
-                    throw new IllegalArgumentException("AuthResponse packet size is too low");
+                try {
 
-                if (!buffer.isReadable(size))
-                    return;
+                    // trying to decode as pre-EIP-8
 
-                byte[] responsePacket = new byte[size + 2];
-                buffer.readBytes(responsePacket, 2, size);
-                System.arraycopy(sizeBytes, 0, responsePacket, 0, sizeBytes.length);
-
-                AuthResponseMessageV4 response = this.handshake.handleAuthResponseV4(myKey, initiatePacket, responsePacket);
-                if (loggerNet.isInfoEnabled())
+                    AuthResponseMessage response = handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
                     loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), response);
+
+                } catch (Throwable t) {
+
+                    // it must be format defined by EIP-8 then
+
+                    responsePacket = readEIP8Packet(buffer, responsePacket);
+
+                    if (responsePacket == null) return;
+
+                    AuthResponseMessageV4 response = handshake.handleAuthResponseV4(myKey, initiatePacket, responsePacket);
+                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), response);
+                }
 
                 EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
                 this.frameCodec = new FrameCodec(secrets);
@@ -198,6 +209,8 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                     try {
 
                         authInitPacket = readEIP8Packet(buffer, authInitPacket);
+
+                        if (authInitPacket == null) return;
 
                         AuthInitiateMessageV4 initiateMessage = handshake.decryptAuthInitiateV4(authInitPacket, myKey);
                         loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), initiateMessage);

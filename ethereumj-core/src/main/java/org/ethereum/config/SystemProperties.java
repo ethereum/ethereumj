@@ -539,6 +539,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean eip8() {
+        return config.getBoolean("peer.p2p.eip8");
+    }
+
+    @ValidateMe
     public int listenPort() {
         return config.getInt("peer.listen.port");
     }
