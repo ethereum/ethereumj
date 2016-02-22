@@ -360,6 +360,7 @@ public class BlockHeader {
     }
 
     public static boolean isHomestead(long blockNumber) {
+        if (CONFIG.isMorden()) return blockNumber >= HOMESTEAD_MORDEN_FORK_BLKNUM;
         return CONFIG.isFrontier() && blockNumber >= HOMESTEAD_FORK_BLKNUM;
     }
 

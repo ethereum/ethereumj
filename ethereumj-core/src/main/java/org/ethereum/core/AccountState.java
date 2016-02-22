@@ -7,6 +7,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.config.Constants.startingNonce;
 import static org.ethereum.crypto.HashUtil.*;
 
 public class AccountState {
@@ -46,7 +47,7 @@ public class AccountState {
 
 
     public AccountState() {
-        this(BigInteger.ZERO, BigInteger.ZERO);
+        this(startingNonce(), BigInteger.ZERO);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {
