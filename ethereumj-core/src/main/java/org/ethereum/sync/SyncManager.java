@@ -92,6 +92,8 @@ public class SyncManager {
 
                 ethereumListener.onLongSyncDone();
 
+
+
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
                 }

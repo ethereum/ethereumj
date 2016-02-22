@@ -348,6 +348,10 @@ public class Channel {
         return eth.getVersion();
     }
 
+    public void dropConnection() {
+        eth.dropConnection();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -83,6 +83,7 @@ public class SyncPool implements Iterable<Channel> {
                     @Override
                     public void run() {
                         try {
+                            heartBeat();
                             releaseBans();
                             processConnections();
                             updateLowerUsefulDifficulty();
@@ -433,6 +434,15 @@ public class SyncPool implements Iterable<Channel> {
         BigInteger td = blockchain.getTotalDifficulty();
         if (td.compareTo(lowerUsefulDifficulty) > 0) {
             lowerUsefulDifficulty = td;
+        }
+    }
+
+    private void heartBeat() {
+        for (Channel peer : this) {
+            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
+                logger.info("Peer {}: no response after %d seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
+                peer.dropConnection();
+            }
         }
     }
 }

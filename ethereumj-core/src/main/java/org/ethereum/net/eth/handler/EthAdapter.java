@@ -105,4 +105,8 @@ public class EthAdapter implements Eth {
     @Override
     public void recoverGap(BlockWrapper block) {
     }
+
+    @Override
+    public void dropConnection() {
+    }
 }

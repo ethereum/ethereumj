@@ -10,7 +10,6 @@ public class SyncStatistics {
     private long updatedAt;
     private long blocksCount;
     private long headersCount;
-    private int emptyResponsesCount;
     private int headerBunchesCount;
 
     public SyncStatistics() {
@@ -21,7 +20,6 @@ public class SyncStatistics {
         updatedAt = System.currentTimeMillis();
         blocksCount = 0;
         headersCount = 0;
-        emptyResponsesCount = 0;
         headerBunchesCount = 0;
     }
 
@@ -37,9 +35,6 @@ public class SyncStatistics {
     }
 
     private void fixCommon(long cnt) {
-        if (cnt == 0) {
-            emptyResponsesCount += 1;
-        }
         updatedAt = System.currentTimeMillis();
     }
 
@@ -51,12 +46,8 @@ public class SyncStatistics {
         return headersCount;
     }
 
-    public long millisSinceLastUpdate() {
-        return System.currentTimeMillis() - updatedAt;
-    }
-
-    public int getEmptyResponsesCount() {
-        return emptyResponsesCount;
+    public long secondsSinceLastUpdate() {
+        return (System.currentTimeMillis() - updatedAt) / 1000;
     }
 
     public int getHeaderBunchesCount() {

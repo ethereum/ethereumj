@@ -1013,7 +1013,8 @@ public class Eth62 extends EthHandler {
         return true;
     }
 
-    private void dropConnection() {
+    @Override
+    public void dropConnection() {
 
         // todo: reduce reputation
 

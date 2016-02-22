@@ -119,4 +119,10 @@ public interface Eth {
      * @param block gap block
      */
     void recoverGap(BlockWrapper block);
+
+    /**
+     * Drops connection with remote peer.
+     * It should be called when peer don't behave
+     */
+    void dropConnection();
 }
