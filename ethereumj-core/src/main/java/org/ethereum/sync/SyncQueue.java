@@ -105,7 +105,7 @@ public class SyncQueue {
             }
         };
 
-        Thread t=new Thread (queueProducer);
+        Thread t=new Thread (queueProducer, "SyncQueueThread");
         t.start();
     }
 
