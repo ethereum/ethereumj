@@ -72,9 +72,14 @@ public class ArrayListIndex implements Index {
     }
 
     @Override
-    public synchronized Long lastNumber() {
+    public synchronized Long peekLast() {
 
         if (index.isEmpty()) return null;
         return index.get(index.size() - 1);
+    }
+
+    @Override
+    public synchronized void remove(Long num) {
+        index.remove(num);
     }
 }

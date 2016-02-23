@@ -211,16 +211,30 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public long getLastNumber() {
-        Long num = index.lastNumber();
+        Long num = index.peekLast();
         return num == null ? 0 : num;
     }
 
     @Override
-    public BlockWrapper getLastBlock() {
+    public BlockWrapper peekLast() {
 
         synchronized (mutex) {
-            Long num = index.lastNumber();
+            Long num = index.peekLast();
             return blocks.get(num);
+        }
+    }
+
+    @Override
+    public void remove(BlockWrapper block) {
+
+        synchronized (mutex) {
+
+            BlockWrapper existing = blocks.get(block.getNumber());
+            if (existing == null || !existing.equals(block))
+                return;
+
+            index.remove(block.getNumber());
+            blocks.remove(block.getNumber());
         }
     }
 

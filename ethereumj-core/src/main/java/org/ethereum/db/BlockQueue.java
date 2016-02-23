@@ -41,5 +41,7 @@ public interface BlockQueue extends DiskStore {
 
     long getLastNumber();
 
-    BlockWrapper getLastBlock();
+    BlockWrapper peekLast();
+
+    void remove(BlockWrapper block);
 }

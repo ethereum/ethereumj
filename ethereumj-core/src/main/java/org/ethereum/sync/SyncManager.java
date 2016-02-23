@@ -90,9 +90,7 @@ public class SyncManager {
                 logger.info("Start Long sync");
                 longSync.start();
 
-                ethereumListener.onLongSyncDone();
-
-
+                ethereumListener.onLongSyncStarted();
 
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
@@ -125,7 +123,9 @@ public class SyncManager {
 
         @Override
         public void onHeadersAdded() {
-            pool.changeStateForIdles(BLOCK_RETRIEVING);
+            if (longSync.inProgress()) {
+                pool.changeStateForIdles(BLOCK_RETRIEVING);
+            }
         }
     };
 
@@ -173,26 +173,25 @@ public class SyncManager {
             // recover gap only during Short sync
             if (longSync.inProgress()) return;
 
-            Channel master = pool.getMaster();
-
-            // wait unless previous gap recovery is in progress
-            if (master != null) return;
-
-            master = pool.getByNodeId(block.getNodeId());
+            BlockWrapper latest = queue.peekLastBlock();
+            Channel master = pool.getByNodeId(latest.getNodeId());
 
             // drop the block if there is no peer which sent it to us
             if (master == null) {
-                queue.pollBlock();
+                queue.removeBlock(latest);
                 return;
             }
+
+            // wait if gap recovery is already in progress
+            if (!master.isIdle()) return;
 
             if (logger.isDebugEnabled()) logger.debug(
                     "Recover gap: best.number [{}] vs block.number [{}]",
                     blockchain.getBestBlock().getNumber(),
-                    block.getNumber()
+                    latest.getNumber()
             );
 
-            master.recoverGap(block);
+            master.recoverGap(latest);
         }
     };
 

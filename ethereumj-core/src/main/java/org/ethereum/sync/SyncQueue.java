@@ -45,8 +45,6 @@ public class SyncQueue {
      */
     private BlockQueue blockQueue = new BlockQueueMem();
 
-    public boolean noParent = false;
-
     @Autowired
     SystemProperties config;
 
@@ -87,7 +85,7 @@ public class SyncQueue {
      */
     private void produceQueue() {
 
-        while (1==1){
+        while (1==1) {
 
             BlockWrapper wrapper = null;
             try {
@@ -103,10 +101,7 @@ public class SyncQueue {
                     blockQueue.add(wrapper);
                     compositeSyncListener.onNoParent(wrapper);
 
-                    noParent = true;
-                    sleep(2000);
-                } else {
-                    noParent = false;
+                    sleep(1000);
                 }
 
                 if (importResult == IMPORTED_BEST)
@@ -293,44 +288,19 @@ public class SyncQueue {
     }
 
     /**
-     * Checks whether BlockQueue contains solid blocks or not. <br>
-     * Block is assumed to be solid in two cases:
-     * <ul>
-     *     <li>it was downloading during main sync</li>
-     *     <li>NEW block with exceeded solid timeout</li>
-     * </ul>
-     *
-     * @see BlockWrapper#SOLID_BLOCK_DURATION_THRESHOLD
-     *
-     * @return true if queue contains solid blocks, false otherwise
-     */
-    public boolean hasSolidBlocks() {
-        BlockWrapper wrapper = blockQueue.peek();
-        return wrapper != null && wrapper.isSolidBlock();
-    }
-
-    /**
-     * @return number of last block in the queue
-     */
-    public long getLastBlockNumber() {
-        return blockQueue.getLastNumber();
-    }
-
-    /**
      * @return latest block in the queue
      */
-    public Block getLastBlock() {
-        BlockWrapper wrapper = blockQueue.getLastBlock();
-        return wrapper == null ? null : wrapper.getBlock();
+    public BlockWrapper peekLastBlock() {
+        return blockQueue.peekLast();
     }
 
     /**
-     * Polls block from the queue
+     * Removes block if it's still on the queue
      *
-     * @return block
+     * @param block block to be removed
      */
-    public BlockWrapper pollBlock() {
-        return blockQueue.poll();
+    public void removeBlock(BlockWrapper block) {
+        blockQueue.remove(block);
     }
 
     /**

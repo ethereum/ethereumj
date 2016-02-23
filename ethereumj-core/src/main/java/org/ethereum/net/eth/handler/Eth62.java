@@ -542,6 +542,8 @@ public class Eth62 extends EthHandler {
 
         if (!queue.validateAndAddHeaders(received, channel.getNodeId()))
             dropConnection();
+
+        changeState(BLOCK_RETRIEVING);
     }
 
     protected void processGapRecovery(List<BlockHeader> received) {
@@ -598,12 +600,9 @@ public class Eth62 extends EthHandler {
                 maxHashesAsk
         );
 
-        Block latest = queue.getLastBlock();
-        if (latest == null) {
-            latest = bestBlock;
-        }
+        BlockWrapper latest = queue.peekLastBlock();
 
-        long blockNumber = latest.getNumber();
+        long blockNumber = latest != null ? latest.getNumber() : bestBlock.getNumber();
 
         sendGetBlockHeaders(blockNumber + 1, maxHashesAsk);
     }
@@ -1017,6 +1016,12 @@ public class Eth62 extends EthHandler {
     public void dropConnection() {
 
         // todo: reduce reputation
+
+        // drop headers and blocks during Short sync only
+        if (syncDone) {
+            queue.dropHeaders(channel.getNodeId());
+            queue.dropBlocks(channel.getNodeId());
+        }
 
         logger.info("Peer {}: is a bad one, drop", channel.getPeerIdShort());
         disconnect(USELESS_PEER);
