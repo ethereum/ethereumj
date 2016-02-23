@@ -3,8 +3,6 @@ package org.ethereum.db;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.util.ByteUtil;
@@ -465,14 +463,6 @@ public class StorageDictionary {
             ret.storageKey = storageKey;
             return ret;
         }
-//        public byte[] serialize() {
-//            try {
-//                ObjectMapper om = new ObjectMapper();
-//                return om.writeValueAsString(this).getBytes();
-//            } catch (JsonProcessingException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
     }
 
     private PathElement get(byte[] hash) {
@@ -492,7 +482,7 @@ public class StorageDictionary {
         pe.sd = this;
     }
 
-    public PathElement load(byte[] hash) {
+    PathElement load(byte[] hash) {
         byte[] bytes = storageDb.get(hash);
         if (bytes == null) return null;
         PathElement ret = deserializePathElement(bytes);
@@ -507,7 +497,7 @@ public class StorageDictionary {
         dirtyNodes.clear();
     }
 
-    public StorageDictionary getFiltered(Set<DataWord> hashFilter) {
+    public synchronized StorageDictionary getFiltered(Set<DataWord> hashFilter) {
         HashMapDB filterSource = new HashMapDB();
         StorageDictionary ret = new StorageDictionary(filterSource);
         for (DataWord hash : hashFilter) {
@@ -546,7 +536,7 @@ public class StorageDictionary {
         return exist;
     }
 
-    public boolean hasChanges() {
+    public synchronized boolean hasChanges() {
         return !dirtyNodes.isEmpty();
     }
 
@@ -576,7 +566,7 @@ public class StorageDictionary {
         return bb;
     }
 
-    public PathElement deserializePathElement(byte[] bb) {
+    PathElement deserializePathElement(byte[] bb) {
         PathElement ret = new PathElement();
         RLPList list = (RLPList) RLP.decode2(bb).get(0);
         ret.type = Type.values()[ByteUtil.byteArrayToInt(list.get(0).getRLPData())];
@@ -592,7 +582,7 @@ public class StorageDictionary {
         return ret;
     }
 
-    public static byte[] toStorageKey(String hex) {
+    static byte[] toStorageKey(String hex) {
         return Hex.decode(Utils.align(hex, '0', 64, false));
     }
 
