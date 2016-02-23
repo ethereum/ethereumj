@@ -3,6 +3,8 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.util.ExecutorPipeline;
+import org.ethereum.util.Functional;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,28 +23,6 @@ import java.util.concurrent.*;
 public class BlockLoader {
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
-    public static class LimitedQueue<E> extends LinkedBlockingQueue<E>
-    {
-        public LimitedQueue(int maxSize)
-        {
-            super(maxSize);
-        }
-
-        @Override
-        public boolean offer(E e)
-        {
-            // turn offer() and add() into a blocking calls (unless interrupted)
-            try {
-                put(e);
-                return true;
-            } catch(InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-            return false;
-        }
-
-    }
-
     @Autowired
     private BlockHeaderValidator headerValidator;
 
@@ -53,51 +33,6 @@ public class BlockLoader {
     private Blockchain blockchain;
 
     Scanner scanner = null;
-
-    BlockingQueue<Runnable> preworkQueue = new LimitedQueue<>(1000);
-    ThreadPoolExecutor blockPreworkExec = new ThreadPoolExecutor(8, 8, 0L, TimeUnit.MILLISECONDS, preworkQueue);
-    BlockingQueue<Runnable> workQueue = new LimitedQueue<>(10000);
-    ThreadPoolExecutor blockWorkExec = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, workQueue);
-
-    volatile long nextBlock = -1;
-    Map<Long, Block> preworkedBlocks = Collections.synchronizedMap(new HashMap<Long, Block>());
-
-    private void blockPrework(Block b) {
-        for (Transaction tx : b.getTransactionsList()) {
-            tx.getSender();
-        }
-        synchronized (this) {
-            if (b.getNumber() == nextBlock) {
-                submitBlockWork(b);
-                long newNextBlock = nextBlock + 1;
-                while (true) {
-                    Block block = preworkedBlocks.remove(newNextBlock);
-                    if (block == null) {
-                        break;
-                    } else {
-                        submitBlockWork(block);
-                        newNextBlock++;
-                    }
-                }
-                nextBlock = newNextBlock;
-            } else {
-                preworkedBlocks.put(b.getNumber(), b);
-            }
-        }
-    }
-
-    private void submitBlockWork(final Block b) {
-        blockWorkExec.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    blockWork(b);
-                } catch (Exception e) {
-                    logger.error("Work error: ", e);
-                }
-            }
-        });
-    }
 
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
@@ -110,7 +45,7 @@ public class BlockLoader {
 
             ImportResult result = blockchain.tryToConnect(block);
             System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
-                    + preworkQueue.size() + ", work: " + workQueue.size() + ", blocks: " + preworkedBlocks.size() + ")");
+                    + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ")");
 
         } else {
 
@@ -119,21 +54,31 @@ public class BlockLoader {
         }
     }
 
-    private void processBlock(final Block b) {
-        if (nextBlock < 0) nextBlock = b.getNumber();
-        blockPreworkExec.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    blockPrework(b);
-                } catch (Exception e) {
-                    logger.error("Prework error: ", e);
-                }
-            }
-        });
-    }
+    ExecutorPipeline<Block, Block> exec1;
+    ExecutorPipeline<Block, ?> exec2;
 
     public void loadBlocks() {
+        exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
+            @Override
+            public Block apply(Block b) {
+                for (Transaction tx : b.getTransactionsList()) {
+                    tx.getSender();
+                }
+                return b;
+            }
+        }, new Functional.Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) {
+                logger.error("Unhandled exception: ", throwable);
+            }
+        });
+
+        exec2 = exec1.add(1, 1000, new Functional.Consumer<Block>() {
+            @Override
+            public void accept(Block block) {
+                blockWork(block);
+            }
+        });
 
         String fileSrc = config.blocksLoader();
         try {
@@ -148,7 +93,7 @@ public class BlockLoader {
                 byte[] blockRLPBytes = Hex.decode(scanner.nextLine());
                 Block block = new Block(blockRLPBytes);
 
-                processBlock(block);
+                exec1.push(block);
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,9 +1,13 @@
 package org.ethereum.db;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.Transaction;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
+import org.ethereum.util.ExecutorPipeline;
+import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
@@ -30,7 +34,6 @@ public class BlockQueueMem implements BlockQueue {
     private final static String HASH_SET_NAME = "hashset";
     private MapDBFactory mapDBFactory;
 
-//    private DB db;
     private Map<Long, BlockWrapper> blocks = Collections.synchronizedMap(new HashMap<Long, BlockWrapper>());
     private Set<ByteArrayWrapper> hashes = Collections.synchronizedSet(new HashSet<ByteArrayWrapper>());
     private Index index = new ArrayListIndex(Collections.<Long>emptyList());
@@ -44,6 +47,33 @@ public class BlockQueueMem implements BlockQueue {
 
     private final Object writeMutex = new Object();
     private final Object readMutex = new Object();
+
+    private ExecutorPipeline<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>> exec1 = new ExecutorPipeline<>
+            (8, 1000, true, new Functional.Function<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>>() {
+                @Override
+                public Pair<BlockWrapper, Boolean> apply(Pair<BlockWrapper, Boolean> blockWrapper) {
+                    for (Transaction tx : blockWrapper.getLeft().getBlock().getTransactionsList()) {
+                        tx.getSender();
+                    }
+                    return blockWrapper;
+                }
+            }, new Functional.Consumer<Throwable>() {
+                @Override
+                public void accept(Throwable throwable) {
+                    logger.error("Unexpected exception: ", throwable);
+                }
+            });
+
+    private ExecutorPipeline<Pair<BlockWrapper, Boolean>, Void> exec2 = exec1.add(1, 1, new Functional.Consumer<Pair<BlockWrapper, Boolean>>() {
+        @Override
+        public void accept(Pair<BlockWrapper, Boolean> blockWrapper) {
+            if (blockWrapper.getRight()) {
+                addOrReplaceImpl(blockWrapper.getLeft());
+            } else {
+                addImpl(blockWrapper.getLeft());
+            }
+        }
+    });
 
     @Override
     public void open() {
@@ -94,40 +124,47 @@ public class BlockQueueMem implements BlockQueue {
     @Override
     public void addOrReplaceAll(Collection<BlockWrapper> blockList) {
         awaitInit();
-        synchronized (writeMutex) {
-            List<Long> numbers = new ArrayList<>(blockList.size());
-            Set<ByteArrayWrapper> newHashes = new HashSet<>();
-            for (BlockWrapper b : blockList) {
-
-                if (!index.contains(b.getNumber())) {
-
-                    if (!numbers.contains(b.getNumber())) {
-                        numbers.add(b.getNumber());
-                        blocks.put(b.getNumber(), b);
-                        newHashes.add(new ByteArrayWrapper(b.getHash()));
-                    }
-
-                } else  {
-                    replaceInner(b);
-                }
-            }
-            hashes.addAll(newHashes);
-
-            logger.debug("Added: " + blockList.size() + ", BlockQueue size: " + blocks.size());
-
-            takeLock.lock();
-            try {
-                index.addAll(numbers);
-                notEmpty.signalAll();
-            } finally {
-                takeLock.unlock();
-            }
+        for (BlockWrapper blockWrapper : blockList) {
+            addOrReplace(blockWrapper);
         }
+//        synchronized (writeMutex) {
+//            List<Long> numbers = new ArrayList<>(blockList.size());
+//            Set<ByteArrayWrapper> newHashes = new HashSet<>();
+//            for (BlockWrapper b : blockList) {
+//
+//                if (!index.contains(b.getNumber())) {
+//
+//                    if (!numbers.contains(b.getNumber())) {
+//                        numbers.add(b.getNumber());
+//                        blocks.put(b.getNumber(), b);
+//                        newHashes.add(new ByteArrayWrapper(b.getHash()));
+//                    }
+//
+//                } else  {
+//                    replaceInner(b);
+//                }
+//            }
+//            hashes.addAll(newHashes);
+//
+//            logger.debug("Added: " + blockList.size() + ", BlockQueue size: " + blocks.size());
+//
+//            takeLock.lock();
+//            try {
+//                index.addAll(numbers);
+//                notEmpty.signalAll();
+//            } finally {
+//                takeLock.unlock();
+//            }
+//        }
 //        db.commit();
     }
 
     @Override
     public void add(BlockWrapper block) {
+        exec1.push(Pair.of(block, false));
+    }
+
+    public void addImpl(BlockWrapper block) {
         awaitInit();
         synchronized (writeMutex) {
 
@@ -142,6 +179,10 @@ public class BlockQueueMem implements BlockQueue {
     @Override
     public void addOrReplace(BlockWrapper block) {
         awaitInit();
+        exec1.push(Pair.of(block, true));
+    }
+
+    private void addOrReplaceImpl(BlockWrapper block) {
         synchronized (writeMutex) {
 
             if (!index.contains(block.getNumber())) {
@@ -150,7 +191,6 @@ public class BlockQueueMem implements BlockQueue {
                 replaceInner(block);
             }
         }
-//        db.commit();
     }
 
     private void replaceInner(BlockWrapper block) {
