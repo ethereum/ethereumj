@@ -46,17 +46,21 @@ public class UDPListener {
             bootPeers = config.peerDiscoveryIPList().toArray(new String[0]);
         }
         if (config.peerDiscovery()) {
-            new Thread("UDPListener") {
-                @Override
-                public void run() {
-                    try {
-                        UDPListener.this.start(bootPeers);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        throw new RuntimeException(e);
+            if (port == 0) {
+                logger.error("Discovery can't be started while listen port == 0");
+            } else {
+                new Thread("UDPListener") {
+                    @Override
+                    public void run() {
+                        try {
+                            UDPListener.this.start(bootPeers);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            throw new RuntimeException(e);
+                        }
                     }
-                }
-            }.start();
+                }.start();
+            }
         }
     }
 
