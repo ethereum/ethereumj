@@ -73,7 +73,6 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void addOrReplaceAll(Collection<BlockWrapper> blockList) {
-        awaitInit();
         for (BlockWrapper blockWrapper : blockList) {
             addOrReplace(blockWrapper);
         }
@@ -119,7 +118,6 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void addOrReplace(BlockWrapper block) {
-        awaitInit();
         exec1.push(Pair.of(block, true));
     }
 
