@@ -4,6 +4,8 @@ import org.ethereum.cli.CLIInterface;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.vm.StorageDictionaryHandler;
+import org.ethereum.vm.VM;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -25,12 +27,10 @@ public class Start {
             CONFIG.setDiscoveryEnabled(false);
         }
 
-        System.out.println("Hello from Start!!!");
+        Ethereum ethereum = EthereumFactory.createEthereum();
 
-//        Ethereum ethereum = EthereumFactory.createEthereum();
-//
-//        if (!CONFIG.blocksLoader().equals(""))
-//            ethereum.getBlockLoader().loadBlocks();
+        if (!CONFIG.blocksLoader().equals(""))
+            ethereum.getBlockLoader().loadBlocks();
     }
 
 }
