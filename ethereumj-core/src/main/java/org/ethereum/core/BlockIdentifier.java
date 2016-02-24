@@ -57,7 +57,7 @@ public class BlockIdentifier {
 
     @Override
     public String toString() {
-        return "BlockIdentifier{" +
+        return "BlockIdentifier {" +
                 "hash=" + Hex.toHexString(hash) +
                 ", number=" + number +
                 '}';

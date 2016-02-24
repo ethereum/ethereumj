@@ -1,15 +1,14 @@
 package org.ethereum.vm;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
-
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -47,6 +46,7 @@ public class DataWord implements Comparable<DataWord> {
         this.data = data.array();
     }
 
+    @JsonCreator
     public DataWord(String data) {
         this(Hex.decode(data));
     }
@@ -321,6 +321,8 @@ public class DataWord implements Comparable<DataWord> {
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
+    @JsonValue
+    @Override
     public String toString() {
         return Hex.toHexString(data);
     }

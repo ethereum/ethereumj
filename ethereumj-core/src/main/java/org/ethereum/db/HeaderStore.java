@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
 
 import java.util.Collection;
 import java.util.List;
@@ -12,19 +13,21 @@ import java.util.Set;
  */
 public interface HeaderStore extends DiskStore {
 
-    void add(BlockHeader header);
+    void add(BlockHeaderWrapper header);
 
-    void addBatch(Collection<BlockHeader> headers);
+    void addBatch(Collection<BlockHeaderWrapper> headers);
 
-    BlockHeader peek();
+    BlockHeaderWrapper peek();
 
-    BlockHeader poll();
+    BlockHeaderWrapper poll();
 
-    List<BlockHeader> pollBatch(int qty);
+    List<BlockHeaderWrapper> pollBatch(int qty);
 
     boolean isEmpty();
 
     int size();
 
     void clear();
+
+    void drop(byte[] nodeId);
 }

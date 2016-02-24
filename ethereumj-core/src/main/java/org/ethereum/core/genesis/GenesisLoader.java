@@ -3,6 +3,7 @@ package org.ethereum.core.genesis;
 import com.google.common.io.ByteStreams;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
+import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -98,7 +99,7 @@ public class GenesisLoader {
         for (String key : alloc.keySet()){
 
             BigInteger balance = new BigInteger(alloc.get(key).getBalance());
-            AccountState acctState = new AccountState(ZERO, balance);
+            AccountState acctState = new AccountState(Constants.startingNonce(), balance);
 
             premine.put(wrap(Hex.decode(key)), acctState);
         }

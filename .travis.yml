@@ -44,5 +44,5 @@ notifications:
 env:
   global:
     - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
-    - secure: "BSdfBQsJi5VFcIF7Z50ddfjex60OZpd8OM7AxN+h93wxzBx/GD2bsWA9elwvrLFImByw5RIqE9xRvL4CioKZLgFiJCSFuPkf6I+6R6PsUhqklPvAJSXHlQXOM6bJD23rZewyfudh5JtqADVavY7vlXnmYXFeWKh8XdPYtRPlJV0="
-    - secure: "iZcZikUHrdaxsc5at1KT0M/6D4OHdU2WTd/aFIBKERXteGw+okq+s+VWghnELEq3YsKfYRJrkslcA6Mpcxq7KrUMsSSX1kZ1ifsk2151sU3+fJpIYQ9pCeWboLWSF//A7IdEe+zHpRVFuHVGU05OAalNCmJ52TEe3/M0YkY5+e8="
+    - secure: "fFabmuPiELgpisqqHqzVvuC4tQKQYZrWX5Zd6jwJE+tTqVcev+Fc8s6UhsXQgs7ny/3u4xe6x35vuoItK0UU0LxDooPvxBlwZW3meI4YY3oTSTz6bUMbiAbondrzuWbmaMC0QgcY2k2e8dz1xaOhM5lMVkA2lABuObkEWy0RCrU="
+    - secure: "ZBwSKOcpmaqSTnVmjXYKobxB8KV2DX7eJupHXGSEp5ZTShJdkyOMivHZ+hkUYw1IQ9Z9wLuTrc6t8bSbxHzuaQrjfLfb9F5JISO/JmwkgBUWDTJL5soa/x5rMFt45E4PSaoQdcLNPWmPy1l2kzMIRFOx1w9u/8xipcHcqbfF7Us="
