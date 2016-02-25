@@ -85,7 +85,8 @@ public class VM {
             }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
-                if (!BlockHeader.isHomestead(program.getNumber().longValue())) {
+                if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
+                        getConstants().hasDelegateCallOpcode()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
             }

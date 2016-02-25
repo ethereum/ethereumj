@@ -15,7 +15,6 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -24,8 +23,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static java.lang.Math.max;
-import static org.ethereum.config.Constants.UNCLE_GENERATION_LIMIT;
-import static org.ethereum.config.Constants.UNCLE_LIST_LIMIT;
 
 /**
  * Created by Anton Nashatyrev on 10.12.2015.
@@ -66,9 +63,14 @@ public class BlockMiner {
     private Block miningBlock;
     private ListenableFuture<Long> ethashTask;
     private long lastBlockMinedTime;
+    private int UNCLE_LIST_LIMIT;
+    private int UNCLE_GENERATION_LIMIT;
+
 
     @PostConstruct
     private void init() {
+        UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
+        UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
         minGasPrice = config.getMineMinGasPrice();
         minBlockTimeout = config.getMineMinBlockTimeoutMsec();
         cpuThreads = config.getMineCpuThreads();
@@ -175,7 +177,7 @@ public class BlockMiner {
 
         long limitNum = max(0, miningNum - UNCLE_GENERATION_LIMIT);
         Set<ByteArrayWrapper> ancestors = BlockchainImpl.getAncestors(blockStore, mineBest, UNCLE_GENERATION_LIMIT + 1, true);
-        Set<ByteArrayWrapper> knownUncles = BlockchainImpl.getUsedUncles(blockStore, mineBest, true);
+        Set<ByteArrayWrapper> knownUncles = ((BlockchainImpl)blockchain).getUsedUncles(blockStore, mineBest, true);
         knownUncles.addAll(ancestors);
         knownUncles.add(new ByteArrayWrapper(mineBest.getHash()));
 
@@ -216,9 +218,8 @@ public class BlockMiner {
         synchronized(this) {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
-            ethashTask = fullMining ?
-                    Ethash.getForBlock(miningBlock.getNumber()).mine(miningBlock, cpuThreads) :
-                    Ethash.getForBlock(miningBlock.getNumber()).mineLight(miningBlock, cpuThreads);
+            ethashTask = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
+                    getMineAlgorithm().mine(miningBlock);
             ethashTask.addListener(new Runnable() {
                 //            private final Future<Long> task = ethashTask;
                 @Override

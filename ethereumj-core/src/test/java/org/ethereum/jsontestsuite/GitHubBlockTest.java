@@ -1,6 +1,8 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.fork.MainForkConfig;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -9,8 +11,6 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Set;
-import java.util.HashSet;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -19,14 +19,12 @@ public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
     public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
-    private static final long HOMESTEAD_TEST_BLOCK = 0;
-    private static final long HOMESTEAD_BLOCK = Constants.HOMESTEAD_FORK_BLKNUM;
 
     @Ignore // test for conveniently running a single test
     @Test
     public void runSingleTest() throws ParseException, IOException {
         CONFIG.setGenesisInfo("frontier.json");
-        Constants.HOMESTEAD_FORK_BLKNUM = HOMESTEAD_TEST_BLOCK;
+        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
 
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
@@ -39,11 +37,11 @@ public class GitHubBlockTest {
 
     private void runHomestead(String name) throws IOException, ParseException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/" + name + ".json", shacommit);
-        Constants.HOMESTEAD_FORK_BLKNUM = HOMESTEAD_TEST_BLOCK;
+        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
         try {
             GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
         } finally {
-            Constants.HOMESTEAD_FORK_BLKNUM = HOMESTEAD_BLOCK;
+            SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
         }
     }
 

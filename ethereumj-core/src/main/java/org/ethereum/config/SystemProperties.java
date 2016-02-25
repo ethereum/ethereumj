@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.config.fork.MainForkConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -82,6 +83,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
+    private BlockchainForkConfig blockchainConfig = MainForkConfig.INSTANCE;
     private Genesis genesis;
 
     public SystemProperties() {
@@ -206,6 +208,14 @@ public class SystemProperties {
         String string = config.getString(propName);
         if (string.trim().isEmpty()) return defaultValue;
         return (T) config.getAnyRef(propName);
+    }
+
+    public BlockchainForkConfig getBlockchainConfig() {
+        return blockchainConfig;
+    }
+
+    public void setBlockchainConfig(BlockchainForkConfig config) {
+        blockchainConfig = config;
     }
 
     @ValidateMe

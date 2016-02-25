@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -10,10 +11,7 @@ import org.spongycastle.util.BigIntegers;
 import java.math.BigInteger;
 import java.util.List;
 
-import static org.ethereum.config.Constants.*;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.BIUtil.max;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -330,38 +328,8 @@ public class BlockHeader {
     }
 
     public BigInteger calcDifficulty(BlockHeader parent) {
-
-        BigInteger pd = parent.getDifficultyBI();
-        BigInteger quotient = pd.divide(DIFFICULTY_BOUND_DIVISOR);
-
-        BigInteger sign;
-        if (isHomestead()) {
-            // block_diff = parent_diff + parent_diff // 2048 * max(1 - (block_timestamp - parent_timestamp) // 10, -99)
-            sign = BigInteger.valueOf(Math.max(1 - (timestamp - parent.timestamp) / 10, -99));
-        } else {
-            // block_diff = parent_diff + parent_diff // 2048 * (1 if block_timestamp - parent_timestamp < 13 else -1)
-            sign = BigInteger.valueOf(timestamp >= parent.timestamp + getDURATION_LIMIT() ? -1 : 1);
-        }
-
-        BigInteger fromParent = pd.add(quotient.multiply(sign));
-        BigInteger difficulty = max(MINIMUM_DIFFICULTY, fromParent);
-
-        int periodCount = (int) (number / EXP_DIFFICULTY_PERIOD);
-
-        if (periodCount > 1) {
-            difficulty = max(MINIMUM_DIFFICULTY, difficulty.add(BigInteger.ONE.shiftLeft(periodCount - 2)));
-        }
-
-        return difficulty;
-    }
-
-    public boolean isHomestead() {
-        return isHomestead(getNumber());
-    }
-
-    public static boolean isHomestead(long blockNumber) {
-        if (CONFIG.isMorden()) return blockNumber >= HOMESTEAD_MORDEN_FORK_BLKNUM;
-        return CONFIG.isFrontier() && blockNumber >= HOMESTEAD_FORK_BLKNUM;
+        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber()).
+                calcDifficulty(this, parent);
     }
 
     public String toString() {

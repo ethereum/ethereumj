@@ -1,11 +1,14 @@
 package org.ethereum.miner;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.fork.MainForkConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,8 +26,19 @@ public class MineBlock {
 
     @BeforeClass
     public static void setup() {
-        Constants.MINIMUM_DIFFICULTY = BigInteger.valueOf(1);
+        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        }));
     }
+
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+    }
+
 
     @Test
     public void mine1() throws Exception {

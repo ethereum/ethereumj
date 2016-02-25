@@ -3,7 +3,6 @@ package org.ethereum.core.genesis;
 import com.google.common.io.ByteStreams;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
-import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -20,7 +19,6 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.math.BigInteger.ZERO;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
@@ -36,10 +34,14 @@ public class GenesisLoader {
         String genesisFile = config.genesisInfo();
 
         InputStream is = GenesisLoader.class.getResourceAsStream("/genesis/" + genesisFile);
-        return loadGenesis(is);
+        return loadGenesis(config, is);
     }
 
-    public static Genesis loadGenesis(InputStream genesisJsonIS)  {
+    public static Genesis loadGenesis(InputStream genesisJsonIS) {
+        return loadGenesis(CONFIG, genesisJsonIS);
+    }
+    
+    public static Genesis loadGenesis(SystemProperties config, InputStream genesisJsonIS)  {
         try {
 
             String json = new String(ByteStreams.toByteArray(genesisJsonIS));
@@ -51,7 +53,7 @@ public class GenesisLoader {
 
             Genesis genesis = createBlockForJson(genesisJson);
 
-            Map<ByteArrayWrapper, AccountState> premine = generatePreMine(genesisJson.getAlloc());
+            Map<ByteArrayWrapper, AccountState> premine = generatePreMine(config, genesisJson.getAlloc());
             genesis.setPremine(premine);
 
             byte[] rootHash = generateRootHash(premine);
@@ -93,13 +95,14 @@ public class GenesisLoader {
     }
 
 
-    private static Map<ByteArrayWrapper, AccountState> generatePreMine(Map<String, AllocatedAccount> alloc){
+    private static Map<ByteArrayWrapper, AccountState> generatePreMine(SystemProperties config, Map<String, AllocatedAccount> alloc){
 
         Map<ByteArrayWrapper, AccountState> premine = new HashMap<>();
         for (String key : alloc.keySet()){
 
             BigInteger balance = new BigInteger(alloc.get(key).getBalance());
-            AccountState acctState = new AccountState(Constants.startingNonce(), balance);
+            AccountState acctState = new AccountState(
+                    config.getBlockchainConfig().getCommonConstants().getInitialNonce(), balance);
 
             premine.put(wrap(Hex.decode(key)), acctState);
         }

@@ -1,16 +1,15 @@
 package org.ethereum.miner;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.fork.MainForkConfig;
 import org.ethereum.core.Block;
 import org.ethereum.mine.Ethash;
 import org.ethereum.mine.EthashAlgo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -28,8 +27,19 @@ import static org.junit.Assert.assertArrayEquals;
 public class EthashTest {
     @BeforeClass
     public static void setup() {
-        Constants.MINIMUM_DIFFICULTY = BigInteger.valueOf(1);
+        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        }));
     }
+
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+    }
+
 
     @Test // check exact values
     public void test_0() {

@@ -1,14 +1,13 @@
 package org.ethereum.validator;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
 
-import static org.ethereum.config.Constants.MIN_GAS_LIMIT;
-
 /**
- * Checks {@link BlockHeader#gasLimit} against {@link Constants#MIN_GAS_LIMIT}. <br>
+ * Checks {@link BlockHeader#gasLimit} against {@link Constants#getMIN_GAS_LIMIT}. <br>
  *
  * This check is NOT run in Frontier
  *
@@ -16,6 +15,9 @@ import static org.ethereum.config.Constants.MIN_GAS_LIMIT;
  * @since 02.09.2015
  */
 public class GasLimitRule extends BlockHeaderRule {
+
+    private static int MIN_GAS_LIMIT = SystemProperties.CONFIG.getBlockchainConfig().
+            getCommonConstants().getMIN_GAS_LIMIT();
 
     @Override
     public boolean validate(BlockHeader header) {

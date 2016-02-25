@@ -1,12 +1,15 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.fork.AbstractForkConfig;
+import org.ethereum.config.fork.MainForkConfig;
 import org.json.simple.parser.ParseException;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -25,14 +28,17 @@ public class GitHubStateTest {
 
     @Before
     public void setup() {
+        // TODO remove this after Homestead launch and shacommit update with actual block number
         // for this JSON test commit the Homestead block was defined as 900000
-        oldForkValue = Constants.HOMESTEAD_FORK_BLKNUM;
-        Constants.HOMESTEAD_FORK_BLKNUM = 900_000;
+        SystemProperties.CONFIG.setBlockchainConfig(new AbstractForkConfig() {{
+            add(0, new FrontierConfig());
+            add(900_000, new HomesteadConfig());
+        }});
     }
 
     @After
     public void clean() {
-        Constants.HOMESTEAD_FORK_BLKNUM = oldForkValue;
+        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
     }
 
     @Ignore

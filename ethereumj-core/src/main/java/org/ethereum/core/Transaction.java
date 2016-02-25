@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -114,15 +115,8 @@ public class Transaction {
 
         if (!parsed) rlpParse();
 
-        long nonZeroes = nonZeroDataBytes();
-        long zeroVals  = getLength(data) - nonZeroes;
-
-        if (block.isHomestead()) {
-            return (isContractCreation() ? GasCost.TRANSACTION_CREATE_CONTRACT : GasCost.TRANSACTION)
-                    + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
-        } else {
-            return GasCost.TRANSACTION + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
-        }
+        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(block.getNumber()).
+                getTransactionCost(this);
     }
 
     public void rlpParse() {

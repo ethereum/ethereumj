@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -7,7 +8,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.ethereum.config.Constants.startingNonce;
 import static org.ethereum.crypto.HashUtil.*;
 
 public class AccountState {
@@ -47,7 +47,7 @@ public class AccountState {
 
 
     public AccountState() {
-        this(startingNonce(), BigInteger.ZERO);
+        this(SystemProperties.CONFIG.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {

@@ -1,10 +1,12 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.fork.MainForkConfig;
 import org.ethereum.core.BlockHeader;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -13,8 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
-import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Mikhail Kalinin
@@ -22,28 +23,19 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBasicTest {
-    private static final long HOMESTEAD_BLOCK_SAVE = Constants.HOMESTEAD_FORK_BLKNUM;
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
     public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
 
-    @Before
-    public void setup() {
-
-        // if not set explicitly
-        // this test fails being run by Gradle
-        CONFIG.setGenesisInfo("frontier.json");
-    }
-
     @After
     public void recover() {
-        Constants.HOMESTEAD_FORK_BLKNUM = HOMESTEAD_BLOCK_SAVE;
+        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
     }
 
     @Test
     public void runDifficultyTest() throws IOException, ParseException {
 
-        Constants.HOMESTEAD_FORK_BLKNUM = Long.MAX_VALUE;
+        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig());
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
 
@@ -63,7 +55,7 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyFrontierTest() throws IOException, ParseException {
 
-        Constants.HOMESTEAD_FORK_BLKNUM = Long.MAX_VALUE;
+        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig());
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyFrontier.json", shacommit);
 
@@ -83,7 +75,7 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyHomesteadTest() throws IOException, ParseException {
 
-        Constants.HOMESTEAD_FORK_BLKNUM = 0;
+        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyHomestead.json", shacommit);
 

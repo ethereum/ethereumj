@@ -32,15 +32,6 @@ public class Block {
 
     private static final Logger logger = LoggerFactory.getLogger("block");
 
-    public static final BigInteger BLOCK_REWARD = CONFIG.isFrontier() ?
-            new BigInteger("5000000000000000000") :
-            new BigInteger("1500000000000000000");
-
-    public static final BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
-            BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
-    public static final BigInteger INCLUSION_REWARD = BLOCK_REWARD
-            .divide(BigInteger.valueOf(32));
-
     private BlockHeader header;
 
     /* Transactions */
@@ -449,10 +440,6 @@ public class Block {
         body.add(uncles);
 
         return body;
-    }
-
-    public boolean isHomestead() {
-        return getHeader().isHomestead();
     }
 
     public String getShortHash() {

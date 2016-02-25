@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
@@ -145,11 +145,10 @@ public class TransactionExecutor {
             return;
         }
 
-        if (currentBlock.isHomestead() && tx.getSignature() != null) {
-            if (tx.getSignature().s.compareTo(Constants.SECP256K1N_HALF) >= 0) {
-                logger.warn("Transaction signature not accepted: " + tx.getSignature());
-                return;
-            }
+        if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                acceptTransactionSignature(tx)) {
+            logger.warn("Transaction signature not accepted: " + tx.getSignature());
+            return;
         }
 
         readyToExecute = true;
@@ -269,7 +268,8 @@ public class TransactionExecutor {
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    if (currentBlock.isHomestead()) {
+                    if (!CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                            getConstants().createEmptyContractOnOOG()) {
                         program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                 returnDataGasValue, program));
                         result = program.getResult();

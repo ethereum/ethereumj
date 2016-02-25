@@ -1,8 +1,9 @@
 package org.ethereum.sync;
 
-import org.ethereum.config.Constants;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.fork.MainForkConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Blockchain;
@@ -31,10 +32,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-import static java.math.BigInteger.ONE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.fail;
@@ -63,8 +66,12 @@ public class ShortSyncTest {
     @BeforeClass
     public static void setup() throws IOException, URISyntaxException {
 
-        minDifficultyBackup = Constants.MINIMUM_DIFFICULTY;
-        Constants.MINIMUM_DIFFICULTY = ONE;
+        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        }));
 
         nodeA = new Node("enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334");
 
@@ -105,7 +112,7 @@ public class ShortSyncTest {
 
     @AfterClass
     public static void cleanup() {
-        Constants.MINIMUM_DIFFICULTY = minDifficultyBackup;
+        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
     }
 
     @Before
