@@ -17,8 +17,13 @@ public class PingMessage extends Message {
     String host;
     int port;
     long expires;
+    int version;
 
     public static PingMessage create(String host, int port, ECKey privKey) {
+        return create(host, port, privKey, 4);
+    }
+
+    public static PingMessage create(String host, int port, ECKey privKey, int version) {
 
         long expiration = 60 + System.currentTimeMillis() / 1000;
 
@@ -37,8 +42,7 @@ public class PingMessage extends Message {
         byte[] rlpExp = RLP.encodeElement(stripLeadingZeroes(tmpExp));
 
         byte[] type = new byte[]{1};
-        byte[] version = new byte[]{4};
-        byte[] rlpVer = RLP.encodeElement(version);
+        byte[] rlpVer = RLP.encodeInt(version);
         byte[] rlpFromList = RLP.encodeList(rlpIp, rlpPort, rlpPort);
         byte[] rlpToList = RLP.encodeList(rlpIpTo, rlpPortTo, rlpPortTo);
         byte[] data = RLP.encodeList(rlpVer, rlpFromList, rlpToList, rlpExp);
@@ -56,8 +60,7 @@ public class PingMessage extends Message {
     @Override
     public void parse(byte[] data) {
 
-        RLPList list = RLP.decode2(data);
-        RLPList dataList = (RLPList) list.get(0);
+        RLPList dataList = (RLPList) RLP.decode2OneItem(data, 0);
         RLPList fromList = (RLPList) dataList.get(2);
 
         byte[] ipB = fromList.get(0).getRLPData();
@@ -67,6 +70,8 @@ public class PingMessage extends Message {
 
         RLPItem expires = (RLPItem) dataList.get(3);
         this.expires = ByteUtil.byteArrayToLong(expires.getRLPData());
+
+        this.version = ByteUtil.byteArrayToInt(dataList.get(0).getRLPData());
     }
 
 
