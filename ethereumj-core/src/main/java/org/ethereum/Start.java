@@ -31,6 +31,7 @@ public class Start {
         if (!CONFIG.blocksLoader().equals(""))
             ethereum.getBlockLoader().loadBlocks();
 
+        // TODO adding rpc
         if (CONFIG.isRpcEnabled()) {
             new JsonRpcListener(ethereum).start();
         }
