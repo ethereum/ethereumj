@@ -548,9 +548,11 @@ public class Eth62 extends EthHandler {
 
     protected void processGapRecovery(List<BlockHeader> received) {
 
+        boolean completed = false;
+
         // treat empty headers response as end of header sync
         if (received.isEmpty()) {
-            changeState(BLOCK_RETRIEVING);
+            completed = true;
         } else {
             syncStats.addHeaders(received.size());
 
@@ -560,7 +562,7 @@ public class Eth62 extends EthHandler {
                 adding.add(header);
 
                 if (Arrays.equals(header.getHash(), lastHashToAsk)) {
-                    changeState(BLOCK_RETRIEVING);
+                    completed = true;
                     logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), toHexString(lastHashToAsk));
                     break;
                 }
@@ -575,17 +577,16 @@ public class Eth62 extends EthHandler {
             }
         }
 
-        if (syncState == HASH_RETRIEVING) {
-            long lastNumber = received.get(received.size() - 1).getNumber();
-            sendGetBlockHeaders(lastNumber + 1, maxHashesAsk);
-        }
-
-        if (syncState == BLOCK_RETRIEVING) {
+        if (completed) {
             logger.info(
                     "Peer {}: header sync completed, [{}] headers in queue",
                     channel.getPeerIdShort(),
                     queue.headerStoreSize()
             );
+            changeState(BLOCK_RETRIEVING);
+        } else {
+            long lastNumber = received.get(received.size() - 1).getNumber();
+            sendGetBlockHeaders(lastNumber + 1, maxHashesAsk);
         }
     }
 
