@@ -400,7 +400,7 @@ public class Program {
             vm.play(program);
             result = program.getResult();
 
-            getResult().addInternalTransactions(result.getInternalTransactions());
+            getResult().merge(result);
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
