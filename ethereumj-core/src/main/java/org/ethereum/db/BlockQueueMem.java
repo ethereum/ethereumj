@@ -42,18 +42,19 @@ public class BlockQueueMem implements BlockQueue {
         List<Long> numbers = new ArrayList<>(blockList.size());
         Map<Long, BlockWrapper> newBlocks = new HashMap<>();
 
-        for (BlockWrapper b : blockList) {
+        synchronized (mutex) {
 
-            // do not add existing number to index
-            if (!index.contains(b.getNumber()) &&
-                    !numbers.contains(b.getNumber())) {
-                numbers.add(b.getNumber());
+            for (BlockWrapper b : blockList) {
+
+                // do not add existing number to index
+                if (!index.contains(b.getNumber()) &&
+                        !numbers.contains(b.getNumber())) {
+                    numbers.add(b.getNumber());
+                }
+
+                newBlocks.put(b.getNumber(), b);
             }
 
-            newBlocks.put(b.getNumber(), b);
-        }
-
-        synchronized (mutex) {
             blocks.putAll(newBlocks);
             index.addAll(numbers);
         }
