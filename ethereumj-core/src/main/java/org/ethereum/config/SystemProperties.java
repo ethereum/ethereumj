@@ -716,4 +716,18 @@ public class SystemProperties {
         return config.hasPath("blocks.loader") ?
                 config.getString("blocks.loader") : DEFAULT_BLOCKS_LOADER;
     }
+
+    // TODO review added method
+    public boolean isRpcEnabled() {
+        return config.hasPath("rpc.enabled") ?
+                config.getBoolean("rpc.enabled") : false;
+
+    }
+
+    // TODO review added method
+    public int RpcPort() {
+        return config.hasPath("rpc.port") ?
+                config.getInt("rpc.port") : 4444;
+
+    }
 }

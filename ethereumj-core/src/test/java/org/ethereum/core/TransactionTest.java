@@ -308,7 +308,8 @@ public class TransactionTest {
         List<LogInfo> logs = new ArrayList<>();
         logs.add(logInfo1);
 
-        TransactionReceipt receipt = new TransactionReceipt(stateRoot, gasUsed, bloom, logs);
+        // TODO calculate cumulative gas
+        TransactionReceipt receipt = new TransactionReceipt(stateRoot, gasUsed, gasUsed, bloom, logs);
 
         assertEquals(data,
                 Hex.toHexString(receipt.getEncoded()));

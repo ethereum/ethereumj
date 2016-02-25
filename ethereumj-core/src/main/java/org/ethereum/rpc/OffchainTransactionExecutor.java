@@ -46,7 +46,7 @@ public class OffchainTransactionExecutor {
                 EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 0, EMPTY_ARRAY, 0,
                 0,
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
+                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
         );
     }
     public List<TransactionReceipt> executeTransactions(List<Transaction> txList) {

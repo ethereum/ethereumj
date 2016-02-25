@@ -1,6 +1,5 @@
 package org.ethereum.rpc.DTO;
 
-import com.subgraph.orchid.encoders.Hex;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.TransactionInfo;

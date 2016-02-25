@@ -28,6 +28,7 @@ public class TransactionReceipt {
 
     private byte[] postTxState = EMPTY_BYTE_ARRAY;
     private byte[] cumulativeGas = EMPTY_BYTE_ARRAY;
+    private byte[] gasUsed = EMPTY_BYTE_ARRAY;
     private Bloom bloomFilter = new Bloom();
     private List<LogInfo> logInfoList = new ArrayList<>();
 
@@ -46,10 +47,12 @@ public class TransactionReceipt {
         RLPItem cumulativeGasRLP = (RLPItem) receipt.get(1);
         RLPItem bloomRLP = (RLPItem) receipt.get(2);
         RLPList logs = (RLPList) receipt.get(3);
+        RLPItem gasUsedRLP = (RLPItem) receipt.get(4);
 
         postTxState = postTxStateRLP.getRLPData();
         cumulativeGas = cumulativeGasRLP.getRLPData();
         bloomFilter = new Bloom(bloomRLP.getRLPData());
+        gasUsed = gasUsedRLP.getRLPData();
 
         for (RLPElement log : logs) {
             LogInfo logInfo = new LogInfo(log.getRLPData());
@@ -60,10 +63,11 @@ public class TransactionReceipt {
     }
 
 
-    public TransactionReceipt(byte[] postTxState, byte[] cumulativeGas,
+    public TransactionReceipt(byte[] postTxState, byte[] cumulativeGas, byte[] gasUsed,
                               Bloom bloomFilter, List<LogInfo> logInfoList) {
         this.postTxState = postTxState;
         this.cumulativeGas = cumulativeGas;
+        this.gasUsed = gasUsed;
         this.bloomFilter = bloomFilter;
         this.logInfoList = logInfoList;
     }
@@ -74,6 +78,10 @@ public class TransactionReceipt {
 
     public byte[] getCumulativeGas() {
         return cumulativeGas;
+    }
+
+    public byte[] getGasUsed() {
+        return gasUsed;
     }
 
     public long getCumulativeGasLong() {
@@ -97,6 +105,7 @@ public class TransactionReceipt {
 
         byte[] postTxStateRLP = RLP.encodeElement(this.postTxState);
         byte[] cumulativeGasRLP = RLP.encodeElement(this.cumulativeGas);
+        byte[] gasUsedRLP = RLP.encodeElement(this.gasUsed);
         byte[] bloomRLP = RLP.encodeElement(this.bloomFilter.data);
 
         final byte[] logInfoListRLP;
@@ -113,7 +122,7 @@ public class TransactionReceipt {
             logInfoListRLP = RLP.encodeList();
         }
 
-        rlpEncoded = RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP);
+        rlpEncoded = RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP, gasUsedRLP);
 
         return rlpEncoded;
     }
@@ -126,10 +135,17 @@ public class TransactionReceipt {
         this.cumulativeGas = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(cumulativeGas));
     }
 
+    public void setGasUsed(long gasUsed) {
+        this.gasUsed = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(gasUsed));
+    }
+
     public void setCumulativeGas(byte[] cumulativeGas) {
         this.cumulativeGas = cumulativeGas;
     }
 
+    public void setGasUsed(byte[] gasUsed) {
+        this.gasUsed = gasUsed;
+    }
 
     public void setLogInfoList(List<LogInfo> logInfoList) {
         if (logInfoList == null) return;

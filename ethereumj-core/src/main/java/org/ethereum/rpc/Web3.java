@@ -1,7 +1,7 @@
 package org.ethereum.rpc;
 
-import org.ethereum.mine.MinerWork;
-import org.ethereum.mine.ProcessSPVProofIllegalStateException;
+// import org.ethereum.mine.MinerWork;
+// import org.ethereum.mine.ProcessSPVProofIllegalStateException;
 import org.ethereum.rpc.DTO.TransactionReceiptDTO;
 import org.ethereum.rpc.DTO.TransactionResultDTO;
 
@@ -113,8 +113,9 @@ public interface Web3 {
     void shh_getFilterChanges();
     void shh_getMessages();
 
-    MinerWork eth_getWork();
-    void eth_processSPVProof(String bitcoinBlockHex) throws ProcessSPVProofIllegalStateException;
+    // TODO Miner related methods
+    // MinerWork eth_getWork();
+    // void eth_processSPVProof(String bitcoinBlockHex) throws ProcessSPVProofIllegalStateException;
 
 
     }

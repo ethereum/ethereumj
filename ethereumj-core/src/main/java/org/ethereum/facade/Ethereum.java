@@ -1,16 +1,19 @@
 package org.ethereum.facade;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.shh.Whisper;
 import org.ethereum.vm.program.ProgramResult;
 
@@ -189,4 +192,13 @@ public interface Ethereum {
     long getGasPrice();
 
     void exitOn(long number);
+
+    // TODO review world manager expose
+    WorldManager getWorldManager();
+
+    // TODO review peer server expose
+    PeerServer getPeerServer();
+
+    // TODO added method, to review
+    ProgramResult callConstantCallTransaction(Transaction tx, Block block);
 }

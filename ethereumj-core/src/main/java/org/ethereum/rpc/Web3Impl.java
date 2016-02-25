@@ -10,13 +10,14 @@ import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.TransactionInfo;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.mine.MinerServer;
-import org.ethereum.mine.MinerWork;
-import org.ethereum.mine.ProcessSPVProofIllegalStateException;
-import org.ethereum.net.eth.sync.SyncManager;
+// TODO Miner related
+// import org.ethereum.mine.MinerServer;
+// import org.ethereum.mine.MinerWork;
+// import org.ethereum.mine.ProcessSPVProofIllegalStateException;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.rpc.DTO.TransactionReceiptDTO;
 import org.ethereum.rpc.DTO.TransactionResultDTO;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.program.ProgramResult;
@@ -35,7 +36,8 @@ public class Web3Impl implements Web3 {
 
     public Ethereum eth;
 
-    public MinerServer minerServer;
+    // TODO Miner related
+    // public MinerServer minerServer;
 
     public String base_clientVersion = "RootstockJ";
 
@@ -43,7 +45,8 @@ public class Web3Impl implements Web3 {
         this.eth = eth;
         this.worldManager = eth.getWorldManager();
         this.repository = eth.getRepository();
-        this.minerServer = eth.getMinerServer();
+        // TODO Miner related
+        // this.minerServer = eth.getMinerServer();
     }
     
     public long JSonHexToLong(String x) throws Exception {
@@ -136,8 +139,11 @@ public class Web3Impl implements Web3 {
         return s;
     };
 
+    // TODO not implemented
     public String eth_coinbase(){
-        return TypeConverter.toJsonHex(worldManager.getCoinBaseAddress());
+        throw new NotImplementedException();
+        // TODO expose coin base address
+        // return TypeConverter.toJsonHex(worldManager.getCoinBaseAddress());
     };
 
     public boolean eth_mining()
@@ -159,10 +165,16 @@ public class Web3Impl implements Web3 {
         return TypeConverter.toJsonHex(defaultGasPrice);
     };
 
-    public String[] eth_accounts(){
-        Collection<String> addrs =worldManager.getWallet().getAccountAddresses();
-        return toJsonHexArray(addrs);
-    };
+    // TODO review implementation using getAccountCollection
+    public String[] eth_accounts() {
+        List<String> addresses = new ArrayList<>();
+
+        for (Account account : worldManager.getWallet().getAccountCollection()) {
+            addresses.add(Hex.toHexString(account.getAddress()));
+        }
+
+        return toJsonHexArray(addresses);
+    }
 
     public String eth_blockNumber(){
         Block bestBlock =worldManager.getBlockchain().getBestBlock();
@@ -259,9 +271,12 @@ public class Web3Impl implements Web3 {
 
     public String eth_sign(String addr,String data) throws Exception {
         String ha = JSonHexToHex(addr);
-        Account account = eth.getWallet().findAccountByAddress(ha);
+
+        Account account = getAccountByAddress(ha);
+
         if (account==null)
             throw new Exception("Inexistent account");
+
         // Todo: is not clear from the spec what hash function must be used to sign
         // We assume sha3
         byte[] masgHash= HashUtil.sha3(TypeConverter.StringHexToByteArray(data));
@@ -269,11 +284,11 @@ public class Web3Impl implements Web3 {
         // Todo: is not clear if result should be RlpEncoded or serialized by other means
         byte[] rlpSig = RLP.encode(signature);
         return TypeConverter.toJsonHex(rlpSig);
-    };
+    }
 
     public String eth_sendTransaction(CallArguments args) throws Exception {
 
-        Account account = worldManager.getWallet().findAccountByAddress(JSonHexToHex(args.from));
+        Account account = getAccountByAddress(JSonHexToHex(args.from));
 
         if (account == null)
             throw new Exception("From address private key could not be found in this node");
@@ -295,8 +310,12 @@ public class Web3Impl implements Web3 {
 
         List<Transaction> txs = new ArrayList<Transaction>();
         txs.add(tx);
-        worldManager.getBlockchain().addPendingTransactions(new HashSet<Transaction>(txs));
-        channelManager.sendTransaction(tx);
+
+        // TODO review if needed
+        // worldManager.getBlockchain().addPendingTransactions(new HashSet<Transaction>(txs));
+
+        // TODO review channel argument as null
+        channelManager.sendTransaction(txs, null);
 
         return TypeConverter.toJsonHex(tx.getHash());
     };
@@ -314,7 +333,9 @@ public class Web3Impl implements Web3 {
                 TypeConverter.StringHexToByteArray(to), /*receiveAddress*/
                 TypeConverter.StringHexToByteArray(value),
                 TypeConverter.StringHexToByteArray(data));
-        channelManager.sendTransaction(tx);
+
+        // TODO review channel as null
+        channelManager.sendTransaction(Arrays.asList(tx), null);
 
         return TypeConverter.toJsonHex(tx.getHash());
     };
@@ -324,7 +345,10 @@ public class Web3Impl implements Web3 {
         ChannelManager channelManager = worldManager.getChannelManager();
         Transaction tx;
         tx = new Transaction(TypeConverter.StringHexToByteArray(rawData));
-        channelManager.sendTransaction(tx);
+
+        // TODO review channel as null
+        channelManager.sendTransaction(Arrays.asList(tx), null);
+
         return TypeConverter.toJsonHex(tx.getHash());
     };
 
@@ -372,7 +396,7 @@ public class Web3Impl implements Web3 {
 
         Block block = worldManager.getBlockchain().getBestBlock();
 
-        ProgramResult res = eth.callConstantCallTransaction(tx,block);
+        ProgramResult res = eth.callConstantCallTransaction(tx, block);
         return res;
     };
 
@@ -444,10 +468,12 @@ public class Web3Impl implements Web3 {
         return getBlockResult(b);
     };
 
+    // TODO complete implementation, blockchain.getTransactionInfo
     public TransactionResultDTO eth_getTransactionByHash(String transactionHash) throws Exception {
+        throw new NotImplementedException();
 
         //TODO: return also unconfirmed transactions
-
+/*
         Blockchain blockchain = worldManager.getBlockchain();
         TransactionInfo txInfo = blockchain.getTransactionInfo(TypeConverter.StringHexToByteArray(transactionHash));
 
@@ -459,8 +485,8 @@ public class Web3Impl implements Web3 {
         TransactionResultDTO txDTO = new TransactionResultDTO(block, txInfo.getIndex(), txInfo.getReceipt().getTransaction());
 
         return txDTO;
+  */
     }
-
 
     public TransactionResultDTO eth_getTransactionByBlockHashAndIndex(String blockHash,String index) throws Exception {
         Block b = getBlockByJSonHash(blockHash);
@@ -478,7 +504,10 @@ public class Web3Impl implements Web3 {
         return tr;
     };
 
+    // TODO complete implementation blockchain.getTransactionInfo
     public TransactionReceiptDTO eth_getTransactionReceipt(String transactionHash) throws Exception {
+        throw new NotImplementedException();
+        /*
         Blockchain blockchain = worldManager.getBlockchain();
         byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
         TransactionInfo txInfo = blockchain.getTransactionInfo(hash);
@@ -489,6 +518,7 @@ public class Web3Impl implements Web3 {
         Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
 
         return new TransactionReceiptDTO(block, txInfo);
+        */
     };
 
     public void eth_getUncleByBlockHashAndIndex(){};
@@ -531,6 +561,8 @@ public class Web3Impl implements Web3 {
     public void shh_getFilterChanges(){};
     public void shh_getMessages(){};
 
+    // TODO Miner related
+    /*
     public MinerWork eth_getWork() {
         return minerServer.getWork();
     };
@@ -554,5 +586,21 @@ public class Web3Impl implements Web3 {
 
         minerServer.processSPVProof(blockHashForMergedMining, bitcoinBlock);
     }
+*/
 
-}
+    // TODO review new method to get account by address
+    private Account getAccountByAddress(String address) {
+        Collection<Account> accounts = eth.getWallet().getAccountCollection();
+
+        Account account = null;
+
+        // TODO review search account by address
+        for (Account acc : accounts) {
+            String straddr = Hex.toHexString(acc.getAddress());
+            if (address.equals(straddr)) {
+                account = acc;
+                break;
+            }
+        }
+        return account;
+    }}
