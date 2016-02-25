@@ -111,13 +111,19 @@ public class SystemProperties {
             Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
             logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
-            Config cmdLineConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
-                    ConfigFactory.empty();
-            logger.info("Config (" + (cmdLineConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
+            Config cmdLineConfigFile = ConfigFactory.empty();
+            Config cmdLineConfigRes = ConfigFactory.empty();
+            if (file != null) {
+                cmdLineConfigRes = ConfigFactory.parseResources(file);
+                cmdLineConfigFile = ConfigFactory.parseFile(new File(file));
+            }
+            logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file resource '" + file + "'");
+            logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = javaSystemProperties
                     .withFallback(apiConfig)
-                    .withFallback(cmdLineConfig)
+                    .withFallback(cmdLineConfigFile)
+                    .withFallback(cmdLineConfigRes)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
                     .withFallback(userConfig)
@@ -640,11 +646,11 @@ public class SystemProperties {
     }
 
     public boolean isFrontier() {
-        return genesisInfo().contains("frontier") || genesisInfo().contains("morden");
+        return genesisInfo().contains("frontier");
     }
 
     public boolean isMorden() {
-        return genesisInfo().contains("morden");
+        return genesisInfo().contains("frontier-morden");
     }
 
     @ValidateMe
