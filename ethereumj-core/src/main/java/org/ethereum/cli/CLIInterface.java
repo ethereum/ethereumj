@@ -62,6 +62,18 @@ public class CLIInterface {
                     logger.info("Resetting db set to [{}]", resetStr);
                     cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetStr.toString());
                 }
+
+                // TODO added parameter
+                // override the rpc parameter
+                if (args[i].equals("-rpc")) {
+                    if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+                        String portStr =  args[i + 1];
+                        cliOptions.put(SystemProperties.PROPERTY_RPC_PORT, portStr);
+                        logger.info("RPC port set to [{}]", portStr);
+                    }
+
+                    cliOptions.put(SystemProperties.PROPERTY_RPC_ENABLED, "true");
+                }
             }
 
             logger.info("Overriding config file with CLI options: " + cliOptions);
