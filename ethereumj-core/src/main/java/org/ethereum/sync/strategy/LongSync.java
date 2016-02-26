@@ -24,7 +24,7 @@ import static org.ethereum.util.BIUtil.isIn20PercentRange;
 @Component
 public class LongSync extends AbstractSyncStrategy {
 
-    private static final int ROTATION_LIMIT = 100;
+    private static final int ROTATION_LIMIT = 20;
 
     private SyncState state = HASH_RETRIEVING;
 
