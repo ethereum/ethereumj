@@ -314,6 +314,9 @@ public class Web3Impl implements Web3 {
         // TODO review if needed
         // worldManager.getBlockchain().addPendingTransactions(new HashSet<Transaction>(txs));
 
+        // TODO review submit transaction to own peer
+        eth.submitTransaction(tx);
+
         // TODO review channel argument as null
         channelManager.sendTransaction(txs, null);
 
