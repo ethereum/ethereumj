@@ -40,6 +40,18 @@ tasks.withType(JavaCompile){
     options.warnings = false
 }
 
+task runMorden (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.file=morden.conf'
+}
+
+task runTest (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.file=test.conf'
+}
+
 /**
  *  This is TCK test command line option,
  *  to run the test:
