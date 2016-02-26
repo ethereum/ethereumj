@@ -255,10 +255,9 @@ public class Eth62 extends EthHandler {
      *************************/
 
     protected void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
-        channel.getNodeStatistics().ethHandshake(msg);
-        ethereumListener.onEthStatusUpdated(channel, msg);
 
         try {
+
             if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())
                     || msg.getProtocolVersion() != version.getCode()) {
                 loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
@@ -266,24 +265,32 @@ public class Eth62 extends EthHandler {
                 disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
                 ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
                 return;
-            } else if (msg.getNetworkId() != config.networkId()) {
+            }
+
+            if (msg.getNetworkId() != config.networkId()) {
                 ethState = EthState.STATUS_FAILED;
                 disconnect(ReasonCode.NULL_IDENTITY);
                 return;
-            } else if (peerDiscoveryMode) {
+            }
+
+            // basic checks passed, update statistics
+            channel.getNodeStatistics().ethHandshake(msg);
+            ethereumListener.onEthStatusUpdated(channel, msg);
+
+            if (peerDiscoveryMode) {
                 loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
                 disconnect(ReasonCode.REQUESTED);
                 ctx.close().sync();
                 ctx.disconnect().sync();
                 return;
             }
+
+            // update bestKnownBlock info
+            sendGetBlockHeaders(msg.getBestHash(), 1, 0, false);
+
         } catch (NoSuchElementException e) {
             loggerNet.debug("EthHandler already removed");
-            return;
         }
-
-        // update bestKnownBlock info
-        sendGetBlockHeaders(msg.getBestHash(), 1, 0, false);
     }
 
     protected void processNewBlockHashes(NewBlockHashesMessage msg) {
