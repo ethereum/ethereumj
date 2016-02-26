@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
 import static org.ethereum.sync.SyncState.HASH_RETRIEVING;
 import static org.ethereum.sync.SyncState.IDLE;
+import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
 /**
  * Implements long sync algorithm <br/>
@@ -79,11 +80,24 @@ public class LongSync extends AbstractSyncStrategy {
         } else {
 
             // master peer rotation
-            if (master.getSyncStats().getHeaderBunchesCount() > ROTATION_LIMIT) {
+            if (rotationNeeded(master)) {
                 logger.debug("Peer {}: rotating", master.getPeerIdShort());
                 changeState(BLOCK_RETRIEVING);
             }
         }
+    }
+
+    private boolean rotationNeeded(Channel master) {
+
+        if (master.getSyncStats().getHeaderBunchesCount() > ROTATION_LIMIT)
+            return true;
+
+        Channel top = pool.getHighestDifficulty();
+
+        if (top != null && !isIn20PercentRange(top.getTotalDifficulty(), master.getTotalDifficulty()))
+            return true;
+
+        return false;
     }
 
     private void doBodies() {
