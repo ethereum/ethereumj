@@ -4,7 +4,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.fork.MordenForkConfig;
+import org.ethereum.config.fork.TestNetForkConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -83,7 +86,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
-    private BlockchainForkConfig blockchainConfig = MainForkConfig.INSTANCE;
+    private BlockchainForkConfig blockchainConfig;
     private Genesis genesis;
 
     public SystemProperties() {
@@ -210,7 +213,43 @@ public class SystemProperties {
         return (T) config.getAnyRef(propName);
     }
 
+    @ValidateMe
     public BlockchainForkConfig getBlockchainConfig() {
+        if (blockchainConfig == null) {
+            if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
+                throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
+            }
+            if (config.hasPath("blockchain.config.name")) {
+                switch(config.getString("blockchain.config.name")) {
+                    case "main":
+                        blockchainConfig = new MainForkConfig();
+                        break;
+                    case "olympic":
+                        blockchainConfig = new OlympicConfig();
+                        break;
+                    case "morden":
+                        blockchainConfig = new MordenForkConfig();
+                        break;
+                    case "testnet":
+                        blockchainConfig = new TestNetForkConfig();
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
+                }
+            } else {
+                String className = config.getString("blockchain.config.class");
+                try {
+                    Class<? extends BlockchainForkConfig> aClass = (Class<? extends BlockchainForkConfig>) Class.forName(className);
+                    blockchainConfig = aClass.newInstance();
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
+                } catch (ClassCastException e) {
+                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' is not instance of org.ethereum.config.BlockchainForkConfig" , e);
+                } catch (InstantiationException|IllegalAccessException e) {
+                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' couldn't be instantiated (check for default constructor and its accessibility)" , e);
+                }
+            }
+        }
         return blockchainConfig;
     }
 
