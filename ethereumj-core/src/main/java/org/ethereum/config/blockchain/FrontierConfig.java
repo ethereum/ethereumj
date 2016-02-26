@@ -21,6 +21,11 @@ public class FrontierConfig extends OlympicConfig {
         public BigInteger getBLOCK_REWARD() {
             return BLOCK_REWARD;
         }
+
+        @Override
+        public int getMIN_GAS_LIMIT() {
+            return 5000;
+        }
     };
 
     public FrontierConfig() {
