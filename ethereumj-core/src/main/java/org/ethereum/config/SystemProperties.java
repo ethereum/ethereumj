@@ -540,7 +540,6 @@ public class SystemProperties {
 
     @ValidateMe
     public int networkId() {
-        if (isMorden()) return 2;
         return config.getInt("peer.networkId");
     }
 
@@ -642,14 +641,6 @@ public class SystemProperties {
             return config.getString("genesis");
         else
             return genesisInfo;
-    }
-
-    public boolean isFrontier() {
-        return genesisInfo().contains("frontier") || genesisInfo().contains("morden");
-    }
-
-    public boolean isMorden() {
-        return genesisInfo().contains("morden");
     }
 
     @ValidateMe
