@@ -5,12 +5,10 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +22,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.sync.SyncState.IDLE;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.TimeUtils.*;
@@ -47,14 +44,9 @@ public class SyncPool implements Iterable<Channel> {
 
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
-    private static final int DISCONNECT_HITS_THRESHOLD = 5;
-    private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(1);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
 
     private final Map<ByteArrayWrapper, Channel> activePeers = new HashMap<>();
-    private final Set<Channel> bannedPeers = new HashSet<>();
-    private final Map<String, Integer> disconnectHits = new HashMap<>();
-    private final Map<String, Long> bans = new HashMap<>();
     private final Map<String, Long> pendingConnections = new HashMap<>();
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
@@ -84,7 +76,6 @@ public class SyncPool implements Iterable<Channel> {
                     public void run() {
                         try {
                             heartBeat();
-                            releaseBans();
                             processConnections();
                             updateLowerUsefulDifficulty();
                             fillUp();
@@ -117,13 +108,9 @@ public class SyncPool implements Iterable<Channel> {
 
         synchronized (activePeers) {
             activePeers.put(peer.getNodeIdWrapper(), peer);
-            bannedPeers.remove(peer);
         }
         synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
-        }
-        synchronized (bans) {
-            bans.remove(peer.getPeerId());
         }
 
         ethereumListener.onPeerAddedToSyncPool(peer);
@@ -177,37 +164,19 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     public void onDisconnect(Channel peer) {
-        if (peer.getNodeId() == null) {
-            return;
-        }
+
+        if (peer.getNodeId() == null) return;
 
         boolean existed;
         synchronized (activePeers) {
             existed = activePeers.values().remove(peer);
-            bannedPeers.remove(peer);
         }
 
         // do not count disconnects for nodeId
         // if exact peer is not an active one
-        if (!existed) {
-            return;
-        }
+        if (!existed) return;
 
         logger.info("Peer {}: disconnected", peer.getPeerIdShort());
-
-        synchronized (disconnectHits) {
-            Integer hits = disconnectHits.get(peer.getPeerId());
-            if (hits == null) {
-                hits = 0;
-            }
-            if (hits > DISCONNECT_HITS_THRESHOLD) {
-                ban(peer);
-                logger.info("Peer {}: banned due to disconnects exceeding", Utils.getNodeIdShort(peer.getPeerId()));
-                disconnectHits.remove(peer.getPeerId());
-            } else {
-                disconnectHits.put(peer.getPeerId(), hits + 1);
-            }
-        }
     }
 
     public void connect(Node node) {
@@ -229,31 +198,12 @@ public class SyncPool implements Iterable<Channel> {
         }
     }
 
-    public void ban(Channel peer) {
-
-        peer.changeSyncState(IDLE);
-
-        synchronized (activePeers) {
-            if (activePeers.containsKey(peer.getNodeIdWrapper())) {
-                activePeers.remove(peer.getNodeIdWrapper());
-                bannedPeers.add(peer);
-            }
-        }
-
-        synchronized (bans) {
-            bans.put(peer.getPeerId(), timeAfterMillis(DEFAULT_BAN_TIMEOUT));
-        }
-    }
-
     public Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
                 ids.add(peer.getPeerId());
             }
-        }
-        synchronized (bans) {
-            ids.addAll(bans.keySet());
         }
         synchronized (pendingConnections) {
             ids.addAll(pendingConnections.keySet());
@@ -283,31 +233,6 @@ public class SyncPool implements Iterable<Channel> {
         }
     }
 
-    public boolean hasCompatible(EthVersion version) {
-
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
-                if (peer.getEthVersion().isCompatible(version))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    @Nullable
-    public Channel findOne(Functional.Predicate<Channel> filter) {
-
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
-                if (filter.test(peer))
-                    return peer;
-            }
-        }
-
-        return null;
-    }
-
     public boolean isEmpty() {
         return activePeers.isEmpty();
     }
@@ -331,47 +256,6 @@ public class SyncPool implements Iterable<Channel> {
             for(Channel peer : this) {
                 peer.logSyncStats();
             }
-        }
-    }
-
-    void logBannedPeers() {
-        synchronized (bans) {
-            if (bans.size() > 0) {
-                logger.info("\n");
-                logger.info("Banned peers");
-                logger.info("============");
-                for (Map.Entry<String, Long> e : bans.entrySet()) {
-                    logger.info(
-                            "Peer {} | {} seconds ago",
-                            Utils.getNodeIdShort(e.getKey()),
-                            millisToSeconds(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
-                    );
-                }
-            }
-        }
-    }
-
-    private void releaseBans() {
-
-        Set<String> released;
-
-        synchronized (bans) {
-            released = getTimeoutExceeded(bans);
-
-            synchronized (activePeers) {
-                for (Channel peer : bannedPeers) {
-                    if (released.contains(peer.getPeerId())) {
-                        activePeers.put(peer.getNodeIdWrapper(), peer);
-                    }
-                }
-                bannedPeers.removeAll(activePeers.values());
-            }
-
-            bans.keySet().removeAll(released);
-        }
-
-        synchronized (disconnectHits) {
-            disconnectHits.keySet().removeAll(released);
         }
     }
 
