@@ -50,7 +50,6 @@ As a starting point for your own project take a look at https://github.com/ether
 ##### Optional samples to try:
 ```
 ./gradlew run -PmainClass=org.ethereum.samples.BasicSample
-./gradlew run -PmainClass=org.ethereum.samples.BasicSample
 ./gradlew run -PmainClass=org.ethereum.samples.FollowAccount
 ./gradlew run -PmainClass=org.ethereum.samples.PendingStateSample
 ./gradlew run -PmainClass=org.ethereum.samples.PriceFeedSample
