@@ -3,10 +3,12 @@ package org.ethereum.net;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +119,8 @@ public class MessageQueue {
             if (waitingMessage.getAnswerMessage() != null
                     && msg.getClass() == waitingMessage.getAnswerMessage()) {
                 messageRoundtrip.answer();
+                if (waitingMessage instanceof EthMessage)
+                    channel.getPeerStats().pong(messageRoundtrip.lastTimestamp);
                 logger.trace("Message round trip covered: [{}] ",
                         messageRoundtrip.getMsg().getClass());
             }

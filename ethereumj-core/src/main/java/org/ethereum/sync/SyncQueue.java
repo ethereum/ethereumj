@@ -3,6 +3,8 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -12,8 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Thread.sleep;
+import static java.util.Collections.emptyList;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.core.ImportResult.IMPORTED_BEST;
@@ -45,6 +50,11 @@ public class SyncQueue {
      */
     private BlockQueue blockQueue = new BlockQueueMem();
 
+    private final ReentrantLock takeLock = new ReentrantLock();
+    private final Condition notEmpty = takeLock.newCondition();
+
+    private boolean longSyncDone = false;
+
     @Autowired
     SystemProperties config;
 
@@ -57,6 +67,9 @@ public class SyncQueue {
     @Autowired
     private CompositeSyncListener compositeSyncListener;
 
+    @Autowired
+    private CompositeEthereumListener compositeEthereumListener;
+
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -67,6 +80,17 @@ public class SyncQueue {
 
         headerStore.open();
         blockQueue.open();
+
+        compositeEthereumListener.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onLongSyncDone() {
+                longSyncDone = true;
+            }
+            @Override
+            public void onLongSyncStarted() {
+                longSyncDone = false;
+            }
+        });
 
         Runnable queueProducer = new Runnable(){
 
@@ -85,11 +109,27 @@ public class SyncQueue {
      */
     private void produceQueue() {
 
+        long beginning = System.currentTimeMillis();
+        long totalGap = 0;
+        long startWait;
+
         while (1==1) {
 
             BlockWrapper wrapper = null;
             try {
+
+                startWait = System.currentTimeMillis();
+
                 wrapper = blockQueue.take();
+
+                if (totalGap > 0) {
+                    totalGap += System.currentTimeMillis() - startWait;
+                }
+
+                if (totalGap == 0) {
+                    totalGap += 1;
+                }
+
                 logger.debug("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
 
@@ -101,7 +141,7 @@ public class SyncQueue {
                     blockQueue.add(wrapper);
                     compositeSyncListener.onNoParent(wrapper);
 
-                    sleep(1000);
+                    sleep(100);
                 }
 
                 if (importResult == IMPORTED_BEST)
@@ -116,6 +156,16 @@ public class SyncQueue {
 
                 if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
                     if (logger.isTraceEnabled()) logger.trace(Hex.toHexString(wrapper.getBlock().getEncoded()));
+                }
+
+                if (wrapper.getNumber() == 1_000_000) {
+                    logger.debug("Total sync time = {} hrs", Math.round((System.currentTimeMillis() - beginning) / 36000.0) / 100.0);
+                    logger.debug("Total gap = {} sec, {} millis", totalGap / 1000, totalGap % 1000);
+                }
+
+                if (wrapper.getNumber() % 100_000 == 0) {
+                    logger.debug("Sync time = {} hrs", Math.round((System.currentTimeMillis() - beginning) / 36000.0) / 100.0);
+                    logger.debug("Gap = {} sec, {} millis", totalGap / 1000, totalGap % 1000);
                 }
 
             } catch (Throwable e) {
@@ -210,8 +260,7 @@ public class SyncQueue {
         }
 
         headerStore.addBatch(wrappers);
-
-        compositeSyncListener.onHeadersAdded();
+        fireHeadersNotEmpty();
 
         logger.debug("{} headers added", headers.size());
 
@@ -225,13 +274,8 @@ public class SyncQueue {
      * @param headers list of headers
      */
     public void returnHeaders(List<BlockHeaderWrapper> headers) {
-        try {
-            headerStore.addBatch(headers);
-            compositeSyncListener.onHeadersAdded();
-
-        } catch (NullPointerException npe) {
-            npe.printStackTrace();
-        }
+        headerStore.addBatch(headers);
+        fireHeadersNotEmpty();
     }
 
     /**
@@ -243,6 +287,29 @@ public class SyncQueue {
         if (logger.isDebugEnabled() && !headerStore.isEmpty())
             logger.debug("Headers list size: {}", headerStore.size());
         return headerStore.pollBatch(config.maxBlocksAsk());
+    }
+
+    /**
+     * Performs the same work as {@link #pollHeaders()} does. <br>
+     * Blocks thread if header store is empty until new headers appears in the store
+     *
+     * @return list of headers
+     */
+    public List<BlockHeaderWrapper> takeHeaders() {
+
+        takeLock.lock();
+        try {
+            List<BlockHeaderWrapper> headers;
+            while ((headers = headerStore.pollBatch(config.maxBlocksAsk())).isEmpty()) {
+                notEmpty.awaitUninterruptibly();
+                if (longSyncDone) return emptyList();
+            }
+            if (logger.isDebugEnabled() && !headerStore.isEmpty())
+                logger.debug("Headers list size: {}", headerStore.size());
+            return headers;
+        } finally {
+            takeLock.unlock();
+        }
     }
 
     public boolean isHeadersEmpty() {
@@ -320,5 +387,14 @@ public class SyncQueue {
         }
 
         return true;
+    }
+
+    private void fireHeadersNotEmpty() {
+        takeLock.lock();
+        try {
+            notEmpty.signalAll();
+        } finally {
+            takeLock.unlock();
+        }
     }
 }

@@ -221,6 +221,13 @@ public class Eth62 extends EthHandler {
             return false;
         }
 
+        sendGetBlockBodies(headers);
+
+        return true;
+    }
+
+    protected void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+
         sentHeaders.clear();
         sentHeaders.addAll(headers);
 
@@ -238,8 +245,6 @@ public class Eth62 extends EthHandler {
         GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
 
         sendMessage(msg);
-
-        return true;
     }
 
     @Override
@@ -410,8 +415,10 @@ public class Eth62 extends EthHandler {
 
         queue.addList(blocks, channel.getNodeId());
 
-        if (syncState == BLOCK_RETRIEVING) {
+        if (syncDone) {
             sendGetBlockBodies();
+        } else {
+            changeState(IDLE);
         }
     }
 
@@ -419,7 +426,7 @@ public class Eth62 extends EthHandler {
 
         Block newBlock = newBlockMessage.getBlock();
 
-        logger.info("New block received: block.index [{}]", newBlock.getNumber());
+        logger.debug("New block received: block.index [{}]", newBlock.getNumber());
 
         // skip new block if TD is lower than ours
         if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
@@ -485,8 +492,16 @@ public class Eth62 extends EthHandler {
 
     @Override
     public void recoverGap(BlockWrapper block) {
+        syncStats.reset();
         syncState = HASH_RETRIEVING;
         startGapRecovery(block);
+    }
+
+    @Override
+    public void fetchBodies(List<BlockHeaderWrapper> headers) {
+        syncStats.reset();
+        syncState = BLOCK_RETRIEVING;
+        sendGetBlockBodies(headers);
     }
 
     protected void sendNextHeaderRequest() {
@@ -1046,27 +1061,25 @@ public class Eth62 extends EthHandler {
         }
         switch (syncState) {
             case BLOCK_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, state {}, blocks count {} ]",
+                    "Peer {}: [ {}, {}, blocks {}, ping {} ms ]",
                     version,
                     channel.getPeerIdShort(),
                     syncState,
-                    syncStats.getBlocksCount()
-            );
-                break;
+                    syncStats.getBlocksCount(),
+                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
             case HASH_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, state {}, hashes count {} ]",
+                    "Peer {}: [ {}, {}, headers {}, ping {} ms ]",
                     version,
                     channel.getPeerIdShort(),
                     syncState,
-                    syncStats.getHeadersCount()
-            );
-                break;
+                    syncStats.getHeadersCount(),
+                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
             default: logger.info(
-                    "Peer {}: [ {}, state {} ]",
+                    "Peer {}: [ {}, state {}, ping {} ms ]",
                     version,
                     channel.getPeerIdShort(),
-                    syncState
-            );
+                    syncState,
+                    String.format("%.2f", channel.getPeerStats().getAvgLatency()));
         }
     }
 

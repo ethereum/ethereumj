@@ -74,12 +74,6 @@ public class SyncManager {
                 // sync queue
                 queue.init();
 
-                // sync pool
-                pool.init();
-
-                // force block retrieving if new headers are added
-                compositeSyncListener.add(onHeadersAdded);
-
                 // switch between Long and Short
                 compositeSyncListener.add(onNewBlock);
 
@@ -118,16 +112,6 @@ public class SyncManager {
     }
 
     // LISTENERS
-
-    private final SyncListener onHeadersAdded = new SyncListenerAdapter() {
-
-        @Override
-        public void onHeadersAdded() {
-            if (longSync.inProgress()) {
-                pool.changeStateForIdles(BLOCK_RETRIEVING);
-            }
-        }
-    };
 
     private final SyncListener onNewBlock = new SyncListenerAdapter() {
 
@@ -203,7 +187,6 @@ public class SyncManager {
             public void run() {
                 try {
                     pool.logActivePeers();
-                    pool.logBannedPeers();
                     logger.info("\n");
                     logger.info("State {}\n", longSync.getState());
                 } catch (Throwable t) {

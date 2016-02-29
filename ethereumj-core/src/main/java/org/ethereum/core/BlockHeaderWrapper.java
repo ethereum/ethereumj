@@ -61,6 +61,10 @@ public class BlockHeaderWrapper {
         return header;
     }
 
+    public String getHexStrShort() {
+        return Hex.toHexString(header.getHash()).substring(0, 6);
+    }
+
     public boolean sentBy(byte[] nodeId) {
         return Arrays.equals(this.nodeId, nodeId);
     }
