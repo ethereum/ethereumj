@@ -3,18 +3,20 @@ package org.ethereum.db;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.StorageDictionaryHandler;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 /**
@@ -48,9 +50,45 @@ import static java.lang.Math.min;
  * </pre>
  * Each store entry contains storage hashkey which might be used to obtain the actual value from the contract storage
  *
+ * The tree is stored compacted.
+ * Compacted means that the elements which have children with only a single
+ * child with type Offset and key '0' can be compacted: the meaningless
+ * children are removed from the hierarchy.
+ * E.g. the following subtree:
+ * <pre>
+ *     .1
+ *       ('aaa')
+ *          +0
+ *            [0]
+ *            [1]
+ *       ('bbb)
+ *          +0
+ *            [0]
+ * </pre>
+ * would be compacted to
+ * <pre>
+ *     .1
+ *       ('aaa')
+ *         [0]
+ *         [1]
+ *       ('bbb)
+ *         [0]
+ * </pre>
+ *
+ * If it appears that the subtree shouldn't be compacted i.e. a new child appears
+ * <pre>
+ *     .1
+ *       ('aaa')
+ *          +1
+ * </pre>
+ * the subtree is 'decompacted' i.e. all '+0' children are returned back
+ *
  * Created by Anton Nashatyrev on 09.09.2015.
  */
 public class StorageDictionary {
+
+    private static final int MAX_CHILDREN_TO_SORT = 100;
+    private static final boolean SORT_MAP_KEYS = false;
 
     public enum Type {
         Root,
@@ -59,6 +97,8 @@ public class StorageDictionary {
         ArrayIndex,  // dynamic array index
         MapKey   // the key of the 'mapping'
     }
+
+//    class ByteArraySerializer implements JsonSerializer<byte[]>
 
     /**
      * Class represents a tree element
@@ -72,236 +112,250 @@ public class StorageDictionary {
             isGetterVisibility = JsonAutoDetect.Visibility.NONE)
     public static class PathElement implements Comparable<PathElement> {
 
+        StorageDictionary sd;
+
         @JsonProperty
         public Type type;
         @JsonProperty
         public String key;
-        private DataWord hashKey;
-        private SortedMap<PathElement, PathElement> children = new TreeMap<>();
+        @JsonProperty
+        public byte[] storageKey;
 
-        private transient boolean isValid = true;   // 'transient' just a marker here
-        private transient PathElement parent = null;  // 'transient' just a marker here
-        private transient Boolean canCompact = null;
-        private transient List<PathElement> compactedChildren = null;
+        // null means undefined yet
+        // true means children were compacted
+        // false means children were decompacted
+        @JsonProperty
+        public Boolean childrenCompacted = null;
+        @JsonProperty
+        public int childrenCount = 0;
+        @JsonProperty
+        public byte[] parentHash;
+        @JsonProperty
+        public byte[] nextSiblingHash;
+        @JsonProperty
+        public byte[] firstChildHash;
+        @JsonProperty
+        public byte[] lastChildHash;
 
         public PathElement() {
         }
 
-        public PathElement(Type type, int indexOffset) {
+        // using some 'random' hash for root since storageKey '0' is used
+        private static final byte[] rootHash = Hex.decode("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
+        static PathElement createRoot() {
+            PathElement root = new PathElement(Type.Root, 0, rootHash);
+            return root;
+        }
+
+        public PathElement(Type type, int indexOffset, byte[] storageKey) {
             this.type = type;
             key = "" + indexOffset;
+            this.storageKey = storageKey;
         }
 
-        public PathElement(String key) {
+        public PathElement(String key, byte[] storageKey) {
             type = Type.MapKey;
             this.key = key;
+            this.storageKey = storageKey;
         }
 
-        public void add(PathElement[] path, DataWord key) {
-            if (path.length == 0) {
-                if (this.hashKey != null) {
-                    if (!this.hashKey.equals(key)) {
-                        // throw new RuntimeException("Shouldn't happen: different keys");
-                        // actually may happen to non-Solidity contracts, so just ignore
+        public PathElement getParent() {
+            return sd.get(parentHash);
+        }
+
+        public PathElement getFirstChild() {
+            return sd.get(firstChildHash);
+        }
+
+        private PathElement getLastChild() {
+            return sd.get(lastChildHash);
+        }
+
+        public PathElement getNextSibling() {
+            return sd.get(nextSiblingHash);
+        }
+
+        public PathElement addChild(PathElement newChild) {
+            PathElement existingChild = sd.get(newChild.storageKey);
+            if (existingChild != null && Arrays.equals(storageKey, existingChild.parentHash)) {
+                return existingChild;
+            }
+
+            if (childrenCount > MAX_CHILDREN_TO_SORT || (!SORT_MAP_KEYS && newChild.type == Type.MapKey)) {
+                // no more sorting just add to the end
+                insertChild(getLastChild(), newChild);
+            } else {
+                Iterator<PathElement> chIt = getChildrenIterator();
+                PathElement insertAfter = null;
+                while(chIt.hasNext()) {
+                    PathElement next = chIt.next();
+                    if (newChild.compareTo(next) < 0) {
+                        break;
                     }
+                    insertAfter = next;
+                }
+                insertChild(insertAfter, newChild);
+            }
+
+            return newChild;
+        }
+
+        private boolean isMapping() {
+            return getFirstChild().type == Type.MapKey;
+        }
+
+        public PathElement insertChild(PathElement insertAfter, PathElement newChild) {
+            if (insertAfter == null) {
+                // first element
+                newChild.nextSiblingHash = firstChildHash;
+                firstChildHash = newChild.storageKey;
+                if (childrenCount == 0) {
+                    lastChildHash = firstChildHash;
+                }
+            } else if (insertAfter.nextSiblingHash == null) {
+                // last element
+                insertAfter.nextSiblingHash = newChild.storageKey;
+                insertAfter.invalidate();
+                lastChildHash = newChild.storageKey;
+            } else {
+                insertAfter.nextSiblingHash = newChild.storageKey;
+                insertAfter.invalidate();
+            }
+
+            newChild.parentHash = this.storageKey;
+            sd.put(newChild);
+            newChild.invalidate();
+            childrenCount++;
+            this.invalidate();
+
+            return newChild;
+        }
+
+        public void addChildPath(PathElement[] pathElements) {
+            if (pathElements.length == 0) return;
+
+            boolean addCompacted;
+            if (pathElements.length > 1 && pathElements[1].canBeCompactedWithParent()) {
+                // this one particular path we are adding can be compacted
+                if (childrenCompacted == Boolean.FALSE) {
+                    addCompacted = false;
                 } else {
-                    this.hashKey = key;
-                    invalidate();
+                    childrenCompacted = Boolean.TRUE;
+                    addCompacted = true;
                 }
-                return;
+            } else {
+                addCompacted = false;
+                if (childrenCompacted == Boolean.TRUE) {
+                    childrenCompacted = Boolean.FALSE;
+                    // we already added compacted children - need to decompact them now
+                    decompactAllChildren();
+                } else {
+                    childrenCompacted = Boolean.FALSE;
+                }
             }
 
-            PathElement child = children.get(path[0]);
-            if (child == null) {
-                if (children.size() >= 10000) {
-                    // TODO: for a while don't exceed storage threshold
-                    return;
-                }
-                child = path[0];
-                child.parent = this;
-                children.put(child, child);
-
-                invalidate();
+            if (addCompacted) {
+                PathElement compacted = compactPath(pathElements[0], pathElements[1]);
+                PathElement child = addChild(compacted);
+                child.addChildPath(Arrays.copyOfRange(pathElements, 2, pathElements.length));
+                sd.put(compacted);
+            } else {
+                PathElement child = addChild(pathElements[0]);
+                child.addChildPath(Arrays.copyOfRange(pathElements, 1, pathElements.length));
             }
-            child.add(Arrays.copyOfRange(path, 1, path.length), key);
+        }
+
+        private PathElement compactPath(PathElement parent, PathElement child) {
+            PathElement compacted = new PathElement();
+            compacted.type = parent.type;
+            compacted.key = parent.key;
+            compacted.storageKey = child.storageKey;
+            return compacted;
+        }
+
+        private void decompactAllChildren() {
+            PathElement child = getFirstChild();
+            removeAllChildren();
+            while(child != null) {
+                PathElement[] decoPath = decompactElement(child);
+                addChildPath(decoPath);
+                child = child.getNextSibling();
+            }
+        }
+
+        private void removeAllChildren() {
+            childrenCount = 0;
+            firstChildHash = null;
+            lastChildHash = null;
+        }
+
+        private PathElement[] decompactElement(PathElement pe) {
+            PathElement parent = new PathElement();
+            parent.type = pe.type;
+            parent.key = pe.key;
+            parent.storageKey = getVirtualStorageKey(pe.storageKey);
+            sd.put(parent);
+            PathElement child = new PathElement(Type.Offset, 0, pe.storageKey);
+            child.childrenCount = pe.childrenCount;
+            child.firstChildHash = pe.firstChildHash;
+            child.lastChildHash = pe.lastChildHash;
+            sd.put(child);
+            return new PathElement[]{parent, child};
+        }
+
+        public static byte[] getVirtualStorageKey(byte[] childStorageKey) {
+            BigInteger i = ByteUtil.bytesToBigInteger(childStorageKey).subtract(BigInteger.ONE);
+            return ByteUtil.bigIntegerToBytes(i, 32);
+        }
+
+        private boolean canBeCompactedWithParent() {
+            return type == Type.Offset && "0".equals(key);
+        }
+
+        public Iterator<PathElement> getChildrenIterator() {
+            return new Iterator<PathElement>() {
+                PathElement cur = getFirstChild();
+                @Override
+                public boolean hasNext() {
+                    return cur != null;
+                }
+
+                @Override
+                public PathElement next() {
+                    PathElement ret = cur;
+                    cur = cur.getNextSibling();
+                    return ret;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        public byte[] getHash() {
+            return storageKey;
         }
 
         private void invalidate() {
-            isValid = false;
-            canCompact = null;
-            compactedChildren = null;
-            if (type != Type.Root) {
-                parent.invalidate();
-            }
+            sd.dirtyNodes.add(this);
         }
 
-        public void validate() {
-            isValid = true;
-            for (PathElement element : children.values()) {
-                element.validate();
-            }
-        }
-
-        public boolean isValid() {
-            return isValid;
-        }
-
-        @JsonProperty
-        public String getHashKey() {
-            return hashKey == null ? null : Hex.toHexString(hashKey.getData());
-        }
-
-        @JsonProperty
-        public void setHashKey(String hashKey) {
-            this.hashKey = hashKey == null ? null : new DataWord(Hex.decode(hashKey));
-        }
-
-        @JsonProperty
-        public List<PathElement> getChildren() {
-            return children.isEmpty() ? null : new ArrayList<>(children.values());
-        }
-
-        /**
-         * Create a filtered and compacted copy of the element and its successors.
-         * Filtered means only the elements (and their predecessors) with hashKeys
-         * specified by the 'filter' remain
-         * Compacted means that the elements which have children with only a single
-         * child with type Offset and key '0' can be compacted: the meaningful
-         * children are removed from the hierarchy.
-         * E.g. the following subtree:
-         * <pre>
-         *     .1
-         *       ('aaa')
-         *          +0
-         *            [0]
-         *            [1]
-         *       ('bbb)
-         *          +0
-         *            [0]
-         * </pre>
-         * would be compacted to
-         * <pre>
-         *     .1
-         *       ('aaa')
-         *         [0]
-         *         [1]
-         *       ('bbb)
-         *         [0]
-         * </pre>
-         * The tree is not stored compacted since there is no guarantee that the
-         * '+0' elements are not actually the structures (static arrays) which
-         * other elements are just never assigned and will not be assigned in future.
-         * I.e. in the previous sample the Solidity declaration can be both
-         * 'mapping(int => int[])'  or 'mapping(int => int[2][])'
-         * In the first case the compaction is appropriate while in the second
-         * we shouldn't normally compact the tree (while it's ok for representation purpose)
-         *
-         * @param filter 'null' if not filter applied or a set of hashKeys to be left in
-         *               the tree
-         * @return  Compacted and filtered copy of the subtree
-         */
-        public PathElement copyCompactedFiltered(Set<DataWord> filter) {
-            PathElement copy = new PathElement();
-            copy.type = type;
-            copy.key = key;
-            copy.hashKey = hashKey == null ? null : hashKey.clone();
-            copy.parent = parent;
-            List<PathElement> children = getChildrenCompacted();
-            List<PathElement> filteredChildren = new ArrayList<>();
-            for (PathElement child : children) {
-                PathElement pe = child.copyCompactedFiltered(filter);
-                if (pe != null) filteredChildren.add(pe);
-            }
-            if (filteredChildren.isEmpty() && (hashKey == null ||
-                    (filter != null && !filter.contains(hashKey)))) return null;
-
-            copy.setChildren(filteredChildren);
-            return copy;
-        }
-
-        public List<PathElement> getChildrenCompacted() {
-            if (!canCompact()) return getChildren();
-            if (compactedChildren == null) {
-                compactedChildren = new ArrayList<>();
-                for (PathElement child : children.values()) {
-                    PathElement compChild = new PathElement();
-                    PathElement grandChild = child.children.values().iterator().next();
-                    compChild.type = child.type;
-                    compChild.key = child.key;
-                    compChild.hashKey = grandChild.hashKey;
-                    compChild.children = new TreeMap<>();
-                    for (PathElement ggCh : grandChild.children.keySet()) {
-                        PathElement ggChCopy = ggCh.copyWithNewParent(compChild);
-                        compChild.children.put(ggChCopy, ggChCopy);
-                    }
-                    compChild.parent = this;
-                    compactedChildren.add(compChild);
-                }
-            }
-            return compactedChildren;
-        }
-
-        private boolean canCompact() {
-            if (canCompact == null) {
-                canCompact = true;
-                for (PathElement child : children.values()) {
-                    if (child.children.size() != 1) {
-                        canCompact = false;
-                        break;
-                    }
-
-                    PathElement grandchild = child.children.values().iterator().next();
-                    if (grandchild.type != Type.Offset || !"0".equals(grandchild.key)) {
-                        canCompact = false;
-                        break;
-                    }
-                }
-            }
-            return canCompact;
-        }
-
-        private PathElement copyWithNewParent(PathElement newParent) {
-            PathElement ret = new PathElement();
-            ret.type = type;
-            ret.key = key;
-            ret.hashKey = hashKey;
-            ret.children = children;
-            ret.isValid = isValid;
-            ret.parent = newParent;
-            return ret;
-        }
-
-        public List<PathElement> getChildren(int from, int maxLen) {
-            List<PathElement> children = getChildren();
-            return children.subList(min(from, children.size()), min(from + maxLen, children.size()));
-        }
-
-        @JsonProperty
-        public void setChildren(List<PathElement> children) {
-            for (PathElement child : children) {
-                this.children.put(child, child);
-            }
-        }
-
-        public int count() {
-            int ret = 1;
-            for (PathElement element : children.keySet()) {
-                ret += element.count();
-            }
-            return ret;
+        public int getChildrenCount() {
+            return childrenCount;
         }
 
         public String[] getFullPath() {
             if (type == Type.Root) return new String[0];
-            return Utils.mergeArrays(parent.getFullPath(), new String[] {key});
+            return Utils.mergeArrays(getParent().getFullPath(), new String[]{key});
         }
 
         public String getContentType() {
-            List<PathElement> children = getChildren();
-            if (children == null || children.size() == 0) return "";
-            if (children.get(0).type == Type.MapKey) return "mapping";
-            if (children.get(0).type == Type.ArrayIndex) return "array";
-            if (children.get(0).type == Type.Offset) return "struct";
+            if (getChildrenCount() == 0) return "";
+            if (getFirstChild().type == Type.MapKey) return "mapping";
+            if (getFirstChild().type == Type.ArrayIndex) return "array";
+            if (getFirstChild().type == Type.Offset) return "struct";
             return "";
         }
 
@@ -335,6 +389,23 @@ public class StorageDictionary {
 
         }
 
+        private String shortHash(byte[] hash) {
+            if (hash == null || hash.length == 0) return "";
+            String s = Hex.toHexString(hash);
+            return s.substring(0, min(8, s.length()));
+        }
+
+        public String dump() {
+            return toString() +
+                    "(storageKey=" + shortHash(storageKey) + ", " +
+                    "childCount=" + childrenCount + ", " +
+                    "childrenCompacted=" + childrenCompacted + ", " +
+                    "parentHash=" + shortHash(parentHash) + ", " +
+                    "firstChildHash=" + shortHash(firstChildHash) + ", " +
+                    "lastChildHash=" + shortHash(lastChildHash) + ", " +
+                    "nextSiblingHash=" + shortHash(nextSiblingHash) + ")";
+        }
+
         @Override
         public String toString() {
             if (type == Type.Root) return "ROOT";
@@ -345,64 +416,142 @@ public class StorageDictionary {
         }
 
         public String toString(ContractDetails storage, int indent) {
-            String s =  (hashKey == null ? Utils.repeat(" ", 64) : hashKey) + " : " +
+            String s =  (storageKey == null ? Utils.repeat(" ", 64) : Hex.toHexString(storageKey)) + " : " +
                     Utils.repeat("  ", indent) + this;
-            if (hashKey != null && storage != null) {
-                DataWord data = storage.get(hashKey);
+            if (storageKey != null && storage != null) {
+                DataWord data = storage.get(new DataWord(storageKey));
                 s += " = " + (data == null ? "<null>" : StorageDictionaryHandler.guessValue(data.getData()));
             }
             s += "\n";
             int limit = 50;
-            List<PathElement> list = getChildren();
-            if (list != null) {
-                for (PathElement child : list) {
+            if (getChildrenCount() > 0) {
+                Iterator<PathElement> it = getChildrenIterator();
+                while (it.hasNext()) {
+                    PathElement child = it.next();
                     s += child.toString(storage, indent + 1);
                     if (limit-- <= 0) {
-                        s += "\n             [Total: " + children.size() + " Rest skipped]\n";
+                        s += "\n             [Total: " + getChildrenCount() + " Rest skipped]\n";
                         break;
                     }
                 }
             }
             return s;
         }
+
+        byte[] encodeHash(byte[] hash) {
+            return hash == null ? new byte[0] : hash;
+        }
+
+        public byte[] serialize() {
+            return RLP.encodeList(
+                    RLP.encodeInt(type.ordinal()),
+                    RLP.encodeString(key),
+                    RLP.encodeElement(encodeHash(storageKey)),
+                    RLP.encodeElement(childrenCompacted == null ? new byte[0] : (childrenCompacted ? new byte[] {1} : new byte[] {0})),
+                    RLP.encodeInt(childrenCount),
+                    RLP.encodeElement(encodeHash(parentHash)),
+                    RLP.encodeElement(encodeHash(nextSiblingHash)),
+                    RLP.encodeElement(encodeHash(firstChildHash)),
+                    RLP.encodeElement(encodeHash(lastChildHash))
+                );
+        }
+
+        PathElement copyLight() {
+            PathElement ret = new PathElement();
+            ret.type = type;
+            ret.key = key;
+            ret.storageKey = storageKey;
+            return ret;
+        }
     }
 
-    PathElement root = new PathElement(Type.Root, 0);
-
-    public StorageDictionary() {}
-
-    public StorageDictionary(PathElement root) {
-        this.root = root;
-    }
-
-    public synchronized void addPath(DataWord hashKey, PathElement[] path) {
-        root.add(path, hashKey);
-    }
-
-    /**
-     * Returns the tree element by its keys path
-     */
-    public synchronized PathElement getByPath(String ... path) {
-        PathElement ret = root;
-        for (String pe : path) {
-            PathElement prev = ret;
-            for (PathElement c : ret.getChildren()) {
-                if (pe.equals(c.key)) {
-                    ret = c;
-                    break;
-                }
+    private PathElement get(byte[] hash) {
+        if (hash == null) return null;
+        PathElement ret = cache.get(new ByteArrayWrapper(hash));
+        if (ret == null) {
+            ret = load(hash);
+            if (ret != null) {
+                put(ret);
             }
-            if (prev == ret) return null;
         }
         return ret;
     }
 
-    /**
-     * Creates compacted and filtered copy of the dictionary
-     * (see {@link org.ethereum.db.StorageDictionary.PathElement#compactAndFilter(Set)} for details)
-     */
-    public synchronized StorageDictionary compactAndFilter(Set<DataWord> hashFilter) {
-        return new StorageDictionary(root.copyCompactedFiltered(hashFilter));
+    private void put(PathElement pe) {
+        cache.put(new ByteArrayWrapper(pe.storageKey), pe);
+        pe.sd = this;
+    }
+
+    PathElement load(byte[] hash) {
+        byte[] bytes = storageDb.get(hash);
+        if (bytes == null) return null;
+        PathElement ret = deserializePathElement(bytes);
+        ret.sd = this;
+        return ret;
+    }
+
+    public void store() {
+        for (PathElement node : dirtyNodes) {
+            storageDb.put(node.getHash(), node.serialize());
+        }
+        dirtyNodes.clear();
+    }
+
+    public synchronized StorageDictionary getFiltered(Set<DataWord> hashFilter) {
+        HashMapDB filterSource = new HashMapDB();
+        StorageDictionary ret = new StorageDictionary(filterSource);
+        for (DataWord hash : hashFilter) {
+            PathElement pathElement = get(hash.getData());
+            ArrayList<PathElement> path = new ArrayList<>();
+            while(pathElement.type != Type.Root) {
+                path.add(0, pathElement.copyLight());
+                pathElement = pathElement.getParent();
+            }
+            ret.addPath(path.toArray(new PathElement[0]));
+        }
+        return ret;
+    }
+
+    private KeyValueDataSource storageDb;
+    private Map<ByteArrayWrapper, PathElement> cache = new HashMap<>();
+
+    private List<PathElement> dirtyNodes = new ArrayList<>();
+
+    private PathElement root;
+    private boolean exist;
+
+    public StorageDictionary(KeyValueDataSource storageDb) {
+        this.storageDb = storageDb;
+        root = load(PathElement.rootHash);
+        if (root == null) {
+            root = PathElement.createRoot();
+            put(root);
+            exist = false;
+        } else {
+            exist = true;
+        }
+    }
+
+    public boolean isExist() {
+        return exist;
+    }
+
+    public synchronized boolean hasChanges() {
+        return !dirtyNodes.isEmpty();
+    }
+
+    public synchronized void addPath(PathElement[] path) {
+        int startIdx = path.length - 1;
+        PathElement existingPE = null;
+        while(startIdx >= 0) {
+            if ((existingPE = get(path[startIdx].getHash())) != null) {
+                break;
+            }
+            startIdx--;
+        }
+        existingPE = startIdx >= 0 ? existingPE : root;
+        startIdx++;
+        existingPE.addChildPath(Arrays.copyOfRange(path, startIdx, path.length));
     }
 
     public String dump(ContractDetails storage) {
@@ -413,37 +562,89 @@ public class StorageDictionary {
         return dump(null);
     }
 
-    public void validate() {
-        root.validate();
+    byte[] decodeHash(byte[] bb) {
+        return bb;
     }
 
-    public boolean isValid() {
-        return root.isValid();
+    PathElement deserializePathElement(byte[] bb) {
+        PathElement ret = new PathElement();
+        RLPList list = (RLPList) RLP.decode2(bb).get(0);
+        ret.type = Type.values()[ByteUtil.byteArrayToInt(list.get(0).getRLPData())];
+        ret.key = new String(list.get(1).getRLPData());
+        ret.storageKey = decodeHash(list.get(2).getRLPData());
+        byte[] compB = list.get(3).getRLPData();
+        ret.childrenCompacted = compB == null ? null : (compB[0] == 0 ? Boolean.FALSE : Boolean.TRUE);
+        ret.childrenCount = ByteUtil.byteArrayToInt(list.get(4).getRLPData());
+        ret.parentHash = decodeHash(list.get(5).getRLPData());
+        ret.nextSiblingHash = decodeHash(list.get(6).getRLPData());
+        ret.firstChildHash= decodeHash(list.get(7).getRLPData());
+        ret.lastChildHash= decodeHash(list.get(8).getRLPData());
+        return ret;
     }
 
-    public synchronized String serializeToJson() throws JsonProcessingException {
-        ObjectMapper om = new ObjectMapper();
-        return om.writeValueAsString(root);
+    static byte[] toStorageKey(String hex) {
+        return Hex.decode(Utils.align(hex, '0', 64, false));
     }
 
-    public static StorageDictionary deserializeFromJson(InputStream json) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        StorageDictionary.PathElement root = om.readValue(json, StorageDictionary.PathElement.class);
-        installRoots(root);
-        return new StorageDictionary(root);
-    }
+    public static void main(String[] args) throws Exception {
+        HashMapDB db = new HashMapDB();
+        StorageDictionary sd = new StorageDictionary(db);
+        PathElement pe = new PathElement(Type.Offset, 1, Hex.decode("01020304"));
+        pe.parentHash = Hex.decode("01020304");
+        byte[] bytes = pe.serialize();
+//        System.out.println(new String(bytes));
+        PathElement pe1 = sd.deserializePathElement(bytes);
+        System.out.println(pe1.dump());
 
-    public static StorageDictionary deserializeFromJson(String json) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        StorageDictionary.PathElement root = om.readValue(json, StorageDictionary.PathElement.class);
-        installRoots(root);
-        return new StorageDictionary(root);
-    }
-
-    private static void installRoots(PathElement el) {
-        for (PathElement element : el.children.values()) {
-            element.parent = el;
-            installRoots(element);
+        sd.addPath(new PathElement[]{
+                new PathElement(Type.StorageIndex, 0, toStorageKey("00")),
+                new PathElement("key1", PathElement.getVirtualStorageKey(toStorageKey("ababab"))),
+                new PathElement(Type.Offset, 0, toStorageKey("ababab")),
+                new PathElement(Type.ArrayIndex, 0, toStorageKey("eeee")),
+        });
+        sd.addPath(new PathElement[]{
+                new PathElement(Type.StorageIndex, 0, toStorageKey("00")),
+                new PathElement("key1", PathElement.getVirtualStorageKey(toStorageKey("ababab"))),
+                new PathElement(Type.Offset, 0, toStorageKey("ababab")),
+                new PathElement(Type.ArrayIndex, 1, toStorageKey("eee1")),
+        });
+        sd.store();
+        System.out.println("======");
+        System.out.println(sd.root.toString(null, 0));
+        for (byte[] k : db.keys()) {
+            PathElement p = sd.deserializePathElement(db.get(k));
+            System.out.println(Hex.toHexString(k) + " => " + p.dump());
         }
+
+
+        sd.addPath(new PathElement[]{
+                new PathElement(Type.StorageIndex, 0, toStorageKey("00")),
+                new PathElement("key2", PathElement.getVirtualStorageKey(toStorageKey("ababab2"))),
+                new PathElement(Type.Offset, 0, toStorageKey("ababab2")),
+                new PathElement(Type.ArrayIndex, 0, toStorageKey("eeed")),
+        });
+        sd.store();
+        System.out.println("======");
+        System.out.println(sd.root.toString(null, 0));
+        for (byte[] k : db.keys()) {
+            PathElement p = sd.deserializePathElement(db.get(k));
+            System.out.println(Hex.toHexString(k) + " => " + p.dump());
+        }
+
+
+        sd.addPath(new PathElement[]{
+                new PathElement(Type.StorageIndex, 0, toStorageKey("00")),
+                new PathElement("key1", PathElement.getVirtualStorageKey(toStorageKey("ababab"))),
+                new PathElement(Type.Offset, 1, toStorageKey("ababac")),
+        });
+        sd.store();
+        System.out.println("======");
+        System.out.println(sd.root.toString(null, 0));
+        for (byte[] k : db.keys()) {
+            PathElement p = sd.deserializePathElement(db.get(k));
+            System.out.println(Hex.toHexString(k) + " => " + p.dump());
+        }
+
+        System.out.println(new StorageDictionary(db).root.toString(null, 0));
     }
 }

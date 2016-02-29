@@ -70,7 +70,7 @@ public class VM {
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
-    public StorageDictionaryHandler storageDictHandler;
+    private static VMHook vmHook;
 
     public void step(Program program) {
 
@@ -267,6 +267,10 @@ public class VM {
             // Log debugging line for VM
             if (program.getNumber().intValue() == CONFIG.dumpBlock())
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
+
+            if (vmHook != null) {
+                vmHook.step(program, op);
+            }
 
             // Execute operation
             switch (op) {
@@ -593,10 +597,6 @@ public class VM {
 
                     byte[] encoded = sha3(buffer);
                     DataWord word = new DataWord(encoded);
-
-                    if (storageDictHandler != null) {
-                        storageDictHandler.vmSha3Notify(buffer, word);
-                    }
 
                     if (logger.isInfoEnabled())
                         hint = word.toString();
@@ -934,9 +934,6 @@ public class VM {
                         hint = "[" + program.getOwnerAddress().toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
-                    if (storageDictHandler != null) {
-                        storageDictHandler.vmSStoreNotify(addr, value);
-                    }
                     program.step();
                 }
                 break;
@@ -1166,9 +1163,8 @@ public class VM {
 
     public void play(Program program) {
         try {
-            if (SystemProperties.CONFIG.isStorageDictionaryEnabled()) {
-                storageDictHandler = new StorageDictionaryHandler(program.getOwnerAddress());
-                storageDictHandler.vmStartPlayNotify();
+            if (vmHook != null) {
+                vmHook.startPlay(program);
             }
 
 //            if (program.byTestingSuite()) return;
@@ -1177,10 +1173,8 @@ public class VM {
                 this.step(program);
             }
 
-            if (storageDictHandler != null) {
-                ContractDetails details = program.getStorage()
-                        .getContractDetails(program.getOwnerAddress().getLast20Bytes());
-                storageDictHandler.vmEndPlayNotify(details);
+            if (vmHook != null) {
+                vmHook.stopPlay(program);
             }
 
         } catch (RuntimeException e) {
@@ -1189,6 +1183,10 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss32M !!!\n");
             System.exit(-1);
         }
+    }
+
+    public static void setVmHook(VMHook vmHook) {
+        VM.vmHook = vmHook;
     }
 
     /**

@@ -4,6 +4,8 @@ import org.ethereum.cli.CLIInterface;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.vm.StorageDictionaryHandler;
+import org.ethereum.vm.VM;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
