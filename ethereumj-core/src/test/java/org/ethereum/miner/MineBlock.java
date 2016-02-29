@@ -2,7 +2,7 @@ package org.ethereum.miner;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -36,7 +36,7 @@ public class MineBlock {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
 

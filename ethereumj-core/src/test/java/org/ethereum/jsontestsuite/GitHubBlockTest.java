@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -41,7 +41,7 @@ public class GitHubBlockTest {
         try {
             GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
         } finally {
-            SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+            SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
         }
     }
 

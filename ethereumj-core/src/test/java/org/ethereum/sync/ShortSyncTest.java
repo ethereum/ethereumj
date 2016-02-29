@@ -3,7 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Blockchain;
@@ -112,7 +112,7 @@ public class ShortSyncTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Before

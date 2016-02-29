@@ -3,7 +3,7 @@ package org.ethereum.jsontestsuite;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.BlockHeader;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
@@ -29,7 +29,7 @@ public class GitHubBasicTest {
 
     @After
     public void recover() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Test

@@ -1,7 +1,7 @@
 package org.ethereum.config.blockchain;
 
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.BlockchainForkConfig;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
@@ -18,7 +18,7 @@ import static org.ethereum.util.BIUtil.max;
  *
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public abstract class AbstractConfig implements BlockchainConfig, BlockchainForkConfig {
+public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetConfig {
     protected Constants constants;
     protected MinerIfc miner = new EthashMiner();
 

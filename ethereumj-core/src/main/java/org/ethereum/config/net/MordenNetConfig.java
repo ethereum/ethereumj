@@ -1,12 +1,12 @@
-package org.ethereum.config.fork;
+package org.ethereum.config.net;
 
 import org.ethereum.config.blockchain.MordenConfig;
 
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public class MordenForkConfig extends AbstractForkConfig {
-    public MordenForkConfig() {
+public class MordenNetConfig extends AbstractNetConfig {
+    public MordenNetConfig() {
         add(0, new MordenConfig.Frontier());
         add(1_000_000, new MordenConfig.Homestead());
     }

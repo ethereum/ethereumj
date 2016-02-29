@@ -2,7 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
@@ -519,7 +519,7 @@ public class TransactionTest {
             List<String> res = new StateTestRunner(stateTestSuite.getTestCases().get("test1")).runImpl();
             if (!res.isEmpty()) throw new RuntimeException("Test failed: " + res);
         } finally {
-            SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+            SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
         }
 
     }

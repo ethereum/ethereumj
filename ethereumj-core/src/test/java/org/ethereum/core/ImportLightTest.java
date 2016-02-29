@@ -3,7 +3,7 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
@@ -45,7 +45,7 @@ public class ImportLightTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Test

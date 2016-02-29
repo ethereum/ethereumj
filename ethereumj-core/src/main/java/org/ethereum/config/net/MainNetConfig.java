@@ -1,4 +1,4 @@
-package org.ethereum.config.fork;
+package org.ethereum.config.net;
 
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
@@ -6,10 +6,10 @@ import org.ethereum.config.blockchain.HomesteadConfig;
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public class MainForkConfig extends AbstractForkConfig {
-    public static final MainForkConfig INSTANCE = new MainForkConfig();
+public class MainNetConfig extends AbstractNetConfig {
+    public static final MainNetConfig INSTANCE = new MainNetConfig();
 
-    public MainForkConfig() {
+    public MainNetConfig() {
         add(0, new FrontierConfig());
         add(1_150_000, new HomesteadConfig());
     }

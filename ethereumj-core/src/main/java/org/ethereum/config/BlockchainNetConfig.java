@@ -8,7 +8,7 @@ import org.ethereum.core.BlockHeader;
  *
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public interface BlockchainForkConfig {
+public interface BlockchainNetConfig {
 
     /**
      * Get the config for the specific block

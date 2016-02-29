@@ -3,7 +3,7 @@ package org.ethereum.miner;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.fork.MainForkConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.mine.Ethash;
 import org.ethereum.mine.EthashAlgo;
@@ -37,7 +37,7 @@ public class EthashTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainForkConfig.INSTANCE);
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
 

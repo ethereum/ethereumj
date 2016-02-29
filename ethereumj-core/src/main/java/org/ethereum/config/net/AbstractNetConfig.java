@@ -1,14 +1,13 @@
-package org.ethereum.config.fork;
+package org.ethereum.config.net;
 
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.BlockchainForkConfig;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
-import org.ethereum.core.BlockHeader;
 
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public class AbstractForkConfig implements BlockchainForkConfig {
+public class AbstractNetConfig implements BlockchainNetConfig {
     private long[] blockNumbers = new long[64];
     private BlockchainConfig[] configs = new BlockchainConfig[64];
     private int count;

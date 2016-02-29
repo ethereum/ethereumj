@@ -5,9 +5,9 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.config.blockchain.OlympicConfig;
-import org.ethereum.config.fork.MainForkConfig;
-import org.ethereum.config.fork.MordenForkConfig;
-import org.ethereum.config.fork.TestNetForkConfig;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.config.net.MordenNetConfig;
+import org.ethereum.config.net.TestNetConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -86,7 +86,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
-    private BlockchainForkConfig blockchainConfig;
+    private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
     public SystemProperties() {
@@ -214,7 +214,7 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public BlockchainForkConfig getBlockchainConfig() {
+    public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
                 throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
@@ -222,16 +222,16 @@ public class SystemProperties {
             if (config.hasPath("blockchain.config.name")) {
                 switch(config.getString("blockchain.config.name")) {
                     case "main":
-                        blockchainConfig = new MainForkConfig();
+                        blockchainConfig = new MainNetConfig();
                         break;
                     case "olympic":
                         blockchainConfig = new OlympicConfig();
                         break;
                     case "morden":
-                        blockchainConfig = new MordenForkConfig();
+                        blockchainConfig = new MordenNetConfig();
                         break;
                     case "testnet":
-                        blockchainConfig = new TestNetForkConfig();
+                        blockchainConfig = new TestNetConfig();
                         break;
                     default:
                         throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
@@ -239,7 +239,7 @@ public class SystemProperties {
             } else {
                 String className = config.getString("blockchain.config.class");
                 try {
-                    Class<? extends BlockchainForkConfig> aClass = (Class<? extends BlockchainForkConfig>) Class.forName(className);
+                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) Class.forName(className);
                     blockchainConfig = aClass.newInstance();
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
@@ -253,7 +253,7 @@ public class SystemProperties {
         return blockchainConfig;
     }
 
-    public void setBlockchainConfig(BlockchainForkConfig config) {
+    public void setBlockchainConfig(BlockchainNetConfig config) {
         blockchainConfig = config;
     }
 
