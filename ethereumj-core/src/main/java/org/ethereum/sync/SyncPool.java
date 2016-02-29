@@ -5,12 +5,10 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.sync.SyncState.IDLE;
+import static java.lang.Math.min;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
-import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.TimeUtils.*;
 
 /**
@@ -47,14 +45,10 @@ public class SyncPool implements Iterable<Channel> {
 
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
-    private static final int DISCONNECT_HITS_THRESHOLD = 5;
-    private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(1);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
 
-    private final Map<ByteArrayWrapper, Channel> activePeers = new HashMap<>();
-    private final Set<Channel> bannedPeers = new HashSet<>();
-    private final Map<String, Integer> disconnectHits = new HashMap<>();
-    private final Map<String, Long> bans = new HashMap<>();
+    private final Map<ByteArrayWrapper, Channel> peers = new HashMap<>();
+    private final List<Channel> activePeers = Collections.synchronizedList(new ArrayList<Channel>());
     private final Map<String, Long> pendingConnections = new HashMap<>();
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
@@ -74,7 +68,10 @@ public class SyncPool implements Iterable<Channel> {
     @Autowired
     private NodeManager nodeManager;
 
+    @PostConstruct
     public void init() {
+
+        if (!config.isSyncEnabled()) return;
 
         updateLowerUsefulDifficulty();
 
@@ -84,10 +81,10 @@ public class SyncPool implements Iterable<Channel> {
                     public void run() {
                         try {
                             heartBeat();
-                            releaseBans();
                             processConnections();
                             updateLowerUsefulDifficulty();
                             fillUp();
+                            prepareActive();
                         } catch (Throwable t) {
                             logger.error("Unhandled exception", t);
                         }
@@ -115,15 +112,12 @@ public class SyncPool implements Iterable<Channel> {
             return;
         }
 
-        synchronized (activePeers) {
-            activePeers.put(peer.getNodeIdWrapper(), peer);
-            bannedPeers.remove(peer);
+        synchronized (peers) {
+            peers.put(peer.getNodeIdWrapper(), peer);
         }
+
         synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
-        }
-        synchronized (bans) {
-            bans.remove(peer.getPeerId());
         }
 
         ethereumListener.onPeerAddedToSyncPool(peer);
@@ -132,17 +126,17 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     public void remove(Channel peer) {
-        synchronized (activePeers) {
-            activePeers.values().remove(peer);
+        synchronized (peers) {
+            peers.values().remove(peer);
         }
     }
 
     @Nullable
     public Channel getMaster() {
 
-        synchronized (activePeers) {
+        synchronized (peers) {
 
-            for (Channel peer : activePeers.values())
+            for (Channel peer : peers.values())
                 if (peer.isMaster()) {
                     return peer;
                 }
@@ -152,62 +146,49 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     @Nullable
-    public Channel getHighestDifficulty() {
-
+    public Channel getMasterCandidate() {
         synchronized (activePeers) {
 
-            if (activePeers.isEmpty()) {
-                return null;
-            }
-
-            Channel best = null;
-
-            for (Channel peer : activePeers.values())
-                if (best == null || isMoreThan(peer.getTotalDifficulty(), best.getTotalDifficulty())) {
-                    best = peer;
-                }
-
-            return best;
+            if (activePeers.isEmpty()) return null;
+            return activePeers.get(0);
         }
     }
 
     @Nullable
+    public Channel getBestIdle() {
+        synchronized (activePeers) {
+
+            for (Channel peer : activePeers) {
+                if (peer.isIdle())
+                    return peer;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
     public Channel getByNodeId(byte[] nodeId) {
-        return activePeers.get(new ByteArrayWrapper(nodeId));
+        return peers.get(new ByteArrayWrapper(nodeId));
     }
 
     public void onDisconnect(Channel peer) {
-        if (peer.getNodeId() == null) {
-            return;
-        }
+
+        if (peer.getNodeId() == null) return;
 
         boolean existed;
-        synchronized (activePeers) {
-            existed = activePeers.values().remove(peer);
-            bannedPeers.remove(peer);
+        synchronized (peers) {
+            existed = peers.values().remove(peer);
+            synchronized (activePeers) {
+                activePeers.remove(peer);
+            }
         }
 
         // do not count disconnects for nodeId
         // if exact peer is not an active one
-        if (!existed) {
-            return;
-        }
+        if (!existed) return;
 
         logger.info("Peer {}: disconnected", peer.getPeerIdShort());
-
-        synchronized (disconnectHits) {
-            Integer hits = disconnectHits.get(peer.getPeerId());
-            if (hits == null) {
-                hits = 0;
-            }
-            if (hits > DISCONNECT_HITS_THRESHOLD) {
-                ban(peer);
-                logger.info("Peer {}: banned due to disconnects exceeding", Utils.getNodeIdShort(peer.getPeerId()));
-                disconnectHits.remove(peer.getPeerId());
-            } else {
-                disconnectHits.put(peer.getPeerId(), hits + 1);
-            }
-        }
     }
 
     public void connect(Node node) {
@@ -229,31 +210,12 @@ public class SyncPool implements Iterable<Channel> {
         }
     }
 
-    public void ban(Channel peer) {
-
-        peer.changeSyncState(IDLE);
-
-        synchronized (activePeers) {
-            if (activePeers.containsKey(peer.getNodeIdWrapper())) {
-                activePeers.remove(peer.getNodeIdWrapper());
-                bannedPeers.add(peer);
-            }
-        }
-
-        synchronized (bans) {
-            bans.put(peer.getPeerId(), timeAfterMillis(DEFAULT_BAN_TIMEOUT));
-        }
-    }
-
     public Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
+        synchronized (peers) {
+            for (Channel peer : peers.values()) {
                 ids.add(peer.getPeerId());
             }
-        }
-        synchronized (bans) {
-            ids.addAll(bans.keySet());
         }
         synchronized (pendingConnections) {
             ids.addAll(pendingConnections.keySet());
@@ -266,8 +228,8 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     public void changeState(SyncState newState) {
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
+        synchronized (peers) {
+            for (Channel peer : peers.values()) {
                 peer.changeSyncState(newState);
             }
         }
@@ -275,103 +237,33 @@ public class SyncPool implements Iterable<Channel> {
 
     public void changeStateForIdles(SyncState newState) {
 
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
+        synchronized (peers) {
+            for (Channel peer : peers.values()) {
                 if (peer.isIdle())
                     peer.changeSyncState(newState);
             }
         }
     }
 
-    public boolean hasCompatible(EthVersion version) {
-
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
-                if (peer.getEthVersion().isCompatible(version))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    @Nullable
-    public Channel findOne(Functional.Predicate<Channel> filter) {
-
-        synchronized (activePeers) {
-            for (Channel peer : activePeers.values()) {
-                if (filter.test(peer))
-                    return peer;
-            }
-        }
-
-        return null;
-    }
-
     public boolean isEmpty() {
-        return activePeers.isEmpty();
-    }
-
-    public int activeCount() {
-        return activePeers.size();
+        return peers.isEmpty();
     }
 
     @Override
     public Iterator<Channel> iterator() {
-        synchronized (activePeers) {
-            return new ArrayList<>(activePeers.values()).iterator();
+        synchronized (peers) {
+            return new ArrayList<>(peers.values()).iterator();
         }
     }
 
     void logActivePeers() {
-        if (activePeers.size() > 0) {
+        synchronized (activePeers) {
+            if (activePeers.isEmpty()) return;
+
             logger.info("\n");
             logger.info("Active peers");
             logger.info("============");
-            for(Channel peer : this) {
-                peer.logSyncStats();
-            }
-        }
-    }
-
-    void logBannedPeers() {
-        synchronized (bans) {
-            if (bans.size() > 0) {
-                logger.info("\n");
-                logger.info("Banned peers");
-                logger.info("============");
-                for (Map.Entry<String, Long> e : bans.entrySet()) {
-                    logger.info(
-                            "Peer {} | {} seconds ago",
-                            Utils.getNodeIdShort(e.getKey()),
-                            millisToSeconds(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
-                    );
-                }
-            }
-        }
-    }
-
-    private void releaseBans() {
-
-        Set<String> released;
-
-        synchronized (bans) {
-            released = getTimeoutExceeded(bans);
-
-            synchronized (activePeers) {
-                for (Channel peer : bannedPeers) {
-                    if (released.contains(peer.getPeerId())) {
-                        activePeers.put(peer.getNodeIdWrapper(), peer);
-                    }
-                }
-                bannedPeers.removeAll(activePeers.values());
-            }
-
-            bans.keySet().removeAll(released);
-        }
-
-        synchronized (disconnectHits) {
-            disconnectHits.keySet().removeAll(released);
+            for (Channel peer : activePeers) peer.logSyncStats();
         }
     }
 
@@ -394,10 +286,8 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     private void fillUp() {
-        int lackSize = config.syncPeerCount() - activeCount();
-        if(lackSize <= 0) {
-            return;
-        }
+        int lackSize = config.maxActivePeers() - peers.size();
+        if(lackSize <= 0) return;
 
         Set<String> nodesInUse = nodesInUse();
 
@@ -412,6 +302,48 @@ public class SyncPool implements Iterable<Channel> {
 
         for(NodeHandler n : newNodes) {
             connect(n.getNode());
+        }
+    }
+
+    private void prepareActive() {
+        synchronized (peers) {
+
+            List<Channel> active = new ArrayList<>(peers.values());
+
+            if (active.isEmpty()) return;
+
+            // filtering by 20% from top difficulty
+            Collections.sort(active, new Comparator<Channel>() {
+                @Override
+                public int compare(Channel c1, Channel c2) {
+                    return c2.getTotalDifficulty().compareTo(c1.getTotalDifficulty());
+                }
+            });
+
+            BigInteger highestDifficulty = active.get(0).getTotalDifficulty();
+            int thresholdIdx = min(config.syncPeerCount(), active.size()) - 1;
+
+            for (int i = thresholdIdx; i >= 0; i--) {
+                if (isIn20PercentRange(active.get(i).getTotalDifficulty(), highestDifficulty)) {
+                    thresholdIdx = i;
+                    break;
+                }
+            }
+
+            List<Channel> filtered = active.subList(0, thresholdIdx + 1);
+
+            // sorting by latency in asc order
+            Collections.sort(filtered, new Comparator<Channel>() {
+                @Override
+                public int compare(Channel c1, Channel c2) {
+                    return Double.valueOf(c1.getPeerStats().getAvgLatency()).compareTo(c2.getPeerStats().getAvgLatency());
+                }
+            });
+
+            synchronized (activePeers) {
+                activePeers.clear();
+                activePeers.addAll(filtered);
+            }
         }
     }
 

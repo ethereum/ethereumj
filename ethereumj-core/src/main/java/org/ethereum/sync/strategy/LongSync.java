@@ -1,12 +1,17 @@
 package org.ethereum.sync.strategy;
 
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.net.server.Channel;
 import org.ethereum.sync.SyncState;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
+import static java.lang.Thread.sleep;
 import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
 import static org.ethereum.sync.SyncState.HASH_RETRIEVING;
 import static org.ethereum.sync.SyncState.IDLE;
+import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
 /**
  * Implements long sync algorithm <br/>
@@ -31,6 +36,50 @@ public class LongSync extends AbstractSyncStrategy {
     public SyncState getState() {
         return state;
     }
+
+    @Override
+    public void start() {
+
+        super.start();
+
+        Thread headerProducer = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                produceHeaders();
+            }
+        });
+        headerProducer.start();
+    }
+
+    private void produceHeaders() {
+
+        while (inProgress()) {
+
+            List<BlockHeaderWrapper> headers = null;
+
+            try {
+                headers = queue.takeHeaders();
+
+                if (headers.isEmpty()) continue;
+
+                Channel peer;
+                while (null == (peer = pool.getBestIdle())) {
+                    sleep(100);
+                }
+
+                peer.fetchBlockBodies(headers);
+
+            } catch (Throwable t) {
+                if (headers == null || headers.isEmpty()) {
+                    logger.error("Error processing headers, {}", t);
+                } else {
+                    logger.error("Error processing headers: {}...{}, {}",
+                            headers.get(0).getHexStrShort(), headers.get(headers.size() - 1).getHexStrShort(), t);
+                }
+            }
+        }
+    }
+
 
     @Override
     protected void doWork() {
@@ -71,7 +120,7 @@ public class LongSync extends AbstractSyncStrategy {
 
             logger.trace("HASH_RETRIEVING is in progress, start master peer");
 
-            master = pool.getHighestDifficulty();
+            master = pool.getMasterCandidate();
 
             if (master == null) return;
 
@@ -79,11 +128,32 @@ public class LongSync extends AbstractSyncStrategy {
         } else {
 
             // master peer rotation
-            if (master.getSyncStats().getHeaderBunchesCount() > ROTATION_LIMIT) {
+            if (rotationNeeded(master)) {
                 logger.debug("Peer {}: rotating", master.getPeerIdShort());
                 changeState(BLOCK_RETRIEVING);
             }
         }
+    }
+
+    private boolean rotationNeeded(Channel master) {
+
+        if (master.getSyncStats().getHeaderBunchesCount() > ROTATION_LIMIT)
+            return true;
+
+        Channel candidate = pool.getMasterCandidate();
+
+        if (candidate != null) {
+
+            // master's TD is too low
+            if (!isIn20PercentRange(candidate.getTotalDifficulty(), master.getTotalDifficulty()))
+                return true;
+
+            // master's speed is too low
+            if (candidate.getPeerStats().getAvgLatency() * 2 < master.getPeerStats().getAvgLatency())
+                return true;
+        }
+
+        return false;
     }
 
     private void doBodies() {

@@ -1,6 +1,7 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
@@ -108,5 +109,9 @@ public class EthAdapter implements Eth {
 
     @Override
     public void dropConnection() {
+    }
+
+    @Override
+    public void fetchBodies(List<BlockHeaderWrapper> headers) {
     }
 }
