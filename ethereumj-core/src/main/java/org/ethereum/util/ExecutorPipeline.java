@@ -8,6 +8,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * Queues execution tasks into a single pipeline where some tasks can be executed in parallel
+ * but preserve 'messages' order so the next task process messages on a single thread in
+ * the same order they were added to the previous executor
+ *
  * Created by Anton Nashatyrev on 23.02.2016.
  */
 public class ExecutorPipeline <In, Out>{

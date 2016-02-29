@@ -35,8 +35,10 @@ public class BlockQueueMem implements BlockQueue {
 
     private final Object mutex = new Object();
 
+    // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
+    // to unload the main block importing cycle
     private ExecutorPipeline<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>> exec1 = new ExecutorPipeline<>
-            (8, 1000, true, new Functional.Function<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>>() {
+            (4, 1000, true, new Functional.Function<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>>() {
                 @Override
                 public Pair<BlockWrapper, Boolean> apply(Pair<BlockWrapper, Boolean> blockWrapper) {
                     for (Transaction tx : blockWrapper.getLeft().getBlock().getTransactionsList()) {
