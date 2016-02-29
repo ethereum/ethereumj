@@ -6,6 +6,7 @@ import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mapdb.HTreeMap;
 import org.slf4j.Logger;
@@ -233,6 +234,7 @@ public class StorageDictionaryTest {
         return ret;
     }
 
+    @Ignore
     @Test
     public void largeStorageTest() throws Exception {
 
