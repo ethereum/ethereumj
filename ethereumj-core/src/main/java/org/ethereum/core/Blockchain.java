@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import org.ethereum.db.TransactionInfo;
+
 import java.math.BigInteger;
 import java.util.List;
 
@@ -19,6 +21,8 @@ public interface Blockchain {
 
     public Block getBestBlock();
 
+    TransactionInfo getTransactionInfo(byte[] hash);
+    
     public boolean hasParentOnTheChain(Block block);
 
     void close();

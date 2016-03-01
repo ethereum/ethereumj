@@ -5,6 +5,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ReceiptStore;
+import org.ethereum.db.TransactionInfo;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.trie.Trie;
@@ -87,6 +89,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     private BlockStore blockStore;
 
+    @Autowired
+    private ReceiptStore receiptsStore;
+
     private Block bestBlock;
 
     private BigInteger totalDifficulty = ZERO;
@@ -159,6 +164,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public Block getBlockByNumber(long blockNr) {
         return blockStore.getChainBlockByNumber(blockNr);
+    }
+
+    @Override
+    public TransactionInfo getTransactionInfo(byte[] hash) {
+
+        TransactionInfo txInfo = receiptsStore.get(hash);
+
+        if (txInfo == null)
+            return null;
+
+        Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
+        txInfo.setTransaction(tx);
+
+        return txInfo;
     }
 
     @Override

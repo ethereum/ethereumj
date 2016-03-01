@@ -509,8 +509,7 @@ public class Web3Impl implements Web3 {
 
     // TODO complete implementation blockchain.getTransactionInfo
     public TransactionReceiptDTO eth_getTransactionReceipt(String transactionHash) throws Exception {
-        throw new NotImplementedException();
-        /*
+
         Blockchain blockchain = worldManager.getBlockchain();
         byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
         TransactionInfo txInfo = blockchain.getTransactionInfo(hash);
@@ -521,8 +520,8 @@ public class Web3Impl implements Web3 {
         Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
 
         return new TransactionReceiptDTO(block, txInfo);
-        */
-    };
+
+    }
 
     public void eth_getUncleByBlockHashAndIndex(){};
     public void eth_getUncleByBlockNumberAndIndex(){};
