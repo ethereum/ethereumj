@@ -82,8 +82,7 @@ public class TransactionReceipt {
 
     // TODO: return gas used for this transaction instead of cumulative gas
     public byte[] getGasUsed() {
-        return cumulativeGas;
-        // return gasUsed;
+        return gasUsed;
     }
 
     public long getCumulativeGasLong() {
