@@ -140,6 +140,11 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
+    public void returnBlock(BlockWrapper block) {
+        add(block);
+    }
+
+    @Override
     public void addOrReplace(BlockWrapper block) {
         awaitInit();
         synchronized (writeMutex) {
