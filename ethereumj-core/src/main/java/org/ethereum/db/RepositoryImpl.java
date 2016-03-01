@@ -2,7 +2,6 @@ package org.ethereum.db;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -30,7 +29,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.config.Constants.startingNonce;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -471,7 +469,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? startingNonce() : accountState.getNonce();
+        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
     }
 
     @Nonnull

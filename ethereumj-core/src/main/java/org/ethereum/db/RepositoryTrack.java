@@ -1,6 +1,5 @@
 package org.ethereum.db;
 
-import org.ethereum.config.Constants;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -17,7 +16,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
-import static org.ethereum.config.Constants.startingNonce;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -179,7 +177,7 @@ public class RepositoryTrack implements Repository {
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? startingNonce() : accountState.getNonce();
+        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
     }
 
     @Override
