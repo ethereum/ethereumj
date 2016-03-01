@@ -835,6 +835,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         else
             blockStore.saveBlock(block, totalDifficulty, true);
 
+        receiptsStore.saveMultiple(block.getHash(), receipts);
+
         logger.info("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
 

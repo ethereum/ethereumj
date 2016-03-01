@@ -22,7 +22,7 @@ public interface Blockchain {
     public Block getBestBlock();
 
     TransactionInfo getTransactionInfo(byte[] hash);
-    
+
     public boolean hasParentOnTheChain(Block block);
 
     void close();

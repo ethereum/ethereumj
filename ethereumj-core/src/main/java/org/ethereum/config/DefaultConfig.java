@@ -5,6 +5,8 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.ReceiptStore;
+import org.ethereum.db.ReceiptStoreImpl;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
@@ -93,5 +95,16 @@ public class DefaultConfig {
     @Bean
     LevelDbDataSource levelDbDataSource(String name) {
         return new LevelDbDataSource(name);
+    }
+
+    @Bean
+    public ReceiptStore receiptStore(){
+
+        KeyValueDataSource ds = new LevelDbDataSource("receipts");
+        ds.init();
+
+        ReceiptStore store = new ReceiptStoreImpl(ds);
+
+        return store;
     }
 }
