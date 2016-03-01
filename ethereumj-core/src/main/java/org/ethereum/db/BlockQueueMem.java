@@ -85,6 +85,11 @@ public class BlockQueueMem implements BlockQueue {
         exec1.push(Pair.of(block, false));
     }
 
+    @Override
+    public void returnBlock(BlockWrapper block) {
+        addImpl(block);
+    }
+
     public void addImpl(BlockWrapper block) {
 
         if (index.contains(block.getNumber())) return;

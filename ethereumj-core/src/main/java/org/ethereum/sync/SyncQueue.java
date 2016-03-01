@@ -138,7 +138,7 @@ public class SyncQueue {
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
 
-                    blockQueue.add(wrapper);
+                    blockQueue.returnBlock(wrapper);
                     compositeSyncListener.onNoParent(wrapper);
 
                     sleep(100);

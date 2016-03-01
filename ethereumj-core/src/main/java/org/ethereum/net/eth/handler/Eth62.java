@@ -486,7 +486,6 @@ public class Eth62 extends EthHandler {
 
     @Override
     public void onShutdown() {
-        changeState(IDLE);
         returnHeaders();
     }
 
