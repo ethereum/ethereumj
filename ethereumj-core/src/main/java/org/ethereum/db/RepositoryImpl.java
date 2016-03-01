@@ -394,7 +394,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized BigInteger getBalance(byte[] addr) {
         AccountState account = getAccountState(addr);
-        return (account == null) ? BigInteger.ZERO : account.getBalance();
+        return (account == null) ? AccountState.EMPTY.getBalance() : account.getBalance();
     }
 
     @Override
@@ -469,7 +469,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
+        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
     }
 
     @Nonnull

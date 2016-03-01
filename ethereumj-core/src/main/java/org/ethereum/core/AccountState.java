@@ -45,6 +45,8 @@ public class AccountState {
     private boolean dirty = false;
     private boolean deleted = false;
 
+    public static final AccountState EMPTY = new AccountState();
+
 
     public AccountState() {
         this(startingNonce(), BigInteger.ZERO);
