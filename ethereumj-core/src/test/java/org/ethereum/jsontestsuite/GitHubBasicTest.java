@@ -25,7 +25,7 @@ public class GitHubBasicTest {
     private static final long HOMESTEAD_BLOCK_SAVE = Constants.HOMESTEAD_FORK_BLKNUM;
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "f28ac81493281feec0b17290565cf74042893677";
 
     @Before
     public void setup() {
@@ -43,7 +43,7 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyTest() throws IOException, ParseException {
 
-        Constants.HOMESTEAD_FORK_BLKNUM = Long.MAX_VALUE;
+        Constants.HOMESTEAD_FORK_BLKNUM = 1_150_000;
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
 
