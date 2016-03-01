@@ -227,24 +227,6 @@ public class SyncPool implements Iterable<Channel> {
         return nodesInUse().contains(nodeId);
     }
 
-    public void changeState(SyncState newState) {
-        synchronized (peers) {
-            for (Channel peer : peers.values()) {
-                peer.changeSyncState(newState);
-            }
-        }
-    }
-
-    public void changeStateForIdles(SyncState newState) {
-
-        synchronized (peers) {
-            for (Channel peer : peers.values()) {
-                if (peer.isIdle())
-                    peer.changeSyncState(newState);
-            }
-        }
-    }
-
     public boolean isEmpty() {
         return peers.isEmpty();
     }

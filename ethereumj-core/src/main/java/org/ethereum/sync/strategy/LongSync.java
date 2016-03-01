@@ -129,7 +129,7 @@ public class LongSync extends AbstractSyncStrategy {
 
             // master peer rotation
             if (rotationNeeded(master)) {
-                logger.debug("Peer {}: rotating", master.getPeerIdShort());
+                master.changeSyncState(IDLE);
                 changeState(BLOCK_RETRIEVING);
             }
         }
@@ -137,20 +137,26 @@ public class LongSync extends AbstractSyncStrategy {
 
     private boolean rotationNeeded(Channel master) {
 
-        if (master.getSyncStats().getHeaderBunchesCount() > ROTATION_LIMIT)
+        if (master.getSyncStats().getHeaderBunchesCount() > ROTATION_LIMIT) {
+            logger.debug("Peer {}: rotating due to rotation limit", master.getPeerIdShort());
             return true;
+        }
 
         Channel candidate = pool.getMasterCandidate();
 
         if (candidate != null) {
 
             // master's TD is too low
-            if (!isIn20PercentRange(candidate.getTotalDifficulty(), master.getTotalDifficulty()))
+            if (!isIn20PercentRange(candidate.getTotalDifficulty(), master.getTotalDifficulty())) {
+                logger.debug("Peer {}: rotating due to low difficulty", master.getPeerIdShort());
                 return true;
+            }
 
             // master's speed is too low
-            if (candidate.getPeerStats().getAvgLatency() * 2 < master.getPeerStats().getAvgLatency())
+            if (candidate.getPeerStats().getAvgLatency() * 2 < master.getPeerStats().getAvgLatency()) {
+                logger.debug("Peer {}: rotating due to high ping", master.getPeerIdShort());
                 return true;
+            }
         }
 
         return false;
@@ -171,10 +177,6 @@ public class LongSync extends AbstractSyncStrategy {
         }
 
         logger.info("Change state from {} to {}", state, newState);
-
-        if (newState == BLOCK_RETRIEVING) {
-            pool.changeState(BLOCK_RETRIEVING);
-        }
 
         state = newState;
     }
