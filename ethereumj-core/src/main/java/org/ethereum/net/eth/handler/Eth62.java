@@ -404,6 +404,8 @@ public class Eth62 extends EthHandler {
 
         List<Block> blocks = validateAndMerge(msg);
 
+        returnHeaders();
+
         if (blocks == null) {
 
             // headers will be returned by #onShutdown()
@@ -411,13 +413,11 @@ public class Eth62 extends EthHandler {
             return;
         }
 
-        returnHeaders();
-
         queue.addList(blocks, channel.getNodeId());
 
         if (syncDone) {
             sendGetBlockBodies();
-        } else {
+        } else if (syncState == BLOCK_RETRIEVING) {
             changeState(IDLE);
         }
     }
