@@ -29,7 +29,7 @@ public class FindNodeMessage extends Message {
 
     public static FindNodeMessage create(byte[] target, ECKey privKey) {
 
-        long expiration = 60 + System.currentTimeMillis() / 1000;
+        long expiration = 90 * 60 + System.currentTimeMillis() / 1000;
 
         /* RLP Encode data */
         byte[] rlpToken = RLP.encodeElement(target);
