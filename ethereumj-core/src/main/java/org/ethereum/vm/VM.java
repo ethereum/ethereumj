@@ -71,10 +71,12 @@ public class VM {
     private int vmCounter = 0;
 
     private static VMHook vmHook;
+    private final static boolean vmTrace = CONFIG.vmTrace();
+    private final static long dumpBlock = CONFIG.dumpBlock();
 
     public void step(Program program) {
 
-        if (CONFIG.vmTrace()) {
+        if (vmTrace) {
             program.saveOpTrace();
         }
 
@@ -265,7 +267,7 @@ public class VM {
             }
 
             // Log debugging line for VM
-            if (program.getNumber().intValue() == CONFIG.dumpBlock())
+            if (program.getNumber().intValue() == dumpBlock)
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
 
             if (vmHook != null) {
