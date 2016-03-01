@@ -43,7 +43,7 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyTest() throws IOException, ParseException {
 
-        Constants.HOMESTEAD_FORK_BLKNUM = Long.MAX_VALUE;
+        Constants.HOMESTEAD_FORK_BLKNUM = 1_150_000;
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
 
