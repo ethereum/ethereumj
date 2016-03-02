@@ -556,7 +556,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized AccountState createAccount(final byte[] addr) {
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(
+                config.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
 
         updateAccountState(addr, accountState);
         updateContractDetails(addr, new ContractDetailsImpl());
@@ -577,7 +578,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         AccountState account = getAccountState(addr);
         ContractDetails details = getContractDetails(addr);
 
-        account = (account == null) ? new AccountState() : account.clone();
+        account = (account == null) ? new AccountState(config.getBlockchainConfig().getCommonConstants().
+                getInitialNonce(), BigInteger.ZERO) : account.clone();
         details = new ContractDetailsCacheImpl(details);
 //        details.setAddress(addr);
 

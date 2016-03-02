@@ -1,10 +1,9 @@
 package org.ethereum.validator;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
-
-import static org.ethereum.config.Constants.GAS_LIMIT_BOUND_DIVISOR;
 
 /**
  * Checks if {@link BlockHeader#gasLimit} matches gas limit bounds. <br>
@@ -15,6 +14,9 @@ import static org.ethereum.config.Constants.GAS_LIMIT_BOUND_DIVISOR;
  * @since 02.09.2015
  */
 public class ParentGasLimitRule extends DependentBlockHeaderRule {
+
+    private static int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.CONFIG.getBlockchainConfig().
+            getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
 
     @Override
     public boolean validate(BlockHeader header, BlockHeader parent) {

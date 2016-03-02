@@ -151,12 +151,9 @@ public class CommonConfig {
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(),
-                new ProofOfWorkRule()
+                new ProofOfWorkRule(),
+                new GasLimitRule()
         ));
-
-        if (!config.isFrontier()) {
-            rules.add(new GasLimitRule());
-        }
 
         return new BlockHeaderValidator(rules);
     }
@@ -166,12 +163,9 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule()
+                new DifficultyRule(),
+                new ParentGasLimitRule()
         ));
-
-        if (!config.isFrontier()) {
-            rules.add(new ParentGasLimitRule());
-        }
 
         return new ParentBlockHeaderValidator(rules);
     }

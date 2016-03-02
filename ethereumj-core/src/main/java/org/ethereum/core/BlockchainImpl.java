@@ -35,8 +35,6 @@ import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
-import static org.ethereum.config.Constants.*;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.util.BIUtil.isMoreThan;
@@ -122,6 +120,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private byte[] minerCoinbase;
     private byte[] minerExtraData;
+    private BigInteger BLOCK_REWARD;
+    private BigInteger INCLUSION_REWARD;
+    private int UNCLE_LIST_LIMIT;
+    private int UNCLE_GENERATION_LIMIT;
+
 
     private Stack<State> stateStack = new Stack<>();
 
@@ -138,12 +141,21 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.adminInfo = adminInfo;
         this.listener = listener;
         this.parentHeaderValidator = parentHeaderValidator;
+        initConst(SystemProperties.CONFIG);
     }
 
     @PostConstruct
     private void init() {
+        initConst(config);
+    }
+
+    private void initConst(SystemProperties config) {
         minerCoinbase = config.getMinerCoinbase();
         minerExtraData = config.getMineExtraData();
+        BLOCK_REWARD = config.getBlockchainConfig().getCommonConstants().getBLOCK_REWARD();
+        INCLUSION_REWARD = BLOCK_REWARD.divide(BigInteger.valueOf(32));
+        UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
+        UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
     }
 
     @Override
@@ -670,7 +682,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return ret;
     }
 
-    public static Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
+    public Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
         Set<ByteArrayWrapper> ret = new HashSet<>();
         long limitNum = max(0, testedBlock.getNumber() - UNCLE_GENERATION_LIMIT);
         Block it = testedBlock;
@@ -772,15 +784,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void addReward(Block block) {
 
         // Add standard block reward
-        BigInteger totalBlockReward = Block.BLOCK_REWARD;
+        BigInteger totalBlockReward = BLOCK_REWARD;
 
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
                 track.addBalance(uncle.getCoinbase(),
-                        new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
+                        new BigDecimal(BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
 
-                totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);
+                totalBlockReward = totalBlockReward.add(INCLUSION_REWARD);
             }
         }
         track.addBalance(block.getCoinbase(), totalBlockReward);
