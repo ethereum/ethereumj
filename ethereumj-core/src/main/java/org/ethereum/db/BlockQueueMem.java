@@ -1,9 +1,17 @@
 package org.ethereum.db;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.index.ArrayListIndex;
 import org.ethereum.db.index.Index;
+import org.ethereum.core.Transaction;
+import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.Serializers;
+import org.ethereum.util.ExecutorPipeline;
+import org.ethereum.util.Functional;
+import org.mapdb.DB;
+import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +35,35 @@ public class BlockQueueMem implements BlockQueue {
 
     private final Object mutex = new Object();
 
+    // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
+    // to unload the main block importing cycle
+    private ExecutorPipeline<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>> exec1 = new ExecutorPipeline<>
+            (4, 1000, true, new Functional.Function<Pair<BlockWrapper, Boolean>, Pair<BlockWrapper, Boolean>>() {
+                @Override
+                public Pair<BlockWrapper, Boolean> apply(Pair<BlockWrapper, Boolean> blockWrapper) {
+                    for (Transaction tx : blockWrapper.getLeft().getBlock().getTransactionsList()) {
+                        tx.getSender();
+                    }
+                    return blockWrapper;
+                }
+            }, new Functional.Consumer<Throwable>() {
+                @Override
+                public void accept(Throwable throwable) {
+                    logger.error("Unexpected exception: ", throwable);
+                }
+            });
+
+    private ExecutorPipeline<Pair<BlockWrapper, Boolean>, Void> exec2 = exec1.add(1, 1, new Functional.Consumer<Pair<BlockWrapper, Boolean>>() {
+        @Override
+        public void accept(Pair<BlockWrapper, Boolean> blockWrapper) {
+            if (blockWrapper.getRight()) {
+                addOrReplaceImpl(blockWrapper.getLeft());
+            } else {
+                addImpl(blockWrapper.getLeft());
+            }
+        }
+    });
+
     @Override
     public void open() {
         logger.info("Block queue opened");
@@ -38,33 +75,22 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void addOrReplaceAll(Collection<BlockWrapper> blockList) {
-
-        List<Long> numbers = new ArrayList<>(blockList.size());
-        Map<Long, BlockWrapper> newBlocks = new HashMap<>();
-
-        for (BlockWrapper b : blockList) {
-
-            // do not add existing number to index
-            if (!index.contains(b.getNumber()) &&
-                    !numbers.contains(b.getNumber())) {
-                numbers.add(b.getNumber());
-            }
-
-            newBlocks.put(b.getNumber(), b);
+        for (BlockWrapper blockWrapper : blockList) {
+            addOrReplace(blockWrapper);
         }
-
-        synchronized (mutex) {
-            blocks.putAll(newBlocks);
-            index.addAll(numbers);
-        }
-
-        fireNotEmpty();
-
-        logger.debug("Added: " + blockList.size() + ", BlockQueue size: " + blocks.size());
     }
 
     @Override
     public void add(BlockWrapper block) {
+        exec1.push(Pair.of(block, false));
+    }
+
+    @Override
+    public void returnBlock(BlockWrapper block) {
+        addImpl(block);
+    }
+
+    public void addImpl(BlockWrapper block) {
 
         if (index.contains(block.getNumber())) return;
 
@@ -77,6 +103,10 @@ public class BlockQueueMem implements BlockQueue {
 
     @Override
     public void addOrReplace(BlockWrapper block) {
+        exec1.push(Pair.of(block, true));
+    }
+
+    private void addOrReplaceImpl(BlockWrapper block) {
 
         synchronized (mutex) {
             if (!index.contains(block.getNumber())) {

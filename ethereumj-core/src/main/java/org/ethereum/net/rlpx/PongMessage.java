@@ -19,7 +19,7 @@ public class PongMessage extends Message {
 
     public static PongMessage create(byte[] token, String host, int port, ECKey privKey) {
 
-        long expiration = 60 + System.currentTimeMillis() / 1000;
+        long expiration = 90 * 60 + System.currentTimeMillis() / 1000;
 
         byte[] rlpIp = RLP.encodeElement(host.getBytes());
 
@@ -69,8 +69,7 @@ public class PongMessage extends Message {
 
     @Override
     public void parse(byte[] data) {
-        RLPList list = RLP.decode2(data);
-        list = (RLPList) list.get(0);
+        RLPList list = (RLPList) RLP.decode2OneItem(data, 0);
 
         this.token = list.get(0).getRLPData();
         RLPItem expires = (RLPItem) list.get(1);

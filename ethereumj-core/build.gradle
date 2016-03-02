@@ -22,6 +22,13 @@ plugins {
 apply plugin: 'propdeps-maven'
 apply plugin: 'com.jfrog.artifactory-upload'
 
+
+repositories {
+    maven {
+        url "http://dl.bintray.com/ethereum/maven"
+    }
+}
+
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
@@ -38,6 +45,18 @@ sourceSets.main.java.srcDirs += generatedSrcDir
 
 tasks.withType(JavaCompile){
     options.warnings = false
+}
+
+task runMorden (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.file=morden.conf'
+}
+
+task runTest (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.file=test.conf'
 }
 
 /**
@@ -98,7 +117,7 @@ dependencies {
     compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
 
     compile "org.fusesource.leveldbjni:leveldbjni:1.8"
-    compile "org.fusesource.leveldbjni:leveldbjni-all:1.8"
+    compile "org.ethereum:leveldbjni-all:1.18"
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"

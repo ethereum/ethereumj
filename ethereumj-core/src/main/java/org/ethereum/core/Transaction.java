@@ -239,7 +239,7 @@ public class Transaction {
         return ECKey.recoverFromSignature(signature.v, signature, hash, true);
     }
 
-    public byte[] getSender() {
+    public synchronized byte[] getSender() {
         try {
             if (sendAddress == null) {
                 ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());

@@ -17,6 +17,8 @@ public interface BlockQueue extends DiskStore {
 
     void add(BlockWrapper block);
 
+    void returnBlock(BlockWrapper block);
+
     void addOrReplace(BlockWrapper block);
 
     BlockWrapper poll();

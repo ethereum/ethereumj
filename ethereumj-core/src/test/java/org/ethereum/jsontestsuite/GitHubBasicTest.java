@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 public class GitHubBasicTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "99afe8f5aad7bca5d0f1b1685390a4dea32d73c3";
 
     @After
     public void recover() {
@@ -35,7 +35,7 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyTest() throws IOException, ParseException {
 
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig());
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
 
@@ -55,7 +55,7 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyFrontierTest() throws IOException, ParseException {
 
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig());
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyFrontier.json", shacommit);
 

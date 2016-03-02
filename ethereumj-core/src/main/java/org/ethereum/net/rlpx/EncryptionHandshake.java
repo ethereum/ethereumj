@@ -40,11 +40,131 @@ public class EncryptionHandshake {
         isInitiator = true;
     }
 
+    EncryptionHandshake(ECPoint remotePublicKey, ECKey ephemeralKey, byte[] initiatorNonce, byte[] responderNonce, boolean isInitiator) {
+        this.remotePublicKey = remotePublicKey;
+        this.ephemeralKey = ephemeralKey;
+        this.initiatorNonce = initiatorNonce;
+        this.responderNonce = responderNonce;
+        this.isInitiator = isInitiator;
+    }
+
     public EncryptionHandshake() {
         ephemeralKey = new ECKey(random);
         responderNonce = new byte[NONCE_SIZE];
         random.nextBytes(responderNonce);
         isInitiator = false;
+    }
+
+    /**
+     * Create a handshake auth message defined by EIP-8
+     *
+     * @param key our private key
+     */
+    public AuthInitiateMessageV4 createAuthInitiateV4(ECKey key) {
+        AuthInitiateMessageV4 message = new AuthInitiateMessageV4();
+        BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+        byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
+
+        byte[] nonce = initiatorNonce;
+        byte[] signed = xor(token, nonce);
+        message.signature = ephemeralKey.sign(signed);
+        message.publicKey = key.getPubKeyPoint();
+        message.nonce = initiatorNonce;
+        return message;
+    }
+
+    public byte[] encryptAuthInitiateV4(AuthInitiateMessageV4 message) {
+
+        byte[] msg = message.encode();
+        byte[] padded = padEip8(msg);
+
+        return encryptAuthEIP8(padded);
+    }
+
+    public AuthInitiateMessageV4 decryptAuthInitiateV4(byte[] in, ECKey myKey) throws InvalidCipherTextException {
+        try {
+
+            byte[] prefix = new byte[2];
+            System.arraycopy(in, 0, prefix, 0, 2);
+            short size = ByteUtil.bigEndianToShort(prefix, 0);
+            byte[] ciphertext = new byte[size];
+            System.arraycopy(in, 2, ciphertext, 0, size);
+
+            byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext, prefix);
+
+            return AuthInitiateMessageV4.decode(plaintext);
+        } catch (InvalidCipherTextException e) {
+            throw e;
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    public byte[] encryptAuthResponseV4(AuthResponseMessageV4 message) {
+
+        byte[] msg = message.encode();
+        byte[] padded = padEip8(msg);
+
+        return encryptAuthEIP8(padded);
+    }
+
+    public AuthResponseMessageV4 decryptAuthResponseV4(byte[] in, ECKey myKey) {
+        try {
+
+            byte[] prefix = new byte[2];
+            System.arraycopy(in, 0, prefix, 0, 2);
+            short size = ByteUtil.bigEndianToShort(prefix, 0);
+            byte[] ciphertext = new byte[size];
+            System.arraycopy(in, 2, ciphertext, 0, size);
+
+            byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext, prefix);
+
+            return AuthResponseMessageV4.decode(plaintext);
+        } catch (IOException | InvalidCipherTextException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    AuthResponseMessageV4 makeAuthInitiateV4(AuthInitiateMessageV4 initiate, ECKey key) {
+        initiatorNonce = initiate.nonce;
+        remotePublicKey = initiate.publicKey;
+        BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+        byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
+        byte[] signed = xor(token, initiatorNonce);
+
+        ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
+                initiate.signature, signed, false);
+        if (ephemeral == null) {
+            throw new RuntimeException("failed to recover signatue from message");
+        }
+        remoteEphemeralKey = ephemeral.getPubKeyPoint();
+        AuthResponseMessageV4 response = new AuthResponseMessageV4();
+        response.ephemeralPublicKey = ephemeralKey.getPubKeyPoint();
+        response.nonce = responderNonce;
+        return response;
+    }
+
+    public AuthResponseMessageV4 handleAuthResponseV4(ECKey myKey, byte[] initiatePacket, byte[] responsePacket) {
+        AuthResponseMessageV4 response = decryptAuthResponseV4(responsePacket, myKey);
+        remoteEphemeralKey = response.ephemeralPublicKey;
+        responderNonce = response.nonce;
+        agreeSecret(initiatePacket, responsePacket);
+        return response;
+    }
+
+    byte[] encryptAuthEIP8(byte[] msg) {
+
+        short size = (short) (msg.length + ECIESCoder.getOverhead());
+        byte[] prefix = ByteUtil.shortToBytes(size);
+        byte[] encrypted = ECIESCoder.encrypt(remotePublicKey, msg, prefix);
+
+        byte[] out = new byte[prefix.length + encrypted.length];
+        int offset = 0;
+        System.arraycopy(prefix, 0, out, offset, prefix.length);
+        offset += prefix.length;
+        System.arraycopy(encrypted, 0, out, offset, encrypted.length);
+
+        return out;
     }
 
     /**
@@ -87,7 +207,7 @@ public class EncryptionHandshake {
         return ECIESCoder.encrypt(remotePublicKey, message.encode());
     }
 
-    public byte[] encryptAuthReponse(AuthResponseMessage message) {
+    public byte[] encryptAuthResponse(AuthResponseMessage message) {
         return ECIESCoder.encrypt(remotePublicKey, message.encode());
     }
 
@@ -155,7 +275,7 @@ public class EncryptionHandshake {
 
     public byte[] handleAuthInitiate(byte[] initiatePacket, ECKey key) throws InvalidCipherTextException {
         AuthResponseMessage response = makeAuthInitiate(initiatePacket, key);
-        byte[] responsePacket = encryptAuthReponse(response);
+        byte[] responsePacket = encryptAuthResponse(response);
         agreeSecret(initiatePacket, responsePacket);
         return responsePacket;
     }
@@ -183,6 +303,23 @@ public class EncryptionHandshake {
         response.ephemeralPublicKey = ephemeralKey.getPubKeyPoint();
         response.nonce = responderNonce;
         return response;
+    }
+
+    /**
+     * Pads messages with junk data,
+     * pad data length is random value satisfying 100 < len < 300.
+     * It's necessary to make messages described by EIP-8 distinguishable from pre-EIP-8 msgs
+     *
+     * @param msg message to pad
+     * @return padded message
+     */
+    private byte[] padEip8(byte[] msg) {
+
+        byte[] paddedMessage = new byte[msg.length + random.nextInt(200) + 100];
+        random.nextBytes(paddedMessage);
+        System.arraycopy(msg, 0, paddedMessage, 0, msg.length);
+
+        return paddedMessage;
     }
 
     static public byte recIdFromSignatureV(int v) {

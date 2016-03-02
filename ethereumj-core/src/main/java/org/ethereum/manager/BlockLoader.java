@@ -2,9 +2,9 @@ package org.ethereum.manager;
 
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Blockchain;
+import org.ethereum.core.*;
+import org.ethereum.util.ExecutorPipeline;
+import org.ethereum.util.Functional;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Scanner;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
 
 @Component
 public class BlockLoader {
@@ -31,8 +34,51 @@ public class BlockLoader {
 
     Scanner scanner = null;
 
+    DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
-    public void loadBlocks(){
+    private void blockWork(Block block) {
+        if (block.getNumber() >= blockchain.getBestBlock().getNumber()) {
+
+            if (block.getNumber() > 0 && !isValid(block.getHeader())) {
+                throw new RuntimeException();
+            }
+
+            ImportResult result = blockchain.tryToConnect(block);
+            System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
+                    + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ")");
+
+        } else {
+
+            if (block.getNumber() % 10000 == 0)
+                System.out.println("Skipping block #" + block.getNumber());
+        }
+    }
+
+    ExecutorPipeline<Block, Block> exec1;
+    ExecutorPipeline<Block, ?> exec2;
+
+    public void loadBlocks() {
+        exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
+            @Override
+            public Block apply(Block b) {
+                for (Transaction tx : b.getTransactionsList()) {
+                    tx.getSender();
+                }
+                return b;
+            }
+        }, new Functional.Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) {
+                logger.error("Unhandled exception: ", throwable);
+            }
+        });
+
+        exec2 = exec1.add(1, 1000, new Functional.Consumer<Block>() {
+            @Override
+            public void accept(Block block) {
+                blockWork(block);
+            }
+        });
 
         String fileSrc = config.blocksLoader();
         try {
@@ -44,32 +90,10 @@ public class BlockLoader {
 
             while (scanner.hasNextLine()) {
 
-                byte[] blockRLPBytes = Hex.decode( scanner.nextLine());
+                byte[] blockRLPBytes = Hex.decode(scanner.nextLine());
                 Block block = new Block(blockRLPBytes);
 
-                long t1 = System.nanoTime();
-                if (block.getNumber() >= blockchain.getBestBlock().getNumber()){
-
-                    if (block.getNumber() > 0 && !isValid(block.getHeader())) {
-                        break;
-                    };
-
-                    blockchain.tryToConnect(block);
-                    long t1_ = System.nanoTime();
-
-                    float elapsed = ((float)(t1_ - t1) / 1_000_000);
-
-                    if (block.getNumber() % 1000 == 0 || elapsed > 10_000) {
-                        String result = String.format("Imported block #%d took: [%02.2f msec]",
-                                block.getNumber(), elapsed);
-
-                        System.out.println(result);
-                    }
-                } else{
-
-                    if (block.getNumber() % 10000 == 0)
-                        System.out.println("Skipping block #" + block.getNumber());
-                }
+                exec1.push(block);
             }
         } catch (IOException e) {
             e.printStackTrace();

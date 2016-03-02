@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class contains static values of messages on the network. These message
@@ -48,6 +50,12 @@ public class StaticMessages {
 
     private String buildHelloAnnouncement() {
         String version = config.projectVersion();
+        String numberVersion = version;
+        Pattern pattern = Pattern.compile("^\\d+(\\.\\d+)*");
+        Matcher matcher = pattern.matcher(numberVersion);
+        if (matcher.find()) {
+            numberVersion = numberVersion.substring(matcher.start(), matcher.end());
+        }
         String system = System.getProperty("os.name");
         if (system.contains(" "))
             system = system.substring(0, system.indexOf(" "));
@@ -55,6 +63,7 @@ public class StaticMessages {
             system = "Android";
         String phrase = config.helloPhrase();
 
-        return String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
+        return String.format("Ethereum(J)/v%s/%s/%s/Java/%s", numberVersion, system,
+                config.projectVersionModifier().equalsIgnoreCase("release") ? "Release" : "Dev", phrase);
     }
 }

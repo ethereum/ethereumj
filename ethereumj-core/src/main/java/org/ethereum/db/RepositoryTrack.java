@@ -177,13 +177,13 @@ public class RepositoryTrack implements Repository {
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
+        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
     }
 
     @Override
     public BigInteger getBalance(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? BigInteger.ZERO : accountState.getBalance();
+        return accountState == null ? AccountState.EMPTY.getBalance() : accountState.getBalance();
     }
 
     @Override

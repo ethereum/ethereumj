@@ -21,7 +21,7 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "f28ac81493281feec0b17290565cf74042893677";
 
 
     private long oldForkValue;
@@ -32,7 +32,7 @@ public class GitHubStateTest {
         // for this JSON test commit the Homestead block was defined as 900000
         SystemProperties.CONFIG.setBlockchainConfig(new AbstractNetConfig() {{
             add(0, new FrontierConfig());
-            add(900_000, new HomesteadConfig());
+            add(1_150_000, new HomesteadConfig());
         }});
     }
 
@@ -242,9 +242,6 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransitionTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, excluded);
-
-        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransitionTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
