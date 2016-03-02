@@ -50,13 +50,13 @@ tasks.withType(JavaCompile){
 task runMorden (type: JavaExec) {
     main = mainClassName
     classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.file=morden.conf'
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
 }
 
 task runTest (type: JavaExec) {
     main = mainClassName
     classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.file=test.conf'
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=test.conf'
 }
 
 /**
