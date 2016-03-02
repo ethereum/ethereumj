@@ -300,7 +300,7 @@ public class TrieImpl implements Trie {
                     byte[] newKey = concatenate(k, unpackToNibbles(child.get(0).asBytes()));
                     newNode = new Object[]{packNibbles(newKey), child.get(1).asObj()};
                 } else {
-                    newNode = new Object[]{currentNode.get(0).asString(), hash};
+                    newNode = new Object[]{currentNode.get(0), hash};
                 }
                 return this.putToCache(newNode);
             } else {
