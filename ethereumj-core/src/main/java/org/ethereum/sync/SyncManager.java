@@ -505,7 +505,7 @@ public class SyncManager {
         }
         logger.trace(
                 "Node list obtained from discovery: {}",
-                nodes.size() > 0 ? sb.toString() : "empty"
+                !nodes.isEmpty() ? sb.toString() : "empty"
         );
     }
 

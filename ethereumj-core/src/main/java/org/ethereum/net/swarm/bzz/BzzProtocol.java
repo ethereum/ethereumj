@@ -98,7 +98,7 @@ public class BzzProtocol implements Functional.Consumer<BzzMessage> {
 
             start();
 
-            if (pendingHandshakeOutMessages.size() > 0) {
+            if (!pendingHandshakeOutMessages.isEmpty()) {
                 LOG.info("Send pending handshake messages: " + pendingHandshakeOutMessages.size());
                 for (BzzMessage pmsg : pendingHandshakeOutMessages) {
                     sendMessageImpl(pmsg);
@@ -109,7 +109,7 @@ public class BzzProtocol implements Functional.Consumer<BzzMessage> {
             // ping the peer for self neighbours
             sendMessageImpl(new BzzRetrieveReqMessage(Key.zeroKey()));
 
-            if (pendingHandshakeInMessages.size() > 0) {
+            if (!pendingHandshakeInMessages.isEmpty()) {
                 LOG.info("Processing pending handshake inbound messages: " + pendingHandshakeInMessages.size());
                 for (BzzMessage pmsg : pendingHandshakeInMessages) {
                     handleMsg(pmsg);
