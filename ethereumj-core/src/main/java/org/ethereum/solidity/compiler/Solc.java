@@ -25,15 +25,15 @@ public class Solc {
     }
 
     private void init() throws IOException {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"), "solc");
 
-        InputStream is = getClass().getResourceAsStream("/bin/" + getOS() + "/file.list");
+        InputStream is = getClass().getResourceAsStream("/native/" + getOS() + "/solc/file.list");
         Scanner scanner = new Scanner(is);
         while (scanner.hasNext()) {
             String s = scanner.next();
             File targetFile = new File(tmpDir, s);
             if (!targetFile.canRead()) {
-                InputStream fis = getClass().getResourceAsStream("/bin/" + getOS() + "/" + s);
+                InputStream fis = getClass().getResourceAsStream("/native/" + getOS() + "/solc/" + s);
                 Files.copy(fis, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
             if (solc == null) {

@@ -97,9 +97,12 @@ public class SolidityCompiler {
             }
         }
 
-        Process process = new ProcessBuilder(commandParts)
-                .directory(Solc.INSTANCE.getExecutable().getParentFile())
-                .start();
+        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
+                .directory(Solc.INSTANCE.getExecutable().getParentFile());
+        processBuilder.environment().put("LD_LIBRARY_PATH",
+                Solc.INSTANCE.getExecutable().getParentFile().getCanonicalPath());
+
+        Process process = processBuilder.start();
 
         try (BufferedOutputStream stream = new BufferedOutputStream(process.getOutputStream())) {
             stream.write(source);
