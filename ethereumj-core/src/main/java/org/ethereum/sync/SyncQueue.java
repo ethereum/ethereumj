@@ -136,7 +136,7 @@ public class SyncQueue {
                 // In case we don't have a parent on the chain
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
-                    logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
+                    logger.debug("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
 
                     blockQueue.returnBlock(wrapper);
                     compositeSyncListener.onNoParent(wrapper);
@@ -359,6 +359,13 @@ public class SyncQueue {
      */
     public BlockWrapper peekLastBlock() {
         return blockQueue.peekLast();
+    }
+
+    /**
+     * @return latest block in the queue
+     */
+    public BlockWrapper peekFirstBlock() {
+        return blockQueue.peek();
     }
 
     /**

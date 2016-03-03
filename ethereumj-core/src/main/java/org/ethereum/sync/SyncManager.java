@@ -157,12 +157,12 @@ public class SyncManager {
             // recover gap only during Short sync
             if (longSync.inProgress()) return;
 
-            BlockWrapper latest = queue.peekLastBlock();
-            Channel master = pool.getByNodeId(latest.getNodeId());
+            BlockWrapper gapBlock = queue.peekFirstBlock();
+            Channel master = pool.getByNodeId(gapBlock.getNodeId());
 
             // drop the block if there is no peer which sent it to us
             if (master == null) {
-                queue.removeBlock(latest);
+                queue.removeBlock(gapBlock);
                 return;
             }
 
@@ -172,10 +172,10 @@ public class SyncManager {
             if (logger.isDebugEnabled()) logger.debug(
                     "Recover gap: best.number [{}] vs block.number [{}]",
                     blockchain.getBestBlock().getNumber(),
-                    latest.getNumber()
+                    gapBlock.getNumber()
             );
 
-            master.recoverGap(latest);
+            master.recoverGap(gapBlock);
         }
     };
 
