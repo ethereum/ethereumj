@@ -129,7 +129,6 @@ public class LongSync extends AbstractSyncStrategy {
 
             // master peer rotation
             if (rotationNeeded(master)) {
-                master.changeSyncState(IDLE);
                 changeState(BLOCK_RETRIEVING);
             }
         }
@@ -174,6 +173,11 @@ public class LongSync extends AbstractSyncStrategy {
 
         if (state == newState) {
             return;
+        }
+
+        if (newState == BLOCK_RETRIEVING) {
+            Channel master = pool.getMaster();
+            if (master != null) master.changeSyncState(IDLE);
         }
 
         logger.info("Change state from {} to {}", state, newState);
