@@ -20,12 +20,13 @@ public class Solc {
         try {
             init();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Can't init solc compiler: ", e);
         }
     }
 
     private void init() throws IOException {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"), "solc");
+        tmpDir.mkdirs();
 
         InputStream is = getClass().getResourceAsStream("/native/" + getOS() + "/solc/file.list");
         Scanner scanner = new Scanner(is);
@@ -55,7 +56,7 @@ public class Solc {
         } else if (osName.contains("mac")) {
             return "mac";
         } else {
-            throw new RuntimeException("Can't find solc compiler for unrecognized OS: " + osName);
+            throw new RuntimeException("Can't find solc compiler: unrecognized OS: " + osName);
         }
     }
 
