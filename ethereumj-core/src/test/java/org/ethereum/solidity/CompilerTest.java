@@ -12,7 +12,6 @@ import java.io.IOException;
  */
 public class CompilerTest {
 
-    @Ignore
     @Test
     public void simpleTest() throws IOException {
         String contract =
