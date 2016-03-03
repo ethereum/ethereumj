@@ -52,7 +52,7 @@ public class TestNetSample extends BasicSample {
     }
 
     @Override
-    public void onSyncDone() {
+    public void onSyncDone() throws Exception {
         super.onSyncDone();
     }
 
