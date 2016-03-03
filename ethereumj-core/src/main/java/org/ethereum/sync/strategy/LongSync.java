@@ -147,13 +147,16 @@ public class LongSync extends AbstractSyncStrategy {
 
             // master's TD is too low
             if (!isIn20PercentRange(candidate.getTotalDifficulty(), master.getTotalDifficulty())) {
-                logger.debug("Peer {}: rotating due to low difficulty", master.getPeerIdShort());
+                logger.debug("Peer {}: rotating due to low difficulty, {} vs {}",
+                        master.getPeerIdShort(), master.getTotalDifficulty(), candidate.getTotalDifficulty());
                 return true;
             }
 
             // master's speed is too low
             if (candidate.getPeerStats().getAvgLatency() * 2 < master.getPeerStats().getAvgLatency()) {
-                logger.debug("Peer {}: rotating due to high ping", master.getPeerIdShort());
+                logger.debug("Peer {}: rotating due to high ping, {} vs {}",
+                        master.getPeerIdShort(), String.format("%.2f", master.getPeerStats().getAvgLatency()),
+                        String.format("%.2f", candidate.getPeerStats().getAvgLatency()));
                 return true;
             }
         }

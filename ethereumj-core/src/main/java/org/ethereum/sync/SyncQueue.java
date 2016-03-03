@@ -141,7 +141,11 @@ public class SyncQueue {
                     blockQueue.returnBlock(wrapper);
                     compositeSyncListener.onNoParent(wrapper);
 
-                    sleep(100);
+                    if (!longSyncDone) {
+                        sleep(100);
+                    } else {
+                        sleep(2000);
+                    }
                 }
 
                 if (importResult == IMPORTED_BEST)
