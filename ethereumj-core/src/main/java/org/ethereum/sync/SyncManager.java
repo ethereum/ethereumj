@@ -12,6 +12,7 @@ import org.ethereum.sync.listener.SyncListenerAdapter;
 import org.ethereum.sync.strategy.SyncStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -162,6 +163,8 @@ public class SyncManager {
 
             // drop the block if there is no peer which sent it to us
             if (master == null) {
+                if (logger.isTraceEnabled()) logger.trace("Peer {} not found, remove block #{}",
+                        Hex.toHexString(gapBlock.getNodeId()).substring(0, 6), gapBlock.getNumber());
                 queue.removeBlock(gapBlock);
                 return;
             }
