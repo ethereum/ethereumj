@@ -74,7 +74,7 @@ public class SolidityCompiler {
         }
 
         public void run() {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream));) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     content.append(line).append("\n");
@@ -115,7 +115,7 @@ public class SolidityCompiler {
             }
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder("ldd", "--version")
+        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
                 .directory(Solc.INSTANCE.getExecutable().getParentFile());
         processBuilder.environment().put("LD_LIBRARY_PATH",
                 Solc.INSTANCE.getExecutable().getParentFile().getCanonicalPath());
