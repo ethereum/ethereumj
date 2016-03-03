@@ -13,3 +13,4 @@ librt.so.1
 libsnappy.so.1
 libsolidity.so
 libstdc++.so.6
+libc.so.6
