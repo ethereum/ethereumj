@@ -8,6 +8,6 @@ import org.ethereum.config.blockchain.MordenConfig;
 public class MordenNetConfig extends AbstractNetConfig {
     public MordenNetConfig() {
         add(0, new MordenConfig.Frontier());
-        add(1_000_000, new MordenConfig.Homestead());
+        add(494_000, new MordenConfig.Homestead());
     }
 }
