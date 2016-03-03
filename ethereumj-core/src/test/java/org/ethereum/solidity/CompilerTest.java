@@ -23,8 +23,8 @@ public class CompilerTest {
                 "}";
         SolidityCompiler.Result res = SolidityCompiler.compile(
                 contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN, SolidityCompiler.Options.INTERFACE);
-        System.out.println(res.output);
-        System.out.println(res.errors);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
         System.out.println(result.contracts.get("a").bin);
     }
