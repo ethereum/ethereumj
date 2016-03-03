@@ -115,7 +115,7 @@ public class SolidityCompiler {
             }
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
+        ProcessBuilder processBuilder = new ProcessBuilder("ldd", "--version")
                 .directory(Solc.INSTANCE.getExecutable().getParentFile());
         processBuilder.environment().put("LD_LIBRARY_PATH",
                 Solc.INSTANCE.getExecutable().getParentFile().getCanonicalPath());
