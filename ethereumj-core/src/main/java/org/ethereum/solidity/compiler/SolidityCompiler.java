@@ -57,6 +57,19 @@ public class SolidityCompiler {
         }
 
         public String getContent() {
+            return getContent(true);
+        }
+
+        public synchronized String getContent(boolean waitForComplete) {
+            if (waitForComplete) {
+                while(stream != null) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
             return content.toString();
         }
 
@@ -68,6 +81,11 @@ public class SolidityCompiler {
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
+            } finally {
+                synchronized (this) {
+                    stream = null;
+                    notifyAll();
+                }
             }
         }
     }
