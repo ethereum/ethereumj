@@ -109,26 +109,12 @@ public class SyncQueue {
      */
     private void produceQueue() {
 
-        long beginning = System.currentTimeMillis();
-        long totalGap = 0;
-        long startWait;
-
         while (1==1) {
 
             BlockWrapper wrapper = null;
             try {
 
-                startWait = System.currentTimeMillis();
-
                 wrapper = blockQueue.take();
-
-                if (totalGap > 0) {
-                    totalGap += System.currentTimeMillis() - startWait;
-                }
-
-                if (totalGap == 0) {
-                    totalGap += 1;
-                }
 
                 logger.debug("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
@@ -160,16 +146,6 @@ public class SyncQueue {
 
                 if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
                     if (logger.isTraceEnabled()) logger.trace(Hex.toHexString(wrapper.getBlock().getEncoded()));
-                }
-
-                if (wrapper.getNumber() == 1_000_000) {
-                    logger.debug("Total sync time = {} hrs", Math.round((System.currentTimeMillis() - beginning) / 36000.0) / 100.0);
-                    logger.debug("Total gap = {} sec, {} millis", totalGap / 1000, totalGap % 1000);
-                }
-
-                if (wrapper.getNumber() % 100_000 == 0) {
-                    logger.debug("Sync time = {} hrs", Math.round((System.currentTimeMillis() - beginning) / 36000.0) / 100.0);
-                    logger.debug("Gap = {} sec, {} millis", totalGap / 1000, totalGap % 1000);
                 }
 
             } catch (Throwable e) {
