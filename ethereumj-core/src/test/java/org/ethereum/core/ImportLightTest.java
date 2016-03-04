@@ -5,9 +5,9 @@ import org.ethereum.config.Constants;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.mine.Ethash;
@@ -18,6 +18,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -29,6 +30,17 @@ import java.util.List;
  * Created by Anton Nashatyrev on 29.12.2015.
  */
 public class ImportLightTest {
+
+    @Bean
+    public ReceiptStore receiptStore(){
+
+        KeyValueDataSource ds = new HashMapDB();
+        ds.init();
+
+        ReceiptStore store = new ReceiptStoreImpl(ds);
+
+        return store;
+    }
 
     @BeforeClass
     public static void setup() {
@@ -171,6 +183,9 @@ public class ImportLightTest {
         blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
 
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        KeyValueDataSource ds = new HashMapDB();
+        ds.init();
+        ReceiptStore receiptStore = new ReceiptStoreImpl(ds);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -181,7 +196,8 @@ public class ImportLightTest {
                 new Wallet(),
                 new AdminInfo(),
                 listener,
-                new CommonConfig().parentHeaderValidator()
+                new CommonConfig().parentHeaderValidator(),
+                receiptStore
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);

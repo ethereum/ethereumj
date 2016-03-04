@@ -2,9 +2,8 @@ package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -111,13 +110,18 @@ public class PendingStateLongRunTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
+        KeyValueDataSource ds = new HashMapDB();
+        ds.init();
+        ReceiptStore receiptStore = new ReceiptStoreImpl(ds);
+
         BlockchainImpl blockchain = new BlockchainImpl(
                 blockStore,
                 repository,
                 new Wallet(),
                 new AdminInfo(),
                 listener,
-                new CommonConfig().parentHeaderValidator()
+                new CommonConfig().parentHeaderValidator(),
+                receiptStore
         );
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
