@@ -1,0 +1,5 @@
+solc
+libdevcore.dylib
+libevmasm.dylib
+libevmcore.dylib
+libsolidity.dylib

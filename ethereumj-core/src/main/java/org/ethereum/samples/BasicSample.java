@@ -145,7 +145,7 @@ public class BasicSample implements Runnable {
     /**
      * Is called when the whole blockchain sync is complete
      */
-    public void onSyncDone() {
+    public void onSyncDone() throws Exception {
         logger.info("Monitoring new blocks in real-time...");
     }
 
