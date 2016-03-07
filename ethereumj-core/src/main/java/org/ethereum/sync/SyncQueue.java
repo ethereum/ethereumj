@@ -17,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static java.lang.Thread.sleep;
 import static java.util.Collections.emptyList;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
@@ -50,8 +49,11 @@ public class SyncQueue {
      */
     private BlockQueue blockQueue = new BlockQueueMem();
 
-    private final ReentrantLock takeLock = new ReentrantLock();
-    private final Condition notEmpty = takeLock.newCondition();
+    private final ReentrantLock headersLock = new ReentrantLock();
+    private final Condition headersNotEmpty = headersLock.newCondition();
+
+    private final ReentrantLock blocksLock = new ReentrantLock();
+    private final Condition blocksAdded = blocksLock.newCondition();
 
     private boolean longSyncDone = false;
 
@@ -109,7 +111,7 @@ public class SyncQueue {
      */
     private void produceQueue() {
 
-        while (1==1) {
+        while (true) {
 
             BlockWrapper wrapper = null;
             try {
@@ -118,21 +120,6 @@ public class SyncQueue {
 
                 logger.debug("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
-
-                // In case we don't have a parent on the chain
-                // return the try and wait for more blocks to come.
-                if (importResult == NO_PARENT) {
-                    logger.debug("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
-
-                    blockQueue.returnBlock(wrapper);
-                    compositeSyncListener.onNoParent(wrapper);
-
-                    if (!longSyncDone) {
-                        sleep(100);
-                    } else {
-                        sleep(2000);
-                    }
-                }
 
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {} ",
@@ -146,6 +133,18 @@ public class SyncQueue {
 
                 if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
                     if (logger.isTraceEnabled()) logger.trace(Hex.toHexString(wrapper.getBlock().getEncoded()));
+                }
+
+                // In case we don't have a parent on the chain
+                // return the try and wait for more blocks to come.
+                if (importResult == NO_PARENT) {
+                    logger.info("No parent on the chain for block.number: {} block.hash: {}",
+                            wrapper.getNumber(), wrapper.getBlock().getShortHash());
+
+                    blockQueue.returnBlock(wrapper);
+                    compositeSyncListener.onNoParent(wrapper);
+
+                    waitForBlocks();
                 }
 
             } catch (Throwable e) {
@@ -175,6 +174,8 @@ public class SyncQueue {
 
         blockQueue.addOrReplaceAll(wrappers);
 
+        fireBlocksAdded();
+
         if (logger.isDebugEnabled()) logger.debug(
                 "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
@@ -202,6 +203,8 @@ public class SyncQueue {
         wrapper.setReceivedAt(System.currentTimeMillis());
 
         blockQueue.addOrReplace(wrapper);
+
+        fireBlocksAdded();
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
@@ -277,18 +280,18 @@ public class SyncQueue {
      */
     public List<BlockHeaderWrapper> takeHeaders() {
 
-        takeLock.lock();
+        headersLock.lock();
         try {
             List<BlockHeaderWrapper> headers;
             while ((headers = headerStore.pollBatch(config.maxBlocksAsk())).isEmpty()) {
-                notEmpty.awaitUninterruptibly();
+                headersNotEmpty.awaitUninterruptibly();
                 if (longSyncDone) return emptyList();
             }
             if (logger.isDebugEnabled() && !headerStore.isEmpty())
                 logger.debug("Headers list size: {}", headerStore.size());
             return headers;
         } finally {
-            takeLock.unlock();
+            headersLock.unlock();
         }
     }
 
@@ -377,11 +380,29 @@ public class SyncQueue {
     }
 
     private void fireHeadersNotEmpty() {
-        takeLock.lock();
+        headersLock.lock();
         try {
-            notEmpty.signalAll();
+            headersNotEmpty.signalAll();
         } finally {
-            takeLock.unlock();
+            headersLock.unlock();
+        }
+    }
+
+    private void fireBlocksAdded() {
+        blocksLock.lock();
+        try {
+            blocksAdded.signalAll();
+        } finally {
+            blocksLock.unlock();
+        }
+    }
+
+    private void waitForBlocks() {
+        blocksLock.lock();
+        try {
+            blocksAdded.awaitUninterruptibly();
+        } finally {
+            blocksLock.unlock();
         }
     }
 }
