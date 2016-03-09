@@ -75,7 +75,9 @@ public class HeaderStoreMem implements HeaderStore {
 
     @Override
     public BlockHeaderWrapper poll() {
-        return pollInner();
+        synchronized (mutex) {
+            return pollInner();
+        }
     }
 
     @Override
@@ -86,12 +88,13 @@ public class HeaderStoreMem implements HeaderStore {
         }
 
         List<BlockHeaderWrapper> headers = new ArrayList<>(qty > size() ? qty : size());
-        while (headers.size() < qty) {
-            BlockHeaderWrapper header = pollInner();
-            if(header == null) {
-                break;
+
+        synchronized (mutex) {
+            while (headers.size() < qty) {
+                BlockHeaderWrapper header = pollInner();
+                if (header == null) break;
+                headers.add(header);
             }
-            headers.add(header);
         }
 
         return headers;
@@ -144,20 +147,19 @@ public class HeaderStoreMem implements HeaderStore {
     }
 
     private BlockHeaderWrapper pollInner() {
-        synchronized (mutex) {
-            if (index.isEmpty()) {
-                return null;
-            }
 
-            Long idx = index.poll();
-            BlockHeaderWrapper header = headers.get(idx);
-            headers.remove(idx);
-
-            if (header == null) {
-                logger.error("Header for index {} is null", idx);
-            }
-
-            return header;
+        if (index.isEmpty()) {
+            return null;
         }
+
+        Long idx = index.poll();
+        BlockHeaderWrapper header = headers.get(idx);
+        headers.remove(idx);
+
+        if (header == null) {
+            logger.error("Header for index {} is null", idx);
+        }
+
+        return header;
     }
 }
