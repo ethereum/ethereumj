@@ -14,7 +14,7 @@ import static org.ethereum.util.BIUtil.toBI;
 
 public class TransactionExecutionSummary {
 
-    private byte[] transactionHash;
+    private Transaction tx;
     private BigInteger value = BigInteger.ZERO;
     private BigInteger gasPrice = BigInteger.ZERO;
     private BigInteger gasLimit = BigInteger.ZERO;
@@ -31,8 +31,12 @@ public class TransactionExecutionSummary {
 
     private boolean failed;
 
+    public Transaction getTransaction() {
+        return tx;
+    }
+
     public byte[] getTransactionHash() {
-        return transactionHash;
+        return getTransaction().getHash() ;
     }
 
     private BigInteger calcCost(BigInteger gas) {
@@ -111,7 +115,7 @@ public class TransactionExecutionSummary {
             Assert.notNull(transaction, "Cannot build TransactionExecutionSummary for null transaction.");
 
             summary = new TransactionExecutionSummary();
-            summary.transactionHash = transaction.getHash();
+            summary.tx = transaction;
             summary.gasLimit = toBI(transaction.getGasLimit());
             summary.gasPrice = toBI(transaction.getGasPrice());
             summary.value = toBI(transaction.getValue());
