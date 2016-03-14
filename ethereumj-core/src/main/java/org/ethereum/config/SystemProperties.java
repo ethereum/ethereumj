@@ -50,6 +50,9 @@ public class SystemProperties {
     public final static String PROPERTY_LISTEN_PORT = "peer.listen.port";
     public final static String PROPERTY_PEER_ACTIVE = "peer.active";
     public final static String PROPERTY_DB_RESET = "database.reset";
+    // TODO review rpc properties
+    public final static String PROPERTY_RPC_ENABLED = "rpc.enabled";
+    public final static String PROPERTY_RPC_PORT = "rpc.port";
 
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
@@ -715,5 +718,19 @@ public class SystemProperties {
     public String blocksLoader() {
         return config.hasPath("blocks.loader") ?
                 config.getString("blocks.loader") : DEFAULT_BLOCKS_LOADER;
+    }
+
+    // TODO review added method
+    public boolean isRpcEnabled() {
+        return config.hasPath("rpc.enabled") ?
+                config.getBoolean("rpc.enabled") : false;
+
+    }
+
+    // TODO review added method
+    public int RpcPort() {
+        return config.hasPath("rpc.port") ?
+                config.getInt("rpc.port") : 4444;
+
     }
 }

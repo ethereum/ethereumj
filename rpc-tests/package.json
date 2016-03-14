@@ -1,0 +1,12 @@
+{
+  "name": "rpc-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Ethereum node rpc tests",
+  "main": "console.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}

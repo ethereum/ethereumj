@@ -4,6 +4,7 @@ import org.ethereum.cli.CLIInterface;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.rpc.JsonRpcListener;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class Start {
 
-    public static void main(String args[]) throws IOException, URISyntaxException {
+    public static void main(String args[]) throws Exception {
         CLIInterface.call(args);
 
         if (!CONFIG.blocksLoader().equals("")) {
@@ -29,6 +30,10 @@ public class Start {
 
         if (!CONFIG.blocksLoader().equals(""))
             ethereum.getBlockLoader().loadBlocks();
-    }
 
+        // TODO adding rpc
+        if (CONFIG.isRpcEnabled()) {
+            new JsonRpcListener(ethereum).start();
+        }
+    }
 }

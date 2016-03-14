@@ -20,7 +20,9 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * Block header is a value object containing
  * the basic information of a block
  */
-public class BlockHeader {
+
+// TODO review implements SerializableObject
+public class BlockHeader implements SerializableObject {
 
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
@@ -391,4 +393,13 @@ public class BlockHeader {
         return toStringWithSuffix("");
     }
 
+    // TODO added to comply with SerializableObject
+    public byte[] getRawHash() {
+        return getHash();
+    }; // encoding without any signature
+
+    // TODO added to comply with SerializableObject
+    public byte[] getEncodedRaw() {
+        return getEncoded();
+    };// encoding without any signature
 }

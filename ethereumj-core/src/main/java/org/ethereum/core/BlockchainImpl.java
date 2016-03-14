@@ -5,6 +5,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ReceiptStore;
+import org.ethereum.db.TransactionInfo;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.trie.Trie;
@@ -87,6 +89,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     private BlockStore blockStore;
 
+    @Autowired
+    private ReceiptStore receiptsStore;
+
     private Block bestBlock;
 
     private BigInteger totalDifficulty = ZERO;
@@ -131,13 +136,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     //todo: autowire over constructor
     public BlockchainImpl(BlockStore blockStore, Repository repository,
                           Wallet wallet, AdminInfo adminInfo,
-                          EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator) {
+                          EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator,
+                          ReceiptStore receiptsStore) {
         this.blockStore = blockStore;
         this.repository = repository;
         this.wallet = wallet;
         this.adminInfo = adminInfo;
         this.listener = listener;
         this.parentHeaderValidator = parentHeaderValidator;
+        this.receiptsStore = receiptsStore;
     }
 
     @PostConstruct
@@ -159,6 +166,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public Block getBlockByNumber(long blockNr) {
         return blockStore.getChainBlockByNumber(blockNr);
+    }
+
+    @Override
+    public TransactionInfo getTransactionInfo(byte[] hash) {
+
+        TransactionInfo txInfo = receiptsStore.get(hash);
+
+        if (txInfo == null)
+            return null;
+
+        Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
+        txInfo.setTransaction(tx);
+
+        return txInfo;
     }
 
     @Override
@@ -706,6 +727,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;
+        long gasUsed = 0;
         List<TransactionReceipt> receipts = new ArrayList<>();
 
         for (Transaction tx : block.getTransactionsList()) {
@@ -720,10 +742,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             executor.go();
             executor.finalization();
 
-            totalGasUsed += executor.getGasUsed();
+            gasUsed = executor.getGasUsed();
+            totalGasUsed += gasUsed;
 
             track.commit();
             TransactionReceipt receipt = new TransactionReceipt();
+            receipt.setGasUsed(gasUsed);
             receipt.setCumulativeGas(totalGasUsed);
             receipt.setPostTxState(repository.getRoot());
             receipt.setTransaction(tx);
@@ -815,6 +839,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockStore.saveBlock(block, totalDifficulty, false);
         else
             blockStore.saveBlock(block, totalDifficulty, true);
+
+        receiptsStore.saveMultiple(block.getHash(), receipts);
 
         logger.info("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);

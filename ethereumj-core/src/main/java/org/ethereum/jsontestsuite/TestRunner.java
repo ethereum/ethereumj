@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.core.*;
 
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.*;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
@@ -78,8 +79,13 @@ public class TestRunner {
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
+        KeyValueDataSource ds = new HashMapDB();
+        ds.init();
+
+        ReceiptStore receiptStore = new ReceiptStoreImpl(ds);
+
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener,
-                new CommonConfig().parentHeaderValidator());
+                new CommonConfig().parentHeaderValidator(), receiptStore);
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);

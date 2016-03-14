@@ -125,6 +125,11 @@ dependencies {
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "log4j:apache-log4j-extras:${log4jVersion}"
 
+    compile "org.eclipse.jetty:jetty-server:9.0.0.RC2"
+    compile "org.eclipse.jetty:jetty-servlet:9.0.0.RC2"
+    compile "javax.portlet:portlet-api:2.0"
+    compile "com.github.briandilley.jsonrpc4j:jsonrpc4j:1.1"
+
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
     }
@@ -216,7 +221,9 @@ bintray {
 }
 
 bintrayUpload.onlyIf {
-    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+    // comment 'false' and uncomment the next line to publish next release
+//    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+    false
 }
 
 install {

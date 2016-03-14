@@ -12,7 +12,11 @@ public class Constants {
     public static int GENESIS_GAS_LIMIT = 3_141_592;
     public static int MIN_GAS_LIMIT = 125000;
     public static int GAS_LIMIT_BOUND_DIVISOR = 1024;
-    public static BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(131072);
+
+    // TODO review min difficulty for dev machine
+    //public static BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(131072);
+    public static BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(0x200);
+
     public static BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(2048);
     public static int EXP_DIFFICULTY_PERIOD = 100000;
 

@@ -364,4 +364,30 @@ public class EthereumImpl implements Ethereum {
     public void exitOn(long number) {
         worldManager.getBlockchain().setExitOn(number);
     }
+
+    // TODO Review world manager expose
+    @Override
+    public WorldManager getWorldManager() { return worldManager; }
+
+    // TODO Review peer server expose
+    @Override
+    public PeerServer getPeerServer() { return peerServer; }
+
+    // TODO added method, to review
+    @Override
+    public ProgramResult callConstantCallTransaction(Transaction tx,Block block) {
+
+        Block bestBlock = worldManager.getBlockchain().getBestBlock();
+        org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
+                (tx, bestBlock.getCoinbase(),(Repository) worldManager.getRepository(),
+                        worldManager.getBlockStore(), programInvokeFactory, block)
+                .setLocalCall(true);
+
+        executor.init();
+        executor.execute();
+        executor.go();
+        executor.finalization();
+
+        return executor.getResult();
+    }
 }

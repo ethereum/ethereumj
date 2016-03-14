@@ -4,7 +4,10 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.ReceiptStore;
+import org.ethereum.db.ReceiptStoreImpl;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
@@ -44,7 +47,11 @@ public class PendingStateTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        blockchain = new BlockchainImpl(blockStore, repository, new Wallet(), new AdminInfo(), listener, new CommonConfig().parentHeaderValidator());
+        KeyValueDataSource ds = new HashMapDB();
+        ds.init();
+        ReceiptStore receiptStore = new ReceiptStoreImpl(ds);
+
+        blockchain = new BlockchainImpl(blockStore, repository, new Wallet(), new AdminInfo(), listener, new CommonConfig().parentHeaderValidator(), receiptStore);
         PendingStateImpl pendingState = new PendingStateImpl(listener, (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();

@@ -207,12 +207,14 @@ public class EthashAlgo {
     public long mineLight(long fullSize, final int[] cache, byte[] blockHeaderTruncHash, long difficulty) {
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
         long nonce = new Random().nextLong();
+
         while(!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
             if (h.compareTo(target) < 0) break;
         }
+
         return nonce;
     }
 

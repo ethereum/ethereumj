@@ -37,3 +37,7 @@ test_db*
 # Local configuration
 **/user.conf
 **/out.log
+
+# Nodes
+node1
+node2
