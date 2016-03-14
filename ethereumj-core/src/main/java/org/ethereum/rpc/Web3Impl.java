@@ -53,14 +53,14 @@ public class Web3Impl implements Web3 {
         if (!x.startsWith("0x"))
             throw new Exception("Incorrect hex syntax");
         x = x.substring(2);
-        return Long.parseUnsignedLong(x, 16);
+        return Long.parseLong(x, 16);
     }
 
     public int JSonHexToInt(String x) throws Exception {
         if (!x.startsWith("0x"))
             throw new Exception("Incorrect hex syntax");
         x = x.substring(2);
-        return Integer.parseUnsignedInt(x, 16);
+        return Integer.parseInt(x, 16);
     }
 
     
