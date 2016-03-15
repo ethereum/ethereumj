@@ -31,10 +31,9 @@ public class TestNetSample extends BasicSample {
                 "peer.networkId = 161 \n" +
                 // a number of public peers for this network (not all of then may be functioning)
                 "peer.active = [" +
-                "    { url = 'enode://3281d70897cbc1aac429cc2f61582a8982000ddde7edd62c1a6dbd3d9bc80f306a2443071248cba5ec23aab8134eb1c0512c076617f7da5d2aec432822c8cad5@peer-1.ether.camp:10101' }," +
                 "    { url = 'enode://9bcff30ea776ebd28a9424d0ac7aa500d372f918445788f45a807d83186bd52c4c0afaf504d77e2077e5a99f1f264f75f8738646c1ac3673ccc652b65565c3bb@peer-1.ether.camp:30303' }," +
-                "    { url = 'enode://ba8248e425bb8128982de4f05dd93a496f45843013ba04fc024a48589044b8c8529f2b24e046b723edcdfdf947d17951fe4de667c2ab73265a12c9b4b952ef75@peer-2.ether.camp:30303' }," +
-                "    { url = 'enode://c45b6d519ea1f50363baf9fda501bafd9187a04badea6c3708b63ae3ccdb679ffa1575a97726e10c4ca33e69ef13c4f8f5c4e66597180f4b1322a40b2d174e7b@peer-3.ether.camp:30303' }" +
+                "    { url = 'enode://c2b35ed63f5d79c7f160d05c54dd60b3ba32d455dbb10a5fe6fde44854073db02f9a538423a63a480126c74c7f650d77066ae446258e3d00388401d419b99f88@peer-2.ether.camp:30303' }," +
+                "    { url = 'enode://8246787f8d57662b850b354f0b526251eafee1f077fc709460dc8788fa640a597e49ffc727580f3ebbbc5eacb34436a66ea40415fab9d73563481666090a6cf0@peer-3.ether.camp:30303' }" +
                 "] \n" +
                 "sync.enabled = true \n" +
                 // special genesis for this test network
@@ -53,7 +52,7 @@ public class TestNetSample extends BasicSample {
     }
 
     @Override
-    public void onSyncDone() {
+    public void onSyncDone() throws Exception {
         super.onSyncDone();
     }
 

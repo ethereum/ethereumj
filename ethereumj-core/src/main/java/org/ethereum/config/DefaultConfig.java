@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Scope;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -86,11 +87,7 @@ public class DefaultConfig {
         return indexedBlockStore;
     }
 
-    @Bean
-    LevelDbDataSource levelDbDataSource() {
-        return new LevelDbDataSource();
-    }
-    @Bean
+    @Bean @Scope("prototype")
     LevelDbDataSource levelDbDataSource(String name) {
         return new LevelDbDataSource(name);
     }

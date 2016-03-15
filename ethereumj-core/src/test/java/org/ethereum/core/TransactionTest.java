@@ -1,6 +1,8 @@
 package org.ethereum.core;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
@@ -8,27 +10,22 @@ import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.StateTestSuite;
 import org.ethereum.jsontestsuite.runners.StateTestRunner;
 import org.ethereum.vm.LogInfo;
-
 import org.ethereum.vm.program.ProgramResult;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.util.ByteUtil.toHexString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TransactionTest {
 
@@ -468,7 +465,7 @@ public class TransactionTest {
                 "            'currentCoinbase' : '2adc25665018aa1fe0e6bc666dac8fc2697ff9ba', " +
                 "            'currentDifficulty' : '0x0100', " +
                 "            'currentGasLimit' : '0x0f4240', " +
-                "            'currentNumber' : '0x0" + Long.toHexString(Constants.HOMESTEAD_FORK_BLKNUM) + "', " +
+                "            'currentNumber' : '0x01', " +
                 "            'currentTimestamp' : '0x01', " +
                 "            'previousHash' : '5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6' " +
                 "        }, " +
@@ -517,8 +514,13 @@ public class TransactionTest {
 
         System.out.println(json.replaceAll("'", "\""));
 
-        List<String> res = new StateTestRunner(stateTestSuite.getTestCases().get("test1")).runImpl();
+        try {
+            SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
+            List<String> res = new StateTestRunner(stateTestSuite.getTestCases().get("test1")).runImpl();
+            if (!res.isEmpty()) throw new RuntimeException("Test failed: " + res);
+        } finally {
+            SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        }
 
-        if (!res.isEmpty()) throw new RuntimeException("Test failed: " + res);
     }
 }

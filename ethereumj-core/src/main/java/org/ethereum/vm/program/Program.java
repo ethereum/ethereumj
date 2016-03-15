@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
@@ -389,7 +390,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), getOwnerAddress(), DataWord.ZERO, gasLimit,
+                this, new DataWord(newAddress), getOwnerAddress(), getCallValue(), gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
@@ -409,7 +410,7 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (BlockHeader.isHomestead(getNumber().longValue())) {
+            if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {

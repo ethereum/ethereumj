@@ -1,7 +1,9 @@
 package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
@@ -14,6 +16,7 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,7 +35,17 @@ public class ImportLightTest {
 
     @BeforeClass
     public static void setup() {
-        Constants.MINIMUM_DIFFICULTY = BigInteger.valueOf(1);
+        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        }));
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Test

@@ -1,18 +1,20 @@
 package org.ethereum.validator;
 
 import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-
-import static org.ethereum.config.Constants.BEST_NUMBER_DIFF_LIMIT;
 
 /**
  * Checks diff between number of some block and number of our best block. <br>
- * The diff must be more than -1 * {@link Constants#BEST_NUMBER_DIFF_LIMIT}
+ * The diff must be more than -1 * {@link Constants#getBEST_NUMBER_DIFF_LIMIT}
  *
  * @author Mikhail Kalinin
  * @since 02.09.2015
  */
 public class BestNumberRule extends DependentBlockHeaderRule {
+
+    private static int BEST_NUMBER_DIFF_LIMIT = SystemProperties.CONFIG.getBlockchainConfig().
+            getCommonConstants().getBEST_NUMBER_DIFF_LIMIT();
 
     @Override
     public boolean validate(BlockHeader header, BlockHeader bestHeader) {

@@ -200,10 +200,16 @@ public class PriceFeedSample extends BasicSample {
     public void onSyncDone() {
         try {
             // after all blocks are synced perform the work
-            worker();
+//            worker();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected void waitForDiscovery() throws Exception {
+        super.waitForDiscovery();
+        worker();
     }
 
     /**

@@ -19,10 +19,10 @@ public class NeighborsMessage extends Message {
 
     @Override
     public void parse(byte[] data) {
-        RLPList list = RLP.decode2(data);
+        RLPList list = (RLPList) RLP.decode2OneItem(data, 0);
 
-        RLPList nodesRLP = (RLPList) ((RLPList) list.get(0)).get(0);
-        RLPItem expires = (RLPItem) ((RLPList) list.get(0)).get(1);
+        RLPList nodesRLP = (RLPList) list.get(0);
+        RLPItem expires = (RLPItem) list.get(1);
 
         nodes = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class NeighborsMessage extends Message {
 
     public static NeighborsMessage create(List<Node> nodes, ECKey privKey) {
 
-        long expiration = 60 + System.currentTimeMillis() / 1000;
+        long expiration = 90 * 60 + System.currentTimeMillis() / 1000;
 
         byte[][] nodeRLPs = null;
 

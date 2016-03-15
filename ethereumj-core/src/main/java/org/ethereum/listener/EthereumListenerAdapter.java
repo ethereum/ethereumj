@@ -83,4 +83,14 @@ public class EthereumListenerAdapter implements EthereumListener {
     public void onPeerAddedToSyncPool(Channel peer) {
 
     }
+
+    @Override
+    public void onLongSyncDone() {
+
+    }
+
+    @Override
+    public void onLongSyncStarted() {
+
+    }
 }

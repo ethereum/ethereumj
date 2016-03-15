@@ -11,11 +11,9 @@ import java.util.List;
  */
 public enum EthVersion {
 
-    V60((byte) 60),
-    V61((byte) 61),
     V62((byte) 62);
 
-    public static final byte LOWER = V60.getCode();
+    public static final byte LOWER = V62.getCode();
     public static final byte UPPER = V62.getCode();
 
     private byte code;

@@ -4,6 +4,8 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
+import org.ethereum.db.index.ArrayListIndex;
+import org.ethereum.db.index.Index;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
@@ -135,6 +137,11 @@ public class BlockQueueImpl implements BlockQueue {
 
         }
         db.commit();
+    }
+
+    @Override
+    public void returnBlock(BlockWrapper block) {
+        add(block);
     }
 
     @Override
@@ -322,6 +329,36 @@ public class BlockQueueImpl implements BlockQueue {
         }
     }
 
+    @Override
+    public long getLastNumber() {
+        Long num = index.peekLast();
+        return num == null ? 0 : num;
+    }
+
+    @Override
+    public BlockWrapper peekLast() {
+
+        synchronized (readMutex) {
+            Long num = index.peekLast();
+            return blocks.get(num);
+        }
+    }
+
+    @Override
+    public void remove(BlockWrapper block) {
+
+        synchronized (readMutex) {
+
+            BlockWrapper existing = blocks.get(block.getNumber());
+            if (existing == null || !existing.equals(block))
+                return;
+
+            index.remove(block.getNumber());
+            blocks.remove(block.getNumber());
+
+            hashes.remove(new ByteArrayWrapper(block.getHash()));
+        }
+    }
 
     private void awaitInit() {
         initLock.lock();
@@ -343,93 +380,5 @@ public class BlockQueueImpl implements BlockQueue {
 
     public void setMapDBFactory(MapDBFactory mapDBFactory) {
         this.mapDBFactory = mapDBFactory;
-    }
-
-    public interface Index extends Iterable<Long> {
-
-        void addAll(Collection<Long> nums);
-
-        void add(Long num);
-
-        Long peek();
-
-        Long poll();
-
-        boolean contains(Long num);
-
-        boolean isEmpty();
-
-        int size();
-
-        void clear();
-
-        void removeAll(Collection<Long> indexes);
-    }
-
-    public static class ArrayListIndex implements Index {
-
-        private List<Long> index;
-
-        public ArrayListIndex(Collection<Long> numbers) {
-            index = new ArrayList<>(numbers);
-            sort();
-        }
-
-        @Override
-        public synchronized void addAll(Collection<Long> nums) {
-            index.addAll(nums);
-            sort();
-        }
-
-        @Override
-        public synchronized void add(Long num) {
-            index.add(num);
-            sort();
-        }
-
-        @Override
-        public synchronized Long peek() {
-            return index.get(0);
-        }
-
-        @Override
-        public synchronized Long poll() {
-            Long num = index.get(0);
-            index.remove(0);
-            return num;
-        }
-
-        @Override
-        public synchronized boolean contains(Long num) {
-            return Collections.binarySearch(index, num) >= 0;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return index.isEmpty();
-        }
-
-        @Override
-        public int size() {
-            return index.size();
-        }
-
-        @Override
-        public synchronized void clear() {
-            index.clear();
-        }
-
-        private void sort() {
-            Collections.sort(index);
-        }
-
-        @Override
-        public Iterator<Long> iterator() {
-            return index.iterator();
-        }
-
-        public synchronized void removeAll(Collection<Long> indexes) {
-            index.removeAll(indexes);
-        }
     }
 }

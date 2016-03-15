@@ -17,8 +17,7 @@ public class FindNodeMessage extends Message {
     @Override
     public void parse(byte[] data) {
 
-        RLPList list = RLP.decode2(data);
-        list = (RLPList) list.get(0);
+        RLPList list = (RLPList) RLP.decode2OneItem(data, 0);
 
         RLPItem target = (RLPItem) list.get(0);
         RLPItem expires = (RLPItem) list.get(1);
@@ -30,7 +29,7 @@ public class FindNodeMessage extends Message {
 
     public static FindNodeMessage create(byte[] target, ECKey privKey) {
 
-        long expiration = 60 + System.currentTimeMillis() / 1000;
+        long expiration = 90 * 60 + System.currentTimeMillis() / 1000;
 
         /* RLP Encode data */
         byte[] rlpToken = RLP.encodeElement(target);

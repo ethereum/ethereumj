@@ -15,6 +15,7 @@ package org.ethereum.crypto;
  * limitations under the License.
  */
 
+import org.ethereum.config.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,8 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
+import static org.ethereum.util.BIUtil.isLessThan;
+import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 /**
@@ -423,6 +426,23 @@ public class ECKey implements Serializable {
             ECDSASignature signature = fromComponents(r, s);
             signature.v = v;
             return signature;
+        }
+
+        public boolean validateComponents() {
+            return validateComponents(r, s, v);
+        }
+
+        public static boolean validateComponents(BigInteger r, BigInteger s, byte v) {
+
+            if (v != 27 && v != 28) return false;
+
+            if (isLessThan(r, BigInteger.ONE)) return false;
+            if (isLessThan(s, BigInteger.ONE)) return false;
+
+            if (!isLessThan(r, Constants.getSECP256K1N())) return false;
+            if (!isLessThan(s, Constants.getSECP256K1N())) return false;
+
+            return true;
         }
 
         /**

@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -44,9 +45,11 @@ public class AccountState {
     private boolean dirty = false;
     private boolean deleted = false;
 
+    public static final AccountState EMPTY = new AccountState();
+
 
     public AccountState() {
-        this(BigInteger.ZERO, BigInteger.ZERO);
+        this(SystemProperties.CONFIG.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {

@@ -50,12 +50,21 @@ public class Abi extends ArrayList<Abi.Entry> {
         });
     }
 
-    public Abi.Function findFunction(Predicate<Abi.Function> searchPredicate) {
-        return find(Abi.Function.class, Abi.Entry.Type.function, searchPredicate);
+    public Function findFunction(Predicate<Function> searchPredicate) {
+        return find(Function.class, Abi.Entry.Type.function, searchPredicate);
     }
 
-    public Abi.Event findEvent(Predicate<Abi.Event> searchPredicate) {
-        return find(Abi.Event.class, Abi.Entry.Type.event, searchPredicate);
+    public Event findEvent(Predicate<Event> searchPredicate) {
+        return find(Event.class, Abi.Entry.Type.event, searchPredicate);
+    }
+
+    public Abi.Constructor findConstructor() {
+        return find(Constructor.class, Entry.Type.constructor, new Predicate<Constructor>() {
+            @Override
+            public boolean evaluate(Constructor object) {
+                return true;
+            }
+        });
     }
 
     @Override
@@ -144,6 +153,8 @@ public class Abi extends ArrayList<Abi.Entry> {
             Entry result = null;
             switch (type) {
                 case constructor:
+                    result = new Constructor(inputs, outputs);
+                    break;
                 case function:
                     result = new Function(constant, name, inputs, outputs);
                     break;
@@ -153,6 +164,21 @@ public class Abi extends ArrayList<Abi.Entry> {
             }
 
             return result;
+        }
+    }
+
+    public static class Constructor extends Entry {
+
+        public Constructor(List<Param> inputs, List<Param> outputs) {
+            super(null, null, "", inputs, outputs, Type.constructor);
+        }
+
+        public List<?> decode(byte[] encoded) {
+            return Param.decodeList(inputs, encoded);
+        }
+
+        public String formatSignature(String contractName) {
+            return format("function %s(%s)", contractName, join(inputs, ", "));
         }
     }
 

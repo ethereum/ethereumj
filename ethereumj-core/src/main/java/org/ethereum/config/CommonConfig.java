@@ -8,7 +8,6 @@ import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.db.RepositoryImpl;
-import org.ethereum.sync.*;
 import org.ethereum.validator.*;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static java.util.Arrays.asList;
 
 @Configuration
@@ -148,32 +146,14 @@ public class CommonConfig {
     }
 
     @Bean
-    public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
-
-        Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
-        states.put(SyncStateName.IDLE, new IdleState());
-        states.put(SyncStateName.HASH_RETRIEVING, new HashRetrievingState());
-        states.put(SyncStateName.BLOCK_RETRIEVING, new BlockRetrievingState());
-
-        for (SyncState state : states.values()) {
-            ((AbstractSyncState)state).setSyncManager(syncManager);
-        }
-
-        return states;
-    }
-
-    @Bean
     public BlockHeaderValidator headerValidator() {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(),
-                new ProofOfWorkRule()
+                new ProofOfWorkRule(),
+                new GasLimitRule()
         ));
-
-        if (!config.isFrontier()) {
-            rules.add(new GasLimitRule());
-        }
 
         return new BlockHeaderValidator(rules);
     }
@@ -183,12 +163,9 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule()
+                new DifficultyRule(),
+                new ParentGasLimitRule()
         ));
-
-        if (!config.isFrontier()) {
-            rules.add(new ParentGasLimitRule());
-        }
 
         return new ParentBlockHeaderValidator(rules);
     }
