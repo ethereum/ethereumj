@@ -3,14 +3,19 @@ package org.ethereum.core;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.StateTestSuite;
 import org.ethereum.jsontestsuite.runners.StateTestRunner;
+import org.ethereum.solidity.compiler.CompilationResult;
+import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.ProgramResult;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.BigIntegers;
@@ -521,6 +526,76 @@ public class TransactionTest {
         } finally {
             SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
         }
+    }
 
+    @Test
+    public void multiSuicideTest() throws IOException, InterruptedException {
+        String contract =
+                "contract PsychoKiller {" +
+                "    function homicide() {" +
+                "        suicide(msg.sender);" +
+                "    }" +
+                "    function multipleHomocide() {" +
+                "        PsychoKiller k  = this;" +
+                "        k.homicide();" +
+                "        k.homicide();" +
+                "        k.homicide();" +
+                "        k.homicide();" +
+                "    }" +
+                "}";
+        SolidityCompiler.Result res = SolidityCompiler.compile(
+                contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+        System.out.println(res.errors);
+        CompilationResult cres = CompilationResult.parse(res.output);
+
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+
+        ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+
+        Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("PsychoKiller").bin), 1000000000L);
+        executeTransaction(blockchain, tx);
+
+        byte[] contractAddress = tx.getContractAddress();
+
+        CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
+        byte[] callData = contract1.getByName("multipleHomocide").encode();
+
+        Transaction tx1 = createTx(blockchain, sender, contractAddress, callData);
+        ProgramResult programResult = executeTransaction(blockchain, tx1);
+
+        // suicide of a single account should be counted only once
+        Assert.assertEquals(programResult.getFutureRefund(), 24000);
+    }
+
+    protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress, byte[] data) throws InterruptedException {
+        return createTx(blockchain, sender, receiveAddress, data, 1);
+    }
+    protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress,
+                                   byte[] data, long value) throws InterruptedException {
+        BigInteger nonce = blockchain.getRepository().getNonce(sender.getAddress());
+        Transaction tx = new Transaction(
+                ByteUtil.bigIntegerToBytes(nonce),
+                ByteUtil.longToBytesNoLeadZeroes(1),
+                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
+                receiveAddress,
+                ByteUtil.longToBytesNoLeadZeroes(value),
+                data);
+        tx.sign(sender.getPrivKeyBytes());
+        return tx;
+    }
+
+    public ProgramResult executeTransaction(BlockchainImpl blockchain, Transaction tx) {
+        Repository track = blockchain.getRepository().startTracking();
+        TransactionExecutor executor = new TransactionExecutor(tx, new byte[32], blockchain.getRepository(),
+                blockchain.getBlockStore(), blockchain.getProgramInvokeFactory(), blockchain.getBestBlock());
+
+        executor.init();
+        executor.execute();
+        executor.go();
+        executor.finalization();
+
+        track.commit();
+        return executor.getResult();
     }
 }

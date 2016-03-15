@@ -6,8 +6,10 @@ import org.ethereum.vm.program.InternalTransaction;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.*;
 import static org.ethereum.util.BIUtil.toBI;
@@ -141,8 +143,11 @@ public class TransactionExecutionSummary {
             return this;
         }
 
-        public Builder deletedAccounts(List<DataWord> deletedAccounts) {
-            summary.deletedAccounts = unmodifiableList(deletedAccounts);
+        public Builder deletedAccounts(Set<DataWord> deletedAccounts) {
+            summary.deletedAccounts = new ArrayList<>();
+            for (DataWord account : deletedAccounts) {
+                summary.deletedAccounts.add(account);
+            }
             return this;
         }
 

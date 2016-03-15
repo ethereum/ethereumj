@@ -5,7 +5,9 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
@@ -21,7 +23,7 @@ public class ProgramResult {
     private byte[] hReturn = EMPTY_BYTE_ARRAY;
     private RuntimeException exception;
 
-    private List<DataWord> deleteAccounts;
+    private Set<DataWord> deleteAccounts;
     private List<InternalTransaction> internalTransactions;
     private List<LogInfo> logInfoList;
     private long futureRefund = 0;
@@ -62,9 +64,9 @@ public class ProgramResult {
         this.exception = exception;
     }
 
-    public List<DataWord> getDeleteAccounts() {
+    public Set<DataWord> getDeleteAccounts() {
         if (deleteAccounts == null) {
-            deleteAccounts = new ArrayList<>();
+            deleteAccounts = new HashSet<>();
         }
         return deleteAccounts;
     }
@@ -73,7 +75,7 @@ public class ProgramResult {
         getDeleteAccounts().add(address);
     }
 
-    public void addDeleteAccounts(List<DataWord> accounts) {
+    public void addDeleteAccounts(Set<DataWord> accounts) {
         if (!isEmpty(accounts)) {
             getDeleteAccounts().addAll(accounts);
         }
