@@ -1,6 +1,7 @@
 package org.ethereum.config.blockchain;
 
 import org.ethereum.config.Constants;
+import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
 
@@ -35,4 +36,11 @@ public class FrontierConfig extends OlympicConfig {
     public FrontierConfig(Constants constants) {
         super(constants);
     }
+
+
+    @Override
+    public boolean acceptTransactionSignature(Transaction tx) {
+        return tx.getSignature().validateComponents();
+    }
+
 }

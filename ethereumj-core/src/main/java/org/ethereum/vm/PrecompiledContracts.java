@@ -1,9 +1,17 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.Constants;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.cryptohash.Keccak256;
+import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
+
+import static org.ethereum.util.BIUtil.isLessThan;
+import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
  * @author Roman Mandeleil
@@ -126,11 +134,12 @@ public class PrecompiledContracts {
                 int sLength = data.length < 128 ? data.length - 96 : 32;
                 System.arraycopy(data, 96, s, 0, sLength);
 
+                if (isValid(r, s, v)) {
+                    ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v[31]);
 
-                ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v[31]);
-
-                ECKey key = ECKey.signatureToKey(h, signature.toBase64());
-                out = new DataWord(key.getAddress());
+                    ECKey key = ECKey.signatureToKey(h, signature.toBase64());
+                    out = new DataWord(key.getAddress());
+                }
             } catch (Throwable any) {
             }
 
@@ -139,6 +148,15 @@ public class PrecompiledContracts {
             } else {
                 return out.getData();
             }
+        }
+
+        private boolean isValid(byte[] rBytes, byte[] sBytes, byte[] vBytes) {
+
+            byte v = vBytes[vBytes.length - 1];
+            BigInteger r = new BigInteger(1, rBytes);
+            BigInteger s = new BigInteger(1, sBytes);
+
+            return ECKey.ECDSASignature.validateComponents(r, s, v);
         }
     }
 

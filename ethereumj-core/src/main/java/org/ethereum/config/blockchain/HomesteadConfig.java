@@ -12,8 +12,8 @@ import java.math.BigInteger;
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public class HomesteadConfig extends FrontierConfig {
-    private static final BigInteger SECP256K1N = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
-    private static final BigInteger SECP256K1N_HALF = SECP256K1N.divide(BigInteger.valueOf(2));
+
+    private static final BigInteger SECP256K1N_HALF = Constants.getSECP256K1N().divide(BigInteger.valueOf(2));
 
     public static class HomesteadConstants extends FrontierConstants {
         @Override
@@ -51,6 +51,7 @@ public class HomesteadConfig extends FrontierConfig {
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
+        if (!super.acceptTransactionSignature(tx)) return false;
         return tx.getSignature().s.compareTo(SECP256K1N_HALF) < 0;
     }
 }
