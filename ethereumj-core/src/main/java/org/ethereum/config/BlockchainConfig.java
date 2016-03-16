@@ -21,7 +21,7 @@ public interface BlockchainConfig {
     /**
      * Returns the mining algorithm
      */
-    MinerIfc getMineAlgorithm();
+    MinerIfc getMineAlgorithm(SystemProperties config);
 
     /**
      * Calculates the difficulty for the block depending on the parent
