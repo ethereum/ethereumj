@@ -30,9 +30,9 @@ public class IndexedBlockStore extends AbstractBlockstore{
     public IndexedBlockStore(){
     }
 
-    public void init(Map<Long, List<BlockInfo>> longListHashMap, KeyValueDataSource hashMapDB, Object o, Object o1) {
-        throw new RuntimeException("To remove");
-    }
+//    public void init(Map<Long, List<BlockInfo>> longListHashMap, KeyValueDataSource hashMapDB, Object o, Object o1) {
+//        throw new RuntimeException("To remove");
+//    }
 
     public void init(KeyValueDataSource index, KeyValueDataSource blocks) {
         indexDS = index;
@@ -116,10 +116,11 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
         List<Block> result = new ArrayList<>();
 
-        List<BlockInfo> blockInfos = index.get((int) number);
-        if (blockInfos == null){
+        if (number >= index.size()) {
             return result;
         }
+
+        List<BlockInfo> blockInfos = index.get((int) number);
 
         for (BlockInfo blockInfo : blockInfos){
 
@@ -133,10 +134,11 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     @Override
     public Block getChainBlockByNumber(long number){
-        List<BlockInfo> blockInfos = index.get((int) number);
-        if (blockInfos == null){
+        if (number >= index.size()){
             return null;
         }
+
+        List<BlockInfo> blockInfos = index.get((int) number);
 
         for (BlockInfo blockInfo : blockInfos){
 
@@ -179,7 +181,6 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
         @Override
     public BigInteger getTotalDifficulty(){
-        BigInteger cacheTotalDifficulty = ZERO;
         long maxNumber = getMaxNumber();
 
         List<BlockInfo> blockInfos = index.get((int) maxNumber);
@@ -189,7 +190,16 @@ public class IndexedBlockStore extends AbstractBlockstore{
             }
         }
 
-        return cacheTotalDifficulty;
+        while (true){
+            --maxNumber;
+            List<BlockInfo> infos = getBlockInfoForLevel(maxNumber);
+
+            for (BlockInfo blockInfo : infos) {
+                if (blockInfo.isMainChain()) {
+                    return blockInfo.getCummDifficulty();
+                }
+            }
+        }
     }
 
     @Override

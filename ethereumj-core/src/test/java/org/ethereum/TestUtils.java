@@ -49,20 +49,20 @@ public final class TestUtils {
         return null;
     }
 
-    public static DB createMapDB(String testDBDir){
-
-        String blocksIndexFile = testDBDir + "/blocks/index";
-        File dbFile = new File(blocksIndexFile);
-        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-
-        DB db = DBMaker.fileDB(dbFile)
-                .transactionDisable()
-                .closeOnJvmShutdown()
-                .make();
-
-
-        return db;
-    }
+//    public static DB createMapDB(String testDBDir){
+//
+//        String blocksIndexFile = testDBDir + "/blocks/index";
+//        File dbFile = new File(blocksIndexFile);
+//        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
+//
+//        DB db = DBMaker.fileDB(dbFile)
+//                .transactionDisable()
+//                .closeOnJvmShutdown()
+//                .make();
+//
+//
+//        return db;
+//    }
 
     public static List<Block> getRandomChain(byte[] startParentHash, long startNumber, long length){
 
