@@ -23,7 +23,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     KeyValueDataSource indexDS;
-    ArrayDataSource<List<BlockInfo>> index;
+    DataSourceArray<List<BlockInfo>> index;
     KeyValueDataSource blocksDS;
     ObjectDataSource<Block> blocks;
 
@@ -36,7 +36,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     public void init(KeyValueDataSource index, KeyValueDataSource blocks) {
         indexDS = index;
-        this.index = new ArrayDataSource<>(index, BLOCK_INFO_SERIALIZER).withCacheSize(256);
+        this.index = new DataSourceArray<>(
+                new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER).withCacheSize(256));
         this.blocksDS = blocks;
         this.blocks = new ObjectDataSource<>(blocks, new Serializer<Block, byte[]>() {
             @Override
@@ -96,10 +97,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     private void addInternalBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
 
-        List<BlockInfo> blockInfos = index.get((int) block.getNumber());
-        if (blockInfos == null){
-            blockInfos = new ArrayList<>();
-        }
+        List<BlockInfo> blockInfos = block.getNumber() >= index.size() ?  new ArrayList<BlockInfo>() :
+                index.get((int) block.getNumber());
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
