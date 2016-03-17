@@ -40,12 +40,13 @@ public final class TestUtils {
 
     public static Map<Long, List<IndexedBlockStore.BlockInfo>> createIndexMap(DB db){
 
-        Map<Long, List<IndexedBlockStore.BlockInfo>> index = db.hashMapCreate("index")
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(BLOCK_INFO_SERIALIZER)
-                .makeOrGet();
-
-        return index;
+//        Map<Long, List<IndexedBlockStore.BlockInfo>> index = db.hashMapCreate("index")
+//                .keySerializer(Serializer.LONG)
+//                .valueSerializer(BLOCK_INFO_SERIALIZER)
+//                .makeOrGet();
+//
+//        return index;
+        return null;
     }
 
     public static DB createMapDB(String testDBDir){
