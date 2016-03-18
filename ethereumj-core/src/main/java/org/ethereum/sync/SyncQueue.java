@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -400,7 +401,9 @@ public class SyncQueue {
     private void waitForBlocks() {
         blocksLock.lock();
         try {
-            blocksAdded.awaitUninterruptibly();
+            blocksAdded.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             blocksLock.unlock();
         }
