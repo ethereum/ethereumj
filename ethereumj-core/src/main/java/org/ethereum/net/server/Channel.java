@@ -220,7 +220,7 @@ public class Channel {
     }
 
     public void setNode(byte[] nodeId) {
-        node = new Node(nodeId, inetSocketAddress.getHostName(), inetSocketAddress.getPort());
+        node = new Node(nodeId, inetSocketAddress.getHostString(), inetSocketAddress.getPort());
         nodeStatistics = nodeManager.getNodeStatistics(node);
     }
 
