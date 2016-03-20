@@ -38,7 +38,7 @@ public interface EthereumListener {
     void onPendingStateChanged(PendingState pendingState);
 
     /**
-     * @deprecated
+     * @deprecated What should be used instead?
      */
     @Deprecated
     void onSyncDone();

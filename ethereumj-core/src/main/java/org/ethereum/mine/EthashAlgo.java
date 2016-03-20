@@ -72,7 +72,7 @@ public class EthashAlgo {
             o[i] = HashUtil.sha512(o[i - 1]);
         }
 
-        for (int _ = 0; _ < params.getCACHE_ROUNDS(); _++) {
+        for (int cacheRound = 0; cacheRound < params.getCACHE_ROUNDS(); cacheRound++) {
             for (int i = 0; i < n; i++) {
                 int v = remainderUnsigned(getWord(o[i], 0), n);
                 o[i] = HashUtil.sha512(xor(o[(i - 1 + n) % n], o[v]));
