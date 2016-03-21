@@ -390,7 +390,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), getOwnerAddress(), getCallValue(), gasLimit,
+                this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
