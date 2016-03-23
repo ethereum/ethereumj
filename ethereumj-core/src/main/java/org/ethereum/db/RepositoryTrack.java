@@ -14,6 +14,7 @@ import java.math.BigInteger;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
@@ -99,6 +100,19 @@ public class RepositoryTrack implements Repository {
             }
 
             return contractDetails;
+        }
+    }
+
+    @Override
+    public boolean hasContractDetails(byte[] addr) {
+        synchronized (repository) {
+            ContractDetails contractDetails = cacheDetails.get(wrap(addr));
+
+            if (contractDetails == null) {
+                return repository.hasContractDetails(addr);
+            } else {
+                return true;
+            }
         }
     }
 
@@ -290,10 +304,17 @@ public class RepositoryTrack implements Repository {
     public void commit() {
 
         synchronized (repository) {
-            for (ContractDetails contractDetails : cacheDetails.values()) {
-
-                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetails;
+            for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cacheDetails.entrySet()) {
+                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) entry.getValue();
                 contractDetailsCache.commit();
+
+                if (contractDetailsCache.origContract == null && repository.hasContractDetails(entry.getKey().getData())) {
+                    // in forked block the contract account might not exist thus it is created without
+                    // origin, but on the main chain details can contain data which should be merged
+                    // into a single storage trie so both branches with different stateRoots are valid
+                    contractDetailsCache.origContract = repository.getContractDetails(entry.getKey().getData());
+                    contractDetailsCache.commit();
+                }
             }
 
             repository.updateBatch(cacheAccounts, cacheDetails);

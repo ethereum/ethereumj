@@ -539,6 +539,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     @Override
+    public boolean hasContractDetails(byte[] addr) {
+        return dds.get(addr) != null;
+    }
+
+    @Override
     public synchronized AccountState getAccountState(final byte[] addr) {
         rwLock.readLock().lock();
         try {
