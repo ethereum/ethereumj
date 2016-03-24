@@ -238,10 +238,8 @@ public class RepositoryTrack implements Repository {
                 return EMPTY_BYTE_ARRAY;
 
             byte[] codeHash = getAccountState(addr).getCodeHash();
-            if (Arrays.equals(codeHash, EMPTY_DATA_HASH))
-                return EMPTY_BYTE_ARRAY;
 
-            return getContractDetails(addr).getCode();
+            return getContractDetails(addr).getCode(codeHash);
         }
     }
 

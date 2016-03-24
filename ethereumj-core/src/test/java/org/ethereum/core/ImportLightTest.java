@@ -277,16 +277,43 @@ public class ImportLightTest {
                 "        child = (new B).value(20)();" +
                 "    }" +
                 "}";
-        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(false);
+        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
-        System.out.println(bc.createBlock());
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
         a.callFunction(10, "create");
-        System.out.println(bc.createBlock());
         byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) a.callConstFunction("child")[0], 20);
         SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
         BigInteger val = (BigInteger) b.callConstFunction("valReceived")[0];
         Assert.assertEquals(20, val.longValue());
+    }
+
+    @Test
+    public void contractCodeForkTest() throws IOException, InterruptedException {
+        String contractA =
+                "contract A {" +
+                "  function call() returns (uint) {" +
+                "    return 111;" +
+                "  }" +
+                "}";
+
+        String contractB =
+                "contract B {" +
+                "  function call() returns (uint) {" +
+                "    return 222222;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        Block b1 = bc.createBlock();
+        SolidityContract a = bc.submitNewContract(contractA);
+        Block b2 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("call")[0]);
+        SolidityContract b = bc.submitNewContract(contractB);
+        Block b2_ = bc.createForkBlock(b1);
+        Block b3 = bc.createForkBlock(b2);
+        Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("call")[0]);
+        Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction(b2, "call")[0]);
+        Assert.assertEquals(BigInteger.valueOf(222222), b.callConstFunction(b2_, "call")[0]);
     }
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
