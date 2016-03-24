@@ -657,11 +657,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 logger.error("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
-
-            if (!isValid(uncle)) {
-                logger.error("Invalid uncle header: " + uncle);
-                return false;
-            }
         }
 
         return true;
