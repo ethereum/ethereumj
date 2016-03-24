@@ -4,6 +4,8 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.tools.bc.SolidityContract;
+import org.ethereum.tools.bc.StandaloneBlockchain;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
@@ -11,11 +13,8 @@ import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.mine.Ethash;
-import org.ethereum.solidity.compiler.CompilationResult;
-import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
-import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -23,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
@@ -190,26 +190,19 @@ public class ImportLightTest {
         // so their storages are different. Check that original Child storage is not broken
         // on the main chain (#4)
 
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
-                getClass().getResourceAsStream("/genesis/genesis-light.json")));
-        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
-        Block parent = blockchain.getBestBlock();
-
-        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
-
         String contractSrc =
-                "contract Child {\n" +
-                "  int a;\n" +
-                "  int b;\n" +
-                "  int c;\n" +
-                "  function Child(int i) {\n" +
-                "    a = 333 + i;\n" +
-                "    b = 444 + i;\n" +
-                "  }\n" +
-                "  function sum() {\n" +
-                "    c = a + b;\n" +
-                "  }\n" +
-                "}\n" +
+                "contract Child {" +
+                "  int a;" +
+                "  int b;" +
+                "  int public c;" +
+                "  function Child(int i) {" +
+                "    a = 333 + i;" +
+                "    b = 444 + i;" +
+                "  }" +
+                "  function sum() {" +
+                "    c = a + b;" +
+                "  }" +
+                "}" +
                 "contract Parent {" +
                 "  address public child;" +
                 "  function createChild(int a) returns (address) {" +
@@ -217,154 +210,83 @@ public class ImportLightTest {
                 "    return child;" +
                 "  }" +
                 "}";
-        SolidityCompiler.Result compileRes = SolidityCompiler.compile(contractSrc.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-        if (!compileRes.errors.isEmpty()) throw new RuntimeException("Compile error: " + compileRes.errors);
-        CompilationResult result = CompilationResult.parse(compileRes.output);
-        CallTransaction.Contract parentContract = new CallTransaction.Contract(result.contracts.get("Parent").abi);
-        CallTransaction.Contract childContract = new CallTransaction.Contract(result.contracts.get("Child").abi);
 
-        System.out.println("Mining #1 (create Parent contract)...");
-
-        Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(0),
-                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                new byte[0], new byte[]{0}, Hex.decode(result.contracts.get("Parent").bin));
-        tx.sign(senderKey.getPrivKeyBytes());
-
-        Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
-        ImportResult importResult = blockchain.tryToConnect(b1);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
-
-        byte[] parentAddr = tx.getContractAddress();
-
-        System.out.println("Mining #2 (empty) ...");
-        Block b2 = blockchain.createNewBlock(b1, Collections.<Transaction>emptyList(), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
-        importResult = blockchain.tryToConnect(b2);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
-
-        System.out.println("Mining #3 (call Parent to create a Child) ...");
-        Transaction tx1 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(1),
-                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                parentAddr, new byte[]{0}, parentContract.getByName("createChild").encode(100));
-        tx1.sign(senderKey.getPrivKeyBytes());
-        Block b3 = blockchain.createNewBlock(b2, Collections.singletonList(tx1), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b3.getNumber()).mineLight(b3).get();
-        importResult = blockchain.tryToConnect(b3);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
-
-        byte[] childAddr = blockchain.getRepository().getContractDetails(parentAddr).get(new DataWord(0)).getLast20Bytes();
-//        ContractDetailsImpl details = (ContractDetailsImpl) blockchain.getRepository().getContractDetails(childAddr);
-//        System.out.println(details.storageTrie.getTrieDump());
-
-        System.out.println("Mining #2' (Forked: call Parent to create a Child) ...");
-        Transaction tx2 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(1),
-                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                parentAddr, new byte[]{0}, parentContract.getByName("createChild").encode(200));
-        tx2.sign(senderKey.getPrivKeyBytes());
-        Block b2_ = blockchain.createNewBlock(b1, Collections.singletonList(tx2), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2_.getNumber()).mineLight(b2_).get();
-        importResult = blockchain.tryToConnect(b2_);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
-
-        System.out.println("Mining #4 (call Child function) ...");
-        Transaction tx3 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(2),
-                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                childAddr, new byte[]{0}, childContract.getByName("sum").encode());
-        tx3.sign(senderKey.getPrivKeyBytes());
-        Block b4 = blockchain.createNewBlock(b3, Collections.singletonList(tx3), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b4.getNumber()).mineLight(b4).get();
-        importResult = blockchain.tryToConnect(b4);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
-
-        DataWord sum = blockchain.getRepository().getContractDetails(childAddr).get(new DataWord(2));
-        System.out.println(sum);
-        Assert.assertEquals(100 + 333 + 100 + 444, sum.longValue());
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract parent = bc.submitNewContract(contractSrc, "Parent");
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        parent.callFunction("createChild", 100);
+        Block b3 = bc.createBlock();
+        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) parent.callConstFunction("child")[0], 20);
+        parent.callFunction("createChild", 200);
+        Block b2_ = bc.createForkBlock(b1);
+        SolidityContract child = bc.createExistingContractFromSrc(contractSrc, "Child", childAddress);
+        child.callFunction("sum");
+        Block b4 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(100 + 333 + 100 + 444), child.callConstFunction("c")[0]);
     }
 
     @Test
     public void createContractFork1() throws Exception {
         // Test creation of the contract on forked branch with different storage
-
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
-                getClass().getResourceAsStream("/genesis/genesis-light.json")));
-        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
-        Block parent = blockchain.getBestBlock();
-
-        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
-
         String contractSrc =
                 "contract A {" +
-                "  int a;" +
-                "  int b;" +
+                "  int public a;" +
                 "  function A() {" +
                 "    a = 333;" +
-                "    b = 444;" +
                 "  }" +
                 "}" +
                 "contract B {" +
-                "  int a;" +
-                "  int b;" +
+                "  int public a;" +
                 "  function B() {" +
                 "    a = 111;" +
-                "    b = 222;" +
                 "  }" +
                 "}";
-        SolidityCompiler.Result compileRes = SolidityCompiler.compile(contractSrc.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-        if (!compileRes.errors.isEmpty()) throw new RuntimeException("Compile error: " + compileRes.errors);
-        CompilationResult result = CompilationResult.parse(compileRes.output);
 
-        System.out.println("Mining #1 (empty) ...");
-        Block b = blockchain.createNewBlock(parent, Collections.<Transaction>emptyList(), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b.getNumber()).mineLight(b).get();
-        ImportResult importResult = blockchain.tryToConnect(b);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
+        {
+            StandaloneBlockchain bc = new StandaloneBlockchain();
+            Block b1 = bc.createBlock();
+            Block b2 = bc.createBlock();
+            SolidityContract a = bc.submitNewContract(contractSrc, "A");
+            Block b3 = bc.createBlock();
+            SolidityContract b = bc.submitNewContract(contractSrc, "B");
+            Block b2_ = bc.createForkBlock(b1);
+            Assert.assertEquals(BigInteger.valueOf(333), a.callConstFunction("a")[0]);
+            Assert.assertEquals(BigInteger.valueOf(111), b.callConstFunction(b2_, "a")[0]);
+            Block b3_ = bc.createForkBlock(b2_);
+            Block b4_ = bc.createForkBlock(b3_);
+            Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("a")[0]);
+            Assert.assertEquals(BigInteger.valueOf(333), a.callConstFunction(b3, "a")[0]);
 
-        System.out.println("Mining #2 ...");
+        }
+    }
 
-        Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(0),
-                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                new byte[0], new byte[]{0}, Hex.decode(result.contracts.get("A").bin));
-        tx.sign(senderKey.getPrivKeyBytes());
-
-        Block b1 = blockchain.createNewBlock(b, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
-        importResult = blockchain.tryToConnect(b1);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
-
-        byte[] aAddr = tx.getContractAddress();
-
-
-        System.out.println("Mining #1' ...");
-        Transaction tx1 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(0),
-                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                new byte[0], new byte[]{0}, Hex.decode(result.contracts.get("B").bin));
-        tx1.sign(senderKey.getPrivKeyBytes());
-
-        Block b1_ = blockchain.createNewBlock(parent, Collections.singletonList(tx1), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1_.getNumber()).mineLight(b1_).get();
-        importResult = blockchain.tryToConnect(b1_);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
-
-        byte[] bAddr = tx1.getContractAddress();
-
-        System.out.println("Mining #2' (empty) ...");
-        Block b2_ = blockchain.createNewBlock(b1_, Collections.<Transaction>emptyList(), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2_.getNumber()).mineLight(b2_).get();
-        importResult = blockchain.tryToConnect(b2_);
-//        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
-
-        System.out.println("Mining #3' (empty) ...");
-        Block b3_ = blockchain.createNewBlock(b2_, Collections.<Transaction>emptyList(), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b3_.getNumber()).mineLight(b3_).get();
-        importResult = blockchain.tryToConnect(b3_);
-        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
+    @Test
+    public void createValueTest() throws IOException, InterruptedException {
+        // checks that correct msg.value is passed when contract internally created with value
+        String contract =
+                "contract B {" +
+                "  uint public valReceived;" +
+                "  function B() {" +
+                "    valReceived = msg.value;" +
+                "  }" +
+                "}" +
+                "contract A {" +
+                "    address public child;" +
+                "    function create() {" +
+                "        child = (new B).value(20)();" +
+                "    }" +
+                "}";
+        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(false);
+        SolidityContract a = bc.submitNewContract(contract, "A");
+        System.out.println(bc.createBlock());
+        bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
+        a.callFunction(10, "create");
+        System.out.println(bc.createBlock());
+        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) a.callConstFunction("child")[0], 20);
+        SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
+        BigInteger val = (BigInteger) b.callConstFunction("valReceived")[0];
+        Assert.assertEquals(20, val.longValue());
     }
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
