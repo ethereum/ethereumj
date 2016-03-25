@@ -119,7 +119,7 @@ public class PendingStateTest {
         pendingState.processBest(b1);
         assertEquals(pendingState.getPendingTransactions().size(), 0);
 
-        Block b1_ = blockchain.createNewBlock(blockchain.getBestBlock(), Collections.emptyList(), Collections.EMPTY_LIST);
+        Block b1_ = blockchain.createNewBlock(blockchain.getBestBlock(), Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         pendingState.processBest(b1_);
         // b1_ has no transactions but it is now the BEST instead of b1 so the tx1 should be returned
         // back to the pending state
