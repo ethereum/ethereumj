@@ -1,6 +1,6 @@
 package org.ethereum.net.shh;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
