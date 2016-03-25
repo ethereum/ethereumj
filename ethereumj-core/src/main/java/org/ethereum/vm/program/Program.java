@@ -864,25 +864,25 @@ public class Program {
             sb.append(Utils.align("" + Integer.toHexString(index) + ":", ' ', 8, false));
 
             if (op == null) {
-                sb.append("<UNKNOWN>: " + (0xFF & opCode) + "\n");
+                sb.append("<UNKNOWN>: ").append(0xFF & opCode).append("\n");
                 index ++;
                 continue;
             }
 
             if (op.name().startsWith("PUSH")) {
-                sb.append(' ' + op.name() + ' ');
+                sb.append(' ').append(op.name()).append(' ');
 
                 int nPush = op.val() - OpCode.PUSH1.val() + 1;
                 byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
                 BigInteger bi = new BigInteger(1, data);
-                sb.append("0x" + bi.toString(16));
+                sb.append("0x").append(bi.toString(16));
                 if (bi.bitLength() <= 32) {
-                    sb.append(" (" + new BigInteger(1, data).toString() + ") ");
+                    sb.append(" (").append(new BigInteger(1, data).toString()).append(") ");
                 }
 
                 index += nPush + 1;
             } else {
-                sb.append(' ' + op.name());
+                sb.append(' ').append(op.name());
                 index++;
             }
             sb.append('\n');
@@ -976,22 +976,22 @@ public class Program {
             OpCode op = OpCode.code(opCode);
 
             if (op == null) {
-                sb.append(" <UNKNOWN>: " + (0xFF & opCode) + " ");
+                sb.append(" <UNKNOWN>: ").append(0xFF & opCode).append(" ");
                 index ++;
                 continue;
             }
 
             if (op.name().startsWith("PUSH")) {
-                sb.append(' ' + op.name() + ' ');
+                sb.append(' ').append(op.name()).append(' ');
 
                 int nPush = op.val() - OpCode.PUSH1.val() + 1;
                 byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
                 BigInteger bi = new BigInteger(1, data);
-                sb.append("0x" + bi.toString(16) + " ");
+                sb.append("0x").append(bi.toString(16)).append(" ");
 
                 index += nPush + 1;
             } else {
-                sb.append(' ' + op.name());
+                sb.append(' ').append(op.name());
                 index++;
             }
         }

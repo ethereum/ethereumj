@@ -395,7 +395,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 zeroReputCount++;
             }
         }
-        sb.append("0 reputation: " + zeroReputCount + " nodes.\n");
+        sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
     }
 
