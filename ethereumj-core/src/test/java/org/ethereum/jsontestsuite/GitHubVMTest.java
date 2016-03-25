@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -136,7 +137,7 @@ public class GitHubVMTest {
         String shacommit = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
         List<String> fileNames = getFileNamesForTreeSha(shacommit);
         List<String> excludedFiles =
-                Arrays.asList(
+                Collections.singletonList(
                         ""
                 );
 

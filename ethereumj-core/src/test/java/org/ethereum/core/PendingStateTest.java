@@ -111,7 +111,7 @@ public class PendingStateTest {
         byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
 
         Transaction tx1 = createTx(2, 77);
-        Block b1 = blockchain.createNewBlock(blockchain.getBestBlock(), Arrays.asList(tx1), Collections.EMPTY_LIST);
+        Block b1 = blockchain.createNewBlock(blockchain.getBestBlock(), Collections.singletonList(tx1), Collections.EMPTY_LIST);
 
         pendingState.addPendingTransaction(tx1);
         assertEquals(pendingState.getPendingTransactions().size(), 1);
@@ -119,7 +119,7 @@ public class PendingStateTest {
         pendingState.processBest(b1);
         assertEquals(pendingState.getPendingTransactions().size(), 0);
 
-        Block b1_ = blockchain.createNewBlock(blockchain.getBestBlock(), Arrays.<Transaction>asList(), Collections.EMPTY_LIST);
+        Block b1_ = blockchain.createNewBlock(blockchain.getBestBlock(), Collections.emptyList(), Collections.EMPTY_LIST);
         pendingState.processBest(b1_);
         // b1_ has no transactions but it is now the BEST instead of b1 so the tx1 should be returned
         // back to the pending state
