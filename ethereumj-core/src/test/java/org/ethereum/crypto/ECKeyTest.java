@@ -42,7 +42,7 @@ public class ECKeyTest {
     private byte[] compressedPubKey = Hex.decode(compressedPubString);
     private String address = "8a40bfaa73256b60764c1bf40675a99083efb075";
 
-    private String exampleMessage = new String("This is an example of a signed message.");
+    private String exampleMessage = "This is an example of a signed message.";
     private String sigBase64 = "HD5AsBr4wuH6UU9tXuSJhUvgfGayfwoY0cKT03sFUjnpQsupHznd/3mCIRfLuNHlRCVGdAyHecdyM8IVZMtc1I8=";
 
     @Test
@@ -192,7 +192,7 @@ public class ECKeyTest {
     @Test
     public void testSignVerify() {
         ECKey key = ECKey.fromPrivate(privateKey);
-        String message = new String("This is an example of a signed message.");
+        String message = "This is an example of a signed message.";
         ECDSASignature output = key.doSign(message.getBytes());
         assertTrue(key.verify(message.getBytes(), output));
     }
