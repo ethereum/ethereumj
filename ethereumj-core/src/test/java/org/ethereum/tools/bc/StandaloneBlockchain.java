@@ -172,6 +172,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
+    public ECKey getSender() {
+        return txSender;
+    }
+
     @Override
     public void sendEther(byte[] toAddress, BigInteger weis) {
         submitNewTx(new PendingTx(toAddress, weis, new byte[0]));
