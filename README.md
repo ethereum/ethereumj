@@ -44,7 +44,18 @@ As a starting point for your own project take a look at https://github.com/ether
 ```
 > git clone https://github.com/ethereum/ethereumj
 > cd ethereumj
-> gradlew run [-PmainClass=<sample class>]
+> ./gradlew run [-PmainClass=<sample class>]
+```
+
+##### Optional samples to try:
+```
+./gradlew run -PmainClass=org.ethereum.samples.BasicSample
+./gradlew run -PmainClass=org.ethereum.samples.FollowAccount
+./gradlew run -PmainClass=org.ethereum.samples.PendingStateSample
+./gradlew run -PmainClass=org.ethereum.samples.PriceFeedSample
+./gradlew run -PmainClass=org.ethereum.samples.PrivateMinerSample
+./gradlew run -PmainClass=org.ethereum.samples.TestNetSample
+./gradlew run -PmainClass=org.ethereum.samples.TransactionBomb
 ```
 
 ##### Importing project to IntelliJ IDEA: 
