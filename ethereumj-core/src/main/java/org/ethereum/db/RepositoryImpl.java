@@ -393,6 +393,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized BigInteger getBalance(byte[] addr) {
+        if (!isExist(addr)) return BigInteger.ZERO;
         AccountState account = getAccountState(addr);
         return (account == null) ? AccountState.EMPTY.getBalance() : account.getBalance();
     }

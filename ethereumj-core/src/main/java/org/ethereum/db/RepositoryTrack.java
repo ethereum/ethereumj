@@ -196,6 +196,7 @@ public class RepositoryTrack implements Repository {
 
     @Override
     public BigInteger getBalance(byte[] addr) {
+        if (!isExist(addr)) return BigInteger.ZERO;
         AccountState accountState = getAccountState(addr);
         return accountState == null ? AccountState.EMPTY.getBalance() : accountState.getBalance();
     }

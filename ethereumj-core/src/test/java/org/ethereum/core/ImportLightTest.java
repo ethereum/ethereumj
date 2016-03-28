@@ -316,6 +316,34 @@ public class ImportLightTest {
         Assert.assertEquals(BigInteger.valueOf(222222), b.callConstFunction(b2_, "call")[0]);
     }
 
+    @Test
+    public void getBalanceTest() throws IOException, InterruptedException {
+        // checking that addr.balance doesn't cause the account to be created
+        // and the subsequent call to that non-existent address costs 25K gas
+        byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
+        String contractA =
+                "contract B { function dummy() {}}" +
+                "contract A {" +
+                "  function call() returns (uint) {" +
+                "    address addr = 0x" + Hex.toHexString(addr) + ";" +
+                "    uint bal = addr.balance;" +
+                "    B b = B(addr);" +
+                "    b.dummy();" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+        a.callFunction("call");
+        bc.createBlock();
+        BigInteger balance2 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+        long spent = balance1.subtract(balance2).longValue();
+        Assert.assertEquals(46634, spent);
+    }
+
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
