@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Created by Anton Nashatyrev on 18.02.2016.
  */
-public class CachingDataSource implements KeyValueDataSource {
+public class CachingDataSource implements KeyValueDataSource, Flushable {
     KeyValueDataSource source;
 
     Map<ByteArrayWrapper, byte[]> cache = new HashMap<>();
