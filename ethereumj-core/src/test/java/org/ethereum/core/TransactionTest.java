@@ -568,7 +568,7 @@ public class TransactionTest {
             // suicide of a single account should be counted only once
             Assert.assertEquals(programResult.getFutureRefund(), 24000);
         } else {
-//            Assert.fail();
+            Assert.fail();
         }
     }
 
