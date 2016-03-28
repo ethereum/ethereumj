@@ -672,7 +672,7 @@ public class RLP {
         Value val = new Value(input);
         if (val.isList()) {
             List<Object> inputArray = val.asList();
-            if (inputArray.size() == 0) {
+            if (inputArray.isEmpty()) {
                 return encodeLength(inputArray.size(), OFFSET_SHORT_LIST);
             }
             byte[] output = ByteUtil.EMPTY_BYTE_ARRAY;

@@ -134,7 +134,7 @@ public class InMemoryBlockStore extends AbstractBlockstore{
 
     @Override
     public Block getBestBlock() {
-        if (blocks.size() == 0) return null;
+        if (blocks.isEmpty()) return null;
         return blocks.get(blocks.size() - 1);
     }
 
@@ -147,7 +147,7 @@ public class InMemoryBlockStore extends AbstractBlockstore{
         List result = s.createQuery("from BlockVO where number = :number").
                 setParameter("number", blockNumber).list();
 
-        if (result.size() == 0) return null;
+        if (result.isEmpty()) return null;
         BlockVO vo = (BlockVO) result.get(0);
 
         return vo.getHash();
@@ -160,7 +160,7 @@ public class InMemoryBlockStore extends AbstractBlockstore{
         List result = s.createQuery("from BlockVO where number = :number").
                 setParameter("number", blockNumber).list();
 
-        if (result.size() == 0) return null;
+        if (result.isEmpty()) return null;
         BlockVO vo = (BlockVO) result.get(0);
 
         s.close();
@@ -176,7 +176,7 @@ public class InMemoryBlockStore extends AbstractBlockstore{
         List result = s.createQuery("from BlockVO where hash = :hash").
                 setParameter("hash", hash).list();
 
-        if (result.size() == 0) return null;
+        if (result.isEmpty()) return null;
         BlockVO vo = (BlockVO) result.get(0);
 
         s.close();
