@@ -93,7 +93,7 @@ public class SyncPool implements Iterable<Channel> {
         );
     }
 
-    public void add(Channel peer) {
+    public synchronized void add(Channel peer) {
 
         if (!config.isSyncEnabled()) return;
 
@@ -112,29 +112,29 @@ public class SyncPool implements Iterable<Channel> {
             return;
         }
 
-        synchronized (peers) {
+//        synchronized (peers) {
             peers.put(peer.getNodeIdWrapper(), peer);
-        }
+//        }
 
-        synchronized (pendingConnections) {
+//        synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
-        }
+//        }
 
         ethereumListener.onPeerAddedToSyncPool(peer);
 
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
     }
 
-    public void remove(Channel peer) {
-        synchronized (peers) {
+    public synchronized void remove(Channel peer) {
+//        synchronized (peers) {
             peers.values().remove(peer);
-        }
+//        }
     }
 
     @Nullable
-    public Channel getMaster() {
+    public synchronized Channel getMaster() {
 
-        synchronized (peers) {
+//        synchronized (peers) {
 
             for (Channel peer : peers.values())
                 if (peer.isMaster()) {
@@ -142,47 +142,47 @@ public class SyncPool implements Iterable<Channel> {
                 }
 
             return null;
-        }
+//        }
     }
 
     @Nullable
-    public Channel getMasterCandidate() {
-        synchronized (activePeers) {
+    public synchronized Channel getMasterCandidate() {
+//        synchronized (activePeers) {
 
             if (activePeers.isEmpty()) return null;
             return activePeers.get(0);
-        }
+//        }
     }
 
     @Nullable
-    public Channel getBestIdle() {
-        synchronized (activePeers) {
+    public synchronized Channel getBestIdle() {
+//        synchronized (activePeers) {
 
             for (Channel peer : activePeers) {
                 if (peer.isIdle())
                     return peer;
             }
-        }
+//        }
 
         return null;
     }
 
     @Nullable
-    public Channel getByNodeId(byte[] nodeId) {
+    public synchronized Channel getByNodeId(byte[] nodeId) {
         return peers.get(new ByteArrayWrapper(nodeId));
     }
 
-    public void onDisconnect(Channel peer) {
+    public synchronized void onDisconnect(Channel peer) {
 
         if (peer.getNodeId() == null) return;
 
         boolean existed;
-        synchronized (peers) {
+//        synchronized (peers) {
             existed = peers.values().remove(peer);
-            synchronized (activePeers) {
+//            synchronized (activePeers) {
                 activePeers.remove(peer);
-            }
-        }
+//            }
+//        }
 
         // do not count disconnects for nodeId
         // if exact peer is not an active one
@@ -191,7 +191,7 @@ public class SyncPool implements Iterable<Channel> {
         logger.info("Peer {}: disconnected", peer.getPeerIdShort());
     }
 
-    public void connect(Node node) {
+    public synchronized void connect(Node node) {
         if (logger.isTraceEnabled()) logger.trace(
                 "Peer {}: initiate connection",
                 node.getHexIdShort()
@@ -204,56 +204,56 @@ public class SyncPool implements Iterable<Channel> {
             return;
         }
 
-        synchronized (pendingConnections) {
+//        synchronized (pendingConnections) {
             ethereum.connect(node);
             pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
-        }
+//        }
     }
 
-    public Set<String> nodesInUse() {
+    public synchronized Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
-        synchronized (peers) {
+//        synchronized (peers) {
             for (Channel peer : peers.values()) {
                 ids.add(peer.getPeerId());
             }
-        }
-        synchronized (pendingConnections) {
+//        }
+//        synchronized (pendingConnections) {
             ids.addAll(pendingConnections.keySet());
-        }
+//        }
         return ids;
     }
 
-    public boolean isInUse(String nodeId) {
+    public synchronized boolean isInUse(String nodeId) {
         return nodesInUse().contains(nodeId);
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return peers.isEmpty();
     }
 
     @Override
-    public Iterator<Channel> iterator() {
-        synchronized (peers) {
+    public synchronized Iterator<Channel> iterator() {
+//        synchronized (peers) {
             return new ArrayList<>(peers.values()).iterator();
-        }
+//        }
     }
 
-    void logActivePeers() {
-        synchronized (activePeers) {
+    synchronized void logActivePeers() {
+//        synchronized (activePeers) {
             if (activePeers.isEmpty()) return;
 
             logger.info("\n");
             logger.info("Active peers");
             logger.info("============");
             for (Channel peer : activePeers) peer.logSyncStats();
-        }
+//        }
     }
 
     private void processConnections() {
-        synchronized (pendingConnections) {
+//        synchronized (pendingConnections) {
             Set<String> exceeded = getTimeoutExceeded(pendingConnections);
             pendingConnections.keySet().removeAll(exceeded);
-        }
+//        }
     }
 
     private Set<String> getTimeoutExceeded(Map<String, Long> map) {
@@ -288,7 +288,7 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     private void prepareActive() {
-        synchronized (peers) {
+//        synchronized (peers) {
 
             List<Channel> active = new ArrayList<>(peers.values());
 
@@ -326,7 +326,7 @@ public class SyncPool implements Iterable<Channel> {
                 activePeers.clear();
                 activePeers.addAll(filtered);
             }
-        }
+//        }
     }
 
     private void logDiscoveredNodes(List<NodeHandler> nodes) {
