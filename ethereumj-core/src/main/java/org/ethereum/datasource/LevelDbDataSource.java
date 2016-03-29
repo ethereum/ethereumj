@@ -78,7 +78,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
             try {
                 logger.debug("Opening database");
-                Path dbPath = Paths.get(getProperty("user.dir"), config.databaseDir(), name);
+                Path dbPath = Paths.get(config.databaseDir(), name);
                 Files.createDirectories(dbPath.getParent());
 
                 logger.debug("Initializing new or existing database: '{}'", name);

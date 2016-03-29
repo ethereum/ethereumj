@@ -38,8 +38,7 @@ public final class VMUtils {
 
         if (CONFIG.vmTrace() && !isEmpty(CONFIG.vmTraceDir())) {
 
-            String pathname = format("%s/%s/%s/%s.json", getProperty("user.dir"), CONFIG.databaseDir(), CONFIG.vmTraceDir(), txHash);
-            File file = new File(pathname);
+            File file = new File(new File(CONFIG.databaseDir(), CONFIG.vmTraceDir()), txHash + ".json");
 
             if (file.exists()) {
                 if (file.isFile() && file.canWrite()) {
