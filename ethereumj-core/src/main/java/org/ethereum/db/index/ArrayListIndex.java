@@ -44,12 +44,12 @@ public class ArrayListIndex implements Index {
     }
 
     @Override
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return index.isEmpty();
     }
 
     @Override
-    public int size() {
+    public synchronized int size() {
         return index.size();
     }
 
@@ -63,8 +63,8 @@ public class ArrayListIndex implements Index {
     }
 
     @Override
-    public Iterator<Long> iterator() {
-        return index.iterator();
+    public synchronized Iterator<Long> iterator() {
+        return new ArrayList<>(index).iterator();
     }
 
     public synchronized void removeAll(Collection<Long> indexes) {

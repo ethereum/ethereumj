@@ -112,8 +112,10 @@ public class HeaderStoreMem implements HeaderStore {
 
     @Override
     public void clear() {
-        headers.clear();
-        index.clear();
+        synchronized (mutex) {
+            headers.clear();
+            index.clear();
+        }
     }
 
     @Override
@@ -121,7 +123,7 @@ public class HeaderStoreMem implements HeaderStore {
 
         List<Long> removed = new ArrayList<>();
 
-        synchronized (index) {
+        synchronized (mutex) {
 
             boolean hasSent = false;
 
