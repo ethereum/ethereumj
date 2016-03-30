@@ -2,7 +2,6 @@ package org.ethereum.net.rlpx;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageCodec;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,7 @@ import java.util.List;
  *
  * Created by Anton Nashatyrev on 15.10.2015.
  */
-public class FrameCodecHandler extends ByteToMessageCodec<FrameCodec.Frame> {
+public class FrameCodecHandler extends NettiByteToMessageCodec<FrameCodec.Frame> {
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
