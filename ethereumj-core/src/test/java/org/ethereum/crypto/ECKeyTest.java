@@ -2,6 +2,7 @@ package org.ethereum.crypto;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey.ECDSASignature;
+import org.ethereum.crypto.jce.SpongyCastleProvider;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -15,12 +16,18 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 
 import java.math.BigInteger;
 
+import java.security.KeyPairGenerator;
+import java.security.Provider;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.Signature;
 import java.security.SignatureException;
 
 import java.util.List;
@@ -32,6 +39,8 @@ import static org.junit.Assert.*;
 
 public class ECKeyTest {
     private static final Logger log = LoggerFactory.getLogger(ECKeyTest.class);
+
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     private String privString = "3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4";
     private BigInteger privateKey = new BigInteger(Hex.decode(privString));
@@ -47,7 +56,7 @@ public class ECKeyTest {
 
     @Test
     public void testHashCode() {
-        Assert.assertEquals(1866897155, ECKey.fromPrivate(privateKey).hashCode());
+        Assert.assertEquals(1866897156, ECKey.fromPrivate(privateKey).hashCode());
     }
 
     @Test
@@ -70,8 +79,17 @@ public class ECKeyTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testPrivatePublicKeyBytesNoArg() {
-        new ECKey(null, null);
+        new ECKey((BigInteger) null, null);
         fail("Expecting an IllegalArgumentException for using only null-parameters");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidPrivateKey() throws Exception {
+        new ECKey(
+            Security.getProvider("SunEC"),
+            KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate(),
+            ECKey.fromPublicOnly(pubKey).getPubKeyPoint());
+        fail("Expecting an IllegalArgumentException for using an non EC private key");
     }
 
     @Test
@@ -82,6 +100,36 @@ public class ECKeyTest {
         assertArrayEquals(key.getPubKey(), pubKey);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testSignIncorrectInputSize() {
+        ECKey key = new ECKey();
+        String message = "The quick brown fox jumps over the lazy dog.";
+        ECDSASignature sig = key.doSign(message.getBytes());
+        fail("Expecting an IllegalArgumentException for a non 32-byte input");
+    }
+
+    @Test(expected = ECKey.MissingPrivateKeyException.class)
+    public void testSignWithPubKeyOnly() {
+        ECKey key = ECKey.fromPublicOnly(pubKey);
+        String message = "The quick brown fox jumps over the lazy dog.";
+        byte[] input = HashUtil.sha3(message.getBytes());
+        ECDSASignature sig = key.doSign(input);
+        fail("Expecting an MissingPrivateKeyException for a public only ECKey");
+    }
+
+    @Test(expected = SignatureException.class)
+    public void testBadBase64Sig() throws SignatureException {
+        byte[] messageHash = new byte[32];
+        ECKey.signatureToKey(messageHash, "This is not valid Base64!");
+        fail("Expecting a SignatureException for invalid Base64");
+    }
+
+    @Test(expected = SignatureException.class)
+    public void testInvalidSignatureLength() throws SignatureException {
+        byte[] messageHash = new byte[32];
+        ECKey.signatureToKey(messageHash, "abcdefg");
+        fail("Expecting a SignatureException for invalid signature length");
+    }
 
     @Test
     public void testPublicKeyFromPrivate() {
@@ -193,8 +241,29 @@ public class ECKeyTest {
     public void testSignVerify() {
         ECKey key = ECKey.fromPrivate(privateKey);
         String message = "This is an example of a signed message.";
-        ECDSASignature output = key.doSign(message.getBytes());
-        assertTrue(key.verify(message.getBytes(), output));
+        byte[] input = HashUtil.sha3(message.getBytes());
+        ECDSASignature sig = key.sign(input);
+        assertTrue(sig.validateComponents());
+        assertTrue(key.verify(input, sig));
+    }
+
+    private void testProviderRoundTrip(Provider provider) throws Exception {
+        ECKey key = new ECKey(provider, secureRandom);
+        String message = "The quick brown fox jumps over the lazy dog.";
+        byte[] input = HashUtil.sha3(message.getBytes());
+        ECDSASignature sig = key.sign(input);
+        assertTrue(sig.validateComponents());
+        assertTrue(key.verify(input, sig));
+    }
+
+    @Test
+    public void testSunECRoundTrip() throws Exception {
+        testProviderRoundTrip(Security.getProvider("SunEC"));
+    }
+
+    @Test
+    public void testSpongyCastleRoundTrip() throws Exception {
+        testProviderRoundTrip(SpongyCastleProvider.getInstance());
     }
 
     @Test
