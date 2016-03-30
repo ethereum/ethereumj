@@ -21,6 +21,7 @@ import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.*;
 import org.spongycastle.crypto.parsers.ECIESPublicKeyParser;
+import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -205,8 +206,9 @@ public class CryptoTest {
         ECKey key = ECKey.fromPrivate(Hex.decode("a4627abc2a3c25315bff732cb22bc128f203912dd2a840f31e66efb27a47d2b1"));
 
         String address = Hex.toHexString(key.getAddress());
-        String pubkey  = Hex.toHexString(key.getPubKeyPoint().getXCoord().getEncoded()) +  // X cord
-                         Hex.toHexString(key.getPubKeyPoint().getYCoord().getEncoded());   // Y cord
+        ECPoint pubPoint = key.getPubKeyPoint().normalize();
+        String pubkey  = Hex.toHexString(pubPoint.getAffineXCoord().getEncoded()) +  // X cord
+                         Hex.toHexString(pubPoint.getAffineYCoord().getEncoded());   // Y cord
 
         log.info("address: " + address);
         log.info("pubkey: " + pubkey);
