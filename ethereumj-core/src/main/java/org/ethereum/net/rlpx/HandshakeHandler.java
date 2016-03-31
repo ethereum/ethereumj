@@ -319,7 +319,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                 loggerNet.info("Handshake failed: " + ctx.channel().remoteAddress() + "(" + cause.getMessage() + ")");
                 loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress(), cause);
             } else {
-                loggerNet.error("Handshake failed: ", cause);
+                loggerNet.warn("Handshake failed: ", cause);
             }
         }
         ctx.close();

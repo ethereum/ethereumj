@@ -454,7 +454,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
 
         if (!receiptHash.equals(receiptListHash)) {
-            logger.error("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
             //return false;
         }
 
@@ -462,7 +462,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
 
         if (!logBloomHash.equals(logBloomListHash)) {
-            logger.error("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
             //track.rollback();
             //return;
         }
@@ -572,7 +572,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
 
             if (!trieHash.equals(trieListHash)) {
-                logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+                logger.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
 
                 //   FIXME: temporary comment out tx.trie validation
 //              return false;
@@ -599,7 +599,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                     curNonce.put(key, expectedNonce.add(ONE));
                     BigInteger txNonce = new BigInteger(1, tx.getNonce());
                     if (!expectedNonce.equals(txNonce)) {
-                        logger.error("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
+                        logger.warn("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
                                 txNonce, expectedNonce, parentRepo.getNonce(txSender), tx);
                         return false;
                     }
@@ -615,13 +615,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String unclesListHash = Hex.toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
 
         if (!unclesHash.equals(unclesListHash)) {
-            logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+            logger.warn("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
             return false;
         }
 
 
         if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
-            logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
+            logger.warn("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
             return false;
         }
 
@@ -637,24 +637,24 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
             boolean isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
             if (!isValid) {
-                logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
+                logger.warn("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
                 return false;
             }
 
             ByteArrayWrapper uncleHash = new ByteArrayWrapper(uncle.getHash());
             if (ancestors.contains(uncleHash)) {
-                logger.error("Uncle is direct ancestor: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle is direct ancestor: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
 
             if (usedUncles.contains(uncleHash)) {
-                logger.error("Uncle is not unique: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle is not unique: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
 
             Block uncleParent = blockStore.getBlockByHash(uncle.getParentHash());
             if (!ancestors.contains(new ByteArrayWrapper(uncleParent.getHash()))) {
-                logger.error("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
         }

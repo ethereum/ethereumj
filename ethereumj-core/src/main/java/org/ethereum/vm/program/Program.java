@@ -1082,8 +1082,20 @@ public class Program {
         void output(String out);
     }
 
+    /**
+     * Denotes problem when executing Ethereum bytecode.
+     * From blockchain and peer perspective this is quite normal situation
+     * and doesn't mean exceptional situation in terms of the program execution
+     */
     @SuppressWarnings("serial")
-    public static class OutOfGasException extends RuntimeException {
+    public static class BytecodeExecutionException extends RuntimeException {
+        public BytecodeExecutionException(String message) {
+            super(message);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public static class OutOfGasException extends BytecodeExecutionException {
 
         public OutOfGasException(String message, Object... args) {
             super(format(message, args));
@@ -1091,7 +1103,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class IllegalOperationException extends RuntimeException {
+    public static class IllegalOperationException extends BytecodeExecutionException {
 
         public IllegalOperationException(String message, Object... args) {
             super(format(message, args));
@@ -1099,7 +1111,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class BadJumpDestinationException extends RuntimeException {
+    public static class BadJumpDestinationException extends BytecodeExecutionException {
 
         public BadJumpDestinationException(String message, Object... args) {
             super(format(message, args));
@@ -1107,7 +1119,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class StackTooSmallException extends RuntimeException {
+    public static class StackTooSmallException extends BytecodeExecutionException {
 
         public StackTooSmallException(String message, Object... args) {
             super(format(message, args));
@@ -1151,7 +1163,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class StackTooLargeException extends RuntimeException {
+    public class StackTooLargeException extends BytecodeExecutionException {
         public StackTooLargeException(String message) {
             super(message);
         }

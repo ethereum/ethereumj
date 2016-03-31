@@ -66,7 +66,7 @@ public class FrameCodecHandler extends NettiByteToMessageCodec<FrameCodec.Frame>
                 loggerNet.info("FrameCodec failed: " + ctx.channel().remoteAddress() + "(" + cause.getMessage() + ")");
                 loggerNet.debug("FrameCodec failed: " + ctx.channel().remoteAddress(), cause);
             } else {
-                loggerNet.error("FrameCodec failed: ", cause);
+                loggerNet.warn("FrameCodec failed: ", cause);
             }
         }
         ctx.close();

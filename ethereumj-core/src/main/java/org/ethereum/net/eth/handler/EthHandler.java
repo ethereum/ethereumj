@@ -86,7 +86,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error("Eth handling failed", cause);
+        logger.warn("Eth handling failed", cause);
         ctx.close();
     }
 
