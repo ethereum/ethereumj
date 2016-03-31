@@ -88,16 +88,6 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
  * be reversed to find the public key used to calculate it. This can be convenient when you have a message and a
  * signature and want to find out who signed it, rather than requiring the user to provide the expected identity.</p>
  *
- * <p>A key can be <i>compressed</i> or <i>uncompressed</i>. This refers to whether the public key is represented
- * when encoded into bytes as an (x, y) coordinate on the elliptic curve, or whether it's represented as just an X
- * co-ordinate and an extra byte that carries a sign bit. With the latter form the Y coordinate can be calculated
- * dynamically, however, <b>because the binary serialization is different the address of a key changes if its
- * compression status is changed</b>. If you deviate from the defaults it's important to understand this: money sent
- * to a compressed version of the key will have a different address to the same key in uncompressed form. Whether
- * a public key is compressed or not is recorded in the SEC binary serialisation format, and preserved in a flag in
- * this class so round-tripping preserves state. Unless you're working with old software or doing unusual things, you
- * can usually ignore the compressed/uncompressed distinction.</p>
- *
  * This code is borrowed from the bitcoinj project and altered to fit Ethereum.<br>
  * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">
  * bitcoinj on GitHub</a>.
@@ -111,8 +101,12 @@ public class ECKey implements Serializable {
     public static final ECDomainParameters CURVE;
 
     /**
-     * Equal to CURVE.getN().shiftRight(1), used for canonicalising the S value of a signature. If you aren't
-     * sure what this is about, you can ignore it.
+     * Equal to CURVE.getN().shiftRight(1), used for canonicalising the S value of a signature.
+     * ECDSA signatures are mutable in the sense that for a given (R, S) pair,
+     * then both (R, S) and (R, N - S mod N) are valid signatures.
+     * Canonical signatures are those where 1 <= S <= N/2
+     *
+     * See https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki#Low_S_values_in_signatures
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
@@ -145,11 +139,15 @@ public class ECKey implements Serializable {
 
     /**
      * Generates an entirely new keypair.
+     *
+     * BouncyCastle will be used as the Java Security Provider
      */
     public ECKey() {
         this(secureRandom);
     }
 
+    /* Convert a Java JCE ECPublicKey into a BouncyCastle ECPoint
+     */
     private static ECPoint extractPublicKey(final ECPublicKey ecPublicKey) {
       final java.security.spec.ECPoint publicPointW = ecPublicKey.getW();
       final BigInteger xCoord = publicPointW.getAffineX();
@@ -158,6 +156,11 @@ public class ECKey implements Serializable {
       return CURVE.getCurve().createPoint(xCoord, yCoord);
     }
 
+    /**
+     * Generate a new keypair using the given Java Security Provider.
+     *
+     * All private key operations will use the provider.
+     */
     public ECKey(Provider provider, SecureRandom secureRandom) {
         this.provider = provider;
 
@@ -181,19 +184,29 @@ public class ECKey implements Serializable {
     /**
      * Generates an entirely new keypair with the given {@link SecureRandom} object.
      *
+     * BouncyCastle will be used as the Java Security Provider
+     *
      * @param secureRandom -
      */
     public ECKey(SecureRandom secureRandom) {
         this(SpongyCastleProvider.getInstance(), secureRandom);
     }
 
+    /* Test if a generic private key is an EC private key
+     *
+     * it is not sufficient to check that privKey is a subtype of ECPrivateKey
+     * as the SunPKCS11 Provider will return a generic PrivateKey instance
+     * a fallback that covers this case is to check the key algorithm
+     */
     private static boolean isECPrivateKey(PrivateKey privKey) {
-        // it is not sufficient to check that privKey is a subtype of ECPrivateKey
-        // as the SunPKCS11 Provider will return a generic PrivateKey instance
-        // a fallback that covers this case is to check the key algorithm
         return privKey instanceof ECPrivateKey || privKey.getAlgorithm().equals("EC");
     }
 
+    /**
+     * Pair a private key with a public EC point.
+     *
+     * All private key operations will use the provider.
+     */
     public ECKey(Provider provider, @Nullable PrivateKey privKey, ECPoint pub) {
         this.provider = provider;
 
@@ -213,6 +226,8 @@ public class ECKey implements Serializable {
         }
     }
 
+    /* Convert a BigInteger into a PrivateKey object
+     */
     private static PrivateKey privateKeyFromBigInteger(BigInteger priv) {
         if (priv == null) {
             return null;
@@ -230,6 +245,11 @@ public class ECKey implements Serializable {
         }
     }
 
+    /**
+     * Pair a private key integer with a public EC point
+     *
+     * BouncyCastle will be used as the Java Security Provider
+     */
     public ECKey(@Nullable BigInteger priv, ECPoint pub) {
         this(
             SpongyCastleProvider.getInstance(),
@@ -245,6 +265,7 @@ public class ECKey implements Serializable {
      * @param uncompressed -
      *
      * @return -
+     * @deprecated per-point compression property will be removed in Bouncy Castle
      */
     public static ECPoint compressPoint(ECPoint uncompressed) {
         return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
@@ -257,6 +278,7 @@ public class ECKey implements Serializable {
      * @param compressed -
      *
      * @return  -
+     * @deprecated per-point compression property will be removed in Bouncy Castle
      */
     public static ECPoint decompressPoint(ECPoint compressed) {
         return CURVE.getCurve().decodePoint(compressed.getEncoded(false));
@@ -341,12 +363,23 @@ public class ECKey implements Serializable {
      * never need this: it's for specialised scenarios or when backwards compatibility in encoded form is necessary.
      *
      * @return  -
+     * @deprecated per-point compression property will be removed in Bouncy Castle
      */
     public ECKey decompress() {
         if (!pub.isCompressed())
             return this;
         else
             return new ECKey(this.provider, this.privKey, decompressPoint(pub));
+    }
+
+    /**
+     * @deprecated per-point compression property will be removed in Bouncy Castle
+     */
+    public ECKey compress() {
+        if (pub.isCompressed())
+            return this;
+        else
+            return new ECKey(this.provider, this.privKey, compressPoint(pub));
     }
 
     /**
@@ -383,16 +416,49 @@ public class ECKey implements Serializable {
     }
 
     /**
-     * Gets the hash160 form of the public key (as seen in addresses).
+     * Compute an address from an encoded public key.
      *
-     * @return -
+     * @param pubBytes an encoded (uncompressed) public key
+     * @return 20-byte address
+     */
+    public static byte[] computeAddress(byte[] pubBytes) {
+        return HashUtil.sha3omit12(
+            Arrays.copyOfRange(pubBytes, 1, pubBytes.length));
+    }
+
+    /**
+     * Compute an address from a public point.
+     *
+     * @param pubPoint a public point
+     * @return 20-byte address
+     */
+    public static byte[] computeAddress(ECPoint pubPoint) {
+        return computeAddress(pubPoint.getEncoded(/* uncompressed */ false));
+    }
+
+    /**
+     * Gets the address form of the public key.
+     *
+     * @return 20-byte address
      */
     public byte[] getAddress() {
         if (pubKeyHash == null) {
-            byte[] pubBytes = this.pub.getEncoded(false);
-            pubKeyHash = HashUtil.sha3omit12(Arrays.copyOfRange(pubBytes, 1, pubBytes.length));
+            pubKeyHash = computeAddress(this.pub);
         }
         return pubKeyHash;
+    }
+
+    /**
+     * Compute the encoded X, Y coordinates of a public point.
+     *
+     * This is the encoded public key without the leading byte.
+     *
+     * @param pubPoint a public point
+     * @return 64-byte X,Y point pair
+     */
+    public static byte[] pubBytesWithoutFormat(ECPoint pubPoint) {
+        final byte[] pubBytes = pubPoint.getEncoded(/* uncompressed */ false);
+        return Arrays.copyOfRange(pubBytes, 1, pubBytes.length);
     }
 
     /**
@@ -400,21 +466,31 @@ public class ECKey implements Serializable {
      */
     public byte[] getNodeId() {
         if (nodeId == null) {
-            byte[] nodeIdWithFormat = getPubKey();
-            nodeId = new byte[nodeIdWithFormat.length - 1];
-            System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+            nodeId  = pubBytesWithoutFormat(this.pub);
         }
         return nodeId;
     }
 
     /**
-     * Gets the raw public key value. This appears in transaction scriptSigs. Note that this is <b>not</b> the same
-     * as the pubKeyHash/address.
+     * Recover the public key from an encoded node id.
      *
-     * @return  -
+     * @param nodeId a 64-byte X,Y point pair
+     */
+    public static ECKey fromNodeId(byte[] nodeId) {
+        check(nodeId.length == 64, "Expected a 64 byte node id");
+        byte[] pubBytes = new byte[65];
+        System.arraycopy(nodeId, 0, pubBytes, 1, nodeId.length);
+        pubBytes[0] = 0x04; // uncompressed
+        return ECKey.fromPublicOnly(pubBytes);
+    }
+
+    /**
+     * Gets the encoded public key value.
+     *
+     * @return 65-byte encoded public key
      */
     public byte[] getPubKey() {
-        return pub.getEncoded();
+        return pub.getEncoded(/* compressed */ false);
     }
 
     /**
@@ -665,16 +741,17 @@ public class ECKey implements Serializable {
         ECDSASignature sig = doSign(messageHash);
         // Now we have to work backwards to figure out the recId needed to recover the signature.
         int recId = -1;
+        byte[] thisKey = this.pub.getEncoded(/* compressed */ false);
         for (int i = 0; i < 4; i++) {
-            ECKey k = ECKey.recoverFromSignature(i, sig, messageHash, isCompressed());
-            if (k != null && k.pub.equals(pub)) {
+            byte[] k = ECKey.recoverPubBytesFromSignature(i, sig, messageHash);
+            if (k != null && Arrays.equals(k, thisKey)) {
                 recId = i;
                 break;
             }
         }
         if (recId == -1)
             throw new RuntimeException("Could not construct a recoverable key. This should never happen.");
-        sig.v = (byte) (recId + 27 + (isCompressed() ? 4 : 0));
+        sig.v = (byte) (recId + 27);
         return sig;
     }
 
@@ -690,7 +767,7 @@ public class ECKey implements Serializable {
      * @return -
      * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
      */
-    public static ECKey signatureToKey(byte[] messageHash, String signatureBase64) throws SignatureException {
+    public static byte[] signatureToKeyBytes(byte[] messageHash, String signatureBase64) throws SignatureException {
         byte[] signatureEncoded;
         try {
             signatureEncoded = Base64.decode(signatureBase64);
@@ -701,24 +778,76 @@ public class ECKey implements Serializable {
         // Parse the signature bytes into r/s and the selector value.
         if (signatureEncoded.length < 65)
             throw new SignatureException("Signature truncated, expected 65 bytes and got " + signatureEncoded.length);
-        int header = signatureEncoded[0] & 0xFF;
+
+        return signatureToKeyBytes(
+            messageHash,
+            ECDSASignature.fromComponents(
+                Arrays.copyOfRange(signatureEncoded, 1, 33),
+                Arrays.copyOfRange(signatureEncoded, 33, 65),
+                (byte) (signatureEncoded[0] & 0xFF)));
+    }
+
+    public static byte[] signatureToKeyBytes(byte[] messageHash, ECDSASignature sig) throws SignatureException {
+        check(messageHash.length == 32, "messageHash argument has length " + messageHash.length);
+        int header = sig.v;
         // The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
         //                  0x1D = second key with even y, 0x1E = second key with odd y
         if (header < 27 || header > 34)
             throw new SignatureException("Header byte out of range: " + header);
-        BigInteger r = new BigInteger(1, Arrays.copyOfRange(signatureEncoded, 1, 33));
-        BigInteger s = new BigInteger(1, Arrays.copyOfRange(signatureEncoded, 33, 65));
-        ECDSASignature sig = new ECDSASignature(r, s);
-        boolean compressed = false;
         if (header >= 31) {
-            compressed = true;
             header -= 4;
         }
         int recId = header - 27;
-        ECKey key = ECKey.recoverFromSignature(recId, sig, messageHash, compressed);
+        byte[] key = ECKey.recoverPubBytesFromSignature(recId, sig, messageHash);
         if (key == null)
             throw new SignatureException("Could not recover public key from signature");
         return key;
+    }
+
+    /**
+     * Compute the address of the key that signed the given signature.
+     *
+     * @param messageHash 32-byte hash of message
+     * @param signatureBase64 Base-64 encoded signature
+     * @return 20-byte address
+     */
+    public static byte[] signatureToAddress(byte[] messageHash, String signatureBase64) throws SignatureException {
+        return computeAddress(signatureToKeyBytes(messageHash, signatureBase64));
+    }
+
+    /**
+     * Compute the address of the key that signed the given signature.
+     *
+     * @param messageHash 32-byte hash of message
+     * @param sig -
+     * @return 20-byte address
+     */
+    public static byte[] signatureToAddress(byte[] messageHash, ECDSASignature sig) throws SignatureException {
+        return computeAddress(signatureToKeyBytes(messageHash, sig));
+    }
+
+    /**
+     * Compute the key that signed the given signature.
+     *
+     * @param messageHash 32-byte hash of message
+     * @param signatureBase64 Base-64 encoded signature
+     * @return ECKey
+     */
+    public static ECKey signatureToKey(byte[] messageHash, String signatureBase64) throws SignatureException {
+        final byte[] keyBytes = signatureToKeyBytes(messageHash, signatureBase64);
+        return ECKey.fromPublicOnly(keyBytes);
+    }
+
+    /**
+     * Compute the key that signed the given signature.
+     *
+     * @param messageHash 32-byte hash of message
+     * @param sig -
+     * @return ECKey
+     */
+    public static ECKey signatureToKey(byte[] messageHash, ECDSASignature sig) throws SignatureException {
+        final byte[] keyBytes = signatureToKeyBytes(messageHash, sig);
+        return ECKey.fromPublicOnly(keyBytes);
     }
 
 
@@ -804,7 +933,7 @@ public class ECKey implements Serializable {
      * @return  -
      */
     public static boolean verify(byte[] data, byte[] signature, byte[] pub) {
-        return verify(data, signature, pub);
+        return verify(data, ECDSASignature.decodeFromDER(signature), pub);
     }
 
     /**
@@ -837,7 +966,7 @@ public class ECKey implements Serializable {
      * @return -
      */
     public boolean isPubKeyCanonical() {
-        return isPubKeyCanonical(pub.getEncoded());
+        return isPubKeyCanonical(pub.getEncoded(/* uncompressed */ false));
     }
 
 
@@ -877,11 +1006,10 @@ public class ECKey implements Serializable {
      * @param recId Which possible key to recover.
      * @param sig the R and S components of the signature, wrapped.
      * @param messageHash Hash of the data that was signed.
-     * @param compressed Whether or not the original pubkey was compressed.
-     * @return An ECKey containing only the public part, or null if recovery wasn't possible.
+     * @return 65-byte encoded public key
      */
     @Nullable
-    public static ECKey recoverFromSignature(int recId, ECDSASignature sig, byte[] messageHash, boolean compressed) {
+    public static byte[] recoverPubBytesFromSignature(int recId, ECDSASignature sig, byte[] messageHash) {
         check(recId >= 0, "recId must be positive");
         check(sig.r.signum() >= 0, "r must be positive");
         check(sig.s.signum() >= 0, "s must be positive");
@@ -928,7 +1056,41 @@ public class ECKey implements Serializable {
         BigInteger srInv = rInv.multiply(sig.s).mod(n);
         BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
         ECPoint.Fp q = (ECPoint.Fp) ECAlgorithms.sumOfTwoMultiplies(CURVE.getG(), eInvrInv, R, srInv);
-        return ECKey.fromPublicOnly(q.getEncoded(compressed));
+        return q.getEncoded(/* compressed */ false);
+    }
+
+    /**
+     *
+     * @param recId Which possible key to recover.
+     * @param sig the R and S components of the signature, wrapped.
+     * @param messageHash Hash of the data that was signed.
+     * @return 20-byte address
+     */
+    @Nullable
+    public static byte[] recoverAddressFromSignature(int recId, ECDSASignature sig, byte[] messageHash) {
+        final byte[] pubBytes = recoverPubBytesFromSignature(recId, sig, messageHash);
+        if (pubBytes == null) {
+            return null;
+        } else {
+            return computeAddress(pubBytes);
+        }
+    }
+
+    /**
+     *
+     * @param recId Which possible key to recover.
+     * @param sig the R and S components of the signature, wrapped.
+     * @param messageHash Hash of the data that was signed.
+     * @return ECKey
+     */
+    @Nullable
+    public static ECKey recoverFromSignature(int recId, ECDSASignature sig, byte[] messageHash) {
+        final byte[] pubBytes = recoverPubBytesFromSignature(recId, sig, messageHash);
+        if (pubBytes == null) {
+            return null;
+        } else {
+            return ECKey.fromPublicOnly(pubBytes);
+        }
     }
 
 
@@ -977,10 +1139,7 @@ public class ECKey implements Serializable {
 
     @Override
     public int hashCode() {
-        // Public keys are random already so we can just use a part of them as the hashcode. Read from the start to
-        // avoid picking up the type code (compressed vs uncompressed) which is tacked on the end.
-        byte[] bits = getPubKey();
-        return (bits[0] & 0xFF) | ((bits[1] & 0xFF) << 8) | ((bits[2] & 0xFF) << 16) | ((bits[3] & 0xFF) << 24);
+        return Arrays.hashCode(getPubKey());
     }
 
 

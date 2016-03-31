@@ -142,7 +142,7 @@ public class EIP8HandshakeTest {
 
         AuthInitiateMessageV4 initiate = handshakerB.decryptAuthInitiateV4(authInitiateData, keyB);
         AuthResponseMessageV4 response = handshakerB.makeAuthInitiateV4(initiate, keyB);
-        assertArrayEquals(keyA.getPubKeyPoint().getEncoded(false), handshakerB.getRemotePublicKey().getEncoded(false));
+        assertArrayEquals(keyA.getPubKey(), handshakerB.getRemotePublicKey().getEncoded(false));
         handshakerB.agreeSecret(authInitiateData, authResponseData);
 
         assertArrayEquals(decode("80e8632c05fed6fc2a13b0f8d31a3cf645366239170ea067065aba8e28bac487"), handshakerB.getSecrets().aes);
@@ -160,12 +160,12 @@ public class EIP8HandshakeTest {
         AuthResponseMessageV4 msg2 = handshakerA.decryptAuthResponseV4(encrypted, keyA);
         assertEquals(4, msg2.version);
         assertArrayEquals(nonceB, msg2.nonce);
-        assertArrayEquals(ephemeralKeyB.getPubKeyPoint().getEncoded(false), msg2.ephemeralPublicKey.getEncoded(false));
+        assertArrayEquals(ephemeralKeyB.getPubKey(), msg2.ephemeralPublicKey.getEncoded(false));
 
         AuthResponseMessageV4 msg3 = handshakerA.decryptAuthResponseV4(authResponseData, keyA);
         assertEquals(4, msg3.version);
         assertArrayEquals(nonceB, msg3.nonce);
-        assertArrayEquals(ephemeralKeyB.getPubKeyPoint().getEncoded(false), msg3.ephemeralPublicKey.getEncoded(false));
+        assertArrayEquals(ephemeralKeyB.getPubKey(), msg3.ephemeralPublicKey.getEncoded(false));
     }
 
     // AuthResponse EIP-8 format with version 57 and 3 additional list elements (sent from B to A)

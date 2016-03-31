@@ -56,7 +56,7 @@ public class ECKeyTest {
 
     @Test
     public void testHashCode() {
-        Assert.assertEquals(1967589636, ECKey.fromPrivate(privateKey).hashCode());
+        Assert.assertEquals(-351262686, ECKey.fromPrivate(privateKey).hashCode());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ECKeyTest {
 
     @Test
     public void testFromPrivateKey() {
-        ECKey key = ECKey.fromPrivate(privateKey).decompress();
+        ECKey key = ECKey.fromPrivate(privateKey);
         assertTrue(key.isPubKeyCanonical());
         assertTrue(key.hasPrivKey());
         assertArrayEquals(pubKey, key.getPubKey());
@@ -157,8 +157,7 @@ public class ECKeyTest {
 
     @Test
     public void testEthereumSign() throws IOException {
-        // TODO: Understand why key must be decompressed for this to work
-        ECKey key = ECKey.fromPrivate(privateKey).decompress();
+        ECKey key = ECKey.fromPrivate(privateKey);
         System.out.println("Secret\t: " + Hex.toHexString(key.getPrivKeyBytes()));
         System.out.println("Pubkey\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Data\t: " + exampleMessage);
@@ -184,12 +183,25 @@ public class ECKeyTest {
         BigInteger s = new BigInteger("6ba4c2874299a55ad947dbc98a25ee895aabf6b625c26c435e84bfd70edf2f69", 16);
         ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 0x1b);
         byte[] rawtx = Hex.decode("f82804881bc16d674ec8000094cd2a3d9f938e13cd947ec05abc7fe734df8dd8268609184e72a0006480");
+        byte[] rawHash = HashUtil.sha3(rawtx);
+        byte[] address = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
         try {
-            ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), sig.toBase64());
+            ECKey key = ECKey.signatureToKey(rawHash, sig);
+
             System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
             System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
-            assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(key.getAddress()));
-            key.verify(HashUtil.sha3(rawtx), sig);
+
+            assertEquals(key, ECKey.signatureToKey(rawHash, sig.toBase64()));
+            assertEquals(key, ECKey.recoverFromSignature(0, sig, rawHash));
+            assertArrayEquals(key.getPubKey(), ECKey.recoverPubBytesFromSignature(0, sig, rawHash));
+
+
+            assertArrayEquals(address, key.getAddress());
+            assertArrayEquals(address, ECKey.signatureToAddress(rawHash, sig));
+            assertArrayEquals(address, ECKey.signatureToAddress(rawHash, sig.toBase64()));
+            assertArrayEquals(address, ECKey.recoverAddressFromSignature(0, sig, rawHash));
+
+            assertTrue(key.verify(rawHash, sig));
         } catch (SignatureException e) {
             fail();
         }
@@ -201,7 +213,7 @@ public class ECKeyTest {
         byte[] rawtx = Hex.decode("f86e80893635c9adc5dea000008609184e72a00082109f9479b08ad8787060333663d19704909ee7b1903e58801ba0899b92d0c76cbf18df24394996beef19c050baa9823b4a9828cd9b260c97112ea0c9e62eb4cf0a9d95ca35c8830afac567619d6b3ebee841a3c8be61d35acd8049");
 
         Transaction tx = new Transaction(rawtx);
-        ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), tx.getSignature().toBase64());
+        ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), tx.getSignature());
 
         System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
@@ -320,7 +332,7 @@ public class ECKeyTest {
         key = ECKey.fromPublicOnly(key.getPubKeyPoint());
         boolean found = false;
         for (int i = 0; i < 4; i++) {
-            ECKey key2 = ECKey.recoverFromSignature(i, sig, hash, true);
+            ECKey key2 = ECKey.recoverFromSignature(i, sig, hash);
             checkNotNull(key2);
             if (key.equals(key2)) {
                 found = true;
@@ -362,5 +374,12 @@ public class ECKeyTest {
         ECKey key = ECKey.fromPrivate(Hex.decode("abb51256c1324a1350598653f46aa3ad693ac3cf5d05f36eba3f495a1f51590f"));
         byte[] payload = key.decryptAES(Hex.decode("84a727bc81fa4b13947dc9728b88fd08"));
         System.out.println(Hex.toHexString(payload));
+    }
+
+    @Test
+    public void testNodeId() {
+        ECKey key = ECKey.fromPublicOnly(pubKey);
+
+        assertEquals(key, ECKey.fromNodeId(key.getNodeId()));
     }
 }

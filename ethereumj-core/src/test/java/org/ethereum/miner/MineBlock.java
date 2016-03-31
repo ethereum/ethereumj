@@ -53,7 +53,7 @@ public class MineBlock {
         byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
         Transaction tx = new Transaction(new byte[] {0}, new byte[] {1}, ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[] {77}, new byte[0]);
-        tx.sign(senderKey.getPrivKeyBytes());
+        tx.sign(senderKey);
         pendingTx.add(tx);
 
         Block b = blockchain.createNewBlock(parent, pendingTx, Collections.EMPTY_LIST);

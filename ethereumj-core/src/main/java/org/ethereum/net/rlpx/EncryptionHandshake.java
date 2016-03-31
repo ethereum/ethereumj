@@ -133,7 +133,7 @@ public class EncryptionHandshake {
         byte[] signed = xor(token, initiatorNonce);
 
         ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
-                initiate.signature, signed, false);
+                initiate.signature, signed);
         if (ephemeral == null) {
             throw new RuntimeException("failed to recover signatue from message");
         }
@@ -188,7 +188,7 @@ public class EncryptionHandshake {
         byte[] signed = xor(token, nonce);
         message.signature = ephemeralKey.sign(signed);
         message.isTokenUsed = isToken;
-        message.ephemeralPublicHash = sha3(ephemeralKey.getPubKeyPoint().getEncoded(false), 1, 64);
+        message.ephemeralPublicHash = sha3(ephemeralKey.getPubKey(), 1, 64);
         message.publicKey = key.getPubKeyPoint();
         message.nonce = initiatorNonce;
         return message;
@@ -293,7 +293,7 @@ public class EncryptionHandshake {
         byte[] signed = xor(token, initiatorNonce);
 
         ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
-                initiate.signature, signed, false);
+                initiate.signature, signed);
         if (ephemeral == null) {
             throw new RuntimeException("failed to recover signatue from message");
         }
