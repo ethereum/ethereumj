@@ -404,6 +404,8 @@ public class Eth62 extends EthHandler {
 
         List<Block> blocks = validateAndMerge(msg);
 
+        // validateAndMerge removes merged headers
+        // others are returned back
         returnHeaders();
 
         if (blocks == null) {
@@ -463,6 +465,8 @@ public class Eth62 extends EthHandler {
         if (syncState == newState) {
             return;
         }
+
+        returnHeaders();
 
         logger.trace(
                 "Peer {}: changing state from {} to {}",
