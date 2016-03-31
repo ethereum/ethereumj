@@ -17,6 +17,7 @@ package org.ethereum.crypto;
 
 import org.ethereum.config.Constants;
 import org.ethereum.crypto.jce.ECAlgorithmParameters;
+import org.ethereum.crypto.jce.ECKeyAgreement;
 import org.ethereum.crypto.jce.ECKeyFactory;
 import org.ethereum.crypto.jce.ECKeyPairGenerator;
 import org.ethereum.crypto.jce.ECSignatureFactory;
@@ -28,6 +29,7 @@ import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.spongycastle.jce.spec.ECParameterSpec;
 import org.spongycastle.jce.spec.ECPrivateKeySpec;
+import org.spongycastle.jce.spec.ECPublicKeySpec;
 
 import org.spongycastle.asn1.ASN1InputStream;
 import org.spongycastle.asn1.ASN1Integer;
@@ -35,6 +37,7 @@ import org.spongycastle.asn1.DLSequence;
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
+import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
 import org.spongycastle.crypto.AsymmetricCipherKeyPair;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
@@ -74,6 +77,8 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
+import javax.crypto.KeyAgreement;
+
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
@@ -99,6 +104,7 @@ public class ECKey implements Serializable {
      * The parameters of the secp256k1 curve that Ethereum uses.
      */
     public static final ECDomainParameters CURVE;
+    public static final ECParameterSpec CURVE_SPEC;
 
     /**
      * Equal to CURVE.getN().shiftRight(1), used for canonicalising the S value of a signature.
@@ -117,6 +123,7 @@ public class ECKey implements Serializable {
         // All clients must agree on the curve to use by agreement. Ethereum uses secp256k1.
         X9ECParameters params = SECNamedCurves.getByName("secp256k1");
         CURVE = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
+        CURVE_SPEC = new ECParameterSpec(params.getCurve(), params.getG(), params.getN(), params.getH());
         HALF_CURVE_ORDER = params.getN().shiftRight(1);
         secureRandom = new SecureRandom();
     }
@@ -235,10 +242,7 @@ public class ECKey implements Serializable {
             try {
                 return ECKeyFactory
                     .getInstance(SpongyCastleProvider.getInstance())
-                    .generatePrivate(
-                        new ECPrivateKeySpec(
-                            priv,
-                            new ECParameterSpec(CURVE.getCurve(), CURVE.getG(), CURVE.getN(), CURVE.getH())));
+                    .generatePrivate(new ECPrivateKeySpec(priv, CURVE_SPEC));
             } catch (InvalidKeySpecException ex) {
                 throw new AssertionError("Assumed correct key spec statically");
             }
@@ -850,6 +854,28 @@ public class ECKey implements Serializable {
         return ECKey.fromPublicOnly(keyBytes);
     }
 
+
+    public BigInteger keyAgreement(ECPoint otherParty) {
+        if (privKey == null) {
+            throw new MissingPrivateKeyException();
+        } else if (privKey instanceof BCECPrivateKey) {
+            final ECDHBasicAgreement agreement = new ECDHBasicAgreement();
+            agreement.init(new ECPrivateKeyParameters(((BCECPrivateKey) privKey).getD(), CURVE));
+            return agreement.calculateAgreement(new ECPublicKeyParameters(otherParty, CURVE));
+        } else {
+            try {
+                final KeyAgreement agreement = ECKeyAgreement.getInstance(this.provider);
+                agreement.init(this.privKey);
+                agreement.doPhase(
+                    ECKeyFactory.getInstance(this.provider)
+                        .generatePublic(new ECPublicKeySpec(otherParty, CURVE_SPEC)),
+                        /* lastPhase */ true);
+                return new BigInteger(1, agreement.generateSecret());
+            } catch (IllegalStateException | InvalidKeyException | InvalidKeySpecException ex) {
+                throw new RuntimeException("ECDH key agreement failure", ex);
+            }
+        }
+    }
 
     /**
      * Decrypt cipher by AES in SIC(also know as CTR) mode
