@@ -1,4 +1,4 @@
-package org.ethereum.tools.bc;
+package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.CommonConfig;
@@ -379,6 +379,13 @@ public class StandaloneBlockchain implements LocalBlockchain {
         @Override
         public String getBinary() {
             return compiled.bin;
+        }
+
+        @Override
+        public void call(byte[] callData) {
+            // for this we need cleaner separation of EasyBlockchain to
+            // Abstract and Solidity specific
+            throw new UnsupportedOperationException();
         }
     }
 
