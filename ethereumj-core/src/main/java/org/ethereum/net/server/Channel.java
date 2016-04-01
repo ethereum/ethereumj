@@ -170,8 +170,8 @@ public class Channel {
         frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), payload), byteBufMsg);
         ctx.writeAndFlush(byteBufMsg).sync();
 
-        if (logger.isInfoEnabled())
-            logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
+        if (logger.isDebugEnabled())
+            logger.debug("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
         getNodeStatistics().rlpxOutHello.add();
     }
 
@@ -181,7 +181,7 @@ public class Channel {
         messageCodec.setEthVersion(version);
         messageCodec.setEthMessageFactory(messageFactory);
 
-        logger.info("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
+        logger.debug("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
 
         ctx.pipeline().addLast(Capability.ETH, handler);
 

@@ -98,7 +98,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     public void activate() {
-        logger.info("ETH protocol activated");
+        logger.debug("ETH protocol activated");
         ethereumListener.trace("ETH protocol activated");
         sendStatus();
     }

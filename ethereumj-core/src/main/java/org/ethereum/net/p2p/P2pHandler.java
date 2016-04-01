@@ -114,7 +114,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        logger.info("P2P protocol activated");
+        logger.debug("P2P protocol activated");
         msgQueue.activate(ctx);
         ethereumListener.trace("P2P protocol activated");
         startTimers();
@@ -176,7 +176,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.info("channel inactive: ", ctx.toString());
+        logger.debug("channel inactive: ", ctx.toString());
         this.killTimers();
     }
 
@@ -199,7 +199,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             // it means that we've been disconnected
             // after some incorrect action from our peer
             // need to log this moment
-            logger.info("From: \t{}\t [DISCONNECT reason=BAD_PEER_ACTION]", channel);
+            logger.debug("From: \t{}\t [DISCONNECT reason=BAD_PEER_ACTION]", channel);
         }
     }
 

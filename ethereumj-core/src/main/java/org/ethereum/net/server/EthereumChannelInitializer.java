@@ -37,12 +37,12 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     public void initChannel(NioSocketChannel ch) throws Exception {
         try {
             if (!peerDiscoveryMode) {
-                logger.info("Open {} connection, channel: {}", isInbound() ? "inbound" : "outbound", ch.toString());
+                logger.debug("Open {} connection, channel: {}", isInbound() ? "inbound" : "outbound", ch.toString());
             }
 
             if (isInbound() && channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
                 // avoid too frequent connection attempts
-                logger.info("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
+                logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
                 ch.disconnect();
                 return;
             }
