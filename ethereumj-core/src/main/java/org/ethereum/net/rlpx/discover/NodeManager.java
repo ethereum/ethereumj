@@ -173,7 +173,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         } catch (Exception e) {
             try {
-                logger.error("Error reading db. Recreating from scratch:", e);
+                logger.warn("Error reading db. Recreating from scratch...");
+                logger.debug("Error reading db. Recreating from scratch:", e);
+
                 db.delete("nodeStats");
                 nodeStatsDB = db.hashMap("nodeStats");
             } catch (Exception e1) {

@@ -313,8 +313,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public synchronized ImportResult tryToConnect(final Block block) {
 
-        if (logger.isInfoEnabled())
-            logger.info("Try connect block hash: {}, number: {}",
+        if (logger.isDebugEnabled())
+            logger.debug("Try connect block hash: {}, number: {}",
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
@@ -709,7 +709,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private List<TransactionReceipt> applyBlock(Block block) {
 
-        logger.info("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
+        logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
         long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;
@@ -765,7 +765,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         long totalTime = System.nanoTime() - saveTime;
         adminInfo.addBlockExecTime(totalTime);
-        logger.info("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
+        logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
         return receipts;
     }
@@ -823,7 +823,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         else
             blockStore.saveBlock(block, totalDifficulty, true);
 
-        logger.info("Block saved: number: {}, hash: {}, TD: {}",
+        logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
 
         setBestBlock(block);
@@ -874,7 +874,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public synchronized void updateTotalDifficulty(Block block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
-        logger.info("TD: updated to {}", totalDifficulty);
+        logger.debug("TD: updated to {}", totalDifficulty);
     }
 
     @Override
