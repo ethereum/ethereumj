@@ -30,7 +30,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class Block {
 
-    private static final Logger logger = LoggerFactory.getLogger("block");
+    private static final Logger logger = LoggerFactory.getLogger("blockchain");
 
     private BlockHeader header;
 
@@ -92,7 +92,7 @@ public class Block {
         this.header.setTransactionsRoot(BlockchainImpl.calcTxTrie(transactionsList));
         if (!Hex.toHexString(transactionsRoot).
                 equals(Hex.toHexString(this.header.getTxTrieRoot())))
-            logger.error("Transaction root miss-calculate, block: {}", getNumber());
+            logger.debug("Transaction root miss-calculate, block: {}", getNumber());
 
         this.header.setStateRoot(stateRoot);
         this.header.setReceiptsRoot(receiptsRoot);
@@ -352,7 +352,7 @@ public class Block {
         parseTxs(txTransactions);
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot))) {
-            logger.error("Transactions trie root validation failed for block #{}", this.header.getNumber());
+            logger.debug("Transactions trie root validation failed for block #{}", this.header.getNumber());
             return false;
         }
 
