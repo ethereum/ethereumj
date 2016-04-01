@@ -73,12 +73,11 @@ public class TestRunner {
         blockStore.init(new HashMapDB(), new HashMapDB());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
-        Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener,
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, adminInfo, listener,
                 new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 

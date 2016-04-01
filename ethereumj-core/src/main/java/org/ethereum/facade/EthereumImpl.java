@@ -300,12 +300,6 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Wallet getWallet() {
-        return worldManager.getWallet();
-    }
-
-
-    @Override
     public org.ethereum.facade.Repository getRepository() {
         return worldManager.getRepository();
     }

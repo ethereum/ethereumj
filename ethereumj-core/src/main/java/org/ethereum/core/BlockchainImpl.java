@@ -90,9 +90,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BigInteger totalDifficulty = ZERO;
 
     @Autowired
-    Wallet wallet;
-
-    @Autowired
     private EthereumListener listener;
 
     @Autowired
@@ -132,12 +129,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository,
-                          Wallet wallet, AdminInfo adminInfo,
+    public BlockchainImpl(BlockStore blockStore, Repository repository, AdminInfo adminInfo,
                           EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator) {
         this.blockStore = blockStore;
         this.repository = repository;
-        this.wallet = wallet;
         this.adminInfo = adminInfo;
         this.listener = listener;
         this.parentHeaderValidator = parentHeaderValidator;
@@ -480,9 +475,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockStore.flush();
             System.gc();
         }
-
-        // Remove all wallet transactions as they already approved by the net
-        wallet.removeTransactions(block.getTransactionsList());
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);

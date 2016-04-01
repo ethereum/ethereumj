@@ -2,7 +2,6 @@ package org.ethereum.facade;
 
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -129,13 +128,6 @@ public interface Ethereum {
      */
     ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
                                        Object... funcArgs);
-
-    /**
-     * @return wallet object which is the manager
-     *         of internal accounts
-     */
-    Wallet getWallet();
-
 
     /**
      * @return - repository for all state data.

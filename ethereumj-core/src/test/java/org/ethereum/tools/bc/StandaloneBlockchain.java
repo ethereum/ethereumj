@@ -261,7 +261,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         BlockchainImpl blockchain = new BlockchainImpl(
                 blockStore,
                 repository,
-                new Wallet(),
                 new AdminInfo(),
                 listener,
                 new CommonConfig().parentHeaderValidator()

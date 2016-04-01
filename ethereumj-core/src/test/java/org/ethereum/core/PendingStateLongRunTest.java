@@ -114,7 +114,6 @@ public class PendingStateLongRunTest {
         BlockchainImpl blockchain = new BlockchainImpl(
                 blockStore,
                 repository,
-                new Wallet(),
                 new AdminInfo(),
                 listener,
                 new CommonConfig().parentHeaderValidator()
