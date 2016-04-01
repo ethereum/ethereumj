@@ -25,7 +25,20 @@ public class NodeHandler {
     static Queue<NodeHandler> aliveNodes = new ArrayDeque<>();
     private static ScheduledExecutorService pongTimer = Executors.newSingleThreadScheduledExecutor();
     static long PingTimeout = 15000; //KademliaOptions.REQ_TIMEOUT;
+    private static volatile int msgCount = 0;
 
+    // gradually reducing log level for dumping discover messages
+    // they are not so informative when everything is already up and running
+    // but quite interesting when discovery just starts
+    private static void logMessage(String msg) {
+        if (msgCount > 1024) {
+            logger.trace(msg);
+        } else if (msgCount > 16) {
+            logger.debug(msg);
+        } else {
+            logger.info(msg);
+        }
+    }
 
     public enum State {
         /**
@@ -165,12 +178,12 @@ public class NodeHandler {
     }
 
     protected void stateChanged(State oldState, State newState) {
-        logger.debug("State change " + oldState + " -> " + newState + ": " + this);
+        logMessage("State change " + oldState + " -> " + newState + ": " + this);
         nodeManager.stateChanged(this, oldState, newState);
     }
 
     void handlePing(PingMessage msg) {
-        logger.debug(" ===> [PING] " + this);
+        logMessage(" ===> [PING] " + this);
         getNodeStatistics().discoverInPing.add();
         if (!nodeManager.table.getNode().equals(node)) {
             sendPong(msg.getMdc());
@@ -178,7 +191,7 @@ public class NodeHandler {
     }
 
     void handlePong(PongMessage msg) {
-        logger.debug(" ===> [PONG] " + this);
+        logMessage(" ===> [PONG] " + this);
         if (waitForPong) {
             waitForPong = false;
             getNodeStatistics().discoverInPong.add();
@@ -188,7 +201,7 @@ public class NodeHandler {
     }
 
     void handleNeighbours(NeighborsMessage msg) {
-        logger.debug(" ===> [NEIGHBOURS] " + this + ", Count: " + msg.getNodes().size());
+        logMessage(" ===> [NEIGHBOURS] " + this + ", Count: " + msg.getNodes().size());
         getNodeStatistics().discoverInNeighbours.add();
         for (Node n : msg.getNodes()) {
             nodeManager.getNodeHandler(n);
@@ -196,7 +209,7 @@ public class NodeHandler {
     }
 
     void handleFindNode(FindNodeMessage msg) {
-        logger.debug(" ===> [FIND_NODE] " + this);
+        logMessage(" ===> [FIND_NODE] " + this);
         getNodeStatistics().discoverInFind.add();
         List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
         sendNeighbours(closest);
@@ -219,9 +232,9 @@ public class NodeHandler {
 
     void sendPing() {
         if (waitForPong) {
-            logger.debug("<=/=  [PING] (Waiting for pong) " + this);
+            logMessage("<=/=  [PING] (Waiting for pong) " + this);
         }
-        logger.debug("<===  [PING] " + this);
+        logMessage("<===  [PING] " + this);
 
         Message ping = PingMessage.create(nodeManager.table.getNode().getHost(),
                 nodeManager.table.getNode().getPort(), nodeManager.key);
@@ -245,21 +258,21 @@ public class NodeHandler {
     }
 
     void sendPong(byte[] mdc) {
-        logger.debug("<===  [PONG] " + this);
+        logMessage("<===  [PONG] " + this);
         Message pong = PongMessage.create(mdc, node.getHost(), node.getPort(), nodeManager.key);
         sendMessage(pong);
         getNodeStatistics().discoverOutPong.add();
     }
 
     void sendNeighbours(List<Node> neighbours) {
-        logger.debug("<===  [NEIGHBOURS] " + this);
+        logMessage("<===  [NEIGHBOURS] " + this);
         NeighborsMessage neighbors = NeighborsMessage.create(neighbours, nodeManager.key);
         sendMessage(neighbors);
         getNodeStatistics().discoverOutNeighbours.add();
     }
 
     void sendFindNode(byte[] target) {
-        logger.debug("<===  [FIND_NODE] " + this);
+        logMessage("<===  [FIND_NODE] " + this);
         Message findNode = FindNodeMessage.create(target, nodeManager.key);
         sendMessage(findNode);
         getNodeStatistics().discoverOutFind.add();
