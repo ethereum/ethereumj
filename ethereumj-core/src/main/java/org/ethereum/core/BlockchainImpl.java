@@ -708,7 +708,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         List<TransactionReceipt> receipts = new ArrayList<>();
 
         for (Transaction tx : block.getTransactionsList()) {
-            stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
+            stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
                     track, blockStore,

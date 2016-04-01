@@ -281,7 +281,7 @@ public class RepositoryTrack implements Repository {
 
     @Override
     public Repository startTracking() {
-        logger.debug("start tracking");
+        logger.trace("start tracking: {}", this);
 
         Repository repository = new RepositoryTrack(this);
 
@@ -319,7 +319,7 @@ public class RepositoryTrack implements Repository {
             repository.updateBatch(cacheAccounts, cacheDetails);
             cacheAccounts.clear();
             cacheDetails.clear();
-            logger.debug("committed changes");
+            logger.trace("committed changes: {}", this);
         }
     }
 

@@ -143,7 +143,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
-        logger.debug("updatingBatch: detailsCache.size: {}", detailsCache.size());
+        logger.trace("updatingBatch: detailsCache.size: {}", detailsCache.size());
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
 
@@ -176,8 +176,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
                 updateAccountState(hash.getData(), accountState);
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("update: [{}],nonce: [{}] balance: [{}] [{}]",
+                if (logger.isTraceEnabled()) {
+                    logger.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
                             Hex.toHexString(hash.getData()),
                             accountState.getNonce(),
                             accountState.getBalance(),
