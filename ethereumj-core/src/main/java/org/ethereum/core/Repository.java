@@ -70,6 +70,8 @@ public interface Repository {
      */
     ContractDetails getContractDetails(byte[] addr);
 
+    boolean hasContractDetails(byte[] addr);
+
     /**
      * Store code associated with an account
      *

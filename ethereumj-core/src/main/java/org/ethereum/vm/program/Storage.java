@@ -68,6 +68,11 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
+    public boolean hasContractDetails(byte[] addr) {
+        return repository.hasContractDetails(addr);
+    }
+
+    @Override
     public void saveCode(byte[] addr, byte[] code) {
         repository.saveCode(addr, code);
     }

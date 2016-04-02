@@ -219,7 +219,7 @@ public class BlockMiner {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
             ethashTask = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
-                    getMineAlgorithm().mine(miningBlock);
+                    getMineAlgorithm(config).mine(miningBlock);
             ethashTask.addListener(new Runnable() {
                 //            private final Future<Long> task = ethashTask;
                 @Override

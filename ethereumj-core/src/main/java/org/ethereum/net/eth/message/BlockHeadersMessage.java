@@ -92,6 +92,14 @@ public class BlockHeadersMessage extends EthMessage {
             if (!blockHeaders.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());
             }
+        } else {
+            if (blockHeaders.size() > 0) {
+                payload.append("#" + blockHeaders.get(0).getNumber() + " (" + Hex.toHexString(blockHeaders.get(0).getHash()).substring(0, 8) + ")");
+            }
+            if (blockHeaders.size() > 1) {
+                payload.append(" ... #" + blockHeaders.get(blockHeaders.size() - 1).getNumber()
+                        + " (" + Hex.toHexString(blockHeaders.get(blockHeaders.size() - 1).getHash()).substring(0, 8) + ")");
+            }
         }
 
         return "[" + getCommand().name() + " " + payload + "]";
