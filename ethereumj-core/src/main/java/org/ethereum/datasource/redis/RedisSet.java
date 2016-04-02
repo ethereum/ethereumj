@@ -4,7 +4,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -39,6 +38,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
+                if(o instanceof Boolean) System.out.println("");
                 return jedis.sismember(getNameBytes(), serialize((T) o));
             }
         });

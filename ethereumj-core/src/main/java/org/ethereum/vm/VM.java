@@ -1,7 +1,6 @@
 package org.ethereum.vm;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
@@ -18,7 +17,11 @@ import java.util.List;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.OpCode.*;
+import static org.ethereum.vm.OpCode.CALL;
+import static org.ethereum.vm.OpCode.CALLCODE;
+import static org.ethereum.vm.OpCode.CREATE;
+import static org.ethereum.vm.OpCode.DELEGATECALL;
+import static org.ethereum.vm.OpCode.PUSH1;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -62,7 +65,7 @@ public class VM {
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger dumpLogger = LoggerFactory.getLogger("dump");
     private static BigInteger _32_ = BigInteger.valueOf(32);
-    private static String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
+    private static final String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
     private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
 
