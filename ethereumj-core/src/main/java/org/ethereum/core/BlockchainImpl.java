@@ -28,7 +28,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -798,7 +797,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
                 track.addBalance(uncle.getCoinbase(),
-                        new BigDecimal(BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8), RoundingMode.HALF_UP)).toBigInteger());
+                        new BigDecimal(BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
 
                 totalBlockReward = totalBlockReward.add(INCLUSION_REWARD);
             }

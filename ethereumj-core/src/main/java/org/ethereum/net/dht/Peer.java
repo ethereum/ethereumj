@@ -48,7 +48,7 @@ public class Peer {
     }
 
     public void setId(byte[] ip) {
-        this.id = id;
+        this.id = ip;
     }
 
     @Override
