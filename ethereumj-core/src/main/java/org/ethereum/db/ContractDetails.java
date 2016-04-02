@@ -16,6 +16,8 @@ public interface ContractDetails {
 
     byte[] getCode();
 
+    byte[] getCode(byte[] codeHash);
+
     void setCode(byte[] code);
 
     byte[] getStorageHash();

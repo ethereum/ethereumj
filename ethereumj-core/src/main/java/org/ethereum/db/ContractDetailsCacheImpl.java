@@ -2,36 +2,31 @@ package org.ethereum.db;
 
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
 import static java.util.Collections.unmodifiableMap;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * @author Roman Mandeleil
  * @since 24.06.2014
  */
-public class ContractDetailsCacheImpl implements ContractDetails {
+public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     private Map<DataWord, DataWord> storage = new HashMap<>();
 
     ContractDetails origContract = new ContractDetailsImpl();
 
-    private byte[] code = EMPTY_BYTE_ARRAY;
-
-    private boolean dirty = false;
-    private boolean deleted = false;
-
-
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
-        this.code = origContract != null ? origContract.getCode() : EMPTY_BYTE_ARRAY;
+        if (origContract != null) {
+            if (origContract instanceof AbstractContractDetails) {
+                setCodes(((AbstractContractDetails) this.origContract).getCodes());
+            } else {
+                setCode(origContract.getCode());
+            }
+        }
     }
 
     @Override
@@ -59,16 +54,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     }
 
     @Override
-    public byte[] getCode() {
-        return code;
-    }
-
-    @Override
-    public void setCode(byte[] code) {
-        this.code = code;
-    }
-
-    @Override
     public byte[] getStorageHash() { // todo: unsupported
 
         SecureTrie storageTrie = new SecureTrie(null);
@@ -86,68 +71,12 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     @Override
     public void decode(byte[] rlpCode) {
-        RLPList data = RLP.decode2(rlpCode);
-        RLPList rlpList = (RLPList) data.get(0);
-
-        RLPList keys = (RLPList) rlpList.get(0);
-        RLPList values = (RLPList) rlpList.get(1);
-        RLPElement code = rlpList.get(2);
-
-
-        for (int i = 0; i < keys.size(); ++i){
-
-            RLPItem key   = (RLPItem)keys.get(i);
-            RLPItem value = (RLPItem)values.get(i);
-
-            storage.put(new DataWord(key.getRLPData()), new DataWord(value.getRLPData()));
-        }
-
-        this.code = (code.getRLPData() == null) ? EMPTY_BYTE_ARRAY : code.getRLPData();
+        throw new RuntimeException("Not supported by this implementation.");
     }
-
-    @Override
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    @Override
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    @Override
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    @Override
-    public boolean isDeleted() {
-        return deleted;
-    }
-
 
     @Override
     public byte[] getEncoded() {
-
-        byte[][] keys = new byte[storage.size()][];
-        byte[][] values = new byte[storage.size()][];
-
-        int i = 0;
-        for (DataWord key : storage.keySet()){
-
-            DataWord value = storage.get(key);
-
-            keys[i] = RLP.encodeElement(key.getData());
-            values[i] = RLP.encodeElement(value.getNoLeadZeroesData());
-
-            ++i;
-        }
-
-        byte[] rlpKeysList = RLP.encodeList(keys);
-        byte[] rlpValuesList = RLP.encodeList(values);
-        byte[] rlpCode = RLP.encodeElement(code);
-
-        return RLP.encodeList(rlpKeysList, rlpValuesList, rlpCode);
+        throw new RuntimeException("Not supported by this implementation.");
     }
 
     @Override
@@ -222,15 +151,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     }
 
     @Override
-    public String toString() {
-
-        String ret = "  Code: " + Hex.toHexString(code) + "\n";
-        ret += "  Storage: " + getStorage().toString();
-
-        return ret;
-    }
-
-    @Override
     public void syncStorage() {
         if (origContract != null) origContract.syncStorage();
     }
@@ -243,8 +163,12 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             origContract.put(key, storage.get(key));
         }
 
-        origContract.setCode(code);
-        origContract.setDirty(this.dirty || origContract.isDirty());
+        if (origContract instanceof AbstractContractDetails) {
+            ((AbstractContractDetails) origContract).appendCodes(getCodes());
+        } else {
+            origContract.setCode(getCode());
+        }
+        origContract.setDirty(this.isDirty() || origContract.isDirty());
     }
 
 

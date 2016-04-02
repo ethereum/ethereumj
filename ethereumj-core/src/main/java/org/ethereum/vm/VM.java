@@ -1,7 +1,6 @@
 package org.ethereum.vm;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
@@ -18,7 +17,11 @@ import java.util.List;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.OpCode.*;
+import static org.ethereum.vm.OpCode.CALL;
+import static org.ethereum.vm.OpCode.CALLCODE;
+import static org.ethereum.vm.OpCode.CREATE;
+import static org.ethereum.vm.OpCode.DELEGATECALL;
+import static org.ethereum.vm.OpCode.PUSH1;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -62,7 +65,7 @@ public class VM {
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger dumpLogger = LoggerFactory.getLogger("dump");
     private static BigInteger _32_ = BigInteger.valueOf(32);
-    private static String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
+    private static final String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
     private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
 
@@ -196,11 +199,11 @@ public class VM {
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     //check to see if account does not exist and is not a precompiled contract
-                    if (op != CALLCODE && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
+                    if (op == CALL && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
                         gasCost += GasCost.NEW_ACCT_CALL;
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
-                    if (!stack.get(stack.size() - 3).isZero() )
+                    if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )
                         gasCost += GasCost.VT_CALL;
 
                     int opOff = op == DELEGATECALL ? 3 : 4;
