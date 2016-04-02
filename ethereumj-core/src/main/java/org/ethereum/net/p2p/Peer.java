@@ -2,11 +2,9 @@ package org.ethereum.net.p2p;
 
 import org.ethereum.net.client.Capability;
 import org.ethereum.util.RLP;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetAddress;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +63,7 @@ public class Peer {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
+        if(!(obj instanceof Peer)) return false;
         Peer peerData = (Peer) obj;
         return peerData.peerId.equals(this.peerId)
                 || this.getAddress().equals(peerData.getAddress());

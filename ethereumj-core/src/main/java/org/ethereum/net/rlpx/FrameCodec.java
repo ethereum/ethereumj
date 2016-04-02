@@ -12,11 +12,14 @@ import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
-import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -222,9 +225,7 @@ public class FrameCodec {
         byte[] result = new byte[mac.getDigestSize()];
         doSum(mac, result);
         if (egress) {
-            for (int i = 0; i < length; i++) {
-                out[i + outOffset] = result[i];
-            }
+            System.arraycopy(result, 0, out, outOffset, length);
         } else {
             for (int i = 0; i < length; i++) {
                 if (out[i + outOffset] != result[i]) {

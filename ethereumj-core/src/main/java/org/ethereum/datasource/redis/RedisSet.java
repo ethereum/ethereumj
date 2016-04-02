@@ -4,8 +4,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -70,12 +70,12 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
 
     @Override
     public boolean add(T t) {
-        return addAll(Arrays.asList(t));
+        return addAll(Collections.singletonList(t));
     }
 
     @Override
     public boolean remove(Object o) {
-        return (o == null) || removeAll(Arrays.asList(o));
+        return (o == null) || removeAll(Collections.singletonList(o));
     }
 
     @Override

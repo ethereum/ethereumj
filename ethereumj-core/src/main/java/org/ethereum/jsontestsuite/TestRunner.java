@@ -1,10 +1,19 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.CommonConfig;
-import org.ethereum.core.*;
-
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Wallet;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.*;
+import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.RepositoryVMTestDummy;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
@@ -15,7 +24,9 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
@@ -26,7 +37,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.ethereum.jsontestsuite.Utils.parseData;
@@ -214,9 +230,9 @@ public class TestRunner {
             saveProgramTraceFile(testCase.getName(), content);
 
             if (testCase.getPost().size() == 0) {
-                if (vmDidThrowAnEception != true) {
+                if (!vmDidThrowAnEception) {
                     String output =
-                            String.format("VM was expected to throw an exception");
+                            "VM was expected to throw an exception";
                     logger.info(output);
                     results.add(output);
                 } else
@@ -224,7 +240,7 @@ public class TestRunner {
             } else {
                 if (vmDidThrowAnEception) {
                     String output =
-                            String.format("VM threw an unexpected exception: " + e.toString());
+                            "VM threw an unexpected exception: " + e.toString();
                     logger.info(output, e);
                     results.add(output);
                     return results;

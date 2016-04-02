@@ -1,7 +1,6 @@
 package org.ethereum.vm.program;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -9,30 +8,48 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.GasCost;
+import org.ethereum.vm.MessageCall;
 import org.ethereum.vm.MessageCall.MsgType;
+import org.ethereum.vm.OpCode;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
-import org.ethereum.vm.trace.ProgramTraceListener;
 import org.ethereum.vm.trace.ProgramTrace;
+import org.ethereum.vm.trace.ProgramTraceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static java.lang.StrictMath.min;
 import static java.lang.String.format;
 import static java.math.BigInteger.ZERO;
 import static java.math.BigInteger.valueOf;
-import static org.apache.commons.lang3.ArrayUtils.*;
-import static org.ethereum.util.BIUtil.*;
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+import static org.ethereum.util.BIUtil.isNotCovers;
+import static org.ethereum.util.BIUtil.isPositive;
+import static org.ethereum.util.BIUtil.toBI;
+import static org.ethereum.util.BIUtil.transfer;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -912,7 +929,7 @@ public class Program {
         }
 
         public boolean isPush() {
-            return getCurOpcode() != null ? getCurOpcode().name().startsWith("PUSH") : false;
+            return getCurOpcode() != null && getCurOpcode().name().startsWith("PUSH");
         }
 
         public byte[] getCurOpcodeArg() {
