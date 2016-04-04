@@ -180,8 +180,9 @@ public class ContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
+        original.externalStorage = true;
 
-        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT + 10; i++) {
+        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
             DataWord key = randomDataWord();
             DataWord value = randomDataWord();
 
@@ -225,7 +226,7 @@ public class ContractDetailsTest {
         original.setAddress(address);
         original.setCode(code);
 
-        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT - 1; i++) {
+        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
             DataWord key = randomDataWord();
             DataWord value = randomDataWord();
 

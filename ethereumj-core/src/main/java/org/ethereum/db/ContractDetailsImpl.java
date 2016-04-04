@@ -30,7 +30,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private Set<ByteArrayWrapper> keys = new HashSet<>();
     private SecureTrie storageTrie = new SecureTrie(null);
 
-    private boolean externalStorage;
+    boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
 
     public ContractDetailsImpl() {
