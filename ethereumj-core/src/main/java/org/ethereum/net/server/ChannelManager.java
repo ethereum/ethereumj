@@ -102,7 +102,9 @@ public class ChannelManager {
             }
         }
 
-        logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
+        if (addCnt > 0) {
+            logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
+        }
 
         newPeers.removeAll(processed);
     }

@@ -1,4 +1,4 @@
-package org.ethereum.tools.bc;
+package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.CommonConfig;
@@ -251,7 +251,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.init(new HashMapDB(), new HashMapDB());
 
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
@@ -261,7 +261,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         BlockchainImpl blockchain = new BlockchainImpl(
                 blockStore,
                 repository,
-                new Wallet(),
                 new AdminInfo(),
                 listener,
                 new CommonConfig().parentHeaderValidator()
@@ -380,6 +379,13 @@ public class StandaloneBlockchain implements LocalBlockchain {
         @Override
         public String getBinary() {
             return compiled.bin;
+        }
+
+        @Override
+        public void call(byte[] callData) {
+            // for this we need cleaner separation of EasyBlockchain to
+            // Abstract and Solidity specific
+            throw new UnsupportedOperationException();
         }
     }
 

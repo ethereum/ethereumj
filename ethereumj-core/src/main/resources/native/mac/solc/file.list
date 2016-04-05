@@ -3,3 +3,6 @@ libdevcore.dylib
 libevmasm.dylib
 libevmcore.dylib
 libsolidity.dylib
+libjsoncpp.dylib 
+libleveldb.1.dylib 
+libsnappy.1.dylib 

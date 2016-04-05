@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class CLIInterface {
 
-    private static final Logger logger = LoggerFactory.getLogger("cli");
+    private static final Logger logger = LoggerFactory.getLogger("general");
 
 
     public static void call(String[] args) {
@@ -64,7 +64,9 @@ public class CLIInterface {
                 }
             }
 
-            logger.info("Overriding config file with CLI options: " + cliOptions);
+            if (cliOptions.size() > 0) {
+                logger.info("Overriding config file with CLI options: " + cliOptions);
+            }
             SystemProperties.CONFIG.overrideParams(cliOptions);
 
         } catch (Throwable e) {

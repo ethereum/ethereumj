@@ -30,7 +30,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private Set<ByteArrayWrapper> keys = new HashSet<>();
     private SecureTrie storageTrie = new SecureTrie(null);
 
-    private boolean externalStorage;
+    boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
 
     public ContractDetailsImpl() {
@@ -66,8 +66,6 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
         this.setDirty(true);
         this.rlpEncoded = null;
-
-        externalStorage = (keys.size() > SystemProperties.CONFIG.detailsInMemoryStorageLimit()) || externalStorage;
     }
 
     @Override
@@ -118,6 +116,9 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.setRoot(storageRoot.getRLPData());
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
+
+        externalStorage = (storage.getRLPData().length > SystemProperties.CONFIG.detailsInMemoryStorageLimit())
+                || externalStorage;
 
         this.rlpEncoded = rlpCode;
     }

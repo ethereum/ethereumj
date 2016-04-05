@@ -261,14 +261,27 @@ public class Transaction {
 
     @Override
     public String toString() {
+        return toString(Integer.MAX_VALUE);
+    }
+
+    public String toString(int maxDataSize) {
         if (!parsed) rlpParse();
+        String dataS;
+        if (data == null) {
+            dataS = "";
+        } else if (data.length < maxDataSize) {
+            dataS = ByteUtil.toHexString(data);
+        } else {
+            dataS = ByteUtil.toHexString(Arrays.copyOfRange(data, 0, maxDataSize)) +
+                    "... (" + data.length + " bytes)";
+        }
         return "TransactionData [" + "hash=" + ByteUtil.toHexString(hash) +
                 "  nonce=" + ByteUtil.toHexString(nonce) +
                 ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
                 ", gas=" + ByteUtil.toHexString(gasLimit) +
                 ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
                 ", value=" + ByteUtil.toHexString(value) +
-                ", data=" + ByteUtil.toHexString(data) +
+                ", data=" + dataS +
                 ", signatureV=" + (signature == null ? "" : signature.v) +
                 ", signatureR=" + (signature == null ? "" : ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r))) +
                 ", signatureS=" + (signature == null ? "" : ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s))) +

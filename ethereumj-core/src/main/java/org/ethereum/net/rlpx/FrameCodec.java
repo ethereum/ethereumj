@@ -144,7 +144,9 @@ public class FrameCodec {
     }
 
     public List<Frame> readFrames(ByteBuf buf) throws IOException {
-        return readFrames(new ByteBufInputStream(buf));
+        try (ByteBufInputStream bufInputStream = new ByteBufInputStream(buf)) {
+            return readFrames(bufInputStream);
+        }
     }
 
     public List<Frame> readFrames(DataInput inp) throws IOException {

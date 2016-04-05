@@ -4,8 +4,8 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.tools.bc.SolidityContract;
-import org.ethereum.tools.bc.StandaloneBlockchain;
+import org.ethereum.util.blockchain.SolidityContract;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -346,7 +344,7 @@ public class ImportLightTest {
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.init(new HashMapDB(), new HashMapDB());
 
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
@@ -356,7 +354,6 @@ public class ImportLightTest {
         BlockchainImpl blockchain = new BlockchainImpl(
                 blockStore,
                 repository,
-                new Wallet(),
                 new AdminInfo(),
                 listener,
                 new CommonConfig().parentHeaderValidator()

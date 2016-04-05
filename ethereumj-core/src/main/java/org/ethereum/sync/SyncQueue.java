@@ -132,8 +132,8 @@ public class SyncQueue {
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),
                             wrapper.getBlock().getTransactionsList().size());
 
-                if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
-                    if (logger.isTraceEnabled()) logger.trace(Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (longSyncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
+                    if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
                 }
 
                 // In case we don't have a parent on the chain

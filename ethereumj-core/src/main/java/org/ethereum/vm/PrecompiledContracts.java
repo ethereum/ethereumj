@@ -1,17 +1,10 @@
 package org.ethereum.vm;
 
-import org.ethereum.config.Constants;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.cryptohash.Keccak256;
-import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
-import static org.ethereum.util.BIUtil.isLessThan;
-import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
  * @author Roman Mandeleil

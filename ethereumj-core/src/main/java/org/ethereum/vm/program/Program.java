@@ -42,7 +42,6 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 public class Program {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
-    private static final Logger gasLogger = LoggerFactory.getLogger("gas");
 
     /**
      * This attribute defines the number of recursive calls allowed in the EVM
@@ -445,8 +444,8 @@ public class Program {
         long refundGas = gasLimit.longValue() - result.getGasUsed();
         if (refundGas > 0) {
             refundGas(refundGas, "remain gas from the internal call");
-            if (gasLogger.isInfoEnabled()) {
-                gasLogger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
+            if (logger.isInfoEnabled()) {
+                logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
                         Hex.toHexString(getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
@@ -527,7 +526,7 @@ public class Program {
             getResult().merge(result);
 
             if (result.getException() != null) {
-                gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+                logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                         Hex.toHexString(contextAddress),
                         result.getException());
 
@@ -558,8 +557,8 @@ public class Program {
             BigInteger refundGas = msg.getGas().value().subtract(toBI(result.getGasUsed()));
             if (isPositive(refundGas)) {
                 refundGas(refundGas.longValue(), "remaining gas from the internal call");
-                if (gasLogger.isInfoEnabled())
-                    gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
+                if (logger.isInfoEnabled())
+                    logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
                             Hex.toHexString(senderAddress),
                             refundGas.toString());
             }
@@ -569,7 +568,7 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
         if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
@@ -582,7 +581,7 @@ public class Program {
     }
 
     public void refundGas(long gasValue, String cause) {
-        gasLogger.info("[{}] Refund for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.info("[{}] Refund for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
         getResult().refundGas(gasValue);
     }
 
@@ -1082,8 +1081,20 @@ public class Program {
         void output(String out);
     }
 
+    /**
+     * Denotes problem when executing Ethereum bytecode.
+     * From blockchain and peer perspective this is quite normal situation
+     * and doesn't mean exceptional situation in terms of the program execution
+     */
     @SuppressWarnings("serial")
-    public static class OutOfGasException extends RuntimeException {
+    public static class BytecodeExecutionException extends RuntimeException {
+        public BytecodeExecutionException(String message) {
+            super(message);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public static class OutOfGasException extends BytecodeExecutionException {
 
         public OutOfGasException(String message, Object... args) {
             super(format(message, args));
@@ -1091,7 +1102,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class IllegalOperationException extends RuntimeException {
+    public static class IllegalOperationException extends BytecodeExecutionException {
 
         public IllegalOperationException(String message, Object... args) {
             super(format(message, args));
@@ -1099,7 +1110,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class BadJumpDestinationException extends RuntimeException {
+    public static class BadJumpDestinationException extends BytecodeExecutionException {
 
         public BadJumpDestinationException(String message, Object... args) {
             super(format(message, args));
@@ -1107,7 +1118,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class StackTooSmallException extends RuntimeException {
+    public static class StackTooSmallException extends BytecodeExecutionException {
 
         public StackTooSmallException(String message, Object... args) {
             super(format(message, args));
@@ -1151,7 +1162,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class StackTooLargeException extends RuntimeException {
+    public class StackTooLargeException extends BytecodeExecutionException {
         public StackTooLargeException(String message) {
             super(message);
         }
