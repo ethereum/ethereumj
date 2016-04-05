@@ -313,7 +313,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (channel.isDiscoveryMode()) {
-            loggerNet.debug("Handshake failed: ", cause);
+            loggerNet.trace("Handshake failed: ", cause);
         } else {
             if (cause instanceof IOException) {
                 loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress(), cause);
