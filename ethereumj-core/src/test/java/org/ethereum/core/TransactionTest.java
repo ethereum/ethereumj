@@ -553,19 +553,23 @@ public class TransactionTest {
 
         ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
 
-        Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("PsychoKiller").bin), 1000000000L);
-        executeTransaction(blockchain, tx);
+        if(cres.contracts.get("PsychoKiller") != null) {
+            Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("PsychoKiller").bin), 1000000000L);
+            executeTransaction(blockchain, tx);
 
-        byte[] contractAddress = tx.getContractAddress();
+            byte[] contractAddress = tx.getContractAddress();
 
-        CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
-        byte[] callData = contract1.getByName("multipleHomocide").encode();
+            CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
+            byte[] callData = contract1.getByName("multipleHomocide").encode();
 
-        Transaction tx1 = createTx(blockchain, sender, contractAddress, callData);
-        ProgramResult programResult = executeTransaction(blockchain, tx1);
+            Transaction tx1 = createTx(blockchain, sender, contractAddress, callData);
+            ProgramResult programResult = executeTransaction(blockchain, tx1);
 
-        // suicide of a single account should be counted only once
-        Assert.assertEquals(programResult.getFutureRefund(), 24000);
+            // suicide of a single account should be counted only once
+            Assert.assertEquals(programResult.getFutureRefund(), 24000);
+        } else {
+            Assert.fail();
+        }
     }
 
     protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress, byte[] data) throws InterruptedException {

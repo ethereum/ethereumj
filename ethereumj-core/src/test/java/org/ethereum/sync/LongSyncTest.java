@@ -357,7 +357,7 @@ public class LongSyncTest {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<BlockHeader> headers = Collections.singletonList(
                         mainB1B10.get(1).getHeader()
                 );
 

@@ -151,7 +151,7 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
         tx1.sign(senderKey.getPrivKeyBytes());
-        Block b2f = blockchain.createNewBlock(b1, Arrays.asList(tx1), Collections.EMPTY_LIST);
+        Block b2f = blockchain.createNewBlock(b1, Collections.singletonList(tx1), Collections.EMPTY_LIST);
         Ethash.getForBlock(b2f.getNumber()).mineLight(b2f).get();
         importResult = blockchain.tryToConnect(b2f);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);

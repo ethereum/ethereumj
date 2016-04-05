@@ -215,7 +215,7 @@ public class TestRunner {
             if (testCase.getPost().size() == 0) {
                 if (vmDidThrowAnEception != true) {
                     String output =
-                            String.format("VM was expected to throw an exception");
+                            "VM was expected to throw an exception";
                     logger.info(output);
                     results.add(output);
                 } else
@@ -223,7 +223,7 @@ public class TestRunner {
             } else {
                 if (vmDidThrowAnEception) {
                     String output =
-                            String.format("VM threw an unexpected exception: " + e.toString());
+                            "VM threw an unexpected exception: " + e.toString();
                     logger.info(output, e);
                     results.add(output);
                     return results;
