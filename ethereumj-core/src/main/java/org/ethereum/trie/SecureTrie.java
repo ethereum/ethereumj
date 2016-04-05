@@ -2,7 +2,7 @@ package org.ethereum.trie;
 
 import org.ethereum.datasource.KeyValueDataSource;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class SecureTrie extends TrieImpl implements Trie {

@@ -6,15 +6,17 @@ import org.ethereum.vm.program.InternalTransaction;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.*;
 import static org.ethereum.util.BIUtil.toBI;
 
 public class TransactionExecutionSummary {
 
-    private byte[] transactionHash;
+    private Transaction tx;
     private BigInteger value = BigInteger.ZERO;
     private BigInteger gasPrice = BigInteger.ZERO;
     private BigInteger gasLimit = BigInteger.ZERO;
@@ -31,8 +33,12 @@ public class TransactionExecutionSummary {
 
     private boolean failed;
 
+    public Transaction getTransaction() {
+        return tx;
+    }
+
     public byte[] getTransactionHash() {
-        return transactionHash;
+        return getTransaction().getHash() ;
     }
 
     private BigInteger calcCost(BigInteger gas) {
@@ -111,7 +117,7 @@ public class TransactionExecutionSummary {
             Assert.notNull(transaction, "Cannot build TransactionExecutionSummary for null transaction.");
 
             summary = new TransactionExecutionSummary();
-            summary.transactionHash = transaction.getHash();
+            summary.tx = transaction;
             summary.gasLimit = toBI(transaction.getGasLimit());
             summary.gasPrice = toBI(transaction.getGasPrice());
             summary.value = toBI(transaction.getValue());
@@ -137,8 +143,11 @@ public class TransactionExecutionSummary {
             return this;
         }
 
-        public Builder deletedAccounts(List<DataWord> deletedAccounts) {
-            summary.deletedAccounts = unmodifiableList(deletedAccounts);
+        public Builder deletedAccounts(Set<DataWord> deletedAccounts) {
+            summary.deletedAccounts = new ArrayList<>();
+            for (DataWord account : deletedAccounts) {
+                summary.deletedAccounts.add(account);
+            }
             return this;
         }
 

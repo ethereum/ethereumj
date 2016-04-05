@@ -2,8 +2,10 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-import static java.lang.Thread.sleep;
+import static java.util.Collections.emptyList;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.core.ImportResult.IMPORTED_BEST;
@@ -32,27 +37,26 @@ public class SyncQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
-    private static final int SCAN_BLOCKS_LIMIT = 1000;
     private static final int BLOCK_QUEUE_LIMIT = 20000;
-
-    /**
-     * Store holding a list of hashes of the heaviest chain on the network,
-     * for which this client doesn't have the blocks yet
-     */
-    private HashStore hashStore;
 
     /**
      * Store holding a list of block headers of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet
      */
-    private HeaderStore headerStore;
+    private HeaderStore headerStore = new HeaderStoreMem();
 
     /**
      * Queue with blocks to be validated and added to the blockchain
      */
-    private BlockQueue blockQueue;
+    private BlockQueue blockQueue = new BlockQueueMem();
 
-    public boolean noParent = false;
+    private final ReentrantLock headersLock = new ReentrantLock();
+    private final Condition headersNotEmpty = headersLock.newCondition();
+
+    private final ReentrantLock blocksLock = new ReentrantLock();
+    private final Condition blocksAdded = blocksLock.newCondition();
+
+    private boolean longSyncDone = false;
 
     @Autowired
     SystemProperties config;
@@ -61,13 +65,13 @@ public class SyncQueue {
     private Blockchain blockchain;
 
     @Autowired
-    private SyncManager syncManager;
-
-    @Autowired
     private BlockHeaderValidator headerValidator;
 
     @Autowired
-    private MapDBFactory mapDBFactory;
+    private CompositeSyncListener compositeSyncListener;
+
+    @Autowired
+    private CompositeEthereumListener compositeEthereumListener;
 
     /**
      * Loads HashStore and BlockQueue from disk,
@@ -77,25 +81,19 @@ public class SyncQueue {
 
         logger.info("Start loading sync queue");
 
-        hashStore = new HashStoreMem();
-        headerStore = new HeaderStoreMem();
-        blockQueue = new BlockQueueMem();
-
-//        hashStore = new HashStoreImpl();
-//        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
-//        headerStore = new HeaderStoreImpl();
-//        ((HeaderStoreImpl)headerStore).setMapDBFactory(mapDBFactory);
-//        blockQueue = new BlockQueueImpl();
-//        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
-
-
-        hashStore.open();
         headerStore.open();
         blockQueue.open();
 
-        if (!config.isSyncEnabled()) {
-            return;
-        }
+        compositeEthereumListener.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onLongSyncDone() {
+                longSyncDone = true;
+            }
+            @Override
+            public void onLongSyncStarted() {
+                longSyncDone = false;
+            }
+        });
 
         Runnable queueProducer = new Runnable(){
 
@@ -105,7 +103,7 @@ public class SyncQueue {
             }
         };
 
-        Thread t=new Thread (queueProducer);
+        Thread t=new Thread (queueProducer, "SyncQueueThread");
         t.start();
     }
 
@@ -114,29 +112,15 @@ public class SyncQueue {
      */
     private void produceQueue() {
 
-        while (1==1){
+        while (true) {
 
             BlockWrapper wrapper = null;
             try {
+
                 wrapper = blockQueue.take();
+
                 logger.debug("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
-
-                // In case we don't have a parent on the chain
-                // return the try and wait for more blocks to come.
-                if (importResult == NO_PARENT) {
-                    logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
-                    wrapper.importFailed();
-                    syncManager.tryGapRecovery(wrapper);
-                    blockQueue.add(wrapper);
-                    noParent = true;
-                    sleep(2000);
-                } else {
-                    noParent = false;
-                }
-
-                if (wrapper.isNewBlock() && importResult.isSuccessful())
-                    syncManager.notifyNewBlockImported(wrapper);
 
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {} ",
@@ -148,8 +132,20 @@ public class SyncQueue {
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),
                             wrapper.getBlock().getTransactionsList().size());
 
-                if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
-                    if (logger.isDebugEnabled()) logger.debug(Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (longSyncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
+                    if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
+                }
+
+                // In case we don't have a parent on the chain
+                // return the try and wait for more blocks to come.
+                if (importResult == NO_PARENT) {
+                    logger.info("No parent on the chain for block.number: {} block.hash: {}",
+                            wrapper.getNumber(), wrapper.getBlock().getShortHash());
+
+                    blockQueue.returnBlock(wrapper);
+                    compositeSyncListener.onNoParent(wrapper);
+
+                    waitForBlocks();
                 }
 
             } catch (Throwable e) {
@@ -158,31 +154,6 @@ public class SyncQueue {
             }
 
         }
-    }
-
-    /**
-     * Add a list of blocks to the processing queue. <br>
-     * Runs BlockHeader validation before adding
-     *
-     * @param blocks the blocks received from a peer to be added to the queue
-     * @param nodeId of the remote peer which these blocks are received from
-     */
-    public void addAndValidate(List<Block> blocks, byte[] nodeId) {
-
-        // run basic checks
-        for (Block b : blocks) {
-            if (!isValid(b.getHeader())) {
-
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Invalid block RLP: {}", Hex.toHexString(b.getEncoded()));
-                }
-
-                syncManager.reportBadAction(nodeId);
-                return;
-            }
-        }
-
-        addList(blocks, nodeId);
     }
 
     /**
@@ -204,6 +175,8 @@ public class SyncQueue {
 
         blockQueue.addOrReplaceAll(wrappers);
 
+        fireBlocksAdded();
+
         if (logger.isDebugEnabled()) logger.debug(
                 "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
@@ -216,13 +189,15 @@ public class SyncQueue {
      *
      * @param block new block
      * @param nodeId nodeId of the remote peer which this block is received from
+     *
+     * @return true if block passed validations and was added to the queue,
+     *         otherwise it returns false
      */
-    public void addNew(Block block, byte[] nodeId) {
+    public boolean validateAndAddNewBlock(Block block, byte[] nodeId) {
 
         // run basic checks
         if (!isValid(block.getHeader())) {
-            syncManager.reportBadAction(nodeId);
-            return;
+            return false;
         }
 
         BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
@@ -230,102 +205,13 @@ public class SyncQueue {
 
         blockQueue.addOrReplace(wrapper);
 
+        fireBlocksAdded();
+
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
                 wrapper.getNumber());
-    }
 
-    /**
-     * Adds hash to the beginning of HashStore queue
-     *
-     * @param hash hash to be added
-     */
-    public void addHash(byte[] hash) {
-        hashStore.addFirst(hash);
-        if (logger.isTraceEnabled()) logger.trace(
-                "Adding hash to a hashQueue: [{}], hash queue size: {} ",
-                Hex.toHexString(hash).substring(0, 6),
-                hashStore.size()
-        );
-    }
-
-    /**
-     * Adds list of hashes to the end of HashStore queue. <br>
-     * Sorts out those hashes which blocks are already added to BlockQueue
-     *
-     * @param hashes hashes
-     */
-    public void addHashesLast(List<byte[]> hashes) {
-        List<byte[]> filtered = blockQueue.filterExisting(hashes);
-
-        hashStore.addBatch(filtered);
-
-        if(logger.isDebugEnabled())
-            logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
-    }
-
-    /**
-     * Adds list of hashes to the beginning of HashStore queue. <br>
-     * Sorts out those hashes which blocks are already added to BlockQueue
-     *
-     * @param hashes hashes
-     */
-    public void addHashes(List<byte[]> hashes) {
-        List<byte[]> filtered = blockQueue.filterExisting(hashes);
-        hashStore.addFirstBatch(filtered);
-
-        if (logger.isDebugEnabled())
-            logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
-    }
-
-    /**
-     * Adds hashes received in NEW_BLOCK_HASHES message. <br>
-     * Excludes hashes representing already imported blocks,
-     * hashes are added to the end of HashStore queue
-     *
-     * @param hashes list of hashes
-     */
-    public void addNewBlockHashes(List<byte[]> hashes) {
-        List<byte[]> notInQueue = blockQueue.filterExisting(hashes);
-
-        List<byte[]> notInChain = new ArrayList<>();
-        for (byte[] hash : notInQueue) {
-            if (!blockchain.isBlockExist(hash)) {
-                notInChain.add(hash);
-            }
-        }
-
-        hashStore.addBatch(notInChain);
-    }
-
-    /**
-     * Puts back given hashes. <br>
-     * Hashes are added to the beginning of queue
-     *
-     * @param hashes returning hashes
-     */
-    public void returnHashes(List<ByteArrayWrapper> hashes) {
-
-        if (hashes.isEmpty()) return;
-
-        ListIterator iterator = hashes.listIterator(hashes.size());
-        while (iterator.hasPrevious()) {
-
-            byte[] hash = ((ByteArrayWrapper) iterator.previous()).getData();
-
-            if (logger.isDebugEnabled())
-                logger.debug("Return hash: [{}]", Hex.toHexString(hash));
-            hashStore.addFirst(hash);
-        }
-    }
-
-    /**
-     * Return a list of hashes from blocks that still need to be downloaded.
-     *
-     * @return A list of hashes for which blocks need to be retrieved.
-     */
-    public List<byte[]> pollHashes() {
-        return hashStore.pollBatch(config.maxBlocksAsk());
+        return true;
     }
 
     /**
@@ -335,9 +221,13 @@ public class SyncQueue {
      *
      * @param headers list of headers got from remote host
      * @param nodeId remote host nodeId
+     *
+     * @return true if blocks passed validation and were added to the queue,
+     *          otherwise it returns false
      */
-    public void addAndValidateHeaders(List<BlockHeader> headers, byte[] nodeId) {
-        List<BlockHeader> filtered = blockQueue.filterExistingHeaders(headers);
+    public boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
+
+        List<BlockHeaderWrapper> wrappers = new ArrayList<>(headers.size());
 
         for (BlockHeader header : headers) {
 
@@ -347,16 +237,18 @@ public class SyncQueue {
                     logger.debug("Invalid header RLP: {}", Hex.toHexString(header.getEncoded()));
                 }
 
-                syncManager.reportBadAction(nodeId);
-                return;
+                return false;
             }
 
+            wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        headerStore.addBatch(headers);
+        headerStore.addBatch(wrappers);
+        fireHeadersNotEmpty();
 
-        if (logger.isDebugEnabled())
-            logger.debug("{} headers filtered out, {} added", headers.size() - filtered.size(), filtered.size());
+        logger.debug("{} headers added", headers.size());
+
+        return true;
     }
 
     /**
@@ -365,8 +257,9 @@ public class SyncQueue {
      *
      * @param headers list of headers
      */
-    public void returnHeaders(List<BlockHeader> headers) {
+    public void returnHeaders(List<BlockHeaderWrapper> headers) {
         headerStore.addBatch(headers);
+        fireHeadersNotEmpty();
     }
 
     /**
@@ -374,22 +267,33 @@ public class SyncQueue {
      *
      * @return list of headers
      */
-    public List<BlockHeader> pollHeaders() {
+    public List<BlockHeaderWrapper> pollHeaders() {
+        if (logger.isDebugEnabled() && !headerStore.isEmpty())
+            logger.debug("Headers list size: {}", headerStore.size());
         return headerStore.pollBatch(config.maxBlocksAsk());
     }
 
-    // a bit ugly but really gives
-    // good result
-    public void logHashesSize() {
-        logger.debug("Hashes list size: [{}]", hashStore.size());
-    }
+    /**
+     * Performs the same work as {@link #pollHeaders()} does. <br>
+     * Blocks thread if header store is empty until new headers appears in the store
+     *
+     * @return list of headers
+     */
+    public List<BlockHeaderWrapper> takeHeaders() {
 
-    public void logHeadersSize() {
-        logger.debug("Headers list size: [{}]", headerStore.size());
-    }
-
-    public boolean isHashesEmpty() {
-        return hashStore.isEmpty();
+        headersLock.lock();
+        try {
+            List<BlockHeaderWrapper> headers;
+            while ((headers = headerStore.pollBatch(config.maxBlocksAsk())).isEmpty()) {
+                headersNotEmpty.awaitUninterruptibly();
+                if (longSyncDone) return emptyList();
+            }
+            if (logger.isDebugEnabled() && !headerStore.isEmpty())
+                logger.debug("Headers list size: {}", headerStore.size());
+            return headers;
+        } finally {
+            headersLock.unlock();
+        }
     }
 
     public boolean isHeadersEmpty() {
@@ -400,22 +304,16 @@ public class SyncQueue {
         return blockQueue.isEmpty();
     }
 
+    public boolean isLimitExceeded() {
+        return expectedBlocksCount() > BLOCK_QUEUE_LIMIT;
+    }
+
     public boolean isMoreBlocksNeeded() {
-        return blockQueue.size() < BLOCK_QUEUE_LIMIT;
+        return expectedBlocksCount() < BLOCK_QUEUE_LIMIT;
     }
 
-    public void clearHashes() {
-        if (!hashStore.isEmpty())
-            hashStore.clear();
-    }
-
-    public void clearHeaders() {
-        if (!headerStore.isEmpty())
-            headerStore.clear();
-    }
-
-    public int hashStoreSize() {
-        return hashStore.size();
+    private int expectedBlocksCount() {
+        return headerStore.size() + blockQueue.size();
     }
 
     public int headerStoreSize() {
@@ -423,41 +321,44 @@ public class SyncQueue {
     }
 
     /**
-     * Scans {@link #SCAN_BLOCKS_LIMIT} first blocks in the queue
-     * and removes blocks sent by given peer
+     * Removes blocks sent by given peer
      *
      * @param nodeId peer's node id
      */
     public void dropBlocks(byte[] nodeId) {
-        blockQueue.drop(nodeId, SCAN_BLOCKS_LIMIT);
+        blockQueue.drop(nodeId, 0);
     }
 
     /**
-     * Checks whether BlockQueue contains solid blocks or not. <br>
-     * Block is assumed to be solid in two cases:
-     * <ul>
-     *     <li>it was downloading during main sync</li>
-     *     <li>NEW block with exceeded solid timeout</li>
-     * </ul>
+     * Removes headers sent by given peer
      *
-     * @see BlockWrapper#SOLID_BLOCK_DURATION_THRESHOLD
-     *
-     * @return true if queue contains solid blocks, false otherwise
+     * @param nodeId peer's node id
      */
-    public boolean hasSolidBlocks() {
-        BlockWrapper wrapper = blockQueue.peek();
-        return wrapper != null && wrapper.isSolidBlock();
+    public void dropHeaders(byte[] nodeId) {
+        headerStore.drop(nodeId);
     }
 
     /**
-     * Checks if block exists in the queue
-     *
-     * @param hash block hash
-     *
-     * @return true if block exists, false otherwise
+     * @return latest block in the queue
      */
-    public boolean isBlockExist(byte[] hash) {
-        return blockQueue.isBlockExist(hash);
+    public BlockWrapper peekLastBlock() {
+        return blockQueue.peekLast();
+    }
+
+    /**
+     * @return latest block in the queue
+     */
+    public BlockWrapper peekFirstBlock() {
+        return blockQueue.peek();
+    }
+
+    /**
+     * Removes block if it's still on the queue
+     *
+     * @param block block to be removed
+     */
+    public void removeBlock(BlockWrapper block) {
+        blockQueue.remove(block);
     }
 
     /**
@@ -472,13 +373,39 @@ public class SyncQueue {
 
         if (!headerValidator.validate(header)) {
 
-            if (logger.isErrorEnabled())
-                headerValidator.logErrors(logger);
-
+            headerValidator.logErrors(logger);
             return false;
         }
 
         return true;
     }
 
+    private void fireHeadersNotEmpty() {
+        headersLock.lock();
+        try {
+            headersNotEmpty.signalAll();
+        } finally {
+            headersLock.unlock();
+        }
+    }
+
+    private void fireBlocksAdded() {
+        blocksLock.lock();
+        try {
+            blocksAdded.signalAll();
+        } finally {
+            blocksLock.unlock();
+        }
+    }
+
+    private void waitForBlocks() {
+        blocksLock.lock();
+        try {
+            blocksAdded.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            blocksLock.unlock();
+        }
+    }
 }

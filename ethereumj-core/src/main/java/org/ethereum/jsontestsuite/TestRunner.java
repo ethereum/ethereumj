@@ -70,15 +70,14 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.init(new HashMapDB(), new HashMapDB());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
-        Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener,
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, adminInfo, listener,
                 new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 
@@ -216,7 +215,7 @@ public class TestRunner {
             if (testCase.getPost().size() == 0) {
                 if (vmDidThrowAnEception != true) {
                     String output =
-                            String.format("VM was expected to throw an exception");
+                            "VM was expected to throw an exception";
                     logger.info(output);
                     results.add(output);
                 } else
@@ -224,7 +223,7 @@ public class TestRunner {
             } else {
                 if (vmDidThrowAnEception) {
                     String output =
-                            String.format("VM threw an unexpected exception: " + e.toString());
+                            "VM threw an unexpected exception: " + e.toString();
                     logger.info(output, e);
                     results.add(output);
                     return results;

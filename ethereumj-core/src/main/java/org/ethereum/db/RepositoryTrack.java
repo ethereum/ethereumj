@@ -14,6 +14,7 @@ import java.math.BigInteger;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
@@ -103,6 +104,19 @@ public class RepositoryTrack implements Repository {
     }
 
     @Override
+    public boolean hasContractDetails(byte[] addr) {
+        synchronized (repository) {
+            ContractDetails contractDetails = cacheDetails.get(wrap(addr));
+
+            if (contractDetails == null) {
+                return repository.hasContractDetails(addr);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    @Override
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                             HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
 
@@ -177,13 +191,14 @@ public class RepositoryTrack implements Repository {
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
+        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
     }
 
     @Override
     public BigInteger getBalance(byte[] addr) {
+        if (!isExist(addr)) return BigInteger.ZERO;
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? BigInteger.ZERO : accountState.getBalance();
+        return accountState == null ? AccountState.EMPTY.getBalance() : accountState.getBalance();
     }
 
     @Override
@@ -224,10 +239,8 @@ public class RepositoryTrack implements Repository {
                 return EMPTY_BYTE_ARRAY;
 
             byte[] codeHash = getAccountState(addr).getCodeHash();
-            if (Arrays.equals(codeHash, EMPTY_DATA_HASH))
-                return EMPTY_BYTE_ARRAY;
 
-            return getContractDetails(addr).getCode();
+            return getContractDetails(addr).getCode(codeHash);
         }
     }
 
@@ -268,7 +281,7 @@ public class RepositoryTrack implements Repository {
 
     @Override
     public Repository startTracking() {
-        logger.debug("start tracking");
+        logger.trace("start tracking: {}", this);
 
         Repository repository = new RepositoryTrack(this);
 
@@ -290,16 +303,23 @@ public class RepositoryTrack implements Repository {
     public void commit() {
 
         synchronized (repository) {
-            for (ContractDetails contractDetails : cacheDetails.values()) {
-
-                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetails;
+            for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cacheDetails.entrySet()) {
+                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) entry.getValue();
                 contractDetailsCache.commit();
+
+                if (contractDetailsCache.origContract == null && repository.hasContractDetails(entry.getKey().getData())) {
+                    // in forked block the contract account might not exist thus it is created without
+                    // origin, but on the main chain details can contain data which should be merged
+                    // into a single storage trie so both branches with different stateRoots are valid
+                    contractDetailsCache.origContract = repository.getContractDetails(entry.getKey().getData());
+                    contractDetailsCache.commit();
+                }
             }
 
             repository.updateBatch(cacheAccounts, cacheDetails);
             cacheAccounts.clear();
             cacheDetails.clear();
-            logger.debug("committed changes");
+            logger.trace("committed changes: {}", this);
         }
     }
 

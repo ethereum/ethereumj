@@ -1,9 +1,12 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.sync.SyncStateName;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.util.List;
@@ -44,12 +47,7 @@ public interface Eth {
      *
      * @param newState new state
      */
-    void changeState(SyncStateName newState);
-
-    /**
-     * @return true if syncState is BLOCKS_LACK, false otherwise
-     */
-    boolean hasBlocksLack();
+    void changeState(SyncState newState);
 
     /**
      * @return true if syncState is DONE_HASH_RETRIEVING, false otherwise
@@ -65,35 +63,6 @@ public interface Eth {
      * @return true if syncState is IDLE, false otherwise
      */
     boolean isIdle();
-
-    /**
-     * Sets maxHashesAsk param for GET_BLOCK_HASHES message
-     *
-     * @param maxHashesAsk maxHashesAsk value
-     */
-    void setMaxHashesAsk(int maxHashesAsk);
-
-    /**
-     * @return current value of maxHashesAsk param
-     */
-    int getMaxHashesAsk();
-
-    /**
-     * Sets last hash to be asked from the peer
-     *
-     * @param lastHashToAsk terminal hash
-     */
-    void setLastHashToAsk(byte[] lastHashToAsk);
-
-    /**
-     * @return lastHashToAsk value
-     */
-    byte[] getLastHashToAsk();
-
-    /**
-     * @return best hash (that we're aware of) known by the peer
-     */
-    byte[] getBestKnownHash();
 
     /**
      * @return sync statistics
@@ -123,12 +92,45 @@ public interface Eth {
     void sendNewBlock(Block newBlock);
 
     /**
+     * Sends new block hashes message to the wire
+     */
+    void sendNewBlockHashes(Block block);
+
+    /**
      * @return protocol version
      */
     EthVersion getVersion();
 
     /**
-     * Fires inner logic related to main sync done event
+     * Fires inner logic related to long sync done or undone event
+     *
+     * @param done true notifies that long sync is finished,
+     *             false notifies that it's enabled again
      */
-    void onSyncDone();
+    void onSyncDone(boolean done);
+
+    /**
+     * Sends {@link EthMessageCodes#STATUS} message
+     */
+    void sendStatus();
+
+    /**
+     * Tries to recover a gap
+     *
+     * @param block gap block
+     */
+    void recoverGap(BlockWrapper block);
+
+    /**
+     * Drops connection with remote peer.
+     * It should be called when peer don't behave
+     */
+    void dropConnection();
+
+    /**
+     * Force peer to fetch block bodies
+     *
+     * @param headers related headers
+     */
+    void fetchBodies(List<BlockHeaderWrapper> headers);
 }

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.net.BindException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,17 +47,21 @@ public class UDPListener {
             bootPeers = config.peerDiscoveryIPList().toArray(new String[0]);
         }
         if (config.peerDiscovery()) {
-            new Thread("UDPListener") {
-                @Override
-                public void run() {
-                    try {
-                        UDPListener.this.start(bootPeers);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        throw new RuntimeException(e);
+            if (port == 0) {
+                logger.error("Discovery can't be started while listen port == 0");
+            } else {
+                new Thread("UDPListener") {
+                    @Override
+                    public void run() {
+                        try {
+                            UDPListener.this.start(bootPeers);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            throw new RuntimeException(e);
+                        }
                     }
-                }
-            }.start();
+                }.start();
+            }
         }
     }
 
@@ -89,7 +94,7 @@ public class UDPListener {
             DiscoveryExecutor discoveryExecutor = new DiscoveryExecutor(nodeManager);
             discoveryExecutor.start();
 
-            while(true) {
+            while (true) {
                 Bootstrap b = new Bootstrap();
                 b.group(group)
                         .channel(NioDatagramChannel.class)
@@ -111,7 +116,11 @@ public class UDPListener {
                 Thread.sleep(5000);
             }
         } catch (Exception e) {
-            logger.error("{}", e);
+            if (e instanceof BindException && e.getMessage().contains("Address already in use")) {
+                logger.error("Port " + port + " is busy. Check if another instance is running with the same port.");
+            } else {
+                logger.error("Can't start discover: ", e);
+            }
         } finally {
             group.shutdownGracefully().sync();
         }

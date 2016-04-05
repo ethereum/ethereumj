@@ -1,5 +1,6 @@
 package org.ethereum.config;
 
+import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
@@ -15,6 +16,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Scope;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -55,42 +57,19 @@ public class DefaultConfig {
 
     @Bean
     public BlockStore blockStore(){
-
-        String database = config.databaseDir();
-
-        String blocksIndexFile = database + "/blocks/index";
-        File dbFile = new File(blocksIndexFile);
-        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-
-        DB indexDB = DBMaker.fileDB(dbFile)
-                .closeOnJvmShutdown()
-                .make();
-
-        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = indexDB.hashMapCreate("index")
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(BLOCK_INFO_SERIALIZER)
-                .counterEnable()
-                .makeOrGet();
-
-        KeyValueDataSource blocksDB = appCtx.getBean(LevelDbDataSource.class, "blocks");
-        blocksDB.init();
-
-
-        IndexedBlockStore cache = new IndexedBlockStore();
-        cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
-
+        KeyValueDataSource index = commonConfig.keyValueDataSource();
+        index.setName("index");
+        index.init();
+        KeyValueDataSource blocks = commonConfig.keyValueDataSource();
+        blocks.setName("block");
+        blocks.init();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(indexMap, blocksDB, cache, indexDB);
-
+        indexedBlockStore.init(new CachingDataSource(index), new CachingDataSource(blocks));
 
         return indexedBlockStore;
     }
 
-    @Bean
-    LevelDbDataSource levelDbDataSource() {
-        return new LevelDbDataSource();
-    }
-    @Bean
+    @Bean @Scope("prototype")
     LevelDbDataSource levelDbDataSource(String name) {
         return new LevelDbDataSource(name);
     }

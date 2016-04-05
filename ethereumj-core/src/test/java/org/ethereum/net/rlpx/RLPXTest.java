@@ -10,6 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -75,7 +76,7 @@ public class RLPXTest {
 
         Node node = new Node(id, ip, port);
 
-        List<Node> nodes = Arrays.asList(node);
+        List<Node> nodes = Collections.singletonList(node);
         ECKey key = ECKey.fromPrivate(BigInteger.TEN);
 
         Message neighbors = NeighborsMessage.create(nodes, key);

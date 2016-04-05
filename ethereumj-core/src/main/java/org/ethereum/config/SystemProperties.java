@@ -4,6 +4,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.config.blockchain.OlympicConfig;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.config.net.MordenNetConfig;
+import org.ethereum.config.net.TestNetConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -82,6 +86,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
+    private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
     public SystemProperties() {
@@ -101,6 +106,9 @@ public class SystemProperties {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
+            String res = System.getProperty("ethereumj.conf.res");
+            Config cmdLineConfigRes = res != null ? ConfigFactory.parseResources(res) : ConfigFactory.empty();
+            logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.res resource '" + res + "'");
             Config userConfig = ConfigFactory.parseResources("user.conf");
             logger.info("Config (" + (userConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from resource 'user.conf'");
             File userDirFile = new File(System.getProperty("user.dir"), "/config/ethereumj.conf");
@@ -111,17 +119,17 @@ public class SystemProperties {
             Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
             logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
-            Config cmdLineConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
-                    ConfigFactory.empty();
-            logger.info("Config (" + (cmdLineConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
+            Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
+            logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = javaSystemProperties
                     .withFallback(apiConfig)
-                    .withFallback(cmdLineConfig)
+                    .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
                     .withFallback(userConfig)
                     .withFallback(userDirConfig)
+                    .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
             validateConfig();
 
@@ -206,6 +214,50 @@ public class SystemProperties {
         String string = config.getString(propName);
         if (string.trim().isEmpty()) return defaultValue;
         return (T) config.getAnyRef(propName);
+    }
+
+    @ValidateMe
+    public BlockchainNetConfig getBlockchainConfig() {
+        if (blockchainConfig == null) {
+            if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
+                throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
+            }
+            if (config.hasPath("blockchain.config.name")) {
+                switch(config.getString("blockchain.config.name")) {
+                    case "main":
+                        blockchainConfig = new MainNetConfig();
+                        break;
+                    case "olympic":
+                        blockchainConfig = new OlympicConfig();
+                        break;
+                    case "morden":
+                        blockchainConfig = new MordenNetConfig();
+                        break;
+                    case "testnet":
+                        blockchainConfig = new TestNetConfig();
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
+                }
+            } else {
+                String className = config.getString("blockchain.config.class");
+                try {
+                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) Class.forName(className);
+                    blockchainConfig = aClass.newInstance();
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
+                } catch (ClassCastException e) {
+                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' is not instance of org.ethereum.config.BlockchainForkConfig" , e);
+                } catch (InstantiationException|IllegalAccessException e) {
+                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' couldn't be instantiated (check for default constructor and its accessibility)" , e);
+                }
+            }
+        }
+        return blockchainConfig;
+    }
+
+    public void setBlockchainConfig(BlockchainNetConfig config) {
+        blockchainConfig = config;
     }
 
     @ValidateMe
@@ -539,6 +591,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean eip8() {
+        return config.getBoolean("peer.p2p.eip8");
+    }
+
+    @ValidateMe
     public int listenPort() {
         return config.getInt("peer.listen.port");
     }
@@ -621,20 +678,12 @@ public class SystemProperties {
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
 
     @ValidateMe
-    public boolean isStorageDictionaryEnabled() { return config.getBoolean("vm.structured.storage.dictionary.enabled");}
-
-
-    @ValidateMe
     public String genesisInfo() {
 
         if (genesisInfo == null)
             return config.getString("genesis");
         else
             return genesisInfo;
-    }
-
-    public boolean isFrontier() {
-        return genesisInfo().contains("frontier");
     }
 
     @ValidateMe

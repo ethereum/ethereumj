@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -114,15 +115,8 @@ public class Transaction {
 
         if (!parsed) rlpParse();
 
-        long nonZeroes = nonZeroDataBytes();
-        long zeroVals  = getLength(data) - nonZeroes;
-
-        if (block.isHomestead()) {
-            return (isContractCreation() ? GasCost.TRANSACTION_CREATE_CONTRACT : GasCost.TRANSACTION)
-                    + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
-        } else {
-            return GasCost.TRANSACTION + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
-        }
+        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(block.getNumber()).
+                getTransactionCost(this);
     }
 
     public void rlpParse() {
@@ -245,7 +239,7 @@ public class Transaction {
         return ECKey.recoverFromSignature(signature.v, signature, hash, true);
     }
 
-    public byte[] getSender() {
+    public synchronized byte[] getSender() {
         try {
             if (sendAddress == null) {
                 ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());
@@ -267,14 +261,27 @@ public class Transaction {
 
     @Override
     public String toString() {
+        return toString(Integer.MAX_VALUE);
+    }
+
+    public String toString(int maxDataSize) {
         if (!parsed) rlpParse();
+        String dataS;
+        if (data == null) {
+            dataS = "";
+        } else if (data.length < maxDataSize) {
+            dataS = ByteUtil.toHexString(data);
+        } else {
+            dataS = ByteUtil.toHexString(Arrays.copyOfRange(data, 0, maxDataSize)) +
+                    "... (" + data.length + " bytes)";
+        }
         return "TransactionData [" + "hash=" + ByteUtil.toHexString(hash) +
                 "  nonce=" + ByteUtil.toHexString(nonce) +
                 ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
                 ", gas=" + ByteUtil.toHexString(gasLimit) +
                 ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
                 ", value=" + ByteUtil.toHexString(value) +
-                ", data=" + ByteUtil.toHexString(data) +
+                ", data=" + dataS +
                 ", signatureV=" + (signature == null ? "" : signature.v) +
                 ", signatureR=" + (signature == null ? "" : ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r))) +
                 ", signatureS=" + (signature == null ? "" : ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s))) +

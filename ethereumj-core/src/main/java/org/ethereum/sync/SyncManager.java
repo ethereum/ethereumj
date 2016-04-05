@@ -1,38 +1,25 @@
 package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.rlpx.discover.DiscoverListener;
-import org.ethereum.net.rlpx.discover.NodeHandler;
-import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.Functional;
-import org.ethereum.util.Utils;
+import org.ethereum.sync.listener.CompositeSyncListener;
+import org.ethereum.sync.listener.SyncListener;
+import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.sync.strategy.SyncStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import java.math.BigInteger;
-import java.util.*;
 import java.util.concurrent.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
-import static org.ethereum.sync.SyncStateName.*;
-import static org.ethereum.util.BIUtil.isIn20PercentRange;
-import static org.ethereum.util.TimeUtils.secondsToMillis;
+import static org.ethereum.sync.SyncState.*;
 
 /**
  * @author Mikhail Kalinin
@@ -43,42 +30,11 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final long WORKER_TIMEOUT = secondsToMillis(1);
-    private static final long PEER_STUCK_TIMEOUT = secondsToMillis(60);
-    private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
+    private static final long FORWARD_SWITCH_LIMIT = 100;
+    private static final long BACKWARD_SWITCH_LIMIT = 200;
 
     @Autowired
     SystemProperties config;
-
-    @Resource
-    @Qualifier("syncStates")
-    private Map<SyncStateName, SyncState> syncStates;
-
-    @Autowired
-    private StateInitiator stateInitiator;
-
-    private SyncState state;
-    private final Object stateMutex = new Object();
-
-    /**
-     * master peer version
-     */
-    EthVersion masterVersion = V62;
-
-    /**
-     * block which gap recovery is running for
-     */
-    private BlockWrapper gapBlock;
-
-    /**
-     * true if sync done event was triggered
-     */
-    private boolean syncDone = false;
-
-    private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
-    private BigInteger highestKnownDifficulty = BigInteger.ZERO;
-
-    private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     Blockchain blockchain;
@@ -87,16 +43,19 @@ public class SyncManager {
     SyncQueue queue;
 
     @Autowired
-    NodeManager nodeManager;
-
-    @Autowired
     EthereumListener ethereumListener;
 
     @Autowired
-    PeersPool pool;
+    SyncPool pool;
 
     @Autowired
     ChannelManager channelManager;
+
+    @Autowired
+    SyncStrategy longSync;
+
+    @Autowired
+    CompositeSyncListener compositeSyncListener;
 
     @PostConstruct
     public void init() {
@@ -106,9 +65,6 @@ public class SyncManager {
             @Override
             public void run() {
 
-                // sync queue
-                queue.init();
-
                 if (!config.isSyncEnabled()) {
                     logger.info("Sync Manager: OFF");
                     return;
@@ -116,31 +72,20 @@ public class SyncManager {
 
                 logger.info("Sync Manager: ON");
 
-                // set IDLE state at the beginning
-                state = syncStates.get(IDLE);
+                // sync queue
+                queue.init();
 
-                masterVersion = initialMasterVersion();
+                // switch between Long and Short
+                compositeSyncListener.add(onNewBlock);
 
-                updateDifficulties();
+                // recover a gap
+                compositeSyncListener.add(onNoParent);
 
-                changeState(stateInitiator.initiate());
+                // starting from long sync
+                logger.info("Start Long sync");
+                longSync.start();
 
-                addBestKnownNodeListener();
-
-                worker.scheduleWithFixedDelay(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            updateDifficulties();
-                            removeUselessPeers();
-                            fillUpPeersPool();
-                            maintainState();
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            logger.error("Exception in main sync worker", t);
-                        }
-                    }
-                }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
+                ethereumListener.onLongSyncStarted();
 
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
@@ -150,293 +95,94 @@ public class SyncManager {
         }).start();
     }
 
-    public void addPeer(Channel peer) {
-        if (!config.isSyncEnabled()) {
-            return;
+    public boolean isSyncDone() {
+        return !longSync.inProgress();
+    }
+
+    private void onSyncDone(boolean done) {
+
+        channelManager.onSyncDone(done);
+
+        if (done) {
+            ethereumListener.onSyncDone();
+            ethereumListener.onLongSyncDone();
+            logger.info("Long sync is finished");
+        } else {
+            ethereumListener.onLongSyncStarted();
         }
+    }
 
-        if (logger.isTraceEnabled()) logger.trace(
-                "Peer {}: adding",
-                peer.getPeerIdShort()
-        );
+    // LISTENERS
 
-        BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
+    private final SyncListener onNewBlock = new SyncListenerAdapter() {
 
-        if (!isIn20PercentRange(peerTotalDifficulty, lowerUsefulDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: difficulty significantly lower than ours: {} vs {}, skipping",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    lowerUsefulDifficulty.toString()
-            );
-            // TODO report low total difficulty
-            return;
-        }
+        @Override
+        public void onNewBlockNumber(long newNumber) {
 
-        if (state.is(HASH_RETRIEVING) && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: its chain is better than previously known: {} vs {}, rotate master peer",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    highestKnownDifficulty.toString()
-            );
+            long bestNumber = blockchain.getBestBlock().getNumber();
+            long diff = newNumber - bestNumber;
 
-            Channel master = pool.findOne(new Functional.Predicate<Channel>() {
-                @Override
-                public boolean test(Channel peer) {
-                    return peer.isHashRetrieving() || peer.isHashRetrievingDone();
-                }
-            });
+            if (diff < 0) return;
 
-            if (master == null || master.isEthCompatible(peer)) {
+            if (longSync.inProgress() && diff <= FORWARD_SWITCH_LIMIT) {
 
-                // should be synchronized with HASH_RETRIEVING state maintenance
-                // to avoid double master peer initializing
-                synchronized (stateMutex) {
-                    startMaster(peer);
-                }
+                logger.debug("Switch to Short sync, best {} vs new {}", bestNumber, newNumber);
+
+                // stop master
+                Channel master = pool.getMaster();
+                if (master != null) master.changeSyncState(IDLE);
+
+                longSync.stop();
+                onSyncDone(true);
+
+            } else if (!longSync.inProgress() && diff > BACKWARD_SWITCH_LIMIT) {
+
+                logger.debug("Switch to Long sync, best {} vs new {}", bestNumber, newNumber);
+
+                // stop master
+                Channel master = pool.getMaster();
+                if (master != null) master.changeSyncState(IDLE);
+
+                longSync.start();
+                onSyncDone(false);
+
             }
         }
+    };
 
-        updateHighestKnownDifficulty(peerTotalDifficulty);
+    private final SyncListener onNoParent = new SyncListenerAdapter() {
 
-        pool.add(peer);
-    }
+        @Override
+        public void onNoParent(BlockWrapper block) {
 
-    public void onDisconnect(Channel peer) {
+            // recover gap only during Short sync
+            if (longSync.inProgress()) return;
 
-        // if master peer has been disconnected
-        // we need to process data it sent
-        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
-            changeState(BLOCK_RETRIEVING);
-        }
+            BlockWrapper gapBlock = queue.peekFirstBlock();
+            Channel master = pool.getByNodeId(gapBlock.getNodeId());
 
-        pool.onDisconnect(peer);
-    }
+            // drop the block if there is no peer which sent it to us
+            if (master == null) {
+                if (logger.isTraceEnabled()) logger.trace("Peer {} not found, remove block #{}",
+                        Hex.toHexString(gapBlock.getNodeId()).substring(0, 6), gapBlock.getNumber());
+                queue.removeBlock(gapBlock);
+                return;
+            }
 
-    public void tryGapRecovery(BlockWrapper wrapper) {
-        if (!isGapRecoveryAllowed(wrapper)) {
-            return;
-        }
+            // wait if gap recovery is already in progress
+            if (!master.isIdle()) return;
 
-        if (logger.isDebugEnabled()) logger.debug(
-                "Recovering gap: best.number [{}] vs block.number [{}]",
-                blockchain.getBestBlock().getNumber(),
-                wrapper.getNumber()
-        );
-
-        gapBlock = wrapper;
-
-        changeState(HASH_RETRIEVING);
-    }
-
-    public BlockWrapper getGapBlock() {
-        return gapBlock;
-    }
-
-    void resetGapRecovery() {
-        this.gapBlock = null;
-    }
-
-    public void notifyNewBlockImported(BlockWrapper wrapper) {
-        if (syncDone) {
-            return;
-        }
-
-        if (!wrapper.isSolidBlock()) {
-            syncDone = true;
-            onSyncDone();
-
-            logger.debug("NEW block.number [{}] imported", wrapper.getNumber());
-        } else if (logger.isInfoEnabled()) {
-            logger.debug(
-                    "NEW block.number [{}] block.minsSinceReceiving [{}] exceeds import time limit, continue sync",
-                    wrapper.getNumber(),
-                    wrapper.timeSinceReceiving() / 1000 / 60
+            if (logger.isDebugEnabled()) logger.debug(
+                    "Recover gap: best.number [{}] vs block.number [{}]",
+                    blockchain.getBestBlock().getNumber(),
+                    gapBlock.getNumber()
             );
+
+            master.recoverGap(gapBlock);
         }
-    }
+    };
 
-    public boolean isSyncDone() {
-        return syncDone;
-    }
-
-    public void reportBadAction(byte[] nodeId) {
-
-        Channel peer = pool.getByNodeId(nodeId);
-
-        if (peer != null) {
-            logger.info("Peer {}: bad action, drop it", peer.getPeerIdShort());
-            peer.disconnect(USELESS_PEER);
-        }
-
-        queue.dropBlocks(nodeId);
-
-        // TODO decrease peer's reputation
-
-    }
-
-    private int gapSize(BlockWrapper block) {
-        Block bestBlock = blockchain.getBestBlock();
-        return (int) (block.getNumber() - bestBlock.getNumber());
-    }
-
-    private void onSyncDone() {
-        channelManager.onSyncDone();
-        ethereumListener.onSyncDone();
-        logger.info("Main synchronization is finished");
-    }
-
-    private boolean isGapRecoveryAllowed(BlockWrapper block) {
-        // hashes are not downloaded yet, recovery doesn't make sense at all
-        if (state.is(HASH_RETRIEVING)) {
-            return false;
-        }
-
-        // no peers compatible with latest master left, we're stuck
-        if (!pool.hasCompatible(masterVersion)) {
-            logger.trace("No peers compatible with {}, recover the gap", masterVersion);
-            return true;
-        }
-
-        // gap for this block is being recovered
-        if (block.equals(gapBlock) && !state.is(IDLE)) {
-            logger.trace("Gap recovery is already in progress for block.number [{}]", gapBlock.getNumber());
-            return false;
-        }
-
-        // ALL blocks are downloaded, we definitely have a gap
-        if (!hasBlockHashes()) {
-            logger.trace("No hashes/headers left, recover the gap", masterVersion);
-            return true;
-        }
-
-        // if blocks downloading is in progress
-        // and import fails during some period of time
-        // then we assume that faced with a gap
-        // but anyway NEW blocks must wait until SyncManager becomes idle
-        if (!block.isNewBlock()) {
-            return block.timeSinceFail() > GAP_RECOVERY_TIMEOUT;
-        } else {
-            return state.is(IDLE);
-        }
-    }
-
-    void changeState(SyncStateName newStateName) {
-        SyncState newState = syncStates.get(newStateName);
-
-        if (state == newState) {
-            return;
-        }
-
-        logger.info("Changing state from {} to {}", state, newState);
-
-        synchronized (stateMutex) {
-            newState.doOnTransition();
-            state = newState;
-        }
-    }
-
-    boolean isPeerStuck(Channel peer) {
-        SyncStatistics stats = peer.getSyncStats();
-
-        return stats.millisSinceLastUpdate() > PEER_STUCK_TIMEOUT
-                || stats.getEmptyResponsesCount() > 0;
-    }
-
-    void startMaster(Channel master) {
-        pool.changeState(IDLE);
-
-        masterVersion = master.getEthVersion();
-
-        if (gapBlock != null) {
-            master.setLastHashToAsk(gapBlock.getHash());
-        } else {
-            master.setLastHashToAsk(master.getBestKnownHash());
-            queue.clearHashes();
-            queue.clearHeaders();
-        }
-
-        master.changeSyncState(HASH_RETRIEVING);
-
-        if (logger.isInfoEnabled()) logger.info(
-                "Peer {}: {} initiated, lastHashToAsk [{}], askLimit [{}]",
-                master.getPeerIdShort(),
-                state,
-                Hex.toHexString(master.getLastHashToAsk()),
-                master.getMaxHashesAsk()
-        );
-    }
-
-    boolean hasBlockHashes() {
-        if (masterVersion.isCompatible(V62)) {
-            return !queue.isHeadersEmpty();
-        } else {
-            return !queue.isHashesEmpty();
-        }
-    }
-
-    private void updateDifficulties() {
-        updateLowerUsefulDifficulty(blockchain.getTotalDifficulty());
-        updateHighestKnownDifficulty(blockchain.getTotalDifficulty());
-    }
-
-    private void updateLowerUsefulDifficulty(BigInteger difficulty) {
-        if (difficulty.compareTo(lowerUsefulDifficulty) > 0) {
-            lowerUsefulDifficulty = difficulty;
-        }
-    }
-
-    private void updateHighestKnownDifficulty(BigInteger difficulty) {
-        if (difficulty.compareTo(highestKnownDifficulty) > 0) {
-            highestKnownDifficulty = difficulty;
-        }
-    }
-
-    private EthVersion initialMasterVersion() {
-
-        if (CONFIG.syncVersion() != null) {
-            return EthVersion.fromCode(CONFIG.syncVersion());
-        }
-
-        if (!queue.isHeadersEmpty() || queue.isHashesEmpty()) {
-            return V62;
-        } else {
-            return V61;
-        }
-    }
-
-    private void addBestKnownNodeListener() {
-        nodeManager.addDiscoverListener(
-                new DiscoverListener() {
-                    @Override
-                    public void nodeAppeared(NodeHandler handler) {
-                        if (logger.isTraceEnabled()) logger.trace(
-                                "Peer {}: new best chain peer discovered: {} vs {}",
-                                handler.getNode().getHexIdShort(),
-                                handler.getNodeStatistics().getEthTotalDifficulty(),
-                                highestKnownDifficulty
-                        );
-                        pool.connect(handler.getNode());
-                    }
-
-                    @Override
-                    public void nodeDisappeared(NodeHandler handler) {
-                    }
-                },
-                new Functional.Predicate<NodeStatistics>() {
-                    @Override
-                    public boolean test(NodeStatistics nodeStatistics) {
-                        if (nodeStatistics.getEthTotalDifficulty() == null) {
-                            return false;
-                        }
-                        return !isIn20PercentRange(highestKnownDifficulty, nodeStatistics.getEthTotalDifficulty());
-                    }
-                }
-        );
-    }
-
-    // WORKER
+    // LOGS
 
     private void startLogWorker() {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
@@ -444,74 +190,13 @@ public class SyncManager {
             public void run() {
                 try {
                     pool.logActivePeers();
-                    pool.logBannedPeers();
                     logger.info("\n");
-                    logger.info("State {}\n", state);
+                    logger.info("State {}\n", longSync.getState());
                 } catch (Throwable t) {
                     t.printStackTrace();
                     logger.error("Exception in log worker", t);
                 }
             }
         }, 0, 30, TimeUnit.SECONDS);
-    }
-
-    private void removeUselessPeers() {
-        List<Channel> removed = new ArrayList<>();
-        for (Channel peer : pool) {
-            if (peer.hasBlocksLack()) {
-                logger.info("Peer {}: has no more blocks, ban", peer.getPeerIdShort());
-                removed.add(peer);
-                updateLowerUsefulDifficulty(peer.getTotalDifficulty());
-            }
-        }
-
-        // todo decrease peers' reputation
-
-        for (Channel peer : removed) {
-            pool.ban(peer);
-        }
-    }
-
-    private void fillUpPeersPool() {
-        int lackSize = config.syncPeerCount() - pool.activeCount();
-        if(lackSize <= 0) {
-            return;
-        }
-
-        Set<String> nodesInUse = pool.nodesInUse();
-
-        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
-        if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
-        }
-
-        if (logger.isTraceEnabled()) {
-            logDiscoveredNodes(newNodes);
-        }
-
-        for(NodeHandler n : newNodes) {
-            pool.connect(n.getNode());
-        }
-    }
-
-    private void logDiscoveredNodes(List<NodeHandler> nodes) {
-        StringBuilder sb = new StringBuilder();
-        for(NodeHandler n : nodes) {
-            sb.append(Utils.getNodeIdShort(Hex.toHexString(n.getNode().getId())));
-            sb.append(", ");
-        }
-        if(sb.length() > 0) {
-            sb.delete(sb.length() - 2, sb.length());
-        }
-        logger.trace(
-                "Node list obtained from discovery: {}",
-                nodes.size() > 0 ? sb.toString() : "empty"
-        );
-    }
-
-    private void maintainState() {
-        synchronized (stateMutex) {
-            state.doMaintain();
-        }
     }
 }

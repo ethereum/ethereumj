@@ -2,13 +2,15 @@ package org.ethereum.sync;
 
 /**
  * @author Mikhail Kalinin
- * @since 13.08.2015
+ * @since 14.07.2015
  */
-public interface SyncState {
+public enum SyncState {
 
-    boolean is(SyncStateName name);
+    // Common
+    IDLE,
+    HASH_RETRIEVING,
+    BLOCK_RETRIEVING,
 
-    void doOnTransition();
-
-    void doMaintain();
+    // Peer
+    DONE_HASH_RETRIEVING
 }

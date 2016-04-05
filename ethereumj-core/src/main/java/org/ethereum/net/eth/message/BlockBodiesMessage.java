@@ -77,7 +77,7 @@ public class BlockBodiesMessage extends EthMessage {
 
         payload.append("count( ").append(blockBodies.size()).append(" )");
 
-        if (logger.isDebugEnabled()) {
+        if (logger.isTraceEnabled()) {
             payload.append(" ");
             for (byte[] body : blockBodies) {
                 payload.append(Hex.toHexString(body)).append(" | ");

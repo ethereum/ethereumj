@@ -51,7 +51,7 @@ public class ImportTest {
         public BlockStore blockStore(SessionFactory sessionFactory){
 
             IndexedBlockStore blockStore = new IndexedBlockStore();
-            blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+            blockStore.init(new HashMapDB(), new HashMapDB());
 
             return blockStore;
         }

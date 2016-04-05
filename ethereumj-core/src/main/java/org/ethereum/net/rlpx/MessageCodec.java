@@ -135,8 +135,8 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
         Message msg = createMessage((byte) frameType, payload);
 
-        if (loggerNet.isInfoEnabled())
-            loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg.toString());
+        if (loggerNet.isDebugEnabled())
+            loggerNet.debug("From: \t{} \tRecv: \t{}", channel, msg.toString());
 
         ethereumListener.onRecvMessage(channel, msg);
 
@@ -149,8 +149,8 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
         ethereumListener.trace(output);
 
-        if (loggerNet.isInfoEnabled())
-            loggerNet.info("To: \t{} \tSend: \t{}", channel, msg);
+        if (loggerNet.isDebugEnabled())
+            loggerNet.debug("To: \t{} \tSend: \t{}", channel, msg);
 
         byte[] encoded = msg.getEncoded();
 

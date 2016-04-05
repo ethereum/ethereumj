@@ -147,7 +147,8 @@ public class EthereumIESEngine
     private byte[] encryptBlock(
         byte[] in,
         int inOff,
-        int inLen)
+        int inLen,
+        byte[] macData)
         throws InvalidCipherTextException
     {
         byte[] C = null, K = null, K1 = null, K2 = null;
@@ -236,6 +237,10 @@ public class EthereumIESEngine
             mac.update(L2, 0, L2.length);
         }
 
+        if (macData != null) {
+            mac.update(macData, 0, macData.length);
+        }
+
         mac.doFinal(T, 0);
 
         // Output the triple (V,C,T).
@@ -249,7 +254,8 @@ public class EthereumIESEngine
     private byte[] decryptBlock(
         byte[] in_enc,
         int inOff,
-        int inLen)
+        int inLen,
+        byte[] macData)
         throws InvalidCipherTextException
     {
         byte[] M = null, K = null, K1 = null, K2 = null;
@@ -348,6 +354,11 @@ public class EthereumIESEngine
             Pack.intToBigEndian(P2.length * 8, L2, 0);
             mac.update(L2, 0, L2.length);
         }
+
+        if (macData != null) {
+            mac.update(macData, 0, macData.length);
+        }
+
         mac.doFinal(T2, 0);
 
         if (!Arrays.constantTimeAreEqual(T1, T2))
@@ -360,11 +371,15 @@ public class EthereumIESEngine
         return Arrays.copyOfRange(M, 0, len);
     }
 
+    public byte[] processBlock(byte[] in, int inOff, int inLen) throws InvalidCipherTextException {
+        return processBlock(in, inOff, inLen, null);
+    }
 
     public byte[] processBlock(
         byte[] in,
         int inOff,
-        int inLen)
+        int inLen,
+        byte[] macData)
         throws InvalidCipherTextException
     {
         if (forEncryption)
@@ -425,7 +440,7 @@ public class EthereumIESEngine
         kdf.init(kdfParam);
 
         return forEncryption
-            ? encryptBlock(in, inOff, inLen)
-            : decryptBlock(in, inOff, inLen);
+            ? encryptBlock(in, inOff, inLen, macData)
+            : decryptBlock(in, inOff, inLen, macData);
     }
 }

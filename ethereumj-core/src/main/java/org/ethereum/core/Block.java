@@ -30,16 +30,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class Block {
 
-    private static final Logger logger = LoggerFactory.getLogger("block");
-
-    public static final BigInteger BLOCK_REWARD = CONFIG.isFrontier() ?
-            new BigInteger("5000000000000000000") :
-            new BigInteger("1500000000000000000");
-
-    public static final BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
-            BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
-    public static final BigInteger INCLUSION_REWARD = BLOCK_REWARD
-            .divide(BigInteger.valueOf(32));
+    private static final Logger logger = LoggerFactory.getLogger("blockchain");
 
     private BlockHeader header;
 
@@ -101,7 +92,7 @@ public class Block {
         this.header.setTransactionsRoot(BlockchainImpl.calcTxTrie(transactionsList));
         if (!Hex.toHexString(transactionsRoot).
                 equals(Hex.toHexString(this.header.getTxTrieRoot())))
-            logger.error("Transaction root miss-calculate, block: {}", getNumber());
+            logger.debug("Transaction root miss-calculate, block: {}", getNumber());
 
         this.header.setStateRoot(stateRoot);
         this.header.setReceiptsRoot(receiptsRoot);
@@ -300,7 +291,7 @@ public class Block {
         toStringBuff.setLength(0);
         toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
         toStringBuff.append("BlockData [ ");
-        toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
+        toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
 
         if (!getUncleList().isEmpty()) {
@@ -361,7 +352,7 @@ public class Block {
         parseTxs(txTransactions);
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot))) {
-            logger.error("Transactions trie root validation failed for block #{}", this.header.getNumber());
+            logger.debug("Transactions trie root validation failed for block #{}", this.header.getNumber());
             return false;
         }
 
@@ -449,10 +440,6 @@ public class Block {
         body.add(uncles);
 
         return body;
-    }
-
-    public boolean isHomestead() {
-        return getHeader().isHomestead();
     }
 
     public String getShortHash() {

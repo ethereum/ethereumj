@@ -74,7 +74,7 @@ public class PeerClient {
 
         } catch (Exception e) {
             if (discoveryMode) {
-                logger.debug("Exception:", e);
+                logger.trace("Exception:", e);
             } else {
                 if (e instanceof IOException) {
                     logger.info("PeerClient: Can't connect to " + host + ":" + port + " (" + e.getMessage() + ")");

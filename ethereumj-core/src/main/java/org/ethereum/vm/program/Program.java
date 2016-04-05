@@ -1,11 +1,13 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
 import org.ethereum.vm.MessageCall.MsgType;
@@ -40,7 +42,6 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 public class Program {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
-    private static final Logger gasLogger = LoggerFactory.getLogger("gas");
 
     /**
      * This attribute defines the number of recursive calls allowed in the EVM
@@ -311,7 +312,13 @@ public class Program {
 
         addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
 
-        transfer(getStorage(), owner, obtainer, balance);
+        if (FastByteComparisons.compareTo(owner, 0, 20, obtainer, 0, 20) == 0) {
+            // if owner == obtainer just zeroing account according to Yellow Paper
+            getStorage().addBalance(owner, balance.negate());
+        } else {
+            transfer(getStorage(), owner, obtainer, balance);
+        }
+
         getResult().addDeleteAccount(this.getOwnerAddress());
     }
 
@@ -382,7 +389,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), getOwnerAddress(), DataWord.ZERO, gasLimit,
+                this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
@@ -393,7 +400,7 @@ public class Program {
             vm.play(program);
             result = program.getResult();
 
-            getResult().addInternalTransactions(result.getInternalTransactions());
+            getResult().merge(result);
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
@@ -402,7 +409,7 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (BlockHeader.isHomestead(getNumber().longValue())) {
+            if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {
@@ -437,8 +444,8 @@ public class Program {
         long refundGas = gasLimit.longValue() - result.getGasUsed();
         if (refundGas > 0) {
             refundGas(refundGas, "remain gas from the internal call");
-            if (gasLogger.isInfoEnabled()) {
-                gasLogger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
+            if (logger.isInfoEnabled()) {
+                logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
                         Hex.toHexString(getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
@@ -519,7 +526,7 @@ public class Program {
             getResult().merge(result);
 
             if (result.getException() != null) {
-                gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+                logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                         Hex.toHexString(contextAddress),
                         result.getException());
 
@@ -550,8 +557,8 @@ public class Program {
             BigInteger refundGas = msg.getGas().value().subtract(toBI(result.getGasUsed()));
             if (isPositive(refundGas)) {
                 refundGas(refundGas.longValue(), "remaining gas from the internal call");
-                if (gasLogger.isInfoEnabled())
-                    gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
+                if (logger.isInfoEnabled())
+                    logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
                             Hex.toHexString(senderAddress),
                             refundGas.toString());
             }
@@ -561,7 +568,7 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
         if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
@@ -574,7 +581,7 @@ public class Program {
     }
 
     public void refundGas(long gasValue, String cause) {
-        gasLogger.info("[{}] Refund for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.info("[{}] Refund for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
         getResult().refundGas(gasValue);
     }
 
@@ -856,25 +863,25 @@ public class Program {
             sb.append(Utils.align("" + Integer.toHexString(index) + ":", ' ', 8, false));
 
             if (op == null) {
-                sb.append("<UNKNOWN>: " + (0xFF & opCode) + "\n");
+                sb.append("<UNKNOWN>: ").append(0xFF & opCode).append("\n");
                 index ++;
                 continue;
             }
 
             if (op.name().startsWith("PUSH")) {
-                sb.append(' ' + op.name() + ' ');
+                sb.append(' ').append(op.name()).append(' ');
 
                 int nPush = op.val() - OpCode.PUSH1.val() + 1;
                 byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
                 BigInteger bi = new BigInteger(1, data);
-                sb.append("0x" + bi.toString(16));
+                sb.append("0x").append(bi.toString(16));
                 if (bi.bitLength() <= 32) {
-                    sb.append(" (" + new BigInteger(1, data).toString() + ") ");
+                    sb.append(" (").append(new BigInteger(1, data).toString()).append(") ");
                 }
 
                 index += nPush + 1;
             } else {
-                sb.append(' ' + op.name());
+                sb.append(' ').append(op.name());
                 index++;
             }
             sb.append('\n');
@@ -968,22 +975,22 @@ public class Program {
             OpCode op = OpCode.code(opCode);
 
             if (op == null) {
-                sb.append(" <UNKNOWN>: " + (0xFF & opCode) + " ");
+                sb.append(" <UNKNOWN>: ").append(0xFF & opCode).append(" ");
                 index ++;
                 continue;
             }
 
             if (op.name().startsWith("PUSH")) {
-                sb.append(' ' + op.name() + ' ');
+                sb.append(' ').append(op.name()).append(' ');
 
                 int nPush = op.val() - OpCode.PUSH1.val() + 1;
                 byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
                 BigInteger bi = new BigInteger(1, data);
-                sb.append("0x" + bi.toString(16) + " ");
+                sb.append("0x").append(bi.toString(16)).append(" ");
 
                 index += nPush + 1;
             } else {
-                sb.append(' ' + op.name());
+                sb.append(' ').append(op.name());
                 index++;
             }
         }
@@ -1074,8 +1081,20 @@ public class Program {
         void output(String out);
     }
 
+    /**
+     * Denotes problem when executing Ethereum bytecode.
+     * From blockchain and peer perspective this is quite normal situation
+     * and doesn't mean exceptional situation in terms of the program execution
+     */
     @SuppressWarnings("serial")
-    public static class OutOfGasException extends RuntimeException {
+    public static class BytecodeExecutionException extends RuntimeException {
+        public BytecodeExecutionException(String message) {
+            super(message);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public static class OutOfGasException extends BytecodeExecutionException {
 
         public OutOfGasException(String message, Object... args) {
             super(format(message, args));
@@ -1083,7 +1102,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class IllegalOperationException extends RuntimeException {
+    public static class IllegalOperationException extends BytecodeExecutionException {
 
         public IllegalOperationException(String message, Object... args) {
             super(format(message, args));
@@ -1091,7 +1110,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class BadJumpDestinationException extends RuntimeException {
+    public static class BadJumpDestinationException extends BytecodeExecutionException {
 
         public BadJumpDestinationException(String message, Object... args) {
             super(format(message, args));
@@ -1099,7 +1118,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class StackTooSmallException extends RuntimeException {
+    public static class StackTooSmallException extends BytecodeExecutionException {
 
         public StackTooSmallException(String message, Object... args) {
             super(format(message, args));
@@ -1143,7 +1162,7 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class StackTooLargeException extends RuntimeException {
+    public class StackTooLargeException extends BytecodeExecutionException {
         public StackTooLargeException(String message) {
             super(message);
         }

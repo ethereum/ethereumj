@@ -70,11 +70,13 @@ public class VM {
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
-    public StorageDictionaryHandler storageDictHandler;
+    private static VMHook vmHook;
+    private final static boolean vmTrace = CONFIG.vmTrace();
+    private final static long dumpBlock = CONFIG.dumpBlock();
 
     public void step(Program program) {
 
-        if (CONFIG.vmTrace()) {
+        if (vmTrace) {
             program.saveOpTrace();
         }
 
@@ -85,7 +87,8 @@ public class VM {
             }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
-                if (!BlockHeader.isHomestead(program.getNumber().longValue())) {
+                if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
+                        getConstants().hasDelegateCallOpcode()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
             }
@@ -193,11 +196,11 @@ public class VM {
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     //check to see if account does not exist and is not a precompiled contract
-                    if (op != CALLCODE && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
+                    if (op == CALL && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
                         gasCost += GasCost.NEW_ACCT_CALL;
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
-                    if (!stack.get(stack.size() - 3).isZero() )
+                    if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )
                         gasCost += GasCost.VT_CALL;
 
                     int opOff = op == DELEGATECALL ? 3 : 4;
@@ -265,8 +268,12 @@ public class VM {
             }
 
             // Log debugging line for VM
-            if (program.getNumber().intValue() == CONFIG.dumpBlock())
+            if (program.getNumber().intValue() == dumpBlock)
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
+
+            if (vmHook != null) {
+                vmHook.step(program, op);
+            }
 
             // Execute operation
             switch (op) {
@@ -593,10 +600,6 @@ public class VM {
 
                     byte[] encoded = sha3(buffer);
                     DataWord word = new DataWord(encoded);
-
-                    if (storageDictHandler != null) {
-                        storageDictHandler.vmSha3Notify(buffer, word);
-                    }
 
                     if (logger.isInfoEnabled())
                         hint = word.toString();
@@ -934,9 +937,6 @@ public class VM {
                         hint = "[" + program.getOwnerAddress().toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
-                    if (storageDictHandler != null) {
-                        storageDictHandler.vmSStoreNotify(addr, value);
-                    }
                     program.step();
                 }
                 break;
@@ -1166,9 +1166,8 @@ public class VM {
 
     public void play(Program program) {
         try {
-            if (SystemProperties.CONFIG.isStorageDictionaryEnabled()) {
-                storageDictHandler = new StorageDictionaryHandler(program.getOwnerAddress());
-                storageDictHandler.vmStartPlayNotify();
+            if (vmHook != null) {
+                vmHook.startPlay(program);
             }
 
 //            if (program.byTestingSuite()) return;
@@ -1177,10 +1176,8 @@ public class VM {
                 this.step(program);
             }
 
-            if (storageDictHandler != null) {
-                ContractDetails details = program.getStorage()
-                        .getContractDetails(program.getOwnerAddress().getLast20Bytes());
-                storageDictHandler.vmEndPlayNotify(details);
+            if (vmHook != null) {
+                vmHook.stopPlay(program);
             }
 
         } catch (RuntimeException e) {
@@ -1189,6 +1186,10 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss32M !!!\n");
             System.exit(-1);
         }
+    }
+
+    public static void setVmHook(VMHook vmHook) {
+        VM.vmHook = vmHook;
     }
 
     /**

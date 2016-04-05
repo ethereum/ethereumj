@@ -173,7 +173,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         } catch (Exception e) {
             try {
-                logger.error("Error reading db. Recreating from scratch:", e);
+                logger.warn("Error reading db. Recreating from scratch...");
+                logger.debug("Error reading db. Recreating from scratch:", e);
+
                 db.delete("nodeStats");
                 nodeStatsDB = db.hashMap("nodeStats");
             } catch (Exception e1) {
@@ -239,7 +241,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         Message m = discoveryEvent.getMessage();
         InetSocketAddress sender = discoveryEvent.getAddress();
 
-        Node n = new Node(m.getNodeId(), sender.getHostName(), sender.getPort());
+        Node n = new Node(m.getNodeId(), sender.getHostString(), sender.getPort());
 
         if (inboundOnlyFromKnownNodes && !hasNodeHandler(n)) {
             logger.debug("=/=> (" + sender + "): inbound packet from unknown peer rejected due to config option.");
@@ -395,7 +397,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 zeroReputCount++;
             }
         }
-        sb.append("0 reputation: " + zeroReputCount + " nodes.\n");
+        sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
     }
 

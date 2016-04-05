@@ -144,7 +144,9 @@ public class FrameCodec {
     }
 
     public List<Frame> readFrames(ByteBuf buf) throws IOException {
-        return readFrames(new ByteBufInputStream(buf));
+        try (ByteBufInputStream bufInputStream = new ByteBufInputStream(buf)) {
+            return readFrames(bufInputStream);
+        }
     }
 
     public List<Frame> readFrames(DataInput inp) throws IOException {
@@ -222,9 +224,7 @@ public class FrameCodec {
         byte[] result = new byte[mac.getDigestSize()];
         doSum(mac, result);
         if (egress) {
-            for (int i = 0; i < length; i++) {
-                out[i + outOffset] = result[i];
-            }
+            System.arraycopy(result, 0, out, outOffset, length);
         } else {
             for (int i = 0; i < length; i++) {
                 if (out[i + outOffset] != result[i]) {

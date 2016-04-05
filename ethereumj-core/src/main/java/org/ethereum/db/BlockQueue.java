@@ -17,6 +17,8 @@ public interface BlockQueue extends DiskStore {
 
     void add(BlockWrapper block);
 
+    void returnBlock(BlockWrapper block);
+
     void addOrReplace(BlockWrapper block);
 
     BlockWrapper poll();
@@ -38,4 +40,10 @@ public interface BlockQueue extends DiskStore {
     boolean isBlockExist(byte[] hash);
 
     void drop(byte[] nodeId, int scanLimit);
+
+    long getLastNumber();
+
+    BlockWrapper peekLast();
+
+    void remove(BlockWrapper block);
 }

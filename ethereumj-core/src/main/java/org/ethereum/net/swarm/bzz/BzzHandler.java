@@ -48,7 +48,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
         if (!isActive()) return;
 
         if (BzzMessageCodes.inRange(msg.getCommand().asByte()))
-            logger.info("BzzHandler invoke: [{}]", msg.getCommand());
+            logger.debug("BzzHandler invoke: [{}]", msg.getCommand());
 
         ethereumListener.trace(String.format("BzzHandler invoke: [%s]", msg.getCommand()));
 

@@ -4,7 +4,6 @@ import org.ethereum.core.AccountState;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.util.*;
 import org.json.simple.JSONArray;
@@ -31,8 +30,6 @@ import java.nio.file.Files;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.crypto.SHA3Helper.sha3;
-import static org.ethereum.util.ByteUtil.wrap;
 import static org.junit.Assert.*;
 
 public class TrieTest {
@@ -1084,8 +1081,8 @@ public class TrieTest {
         String expected = trie2.getTrieDump();
         assertEquals(original, expected);
 
-        System.out.println("took: " + ((float)(t_ - t) / 1_000_000) + "ms");
-        System.out.println("size: " + ((float)(data.length) / 1_000) + "KB");
+        System.out.println("took: " + ((float) (t_ - t) / 1_000_000) + "ms");
+        System.out.println("size: " + ((float) (data.length) / 1_000) + "KB");
 
     }
 
@@ -1408,5 +1405,34 @@ public class TrieTest {
         assertEquals("9946c12c75fb0e6c657bb94be25661a3f284a823d4e3193ae8961f7335f4d7d1", root3);
     }
 
+    // this case relates to a bug which led us to conflict on Morden network (block #486248)
+    // first part of the new Value was converted to String by #asString() during key deletion
+    // and some lines after String.getBytes() returned byte array which differed to array before converting
+    @Test
+    public void testBugFix() throws ParseException, IOException, URISyntaxException {
 
+        Map<String, String> dataMap = new HashMap<>();
+        dataMap.put("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2", "00000000000000000000000000000000000000000000000000000000000000be");
+        dataMap.put("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae", "00000000000000000000000000000000000000000000002f0000000000000000");
+
+        TrieImpl trie = new TrieImpl(new HashMapDB());
+
+        for (Map.Entry<String, String> e : dataMap.entrySet()) {
+            trie.update(Hex.decode(e.getKey()), Hex.decode(e.getValue()));
+        }
+
+        assertArrayEquals(trie.get(Hex.decode("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2")),
+                Hex.decode("00000000000000000000000000000000000000000000000000000000000000be"));
+
+        assertArrayEquals(trie.get(Hex.decode("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae")),
+                Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
+
+        trie.delete(Hex.decode("6e9286c946c6dd1f5d97f35683732dc8a70dc511133a43d416892f527dfcd243"));
+
+        assertArrayEquals(trie.get(Hex.decode("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2")),
+                Hex.decode("00000000000000000000000000000000000000000000000000000000000000be"));
+
+        assertArrayEquals(trie.get(Hex.decode("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae")),
+                Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
+    }
 }

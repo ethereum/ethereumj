@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +18,7 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "f28ac81493281feec0b17290565cf74042893677";
 
     @Test
     public void runSingle() throws ParseException {
@@ -136,7 +137,7 @@ public class GitHubVMTest {
         String shacommit = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
         List<String> fileNames = getFileNamesForTreeSha(shacommit);
         List<String> excludedFiles =
-                Arrays.asList(
+                Collections.singletonList(
                         ""
                 );
 

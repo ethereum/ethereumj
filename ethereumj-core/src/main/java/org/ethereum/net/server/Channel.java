@@ -6,6 +6,8 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
@@ -15,12 +17,10 @@ import org.ethereum.net.eth.handler.EthAdapter;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.Eth60MessageFactory;
-import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
-import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.StaticMessages;
@@ -95,6 +95,8 @@ public class Channel {
     private boolean discoveryMode;
     private boolean isActive;
 
+    private PeerStatistics peerStats = new PeerStatistics();
+
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
 
         isActive = remoteId != null && !remoteId.isEmpty();
@@ -168,8 +170,8 @@ public class Channel {
         frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), payload), byteBufMsg);
         ctx.writeAndFlush(byteBufMsg).sync();
 
-        if (logger.isInfoEnabled())
-            logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
+        if (logger.isDebugEnabled())
+            logger.debug("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
         getNodeStatistics().rlpxOutHello.add();
     }
 
@@ -179,7 +181,7 @@ public class Channel {
         messageCodec.setEthVersion(version);
         messageCodec.setEthMessageFactory(messageFactory);
 
-        logger.info("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
+        logger.debug("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
 
         ctx.pipeline().addLast(Capability.ETH, handler);
 
@@ -194,8 +196,6 @@ public class Channel {
 
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
-            case V60:   return new Eth60MessageFactory();
-            case V61:   return new Eth61MessageFactory();
             case V62:   return new Eth62MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
@@ -220,7 +220,7 @@ public class Channel {
     }
 
     public void setNode(byte[] nodeId) {
-        node = new Node(nodeId, inetSocketAddress.getHostName(), inetSocketAddress.getPort());
+        node = new Node(nodeId, inetSocketAddress.getHostString(), inetSocketAddress.getPort());
         nodeStatistics = nodeManager.getNodeStatistics(node);
     }
 
@@ -239,9 +239,15 @@ public class Channel {
     public void onDisconnect() {
     }
 
-    public void onSyncDone() {
-        eth.enableTransactions();
-        eth.onSyncDone();
+    public void onSyncDone(boolean done) {
+
+        if (done) {
+            eth.enableTransactions();
+        } else {
+            eth.disableTransactions();
+        }
+
+        eth.onSyncDone(done);
     }
 
     public boolean isDiscoveryMode() {
@@ -279,7 +285,19 @@ public class Channel {
         return inetSocketAddress;
     }
 
+    public PeerStatistics getPeerStats() {
+        return peerStats;
+    }
+
     // ETH sub protocol
+
+    public void fetchBlockBodies(List<BlockHeaderWrapper> headers) {
+        eth.fetchBodies(headers);
+    }
+
+    public void recoverGap(BlockWrapper block) {
+        eth.recoverGap(block);
+    }
 
     public boolean isEthCompatible(Channel peer) {
         return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
@@ -301,32 +319,8 @@ public class Channel {
         return nodeStatistics.getEthTotalDifficulty();
     }
 
-    public void changeSyncState(SyncStateName newState) {
+    public void changeSyncState(SyncState newState) {
         eth.changeState(newState);
-    }
-
-    public boolean hasBlocksLack() {
-        return eth.hasBlocksLack();
-    }
-
-    public void setMaxHashesAsk(int maxHashesAsk) {
-        eth.setMaxHashesAsk(maxHashesAsk);
-    }
-
-    public int getMaxHashesAsk() {
-        return eth.getMaxHashesAsk();
-    }
-
-    public void setLastHashToAsk(byte[] lastHashToAsk) {
-        eth.setLastHashToAsk(lastHashToAsk);
-    }
-
-    public byte[] getLastHashToAsk() {
-        return eth.getLastHashToAsk();
-    }
-
-    public byte[] getBestKnownHash() {
-        return eth.getBestKnownHash();
     }
 
     public SyncStatistics getSyncStats() {
@@ -339,6 +333,10 @@ public class Channel {
 
     public boolean isHashRetrieving() {
         return eth.isHashRetrieving();
+    }
+
+    public boolean isMaster() {
+        return eth.isHashRetrieving() || eth.isHashRetrievingDone();
     }
 
     public boolean isIdle() {
@@ -359,6 +357,10 @@ public class Channel {
 
     public EthVersion getEthVersion() {
         return eth.getVersion();
+    }
+
+    public void dropConnection() {
+        eth.dropConnection();
     }
 
     @Override

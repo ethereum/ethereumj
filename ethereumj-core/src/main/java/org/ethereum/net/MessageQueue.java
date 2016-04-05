@@ -3,10 +3,12 @@ package org.ethereum.net;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +45,14 @@ public class MessageQueue {
 
     private static final ScheduledExecutorService timer = Executors.newScheduledThreadPool(4, new ThreadFactory() {
         private AtomicInteger cnt = new AtomicInteger(0);
+
         public Thread newThread(Runnable r) {
             return new Thread(r, "MessageQueueTimer-" + cnt.getAndIncrement());
         }
     });
 
-    private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
+    private Queue<MessageRoundtrip> requestQueue = new ConcurrentLinkedQueue<>();
+    private Queue<MessageRoundtrip> respondQueue = new ConcurrentLinkedQueue<>();
     private ChannelHandlerContext ctx = null;
 
     @Autowired
@@ -83,7 +87,10 @@ public class MessageQueue {
             hasPing = true;
         }
 
-        messageQueue.add(new MessageRoundtrip(msg));
+        if (msg.getAnswerMessage() != null)
+            requestQueue.add(new MessageRoundtrip(msg));
+        else
+            respondQueue.add(new MessageRoundtrip(msg));
     }
 
     public void disconnect() {
@@ -103,8 +110,8 @@ public class MessageQueue {
 
         ethereumListener.trace("[Recv: " + msg + "]");
 
-        if (messageQueue.peek() != null) {
-            MessageRoundtrip messageRoundtrip = messageQueue.peek();
+        if (requestQueue.peek() != null) {
+            MessageRoundtrip messageRoundtrip = requestQueue.peek();
             Message waitingMessage = messageRoundtrip.getMsg();
 
             if (waitingMessage instanceof PingMessage) hasPing = false;
@@ -112,6 +119,8 @@ public class MessageQueue {
             if (waitingMessage.getAnswerMessage() != null
                     && msg.getClass() == waitingMessage.getAnswerMessage()) {
                 messageRoundtrip.answer();
+                if (waitingMessage instanceof EthMessage)
+                    channel.getPeerStats().pong(messageRoundtrip.lastTimestamp);
                 logger.trace("Message round trip covered: [{}] ",
                         messageRoundtrip.getMsg().getClass());
             }
@@ -120,14 +129,15 @@ public class MessageQueue {
 
     private void removeAnsweredMessage(MessageRoundtrip messageRoundtrip) {
         if (messageRoundtrip != null && messageRoundtrip.isAnswered())
-            messageQueue.remove();
+            requestQueue.remove();
     }
 
     private void nudgeQueue() {
         // remove last answered message on the queue
-        removeAnsweredMessage(messageQueue.peek());
+        removeAnsweredMessage(requestQueue.peek());
         // Now send the next message
-        sendToWire(messageQueue.peek());
+        sendToWire(respondQueue.poll());
+        sendToWire(requestQueue.peek());
     }
 
     private void sendToWire(MessageRoundtrip messageRoundtrip) {
@@ -141,9 +151,7 @@ public class MessageQueue {
 
             ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
-            if (msg.getAnswerMessage() == null)
-                messageQueue.remove();
-            else {
+            if (msg.getAnswerMessage() != null) {
                 messageRoundtrip.incRetryTimes();
                 messageRoundtrip.saveTime();
             }

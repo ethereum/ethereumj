@@ -1,12 +1,15 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.json.simple.parser.ParseException;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -18,21 +21,24 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "f28ac81493281feec0b17290565cf74042893677";
 
 
     private long oldForkValue;
 
     @Before
     public void setup() {
+        // TODO remove this after Homestead launch and shacommit update with actual block number
         // for this JSON test commit the Homestead block was defined as 900000
-        oldForkValue = Constants.HOMESTEAD_FORK_BLKNUM;
-        Constants.HOMESTEAD_FORK_BLKNUM = 900_000;
+        SystemProperties.CONFIG.setBlockchainConfig(new AbstractNetConfig() {{
+            add(0, new FrontierConfig());
+            add(1_150_000, new HomesteadConfig());
+        }});
     }
 
     @After
     public void clean() {
-        Constants.HOMESTEAD_FORK_BLKNUM = oldForkValue;
+        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Ignore
@@ -126,8 +132,6 @@ public class GitHubStateTest {
     public void stPreCompiledContracts() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
 
-        excluded.add("CallEcrecoverCheckLengthWrongV"); // TODO: investigate https://github.com/ethereum/tests/commit/aaf284fa888468f92c7686c754b5dd0b5437f849
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stPreCompiledContracts.json", shacommit);
@@ -215,8 +219,6 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws IOException {
         Set<String> excluded = new HashSet<>();
 
-        excluded.add("suicideSendEtherPostDeath"); // TODO investigate: https://github.com/ethereum/tests/commit/0ff495059d6ffba8408376f872d426cb38e19444
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
@@ -240,9 +242,6 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransitionTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, excluded);
-
-        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransitionTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 

@@ -35,8 +35,6 @@ import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
-import static org.ethereum.config.Constants.*;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.util.BIUtil.isMoreThan;
@@ -92,9 +90,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BigInteger totalDifficulty = ZERO;
 
     @Autowired
-    Wallet wallet;
-
-    @Autowired
     private EthereumListener listener;
 
     @Autowired
@@ -122,6 +117,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private byte[] minerCoinbase;
     private byte[] minerExtraData;
+    private BigInteger BLOCK_REWARD;
+    private BigInteger INCLUSION_REWARD;
+    private int UNCLE_LIST_LIMIT;
+    private int UNCLE_GENERATION_LIMIT;
+
 
     private Stack<State> stateStack = new Stack<>();
 
@@ -129,21 +129,28 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository,
-                          Wallet wallet, AdminInfo adminInfo,
+    public BlockchainImpl(BlockStore blockStore, Repository repository, AdminInfo adminInfo,
                           EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator) {
         this.blockStore = blockStore;
         this.repository = repository;
-        this.wallet = wallet;
         this.adminInfo = adminInfo;
         this.listener = listener;
         this.parentHeaderValidator = parentHeaderValidator;
+        initConst(SystemProperties.CONFIG);
     }
 
     @PostConstruct
     private void init() {
+        initConst(config);
+    }
+
+    private void initConst(SystemProperties config) {
         minerCoinbase = config.getMinerCoinbase();
         minerExtraData = config.getMineExtraData();
+        BLOCK_REWARD = config.getBlockchainConfig().getCommonConstants().getBLOCK_REWARD();
+        INCLUSION_REWARD = BLOCK_REWARD.divide(BigInteger.valueOf(32));
+        UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
+        UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
     }
 
     @Override
@@ -301,8 +308,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public synchronized ImportResult tryToConnect(final Block block) {
 
-        if (logger.isInfoEnabled())
-            logger.info("Try connect block hash: {}, number: {}",
+        if (logger.isDebugEnabled())
+            logger.debug("Try connect block hash: {}, number: {}",
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
@@ -442,7 +449,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
 
         if (!receiptHash.equals(receiptListHash)) {
-            logger.error("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
             //return false;
         }
 
@@ -450,7 +457,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
 
         if (!logBloomHash.equals(logBloomListHash)) {
-            logger.error("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
             //track.rollback();
             //return;
         }
@@ -468,9 +475,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockStore.flush();
             System.gc();
         }
-
-        // Remove all wallet transactions as they already approved by the net
-        wallet.removeTransactions(block.getTransactionsList());
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
@@ -560,7 +564,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
 
             if (!trieHash.equals(trieListHash)) {
-                logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+                logger.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
 
                 //   FIXME: temporary comment out tx.trie validation
 //              return false;
@@ -587,7 +591,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                     curNonce.put(key, expectedNonce.add(ONE));
                     BigInteger txNonce = new BigInteger(1, tx.getNonce());
                     if (!expectedNonce.equals(txNonce)) {
-                        logger.error("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
+                        logger.warn("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
                                 txNonce, expectedNonce, parentRepo.getNonce(txSender), tx);
                         return false;
                     }
@@ -603,13 +607,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         String unclesListHash = Hex.toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
 
         if (!unclesHash.equals(unclesListHash)) {
-            logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+            logger.warn("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
             return false;
         }
 
 
         if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
-            logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
+            logger.warn("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
             return false;
         }
 
@@ -625,29 +629,24 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
             boolean isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
             if (!isValid) {
-                logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
+                logger.warn("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
                 return false;
             }
 
             ByteArrayWrapper uncleHash = new ByteArrayWrapper(uncle.getHash());
             if (ancestors.contains(uncleHash)) {
-                logger.error("Uncle is direct ancestor: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle is direct ancestor: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
 
             if (usedUncles.contains(uncleHash)) {
-                logger.error("Uncle is not unique: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle is not unique: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
 
             Block uncleParent = blockStore.getBlockByHash(uncle.getParentHash());
             if (!ancestors.contains(new ByteArrayWrapper(uncleParent.getHash()))) {
-                logger.error("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
-                return false;
-            }
-
-            if (!isValid(uncle)) {
-                logger.error("Invalid uncle header: " + uncle);
+                logger.warn("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
                 return false;
             }
         }
@@ -670,7 +669,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return ret;
     }
 
-    public static Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
+    public Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
         Set<ByteArrayWrapper> ret = new HashSet<>();
         long limitNum = max(0, testedBlock.getNumber() - UNCLE_GENERATION_LIMIT);
         Block it = testedBlock;
@@ -702,14 +701,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private List<TransactionReceipt> applyBlock(Block block) {
 
-        logger.info("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
+        logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
         long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;
         List<TransactionReceipt> receipts = new ArrayList<>();
 
         for (Transaction tx : block.getTransactionsList()) {
-            stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
+            stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
                     track, blockStore,
@@ -758,7 +757,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         long totalTime = System.nanoTime() - saveTime;
         adminInfo.addBlockExecTime(totalTime);
-        logger.info("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
+        logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
         return receipts;
     }
@@ -772,15 +771,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void addReward(Block block) {
 
         // Add standard block reward
-        BigInteger totalBlockReward = Block.BLOCK_REWARD;
+        BigInteger totalBlockReward = BLOCK_REWARD;
 
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
                 track.addBalance(uncle.getCoinbase(),
-                        new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
+                        new BigDecimal(BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
 
-                totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);
+                totalBlockReward = totalBlockReward.add(INCLUSION_REWARD);
             }
         }
         track.addBalance(block.getCoinbase(), totalBlockReward);
@@ -816,7 +815,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         else
             blockStore.saveBlock(block, totalDifficulty, true);
 
-        logger.info("Block saved: number: {}, hash: {}, TD: {}",
+        logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
 
         setBestBlock(block);
@@ -867,7 +866,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public synchronized void updateTotalDifficulty(Block block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
-        logger.info("TD: updated to {}", totalDifficulty);
+        logger.debug("TD: updated to {}", totalDifficulty);
     }
 
     @Override

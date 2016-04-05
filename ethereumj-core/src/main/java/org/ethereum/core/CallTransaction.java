@@ -267,6 +267,7 @@ public class CallTransaction {
         @Override
         public Object decode(byte[] encoded, int offset) {
             int len = IntType.decodeInt(encoded, offset).intValue();
+            if (len == 0) return new byte[0];
             offset += 32;
             return Arrays.copyOfRange(encoded, offset, offset + len);
         }
