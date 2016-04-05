@@ -86,7 +86,7 @@ public class TransactionsMessage extends EthMessage {
             for (int i = 0; i < 3; i++) {
                 sb.append("\n   ").append(transactions.get(i).toString(128));
             }
-            sb.append("\n   ").append("[Skipped " + (transactions.size() - 3) + " transactions]");
+            sb.append("\n   ").append("[Skipped ").append(transactions.size() - 3).append(" transactions]");
         }
         return "[" + getCommand().name() + " num:"
                 + transactions.size() + " " + sb.toString() + "]";
