@@ -87,7 +87,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
                 alive = true;
             } catch (IOException ioe) {
                 logger.error(ioe.getMessage(), ioe);
-                throw new RuntimeException("Can't initialize database");
+                throw new RuntimeException("Can't initialize database", ioe);
             }
             logger.debug("<~ LevelDbDataSource.init(): " + name);
         } finally {
