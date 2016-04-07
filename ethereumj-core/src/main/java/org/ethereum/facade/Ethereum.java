@@ -140,7 +140,7 @@ public interface Ethereum {
     Repository getPendingState();
 
 
-    public void init();
+    void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
     Repository getSnapshootTo(byte[] root);

@@ -8,17 +8,17 @@ import java.math.BigInteger;
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public class Constants {
-    private int MAXIMUM_EXTRA_DATA_SIZE = 32;
-    private int MIN_GAS_LIMIT = 125000;
-    private int GAS_LIMIT_BOUND_DIVISOR = 1024;
-    private BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(131072);
-    private BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(2048);
-    private int EXP_DIFFICULTY_PERIOD = 100000;
+    private static final int MAXIMUM_EXTRA_DATA_SIZE = 32;
+    private static final int MIN_GAS_LIMIT = 125000;
+    private static final int GAS_LIMIT_BOUND_DIVISOR = 1024;
+    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(131072);
+    private static final BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(2048);
+    private static final int EXP_DIFFICULTY_PERIOD = 100000;
 
-    private int UNCLE_GENERATION_LIMIT = 7;
-    private int UNCLE_LIST_LIMIT = 2;
+    private static final int UNCLE_GENERATION_LIMIT = 7;
+    private static final int UNCLE_LIST_LIMIT = 2;
 
-    private int BEST_NUMBER_DIFF_LIMIT = 100;
+    private static final int BEST_NUMBER_DIFF_LIMIT = 100;
 
     private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
 
