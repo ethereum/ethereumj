@@ -10,13 +10,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.*;
-import static org.ethereum.util.CompactEncoder.*;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.matchingNibbleLength;
+import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.util.CompactEncoder.binToNibbles;
+import static org.ethereum.util.CompactEncoder.packNibbles;
+import static org.ethereum.util.CompactEncoder.unpackToNibbles;
 import static org.ethereum.util.RLP.calcElementPrefixSize;
 import static org.spongycastle.util.Arrays.concatenate;
 
@@ -595,7 +607,7 @@ public class TrieImpl implements Trie {
     }
 
     public interface ScanAction {
-        public void doOnNode(byte[] hash, Value node);
+        void doOnNode(byte[] hash, Value node);
     }
 
     public boolean validate() {

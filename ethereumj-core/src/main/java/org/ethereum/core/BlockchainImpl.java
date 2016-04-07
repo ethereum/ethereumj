@@ -26,9 +26,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,6 +88,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+    private static final int MAGIC_REWARD_OFFSET = 8;
 
     @Autowired
     private Repository repository;
@@ -783,21 +782,19 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      */
     private void addReward(Block block) {
 
-        // Add standard block reward
-        BigInteger totalBlockReward = BLOCK_REWARD;
+        BigInteger standardTotalBlockReward = BLOCK_REWARD;
 
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                track.addBalance(uncle.getCoinbase(),
-                        new BigDecimal(BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8), RoundingMode.HALF_UP)).toBigInteger());
-
-                totalBlockReward = totalBlockReward.add(INCLUSION_REWARD);
+                track.addBalance(
+                        uncle.getCoinbase(),
+                        BLOCK_REWARD.multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber())).divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET))
+                );
+                standardTotalBlockReward = standardTotalBlockReward.add(INCLUSION_REWARD);
             }
         }
-        track.addBalance(block.getCoinbase(), totalBlockReward);
-
-
+        track.addBalance(block.getCoinbase(), standardTotalBlockReward);
     }
 
     @Override
