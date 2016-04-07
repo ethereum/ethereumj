@@ -143,7 +143,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
-        logger.info("updatingBatch: detailsCache.size: {}", detailsCache.size());
+        logger.trace("updatingBatch: detailsCache.size: {}", detailsCache.size());
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
 
@@ -176,8 +176,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
                 updateAccountState(hash.getData(), accountState);
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
+                if (logger.isTraceEnabled()) {
+                    logger.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
                             Hex.toHexString(hash.getData()),
                             accountState.getNonce(),
                             accountState.getBalance(),
@@ -187,7 +187,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         }
 
 
-        logger.info("updated: detailsCache.size: {}", detailsCache.size());
+        logger.debug("updated: detailsCache.size: {}", detailsCache.size());
 
         stateCache.clear();
         detailsCache.clear();
@@ -393,6 +393,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized BigInteger getBalance(byte[] addr) {
+        if (!isExist(addr)) return BigInteger.ZERO;
         AccountState account = getAccountState(addr);
         return (account == null) ? AccountState.EMPTY.getBalance() : account.getBalance();
     }
@@ -441,11 +442,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             return EMPTY_BYTE_ARRAY;
 
         byte[] codeHash = getAccountState(addr).getCodeHash();
-        if (Arrays.equals(codeHash, EMPTY_DATA_HASH))
-            return EMPTY_BYTE_ARRAY;
 
         ContractDetails details = getContractDetails(addr);
-        return (details == null) ? null : details.getCode();
+        return (details == null) ? null : details.getCode(codeHash);
     }
 
     @Override
@@ -536,6 +535,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         } finally {
             rwLock.readLock().unlock();
         }
+    }
+
+    @Override
+    public boolean hasContractDetails(byte[] addr) {
+        return dds.get(addr) != null;
     }
 
     @Override

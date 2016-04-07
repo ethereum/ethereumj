@@ -155,8 +155,8 @@ public class DetailsDataStoreTest {
 
         HashMapDB internalStorage = new HashMapDB();
 
-        ContractDetails detailsWithExternalStorage = randomContractDetails(512, inMemoryStorageLimit + 1, externalStorage);
-        ContractDetails detailsWithInternalStorage = randomContractDetails(512, inMemoryStorageLimit - 1, internalStorage);
+        ContractDetails detailsWithExternalStorage = randomContractDetails(512, inMemoryStorageLimit / 64 + 10, externalStorage, true);
+        ContractDetails detailsWithInternalStorage = randomContractDetails(512, inMemoryStorageLimit / 64 - 10, internalStorage, false);
 
         DataWord key = detailsWithExternalStorage.getStorageKeys().iterator().next();
 
@@ -174,14 +174,14 @@ public class DetailsDataStoreTest {
 
         Map<DataWord, DataWord> storage = detailsWithExternalStorage.getStorage();
         assertNotNull(storage);
-        assertEquals(inMemoryStorageLimit + 1, storage.size());
+        assertEquals(inMemoryStorageLimit / 64 + 10, storage.size());
 
         byte[] withExternalStorageRlp = detailsWithExternalStorage.getEncoded();
         ContractDetailsImpl decoded = new ContractDetailsImpl();
         decoded.setExternalStorageDataSource(externalStorage);
         decoded.decode(withExternalStorageRlp);
 
-        assertEquals(inMemoryStorageLimit + 1, decoded.getStorage().size());
+        assertEquals(inMemoryStorageLimit / 64 + 10, decoded.getStorage().size());
         assertTrue(withExternalStorageRlp.length < detailsWithInternalStorage.getEncoded().length);
 
 
@@ -189,7 +189,7 @@ public class DetailsDataStoreTest {
         assertNotNull(detailsWithInternalStorage);
         storage = detailsWithInternalStorage.getStorage();
         assertNotNull(storage);
-        assertEquals(inMemoryStorageLimit - 1, storage.size());
+        assertEquals(inMemoryStorageLimit / 64 - 10, storage.size());
 
         // from inmemory to ondisk transition checking
         externalStorage = new HashMapDB();
@@ -197,8 +197,10 @@ public class DetailsDataStoreTest {
         detailsWithInternalStorage.put(randomDataWord(), randomDataWord());
     }
 
-    private static ContractDetails randomContractDetails(int codeSize, int storageSize, @Nullable KeyValueDataSource storageDataSource) {
+    private static ContractDetails randomContractDetails(int codeSize, int storageSize, @Nullable KeyValueDataSource storageDataSource,
+                                                         boolean external) {
         ContractDetailsImpl result = new ContractDetailsImpl();
+        result.externalStorage = external;
         result.setCode(randomBytes(codeSize));
 
         if (storageDataSource != null)

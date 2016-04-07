@@ -13,7 +13,6 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,7 +178,7 @@ public class BasicSample implements Runnable {
         }
     }
 
-    protected Map<Channel, StatusMessage> ethNodes = new Hashtable<>();
+    protected Map<Node, StatusMessage> ethNodes = new Hashtable<>();
 
     /**
      * Discovering nodes is only the first step. No we need to find among discovered nodes
@@ -295,7 +294,7 @@ public class BasicSample implements Runnable {
 
         @Override
         public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-            ethNodes.put(channel, statusMessage);
+            ethNodes.put(channel.getNode(), statusMessage);
         }
 
         @Override

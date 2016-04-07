@@ -47,8 +47,7 @@ public class AccountValidator {
             results.add(formattedString);
         }
 
-        byte[] code = Arrays.equals(currentState.getCodeHash(), EMPTY_DATA_HASH) ?
-                new byte[0] : currentDetails.getCode();
+        byte[] code = currentDetails.getCode(currentState.getCodeHash());
         if (!Arrays.equals(expectedDetails.getCode(), code)) {
             String formattedString = String.format("Account: %s: has unexpected code, expected code: %s found code: %s",
                     address, Hex.toHexString(expectedDetails.getCode()), Hex.toHexString(currentDetails.getCode()));

@@ -69,7 +69,7 @@ public class Utils {
             result = result.divide(_1000_);
             pow += 3;
         }
-        return result.toString() + "·(" + "10^" + pow + ")";
+        return result.toString() + "\u00b7(" + "10^" + pow + ")";
     }
 
     /**

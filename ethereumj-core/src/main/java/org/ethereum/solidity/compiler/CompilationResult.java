@@ -2,9 +2,9 @@ package org.ethereum.solidity.compiler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -14,7 +14,15 @@ public class CompilationResult {
     public String version;
 
     public static CompilationResult parse(String rawJson) throws IOException {
-        return new ObjectMapper().readValue(rawJson, CompilationResult.class);
+        if(rawJson == null || rawJson.isEmpty()){
+            CompilationResult empty = new CompilationResult();
+            empty.contracts = Collections.emptyMap();
+            empty.version = "";
+
+            return empty;
+        } else {
+            return new ObjectMapper().readValue(rawJson, CompilationResult.class);
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

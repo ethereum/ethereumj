@@ -47,9 +47,6 @@ public class WorldManager {
     private Repository repository;
 
     @Autowired
-    private Wallet wallet;
-
-    @Autowired
     private PeerClient activePeer;
 
     @Autowired
@@ -78,13 +75,6 @@ public class WorldManager {
 
     @PostConstruct
     public void init() {
-        byte[] cowAddr = HashUtil.sha3("cow".getBytes());
-        wallet.importKey(cowAddr);
-
-        String secret = config.coinbaseSecret();
-        byte[] cbAddr = HashUtil.sha3(secret.getBytes());
-        wallet.importKey(cbAddr);
-
         loadBlockchain();
     }
 
@@ -115,20 +105,12 @@ public class WorldManager {
         return listener;
     }
 
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
-    }
-
     public org.ethereum.facade.Repository getRepository() {
         return (org.ethereum.facade.Repository)repository;
     }
 
     public Blockchain getBlockchain() {
         return blockchain;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
     }
 
     public void setActivePeer(PeerClient peer) {

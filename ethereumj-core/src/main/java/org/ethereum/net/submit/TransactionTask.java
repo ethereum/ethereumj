@@ -1,8 +1,6 @@
 package org.ethereum.net.submit;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 

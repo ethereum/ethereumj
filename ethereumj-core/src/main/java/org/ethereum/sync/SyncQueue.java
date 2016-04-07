@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -131,8 +132,8 @@ public class SyncQueue {
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),
                             wrapper.getBlock().getTransactionsList().size());
 
-                if (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST) {
-                    if (logger.isTraceEnabled()) logger.trace(Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (longSyncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
+                    if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
                 }
 
                 // In case we don't have a parent on the chain
@@ -400,7 +401,9 @@ public class SyncQueue {
     private void waitForBlocks() {
         blocksLock.lock();
         try {
-            blocksAdded.awaitUninterruptibly();
+            blocksAdded.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             blocksLock.unlock();
         }

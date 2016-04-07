@@ -14,17 +14,15 @@ import javax.annotation.PostConstruct;
  *
  * Created by Anton Nashatyrev on 26.02.2016.
  */
-@Component
 public class EthashMiner implements MinerIfc {
 
-    @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
     private int cpuThreads;
     private boolean fullMining = true;
 
-    @PostConstruct
-    private void init() {
+    public EthashMiner(SystemProperties config) {
+        this.config = config;
         cpuThreads = config.getMineCpuThreads();
         fullMining = config.isMineFullDataset();
     }

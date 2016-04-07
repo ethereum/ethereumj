@@ -3,6 +3,7 @@ package org.ethereum.config.blockchain;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
 import org.ethereum.mine.EthashMiner;
@@ -20,7 +21,7 @@ import static org.ethereum.util.BIUtil.max;
  */
 public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetConfig {
     protected Constants constants;
-    protected MinerIfc miner = new EthashMiner();
+    protected MinerIfc miner;
 
     public AbstractConfig() {
         this(new Constants());
@@ -46,7 +47,8 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
-    public MinerIfc getMineAlgorithm() {
+    public MinerIfc getMineAlgorithm(SystemProperties config) {
+        if (miner == null) miner = new EthashMiner(config);
         return miner;
     }
 
