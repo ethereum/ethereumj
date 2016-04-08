@@ -124,7 +124,7 @@ public class TransactionReceipt {
         return rlpEncoded;
     }
 
-    public byte[] getEncoded(boolean receiptTrie) {
+    private byte[] getEncoded(boolean receiptTrie) {
 
         byte[] postTxStateRLP = RLP.encodeElement(this.postTxState);
         byte[] cumulativeGasRLP = RLP.encodeElement(this.cumulativeGas);

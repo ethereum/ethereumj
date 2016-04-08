@@ -1,210 +1,561 @@
 package org.ethereum.jsonrpc;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.*;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.SHA3Helper;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.TransactionInfo;
+import org.ethereum.db.TransactionStore;
+import org.ethereum.facade.Ethereum;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.mine.BlockMiner;
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.client.ConfigCapabilities;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.ChannelManager;
+import org.ethereum.net.server.PeerServer;
+import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.sync.SyncManager;
+import org.ethereum.sync.listener.CompositeSyncListener;
+import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.util.RLP;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.ProgramResult;
+import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.lang.Math.max;
+import static org.ethereum.jsonrpc.TypeConverter.*;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
+
 /**
  * Created by Anton Nashatyrev on 25.11.2015.
  */
 //@JsonRpcService("/jr")
-//@Component
+@Component
 public class JsonRpcImpl implements JsonRpc {
 
-    public String net_version() {
-        return "666";
+    public class BinaryCallArguments {
+        public long nonce;
+        public long gasPrice;
+        public long gasLimit;
+        public String toAddress;
+        public long value;
+        public byte[] data;
+        public void setArguments(CallArguments args) throws Exception {
+            nonce =0;
+            gasPrice = 0;
+            if (args.gasPrice != null && args.gasPrice.length()!=0)
+                gasPrice = JSonHexToLong(args.gasPrice);
+
+            gasLimit = 4_000_000;
+            if (args.gasLimit != null && args.gasLimit.length()!=0)
+                gasLimit = JSonHexToLong(args.gasLimit);
+
+            toAddress = JSonHexToHex(args.to);
+
+            value=0;
+            if (args.value != null && args.value.length()!=0)
+                value = JSonHexToLong(args.value);
+
+            data = null;
+
+            if (args.data != null && args.data.length()!=0)
+                data = TypeConverter.StringHexToByteArray(args.data);
+        }
     }
 
-    public String eth_getBalance(String account, String block) {
-        System.out.println("JsonRpcImpl.eth_getBalance:" + "account = [" + account + "], block = [" + block + "]");
-        return "0x555";
+    @Autowired
+    SystemProperties config;
+
+    @Autowired
+    ConfigCapabilities configCapabilities;
+
+    @Autowired
+    public WorldManager worldManager;
+
+    @Autowired
+    public Repository repository;
+
+    @Autowired
+    BlockchainImpl blockchain;
+
+    @Autowired
+    Ethereum eth;
+
+    @Autowired
+    PeerServer peerServer;
+
+    @Autowired
+    SyncManager syncManager;
+
+    @Autowired
+    TransactionStore txStore;
+
+    @Autowired
+    ChannelManager channelManager;
+
+    @Autowired
+    CompositeSyncListener compositeSyncListener;
+
+    @Autowired
+    BlockMiner blockMiner;
+
+    @Autowired
+    TransactionStore transactionStore;
+
+    long initialBlockNumber;
+    long maxBlockNumberSeen;
+
+    Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
+
+    @PostConstruct
+    private void init() {
+        initialBlockNumber = blockchain.getBestBlock().getNumber();
+        compositeSyncListener.add(new SyncListenerAdapter() {
+            @Override
+            public void onNewBlockNumber(long number) {
+                maxBlockNumberSeen = max(maxBlockNumberSeen, number);
+            }
+        });
     }
 
-    @Override
-    public String eth_getStorageAt(String account, String block, String a) {
-//        return "0x555";
-        throw new UnsupportedOperationException("JSON RPC method eth_getStorageAt not implemented yet");
+    public long JSonHexToLong(String x) throws Exception {
+        if (!x.startsWith("0x"))
+            throw new Exception("Incorrect hex syntax");
+        x = x.substring(2);
+        return Long.parseLong(x, 16);
     }
 
-    @Override
+    public int JSonHexToInt(String x) throws Exception {
+        if (!x.startsWith("0x"))
+            throw new Exception("Incorrect hex syntax");
+        x = x.substring(2);
+        return Integer.parseInt(x, 16);
+    }
+
+    public String JSonHexToHex(String x) throws Exception {
+        if (!x.startsWith("0x"))
+            throw new Exception("Incorrect hex syntax");
+        x = x.substring(2);
+        return x;
+    }
+
+    public Block getBlockByJSonHash(String blockHash) throws Exception  {
+        byte[] bhash = TypeConverter.StringHexToByteArray(blockHash);
+        return worldManager.getBlockchain().getBlockByHash(bhash);
+    }
+
+    private Block getByJsonBlockId(String id) {
+        if ("earliest".equalsIgnoreCase(id)) {
+            return blockchain.getBlockByNumber(0);
+        } else if ("latest".equalsIgnoreCase(id)) {
+            return blockchain.getBestBlock();
+        } else if ("pending".equalsIgnoreCase(id)) {
+            // TODO
+            throw new UnsupportedOperationException();
+        } else {
+            long blockNumber = StringHexToBigInteger(id).longValue();
+            return blockchain.getBlockByNumber(blockNumber);
+        }
+    }
+
+    protected Account getAccount(String address) throws Exception {
+        return accounts.get(new ByteArrayWrapper(StringHexToByteArray(address)));
+    }
+
+    protected Account addAccount(String seed) {
+        ECKey key = ECKey.fromPrivate(SHA3Helper.sha3(seed.getBytes()));
+        Account account = new Account();
+        account.init(key);
+        accounts.put(new ByteArrayWrapper(account.getAddress()), account);
+        return account;
+    }
+
     public String web3_clientVersion() {
-        throw new UnsupportedOperationException("JSON RPC method web3_clientVersion not implemented yet");
-    }
+        return "EthereumJ" + "/"+ SystemProperties.CONFIG.projectVersion() + "/"+SystemProperties.CONFIG.projectVersionModifier();
+    };
 
-    @Override
-    public String web3_sha3() {
-        throw new UnsupportedOperationException("JSON RPC method web3_sha3 not implemented yet");
-    }
+    public String  web3_sha3(String data) throws Exception {
+        byte[] result = HashUtil.sha3(TypeConverter.StringHexToByteArray(data));
+        return TypeConverter.toJsonHex(result);
+    };
 
-    @Override
-    public String net_peerCount() {
-        throw new UnsupportedOperationException("JSON RPC method net_peerCount not implemented yet");
-    }
+    public String net_version() {
+        return eth_protocolVersion();
+    };
 
-    @Override
-    public String net_listening() {
-        throw new UnsupportedOperationException("JSON RPC method net_listening not implemented yet");
-    }
+    public String net_peerCount(){
+        int n = channelManager.getActivePeers().size();
+        return TypeConverter.toJsonHex(n);
+    };
 
-    @Override
-    public String eth_protocolVersion() {
-        throw new UnsupportedOperationException("JSON RPC method eth_protocolVersion not implemented yet");
-    }
+    public boolean net_listening() {
+        return peerServer.isListening();
+    };
 
-    @Override
-    public String eth_syncing() {
-        throw new UnsupportedOperationException("JSON RPC method eth_syncing not implemented yet");
-    }
+    public String eth_protocolVersion(){
+        int version = 0;
+        for (Capability capability : configCapabilities.getConfigCapabilities()) {
+            if (capability.isEth()) {
+                version = max(version, capability.getVersion());
+            }
+        }
+        return Integer.toString(version);
+    };
 
-    @Override
+    public SyncingResult eth_syncing(){
+        SyncingResult s = new SyncingResult();
+        s.startingBlock= TypeConverter.toJsonHex(initialBlockNumber);
+        s.currentBlock= TypeConverter.toJsonHex(blockchain.getBestBlock().getNumber());
+        s.highestBlock= TypeConverter.toJsonHex(maxBlockNumberSeen);
+
+        return s;
+    };
+
     public String eth_coinbase() {
-        throw new UnsupportedOperationException("JSON RPC method eth_coinbase not implemented yet");
+        return toJsonHex(blockchain.getMinerCoinbase());
     }
 
-    @Override
-    public String eth_mining() {
-        throw new UnsupportedOperationException("JSON RPC method eth_mining not implemented yet");
+    public boolean eth_mining() {
+        return blockMiner.isMining();
     }
 
-    @Override
+
     public String eth_hashrate() {
-        throw new UnsupportedOperationException("JSON RPC method eth_hashrate not implemented yet");
+        // Todo: Wait for Osky code
+        return TypeConverter.toJsonHex(0);
+    }
+
+    public String eth_gasPrice(){
+        return TypeConverter.toJsonHex(eth.getGasPrice());
+    };
+
+    // TODO review implementation using getAccountCollection
+    public String[] eth_accounts() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String eth_blockNumber(){
+        Block bestBlock = blockchain.getBestBlock();
+        long b = 0;
+        if (bestBlock != null) {
+            b = bestBlock.getNumber();
+        }
+        return TypeConverter.toJsonHex(b);
+    };
+
+
+    public String eth_getBalance(String address, String blockId) throws Exception {
+        Block block = getByJsonBlockId(blockId);
+        byte[] addressAsByteArray = TypeConverter.StringHexToByteArray(address);
+        BigInteger balance = this.repository.getSnapshotTo(block.getStateRoot()).getBalance(addressAsByteArray);
+        return TypeConverter.toJsonHex(balance);
+    }
+
+    public String eth_getBalance(String address) throws Exception {
+        return eth_getBalance(address, "latest");
     }
 
     @Override
-    public String eth_gasPrice() {
-        throw new UnsupportedOperationException("JSON RPC method eth_gasPrice not implemented yet");
+    public String eth_getStorageAt(String address, String storageIdx, String blockId) throws Exception {
+        Block block = getByJsonBlockId(blockId);
+        byte[] addressAsByteArray = StringHexToByteArray(address);
+        DataWord storageValue = this.repository.getSnapshotTo(block.getStateRoot()).
+                getStorageValue(addressAsByteArray, new DataWord(StringHexToByteArray(storageIdx)));
+        return TypeConverter.toJsonHex(storageValue.getData());
     }
 
     @Override
-    public String eth_accounts() {
-        throw new UnsupportedOperationException("JSON RPC method eth_accounts not implemented yet");
+    public String eth_getTransactionCount(String address, String blockId) throws Exception {
+        Block block = getByJsonBlockId(blockId);
+        byte[] addressAsByteArray = TypeConverter.StringHexToByteArray(address);
+        BigInteger nonce = this.repository.getSnapshotTo(block.getStateRoot()).getNonce(addressAsByteArray);
+        return TypeConverter.toJsonHex(nonce);
+    }
+
+    public String eth_getBlockTransactionCountByHash(String blockHash) throws Exception {
+        Block b = getBlockByJSonHash(blockHash);
+        long n = b.getTransactionsList().size();
+        return TypeConverter.toJsonHex(n);
+    };
+
+    public String eth_getBlockTransactionCountByNumber(String bnOrId) throws Exception {
+        Block b = getByJsonBlockId(bnOrId);
+        long n = b.getTransactionsList().size();
+        return TypeConverter.toJsonHex(n);
+    };
+
+    public String eth_getUncleCountByBlockHash(String blockHash) throws Exception {
+        Block b = getBlockByJSonHash(blockHash);
+        long n = b.getUncleList().size();
+        return TypeConverter.toJsonHex(n);
+    };
+
+    public String eth_getUncleCountByBlockNumber(String bnOrId) throws Exception {
+        Block b = getByJsonBlockId(bnOrId);
+        long n = b.getUncleList().size();
+        return TypeConverter.toJsonHex(n);
+    };
+
+    public String eth_getCode(String address, String blockId) throws Exception {
+        Block block = getByJsonBlockId(blockId);
+        byte[] addressAsByteArray = TypeConverter.StringHexToByteArray(address);
+        byte[] code = this.repository.getSnapshotTo(block.getStateRoot()).getCode(addressAsByteArray);
+        return TypeConverter.toJsonHex(code);
+
+    };
+
+    public String eth_sign(String addr,String data) throws Exception {
+        String ha = JSonHexToHex(addr);
+
+        Account account = getAccount(ha);
+
+        if (account==null)
+            throw new Exception("Inexistent account");
+
+        // Todo: is not clear from the spec what hash function must be used to sign
+        // We assume sha3
+        byte[] masgHash= HashUtil.sha3(TypeConverter.StringHexToByteArray(data));
+        ECKey.ECDSASignature signature = account.getEcKey().sign(masgHash);
+        // Todo: is not clear if result should be RlpEncoded or serialized by other means
+        byte[] rlpSig = RLP.encode(signature);
+        return TypeConverter.toJsonHex(rlpSig);
+    }
+
+    public String eth_sendTransaction(CallArguments args) throws Exception {
+
+        Account account = getAccount(JSonHexToHex(args.from));
+
+        if (account == null)
+            throw new Exception("From address private key could not be found in this node");
+
+        if (args.data != null && args.data.startsWith("0x"))
+            args.data = args.data.substring(2);
+
+        Transaction tx = new Transaction(
+                bigIntegerToBytes(account.getNonce()),
+                args.gasPrice != null ? StringNumberAsBytes(args.gasPrice) : EMPTY_BYTE_ARRAY,
+                args.gasLimit != null ? StringNumberAsBytes(args.gasLimit) : EMPTY_BYTE_ARRAY,
+                args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
+                args.value != null ? StringNumberAsBytes(args.value) : EMPTY_BYTE_ARRAY,
+                Hex.decode(args.data));
+        tx.sign(account.getEcKey().getPrivKeyBytes());
+
+        eth.submitTransaction(tx);
+
+        return TypeConverter.toJsonHex(tx.getHash());
+    }
+
+    // TODO: Remove, obsolete with this params
+    public String eth_sendTransaction(String from,String to, String gas,
+                                      String gasPrice, String value,String data,String nonce) throws Exception {
+        Transaction tx = new Transaction(
+                TypeConverter.StringHexToByteArray(nonce),
+                TypeConverter.StringHexToByteArray(gasPrice),
+                TypeConverter.StringHexToByteArray(gas),
+                TypeConverter.StringHexToByteArray(to), /*receiveAddress*/
+                TypeConverter.StringHexToByteArray(value),
+                TypeConverter.StringHexToByteArray(data));
+
+        eth.submitTransaction(tx);
+
+        return TypeConverter.toJsonHex(tx.getHash());
+    }
+
+    public String eth_sendRawTransaction(String rawData) throws Exception {
+        Transaction tx = new Transaction(StringHexToByteArray(rawData));
+
+        eth.submitTransaction(tx);
+
+        return TypeConverter.toJsonHex(tx.getHash());
+    }
+
+    public ProgramResult createCallTxAndExecute(CallArguments args, Block block) throws Exception {
+        BinaryCallArguments bca = new BinaryCallArguments();
+        bca.setArguments(args);
+        Transaction tx = CallTransaction.createRawTransaction(0,
+                bca.gasPrice,
+                bca.gasLimit,
+                bca.toAddress,
+                bca.value,
+                bca.data);
+
+        ProgramResult res = eth.callConstant(tx, block);
+        return res;
+    }
+
+    public String eth_call(CallArguments args, String bnOrId) throws Exception {
+
+        ProgramResult res = createCallTxAndExecute(args, getBlockByJSonHash(bnOrId));
+        return TypeConverter.toJsonHex(res.getHReturn());
+
+    };
+
+    public String eth_estimateGas(CallArguments args) throws Exception {
+        ProgramResult res = createCallTxAndExecute(args, blockchain.getBestBlock());
+        return TypeConverter.toJsonHex(res.getGasUsed());
+    }
+
+
+    public BlockResult getBlockResult(Block b, boolean fullTx) {
+        if (b==null)
+            return null;
+        BlockResult br = new BlockResult();
+        br.number = TypeConverter.toJsonHex(b.getNumber());
+        br.hash = TypeConverter.toJsonHex(b.getHash());
+        br.parentHash = TypeConverter.toJsonHex(b.getParentHash());
+        br.nonce = TypeConverter.toJsonHex(b.getNonce());
+        br.sha3Uncles= TypeConverter.toJsonHex(b.getUnclesHash());
+        br.logsBloom = TypeConverter.toJsonHex(b.getLogBloom());
+        br.transactionsRoot =TypeConverter.toJsonHex(b.getTxTrieRoot());
+        br.stateRoot = TypeConverter.toJsonHex(b.getStateRoot());
+        br.receiptsRoot =TypeConverter.toJsonHex(b.getReceiptsRoot());
+        br.miner = TypeConverter.toJsonHex(b.getCoinbase());
+        br.difficulty = TypeConverter.toJsonHex(b.getDifficulty());
+        br.totalDifficulty = TypeConverter.toJsonHex(b.getCumulativeDifficulty());
+        if (b.getExtraData() != null)
+            br.extraData =TypeConverter.toJsonHex(b.getExtraData());
+        br.size = TypeConverter.toJsonHex(b.getEncoded().length);
+        br.gasLimit =TypeConverter.toJsonHex(b.getGasLimit());
+        br.gasUsed =TypeConverter.toJsonHex(b.getGasUsed());
+        br.timestamp =TypeConverter.toJsonHex(b.getTimestamp());
+
+        List<Object> txes = new ArrayList<>();
+        if (fullTx) {
+            for (int i = 0; i < b.getTransactionsList().size(); i++) {
+                txes.add(new TransactionResultDTO(b, i, b.getTransactionsList().get(i)));
+            }
+        } else {
+            for (Transaction tx : b.getTransactionsList()) {
+                txes.add(toJsonHex(tx.getHash()));
+            }
+        }
+        br.transactions = txes.toArray();
+
+        List<String> ul = new ArrayList<>();
+        for (BlockHeader header : b.getUncleList()) {
+            ul.add(toJsonHex(header.getHash()));
+        }
+        br.uncles = ul.toArray(new String[ul.size()]);
+
+        return br;
+    }
+
+    public BlockResult eth_getBlockByHash(String blockHash,Boolean fullTransactionObjects) throws Exception {
+        Block b = getBlockByJSonHash(blockHash);
+        return getBlockResult(b, fullTransactionObjects);
+    }
+
+    public BlockResult eth_getBlockByNumber(String bnOrId,Boolean fullTransactionObjects) throws Exception {
+        Block b = getByJsonBlockId(bnOrId);
+
+        return getBlockResult(b, fullTransactionObjects);
+    }
+
+    public TransactionResultDTO eth_getTransactionByHash(String transactionHash) throws Exception {
+        TransactionInfo txInfo = transactionStore.get(StringHexToByteArray(transactionHash));
+        Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
+        return new TransactionResultDTO(block, txInfo.getIndex(), block.getTransactionsList().get(txInfo.getIndex()));
+    }
+
+    public TransactionResultDTO eth_getTransactionByBlockHashAndIndex(String blockHash,String index) throws Exception {
+        Block b = getBlockByJSonHash(blockHash);
+        int idx = JSonHexToInt(index);
+        Transaction tx = b.getTransactionsList().get(idx);
+        TransactionResultDTO tr = new TransactionResultDTO(b, idx, tx);
+        return tr;
+    }
+
+    public TransactionResultDTO eth_getTransactionByBlockNumberAndIndex(String bnOrId, String index) throws Exception {
+        Block b = getByJsonBlockId(bnOrId);
+        int idx = JSonHexToInt(index);
+        Transaction tx = b.getTransactionsList().get(idx);
+        TransactionResultDTO tr = new TransactionResultDTO(b, idx, tx);
+        return tr;
+    }
+
+    public TransactionReceiptDTO eth_getTransactionReceipt(String transactionHash) throws Exception {
+        byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
+        TransactionInfo txInfo = txStore.get(hash);
+
+        if (txInfo == null)
+            return null;
+
+        Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
+
+        return new TransactionReceiptDTO(block, txInfo);
     }
 
     @Override
-    public String eth_blockNumber() {
-        throw new UnsupportedOperationException("JSON RPC method eth_blockNumber not implemented yet");
+    public BlockResult eth_getUncleByBlockHashAndIndex(String blockHash, String uncleIdx) throws Exception {
+        Block block = blockchain.getBlockByHash(StringHexToByteArray(blockHash));
+        BlockHeader uncleHeader = block.getUncleList().get(JSonHexToInt(uncleIdx));
+        Block uncle = blockchain.getBlockByHash(uncleHeader.getHash());
+        if (uncle == null) return null;
+        return getBlockResult(uncle, false);
     }
 
     @Override
-    public String eth_getBalance() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getBalance not implemented yet");
+    public BlockResult eth_getUncleByBlockNumberAndIndex(String blockId, String uncleIdx) throws Exception {
+        return eth_getUncleByBlockHashAndIndex(
+                toJsonHex(getByJsonBlockId(blockId).getHash()), uncleIdx);
     }
 
     @Override
-    public String eth_getStorageAt() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getStorageAt not implemented yet");
+    public String[] eth_getCompilers() {
+        return new String[] {"solidity"};
     }
 
     @Override
-    public String eth_getTransactionCount() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getTransactionCount not implemented yet");
+    public CompilationResult eth_compileLLL(String contract) {
+        throw new UnsupportedOperationException("LLL compiler not supported");
     }
 
     @Override
-    public String eth_getBlockTransactionCountByHash() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getBlockTransactionCountByHash not implemented yet");
+    public CompilationResult eth_compileSolidity(String contract) throws Exception {
+        SolidityCompiler.Result res = SolidityCompiler.compile(
+                contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+        if (!res.errors.isEmpty()) {
+            throw new RuntimeException("Compilation error: " + res.errors);
+        }
+        org.ethereum.solidity.compiler.CompilationResult result = org.ethereum.solidity.compiler.CompilationResult.parse(res.output);
+        CompilationResult ret = new CompilationResult();
+        org.ethereum.solidity.compiler.CompilationResult.ContractMetadata contractMetadata = result.contracts.values().iterator().next();
+        ret.code = toJsonHex(contractMetadata.bin);
+        ret.info = new CompilationInfo();
+        ret.info.source = contract;
+        ret.info.language = "Solidity";
+        ret.info.languageVersion = "0";
+        ret.info.compilerVersion = result.version;
+        ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi);
+        return ret;
     }
 
     @Override
-    public String eth_getBlockTransactionCountByNumber() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getBlockTransactionCountByNumber not implemented yet");
+    public CompilationResult eth_compileSerpent(String contract){
+        throw new UnsupportedOperationException("Serpent compiler not supported");
     }
 
     @Override
-    public String eth_getUncleCountByBlockHash() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getUncleCountByBlockHash not implemented yet");
+    public String eth_resend() {
+        throw new UnsupportedOperationException("JSON RPC method eth_resend not implemented yet");
     }
 
     @Override
-    public String eth_getUncleCountByBlockNumber() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getUncleCountByBlockNumber not implemented yet");
-    }
-
-    @Override
-    public String eth_getCode() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getCode not implemented yet");
-    }
-
-    @Override
-    public String eth_sign() {
-        throw new UnsupportedOperationException("JSON RPC method eth_sign not implemented yet");
-    }
-
-    @Override
-    public String eth_sendTransaction() {
-        throw new UnsupportedOperationException("JSON RPC method eth_sendTransaction not implemented yet");
-    }
-
-    @Override
-    public String eth_sendRawTransaction() {
-        throw new UnsupportedOperationException("JSON RPC method eth_sendRawTransaction not implemented yet");
-    }
-
-    @Override
-    public String eth_call() {
-        throw new UnsupportedOperationException("JSON RPC method eth_call not implemented yet");
-    }
-
-    @Override
-    public String eth_estimateGas() {
-        throw new UnsupportedOperationException("JSON RPC method eth_estimateGas not implemented yet");
-    }
-
-    @Override
-    public String eth_getBlockByHash() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getBlockByHash not implemented yet");
-    }
-
-    @Override
-    public String eth_getBlockByNumber() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getBlockByNumber not implemented yet");
-    }
-
-    @Override
-    public String eth_getTransactionByHash() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getTransactionByHash not implemented yet");
-    }
-
-    @Override
-    public String eth_getTransactionByBlockHashAndIndex() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getTransactionByBlockHashAndIndex not implemented yet");
-    }
-
-    @Override
-    public String eth_getTransactionByBlockNumberAndIndex() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getTransactionByBlockNumberAndIndex not implemented yet");
-    }
-
-    @Override
-    public String eth_getTransactionReceipt() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getTransactionReceipt not implemented yet");
-    }
-
-    @Override
-    public String eth_getUncleByBlockHashAndIndex() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getUncleByBlockHashAndIndex not implemented yet");
-    }
-
-    @Override
-    public String eth_getUncleByBlockNumberAndIndex() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getUncleByBlockNumberAndIndex not implemented yet");
-    }
-
-    @Override
-    public String eth_getCompilers() {
-        throw new UnsupportedOperationException("JSON RPC method eth_getCompilers not implemented yet");
-    }
-
-    @Override
-    public String eth_compileLLL() {
-        throw new UnsupportedOperationException("JSON RPC method eth_compileLLL not implemented yet");
-    }
-
-    @Override
-    public String eth_compileSolidity() {
-        throw new UnsupportedOperationException("JSON RPC method eth_compileSolidity not implemented yet");
-    }
-
-    @Override
-    public String eth_compileSerpent() {
-        throw new UnsupportedOperationException("JSON RPC method eth_compileSerpent not implemented yet");
+    public String eth_pendingTransactions() {
+        throw new UnsupportedOperationException("JSON RPC method eth_pendingTransactions not implemented yet");
     }
 
     @Override
@@ -327,11 +678,10 @@ public class JsonRpcImpl implements JsonRpc {
         throw new UnsupportedOperationException("JSON RPC method shh_getMessages not implemented yet");
     }
 
-
-
     @Override
-    public String admin_addPeer() {
-        throw new UnsupportedOperationException("JSON RPC method admin_addPeer not implemented yet");
+    public boolean admin_addPeer(String s) {
+        eth.connect(new Node(s));
+        return true;
     }
 
     @Override
@@ -435,16 +785,6 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     @Override
-    public String eth_resend() {
-        throw new UnsupportedOperationException("JSON RPC method eth_resend not implemented yet");
-    }
-
-    @Override
-    public String eth_pendingTransactions() {
-        throw new UnsupportedOperationException("JSON RPC method eth_pendingTransactions not implemented yet");
-    }
-
-    @Override
     public String net_addPeer() {
         throw new UnsupportedOperationException("JSON RPC method net_addPeer not implemented yet");
     }
@@ -530,17 +870,23 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     @Override
-    public String personal_newAccount() {
-        throw new UnsupportedOperationException("JSON RPC method personal_newAccount not implemented yet");
+    public String personal_newAccount(String seed) {
+        Account account = addAccount(seed);
+        return toJsonHex(account.getAddress());
     }
 
     @Override
-    public String personal_unlockAccount() {
-        throw new UnsupportedOperationException("JSON RPC method personal_unlockAccount not implemented yet");
+    public boolean personal_unlockAccount(String addr, String pass, String duration) {
+        return true;
     }
 
     @Override
-    public String personal_listAccounts() {
-        throw new UnsupportedOperationException("JSON RPC method personal_listAccounts not implemented yet");
+    public String[] personal_listAccounts() {
+        String[] ret = new String[accounts.size()];
+        int i = 0;
+        for (ByteArrayWrapper addr : accounts.keySet()) {
+            ret[i++] = toJsonHex(addr.getData());
+        }
+        return ret;
     }
 }
