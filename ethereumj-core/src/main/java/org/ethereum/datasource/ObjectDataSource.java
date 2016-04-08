@@ -58,7 +58,7 @@ public class ObjectDataSource<V> implements Flushable{
         return ret;
     }
 
-    KeyValueDataSource getSrc() {
+    protected KeyValueDataSource getSrc() {
         return src;
     }
 }

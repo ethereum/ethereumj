@@ -109,22 +109,16 @@ public class PendingStateLongRunTest {
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
-        EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        BlockchainImpl blockchain = new BlockchainImpl(
-                blockStore,
-                repository,
-                new AdminInfo(),
-                listener,
-                new CommonConfig().parentHeaderValidator()
-        );
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
 
         pendingState.init();
 

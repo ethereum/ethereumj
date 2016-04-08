@@ -258,13 +258,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        BlockchainImpl blockchain = new BlockchainImpl(
-                blockStore,
-                repository,
-                new AdminInfo(),
-                listener,
-                new CommonConfig().parentHeaderValidator()
-        );
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);

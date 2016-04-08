@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import org.ethereum.db.TransactionInfo;
+
 import java.math.BigInteger;
 import java.util.List;
 
@@ -35,7 +37,11 @@ public interface Blockchain {
 
     public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty);
 
-    TransactionReceipt getTransactionReceiptByHash(byte[] hash);
+    /**
+     * Returns the transaction info stored in the blockchain
+     * This doesn't involve pending transactions
+     */
+    TransactionInfo getTransactionInfo(byte[] hash);
 
     public Block getBlockByHash(byte[] hash);
 

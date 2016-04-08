@@ -310,6 +310,7 @@ public class TransactionTest {
         List<LogInfo> logs = new ArrayList<>();
         logs.add(logInfo1);
 
+        // TODO calculate cumulative gas
         TransactionReceipt receipt = new TransactionReceipt(stateRoot, gasUsed, bloom, logs);
 
         assertEquals(data,

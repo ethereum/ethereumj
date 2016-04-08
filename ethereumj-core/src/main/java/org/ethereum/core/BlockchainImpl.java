@@ -3,9 +3,13 @@ package org.ethereum.core;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.TransactionInfo;
+import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -85,6 +89,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     private BlockStore blockStore;
 
+    @Autowired
+    private TransactionStore transactionStore;
+
     private Block bestBlock;
 
     private BigInteger totalDifficulty = ZERO;
@@ -129,14 +136,34 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository, AdminInfo adminInfo,
-                          EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator) {
+    public BlockchainImpl(BlockStore blockStore, Repository repository) {
         this.blockStore = blockStore;
         this.repository = repository;
-        this.adminInfo = adminInfo;
-        this.listener = listener;
-        this.parentHeaderValidator = parentHeaderValidator;
+        this.adminInfo = new AdminInfo();
+        this.listener = new EthereumListenerAdapter();
+        this.parentHeaderValidator = null;
+        this.transactionStore = new TransactionStore(new HashMapDB());
         initConst(SystemProperties.CONFIG);
+    }
+
+    public BlockchainImpl withTransactionStore(TransactionStore transactionStore) {
+        this.transactionStore = transactionStore;
+        return this;
+    }
+
+    public BlockchainImpl withAdminInfo(AdminInfo adminInfo) {
+        this.adminInfo = adminInfo;
+        return this;
+    }
+
+    public BlockchainImpl withEthereumListener(EthereumListener listener) {
+        this.listener = listener;
+        return this;
+    }
+
+    public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
+        this.parentHeaderValidator = parentHeaderValidator;
+        return this;
     }
 
     @PostConstruct
@@ -169,8 +196,17 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
-        throw new UnsupportedOperationException("TODO: will be implemented soon "); // FIXME: go and fix me
+    public TransactionInfo getTransactionInfo(byte[] hash) {
+
+        TransactionInfo txInfo = transactionStore.get(hash);
+
+        if (txInfo == null)
+            return null;
+
+        Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
+        txInfo.setTransaction(tx);
+
+        return txInfo;
     }
 
     @Override
@@ -282,9 +318,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             // flushing
             if (!byTest) {
-                repository.flush();
-                blockStore.flush();
-                System.gc();
+                flush();
             }
 
             dropState();
@@ -419,8 +453,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
-            repository.flush();
-            blockStore.flush();
+            flush();
             System.exit(-1);
         }
 
@@ -471,15 +504,21 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
 
         if (!byTest && needFlush(block)) {
-            repository.flush();
-            blockStore.flush();
-            System.gc();
+            flush();
         }
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
 
         return true;
+    }
+
+    public void flush() {
+        repository.flush();
+        blockStore.flush();
+        transactionStore.flush();
+
+        System.gc();
     }
 
     private boolean needFlush(Block block) {
@@ -530,6 +569,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
 
     public boolean isValid(BlockHeader header) {
+        if (parentHeaderValidator == null) return true;
 
         Block parentBlock = getParent(header);
 
@@ -741,6 +781,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (block.getNumber() >= config.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
+            transactionStore.put(tx.getHash(), new TransactionInfo(receipt, block.getHash(), receipts.size()));
+
             receipts.add(receipt);
         }
 
@@ -842,6 +884,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public List<Block> getGarbage() {
         return garbage;
+    }
+
+    public TransactionStore getTransactionStore() {
+        return transactionStore;
     }
 
     @Override
