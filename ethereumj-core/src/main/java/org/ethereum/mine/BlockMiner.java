@@ -263,6 +263,10 @@ public class BlockMiner {
         logger.debug("Mined block import result is " + importResult + " : " + newBlock.getShortHash());
     }
 
+    public boolean isMining() {
+        return isMining;
+    }
+
     /*****  Listener boilerplate  ******/
 
     public void addListener(MinerListener l) {

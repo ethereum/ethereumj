@@ -939,6 +939,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.minerCoinbase = minerCoinbase;
     }
 
+    @Override
+    public byte[] getMinerCoinbase() {
+        return minerCoinbase;
+    }
+
     public void setMinerExtraData(byte[] minerExtraData) {
         this.minerExtraData = minerExtraData;
     }

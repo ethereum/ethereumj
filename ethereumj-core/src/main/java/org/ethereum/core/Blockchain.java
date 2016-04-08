@@ -45,6 +45,8 @@ public interface Blockchain {
 
     public void setExitOn(long exitOn);
 
+    byte[] getMinerCoinbase();
+
     boolean isBlockExist(byte[] hash);
 
     List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
