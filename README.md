@@ -42,9 +42,11 @@ As a starting point for your own project take a look at https://github.com/ether
 
 ##### Running from command line:
 ```
-> git clone https://github.com/ethereum/ethereumj
-> cd ethereumj
-> ./gradlew run [-PmainClass=<sample class>]
+git clone https://github.com/ethereum/ethereumj
+cd ethereumj
+vim ethereumj-core/src/main/resources/ethereumj.conf # adjust ethereumj.conf to your needs
+./gradlew clean shadowJar
+java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 ```
 
 ##### Optional samples to try:
