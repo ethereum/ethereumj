@@ -35,6 +35,7 @@ test_db*
 
 
 # Local configuration
+config/
 **/user.conf
 **/out.log
 **/user.log4j.properties
