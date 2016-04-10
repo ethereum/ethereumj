@@ -5,7 +5,6 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 
 import java.net.InetAddress;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +82,7 @@ public class PeerInfo {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
+        if(!(obj instanceof PeerInfo)) return false;
         PeerInfo peerData = (PeerInfo) obj;
         return peerData.hashCode() == this.hashCode();
     }

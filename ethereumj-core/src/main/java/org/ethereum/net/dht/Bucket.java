@@ -98,7 +98,7 @@ public class Bucket {
 
     public interface DoOnTree {
 
-        public void call(Bucket bucket);
+        void call(Bucket bucket);
     }
 
 
