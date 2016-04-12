@@ -21,6 +21,18 @@ public interface JsonRpc {
         public String gasPrice;
         public String value;
         public String data; // compiledCode
+
+        @Override
+        public String toString() {
+            return "CallArguments{" +
+                    "from='" + from + '\'' +
+                    ", to='" + to + '\'' +
+                    ", gasLimit='" + gasLimit + '\'' +
+                    ", gasPrice='" + gasPrice + '\'' +
+                    ", value='" + value + '\'' +
+                    ", data='" + data + '\'' +
+                    '}';
+        }
     }
 
     class BlockResult {

@@ -32,7 +32,7 @@ public class TransactionResultDTO {
         gas = TypeConverter.toJsonHex(tx.getGasLimit()); // Todo: unclear if it's the gas limit or gas consumed what is asked
         gasPrice = TypeConverter.toJsonHex(tx.getGasPrice());
         value = TypeConverter.toJsonHex(tx.getValue());
-        input  = tx.getData() != null ? new String(tx.getData()) : null;
+        input  = tx.getData() != null ? TypeConverter.toJsonHex(tx.getData()) : null;
     }
 
 }
