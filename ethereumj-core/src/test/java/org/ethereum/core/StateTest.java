@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
@@ -115,7 +116,7 @@ public class StateTest {
     private Trie generateGenesisState() {
 
         Trie trie = new TrieImpl(new HashMapDB());
-        Genesis genesis = (Genesis)Genesis.getInstance();
+        Genesis genesis = SystemProperties.getDefault().getGenesis();
         for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
             trie.update(key.getData(), genesis.getPremine().get(key).getEncoded());
         }

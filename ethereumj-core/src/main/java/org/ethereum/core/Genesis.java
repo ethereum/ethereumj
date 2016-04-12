@@ -56,10 +56,6 @@ public class Genesis extends Block {
                 mixHash, nonce, null, null);
     }
 
-    public static Block getInstance() {
-        return SystemProperties.CONFIG.getGenesis();
-    }
-
     public static Block getInstance(SystemProperties config) {
         return config.getGenesis();
     }

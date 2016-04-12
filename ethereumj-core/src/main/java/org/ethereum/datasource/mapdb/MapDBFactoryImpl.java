@@ -19,7 +19,13 @@ public class MapDBFactoryImpl implements MapDBFactory {
     private ApplicationContext ctx;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG; // initialized for standalone test
+    SystemProperties config;
+
+    public MapDBFactoryImpl() {}
+
+    public MapDBFactoryImpl(SystemProperties config) {
+        this.config = config;
+    }
 
     @Override
     public KeyValueDataSource createDataSource() {

@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information

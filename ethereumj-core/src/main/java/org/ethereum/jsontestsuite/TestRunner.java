@@ -1,6 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
@@ -58,6 +59,11 @@ public class TestRunner {
     private ProgramTrace trace = null;
     private boolean setNewStateRoot;
     private String bestStateRoot;
+    private SystemProperties config;
+
+    public TestRunner(SystemProperties config) {
+        this.config = config;
+    }
 
     public List<String> runTestSuite(TestSuite testSuite) {
 
@@ -68,7 +74,7 @@ public class TestRunner {
 
             TestCase testCase = testIterator.next();
 
-            TestRunner runner = new TestRunner();
+            TestRunner runner = new TestRunner(config);
             List<String> result = runner.runTestCase(testCase);
             resultCollector.addAll(result);
         }
@@ -82,7 +88,7 @@ public class TestRunner {
 
         /* 1 */ // Create genesis + init pre state
         Block genesis = BlockBuilder.build(testCase.getGenesisBlockHeader(), null, null);
-        Repository repository = RepositoryBuilder.build(testCase.getPre());
+        Repository repository = RepositoryBuilder.build(config, testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
@@ -90,11 +96,11 @@ public class TestRunner {
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+        BlockchainImpl blockchain = new BlockchainImpl(config, blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig(config, null, null).parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, new EthereumListenerAdapter(), blockchain);
         pendingState.init();
 
         blockchain.setBestBlock(genesis);
@@ -157,7 +163,7 @@ public class TestRunner {
             results.add(formattedString);
         }
 
-        Repository postRepository = RepositoryBuilder.build(testCase.getPostState());
+        Repository postRepository = RepositoryBuilder.build(config, testCase.getPostState());
         List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
         results.addAll(repoResults);
 
@@ -174,7 +180,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(), testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(config), testCase.getPre());
 
         try {
 
@@ -211,8 +217,8 @@ public class TestRunner {
 
             /* 3. Create Program - exec.code */
             /* 4. run VM */
-            VM vm = new VM();
-            Program program = new Program(exec.getCode(), programInvoke);
+            VM vm = new VM(config);
+            Program program = new Program(config, exec.getCode(), programInvoke);
             boolean vmDidThrowAnEception = false;
             RuntimeException e = null;
             try {

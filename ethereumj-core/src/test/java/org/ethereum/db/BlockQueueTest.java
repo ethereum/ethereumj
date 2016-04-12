@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
@@ -29,7 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.junit.Assert.*;
 
 /**
@@ -54,7 +55,8 @@ public class BlockQueueTest {
         File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
-        Block genesis = Genesis.getInstance();
+        SystemProperties config = SystemProperties.getDefault();
+        Block genesis = config.getGenesis();
         blocks.add(genesis);
 
         for (String blockRLP : strData) {
@@ -75,11 +77,12 @@ public class BlockQueueTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
-        CONFIG.setDataBaseDir(testDb);
-        CONFIG.setDatabaseReset(false);
 
-        MapDBFactory mapDBFactory = new MapDBFactoryImpl();
-        blockQueue = new BlockQueueImpl();
+        config.setDataBaseDir(testDb);
+        config.setDatabaseReset(false);
+
+        MapDBFactory mapDBFactory = new MapDBFactoryImpl(config);
+        blockQueue = new BlockQueueImpl(config);
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 

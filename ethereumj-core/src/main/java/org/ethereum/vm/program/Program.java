@@ -60,7 +60,7 @@ public class Program {
     private ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 
     private ProgramOutListener listener;
-    private ProgramTraceListener traceListener = new ProgramTraceListener();
+    private ProgramTraceListener traceListener;
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private Stack stack;
@@ -68,7 +68,7 @@ public class Program {
     private Storage storage;
 
     private ProgramResult result = new ProgramResult();
-    private ProgramTrace trace = new ProgramTrace();
+    private ProgramTrace trace;
 
     private byte[] ops;
     private int pc;
@@ -78,7 +78,10 @@ public class Program {
 
     private Set<Integer> jumpdest = new HashSet<>();
 
-    public Program(byte[] ops, ProgramInvoke programInvoke) {
+    SystemProperties config;
+
+    public Program(SystemProperties config, byte[] ops, ProgramInvoke programInvoke) {
+        this.config = config;
         this.invoke = programInvoke;
 
         this.ops = nullToEmpty(ops);
@@ -86,13 +89,14 @@ public class Program {
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
         this.storage = setupProgramListener(new Storage(programInvoke));
-        this.trace = new ProgramTrace(programInvoke);
+        this.trace = new ProgramTrace(config, programInvoke);
+        this.traceListener = new ProgramTraceListener(config.vmTrace());
 
         precompile();
     }
 
-    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke);
+    public Program(SystemProperties config, byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
+        this(config, ops, programInvoke);
         this.transaction = transaction;
     }
 
@@ -395,8 +399,8 @@ public class Program {
         ProgramResult result = ProgramResult.empty();
         if (isNotEmpty(programCode)) {
 
-            VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            VM vm = newVM();
+            Program program = new Program(config, programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -409,7 +413,7 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {
@@ -450,6 +454,10 @@ public class Program {
                         refundGas);
             }
         }
+    }
+
+    private VM newVM() {
+        return new VM(config);
     }
 
     /**
@@ -517,8 +525,8 @@ public class Program {
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            VM vm = newVM();
+            Program program = new Program(config, programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -807,6 +815,9 @@ public class Program {
     }
 
     public ProgramTrace getTrace() {
+        if (trace == null) {
+            this.trace = new ProgramTrace(config);
+        }
         return trace;
     }
 

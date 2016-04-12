@@ -65,12 +65,12 @@ public class FramingTest {
 
     @Test
     public void testTest() throws FileNotFoundException, InterruptedException {
-        SysPropConfig1.props = new SystemProperties();
+        SysPropConfig1.props = SystemProperties.getDefault();
         SysPropConfig1.props.overrideParams(
                 "peer.listen.port", "30334",
                 "peer.privateKey", "ba43d10d069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8",
                 "database.dir", "testDB-1");
-        SysPropConfig2.props = new SystemProperties();
+        SysPropConfig2.props = SystemProperties.getDefault();
         SysPropConfig2.props.overrideParams(
                 "peer.listen.port", "30335",
                 "peer.privateKey", "d3a4a240b107ab443d46187306d0b947ce3d6b6ed95aead8c4941afcebde43d2",

@@ -30,7 +30,7 @@ public class PeerConnectionTester {
     private WorldManager worldManager;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
     // NodeHandler instance should be unique per Node instance
     private Map<NodeHandler, ?> connectedCandidates = Collections.synchronizedMap(new IdentityHashMap());

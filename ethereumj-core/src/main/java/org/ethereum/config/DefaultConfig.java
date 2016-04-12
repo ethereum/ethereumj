@@ -81,6 +81,6 @@ public class DefaultConfig {
 
     @Bean @Scope("prototype")
     LevelDbDataSource levelDbDataSource(String name) {
-        return new LevelDbDataSource(name);
+        return new LevelDbDataSource(config, name);
     }
 }

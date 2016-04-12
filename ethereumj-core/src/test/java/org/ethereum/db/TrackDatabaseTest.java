@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 
@@ -25,7 +26,7 @@ public class TrackDatabaseTest {
     @Test
     public void test1() {
 
-        KeyValueDataSource keyValueDataSource = new LevelDbDataSource("temp");
+        KeyValueDataSource keyValueDataSource = new LevelDbDataSource(SystemProperties.getDefault(), "temp");
         keyValueDataSource.init();
 
         DatabaseImpl db1 = new DatabaseImpl(keyValueDataSource);

@@ -1,13 +1,14 @@
 package org.ethereum;
 
 import org.ethereum.cli.CLIInterface;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 /**
  * @author Roman Mandeleil
@@ -16,16 +17,16 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class Start {
 
     public static void main(String args[]) throws IOException, URISyntaxException {
-        CLIInterface.call(args);
+        SystemProperties config = CLIInterface.call(args);
 
-        if (!CONFIG.blocksLoader().equals("")) {
-            CONFIG.setSyncEnabled(false);
-            CONFIG.setDiscoveryEnabled(false);
+        if (!config.blocksLoader().equals("")) {
+            config.setSyncEnabled(false);
+            config.setDiscoveryEnabled(false);
         }
 
-        Ethereum ethereum = EthereumFactory.createEthereum();
+        Ethereum ethereum = EthereumFactory.createEthereum(config);
 
-        if (!CONFIG.blocksLoader().equals(""))
+        if (!config.blocksLoader().equals(""))
             ethereum.getBlockLoader().loadBlocks();
     }
 

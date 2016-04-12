@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -35,13 +36,11 @@ public class RepositoryTrack implements Repository {
     HashMap<ByteArrayWrapper, ContractDetails> cacheDetails = new HashMap<>();
 
     Repository repository;
+    SystemProperties config;
 
-    public RepositoryTrack() {
-        this.repository = new RepositoryDummy();
-    }
-
-    public RepositoryTrack(Repository repository) {
+    public RepositoryTrack(Repository repository, SystemProperties config) {
         this.repository = repository;
+        this.config = config;
     }
 
     @Override
@@ -50,7 +49,7 @@ public class RepositoryTrack implements Repository {
         synchronized (repository) {
             logger.trace("createAccount: [{}]", Hex.toHexString(addr));
 
-            AccountState accountState = new AccountState();
+            AccountState accountState = new AccountState(config.getBlockchainConfig());
             cacheAccounts.put(wrap(addr), accountState);
 
             ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
@@ -191,14 +190,14 @@ public class RepositoryTrack implements Repository {
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
+        return accountState == null ? config.getBlockchainConfig().getCommonConstants().getInitialNonce() : accountState.getNonce();
     }
 
     @Override
     public BigInteger getBalance(byte[] addr) {
         if (!isExist(addr)) return BigInteger.ZERO;
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getBalance() : accountState.getBalance();
+        return accountState == null ? AccountState.EMPTY_BALANCE : accountState.getBalance();
     }
 
     @Override
@@ -283,7 +282,7 @@ public class RepositoryTrack implements Repository {
     public Repository startTracking() {
         logger.trace("start tracking: {}", this);
 
-        Repository repository = new RepositoryTrack(this);
+        Repository repository = new RepositoryTrack(this, config);
 
         return repository;
     }

@@ -5,10 +5,13 @@ import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
+import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static org.ethereum.TestUtils.*;
@@ -17,11 +20,18 @@ import static org.junit.Assert.*;
 
 public class DetailsDataStoreTest {
 
+    SystemProperties config;
+
+    @Before
+    public void setup() {
+        this.config = SystemProperties.getDefault();
+    }
+
     @Test
     public void test1(){
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
-        DetailsDataStore dds = new DetailsDataStore();
+        DetailsDataStore dds = new DetailsDataStore(config);
         dds.setDB(db);
 
         byte[] c_key = Hex.decode("1a2b");
@@ -54,7 +64,7 @@ public class DetailsDataStoreTest {
     public void test2(){
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
-        DetailsDataStore dds = new DetailsDataStore();
+        DetailsDataStore dds = new DetailsDataStore(config);
         dds.setDB(db);
 
         byte[] c_key = Hex.decode("1a2b");
@@ -91,7 +101,7 @@ public class DetailsDataStoreTest {
     public void test3(){
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
-        DetailsDataStore dds = new DetailsDataStore();
+        DetailsDataStore dds = new DetailsDataStore(config);
         dds.setDB(db);
 
         byte[] c_key = Hex.decode("1a2b");
@@ -130,7 +140,7 @@ public class DetailsDataStoreTest {
     public void test4() {
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
-        DetailsDataStore dds = new DetailsDataStore();
+        DetailsDataStore dds = new DetailsDataStore(config);
         dds.setDB(db);
 
         byte[] c_key = Hex.decode("1a2b");
@@ -142,12 +152,12 @@ public class DetailsDataStoreTest {
     @Test
     public void testExternalStorage() throws InterruptedException {
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
-        DetailsDataStore dds = new DetailsDataStore();
+        DetailsDataStore dds = new DetailsDataStore(config);
         dds.setDB(db);
 
         byte[] addrWithExternalStorage = randomAddress();
         byte[] addrWithInternalStorage = randomAddress();
-        final int inMemoryStorageLimit = SystemProperties.CONFIG.detailsInMemoryStorageLimit();
+        final int inMemoryStorageLimit = config.detailsInMemoryStorageLimit();
 
         HashMapDB externalStorage =
             (HashMapDB)
@@ -179,7 +189,7 @@ public class DetailsDataStoreTest {
         byte[] withExternalStorageRlp = detailsWithExternalStorage.getEncoded();
         ContractDetailsImpl decoded = new ContractDetailsImpl();
         decoded.setExternalStorageDataSource(externalStorage);
-        decoded.decode(withExternalStorageRlp);
+        decoded.decode(config, withExternalStorageRlp);
 
         assertEquals(inMemoryStorageLimit / 64 + 10, decoded.getStorage().size());
         assertTrue(withExternalStorageRlp.length < detailsWithInternalStorage.getEncoded().length);

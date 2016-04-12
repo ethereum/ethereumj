@@ -19,7 +19,8 @@ public class DataSourcePool {
     }
 
     public static KeyValueDataSource levelDbByName(String name) {
-        return (KeyValueDataSource) getDataSourceFromPool(name, new LevelDbDataSource());
+        return null;
+//        return (KeyValueDataSource) getDataSourceFromPool(name, new LevelDbDataSource());
     }
 
     private static DataSource getDataSourceFromPool(String name, @Nonnull DataSource dataSource) {

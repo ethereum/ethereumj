@@ -27,15 +27,8 @@ public class GitHubBasicTest {
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
     public String shacommit = "99afe8f5aad7bca5d0f1b1685390a4dea32d73c3";
 
-    @After
-    public void recover() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-    }
-
     @Test
     public void runDifficultyTest() throws IOException, ParseException {
-
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
 
@@ -48,14 +41,12 @@ public class GitHubBasicTest {
             BlockHeader current = testCase.getCurrent();
             BlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(parent));
+            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(MainNetConfig.INSTANCE, parent));
         }
     }
 
     @Test
     public void runDifficultyFrontierTest() throws IOException, ParseException {
-
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
 
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyFrontier.json", shacommit);
 
@@ -68,15 +59,12 @@ public class GitHubBasicTest {
             BlockHeader current = testCase.getCurrent();
             BlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(parent));
+            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(MainNetConfig.INSTANCE, parent));
         }
     }
 
     @Test
     public void runDifficultyHomesteadTest() throws IOException, ParseException {
-
-        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
-
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyHomestead.json", shacommit);
 
         DifficultyTestSuite testSuite = new DifficultyTestSuite(json);
@@ -88,7 +76,7 @@ public class GitHubBasicTest {
             BlockHeader current = testCase.getCurrent();
             BlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(parent));
+            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(new HomesteadConfig(), parent));
         }
     }
 }

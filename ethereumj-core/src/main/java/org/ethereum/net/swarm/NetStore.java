@@ -2,6 +2,7 @@ package org.ethereum.net.swarm;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 /**
  * The main logic of communicating with BZZ peers.
@@ -24,23 +25,16 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 @Component
 public class NetStore implements ChunkStore {
-    private static NetStore INST;
 
-    public synchronized static NetStore getInstance() {
-        return INST;
-    }
-
-    @Autowired
     WorldManager worldManager;
 
+    SystemProperties config;
 
-    public static PeerAddress createSelfAddress() {
-        return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());
+
+    public static PeerAddress createSelfAddress(SystemProperties config) {
+        return new PeerAddress(new byte[] {127,0,0,1}, config.listenPort(), config.nodeId());
     }
 
-    public static byte[] getSelfNodeId() {
-        return CONFIG.nodeId();
-    }
 
     public int requesterCount = 3;
     public int maxStorePeers = 3;
@@ -51,14 +45,15 @@ public class NetStore implements ChunkStore {
     private Hive hive;
     private PeerAddress selfAddress;
 
-    public NetStore() {
-        this(new LocalStore(new MemStore(), new MemStore()), new Hive(createSelfAddress()));
+    @Autowired
+    public NetStore(SystemProperties config) {
+        this(config, new LocalStore(new MemStore(), new MemStore()), new Hive(null, createSelfAddress(config)));
+        hive.setNetStore(this);
         start(hive.getSelfAddress());
-        // FIXME bad dirty hack to workaround Spring DI machinery
-        INST = this;
     }
 
-    public NetStore(LocalStore localStore, Hive hive) {
+    public NetStore(SystemProperties config, LocalStore localStore, Hive hive) {
+        this.config = config;
         this.localStore = localStore;
         this.hive = hive;
     }

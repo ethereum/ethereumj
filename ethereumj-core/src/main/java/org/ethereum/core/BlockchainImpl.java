@@ -123,7 +123,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private PendingState pendingState;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -147,14 +147,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository) {
+    public BlockchainImpl(SystemProperties config, BlockStore blockStore, Repository repository) {
+        this.config = config;
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = new AdminInfo();
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
-        initConst(SystemProperties.CONFIG);
+        init();
     }
 
     public BlockchainImpl withTransactionStore(TransactionStore transactionStore) {
@@ -437,7 +438,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             block.addUncle(uncle);
         }
 
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().calcDifficulty(parent.getHeader())));
+        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().calcDifficulty(config.getBlockchainConfig(), parent.getHeader())));
 
         pushState(parent.getHash());
 
@@ -483,7 +484,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 block.getParentHash())) return false;
 
         if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
-            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
+            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber(), config.traceStartBlock());
         }
 
         List<TransactionReceipt> receipts = processBlock(block);
@@ -774,7 +775,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
+            TransactionExecutor executor = new TransactionExecutor(config, tx, block.getCoinbase(),
                     track, blockStore,
                     programInvokeFactory, block, listener, totalGasUsed);
 

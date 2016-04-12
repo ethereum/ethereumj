@@ -5,6 +5,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
@@ -24,7 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 /**
  * This class creates the connection to an remote address using the Netty framework
@@ -60,6 +61,9 @@ public class DiscoveryChannel {
     @Autowired
     ApplicationContext ctx;
 
+    @Autowired
+    SystemProperties config;
+
 
     public DiscoveryChannel() {
 
@@ -77,7 +81,7 @@ public class DiscoveryChannel {
 
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerConnectionTimeout());
             b.remoteAddress(host, port);
 
 
@@ -102,7 +106,7 @@ public class DiscoveryChannel {
                             logger.info("Open connection, channel: {}", ch.toString());
 
                             ch.pipeline().addLast("readTimeoutHandler",
-                                    new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
+                                    new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
 //                            ch.pipeline().addLast("initiator", decoder.getInitiator());
                             ch.pipeline().addLast("messageCodec", decoder);
                             ch.pipeline().addLast(Capability.P2P, p2pHandler);

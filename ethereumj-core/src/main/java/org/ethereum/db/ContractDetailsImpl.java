@@ -10,11 +10,11 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.Arrays;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
@@ -33,14 +33,13 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
 
-    public ContractDetailsImpl() {
+    public ContractDetailsImpl() {}
+
+    public ContractDetailsImpl(SystemProperties config, byte[] rlpCode) {
+        decode(config, rlpCode);
     }
 
-    public ContractDetailsImpl(byte[] rlpCode) {
-        decode(rlpCode);
-    }
-
-    private ContractDetailsImpl(byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+    private ContractDetailsImpl( byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
         this.storageTrie = storageTrie;
         setCodes(codes);
@@ -87,7 +86,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     }
 
     @Override
-    public void decode(byte[] rlpCode) {
+    public void decode(SystemProperties config, byte[] rlpCode) {
         RLPList data = RLP.decode2(rlpCode);
         RLPList rlpList = (RLPList) data.get(0);
 
@@ -117,7 +116,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > SystemProperties.CONFIG.detailsInMemoryStorageLimit())
+        externalStorage = (storage.getRLPData().length > config.detailsInMemoryStorageLimit())
                 || externalStorage;
 
         this.rlpEncoded = rlpCode;
@@ -228,7 +227,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     private KeyValueDataSource getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = levelDbByName("details-storage/" + toHexString(address));
+//            externalStorageDataSource = levelDbByName("details-storage/" + toHexString(address));
         }
         return externalStorageDataSource;
     }

@@ -24,9 +24,11 @@ import java.util.List;
  */
 public class MineBlock {
 
+    private static SystemProperties config = SystemProperties.getDefault();
+
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        config.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -34,15 +36,10 @@ public class MineBlock {
         }));
     }
 
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-    }
-
 
     @Test
     public void mine1() throws Exception {
-        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(config, GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
@@ -59,9 +56,9 @@ public class MineBlock {
         Block b = blockchain.createNewBlock(parent, pendingTx, Collections.EMPTY_LIST);
 
         System.out.println("Mining...");
-        Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+        Ethash.getForBlock(b.getNumber(), config).mineLight(b).get();
         System.out.println("Validating...");
-        boolean valid = Ethash.getForBlock(b.getNumber()).validate(b.getHeader());
+        boolean valid = Ethash.getForBlock(b.getNumber(), config).validate(b.getHeader());
         Assert.assertTrue(valid);
 
         System.out.println("Connecting...");

@@ -1,5 +1,7 @@
 package org.ethereum.json;
 
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.db.ByteArrayWrapper;
@@ -46,7 +48,7 @@ import java.util.List;
 public class JSONHelper {
 
     @SuppressWarnings("uncheked")
-    public static void dumpState(ObjectNode statesNode, String address, AccountState state, ContractDetails details) {
+    public static void dumpState(BlockchainNetConfig config, ObjectNode statesNode, String address, AccountState state, ContractDetails details) {
 
         List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
         Collections.sort(storageKeys);
@@ -60,7 +62,7 @@ public class JSONHelper {
         }
 
         if (state == null)
-            state = AccountState.EMPTY;
+            state = new AccountState(config);
 
         account.put("balance", state.getBalance() == null ? "0" : state.getBalance().toString());
 //        account.put("codeHash", details.getCodeHash() == null ? "0x" : "0x" + Hex.toHexString(details.getCodeHash()));
@@ -72,7 +74,7 @@ public class JSONHelper {
         statesNode.set(address, account);
     }
 
-    public static void dumpBlock(ObjectNode blockNode, Block block,
+    public static void dumpBlock(BlockchainNetConfig config, ObjectNode blockNode, Block block,
                                  long gasUsed, byte[] state, List<ByteArrayWrapper> keys,
                                  Repository repository) {
 
@@ -89,7 +91,7 @@ public class JSONHelper {
             byte[] keyBytes = key.getData();
             AccountState accountState = repository.getAccountState(keyBytes);
             ContractDetails details = repository.getContractDetails(keyBytes);
-            dumpState(statesNode, Hex.toHexString(keyBytes), accountState, details);
+            dumpState(config, statesNode, Hex.toHexString(keyBytes), accountState, details);
         }
         blockNode.set("state", statesNode);
 

@@ -66,7 +66,7 @@ public class PrivateMinerSample {
          */
         @Bean
         public SystemProperties systemProperties() {
-            SystemProperties props = new SystemProperties();
+            SystemProperties props = SystemProperties.getDefault();
             props.overrideParams(ConfigFactory.parseString(config.replaceAll("'", "\"")));
             return props;
         }
@@ -155,7 +155,7 @@ public class PrivateMinerSample {
          */
         @Bean
         public SystemProperties systemProperties() {
-            SystemProperties props = new SystemProperties();
+            SystemProperties props = SystemProperties.getDefault();
             props.overrideParams(ConfigFactory.parseString(config.replaceAll("'", "\"")));
             return props;
         }

@@ -1,5 +1,6 @@
 package org.ethereum.vm.program.invoke;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
@@ -35,7 +36,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
 
 
-        this.repository = new RepositoryDummy();
+        this.repository = new RepositoryDummy(SystemProperties.getDefault());
         this.repository.createAccount(ownerAddress);
 
         this.repository.createAccount(contractAddress);

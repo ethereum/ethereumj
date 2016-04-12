@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
@@ -16,7 +17,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     private Map<DataWord, DataWord> storage = new HashMap<>();
 
-    ContractDetails origContract = new ContractDetailsImpl();
+    ContractDetails origContract;
 
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
@@ -70,7 +71,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     }
 
     @Override
-    public void decode(byte[] rlpCode) {
+    public void decode(SystemProperties config, byte[] rlpCode) {
         throw new RuntimeException("Not supported by this implementation.");
     }
 

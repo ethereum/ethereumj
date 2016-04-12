@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -27,6 +28,12 @@ public class DetailsDataStore {
         this.db = db;
     }
 
+    SystemProperties config;
+
+    public DetailsDataStore(SystemProperties config) {
+        this.config = config;
+    }
+
     public ContractDetails get(byte[] key) {
 
         ByteArrayWrapper wrappedKey = wrap(key);
@@ -38,7 +45,7 @@ public class DetailsDataStore {
             byte[] data = db.get(key);
             if (data == null) return null;
 
-            details = new ContractDetailsImpl(data);
+            details = new ContractDetailsImpl(config, data);
             cache.put(wrappedKey, details);
 
             float out = ((float) data.length) / 1048576;

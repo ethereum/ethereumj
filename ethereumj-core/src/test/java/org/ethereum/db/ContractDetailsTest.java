@@ -19,8 +19,9 @@ import static org.junit.Assert.assertTrue;
 
 public class ContractDetailsTest {
 
-    private static final int IN_MEMORY_STORAGE_LIMIT = SystemProperties.CONFIG.detailsInMemoryStorageLimit();
+    private static final int IN_MEMORY_STORAGE_LIMIT = SystemProperties.getDefault().detailsInMemoryStorageLimit();
 
+    private SystemProperties config = SystemProperties.getDefault();
     @Test
     public void test_1(){
 
@@ -39,7 +40,7 @@ public class ContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        ContractDetailsImpl contractDetails_ = new ContractDetailsImpl(data);
+        ContractDetailsImpl contractDetails_ = new ContractDetailsImpl(config, data);
 
         assertEquals(Hex.toHexString(code),
             Hex.toHexString(contractDetails_.getCode()));
@@ -120,7 +121,7 @@ public class ContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        ContractDetailsImpl contractDetails_ = new ContractDetailsImpl(data);
+        ContractDetailsImpl contractDetails_ = new ContractDetailsImpl(config, data);
 
         assertEquals(Hex.toHexString(code),
                 Hex.toHexString(contractDetails_.getCode()));
@@ -196,7 +197,7 @@ public class ContractDetailsTest {
 
         ContractDetailsImpl deserialized = new ContractDetailsImpl();
         deserialized.setExternalStorageDataSource(externalStorage);
-        deserialized.decode(rlp);
+        deserialized.decode(config, rlp);
 
         assertEquals(toHexString(address), toHexString(deserialized.getAddress()));
         assertEquals(toHexString(code), toHexString(deserialized.getCode()));
@@ -260,10 +261,10 @@ public class ContractDetailsTest {
         }
     }
 
-    private static ContractDetails deserialize(byte[] rlp, KeyValueDataSource externalStorage) {
+    private ContractDetails deserialize(byte[] rlp, KeyValueDataSource externalStorage) {
         ContractDetailsImpl result = new ContractDetailsImpl();
         result.setExternalStorageDataSource(externalStorage);
-        result.decode(rlp);
+        result.decode(config, rlp);
         
         return result;
     }

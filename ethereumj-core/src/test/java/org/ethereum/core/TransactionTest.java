@@ -403,7 +403,7 @@ public class TransactionTest {
 
         StateTestSuite stateTestSuite = new StateTestSuite(json.replaceAll("'", "\""));
 
-        List<String> res = new StateTestRunner(stateTestSuite.getTestCases().get("test1")) {
+        List<String> res = new StateTestRunner(SystemProperties.getDefault(), stateTestSuite.getTestCases().get("test1")) {
             @Override
             protected ProgramResult executeTransaction(Transaction tx) {
                 // first emulating the constant call (Ethereum.callConstantFunction)
@@ -419,7 +419,7 @@ public class TransactionTest {
                     Block bestBlock = block;
 
                     TransactionExecutor executor = new TransactionExecutor
-                            (txConst, bestBlock.getCoinbase(), track, new BlockStoreDummy(),
+                            (SystemProperties.getDefault(), txConst, bestBlock.getCoinbase(), track, new BlockStoreDummy(),
                                     invokeFactory, bestBlock)
                             .setLocalCall(true);
 
@@ -520,13 +520,11 @@ public class TransactionTest {
 
         System.out.println(json.replaceAll("'", "\""));
 
-        try {
-            SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
-            List<String> res = new StateTestRunner(stateTestSuite.getTestCases().get("test1")).runImpl();
-            if (!res.isEmpty()) throw new RuntimeException("Test failed: " + res);
-        } finally {
-            SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-        }
+        SystemProperties config =  SystemProperties.getDefault();
+        config.setBlockchainConfig(new HomesteadConfig());
+        List<String> res = new StateTestRunner(config, stateTestSuite.getTestCases().get("test1")).runImpl();
+        if (!res.isEmpty()) throw new RuntimeException("Test failed: " + res);
+
     }
 
     @Test
@@ -549,7 +547,7 @@ public class TransactionTest {
         System.out.println(res.errors);
         CompilationResult cres = CompilationResult.parse(res.output);
 
-        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(SystemProperties.getDefault(), GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
 
         ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
@@ -592,7 +590,7 @@ public class TransactionTest {
 
     public ProgramResult executeTransaction(BlockchainImpl blockchain, Transaction tx) {
         Repository track = blockchain.getRepository().startTracking();
-        TransactionExecutor executor = new TransactionExecutor(tx, new byte[32], blockchain.getRepository(),
+        TransactionExecutor executor = new TransactionExecutor(SystemProperties.getDefault(), tx, new byte[32], blockchain.getRepository(),
                 blockchain.getBlockStore(), blockchain.getProgramInvokeFactory(), blockchain.getBestBlock());
 
         executor.init();

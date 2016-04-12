@@ -37,12 +37,18 @@ public class CommonConfig {
     @Autowired
     private MapDBFactory mapDBFactory;
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    private SystemProperties config;
 
+    public CommonConfig() { }
 
+    public CommonConfig(SystemProperties config, RedisConnection redisConnection, MapDBFactory mapDBFactory) {
+        this.config = config;
+        this.redisConnection = redisConnection;
+        this.mapDBFactory = mapDBFactory;
+    }
     @Bean
     Repository repository() {
-        return new RepositoryImpl(keyValueDataSource(), keyValueDataSource());
+        return new RepositoryImpl(config, keyValueDataSource(), keyValueDataSource());
     }
 
     @Bean
@@ -58,7 +64,7 @@ public class CommonConfig {
             }
 
             dataSource = "leveldb";
-            return new LevelDbDataSource();
+            return new LevelDbDataSource(config);
         } finally {
             logger.info(dataSource + " key-value data source created.");
         }
@@ -163,15 +169,11 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule(),
-                new ParentGasLimitRule()
+                new DifficultyRule(config.getBlockchainConfig()),
+                new ParentGasLimitRule(config.getBlockchainConfig())
         ));
 
         return new ParentBlockHeaderValidator(rules);
     }
 
-    @Bean
-    public SystemProperties systemProperties() {
-        return SystemProperties.CONFIG;
-    }
 }

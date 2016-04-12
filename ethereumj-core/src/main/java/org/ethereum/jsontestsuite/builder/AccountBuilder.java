@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite.builder;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.jsontestsuite.model.AccountTck;
@@ -16,13 +17,13 @@ import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 
 public class AccountBuilder {
 
-    public static StateWrap build(AccountTck account) {
+    public static StateWrap build(SystemProperties config, AccountTck account) {
 
         ContractDetailsImpl details = new ContractDetailsImpl();
         details.setCode(parseData(account.getCode()));
         details.setStorage(convertStorage(account.getStorage()));
 
-        AccountState state = new AccountState();
+        AccountState state = new AccountState(config.getBlockchainConfig());
 
         state.addToBalance(unifiedNumericToBigInteger(account.getBalance()));
         state.setNonce(unifiedNumericToBigInteger(account.getNonce()));

@@ -19,7 +19,8 @@ public class CLIInterface {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
 
-    public static void call(String[] args) {
+    public static SystemProperties call(String[] args) {
+        SystemProperties config = SystemProperties.getDefault();
 
         try {
             Map<String, String> cliOptions = new HashMap<>();
@@ -67,12 +68,14 @@ public class CLIInterface {
             if (cliOptions.size() > 0) {
                 logger.info("Overriding config file with CLI options: " + cliOptions);
             }
-            SystemProperties.CONFIG.overrideParams(cliOptions);
 
+            config.overrideParams(cliOptions);
         } catch (Throwable e) {
             logger.error("Error parsing command line: [{}]", e.getMessage());
             System.exit(1);
         }
+
+        return config;
     }
 
     private static Boolean interpret(String arg) {

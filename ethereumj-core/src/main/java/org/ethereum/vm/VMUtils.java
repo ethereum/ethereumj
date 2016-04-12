@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,7 @@ import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.springframework.util.StringUtils.isEmpty;
 
 public final class VMUtils {
@@ -33,12 +34,12 @@ public final class VMUtils {
         }
     }
 
-    private static File createProgramTraceFile(String txHash) {
+    private static File createProgramTraceFile(SystemProperties config , String txHash) {
         File result = null;
 
-        if (CONFIG.vmTrace() && !isEmpty(CONFIG.vmTraceDir())) {
+        if (config.vmTrace() && !isEmpty(config.vmTraceDir())) {
 
-            File file = new File(new File(CONFIG.databaseDir(), CONFIG.vmTraceDir()), txHash + ".json");
+            File file = new File(new File(config.databaseDir(), config.vmTraceDir()), txHash + ".json");
 
             if (file.exists()) {
                 if (file.isFile() && file.canWrite()) {
@@ -73,7 +74,7 @@ public final class VMUtils {
     }
 
     public static void saveProgramTraceFile(String txHash, String content) {
-        File file = createProgramTraceFile(txHash);
+        File file = createProgramTraceFile(SystemProperties.getDefault(), txHash);
         if (file != null) {
             writeStringToFile(file, content);
         }

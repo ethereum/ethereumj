@@ -58,9 +58,9 @@ public class JsonRpcTest {
          */
         @Bean
         public SystemProperties systemProperties() {
-            SystemProperties props = new SystemProperties();
+            SystemProperties props = SystemProperties.getDefault();
             props.overrideParams(ConfigFactory.parseString(config.replaceAll("'", "\"")));
-            SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            props.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
                 @Override
                 public BigInteger getMINIMUM_DIFFICULTY() {
                     return BigInteger.ONE;

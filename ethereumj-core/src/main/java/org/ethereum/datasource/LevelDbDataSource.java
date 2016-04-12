@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.System.getProperty;
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
 
 /**
@@ -35,7 +35,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
     @Autowired
-    SystemProperties config  = SystemProperties.CONFIG; // initialized for standalone test
+    SystemProperties config;
 
     String name;
     DB db;
@@ -49,10 +49,12 @@ public class LevelDbDataSource implements KeyValueDataSource {
     // however blocks them on init/close/delete operations
     private ReadWriteLock resetDbLock = new ReentrantReadWriteLock();
 
-    public LevelDbDataSource() {
+    public LevelDbDataSource(SystemProperties config) {
+        this.config = config;
     }
 
-    public LevelDbDataSource(String name) {
+    public LevelDbDataSource(SystemProperties config, String name) {
+        this(config);
         this.name = name;
         logger.info("New LevelDbDataSource: " + name);
     }

@@ -47,7 +47,7 @@ public class MinerTest {
     public static class SysPropConfig1 {
         static Eth62 testHandler = null;
 
-        static SystemProperties props = new SystemProperties();;
+        static SystemProperties props = SystemProperties.getDefault();;
         @Bean
         public SystemProperties systemProperties() {
             return props;
@@ -59,7 +59,7 @@ public class MinerTest {
     public static class SysPropConfig2 {
         static Eth62 testHandler = null;
 
-        static SystemProperties props = new SystemProperties();;
+        static SystemProperties props = SystemProperties.getDefault();;
         @Bean
         public SystemProperties systemProperties() {
             return props;

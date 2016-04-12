@@ -1,7 +1,9 @@
 package org.ethereum.validator;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 
@@ -15,8 +17,13 @@ import java.math.BigInteger;
  */
 public class ParentGasLimitRule extends DependentBlockHeaderRule {
 
-    private static int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.CONFIG.getBlockchainConfig().
-            getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
+
+    private int GAS_LIMIT_BOUND_DIVISOR;
+
+    public ParentGasLimitRule(BlockchainNetConfig config) {
+        GAS_LIMIT_BOUND_DIVISOR = config.getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
+    }
+
 
     @Override
     public boolean validate(BlockHeader header, BlockHeader parent) {
