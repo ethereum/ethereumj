@@ -40,6 +40,16 @@ or gradle:
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
 
+##### Building an executable JAR
+```
+git clone https://github.com/ethereum/ethereumj
+cd ethereumj
+cp ethereumj-core/src/main/resources/ethereumj.conf ethereumj-core/src/main/resources/user.conf
+vim ethereumj-core/src/main/resources/user.conf # adjust user.conf to your needs
+./gradlew clean shadowJar
+java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
+```
+
 ##### Running from command line:
 ```
 > git clone https://github.com/ethereum/ethereumj
