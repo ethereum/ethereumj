@@ -24,15 +24,31 @@ public class TransactionResultDTO {
     public TransactionResultDTO (Block b, int index, Transaction tx) {
         hash =  TypeConverter.toJsonHex(tx.getHash());
         nonce = TypeConverter.toJsonHex(tx.getNonce());
-        blockHash = TypeConverter.toJsonHex(b.getHash());
-        blockNumber = TypeConverter.toJsonHex(b.getNumber());
-        transactionIndex =TypeConverter.toJsonHex(index);
+        blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
+        blockNumber = b == null ? null : TypeConverter.toJsonHex(b.getNumber());
+        transactionIndex = b == null ? null : TypeConverter.toJsonHex(index);
         from= TypeConverter.toJsonHex(tx.getSender());
         to = tx.getReceiveAddress() == null ? null : TypeConverter.toJsonHex(tx.getReceiveAddress());
-        gas = TypeConverter.toJsonHex(tx.getGasLimit()); // Todo: unclear if it's the gas limit or gas consumed what is asked
+        gas = TypeConverter.toJsonHex(tx.getGasLimit());
         gasPrice = TypeConverter.toJsonHex(tx.getGasPrice());
         value = TypeConverter.toJsonHex(tx.getValue());
         input  = tx.getData() != null ? TypeConverter.toJsonHex(tx.getData()) : null;
     }
 
+    @Override
+    public String toString() {
+        return "TransactionResultDTO{" +
+                "hash='" + hash + '\'' +
+                ", nonce='" + nonce + '\'' +
+                ", blockHash='" + blockHash + '\'' +
+                ", blockNumber='" + blockNumber + '\'' +
+                ", transactionIndex='" + transactionIndex + '\'' +
+                ", from='" + from + '\'' +
+                ", to='" + to + '\'' +
+                ", gas='" + gas + '\'' +
+                ", gasPrice='" + gasPrice + '\'' +
+                ", value='" + value + '\'' +
+                ", input='" + input + '\'' +
+                '}';
+    }
 }

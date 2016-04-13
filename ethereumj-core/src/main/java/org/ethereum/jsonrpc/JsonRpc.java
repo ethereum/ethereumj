@@ -3,6 +3,8 @@ package org.ethereum.jsonrpc;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 
+import java.util.Arrays;
+
 /**
  * Created by Anton Nashatyrev on 25.11.2015.
  */
@@ -12,6 +14,15 @@ public interface JsonRpc {
         public String startingBlock;
         public String currentBlock;
         public String highestBlock;
+
+        @Override
+        public String toString() {
+            return "SyncingResult{" +
+                    "startingBlock='" + startingBlock + '\'' +
+                    ", currentBlock='" + currentBlock + '\'' +
+                    ", highestBlock='" + highestBlock + '\'' +
+                    '}';
+        }
     }
 
     class CallArguments {
@@ -55,11 +66,44 @@ public interface JsonRpc {
         public String timestamp; //: QUANTITY - the unix timestamp for when the block was collated.
         public Object[] transactions; //: Array - Array of transaction objects, or 32 Bytes transaction hashes depending on the last given parameter.
         public String[] uncles; //: Array - Array of uncle hashes.
+
+        @Override
+        public String toString() {
+            return "BlockResult{" +
+                    "number='" + number + '\'' +
+                    ", hash='" + hash + '\'' +
+                    ", parentHash='" + parentHash + '\'' +
+                    ", nonce='" + nonce + '\'' +
+                    ", sha3Uncles='" + sha3Uncles + '\'' +
+                    ", logsBloom='" + logsBloom + '\'' +
+                    ", transactionsRoot='" + transactionsRoot + '\'' +
+                    ", stateRoot='" + stateRoot + '\'' +
+                    ", receiptsRoot='" + receiptsRoot + '\'' +
+                    ", miner='" + miner + '\'' +
+                    ", difficulty='" + difficulty + '\'' +
+                    ", totalDifficulty='" + totalDifficulty + '\'' +
+                    ", extraData='" + extraData + '\'' +
+                    ", size='" + size + '\'' +
+                    ", gasLimit='" + gasLimit + '\'' +
+                    ", gasUsed='" + gasUsed + '\'' +
+                    ", timestamp='" + timestamp + '\'' +
+                    ", transactions=" + Arrays.toString(transactions) +
+                    ", uncles=" + Arrays.toString(uncles) +
+                    '}';
+        }
     }
 
     class CompilationResult {
         String code;
         CompilationInfo info;
+
+        @Override
+        public String toString() {
+            return "CompilationResult{" +
+                    "code='" + code + '\'' +
+                    ", info=" + info +
+                    '}';
+        }
     }
 
     class CompilationInfo {
@@ -70,7 +114,38 @@ public interface JsonRpc {
         CallTransaction.Contract abiDefinition;
         String userDoc;
         String developerDoc;
+
+        @Override
+        public String toString() {
+            return "CompilationInfo{" +
+                    "source='" + source + '\'' +
+                    ", language='" + language + '\'' +
+                    ", languageVersion='" + languageVersion + '\'' +
+                    ", compilerVersion='" + compilerVersion + '\'' +
+                    ", abiDefinition=" + abiDefinition +
+                    ", userDoc='" + userDoc + '\'' +
+                    ", developerDoc='" + developerDoc + '\'' +
+                    '}';
+        }
     }
+
+    class FilterRequest {
+        public String fromBlock;
+        public String toBlock;
+        public Object address;
+        public Object[] topics;
+
+        @Override
+        public String toString() {
+            return "FilterRequest{" +
+                    "fromBlock='" + fromBlock + '\'' +
+                    ", toBlock='" + toBlock + '\'' +
+                    ", address=" + address +
+                    ", topics=" + Arrays.toString(topics) +
+                    '}';
+        }
+    }
+
 
     String web3_clientVersion();
     String web3_sha3(String data) throws Exception;
@@ -123,13 +198,19 @@ public interface JsonRpc {
     String eth_resend();
     String eth_pendingTransactions();
 
-    String eth_newFilter();
+    String eth_newFilter(FilterRequest fr) throws Exception;
+
+//    String eth_newFilter(String fromBlock, String toBlock, String address, String[] topics) throws Exception;
+
     String eth_newBlockFilter();
     String eth_newPendingTransactionFilter();
-    String eth_uninstallFilter();
-    String eth_getFilterChanges();
-    String eth_getFilterLogs();
-    String eth_getLogs();
+    boolean eth_uninstallFilter(String id);
+    Object[] eth_getFilterChanges(String id);
+
+    Object[] eth_getFilterLogs(String id);
+
+    Object[] eth_getLogs(FilterRequest fr) throws Exception;
+
     String eth_getWork();
     String eth_submitWork();
     String eth_submitHashrate();
