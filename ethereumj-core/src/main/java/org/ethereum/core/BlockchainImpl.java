@@ -26,9 +26,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -36,7 +43,11 @@ import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
-import static org.ethereum.core.ImportResult.*;
+import static org.ethereum.core.ImportResult.EXIST;
+import static org.ethereum.core.ImportResult.IMPORTED_BEST;
+import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
+import static org.ethereum.core.ImportResult.INVALID_BLOCK;
+import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
@@ -77,6 +88,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+    private static final int MAGIC_REWARD_OFFSET = 8;
 
     @Autowired
     private Repository repository;
@@ -770,21 +782,19 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      */
     private void addReward(Block block) {
 
-        // Add standard block reward
-        BigInteger totalBlockReward = BLOCK_REWARD;
+        BigInteger standardTotalBlockReward = BLOCK_REWARD;
 
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                track.addBalance(uncle.getCoinbase(),
-                        new BigDecimal(BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
-
-                totalBlockReward = totalBlockReward.add(INCLUSION_REWARD);
+                track.addBalance(
+                        uncle.getCoinbase(),
+                        BLOCK_REWARD.multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber())).divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET))
+                );
+                standardTotalBlockReward = standardTotalBlockReward.add(INCLUSION_REWARD);
             }
         }
-        track.addBalance(block.getCoinbase(), totalBlockReward);
-
-
+        track.addBalance(block.getCoinbase(), standardTotalBlockReward);
     }
 
     @Override
