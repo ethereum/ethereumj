@@ -162,6 +162,9 @@ public class JsonRpcImpl implements JsonRpc {
     @Autowired
     TransactionStore transactionStore;
 
+    @Autowired
+    PendingStateImpl pendingState;
+
     long initialBlockNumber;
     long maxBlockNumberSeen;
 
@@ -238,7 +241,7 @@ public class JsonRpcImpl implements JsonRpc {
 
     private Repository getRepoByJsonBlockId(String id) {
         if ("pending".equalsIgnoreCase(id)) {
-            return (Repository) eth.getPendingState();
+            return pendingState.getRepository();
         } else {
             Block block = getByJsonBlockId(id);
             return this.repository.getSnapshotTo(block.getStateRoot());
@@ -247,7 +250,7 @@ public class JsonRpcImpl implements JsonRpc {
 
     private List<Transaction> getTransactionsByJsonBlockId(String id) {
         if ("pending".equalsIgnoreCase(id)) {
-            return eth.getPendingStateTransactions();
+            return pendingState.getWireTransactions();
         } else {
             Block block = getByJsonBlockId(id);
             return block != null ? block.getTransactionsList() : Collections.<Transaction>emptyList();
@@ -539,7 +542,7 @@ public class JsonRpcImpl implements JsonRpc {
                 args.data = args.data.substring(2);
 
             Transaction tx = new Transaction(
-                    bigIntegerToBytes(eth.getPendingState().getNonce(account.getAddress())),
+                    bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
                     args.gasPrice != null ? StringNumberAsBytes(args.gasPrice) : EMPTY_BYTE_ARRAY,
                     args.gasLimit != null ? StringNumberAsBytes(args.gasLimit) : EMPTY_BYTE_ARRAY,
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
