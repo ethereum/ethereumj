@@ -69,6 +69,7 @@ public class PendingStateImpl implements PendingState {
 //    @Resource
 //    @Qualifier("wireTransactions")
     private final List<PendingTransaction> wireTransactions = new ArrayList<>();
+
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
     private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(500000);
@@ -215,6 +216,13 @@ public class PendingStateImpl implements PendingState {
         return pendingStateTransactions;
     }
 
+    public List<Transaction> getAllPendingTransactions() {
+        List<Transaction> ret = new ArrayList<>(pendingStateTransactions);
+        ret.addAll(getWireTransactions());
+        return ret;
+    }
+
+
     private Block findCommonAncestor(Block b1, Block b2) {
         while(!b1.isEqual(b2)) {
             if (b1.getNumber() >= b2.getNumber()) {
@@ -348,7 +356,7 @@ public class PendingStateImpl implements PendingState {
         }
     }
 
-    private void executeTx(Transaction tx) {
+    private TransactionReceipt executeTx(Transaction tx) {
 
         logger.info("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
 
@@ -363,6 +371,15 @@ public class PendingStateImpl implements PendingState {
         executor.execute();
         executor.go();
         executor.finalization();
+
+        TransactionReceipt receipt = new TransactionReceipt();
+        receipt.setPostTxState(pendingState.getRoot());
+        receipt.setTransaction(tx);
+        receipt.setLogInfoList(executor.getVMLogs());
+        receipt.setGasUsed(executor.getGasUsed());
+        receipt.setExecutionResult(executor.getResult().getHReturn());
+
+        return receipt;
     }
 
     public void setBlockchain(Blockchain blockchain) {
