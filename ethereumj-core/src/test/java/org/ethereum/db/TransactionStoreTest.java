@@ -5,6 +5,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionInfo;
 import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.util.blockchain.SolidityContract;

@@ -2,11 +2,9 @@ package org.ethereum.jsonrpc;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.db.TransactionInfo;
-import org.ethereum.util.ByteUtil;
+import org.ethereum.core.TransactionInfo;
 import org.ethereum.vm.LogInfo;
 
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 
 import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;

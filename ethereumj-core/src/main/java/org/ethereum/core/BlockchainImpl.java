@@ -6,7 +6,6 @@ import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.TransactionInfo;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;

@@ -1,7 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.datasource.*;
-import org.ethereum.db.TransactionInfo;
+import org.ethereum.core.TransactionInfo;
 import org.springframework.stereotype.Component;
 
 /**

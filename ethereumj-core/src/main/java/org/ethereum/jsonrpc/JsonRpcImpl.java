@@ -6,7 +6,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.TransactionInfo;
+import org.ethereum.core.TransactionInfo;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -22,6 +22,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -250,10 +251,10 @@ public class JsonRpcImpl implements JsonRpc {
 
     private List<Transaction> getTransactionsByJsonBlockId(String id) {
         if ("pending".equalsIgnoreCase(id)) {
-            return pendingState.getWireTransactions();
+            return pendingState.getAllPendingTransactions();
         } else {
             Block block = getByJsonBlockId(id);
-            return block != null ? block.getTransactionsList() : Collections.<Transaction>emptyList();
+            return block != null ? block.getTransactionsList() : null;
         }
     }
 
@@ -467,7 +468,9 @@ public class JsonRpcImpl implements JsonRpc {
     public String eth_getBlockTransactionCountByNumber(String bnOrId) throws Exception {
         String s = null;
         try {
-            long n = getTransactionsByJsonBlockId(bnOrId).size();
+            List<Transaction> list = getTransactionsByJsonBlockId(bnOrId);
+            if (list == null) return null;
+            long n = list.size();
             return s = TypeConverter.toJsonHex(n);
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_getBlockTransactionCountByNumber(" + bnOrId + "): " + s);
@@ -632,17 +635,18 @@ public class JsonRpcImpl implements JsonRpc {
     public BlockResult getBlockResult(Block b, boolean fullTx) {
         if (b==null)
             return null;
+        boolean isPending = ByteUtil.byteArrayToLong(b.getNonce()) == 0;
         BlockResult br = new BlockResult();
-        br.number = TypeConverter.toJsonHex(b.getNumber());
-        br.hash = TypeConverter.toJsonHex(b.getHash());
+        br.number = isPending ? null : TypeConverter.toJsonHex(b.getNumber());
+        br.hash = isPending ? null : TypeConverter.toJsonHex(b.getHash());
         br.parentHash = TypeConverter.toJsonHex(b.getParentHash());
-        br.nonce = TypeConverter.toJsonHex(b.getNonce());
+        br.nonce = isPending ? null : TypeConverter.toJsonHex(b.getNonce());
         br.sha3Uncles= TypeConverter.toJsonHex(b.getUnclesHash());
-        br.logsBloom = TypeConverter.toJsonHex(b.getLogBloom());
+        br.logsBloom = isPending ? null : TypeConverter.toJsonHex(b.getLogBloom());
         br.transactionsRoot =TypeConverter.toJsonHex(b.getTxTrieRoot());
         br.stateRoot = TypeConverter.toJsonHex(b.getStateRoot());
         br.receiptsRoot =TypeConverter.toJsonHex(b.getReceiptsRoot());
-        br.miner = TypeConverter.toJsonHex(b.getCoinbase());
+        br.miner = isPending ? null : TypeConverter.toJsonHex(b.getCoinbase());
         br.difficulty = TypeConverter.toJsonHex(b.getDifficulty());
         br.totalDifficulty = TypeConverter.toJsonHex(blockchain.getTotalDifficulty());
         if (b.getExtraData() != null)
@@ -686,7 +690,12 @@ public class JsonRpcImpl implements JsonRpc {
     public BlockResult eth_getBlockByNumber(String bnOrId,Boolean fullTransactionObjects) throws Exception {
         BlockResult s = null;
         try {
-            Block b = getByJsonBlockId(bnOrId);
+            Block b;
+            if ("pending".equalsIgnoreCase(bnOrId)) {
+                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getAllPendingTransactions(), Collections.<BlockHeader>emptyList());
+            } else {
+                b = getByJsonBlockId(bnOrId);
+            }
             return s = (b == null ? null : getBlockResult(b, fullTransactionObjects));
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_getBlockByNumber(" +  bnOrId + ", " + fullTransactionObjects + "): " + s);
@@ -701,6 +710,12 @@ public class JsonRpcImpl implements JsonRpc {
                 return null;
             }
             Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
+            // need to return txes only from main chain
+            Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
+            if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
+                return null;
+            }
+
             return s = new TransactionResultDTO(block, txInfo.getIndex(), block.getTransactionsList().get(txInfo.getIndex()));
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_getTransactionByHash(" + transactionHash + "): " + s);
@@ -726,6 +741,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             Block b = getByJsonBlockId(bnOrId);
             List<Transaction> txs = getTransactionsByJsonBlockId(bnOrId);
+            if (txs == null) return null;
             int idx = JSonHexToInt(index);
             if (idx >= txs.size()) return null;
             Transaction tx = txs.get(idx);
@@ -745,6 +761,12 @@ public class JsonRpcImpl implements JsonRpc {
                 return null;
 
             Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
+
+            // need to return txes only from main chain
+            Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
+            if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
+                return null;
+            }
 
             return s = new TransactionReceiptDTO(block, txInfo);
         } finally {

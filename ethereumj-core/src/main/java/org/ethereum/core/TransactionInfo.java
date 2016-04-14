@@ -1,4 +1,4 @@
-package org.ethereum.db;
+package org.ethereum.core;
 
 import org.ethereum.core.Bloom;
 import org.ethereum.core.Transaction;
@@ -10,12 +10,21 @@ import org.ethereum.util.RLPList;
 import org.ethereum.vm.LogInfo;
 
 /**
+ * Contains Transaction execution info:
+ * its receipt and execution context
+ * If the transaction is still in pending state the context is the
+ * hash of the parent block on top of which the transaction was executed
+ * If the transaction is already mined into a block the context
+ * is the containing block and the index of the transaction in that block
+ *
  * Created by Ruben on 8/1/2016.
  */
 public class TransactionInfo {
 
     TransactionReceipt receipt;
     byte[] blockHash;
+    // user for pending transaction
+    byte[] parentBlockHash;
     int index;
 
     public TransactionInfo(TransactionReceipt receipt, byte[] blockHash, int index) {
@@ -60,6 +69,14 @@ public class TransactionInfo {
     }
 
     public byte[] getBlockHash() { return blockHash; }
+
+    public byte[] getParentBlockHash() {
+        return parentBlockHash;
+    }
+
+    public void setParentBlockHash(byte[] parentBlockHash) {
+        this.parentBlockHash = parentBlockHash;
+    }
 
     public int getIndex() { return index; }
 

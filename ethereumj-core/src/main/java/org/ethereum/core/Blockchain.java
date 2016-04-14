@@ -1,7 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.db.TransactionInfo;
-
 import java.math.BigInteger;
 import java.util.List;
 
