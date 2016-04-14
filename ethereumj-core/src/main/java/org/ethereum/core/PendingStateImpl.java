@@ -373,7 +373,6 @@ public class PendingStateImpl implements PendingState {
         executor.finalization();
 
         TransactionReceipt receipt = new TransactionReceipt();
-        receipt.setPostTxState(pendingState.getRoot());
         receipt.setTransaction(tx);
         receipt.setLogInfoList(executor.getVMLogs());
         receipt.setGasUsed(executor.getGasUsed());
