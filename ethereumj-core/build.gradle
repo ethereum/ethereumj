@@ -250,7 +250,7 @@ tasks.processResources.doLast(){
     println 'This will be printed after the build task even if something else calls the build task'
 
     File versionfile = file(new File('build/resources/main/build-info.properties'))
-    versionfile.text = 'build.hash=' + gitCommitHash() +  'build.time=' + buildTime()
+    versionfile.text = 'build.hash=' + gitCommitHash() + '\n' + 'build.time=' + buildTime() + '\n' + 'build.branch=' + gitCurBranch() + '\n'
 }
 
 task publish {
@@ -312,12 +312,17 @@ def customizePom(pom, gradleProject) {
 
  def gitCommitHash() {
     def process = "git rev-parse --short HEAD".execute()
-    return process.text
+    return process.text.trim()
  }
 
 def buildTime() {
     def df = new SimpleDateFormat("[dd/MMM/yyyy]-[HH:mm]")
     df.setTimeZone(TimeZone.getTimeZone("GMT"));
     return '[GMT]-' + df.format(new Date())
+}
+
+def gitCurBranch() {
+    def process = "git rev-parse --abbrev-ref HEAD".execute()
+    return process.text.trim()
 }
 

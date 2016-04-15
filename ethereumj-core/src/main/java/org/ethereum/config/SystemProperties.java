@@ -14,6 +14,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.util.BuildInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -144,8 +145,7 @@ public class SystemProperties {
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
 
-            this.projectVersionModifier = props.getProperty("modifier");
-            this.projectVersionModifier = this.projectVersionModifier.replaceAll("\"", "");
+            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
