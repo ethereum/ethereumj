@@ -10,6 +10,11 @@ allprojects {
     }
 }
 
+def gitCurBranch() {
+    def process = "git rev-parse --abbrev-ref HEAD".execute()
+    return process.text.trim()
+}
+
 subprojects {
     apply plugin: 'java'
 
@@ -17,11 +22,9 @@ subprojects {
 
     group = 'org.ethereum'
 
-    if (config.modifier?.trim())
-        version = config.versionNumber + "-" + config.modifier
-    else
-        version = config.versionNumber
+    version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
 
+    println("Building version: " + version)
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs << '-XDignore.symbol.file'
