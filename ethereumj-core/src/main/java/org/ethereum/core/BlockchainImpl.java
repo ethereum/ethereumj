@@ -462,9 +462,22 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             //return;
         }
 
-        //DEBUG
-        //System.out.println(" Receipts root is: " + receiptHash + " logbloomhash is " + logBloomHash);
-        //System.out.println(" Receipts listroot is: " + receiptListHash + " logbloomlisthash is " + logBloomListHash);
+        String blockStateRootHash = Hex.toHexString(block.getStateRoot());
+        String worldStateRootHash = Hex.toHexString(repository.getRoot());
+
+        if (!blockStateRootHash.equals(worldStateRootHash)) {
+
+            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+            stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+
+            if (config.exitOnBlockConflict()) {
+                adminInfo.lostConsensus();
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
+                System.exit(1);
+            } else {
+                return false;
+            }
+        }
 
         track.commit();
         storeBlock(block, receipts);
@@ -789,26 +802,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public synchronized void storeBlock(Block block, List<TransactionReceipt> receipts) {
-
-        /* Debug check to see if the state is still as expected */
-        String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-        String worldStateRootHash = Hex.toHexString(repository.getRoot());
-
-        if (!config.blockChainOnly())
-            if (!blockStateRootHash.equals(worldStateRootHash)) {
-
-                stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-                stateLogger.error("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
-//                stateLogger.error("DO ROLLBACK !!!");
-                adminInfo.lostConsensus();
-
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
-                System.exit(1);
-                // in case of rollback hard move the root
-//                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
-//                repository.syncToRoot(parentBlock.getStateRoot());
-//                return false;
-            }
 
         if (fork)
             blockStore.saveBlock(block, totalDifficulty, false);

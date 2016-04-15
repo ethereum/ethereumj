@@ -474,6 +474,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean exitOnBlockConflict() {
+        return config.getBoolean("sync.exitOnBlockConflict");
+    }
+
+    @ValidateMe
     public String projectVersion() {
         return projectVersion;
     }
