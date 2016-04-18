@@ -20,6 +20,18 @@ import java.util.concurrent.Future;
  */
 public interface TransactionResult {
 
+    enum State {
+        NONE,
+        PENDING,
+        BLOCK,
+        CONFIRMED,
+        DROPPED
+    }
+
+    interface Listener {
+        void resultUpdated(TransactionInfo result, State state, int confirmationBlocks);
+    }
+
     Transaction getTransaction();
 
     /**
@@ -28,21 +40,12 @@ public interface TransactionResult {
      */
     TransactionInfo getLatestResult();
 
-    /**
-     * Returns future pending result(s) and mined block result(s)
-     */
-    Future<TransactionInfo> getNextResult();
+    State getLatestState();
 
-    /**
-     * Returns future mined block result(s)
-     */
-    Future<TransactionInfo> getNextBlockResult();
+    int getConfirmationBlocks();
 
-    /**
-     * Returns the future result when the transaction is confirmed by confirmationBlocksCount
-     * blocks.
-     * I.e. when there at least confirmationBlocksCount blocks mined on the main chain
-     * after the block which contains this transaction
-     */
-    Future<TransactionInfo> getConfirmedResult(int confirmationBlocksCount);
+    void addListener(Listener listener);
+
+    void removeListener(Listener listener);
+
 }

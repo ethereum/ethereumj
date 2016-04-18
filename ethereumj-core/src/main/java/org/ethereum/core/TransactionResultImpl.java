@@ -11,11 +11,6 @@ public class TransactionResultImpl implements TransactionResult {
     Transaction transaction;
     TransactionInfo txInfo;
 
-    SettableFuture<TransactionInfo> nextResultFuture;
-    SettableFuture<TransactionInfo> nextBlockResultFuture;
-    SettableFuture<TransactionInfo> confirmedResultFuture;
-
-
     @Override
     public Transaction getTransaction() {
         return transaction;
@@ -27,36 +22,23 @@ public class TransactionResultImpl implements TransactionResult {
     }
 
     @Override
-    public Future<TransactionInfo> getNextResult() {
-        if (nextResultFuture == null) {
-            if (txInfo != null) {
-                nextResultFuture = SettableFuture.create();
-                nextResultFuture.set(txInfo);
-            } else {
-                nextResultFuture = SettableFuture.create();
-            }
-        } else {
-            if (nextResultFuture.isDone()) {
-                nextResultFuture = SettableFuture.create();
-            }
-        }
-        return nextResultFuture;
+    public State getLatestState() {
+        return null;
     }
 
     @Override
-    public Future<TransactionInfo> getNextBlockResult() {
-        if (nextBlockResultFuture == null || nextBlockResultFuture.isDone()) {
-            nextBlockResultFuture = SettableFuture.create();
-        }
-        return nextBlockResultFuture;
+    public int getConfirmationBlocks() {
+        return 0;
     }
 
     @Override
-    public Future<TransactionInfo> getConfirmedResult(int confirmationBlocksCount) {
-        if (confirmedResultFuture == null || confirmedResultFuture.isDone()) {
-            confirmedResultFuture = SettableFuture.create();
-        }
-        return confirmedResultFuture;
+    public void addListener(Listener listener) {
+
+    }
+
+    @Override
+    public void removeListener(Listener listener) {
+
     }
 
     public void updateResult(TransactionInfo txInfo) {
