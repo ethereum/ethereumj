@@ -190,4 +190,8 @@ public class ChannelManager {
                 channel.onSyncDone(done);
         }
     }
+
+    public Collection<Channel> getActivePeers() {
+        return Collections.unmodifiableCollection(activePeers.values());
+    }
 }

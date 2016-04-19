@@ -35,7 +35,11 @@ public interface Blockchain {
 
     List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty);
 
-    TransactionReceipt getTransactionReceiptByHash(byte[] hash);
+    /**
+     * Returns the transaction info stored in the blockchain
+     * This doesn't involve pending transactions
+     */
+    TransactionInfo getTransactionInfo(byte[] hash);
 
     Block getBlockByHash(byte[] hash);
 
@@ -44,6 +48,8 @@ public interface Blockchain {
     List<Block> getGarbage();
 
     void setExitOn(long exitOn);
+
+    byte[] getMinerCoinbase();
 
     boolean isBlockExist(byte[] hash);
 

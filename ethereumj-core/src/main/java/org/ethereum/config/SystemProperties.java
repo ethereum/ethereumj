@@ -123,8 +123,7 @@ public class SystemProperties {
             Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
-            config = javaSystemProperties
-                    .withFallback(apiConfig)
+            config = apiConfig
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
@@ -132,10 +131,12 @@ public class SystemProperties {
                     .withFallback(userDirConfig)
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
-            validateConfig();
 
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
+
+            config = javaSystemProperties.withFallback(config);
+            validateConfig();
 
             Properties props = new Properties();
             InputStream is = getClass().getResourceAsStream("/version.properties");
