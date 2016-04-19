@@ -2,8 +2,12 @@ package org.ethereum.jsonrpc;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
+import org.ethereum.core.Transaction;
+import org.ethereum.vm.LogInfo;
 
 import java.util.Arrays;
+
+import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
 
 /**
  * Created by Anton Nashatyrev on 25.11.2015.
@@ -146,6 +150,44 @@ public interface JsonRpc {
         }
     }
 
+    class LogFilterElement {
+        public String logIndex;
+        public String blockNumber;
+        public String blockHash;
+        public String transactionHash;
+        public String transactionIndex;
+        public String address;
+        public String data;
+        public String[] topics;
+
+        public LogFilterElement(LogInfo logInfo, Block b, int txIndex, Transaction tx, int logIdx) {
+            logIndex = toJsonHex(logIdx);
+            blockNumber = b == null ? null : toJsonHex(b.getNumber());
+            blockHash = b == null ? null : toJsonHex(b.getHash());
+            transactionIndex = b == null ? null : toJsonHex(txIndex);
+            transactionHash = toJsonHex(tx.getHash());
+            address = toJsonHex(tx.getReceiveAddress());
+            data = toJsonHex(logInfo.getData());
+            topics = new String[logInfo.getTopics().size()];
+            for (int i = 0; i < topics.length; i++) {
+                topics[i] = toJsonHex(logInfo.getTopics().get(i).getData());
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "LogFilterElement{" +
+                    "logIndex='" + logIndex + '\'' +
+                    ", blockNumber='" + blockNumber + '\'' +
+                    ", blockHash='" + blockHash + '\'' +
+                    ", transactionHash='" + transactionHash + '\'' +
+                    ", transactionIndex='" + transactionIndex + '\'' +
+                    ", address='" + address + '\'' +
+                    ", data='" + data + '\'' +
+                    ", topics=" + Arrays.toString(topics) +
+                    '}';
+        }
+    }
 
     String web3_clientVersion();
     String web3_sha3(String data) throws Exception;

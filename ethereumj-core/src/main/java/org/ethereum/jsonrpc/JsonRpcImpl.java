@@ -82,45 +82,6 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public static class LogFilterElement {
-        public String logIndex;
-        public String blockNumber;
-        public String blockHash;
-        public String transactionHash;
-        public String transactionIndex;
-        public String address;
-        public String data;
-        public String[] topics;
-
-        public LogFilterElement(LogInfo logInfo, Block b, int txIndex, Transaction tx, int logIdx) {
-            logIndex = toJsonHex(logIdx);
-            blockNumber = b == null ? null : toJsonHex(b.getNumber());
-            blockHash = b == null ? null : toJsonHex(b.getHash());
-            transactionIndex = b == null ? null : toJsonHex(txIndex);
-            transactionHash = toJsonHex(tx.getHash());
-            address = toJsonHex(tx.getReceiveAddress());
-            data = toJsonHex(logInfo.getData());
-            topics = new String[logInfo.getTopics().size()];
-            for (int i = 0; i < topics.length; i++) {
-                topics[i] = toJsonHex(logInfo.getTopics().get(i).getData());
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "LogFilterElement{" +
-                    "logIndex='" + logIndex + '\'' +
-                    ", blockNumber='" + blockNumber + '\'' +
-                    ", blockHash='" + blockHash + '\'' +
-                    ", transactionHash='" + transactionHash + '\'' +
-                    ", transactionIndex='" + transactionIndex + '\'' +
-                    ", address='" + address + '\'' +
-                    ", data='" + data + '\'' +
-                    ", topics=" + Arrays.toString(topics) +
-                    '}';
-        }
-    }
-
     @Autowired
     SystemProperties config;
 
@@ -546,10 +507,10 @@ public class JsonRpcImpl implements JsonRpc {
 
             Transaction tx = new Transaction(
                     bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
-                    args.gasPrice != null ? StringNumberAsBytes(args.gasPrice) : EMPTY_BYTE_ARRAY,
-                    args.gasLimit != null ? StringNumberAsBytes(args.gasLimit) : EMPTY_BYTE_ARRAY,
+                    args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : EMPTY_BYTE_ARRAY,
+                    args.gasLimit != null ? StringHexToByteArray(args.gasLimit) : EMPTY_BYTE_ARRAY,
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
-                    args.value != null ? StringNumberAsBytes(args.value) : EMPTY_BYTE_ARRAY,
+                    args.value != null ? StringHexToByteArray(args.value) : EMPTY_BYTE_ARRAY,
                     args.data != null ? StringHexToByteArray(args.data) : EMPTY_BYTE_ARRAY);
             tx.sign(account.getEcKey().getPrivKeyBytes());
 
@@ -1014,11 +975,11 @@ public class JsonRpcImpl implements JsonRpc {
                     if (topic == null) {
                         logFilter.withTopic(null);
                     } else if (topic instanceof String) {
-                        logFilter.withTopic(StringHexToByteArray((String) topic));
+                        logFilter.withTopic(new DataWord(StringHexToByteArray((String) topic)).getData());
                     } else if (topic instanceof String[]) {
                         List<byte[]> t = new ArrayList<>();
                         for (String s : ((String[]) topic)) {
-                            t.add(StringHexToByteArray(s));
+                            t.add(new DataWord(StringHexToByteArray(s)).getData());
                         }
                         logFilter.withTopic(t.toArray(new byte[0][]));
                     }

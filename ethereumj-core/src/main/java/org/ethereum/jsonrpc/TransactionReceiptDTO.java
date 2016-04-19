@@ -3,9 +3,8 @@ package org.ethereum.jsonrpc;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.core.TransactionInfo;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.LogInfo;
-
-import java.math.BigInteger;
 
 import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
 
@@ -21,7 +20,7 @@ public class TransactionReceiptDTO {
     public long cumulativeGasUsed;   // The total amount of gas used when this transaction was executed in the block.
     public long gasUsed;             //The amount of gas used by this specific transaction alone.
     public String contractAddress; // The contract address created, if the transaction was a contract creation, otherwise  null .
-    public String[] logs;         // Array of log objects, which this transaction generated.
+    public JsonRpc.LogFilterElement[] logs;         // Array of log objects, which this transaction generated.
 
     public  TransactionReceiptDTO(Block block, TransactionInfo txInfo){
         TransactionReceipt receipt = txInfo.getReceipt();
@@ -30,13 +29,15 @@ public class TransactionReceiptDTO {
         transactionIndex = txInfo.getIndex();
         blockHash = toJsonHex(txInfo.getBlockHash());
         blockNumber = block.getNumber();
-        cumulativeGasUsed = new BigInteger(receipt.getCumulativeGas()).longValue();
-        gasUsed = new BigInteger(receipt.getGasUsed()).longValue();
+        cumulativeGasUsed = ByteUtil.byteArrayToLong(receipt.getCumulativeGas());
+        gasUsed = ByteUtil.byteArrayToLong(receipt.getGasUsed());
         if (receipt.getTransaction().getContractAddress() != null)
             contractAddress = toJsonHex(receipt.getTransaction().getContractAddress());
-        logs = new String[0];
-        for (LogInfo logInfo : receipt.getLogInfoList()) {
-            // TODO: Add logs to DTO
+        logs = new JsonRpc.LogFilterElement[receipt.getLogInfoList().size()];
+        for (int i = 0; i < logs.length; i++) {
+            LogInfo logInfo = receipt.getLogInfoList().get(i);
+            logs[i] = new JsonRpc.LogFilterElement(logInfo, block, txInfo.getIndex(),
+                    txInfo.getReceipt().getTransaction(), i);
         }
     }
 }
