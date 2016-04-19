@@ -364,4 +364,11 @@ public class EthereumImpl implements Ethereum {
     public void exitOn(long number) {
         worldManager.getBlockchain().setExitOn(number);
     }
+
+    /**
+     * For testing purposes and 'hackers'
+     */
+    public ApplicationContext getApplicationContext() {
+        return ctx;
+    }
 }
