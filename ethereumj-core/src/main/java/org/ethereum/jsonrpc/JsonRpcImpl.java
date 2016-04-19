@@ -561,7 +561,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public String eth_sendTransaction(String from,String to, String gas,
+    public String eth_sendTransaction(String from, String to, String gas,
                                       String gasPrice, String value,String data,String nonce) throws Exception {
         String s = null;
         try {
@@ -572,6 +572,11 @@ public class JsonRpcImpl implements JsonRpc {
                     TypeConverter.StringHexToByteArray(to), /*receiveAddress*/
                     TypeConverter.StringHexToByteArray(value),
                     TypeConverter.StringHexToByteArray(data));
+
+            Account account = getAccount(from);
+            if (account == null) throw new RuntimeException("No account " + from);
+
+            tx.sign(account.getEcKey().getPrivKeyBytes());
 
             eth.submitTransaction(tx);
 
@@ -1307,48 +1312,53 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     @Override
-    public String miner_start() {
-        throw new UnsupportedOperationException("JSON RPC method miner_start not implemented yet");
+    public boolean miner_start() {
+        blockMiner.startMining();
+        return true;
     }
 
     @Override
-    public String miner_stop() {
-        throw new UnsupportedOperationException("JSON RPC method miner_stop not implemented yet");
+    public boolean miner_stop() {
+        blockMiner.stopMining();
+        return true;
     }
 
     @Override
-    public String miner_setEtherbase() {
-        throw new UnsupportedOperationException("JSON RPC method miner_setEtherbase not implemented yet");
+    public boolean miner_setEtherbase(String coinBase) throws Exception {
+        blockchain.setMinerCoinbase(TypeConverter.StringHexToByteArray(coinBase));
+        return true;
     }
 
     @Override
-    public String miner_setExtra() {
-        throw new UnsupportedOperationException("JSON RPC method miner_setExtra not implemented yet");
+    public boolean miner_setExtra(String data) throws Exception {
+        blockchain.setMinerExtraData(TypeConverter.StringHexToByteArray(data));
+        return true;
     }
 
     @Override
-    public String miner_setGasPrice() {
-        throw new UnsupportedOperationException("JSON RPC method miner_setGasPrice not implemented yet");
+    public boolean miner_setGasPrice(String newMinGasPrice) {
+        blockMiner.setMinGasPrice(TypeConverter.StringHexToBigInteger(newMinGasPrice));
+        return true;
     }
 
     @Override
-    public String miner_startAutoDAG() {
-        throw new UnsupportedOperationException("JSON RPC method miner_startAutoDAG not implemented yet");
+    public boolean miner_startAutoDAG() {
+        return false;
     }
 
     @Override
-    public String miner_stopAutoDAG() {
-        throw new UnsupportedOperationException("JSON RPC method miner_stopAutoDAG not implemented yet");
+    public boolean miner_stopAutoDAG() {
+        return false;
     }
 
     @Override
-    public String miner_makeDAG() {
-        throw new UnsupportedOperationException("JSON RPC method miner_makeDAG not implemented yet");
+    public boolean miner_makeDAG() {
+        return false;
     }
 
     @Override
     public String miner_hashrate() {
-        throw new UnsupportedOperationException("JSON RPC method miner_hashrate not implemented yet");
+        return "0x01";
     }
 
     @Override

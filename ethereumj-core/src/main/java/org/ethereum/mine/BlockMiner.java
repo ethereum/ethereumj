@@ -104,6 +104,10 @@ public class BlockMiner {
         this.cpuThreads = cpuThreads;
     }
 
+    public void setMinGasPrice(BigInteger minGasPrice) {
+        this.minGasPrice = minGasPrice;
+    }
+
     public void startMining() {
         isMining = true;
         fireMinerStarted();
