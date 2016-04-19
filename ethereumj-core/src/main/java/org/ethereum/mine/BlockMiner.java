@@ -240,8 +240,8 @@ public class BlockMiner {
                 }
             }, MoreExecutors.sameThreadExecutor());
         }
-        fireBlockStarted(miningBlock);
-        logger.debug("New block mining started: {}", miningBlock.getShortHash());
+        fireBlockStarted(newMiningBlock);
+        logger.debug("New block mining started: {}", newMiningBlock.getShortHash());
     }
 
     protected void blockMined(Block newBlock) throws InterruptedException {
