@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Component
 public class AdminInfo {
-
+    private static final int ExecTimeListLimit = 10000;
 
     private long startupTimeStamp;
     private boolean consensus = true;
@@ -38,6 +38,9 @@ public class AdminInfo {
     }
 
     public void addBlockExecTime(long time){
+        while (blockExecTime.size() > ExecTimeListLimit) {
+            blockExecTime.remove(0);
+        }
         blockExecTime.add(time);
     }
 
