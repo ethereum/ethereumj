@@ -862,36 +862,6 @@ public class Eth62 extends EthHandler {
     }
 
     private boolean isValid(BlockBodiesMessage response) {
-
-        // against best known block,
-        // if short sync is in progress there might be a case when
-        // peer have no bodies even for blocks with lower number than best known
-        if (!syncDone) {
-
-            int expectedCount = 0;
-            if (sentHeaders.size() > 0 &&
-                    sentHeaders.get(sentHeaders.size() - 1).getNumber() <= bestKnownBlock.getNumber()) {
-                expectedCount = sentHeaders.size();
-            } else if (sentHeaders.size() > 0 && sentHeaders.get(0).getNumber() > bestKnownBlock.getNumber()) {
-                expectedCount = 0;
-            } else {
-                for (int i = 0; i < sentHeaders.size(); i++)
-                    if (sentHeaders.get(i).getNumber() <= bestKnownBlock.getNumber()) {
-                        expectedCount = i;
-                    } else {
-                        break;
-                    }
-            }
-
-            if (response.getBlockBodies().size() < expectedCount) {
-                if (logger.isInfoEnabled()) logger.info(
-                        "Peer {}: invalid response to [GET_BLOCK_BODIES], expected count {}, got {}",
-                        channel.getPeerIdShort(), expectedCount, response.getBlockBodies().size()
-                );
-                return false;
-            }
-        }
-
         // check if peer didn't return a body
         // corresponding to the header sent previously
         if (response.getBlockBodies().size() < sentHeaders.size()) {
