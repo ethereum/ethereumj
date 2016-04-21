@@ -17,6 +17,8 @@ dependencies {
 
 if (project.hasProperty("mainClass")) {
     mainClassName = mainClass
+} else {
+	mainClassName = 'org.ethereum.samples.BasicSample'
 }
 applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
 
