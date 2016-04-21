@@ -43,8 +43,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     private static final long LISTENER_REFRESH_RATE = 1000;
     private static final long DB_COMMIT_RATE = 1 * 60 * 1000;
-    private static final int MAX_NODES = 2000;
-    private static final int NODES_TRIM_THRESHOLD = 3000;
+    static final int MAX_NODES = 2000;
+    static final int NODES_TRIM_THRESHOLD = 3000;
 
     @Autowired
     PeerConnectionTester peerConnectionManager;
