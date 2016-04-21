@@ -1,0 +1,23 @@
+
+plugins {
+    id 'application'
+}
+
+version = '1.0.0'
+
+dependencies {
+
+    compile "log4j:log4j:${log4jVersion}"
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    compile "log4j:apache-log4j-extras:${log4jVersion}"
+
+    optional "commons-logging:commons-logging:1.0"
+    optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+}
+
+if (project.hasProperty("mainClass")) {
+    mainClassName = mainClass
+}
+applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
+
+apply from: "${rootProject.projectDir}/gradle/networkRunTasks.gradle"

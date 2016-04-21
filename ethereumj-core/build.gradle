@@ -1,42 +1,26 @@
 import java.text.SimpleDateFormat
 
 buildscript {
-    repositories {
-        jcenter()
-        maven { url 'http://repo.spring.io/plugins-release-local' }
-    }
     dependencies {
-        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
         classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.1'
     }
 }
 
 plugins {
-    id 'application'
     id 'jacoco'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
     id 'com.github.kt3k.coveralls' version '2.0.1x'
     id 'com.jfrog.bintray' version '1.0'
 }
 
-apply plugin: 'propdeps-maven'
 apply plugin: 'com.jfrog.artifactory-upload'
 
-
 repositories {
-    maven {
-        url "http://dl.bintray.com/ethereum/maven"
-    }
 }
 
-sourceCompatibility = 1.7
+def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
 
-mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
-if (project.hasProperty("mainClass")) {
-    mainClassName = mainClass
-}
-
+version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
 
 ext.generatedSrcDir = file('src/gen/java')
 
@@ -46,42 +30,6 @@ sourceSets.main.java.srcDirs += generatedSrcDir
 tasks.withType(JavaCompile){
     options.warnings = false
 }
-
-task runMorden (type: JavaExec) {
-    main = mainClassName
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
-}
-
-task runTest (type: JavaExec) {
-    main = mainClassName
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=test.conf'
-}
-
-/**
- *  This is TCK test command line option,
- *  to run the test:
- *     gradle tckRun -PfilePath=[ file path]
- *      e.g: gradle tckRun -PfilePath=E:\temp\test-case.json
- */
-task tckRun(type:JavaExec){
-
-    if (project.hasProperty("filePath")) {
-        args = ["filerun", "$filePath"]
-        jvmArgs = ["-Xss32M"]
-    }
-
-    if (project.hasProperty("content")) {
-        args = ["content", "$content"]
-        jvmArgs = ["-Xss32M"]
-    }
-
-    main = "org.ethereum.tck.RunTck"
-    classpath = sourceSets.main.runtimeClasspath
-}
-
-
 
 test {
 
@@ -99,16 +47,6 @@ test {
     systemProperty "file.encoding", "UTF-8"
 }
 
-ext {
-    slf4jVersion = '1.7.7'
-    leveldbVersion = '0.7'
-    scastleVersion = '1.51.0.0'
-    log4jVersion = '1.2.17'
-    springVersion = '4.2.0.RELEASE'
-    hibernateVersion = '4.3.7.Final'
-    junitVersion = '4.11'
-}
-
 dependencies {
     compile "io.netty:netty-all:4.0.30.Final"
     compile "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
@@ -122,7 +60,6 @@ dependencies {
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile "log4j:log4j:${log4jVersion}"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
@@ -141,14 +78,10 @@ dependencies {
 
     compile "org.mapdb:mapdb:2.0-beta12"
 
-    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    compile "log4j:apache-log4j-extras:${log4jVersion}"
-
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
     }
-    optional "commons-logging:commons-logging:1.0"
-    optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
 }
