@@ -5,6 +5,7 @@ import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -25,6 +26,17 @@ public class DetailsDataStoreTest {
     @Before
     public void setup() {
         this.config = SystemProperties.getDefault();
+        DataSourcePool.setDataSourceMaker(new DataSourcePool.DataSourceMaker() {
+            @Override
+            public KeyValueDataSource makeDataSource() {
+                return new HashMapDB();
+            }
+        });
+    }
+
+    @After
+    public void cleanup() {
+        DataSourcePool.setDefaultDataSourceMaker();
     }
 
     @Test
@@ -161,7 +173,7 @@ public class DetailsDataStoreTest {
 
         HashMapDB externalStorage =
             (HashMapDB)
-                    DataSourcePool.hashMapDBByName("details-storage/" + toHexString(addrWithExternalStorage));
+                    DataSourcePool.getDataSourceFromPool("details-storage/" + toHexString(addrWithExternalStorage));
 
         HashMapDB internalStorage = new HashMapDB();
 
