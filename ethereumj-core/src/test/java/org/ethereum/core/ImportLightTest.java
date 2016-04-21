@@ -4,12 +4,12 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.util.blockchain.SolidityContract;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.mine.Ethash;
@@ -22,11 +22,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -179,23 +178,181 @@ public class ImportLightTest {
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
     }
 
+    @Test
+    public void createContractFork() throws Exception {
+        //  #1 (Parent) --> #2 --> #3 (Child) ----------------------> #4 (call Child)
+        //    \-------------------------------> #2' (forked Child)
+        //
+        // Testing the situation when the Child contract is created by the Parent contract
+        // first on the main chain with one parameter (#3) and then on the fork with another parameter (#2')
+        // so their storages are different. Check that original Child storage is not broken
+        // on the main chain (#4)
+
+        String contractSrc =
+                "contract Child {" +
+                "  int a;" +
+                "  int b;" +
+                "  int public c;" +
+                "  function Child(int i) {" +
+                "    a = 333 + i;" +
+                "    b = 444 + i;" +
+                "  }" +
+                "  function sum() {" +
+                "    c = a + b;" +
+                "  }" +
+                "}" +
+                "contract Parent {" +
+                "  address public child;" +
+                "  function createChild(int a) returns (address) {" +
+                "    child = new Child(a);" +
+                "    return child;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract parent = bc.submitNewContract(contractSrc, "Parent");
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        parent.callFunction("createChild", 100);
+        Block b3 = bc.createBlock();
+        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) parent.callConstFunction("child")[0], 20);
+        parent.callFunction("createChild", 200);
+        Block b2_ = bc.createForkBlock(b1);
+        SolidityContract child = bc.createExistingContractFromSrc(contractSrc, "Child", childAddress);
+        child.callFunction("sum");
+        Block b4 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(100 + 333 + 100 + 444), child.callConstFunction("c")[0]);
+    }
+
+    @Test
+    public void createContractFork1() throws Exception {
+        // Test creation of the contract on forked branch with different storage
+        String contractSrc =
+                "contract A {" +
+                "  int public a;" +
+                "  function A() {" +
+                "    a = 333;" +
+                "  }" +
+                "}" +
+                "contract B {" +
+                "  int public a;" +
+                "  function B() {" +
+                "    a = 111;" +
+                "  }" +
+                "}";
+
+        {
+            StandaloneBlockchain bc = new StandaloneBlockchain();
+            Block b1 = bc.createBlock();
+            Block b2 = bc.createBlock();
+            SolidityContract a = bc.submitNewContract(contractSrc, "A");
+            Block b3 = bc.createBlock();
+            SolidityContract b = bc.submitNewContract(contractSrc, "B");
+            Block b2_ = bc.createForkBlock(b1);
+            Assert.assertEquals(BigInteger.valueOf(333), a.callConstFunction("a")[0]);
+            Assert.assertEquals(BigInteger.valueOf(111), b.callConstFunction(b2_, "a")[0]);
+            Block b3_ = bc.createForkBlock(b2_);
+            Block b4_ = bc.createForkBlock(b3_);
+            Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("a")[0]);
+            Assert.assertEquals(BigInteger.valueOf(333), a.callConstFunction(b3, "a")[0]);
+
+        }
+    }
+
+    @Test
+    public void createValueTest() throws IOException, InterruptedException {
+        // checks that correct msg.value is passed when contract internally created with value
+        String contract =
+                "contract B {" +
+                "  uint public valReceived;" +
+                "  function B() {" +
+                "    valReceived = msg.value;" +
+                "  }" +
+                "}" +
+                "contract A {" +
+                "    address public child;" +
+                "    function create() {" +
+                "        child = (new B).value(20)();" +
+                "    }" +
+                "}";
+        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
+        SolidityContract a = bc.submitNewContract(contract, "A");
+        bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
+        a.callFunction(10, "create");
+        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) a.callConstFunction("child")[0], 20);
+        SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
+        BigInteger val = (BigInteger) b.callConstFunction("valReceived")[0];
+        Assert.assertEquals(20, val.longValue());
+    }
+
+    @Test
+    public void contractCodeForkTest() throws IOException, InterruptedException {
+        String contractA =
+                "contract A {" +
+                "  function call() returns (uint) {" +
+                "    return 111;" +
+                "  }" +
+                "}";
+
+        String contractB =
+                "contract B {" +
+                "  function call() returns (uint) {" +
+                "    return 222222;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        Block b1 = bc.createBlock();
+        SolidityContract a = bc.submitNewContract(contractA);
+        Block b2 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("call")[0]);
+        SolidityContract b = bc.submitNewContract(contractB);
+        Block b2_ = bc.createForkBlock(b1);
+        Block b3 = bc.createForkBlock(b2);
+        Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("call")[0]);
+        Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction(b2, "call")[0]);
+        Assert.assertEquals(BigInteger.valueOf(222222), b.callConstFunction(b2_, "call")[0]);
+    }
+
+    @Test
+    public void getBalanceTest() throws IOException, InterruptedException {
+        // checking that addr.balance doesn't cause the account to be created
+        // and the subsequent call to that non-existent address costs 25K gas
+        byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
+        String contractA =
+                "contract B { function dummy() {}}" +
+                "contract A {" +
+                "  function call() returns (uint) {" +
+                "    address addr = 0x" + Hex.toHexString(addr) + ";" +
+                "    uint bal = addr.balance;" +
+                "    B b = B(addr);" +
+                "    b.dummy();" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+        a.callFunction("call");
+        bc.createBlock();
+        BigInteger balance2 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+        long spent = balance1.subtract(balance2).longValue();
+        Assert.assertEquals(46634, spent);
+    }
+
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.init(new HashMapDB(), new HashMapDB());
 
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        BlockchainImpl blockchain = new BlockchainImpl(
-                blockStore,
-                repository,
-                new Wallet(),
-                new AdminInfo(),
-                listener,
-                new CommonConfig().parentHeaderValidator()
-        );
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);

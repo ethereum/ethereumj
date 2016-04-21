@@ -86,7 +86,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error("Eth handling failed", cause);
+        logger.warn("Eth handling failed", cause);
         ctx.close();
     }
 
@@ -98,7 +98,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     public void activate() {
-        logger.info("ETH protocol activated");
+        logger.debug("ETH protocol activated");
         ethereumListener.trace("ETH protocol activated");
         sendStatus();
     }

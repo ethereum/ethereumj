@@ -38,14 +38,13 @@ public class PendingStateTest {
     @Before
     public void setUp() {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.init(new HashMapDB(), new HashMapDB());
 
         repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
-        ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
-        EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        blockchain = new BlockchainImpl(blockStore, repository, new Wallet(), new AdminInfo(), listener, new CommonConfig().parentHeaderValidator());
-        PendingStateImpl pendingState = new PendingStateImpl(listener, (BlockchainImpl) blockchain);
+        blockchain = new BlockchainImpl(blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 

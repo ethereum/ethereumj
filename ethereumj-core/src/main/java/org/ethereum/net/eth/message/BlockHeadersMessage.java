@@ -1,11 +1,8 @@
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -84,13 +81,22 @@ public class BlockHeadersMessage extends EthMessage {
 
         payload.append("count( ").append(blockHeaders.size()).append(" )");
 
-        if (logger.isDebugEnabled()) {
+        if (logger.isTraceEnabled()) {
             payload.append(" ");
             for (BlockHeader header : blockHeaders) {
                 payload.append(Hex.toHexString(header.getHash()).substring(0, 6)).append(" | ");
             }
             if (!blockHeaders.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());
+            }
+        } else {
+            if (blockHeaders.size() > 0) {
+                payload.append("#").append(blockHeaders.get(0).getNumber()).append(" (")
+                        .append(Hex.toHexString(blockHeaders.get(0).getHash()).substring(0, 8)).append(")");
+            }
+            if (blockHeaders.size() > 1) {
+                payload.append(" ... #").append(blockHeaders.get(blockHeaders.size() - 1).getNumber()).append(" (")
+                        .append(Hex.toHexString(blockHeaders.get(blockHeaders.size() - 1).getHash()).substring(0, 8)).append(")");
             }
         }
 

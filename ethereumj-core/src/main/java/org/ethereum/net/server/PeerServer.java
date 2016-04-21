@@ -43,12 +43,13 @@ public class PeerServer {
     @Autowired
     EthereumListener ethereumListener;
 
+    private boolean listening;
+
     public PeerServer() {
     }
 
 
     public void start(int port) {
-
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -77,10 +78,13 @@ public class PeerServer {
 
             ChannelFuture f = b.bind(port).sync();
 
+            listening = true;
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
             logger.debug("Connection is closed");
 
+            // TODO review listening use
+            listening = false;
         } catch (Exception e) {
             logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
             throw new Error("Server Disconnected");
@@ -90,4 +94,7 @@ public class PeerServer {
         }
     }
 
+    public boolean isListening() {
+        return listening;
+    }
 }

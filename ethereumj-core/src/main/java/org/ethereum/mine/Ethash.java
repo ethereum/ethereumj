@@ -59,8 +59,39 @@ public class Ethash {
 
     public synchronized int[] getCacheLight() {
         if (cacheLight == null) {
-            cacheLight = getEthashAlgo().makeCache(getEthashAlgo().getParams().getCacheSize(blockNumber),
-                    getEthashAlgo().getSeedHash(blockNumber));
+            File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag-light.dat");
+            if (fileCacheEnabled && file.canRead()) {
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    logger.info("Loading light dataset from " + file.getAbsolutePath());
+                    long bNum = ois.readLong();
+                    if (bNum == blockNumber) {
+                        cacheLight = (int[]) ois.readObject();
+                        logger.info("Dataset loaded.");
+                    } else {
+                        logger.info("Dataset block number miss: " + bNum + " != " + blockNumber);
+                    }
+                } catch (IOException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (cacheLight == null) {
+                logger.info("Calculating light dataset...");
+                cacheLight = getEthashAlgo().makeCache(getEthashAlgo().getParams().getCacheSize(blockNumber),
+                        getEthashAlgo().getSeedHash(blockNumber));
+                logger.info("Light dataset calculated.");
+
+                if (fileCacheEnabled) {
+                    file.getParentFile().mkdirs();
+                    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))){
+                        logger.info("Writing light dataset to " + file.getAbsolutePath());
+                        oos.writeLong(blockNumber);
+                        oos.writeObject(cacheLight);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
         return cacheLight;
     }
@@ -69,23 +100,32 @@ public class Ethash {
         if (fullData == null) {
             File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag.dat");
             if (fileCacheEnabled && file.canRead()) {
-                try {
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading dataset from " + file.getAbsolutePath());
-                    fullData = (int[]) new ObjectInputStream(new FileInputStream(file)).readObject();
-                    logger.info("Dataset loaded.");
+                    long bNum = ois.readLong();
+                    if (bNum == blockNumber) {
+                        fullData = (int[]) ois.readObject();
+                        logger.info("Dataset loaded.");
+                    } else {
+                        logger.info("Dataset block number miss: " + bNum + " != " + blockNumber);
+                    }
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
-            } else {
+            }
+
+            if (fullData == null){
+
+                logger.info("Calculating full dataset...");
                 fullData = getEthashAlgo().calcDataset(getFullSize(), getCacheLight());
+                logger.info("Full dataset calculated.");
 
                 if (fileCacheEnabled) {
-                    try {
-                        file.getParentFile().mkdirs();
-                        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
+                    file.getParentFile().mkdirs();
+                    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
                         logger.info("Writing dataset to " + file.getAbsolutePath());
+                        oos.writeLong(blockNumber);
                         oos.writeObject(fullData);
-                        oos.close();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

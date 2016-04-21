@@ -1,10 +1,18 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.CommonConfig;
-import org.ethereum.core.*;
-
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.Repository;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.*;
+import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.RepositoryVMTestDummy;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
@@ -12,10 +20,13 @@ import org.ethereum.jsontestsuite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
@@ -26,7 +37,11 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.ethereum.jsontestsuite.Utils.parseData;
@@ -70,19 +85,16 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.init(new HashMapDB(), new HashMapDB());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
-        Wallet wallet = new Wallet();
-        AdminInfo adminInfo = new AdminInfo();
-        EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener,
-                new CommonConfig().parentHeaderValidator());
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
         pendingState.init();
 
         blockchain.setBestBlock(genesis);
@@ -214,7 +226,7 @@ public class TestRunner {
             saveProgramTraceFile(testCase.getName(), content);
 
             if (testCase.getPost().size() == 0) {
-                if (vmDidThrowAnEception != true) {
+                if (!vmDidThrowAnEception) {
                     String output =
                             "VM was expected to throw an exception";
                     logger.info(output);

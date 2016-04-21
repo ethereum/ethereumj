@@ -4,19 +4,15 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.Arrays;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 import static org.ethereum.util.ByteUtil.*;
@@ -25,18 +21,16 @@ import static org.ethereum.util.ByteUtil.*;
  * @author Roman Mandeleil
  * @since 24.06.2014
  */
-public class ContractDetailsImpl implements ContractDetails {
+public class ContractDetailsImpl extends AbstractContractDetails {
 
     private byte[] rlpEncoded;
 
     private byte[] address = EMPTY_BYTE_ARRAY;
-    private byte[] code = EMPTY_BYTE_ARRAY;
+
     private Set<ByteArrayWrapper> keys = new HashSet<>();
     private SecureTrie storageTrie = new SecureTrie(null);
 
-    private boolean dirty = false;
-    private boolean deleted = false;
-    private boolean externalStorage;
+    boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
 
     public ContractDetailsImpl() {
@@ -46,10 +40,10 @@ public class ContractDetailsImpl implements ContractDetails {
         decode(rlpCode);
     }
 
-    public ContractDetailsImpl(byte[] address, SecureTrie storageTrie, byte[] code) {
+    private ContractDetailsImpl(byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
         this.storageTrie = storageTrie;
-        this.code = code;
+        setCodes(codes);
     }
 
     private void addKey(byte[] key) {
@@ -72,8 +66,6 @@ public class ContractDetailsImpl implements ContractDetails {
 
         this.setDirty(true);
         this.rlpEncoded = null;
-
-        externalStorage = (keys.size() > SystemProperties.CONFIG.detailsInMemoryStorageLimit()) || externalStorage;
     }
 
     @Override
@@ -87,17 +79,6 @@ public class ContractDetailsImpl implements ContractDetails {
         }
 
         return result;
-    }
-
-    @Override
-    public byte[] getCode() {
-        return code;
-    }
-
-    @Override
-    public void setCode(byte[] code) {
-        this.code = code;
-        this.rlpEncoded = null;
     }
 
     @Override
@@ -120,7 +101,13 @@ public class ContractDetailsImpl implements ContractDetails {
         this.address = address.getRLPData();
         this.externalStorage = (isExternalStorage.getRLPData() != null);
         this.storageTrie.deserialize(storage.getRLPData());
-        this.code = (code.getRLPData() == null) ? EMPTY_BYTE_ARRAY : code.getRLPData();
+        if (code instanceof RLPList) {
+            for (RLPElement e : ((RLPList) code)) {
+                setCode(e.getRLPData());
+            }
+        } else {
+            setCode(code.getRLPData());
+        }
         for (RLPElement key : keys) {
             addKey(key.getRLPData());
         }
@@ -129,6 +116,9 @@ public class ContractDetailsImpl implements ContractDetails {
             storageTrie.setRoot(storageRoot.getRLPData());
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
+
+        externalStorage = (storage.getRLPData().length > SystemProperties.CONFIG.detailsInMemoryStorageLimit())
+                || externalStorage;
 
         this.rlpEncoded = rlpCode;
     }
@@ -139,36 +129,20 @@ public class ContractDetailsImpl implements ContractDetails {
 
             byte[] rlpAddress = RLP.encodeElement(address);
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-            byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY );
+            byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
             byte[] rlpStorage = RLP.encodeElement(storageTrie.serialize());
-            byte[] rlpCode = RLP.encodeElement(code);
+            byte[][] codes = new byte[getCodes().size()][];
+            int i = 0;
+            for (byte[] bytes : this.getCodes().values()) {
+                codes[i++] = RLP.encodeElement(bytes);
+            }
+            byte[] rlpCode = RLP.encodeList(codes);
             byte[] rlpKeys = RLP.encodeSet(keys);
 
             this.rlpEncoded = RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorage, rlpCode, rlpKeys, rlpStorageRoot);
         }
 
         return rlpEncoded;
-    }
-
-
-    @Override
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    @Override
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    @Override
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    @Override
-    public boolean isDeleted() {
-        return deleted;
     }
 
     @Override
@@ -269,20 +243,9 @@ public class ContractDetailsImpl implements ContractDetails {
         // FIXME: clone is not working now !!!
         // FIXME: should be fixed
 
-        byte[] cloneCode = Arrays.clone(this.getCode());
-
         storageTrie.getRoot();
 
-        return new ContractDetailsImpl(address, null, cloneCode);
-    }
-
-    @Override
-    public String toString() {
-
-        String ret = "  Code: " + Hex.toHexString(code) + "\n";
-        ret += "  Storage: " + getStorage().toString();
-
-        return ret;
+        return new ContractDetailsImpl(address, null, getCodes());
     }
 
     @Override
@@ -297,7 +260,7 @@ public class ContractDetailsImpl implements ContractDetails {
 
         snapStorage.setCache(this.storageTrie.getCache());
 
-        ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, this.code);
+        ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, getCodes());
         details.externalStorage = this.externalStorage;
         details.keys = this.keys;
 

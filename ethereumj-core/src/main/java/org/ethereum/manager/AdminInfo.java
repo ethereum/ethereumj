@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Component
 public class AdminInfo {
-
+    private static final int ExecTimeListLimit = 10000;
 
     private long startupTimeStamp;
     private boolean consensus = true;
@@ -38,12 +38,15 @@ public class AdminInfo {
     }
 
     public void addBlockExecTime(long time){
+        while (blockExecTime.size() > ExecTimeListLimit) {
+            blockExecTime.remove(0);
+        }
         blockExecTime.add(time);
     }
 
     public Long getExecAvg(){
 
-        if (blockExecTime.size() == 0) return 0L;
+        if (blockExecTime.isEmpty()) return 0L;
 
         long sum = 0;
         for (int i = 0; i < blockExecTime.size(); ++i){

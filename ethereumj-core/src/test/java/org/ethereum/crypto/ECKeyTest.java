@@ -42,21 +42,21 @@ public class ECKeyTest {
 
     private static final SecureRandom secureRandom = new SecureRandom();
 
-    private String privString = "3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4";
-    private BigInteger privateKey = new BigInteger(Hex.decode(privString));
+    private String privString = "c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4";
+    private BigInteger privateKey = new BigInteger(privString, 16);
 
-    private String pubString = "0497466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f";
-    private String compressedPubString = "0397466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce7";
+    private String pubString = "040947751e3022ecf3016be03ec77ab0ce3c2662b4843898cb068d74f698ccc8ad75aa17564ae80a20bb044ee7a6d903e8e8df624b089c95d66a0570f051e5a05b";
+    private String compressedPubString = "030947751e3022ecf3016be03ec77ab0ce3c2662b4843898cb068d74f698ccc8ad";
     private byte[] pubKey = Hex.decode(pubString);
     private byte[] compressedPubKey = Hex.decode(compressedPubString);
-    private String address = "8a40bfaa73256b60764c1bf40675a99083efb075";
+    private String address = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
     private String exampleMessage = "This is an example of a signed message.";
-    private String sigBase64 = "HD5AsBr4wuH6UU9tXuSJhUvgfGayfwoY0cKT03sFUjnpQsupHznd/3mCIRfLuNHlRCVGdAyHecdyM8IVZMtc1I8=";
+    private String sigBase64 = "HNLOSI9Nop5o8iywXKwbGbdd8XChK0rRvdRTG46RFcb7dcH+UKlejM/8u1SCoeQvu91jJBMd/nXDs7f5p8ch7Ms=";
 
     @Test
     public void testHashCode() {
-        Assert.assertEquals(1866897156, ECKey.fromPrivate(privateKey).hashCode());
+        Assert.assertEquals(1967589636, ECKey.fromPrivate(privateKey).hashCode());
     }
 
     @Test

@@ -104,6 +104,10 @@ public class BlockMiner {
         this.cpuThreads = cpuThreads;
     }
 
+    public void setMinGasPrice(BigInteger minGasPrice) {
+        this.minGasPrice = minGasPrice;
+    }
+
     public void startMining() {
         isMining = true;
         fireMinerStarted();
@@ -219,7 +223,7 @@ public class BlockMiner {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
             ethashTask = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
-                    getMineAlgorithm().mine(miningBlock);
+                    getMineAlgorithm(config).mine(miningBlock);
             ethashTask.addListener(new Runnable() {
                 //            private final Future<Long> task = ethashTask;
                 @Override
@@ -236,8 +240,8 @@ public class BlockMiner {
                 }
             }, MoreExecutors.sameThreadExecutor());
         }
-        fireBlockStarted(miningBlock);
-        logger.debug("New block mining started: {}", miningBlock.getShortHash());
+        fireBlockStarted(newMiningBlock);
+        logger.debug("New block mining started: {}", newMiningBlock.getShortHash());
     }
 
     protected void blockMined(Block newBlock) throws InterruptedException {
@@ -261,6 +265,10 @@ public class BlockMiner {
         logger.debug("Importing newly mined block " + newBlock.getShortHash() + " ...");
         ImportResult importResult = ((EthereumImpl) ethereum).addNewMinedBlock(newBlock);
         logger.debug("Mined block import result is " + importResult + " : " + newBlock.getShortHash());
+    }
+
+    public boolean isMining() {
+        return isMining;
     }
 
     /*****  Listener boilerplate  ******/

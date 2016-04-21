@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.net.BindException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -93,7 +94,7 @@ public class UDPListener {
             DiscoveryExecutor discoveryExecutor = new DiscoveryExecutor(nodeManager);
             discoveryExecutor.start();
 
-            while(true) {
+            while (true) {
                 Bootstrap b = new Bootstrap();
                 b.group(group)
                         .channel(NioDatagramChannel.class)
@@ -115,7 +116,11 @@ public class UDPListener {
                 Thread.sleep(5000);
             }
         } catch (Exception e) {
-            logger.error("{}", e);
+            if (e instanceof BindException && e.getMessage().contains("Address already in use")) {
+                logger.error("Port " + port + " is busy. Check if another instance is running with the same port.");
+            } else {
+                logger.error("Can't start discover: ", e);
+            }
         } finally {
             group.shutdownGracefully().sync();
         }

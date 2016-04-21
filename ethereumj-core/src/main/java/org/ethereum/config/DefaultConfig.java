@@ -1,10 +1,12 @@
 package org.ethereum.config;
 
+import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.TransactionStore;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
@@ -56,35 +58,25 @@ public class DefaultConfig {
 
     @Bean
     public BlockStore blockStore(){
-
-        String database = config.databaseDir();
-
-        String blocksIndexFile = database + "/blocks/index";
-        File dbFile = new File(blocksIndexFile);
-        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-
-        DB indexDB = DBMaker.fileDB(dbFile)
-                .closeOnJvmShutdown()
-                .make();
-
-        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = indexDB.hashMapCreate("index")
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(BLOCK_INFO_SERIALIZER)
-                .counterEnable()
-                .makeOrGet();
-
-        KeyValueDataSource blocksDB = appCtx.getBean(LevelDbDataSource.class, "blocks");
-        blocksDB.init();
-
-
-        IndexedBlockStore cache = new IndexedBlockStore();
-        cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
-
+        KeyValueDataSource index = commonConfig.keyValueDataSource();
+        index.setName("index");
+        index.init();
+        KeyValueDataSource blocks = commonConfig.keyValueDataSource();
+        blocks.setName("block");
+        blocks.init();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(indexMap, blocksDB, cache, indexDB);
-
+        indexedBlockStore.init(new CachingDataSource(index), new CachingDataSource(blocks));
 
         return indexedBlockStore;
+    }
+
+    @Bean
+    public TransactionStore transactionStore() {
+        KeyValueDataSource ds = commonConfig.keyValueDataSource();
+        ds.setName("transactions");
+        ds.init();
+        CachingDataSource cachingDataSource = new CachingDataSource(ds);
+        return new TransactionStore(cachingDataSource);
     }
 
     @Bean @Scope("prototype")

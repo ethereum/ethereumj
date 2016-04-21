@@ -98,11 +98,12 @@ public class BloomFilter implements Cloneable {
 
     @Override
     public boolean equals(Object obj) {
-        return mask.equals(((BloomFilter)obj).mask);
+        return obj instanceof BloomFilter && mask.equals(((BloomFilter) obj).mask);
+
     }
 
     @Override
-    protected BloomFilter clone() {
+    protected BloomFilter clone() throws CloneNotSupportedException {
         try {
             return (BloomFilter) super.clone();
         } catch (CloneNotSupportedException e) {

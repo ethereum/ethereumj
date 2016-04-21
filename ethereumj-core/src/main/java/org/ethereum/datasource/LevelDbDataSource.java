@@ -78,7 +78,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
             try {
                 logger.debug("Opening database");
-                Path dbPath = Paths.get(getProperty("user.dir"), config.databaseDir(), name);
+                Path dbPath = Paths.get(config.databaseDir(), name);
                 Files.createDirectories(dbPath.getParent());
 
                 logger.debug("Initializing new or existing database: '{}'", name);
@@ -87,7 +87,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
                 alive = true;
             } catch (IOException ioe) {
                 logger.error(ioe.getMessage(), ioe);
-                throw new RuntimeException("Can't initialize database");
+                throw new RuntimeException("Can't initialize database", ioe);
             }
             logger.debug("<~ LevelDbDataSource.init(): " + name);
         } finally {

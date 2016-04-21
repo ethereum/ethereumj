@@ -270,22 +270,18 @@ public class EthereumImpl implements Ethereum {
         };
     }
 
-
     @Override
-    public ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
-                                              Object... funcArgs) {
-        Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                receiveAddress, 0, function, funcArgs);
+    public ProgramResult callConstant(Transaction tx, Block block) {
         tx.sign(new byte[32]);
 
-        Block bestBlock = worldManager.getBlockchain().getBestBlock();
-
-        Repository repository = ((Repository) worldManager.getRepository()).startTracking();
+        Repository repository = ((Repository) worldManager.getRepository())
+                .getSnapshotTo(block.getStateRoot())
+                .startTracking();
 
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                    (tx, bestBlock.getCoinbase(), repository, worldManager.getBlockStore(),
-                    programInvokeFactory, bestBlock)
+                    (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
+                            programInvokeFactory, block)
                     .setLocalCall(true);
 
             executor.init();
@@ -300,10 +296,14 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Wallet getWallet() {
-        return worldManager.getWallet();
-    }
+    public ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
+                                              Object... funcArgs) {
+        Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
+                receiveAddress, 0, function, funcArgs);
+        Block bestBlock = worldManager.getBlockchain().getBestBlock();
 
+        return callConstant(tx, bestBlock);
+    }
 
     @Override
     public org.ethereum.facade.Repository getRepository() {
@@ -363,5 +363,12 @@ public class EthereumImpl implements Ethereum {
     @Override
     public void exitOn(long number) {
         worldManager.getBlockchain().setExitOn(number);
+    }
+
+    /**
+     * For testing purposes and 'hackers'
+     */
+    public ApplicationContext getApplicationContext() {
+        return ctx;
     }
 }
