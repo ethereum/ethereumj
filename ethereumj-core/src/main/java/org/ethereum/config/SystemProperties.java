@@ -125,6 +125,8 @@ public class SystemProperties {
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
+    private final ClassLoader classLoader;
+
     public SystemProperties() {
         this(ConfigFactory.empty());
     }
@@ -138,7 +140,13 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig) {
+        this(apiConfig, SystemProperties.class.getClassLoader());
+    }
+
+    public SystemProperties(Config apiConfig, ClassLoader classLoader) {
         try {
+            this.classLoader = classLoader;
+
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
@@ -277,7 +285,7 @@ public class SystemProperties {
             } else {
                 String className = config.getString("blockchain.config.class");
                 try {
-                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) Class.forName(className);
+                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
                     blockchainConfig = aClass.newInstance();
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
