@@ -21,10 +21,10 @@ public class BlockHeaderBuilder {
                 parseData(headerTck.getCoinbase()),
                 parseData(headerTck.getBloom()),
                 parseNumericData(headerTck.getDifficulty()),
-                new BigInteger(parseData(headerTck.getNumber())).longValue(),
+                new BigInteger(1, parseData(headerTck.getNumber())).longValue(),
                 parseData(headerTck.getGasLimit()),
-                new BigInteger(parseData(headerTck.getGasUsed())).longValue(),
-                new BigInteger(parseData(headerTck.getTimestamp())).longValue(),
+                new BigInteger(1, parseData(headerTck.getGasUsed())).longValue(),
+                new BigInteger(1, parseData(headerTck.getTimestamp())).longValue(),
                 parseData(headerTck.getExtraData()),
                 parseData(headerTck.getMixHash()),
                 parseData(headerTck.getNonce())

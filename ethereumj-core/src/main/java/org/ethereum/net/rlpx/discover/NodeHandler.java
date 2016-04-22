@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 public class NodeHandler {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
-    static Queue<NodeHandler> aliveNodes = new ArrayDeque<>();
     private static ScheduledExecutorService pongTimer = Executors.newSingleThreadScheduledExecutor();
     static long PingTimeout = 15000; //KademliaOptions.REQ_TIMEOUT;
     private static volatile int msgInCount = 0, msgOutCount = 0;
@@ -152,11 +151,7 @@ public class NodeHandler {
                 newState = State.Active;
             } else {
                 NodeHandler evictHandler = nodeManager.getNodeHandler(evictCandidate);
-                if (evictHandler.state == State.EvictCandidate) {
-                    // already challenging for eviction
-                    // adding to alive for later challenges
-                    aliveNodes.add(this);
-                } else {
+                if (evictHandler.state != State.EvictCandidate) {
                     evictHandler.challengeWith(this);
                 }
             }

@@ -43,7 +43,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     private static final long LISTENER_REFRESH_RATE = 1000;
     private static final long DB_COMMIT_RATE = 1 * 60 * 1000;
-    private static final int DB_MAX_LOAD_NODES = 100;
+    static final int MAX_NODES = 2000;
+    static final int NODES_TRIM_THRESHOLD = 3000;
 
     @Autowired
     PeerConnectionTester peerConnectionManager;
@@ -157,19 +158,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                     .valueSerializer(NodeStatistics.Persistent.MapDBSerializer)
                     .makeOrGet();
 
-            List<Map.Entry<Node, NodeStatistics.Persistent>> sorted = new ArrayList<>(nodeStatsDB.entrySet());
-            Collections.sort(sorted, new Comparator<Map.Entry<Node, NodeStatistics.Persistent>>() {
-                public int compare(Map.Entry<Node, NodeStatistics.Persistent> o1, Map.Entry<Node, NodeStatistics.Persistent> o2) {
-                    return o2.getValue().reputation - o1.getValue().reputation;
-                }
-            });
-
-            logger.info("Reading Node statistics from DB: " + min(DB_MAX_LOAD_NODES, nodeStatsDB.size())  + " of " + nodeStatsDB.size() + " nodes.");
-
-            int cnt = DB_MAX_LOAD_NODES;
-            for (Map.Entry<Node, NodeStatistics.Persistent> entry : sorted) {
+            logger.info("Reading Node statistics from DB: " + nodeStatsDB.size() + " nodes.");
+            for (Map.Entry<Node, NodeStatistics.Persistent> entry : nodeStatsDB.entrySet()) {
                 getNodeHandler(entry.getKey()).getNodeStatistics().setPersistedData(entry.getValue());
-                if (--cnt == 0) break;
             }
         } catch (Exception e) {
             try {
@@ -185,11 +176,14 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     private void dbWrite() {
+        Map<Node, NodeStatistics.Persistent> batch = new HashMap<>();
         synchronized (this) {
             for (NodeHandler handler : nodeHandlerMap.values()) {
-                nodeStatsDB.put(handler.getNode(), handler.getNodeStatistics().getPersistent());
+                batch.put(handler.getNode(), handler.getNodeStatistics().getPersistent());
             }
         }
+        nodeStatsDB.clear();
+        nodeStatsDB.putAll(batch);
         db.commit();
         logger.info("Write Node statistics to DB: " + nodeStatsDB.size() + " nodes.");
     }
@@ -212,6 +206,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         String key = getKey(n);
         NodeHandler ret = nodeHandlerMap.get(key);
         if (ret == null) {
+            trimTable();
             ret = new NodeHandler(n ,this);
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret);
@@ -219,6 +214,26 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         }
         return ret;
     }
+
+    private void trimTable() {
+        if (nodeHandlerMap.size() > NODES_TRIM_THRESHOLD) {
+
+            List<NodeHandler> sorted = new ArrayList<>(nodeHandlerMap.values());
+            // reverse sort by reputation
+            Collections.sort(sorted, new Comparator<NodeHandler>() {
+                @Override
+                public int compare(NodeHandler o1, NodeHandler o2) {
+                    return o1.getNodeStatistics().getReputation() - o2.getNodeStatistics().getReputation();
+                }
+            });
+
+            for (NodeHandler handler : sorted) {
+                nodeHandlerMap.remove(getKey(handler.getNode()));
+                if (nodeHandlerMap.size() <= MAX_NODES) break;
+            }
+        }
+    }
+
 
     boolean hasNodeHandler(Node n) {
         return nodeHandlerMap.containsKey(getKey(n));

@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
@@ -117,6 +118,8 @@ public interface Ethereum {
     Future<Transaction> submitTransaction(Transaction transaction);
 
 
+    ProgramResult callConstant(Transaction tx, Block block);
+
     /**
      * Call a contract function locally without sending transaction to the network
      * and without changing contract storage.
@@ -129,6 +132,7 @@ public interface Ethereum {
     ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
                                        Object... funcArgs);
 
+
     /**
      * @return - repository for all state data.
      */
@@ -140,7 +144,7 @@ public interface Ethereum {
     Repository getPendingState();
 
 
-    public void init();
+    void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
     Repository getSnapshootTo(byte[] root);

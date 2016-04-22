@@ -14,6 +14,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.util.BuildInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -122,8 +123,7 @@ public class SystemProperties {
             Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
-            config = javaSystemProperties
-                    .withFallback(apiConfig)
+            config = apiConfig
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
@@ -131,10 +131,12 @@ public class SystemProperties {
                     .withFallback(userDirConfig)
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
-            validateConfig();
 
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
+
+            config = javaSystemProperties.withFallback(config);
+            validateConfig();
 
             Properties props = new Properties();
             InputStream is = getClass().getResourceAsStream("/version.properties");
@@ -144,8 +146,7 @@ public class SystemProperties {
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
 
-            this.projectVersionModifier = props.getProperty("modifier");
-            this.projectVersionModifier = this.projectVersionModifier.replaceAll("\"", "");
+            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
@@ -471,6 +472,11 @@ public class SystemProperties {
             return null;
         }
         return config.getInt("sync.version");
+    }
+
+    @ValidateMe
+    public boolean exitOnBlockConflict() {
+        return config.getBoolean("sync.exitOnBlockConflict");
     }
 
     @ValidateMe

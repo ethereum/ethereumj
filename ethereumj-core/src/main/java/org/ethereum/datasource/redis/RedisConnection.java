@@ -9,7 +9,7 @@ import java.util.Set;
 
 public interface RedisConnection {
     
-    public static final String REDISCLOUD_URL = "REDISCLOUD_URL";
+    String REDISCLOUD_URL = "REDISCLOUD_URL";
     
     boolean isAvailable();
 

@@ -7,10 +7,14 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class RedisStorageTest extends AbstractRedisTest {
 
@@ -104,7 +108,7 @@ public class RedisStorageTest extends AbstractRedisTest {
             if (this == obj) return true;
 
             Pojo another = (Pojo) obj;
-            return (another.getId() == getId()) && another.getName().equals(getName());
+            return (Objects.equals(another.getId(), getId())) && another.getName().equals(getName());
         }
 
         @Override

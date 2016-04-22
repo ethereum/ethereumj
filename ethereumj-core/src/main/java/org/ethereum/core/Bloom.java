@@ -50,8 +50,18 @@ public class Bloom {
         }
     }
 
+    public boolean matches(Bloom topicBloom) {
+        Bloom copy = copy();
+        copy.or(topicBloom);
+        return this.equals(copy);
+    }
+
     public byte[] getData() {
         return data;
+    }
+
+    public Bloom copy() {
+        return new Bloom(Arrays.copyOf(getData(), getData().length));
     }
 
     @Override
