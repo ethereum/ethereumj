@@ -93,6 +93,40 @@ public class ImportLightTest {
     }
 
     @Test
+    public void invalidBlockTest() throws Exception {
+        // testing that bad block import effort doesn't affect the repository state
+
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
+        Block parent = blockchain.getBestBlock();
+
+        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+        byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+
+        System.out.println("Mining #1 ...");
+
+        Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(0),
+                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
+                ByteUtil.longToBytesNoLeadZeroes(0xfffff),
+                receiverAddr, new byte[]{77}, new byte[0]);
+        tx.sign(senderKey.getPrivKeyBytes());
+
+        Block b1bad = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
+        // making the block bad
+        b1bad.getStateRoot()[0] = 0;
+        b1bad.setStateRoot(b1bad.getStateRoot()); // invalidate block
+
+        Ethash.getForBlock(b1bad.getNumber()).mineLight(b1bad).get();
+        ImportResult importResult = blockchain.tryToConnect(b1bad);
+        Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
+        Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
+        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        importResult = blockchain.tryToConnect(b1);
+        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
+    }
+
+    @Test
     public void doubleTransactionTest() throws Exception {
         // Testing that blocks containing tx with invalid nonce are rejected
 
