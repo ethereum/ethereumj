@@ -3,9 +3,6 @@ package org.ethereum.validator;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Checks diff between number of some block and number of our best block. <br>
@@ -16,13 +13,10 @@ import javax.annotation.PostConstruct;
  */
 public class BestNumberRule extends DependentBlockHeaderRule {
 
-    @Autowired
-    SystemProperties config;
+    private final int BEST_NUMBER_DIFF_LIMIT;
 
-    private int BEST_NUMBER_DIFF_LIMIT;
-    @PostConstruct
-    private void populateFromConfig() {
-        BEST_NUMBER_DIFF_LIMIT = config.getBlockchainConfig().
+    public BestNumberRule(SystemProperties config) {
+        this.BEST_NUMBER_DIFF_LIMIT = config.getBlockchainConfig().
                 getCommonConstants().getBEST_NUMBER_DIFF_LIMIT();
     }
 

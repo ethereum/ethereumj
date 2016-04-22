@@ -156,9 +156,9 @@ public class CommonConfig {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
-                new ExtraDataRule(),
+                new ExtraDataRule(config),
                 new ProofOfWorkRule(),
-                new GasLimitRule()
+                new GasLimitRule(config)
         ));
 
         return new BlockHeaderValidator(rules);

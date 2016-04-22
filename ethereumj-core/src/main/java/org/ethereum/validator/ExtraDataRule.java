@@ -3,9 +3,6 @@ package org.ethereum.validator;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Checks {@link BlockHeader#extraData} size against {@link Constants#getMAXIMUM_EXTRA_DATA_SIZE}
@@ -15,13 +12,10 @@ import javax.annotation.PostConstruct;
  */
 public class ExtraDataRule extends BlockHeaderRule {
 
-    @Autowired
-    SystemProperties config;
+    private final int MAXIMUM_EXTRA_DATA_SIZE;
 
-    private int MAXIMUM_EXTRA_DATA_SIZE;
-    @PostConstruct
-    private void populateFromConfig() {
-        MAXIMUM_EXTRA_DATA_SIZE = config.getBlockchainConfig().
+    public ExtraDataRule(SystemProperties config) {
+        this.MAXIMUM_EXTRA_DATA_SIZE = config.getBlockchainConfig().
                 getCommonConstants().getMAXIMUM_EXTRA_DATA_SIZE();
     }
 

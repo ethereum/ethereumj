@@ -3,9 +3,7 @@ package org.ethereum.validator;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 
 /**
@@ -18,13 +16,10 @@ import java.math.BigInteger;
  */
 public class GasLimitRule extends BlockHeaderRule {
 
-    @Autowired
-    SystemProperties config;
+    private final int MIN_GAS_LIMIT;
 
-    private int MIN_GAS_LIMIT;
-    @PostConstruct
-    private void populateFromConfig() {
-        MIN_GAS_LIMIT = config.getBlockchainConfig().
+    public GasLimitRule(SystemProperties config) {
+        this.MIN_GAS_LIMIT = config.getBlockchainConfig().
                 getCommonConstants().getMIN_GAS_LIMIT();
     }
 
