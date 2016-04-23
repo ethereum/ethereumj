@@ -93,7 +93,7 @@ public class ImportLightTest {
     public void invalidBlockTest() throws Exception {
         // testing that bad block import effort doesn't affect the repository state
 
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = createBlockchain(SystemProperties.getDefault(), GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
