@@ -6,6 +6,7 @@ import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -474,6 +475,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         track = repository.startTracking();
+        byte[] origRoot = repository.getRoot();
+
         if (block == null)
             return false;
 
@@ -508,6 +511,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
             stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+
+            track.rollback();
+            // block is bad so 'rollback' the state root to the original state
+            ((RepositoryImpl) repository).setRoot(origRoot);
 
             if (config.exitOnBlockConflict()) {
                 adminInfo.lostConsensus();
