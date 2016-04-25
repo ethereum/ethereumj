@@ -1,6 +1,5 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.Start;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.RLP;
 import org.junit.Test;

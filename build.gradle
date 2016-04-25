@@ -1,7 +1,18 @@
-wrapper.gradleVersion = '2.2.1'
+
+buildscript {
+    repositories {
+        jcenter()
+        maven { url 'http://repo.spring.io/plugins-release-local' }
+    }
+    dependencies {
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+    }
+}
 
 allprojects {
     apply plugin: 'eclipse'
+    apply plugin: 'propdeps-maven'
+
     if (JavaVersion.current().isJava8Compatible()) {
         //Disable lint of javadoc until someone fixes all the html
         tasks.withType(Javadoc) {
@@ -10,31 +21,60 @@ allprojects {
     }
 }
 
-def gitCurBranch() {
-    def branchName = System.getenv('TRAVIS_BRANCH')
-
-    if (branchName) return branchName
-    def process = "git rev-parse --abbrev-ref HEAD".execute()
-    return process.text.trim()
-}
-
 subprojects {
     apply plugin: 'java'
 
-    def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
-
     group = 'org.ethereum'
 
-    version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
+    compileJava {
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.7
 
-    println("Building version: " + version + " (from branch " + gitCurBranch() + ")")
-
-    compileJava.options.encoding = 'UTF-8'
-    compileJava.options.compilerArgs << '-XDignore.symbol.file'
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-XDignore.symbol.file'
+    }
 
     compileTestJava.options.encoding = 'UTF-8'
 
     repositories {
         jcenter()
+        maven {
+            url "http://dl.bintray.com/ethereum/maven"
+        }
     }
+}
+
+ext {
+    slf4jVersion = '1.7.7'
+    leveldbVersion = '0.7'
+    scastleVersion = '1.51.0.0'
+    log4jVersion = '1.2.17'
+    springVersion = '4.2.0.RELEASE'
+    hibernateVersion = '4.3.7.Final'
+    junitVersion = '4.11'
+}
+
+project(':ethereumj-core') {
+}
+
+project(':ethereumj-cli') {
+    dependencies {
+        compile project(':ethereumj-core')
+    }
+}
+
+project(':ethereumj-samples') {
+    dependencies {
+        compile project(':ethereumj-core')
+    }
+}
+
+project(':ethereumj-tck') {
+    dependencies {
+        compile project(':ethereumj-core')
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.12'
 }

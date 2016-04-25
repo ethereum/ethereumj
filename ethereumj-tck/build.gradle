@@ -1,0 +1,26 @@
+
+dependencies {
+    compile "org.slf4j:slf4j-simple:${slf4jVersion}"
+}
+
+/**
+ *  This is TCK test command line option,
+ *  to run the test:
+ *     gradle tckRun -PfilePath=[ file path]
+ *      e.g: gradle tckRun -PfilePath=E:\temp\test-case.json
+ */
+task tckRun(type:JavaExec){
+
+    if (project.hasProperty("filePath")) {
+        args = ["filerun", "$filePath"]
+        jvmArgs = ["-Xss32M"]
+    }
+
+    if (project.hasProperty("content")) {
+        args = ["content", "$content"]
+        jvmArgs = ["-Xss32M"]
+    }
+
+    main = "org.ethereum.tck.RunTck"
+    classpath = sourceSets.main.runtimeClasspath
+}

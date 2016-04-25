@@ -1,3 +1,4 @@
-rootProject.name = "ethereumj"
-include "ethereumj-core"
 
+rootProject.name = "ethereumj"
+
+include 'ethereumj-cli', 'ethereumj-core', 'ethereumj-samples', 'ethereumj-tck'

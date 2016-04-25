@@ -13,7 +13,6 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.validator.DependentBlockHeaderRule;
@@ -484,10 +483,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // keep chain continuity
         if (!Arrays.equals(bestBlock.getHash(),
                 block.getParentHash())) return false;
-
-        if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
-            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
-        }
 
         List<TransactionReceipt> receipts = processBlock(block);
 

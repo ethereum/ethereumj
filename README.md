@@ -54,18 +54,18 @@ java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 ```
 > git clone https://github.com/ethereum/ethereumj
 > cd ethereumj
-> ./gradlew run [-PmainClass=<sample class>]
+> ./gradlew ethereumj-cli:run
 ```
 
 ##### Optional samples to try:
 ```
-./gradlew run -PmainClass=org.ethereum.samples.BasicSample
-./gradlew run -PmainClass=org.ethereum.samples.FollowAccount
-./gradlew run -PmainClass=org.ethereum.samples.PendingStateSample
-./gradlew run -PmainClass=org.ethereum.samples.PriceFeedSample
-./gradlew run -PmainClass=org.ethereum.samples.PrivateMinerSample
-./gradlew run -PmainClass=org.ethereum.samples.TestNetSample
-./gradlew run -PmainClass=org.ethereum.samples.TransactionBomb
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.BasicSample
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.FollowAccount
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.PendingStateSample
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.PriceFeedSample
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.PrivateMinerSample
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.TestNetSample
+./gradlew ethereumj-samples:run -PmainClass=org.ethereum.samples.TransactionBomb
 ```
 
 ##### Importing project to IntelliJ IDEA: 
