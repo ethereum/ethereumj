@@ -1,9 +1,6 @@
 package org.ethereum.config;
 
-import org.ethereum.datasource.CachingDataSource;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.TransactionStore;
@@ -52,6 +49,14 @@ public class DefaultConfig {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
                 logger.error("Uncaught exception", e);
+            }
+        });
+
+        // TODO: this is setting global state across all EthereumJ instances
+        DataSourcePool.setDataSourceMaker(new DataSourcePool.DataSourceMaker() {
+            @Override
+            public KeyValueDataSource makeDataSource() {
+                return commonConfig.keyValueDataSource();
             }
         });
     }
