@@ -39,8 +39,7 @@ public class TestNetSample extends BasicSample {
                 // special genesis for this test network
                 "genesis = frontier-test.json \n" +
                 "database.dir = testnetSampleDb \n" +
-                "cache.flush.memory = 0 \n" +
-                "peer.p2p.eip8 = false";
+                "cache.flush.memory = 0";
 
         public abstract TestNetSample sampleBean();
 
