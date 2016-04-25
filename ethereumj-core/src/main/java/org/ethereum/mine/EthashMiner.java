@@ -36,6 +36,6 @@ public class EthashMiner implements MinerIfc {
 
     @Override
     public boolean validate(BlockHeader blockHeader) {
-        return Ethash.getForBlock(blockHeader.getNumber()).validate(blockHeader);
+        return Ethash.getForBlock(blockHeader.getNumber(), config).validate(blockHeader);
     }
 }

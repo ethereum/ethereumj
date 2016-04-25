@@ -89,7 +89,7 @@ public class PrivateMinerSample {
                 logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
                 // calling this just for indication of the dataset generation
                 // basically this is not required
-                Ethash ethash = Ethash.getForBlock(ethereum.getBlockchain().getBestBlock().getNumber());
+                Ethash ethash = Ethash.getForBlock(ethereum.getBlockchain().getBestBlock().getNumber(), config);
                 ethash.getFullDataset();
                 logger.info("Full dataset generated (loaded).");
             }
