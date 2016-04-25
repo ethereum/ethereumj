@@ -151,8 +151,8 @@ public class SystemProperties {
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
-                    .withFallback(userConfig)
                     .withFallback(userDirConfig)
+                    .withFallback(userConfig)
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
 

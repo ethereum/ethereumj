@@ -599,6 +599,10 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         return worldState.getRootHash();
     }
 
+    public synchronized void setRoot(byte[] root) {
+        worldState.setRoot(root);
+    }
+
     @Override
     public synchronized Repository getSnapshotTo(byte[] root){
 
