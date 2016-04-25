@@ -322,6 +322,8 @@ def buildTime() {
 }
 
 def gitCurBranch() {
+    def branchName = System.getenv('TRAVIS_BRANCH')
+    if (branchName) return branchName
     def process = "git rev-parse --abbrev-ref HEAD".execute()
     return process.text.trim()
 }
