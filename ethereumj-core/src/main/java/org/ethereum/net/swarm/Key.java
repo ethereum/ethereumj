@@ -11,9 +11,6 @@ import java.util.Arrays;
  * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class Key {
-    public static Key zeroKey() {
-        return new Key(new byte[0]);
-    }
 
     private final byte[] bytes;
 
@@ -23,6 +20,10 @@ public class Key {
 
     public Key(String hexKey) {
         this(Hex.decode(hexKey));
+    }
+
+    public static Key zeroKey() {
+        return new Key(new byte[0]);
     }
 
     public byte[] getBytes() {

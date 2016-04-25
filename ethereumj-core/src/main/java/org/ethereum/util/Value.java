@@ -21,21 +21,7 @@ public class Value {
 
     private boolean decoded = false;
 
-    public static Value fromRlpEncoded(byte[] data) {
-
-        if (data != null && data.length != 0) {
-            Value v = new Value();
-            v.init(data);
-            return v;
-        }
-        return null;
-    }
-
     public Value(){
-    }
-
-    public void init(byte[] rlp){
-        this.rlp = rlp;
     }
 
     public Value(Object obj) {
@@ -48,6 +34,20 @@ public class Value {
         } else {
             this.value = obj;
         }
+    }
+
+    public static Value fromRlpEncoded(byte[] data) {
+
+        if (data != null && data.length != 0) {
+            Value v = new Value();
+            v.init(data);
+            return v;
+        }
+        return null;
+    }
+
+    public void init(byte[] rlp){
+        this.rlp = rlp;
     }
 
     /* *****************

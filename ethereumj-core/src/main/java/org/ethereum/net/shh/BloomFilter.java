@@ -15,6 +15,15 @@ public class BloomFilter implements Cloneable {
     private BloomFilter() {
     }
 
+    public BloomFilter(Topic topic) {
+        addTopic(topic);
+    }
+
+    public BloomFilter(byte[] bloomMask) {
+        if (bloomMask.length != BLOOM_BYTES) throw new RuntimeException("Invalid bloom filter array length: " + bloomMask.length);
+        mask = BitSet.valueOf(bloomMask);
+    }
+
     public static BloomFilter createNone() {
         return new BloomFilter();
     }
@@ -23,15 +32,6 @@ public class BloomFilter implements Cloneable {
         BloomFilter bloomFilter = new BloomFilter();
         bloomFilter.mask.set(0, bloomFilter.mask.length());
         return bloomFilter;
-    }
-
-    public BloomFilter(Topic topic) {
-        addTopic(topic);
-    }
-
-    public BloomFilter(byte[] bloomMask) {
-        if (bloomMask.length != BLOOM_BYTES) throw new RuntimeException("Invalid bloom filter array length: " + bloomMask.length);
-        mask = BitSet.valueOf(bloomMask);
     }
 
     private void incCounters(BitSet bs) {

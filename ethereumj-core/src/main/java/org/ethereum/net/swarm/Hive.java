@@ -28,6 +28,8 @@ public class Hive {
 
     private Map<Node, BzzProtocol> connectedPeers = new IdentityHashMap<>();
 
+    private Set<HiveTask> hiveTasks = new IdentitySet();
+
     public Hive(PeerAddress thisAddress) {
         this.thisAddress = thisAddress;
         nodeTable = new NodeTable(thisAddress.toNode());
@@ -138,8 +140,6 @@ public class Hive {
             hiveTasks.add(t);
         }
     }
-
-    private Set<HiveTask> hiveTasks = new IdentitySet();
 
     /**
      * The task to be executed when another one closest Peer is discovered

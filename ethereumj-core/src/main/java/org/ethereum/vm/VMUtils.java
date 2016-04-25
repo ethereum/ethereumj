@@ -20,6 +20,8 @@ public final class VMUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("VM");
 
+    private static final int BUF_SIZE = 4096;
+
     private VMUtils() {
     }
 
@@ -78,8 +80,6 @@ public final class VMUtils {
             writeStringToFile(file, content);
         }
     }
-
-    private static final int BUF_SIZE = 4096;
 
     private static void write(InputStream in, OutputStream out, int bufSize) throws IOException {
         try {

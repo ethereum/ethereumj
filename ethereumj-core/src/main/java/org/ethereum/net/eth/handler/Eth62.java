@@ -93,6 +93,12 @@ public class Eth62 extends EthHandler {
 
     private BlockWrapper gapBlock;
 
+    /*************************
+     *     Fork Coverage     *
+     *************************/
+
+    private static final int FORK_COVER_BATCH_SIZE = 192;
+
     public Eth62() {
         super(V62);
     }
@@ -664,12 +670,6 @@ public class Eth62 extends EthHandler {
                 bestKnownBlock = id;
             }
     }
-
-    /*************************
-     *     Fork Coverage     *
-     *************************/
-
-    private static final int FORK_COVER_BATCH_SIZE = 192;
 
     protected synchronized void startGapRecovery(BlockWrapper block) {
 

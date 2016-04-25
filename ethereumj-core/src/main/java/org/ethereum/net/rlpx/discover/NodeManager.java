@@ -77,6 +77,29 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private HTreeMap<Node, NodeStatistics.Persistent> nodeStatsDB;
     private boolean inited = false;
 
+    private static final Comparator<NodeHandler> BEST_DIFFICULTY_COMPARATOR = new Comparator<NodeHandler>() {
+        @Override
+        public int compare(NodeHandler n1, NodeHandler n2) {
+            BigInteger td1 = null;
+            BigInteger td2 = null;
+            if(n1.getNodeStatistics().getEthTotalDifficulty() != null) {
+                td1 = n1.getNodeStatistics().getEthTotalDifficulty();
+            }
+            if(n2.getNodeStatistics().getEthTotalDifficulty() != null) {
+                td2 = n2.getNodeStatistics().getEthTotalDifficulty();
+            }
+            if (td1 != null && td2 != null) {
+                return td2.compareTo(td1);
+            } else if (td1 == null && td2 == null) {
+                return 0;
+            } else if (td1 != null) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+    };
+
     public NodeManager() {
     }
 
@@ -441,26 +464,4 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         }
     }
 
-    private static final Comparator<NodeHandler> BEST_DIFFICULTY_COMPARATOR = new Comparator<NodeHandler>() {
-        @Override
-        public int compare(NodeHandler n1, NodeHandler n2) {
-            BigInteger td1 = null;
-            BigInteger td2 = null;
-            if(n1.getNodeStatistics().getEthTotalDifficulty() != null) {
-                td1 = n1.getNodeStatistics().getEthTotalDifficulty();
-            }
-            if(n2.getNodeStatistics().getEthTotalDifficulty() != null) {
-                td2 = n2.getNodeStatistics().getEthTotalDifficulty();
-            }
-            if (td1 != null && td2 != null) {
-                return td2.compareTo(td1);
-            } else if (td1 == null && td2 == null) {
-                return 0;
-            } else if (td1 != null) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-    };
 }

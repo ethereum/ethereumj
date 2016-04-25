@@ -35,6 +35,16 @@ public class Ethash {
 
     public static boolean fileCacheEnabled = true;
 
+    private EthashAlgo ethashAlgo = new EthashAlgo(ethashParams);
+
+    private long blockNumber;
+    private int[] cacheLight = null;
+    private int[] fullData = null;
+
+    public Ethash(long blockNumber) {
+        this.blockNumber = blockNumber;
+    }
+
     /**
      * Returns instance for the specified block number either from cache or calculates a new one
      */
@@ -45,16 +55,6 @@ public class Ethash {
             cachedBlockEpoch = epoch;
         }
         return cachedInstance;
-    }
-
-    private EthashAlgo ethashAlgo = new EthashAlgo(ethashParams);
-
-    private long blockNumber;
-    private int[] cacheLight = null;
-    private int[] fullData = null;
-
-    public Ethash(long blockNumber) {
-        this.blockNumber = blockNumber;
     }
 
     public synchronized int[] getCacheLight() {

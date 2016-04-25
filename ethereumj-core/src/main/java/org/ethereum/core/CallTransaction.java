@@ -105,16 +105,6 @@ public class CallTransaction {
     }
 
     public static abstract class ArrayType extends Type {
-        public static ArrayType getType(String typeName) {
-            int idx1 = typeName.indexOf("[");
-            int idx2 = typeName.indexOf("]", idx1);
-            if (idx1 + 1 == idx2) {
-                return new DynamicArrayType(typeName);
-            } else {
-                return new StaticArrayType(typeName);
-            }
-        }
-
         Type elementType;
 
         public ArrayType(String name) {
@@ -124,6 +114,16 @@ public class CallTransaction {
             int idx2 = name.indexOf("]", idx);
             String subDim = idx2 + 1 == name.length() ? "" : name.substring(idx2 + 1);
             elementType = Type.getType(st + subDim);
+        }
+
+        public static ArrayType getType(String typeName) {
+            int idx1 = typeName.indexOf("[");
+            int idx2 = typeName.indexOf("]", idx1);
+            if (idx1 + 1 == idx2) {
+                return new DynamicArrayType(typeName);
+            } else {
+                return new StaticArrayType(typeName);
+            }
         }
 
         @Override
@@ -551,6 +551,8 @@ public class CallTransaction {
     }
 
     public static class Contract {
+        public Function[] functions;
+
         public Contract(String jsonInterface) {
             try {
                 functions = new ObjectMapper().readValue(jsonInterface, Function[].class);
@@ -568,7 +570,6 @@ public class CallTransaction {
             return null;
         }
 
-        public Function[] functions;
     }
 
 }

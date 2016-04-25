@@ -50,7 +50,8 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 public class JsonRpcImpl implements JsonRpc {
     private static final Logger logger = LoggerFactory.getLogger("jsonrpc");
 
-
+    AtomicInteger filterCounter = new AtomicInteger(1);
+    Map<Integer, Filter> installedFilters = new Hashtable<>();
 
     public class BinaryCallArguments {
         public long nonce;
@@ -950,9 +951,6 @@ public class JsonRpcImpl implements JsonRpc {
 //            if (onPendingTx)
         }
     }
-
-    AtomicInteger filterCounter = new AtomicInteger(1);
-    Map<Integer, Filter> installedFilters = new Hashtable<>();
 
     @Override
     public String eth_newFilter(FilterRequest fr) throws Exception {

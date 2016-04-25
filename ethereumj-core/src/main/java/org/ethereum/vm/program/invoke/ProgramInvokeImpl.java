@@ -37,6 +37,14 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     private boolean byTestingSuite = false;
     private int callDeep = 0;
 
+    /*****************/
+    /***  msg data ***/
+    /*****************/
+    /* NOTE: In the protocol there is no restriction on the maximum message data,
+     * However msgData here is a byte[] and this can't hold more than 2^32-1
+     */
+    private static BigInteger MAX_MSG_DATA = BigInteger.valueOf(Integer.MAX_VALUE);
+
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord
@@ -141,14 +149,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     public DataWord getCallValue() {
         return callValue;
     }
-
-    /*****************/
-    /***  msg data ***/
-    /*****************/
-    /* NOTE: In the protocol there is no restriction on the maximum message data,
-     * However msgData here is a byte[] and this can't hold more than 2^32-1
-     */
-    private static BigInteger MAX_MSG_DATA = BigInteger.valueOf(Integer.MAX_VALUE);
 
     /*     CALLDATALOAD  op   */
     public DataWord getDataValue(DataWord indexData) {

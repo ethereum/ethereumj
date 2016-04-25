@@ -20,13 +20,6 @@ public class MemStore implements ChunkStore {
     long maxSizeBytes = 10 * 1000000;
     long curSizeBytes = 0;
 
-    public MemStore() {
-    }
-
-    public MemStore(long maxSizeBytes) {
-        this.maxSizeBytes = maxSizeBytes;
-    }
-
     // TODO: SoftReference for Chunks?
     public Map<Key, Chunk> store = Collections.synchronizedMap(new LRUMap<Key, Chunk>(10000) {
         @Override
@@ -52,6 +45,13 @@ public class MemStore implements ChunkStore {
             return curSizeBytes >= maxSizeBytes;
         }
     });
+
+    public MemStore() {
+    }
+
+    public MemStore(long maxSizeBytes) {
+        this.maxSizeBytes = maxSizeBytes;
+    }
 
     @Override
     public void put(Chunk chunk) {

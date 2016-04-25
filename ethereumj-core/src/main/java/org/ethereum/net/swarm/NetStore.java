@@ -26,21 +26,8 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class NetStore implements ChunkStore {
     private static NetStore INST;
 
-    public synchronized static NetStore getInstance() {
-        return INST;
-    }
-
     @Autowired
     WorldManager worldManager;
-
-
-    public static PeerAddress createSelfAddress() {
-        return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());
-    }
-
-    public static byte[] getSelfNodeId() {
-        return CONFIG.nodeId();
-    }
 
     public int requesterCount = 3;
     public int maxStorePeers = 3;
@@ -50,6 +37,19 @@ public class NetStore implements ChunkStore {
     private LocalStore localStore;
     private Hive hive;
     private PeerAddress selfAddress;
+
+    private Map<Chunk, PeerAddress> chunkSourceAddr = new IdentityHashMap<>();
+    private Map<Key, ChunkRequest> chunkRequestMap = new HashMap<>();
+
+    // Statistics gathers
+    public final Statter statInMsg = Statter.create("net.swarm.bzz.inMessages");
+    public final Statter statOutMsg = Statter.create("net.swarm.bzz.outMessages");
+    public final Statter statHandshakes = Statter.create("net.swarm.bzz.handshakes");
+
+    public final Statter statInStoreReq = Statter.create("net.swarm.in.storeReq");
+    public final Statter statInGetReq = Statter.create("net.swarm.in.getReq");
+    public final Statter statOutStoreReq = Statter.create("net.swarm.out.storeReq");
+    public final Statter statOutGetReq = Statter.create("net.swarm.out.getReq");
 
     public NetStore() {
         this(new LocalStore(new MemStore(), new MemStore()), new Hive(createSelfAddress()));
@@ -61,6 +61,18 @@ public class NetStore implements ChunkStore {
     public NetStore(LocalStore localStore, Hive hive) {
         this.localStore = localStore;
         this.hive = hive;
+    }
+
+    public synchronized static NetStore getInstance() {
+        return INST;
+    }
+
+    public static PeerAddress createSelfAddress() {
+        return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());
+    }
+
+    public static byte[] getSelfNodeId() {
+        return CONFIG.nodeId();
     }
 
     public void start(PeerAddress self) {
@@ -160,9 +172,6 @@ public class NetStore implements ChunkStore {
             }
         });
     }
-
-    private Map<Chunk, PeerAddress> chunkSourceAddr = new IdentityHashMap<>();
-    private Map<Key, ChunkRequest> chunkRequestMap = new HashMap<>();
 
     /******************************************
      *    Get methods
@@ -319,14 +328,5 @@ public class NetStore implements ChunkStore {
         List<Promise<Chunk>> localRequesters = new ArrayList<>();
     }
 
-    // Statistics gathers
-    public final Statter statInMsg = Statter.create("net.swarm.bzz.inMessages");
-    public final Statter statOutMsg = Statter.create("net.swarm.bzz.outMessages");
-    public final Statter statHandshakes = Statter.create("net.swarm.bzz.handshakes");
-
-    public final Statter statInStoreReq = Statter.create("net.swarm.in.storeReq");
-    public final Statter statInGetReq = Statter.create("net.swarm.in.getReq");
-    public final Statter statOutStoreReq = Statter.create("net.swarm.out.storeReq");
-    public final Statter statOutGetReq = Statter.create("net.swarm.out.getReq");
 }
 

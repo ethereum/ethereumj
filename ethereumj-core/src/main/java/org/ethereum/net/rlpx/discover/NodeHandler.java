@@ -27,6 +27,22 @@ public class NodeHandler {
     private static volatile int msgInCount = 0, msgOutCount = 0;
     private static boolean initialLogging = true;
 
+    Node node;
+    NodeManager nodeManager;
+    private NodeStatistics nodeStatistics;
+
+    State state;
+    boolean waitForPong = false;
+    long pingSent;
+    int pingTrials = 3;
+    NodeHandler replaceCandidate;
+
+    public NodeHandler(Node node, NodeManager nodeManager) {
+        this.node = node;
+        this.nodeManager = nodeManager;
+        changeState(State.Discovered);
+    }
+
     // gradually reducing log level for dumping discover messages
     // they are not so informative when everything is already up and running
     // but could be interesting when discovery just starts
@@ -96,22 +112,6 @@ public class NodeHandler {
          * It's an option for future to return veterans back to the table
          */
         NonActive
-    }
-
-    Node node;
-    NodeManager nodeManager;
-    private NodeStatistics nodeStatistics;
-
-    State state;
-    boolean waitForPong = false;
-    long pingSent;
-    int pingTrials = 3;
-    NodeHandler replaceCandidate;
-
-    public NodeHandler(Node node, NodeManager nodeManager) {
-        this.node = node;
-        this.nodeManager = nodeManager;
-        changeState(State.Discovered);
     }
 
     public InetSocketAddress getInetSocketAddress() {

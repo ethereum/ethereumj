@@ -34,6 +34,11 @@ public class Block {
 
     private BlockHeader header;
 
+    private StringBuffer toStringBuff = new StringBuffer();
+    // [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
+    // difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,
+    // extradata, nonce]
+
     /* Transactions */
     private List<Transaction> transactionsList = new CopyOnWriteArrayList<>();
 
@@ -277,11 +282,6 @@ public class Block {
         if (!parsed) parseRLP();
         return uncleList;
     }
-
-    private StringBuffer toStringBuff = new StringBuffer();
-    // [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
-    // difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,
-    // extradata, nonce]
 
     @Override
     public String toString() {
