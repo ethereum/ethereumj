@@ -11,6 +11,9 @@ allprojects {
 }
 
 def gitCurBranch() {
+    def branchName = System.getenv('TRAVIS_BRANCH')
+
+    if (branchName) return branchName
     def process = "git rev-parse --abbrev-ref HEAD".execute()
     return process.text.trim()
 }
@@ -24,7 +27,7 @@ subprojects {
 
     version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
 
-    println("Building version: " + version)
+    println("Building version: " + version + " (from branch " + gitCurBranch() + ")")
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs << '-XDignore.symbol.file'
