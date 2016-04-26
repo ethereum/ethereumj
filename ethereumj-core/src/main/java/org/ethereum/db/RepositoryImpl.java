@@ -16,6 +16,7 @@ import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
@@ -62,7 +63,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     private boolean isSnapshot = false;
 
-//    @Autowired  TODO autowire
+    @Autowired
     SystemProperties config = SystemProperties.CONFIG;
 
     public RepositoryImpl() {
