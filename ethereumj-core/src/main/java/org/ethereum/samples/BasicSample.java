@@ -289,7 +289,9 @@ public class BasicSample implements Runnable {
 
         @Override
         public void onNodeDiscovered(Node node) {
-            nodesDiscovered.add(node);
+            if (nodesDiscovered.size() < 1000) {
+                nodesDiscovered.add(node);
+            }
         }
 
         @Override
