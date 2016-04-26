@@ -1,6 +1,9 @@
 package org.ethereum.core;
 
+import org.ethereum.util.ByteUtil;
+
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * Decorates {@link Transaction} class with additional attributes
@@ -87,6 +90,9 @@ public class PendingTransaction {
                 ']';
     }
 
+    /**
+     *  Two pending transaction are equal if equal their sender + nonce
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -94,11 +100,12 @@ public class PendingTransaction {
 
         PendingTransaction that = (PendingTransaction) o;
 
-        return transaction.equals(that.transaction);
+        return Arrays.equals(getSender(), that.getSender()) &&
+                Arrays.equals(transaction.getNonce(), that.getTransaction().getNonce());
     }
 
     @Override
     public int hashCode() {
-        return transaction.hashCode();
+        return ByteUtil.byteArrayToInt(getSender()) + ByteUtil.byteArrayToInt(transaction.getNonce());
     }
 }

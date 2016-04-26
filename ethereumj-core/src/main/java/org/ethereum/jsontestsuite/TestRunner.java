@@ -20,6 +20,7 @@ import org.ethereum.jsontestsuite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -87,15 +88,13 @@ public class TestRunner {
         blockStore.init(new HashMapDB(), new HashMapDB());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
-        AdminInfo adminInfo = new AdminInfo();
-        EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, adminInfo, listener,
-                new CommonConfig().parentHeaderValidator());
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
         pendingState.init();
 
         blockchain.setBestBlock(genesis);
