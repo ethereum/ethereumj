@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
@@ -65,6 +66,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Autowired
     SystemProperties config = SystemProperties.CONFIG;
+
+    @Autowired
+    ApplicationContext applicationContext;
 
     public RepositoryImpl() {
 
@@ -257,7 +261,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized Repository startTracking() {
-        return new RepositoryTrack(this);
+        return applicationContext == null ? new RepositoryTrack(this) :
+                applicationContext.getBean(RepositoryTrack.class, this);
     }
 
     @Override
