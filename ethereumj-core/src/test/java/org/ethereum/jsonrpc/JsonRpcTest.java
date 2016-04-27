@@ -155,6 +155,10 @@ public class JsonRpcTest {
             callArgs.data = compRes.code;
             callArgs.gasPrice = "0x10000000000";
             callArgs.gasLimit = "0x1000000";
+
+            String gasEstimate = jsonRpc.eth_estimateGas(callArgs);
+            assertTrue(TypeConverter.StringHexToBigInteger(gasEstimate).longValue() > 0);
+
             String txHash2 = jsonRpc.eth_sendTransaction(callArgs);
 
             String hash2 = mineBlock();

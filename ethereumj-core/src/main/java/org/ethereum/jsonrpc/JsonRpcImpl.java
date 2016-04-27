@@ -72,7 +72,9 @@ public class JsonRpcImpl implements JsonRpc {
             if (args.gasLimit != null && args.gasLimit.length()!=0)
                 gasLimit = JSonHexToLong(args.gasLimit);
 
-            toAddress = JSonHexToHex(args.to);
+            toAddress = null;
+            if (args.to != null && args.to.length()!=0)
+                toAddress = JSonHexToHex(args.to);
 
             value=0;
             if (args.value != null && args.value.length()!=0)
