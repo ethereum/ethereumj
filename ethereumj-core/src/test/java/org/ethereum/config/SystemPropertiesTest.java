@@ -33,10 +33,10 @@ public class SystemPropertiesTest {
 
     @Test
     public void blockchainNetConfigTest() {
-        SystemProperties systemProperties1 = new SystemProperties();
+        SystemProperties systemProperties1 = SystemProperties.getDefault();
         systemProperties1.overrideParams("blockchain.config.name", "olympic");
         BlockchainNetConfig blockchainConfig1 = systemProperties1.getBlockchainConfig();
-        SystemProperties systemProperties2 = new SystemProperties();
+        SystemProperties systemProperties2 = SystemProperties.getDefault();
         systemProperties2.overrideParams("blockchain.config.name", "morden");
         BlockchainNetConfig blockchainConfig2= systemProperties2.getBlockchainConfig();
         Assert.assertNotEquals(blockchainConfig1.getClass(), blockchainConfig2.getClass());
