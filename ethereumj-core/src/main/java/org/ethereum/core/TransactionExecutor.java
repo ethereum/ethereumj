@@ -245,6 +245,8 @@ public class TransactionExecutor {
         if (!readyToExecute) return;
 
         // TODO: transaction call for pre-compiled  contracts
+        if (vm == null && program == null) return;
+
         try {
 
             // Charge basic cost of the transaction
