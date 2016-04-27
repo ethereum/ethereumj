@@ -60,7 +60,10 @@ public class JsonRpcImpl implements JsonRpc {
         public long value;
         public byte[] data;
         public void setArguments(CallArguments args) throws Exception {
-            nonce =0;
+            nonce = 0;
+            if (args.nonce != null && args.nonce.length()!=0)
+                nonce = JSonHexToLong(args.nonce);
+
             gasPrice = 0;
             if (args.gasPrice != null && args.gasPrice.length()!=0)
                 gasPrice = JSonHexToLong(args.gasPrice);
@@ -506,7 +509,7 @@ public class JsonRpcImpl implements JsonRpc {
                 args.data = args.data.substring(2);
 
             Transaction tx = new Transaction(
-                    bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
+                    args.nonce != null ? StringHexToByteArray(args.nonce) : bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
                     args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : EMPTY_BYTE_ARRAY,
                     args.gasLimit != null ? StringHexToByteArray(args.gasLimit) : EMPTY_BYTE_ARRAY,
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,

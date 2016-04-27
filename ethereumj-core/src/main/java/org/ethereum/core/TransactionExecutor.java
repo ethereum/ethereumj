@@ -90,6 +90,7 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
+        basicTxCost = tx.transactionCost(currentBlock);
 
         if (localCall) {
             readyToExecute = true;
@@ -109,7 +110,6 @@ public class TransactionExecutor {
             return;
         }
 
-        basicTxCost = tx.transactionCost(currentBlock);
         if (txGasLimit.compareTo(BigInteger.valueOf(basicTxCost)) < 0) {
 
             if (logger.isWarnEnabled())
@@ -205,15 +205,13 @@ public class TransactionExecutor {
         } else {
 
             byte[] code = track.getCode(targetAddress);
-            if (isEmpty(code)) {
-                m_endGas = toBI(tx.getGasLimit()).subtract(BigInteger.valueOf(basicTxCost));
-            } else {
-                ProgramInvoke programInvoke =
-                        programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
-
+            if (!isEmpty(code)) {
                 this.vm = new VM();
-                this.program = new Program(code, programInvoke, tx);
             }
+            ProgramInvoke programInvoke =
+                    programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
+
+            this.program = new Program(code, programInvoke, tx);
         }
 
         BigInteger endowment = toBI(tx.getValue());
@@ -247,14 +245,12 @@ public class TransactionExecutor {
         if (!readyToExecute) return;
 
         // TODO: transaction call for pre-compiled  contracts
-        if (vm == null) return;
-
         try {
 
             // Charge basic cost of the transaction
             program.spendGas(tx.transactionCost(currentBlock), "TRANSACTION COST");
 
-            if (CONFIG.playVM())
+            if (vm != null && CONFIG.playVM())
                 vm.play(program);
 
             result = program.getResult();
