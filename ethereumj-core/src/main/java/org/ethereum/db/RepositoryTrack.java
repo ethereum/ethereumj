@@ -49,10 +49,6 @@ public class RepositoryTrack implements Repository {
     @Autowired
     SystemProperties config = SystemProperties.CONFIG;
 
-    public RepositoryTrack() {
-        this.repository = new RepositoryDummy();
-    }
-
     public RepositoryTrack(Repository repository) {
         this.repository = repository;
     }
