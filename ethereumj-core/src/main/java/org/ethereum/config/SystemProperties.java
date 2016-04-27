@@ -231,7 +231,6 @@ public class SystemProperties {
         return (T) config.getAnyRef(propName);
     }
 
-    @ValidateMe
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
