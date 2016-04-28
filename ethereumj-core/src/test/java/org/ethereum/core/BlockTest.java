@@ -121,7 +121,7 @@ public class BlockTest {
         SystemProperties config = SystemProperties.getDefault();
         config.setGenesisInfo("frontier.json");
 
-        Block genesis = GenesisLoader.loadGenesis(config);
+        Block genesis = GenesisLoader.loadGenesis(config, getClass().getClassLoader());
 
         String hash = Hex.toHexString(genesis.getHash());
         String root = Hex.toHexString(genesis.getStateRoot());

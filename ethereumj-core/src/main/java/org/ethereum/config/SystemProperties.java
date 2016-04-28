@@ -761,7 +761,7 @@ public class SystemProperties {
 
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this);
+            genesis = GenesisLoader.loadGenesis(this, classLoader);
         }
         return genesis;
     }

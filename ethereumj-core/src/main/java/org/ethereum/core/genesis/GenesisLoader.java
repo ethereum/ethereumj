@@ -26,10 +26,10 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class GenesisLoader {
 
-    public static Genesis loadGenesis(SystemProperties config)  {
+    public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader)  {
         String genesisFile = config.genesisInfo();
 
-        InputStream is = GenesisLoader.class.getResourceAsStream("/genesis/" + genesisFile);
+        InputStream is = classLoader.getResourceAsStream("/genesis/" + genesisFile);
         return loadGenesis(config, is);
     }
 
