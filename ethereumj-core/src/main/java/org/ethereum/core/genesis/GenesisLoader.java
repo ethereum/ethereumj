@@ -29,7 +29,7 @@ public class GenesisLoader {
     public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader)  {
         String genesisFile = config.genesisInfo();
 
-        InputStream is = classLoader.getResourceAsStream("/genesis/" + genesisFile);
+        InputStream is = classLoader.getResourceAsStream("genesis/" + genesisFile);
         return loadGenesis(config, is);
     }
 
