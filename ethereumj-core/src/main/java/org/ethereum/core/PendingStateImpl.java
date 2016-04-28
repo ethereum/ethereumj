@@ -54,6 +54,7 @@ public class PendingStateImpl implements PendingState {
 
     private EthereumListener listener;
 
+    @Autowired @Qualifier("repository")
     private Repository repository;
 
     private Blockchain blockchain;

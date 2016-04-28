@@ -10,6 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 
@@ -28,6 +32,8 @@ import static org.ethereum.util.ByteUtil.wrap;
  * @author Roman Mandeleil
  * @since 17.11.2014
  */
+@Component
+@Scope("prototype")
 public class RepositoryTrack implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
@@ -36,6 +42,11 @@ public class RepositoryTrack implements Repository {
     HashMap<ByteArrayWrapper, ContractDetails> cacheDetails = new HashMap<>();
 
     Repository repository;
+
+    @Autowired
+    ApplicationContext applicationContext;
+
+    @Autowired
     SystemProperties config;
 
     public RepositoryTrack(Repository repository, SystemProperties config) {
@@ -49,7 +60,8 @@ public class RepositoryTrack implements Repository {
         synchronized (repository) {
             logger.trace("createAccount: [{}]", Hex.toHexString(addr));
 
-            AccountState accountState = new AccountState(config.getBlockchainConfig());
+            AccountState accountState = new AccountState(config.getBlockchainConfig().getCommonConstants().getInitialNonce(),
+                    BigInteger.ZERO);
             cacheAccounts.put(wrap(addr), accountState);
 
             ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
@@ -282,7 +294,8 @@ public class RepositoryTrack implements Repository {
     public Repository startTracking() {
         logger.trace("start tracking: {}", this);
 
-        Repository repository = new RepositoryTrack(this, config);
+        Repository repository = applicationContext == null ? new RepositoryTrack(this, config) :
+                applicationContext.getBean(RepositoryTrack.class, this);
 
         return repository;
     }

@@ -30,6 +30,7 @@ import org.ethereum.vm.program.ProgramResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -91,7 +92,7 @@ public class JsonRpcImpl implements JsonRpc {
     @Autowired
     public WorldManager worldManager;
 
-    @Autowired
+    @Autowired @Qualifier("repository")
     public Repository repository;
 
     @Autowired
