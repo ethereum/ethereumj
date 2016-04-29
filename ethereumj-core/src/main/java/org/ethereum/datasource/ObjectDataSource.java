@@ -3,12 +3,15 @@ package org.ethereum.datasource;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.ByteArrayWrapper;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * Created by Anton Nashatyrev on 17.03.2016.
  */
 public class ObjectDataSource<V> implements Flushable{
     private KeyValueDataSource src;
-    private LRUMap<ByteArrayWrapper, V> cache = new LRUMap<>(256);
+    private Map<ByteArrayWrapper, V> cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(256));
     Serializer<V, byte[]> serializer;
     boolean cacheOnWrite = true;
 
@@ -18,7 +21,7 @@ public class ObjectDataSource<V> implements Flushable{
     }
 
     public ObjectDataSource<V> withCacheSize(int cacheSize) {
-        cache = new LRUMap<>(cacheSize);
+        cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(cacheSize));
         return this;
     }
 
