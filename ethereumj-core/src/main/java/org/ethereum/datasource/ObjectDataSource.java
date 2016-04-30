@@ -38,7 +38,7 @@ public class ObjectDataSource<V> implements Flushable{
         // for write-back type cache only
     }
 
-    public void put(byte[] key, V value) {
+    public synchronized void put(byte[] key, V value) {
         byte[] bytes = serializer.serialize(value);
         src.put(key, bytes);
         if (cacheOnWrite) {
@@ -46,7 +46,7 @@ public class ObjectDataSource<V> implements Flushable{
         }
     }
 
-    public V get(byte[] key) {
+    public synchronized V get(byte[] key) {
         ByteArrayWrapper keyW = new ByteArrayWrapper(key);
         V ret = cache.get(keyW);
         if (ret == null) {
