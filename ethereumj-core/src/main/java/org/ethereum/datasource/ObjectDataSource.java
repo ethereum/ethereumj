@@ -21,7 +21,7 @@ public class ObjectDataSource<V> implements Flushable{
     }
 
     public ObjectDataSource<V> withCacheSize(int cacheSize) {
-        cache = new LRUMap<>(cacheSize);
+        cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(cacheSize));
         return this;
     }
 
