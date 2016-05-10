@@ -36,6 +36,7 @@ public interface JsonRpc {
         public String gasPrice;
         public String value;
         public String data; // compiledCode
+        public String nonce;
 
         @Override
         public String toString() {
@@ -46,6 +47,7 @@ public interface JsonRpc {
                     ", gasPrice='" + gasPrice + '\'' +
                     ", value='" + value + '\'' +
                     ", data='" + data + '\'' +
+                    ", nonce='" + nonce + '\'' +
                     '}';
         }
     }
