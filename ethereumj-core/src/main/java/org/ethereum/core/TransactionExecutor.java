@@ -90,6 +90,7 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
+        basicTxCost = tx.transactionCost(currentBlock);
 
         if (localCall) {
             readyToExecute = true;
@@ -109,7 +110,6 @@ public class TransactionExecutor {
             return;
         }
 
-        basicTxCost = tx.transactionCost(currentBlock);
         if (txGasLimit.compareTo(BigInteger.valueOf(basicTxCost)) < 0) {
 
             if (logger.isWarnEnabled())
@@ -369,6 +369,16 @@ public class TransactionExecutor {
 
 
     public TransactionReceipt getReceipt() {
+        if (receipt == null) {
+            receipt = new TransactionReceipt();
+            long totalGasUsed = gasUsedInTheBlock + getGasUsed();
+            receipt.setCumulativeGas(totalGasUsed);
+            receipt.setTransaction(tx);
+            receipt.setLogInfoList(getVMLogs());
+            receipt.setGasUsed(getGasUsed());
+            receipt.setExecutionResult(getResult().getHReturn());
+//            receipt.setPostTxState(track.getRoot()); // TODO later when RepositoryTrack.getRoot() is implemented
+        }
         return receipt;
     }
 

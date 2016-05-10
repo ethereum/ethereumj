@@ -794,13 +794,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             totalGasUsed += executor.getGasUsed();
 
             track.commit();
-            TransactionReceipt receipt = new TransactionReceipt();
-            receipt.setCumulativeGas(totalGasUsed);
+            TransactionReceipt receipt = executor.getReceipt();
             receipt.setPostTxState(repository.getRoot());
-            receipt.setTransaction(tx);
-            receipt.setLogInfoList(executor.getVMLogs());
-            receipt.setGasUsed(executor.getGasUsed());
-            receipt.setExecutionResult(executor.getResult().getHReturn());
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(repository.getRoot()));

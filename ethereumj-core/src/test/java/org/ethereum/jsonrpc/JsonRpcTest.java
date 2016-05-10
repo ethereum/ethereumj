@@ -100,6 +100,15 @@ public class JsonRpcTest {
             Object[] changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
             assertEquals(0, changes.length);
 
+            JsonRpc.CallArguments ca = new JsonRpc.CallArguments();
+            ca.from = cowAcct;
+            ca.to = "0x0000000000000000000000000000000000001234";
+            ca.gasLimit = "0x300000";
+            ca.gasPrice = "0x10000000000";
+            ca.value = "0x7777";
+            ca.data = "0x";
+            long sGas = TypeConverter.StringHexToBigInteger(jsonRpc.eth_estimateGas(ca)).longValue();
+
             String txHash1 = jsonRpc.eth_sendTransaction(cowAcct, "0x0000000000000000000000000000000000001234", "0x300000",
                     "0x10000000000", "0x7777", "0x", "0x00");
             System.out.println("Tx hash: " + txHash1);
@@ -124,6 +133,7 @@ public class JsonRpcTest {
             TransactionReceiptDTO receipt1 = jsonRpc.eth_getTransactionReceipt(txHash1);
             assertEquals(1, receipt1.blockNumber);
             assertTrue(receipt1.gasUsed > 0);
+            assertEquals(sGas, receipt1.gasUsed);
 
             String bal1 = jsonRpc.eth_getBalance(cowAcct);
             System.out.println("Balance: " + bal0);
@@ -145,6 +155,7 @@ public class JsonRpcTest {
             callArgs.gasPrice = "0x10000000000";
             callArgs.gasLimit = "0x1000000";
             String txHash2 = jsonRpc.eth_sendTransaction(callArgs);
+            sGas = TypeConverter.StringHexToBigInteger(jsonRpc.eth_estimateGas(callArgs)).longValue();
 
             String hash2 = mineBlock();
 
@@ -154,6 +165,7 @@ public class JsonRpcTest {
             TransactionReceiptDTO receipt2 = jsonRpc.eth_getTransactionReceipt(txHash2);
             assertTrue(receipt2.blockNumber > 1);
             assertTrue(receipt2.gasUsed > 0);
+            assertEquals(sGas, receipt2.gasUsed);
             assertTrue(TypeConverter.StringHexToByteArray(receipt2.contractAddress).length == 20);
 
             JsonRpc.FilterRequest filterReq = new JsonRpc.FilterRequest();

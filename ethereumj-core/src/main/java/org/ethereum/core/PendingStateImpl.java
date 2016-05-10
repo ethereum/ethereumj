@@ -372,13 +372,7 @@ public class PendingStateImpl implements PendingState {
         executor.go();
         executor.finalization();
 
-        TransactionReceipt receipt = new TransactionReceipt();
-        receipt.setTransaction(tx);
-        receipt.setLogInfoList(executor.getVMLogs());
-        receipt.setGasUsed(executor.getGasUsed());
-        receipt.setExecutionResult(executor.getResult().getHReturn());
-
-        return receipt;
+        return executor.getReceipt();
     }
 
     public void setBlockchain(Blockchain blockchain) {

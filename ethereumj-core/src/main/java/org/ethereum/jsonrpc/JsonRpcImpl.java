@@ -70,7 +70,9 @@ public class JsonRpcImpl implements JsonRpc {
             if (args.gasLimit != null && args.gasLimit.length()!=0)
                 gasLimit = JSonHexToLong(args.gasLimit);
 
-            toAddress = JSonHexToHex(args.to);
+            toAddress = null;
+            if (args.to != null && !args.to.isEmpty())
+                toAddress = JSonHexToHex(args.to);
 
             value=0;
             if (args.value != null && args.value.length()!=0)
@@ -563,7 +565,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public ProgramResult createCallTxAndExecute(CallArguments args, Block block) throws Exception {
+    public TransactionReceipt createCallTxAndExecute(CallArguments args, Block block) throws Exception {
         BinaryCallArguments bca = new BinaryCallArguments();
         bca.setArguments(args);
         Transaction tx = CallTransaction.createRawTransaction(0,
@@ -573,16 +575,15 @@ public class JsonRpcImpl implements JsonRpc {
                 bca.value,
                 bca.data);
 
-        ProgramResult res = eth.callConstant(tx, block);
-        return res;
+        return eth.callConstant(tx, block);
     }
 
     public String eth_call(CallArguments args, String bnOrId) throws Exception {
 
         String s = null;
         try {
-            ProgramResult res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
-            return s = TypeConverter.toJsonHex(res.getHReturn());
+            TransactionReceipt res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
+            return s = TypeConverter.toJsonHex(res.getExecutionResult());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_call(" + args + "): " + s);
         }
@@ -591,7 +592,7 @@ public class JsonRpcImpl implements JsonRpc {
     public String eth_estimateGas(CallArguments args) throws Exception {
         String s = null;
         try {
-            ProgramResult res = createCallTxAndExecute(args, blockchain.getBestBlock());
+            TransactionReceipt res = createCallTxAndExecute(args, blockchain.getBestBlock());
             return s = TypeConverter.toJsonHex(res.getGasUsed());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_estimateGas(" + args + "): " + s);
