@@ -248,6 +248,9 @@ public class Transaction {
         return null;
     }
 
+    /**
+     * @deprecated should prefer #sign(ECKey) over this method
+     */
     public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
         sign(ECKey.fromPrivate(privKeyBytes));
     }

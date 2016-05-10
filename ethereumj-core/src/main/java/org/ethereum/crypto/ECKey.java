@@ -882,6 +882,7 @@ public class ECKey implements Serializable {
      *
      * @param cipher -proper cipher
      * @return decrypted cipher, equal length to the cipher.
+     * @deprecated should not use EC private scalar value as an AES key
      */
     public byte[] decryptAES(byte[] cipher){
 
