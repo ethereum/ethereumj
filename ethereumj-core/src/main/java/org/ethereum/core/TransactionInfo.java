@@ -9,6 +9,8 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.LogInfo;
 
+import java.math.BigInteger;
+
 /**
  * Contains Transaction execution info:
  * its receipt and execution context
@@ -45,7 +47,7 @@ public class TransactionInfo {
         if (indexRLP.getRLPData() == null)
             index = 0;
         else
-            index = RLP.decodeInt(indexRLP.getRLPData(), 0);
+            index = new BigInteger(1, indexRLP.getRLPData()).intValue();
     }
 
     public void setTransaction(Transaction tx){
