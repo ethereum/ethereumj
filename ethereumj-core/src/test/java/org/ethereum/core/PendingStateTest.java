@@ -31,7 +31,7 @@ public class PendingStateTest {
 
     private PendingState pendingState;
 
-    private Blockchain blockchain;
+    private BlockchainImpl blockchain;
 
     private Repository repository;
 
@@ -42,8 +42,13 @@ public class PendingStateTest {
 
         repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
-        blockchain = new BlockchainImpl(blockStore, repository)
+        ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
+
+        blockchain = new BlockchainImpl( blockStore, repository)
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+        blockchain.setProgramInvokeFactory(programInvokeFactory);
+        programInvokeFactory.setBlockchain(blockchain);
+
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();

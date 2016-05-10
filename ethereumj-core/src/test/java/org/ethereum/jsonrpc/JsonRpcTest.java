@@ -100,8 +100,19 @@ public class JsonRpcTest {
             Object[] changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
             assertEquals(0, changes.length);
 
-            String txHash1 = jsonRpc.eth_sendTransaction(cowAcct, "0x0000000000000000000000000000000000001234", "0x300000",
-                    "0x10000000000", "0x7777", "0x", "0x00");
+            JsonRpc.CallArguments simpleTxArgs = new JsonRpc.CallArguments();
+            simpleTxArgs.from = cowAcct;
+            simpleTxArgs.to = "0x0000000000000000000000000000000000001234";
+            simpleTxArgs.gasLimit = "0x300000";
+            simpleTxArgs.gasPrice = "0x10000000000";
+            simpleTxArgs.value = "0x7777";
+            simpleTxArgs.data = "0x";
+            simpleTxArgs.nonce = "0x00";
+
+            String simpleGas = jsonRpc.eth_estimateGas(simpleTxArgs);
+            assertEquals(new BigInteger("21000"), TypeConverter.StringHexToBigInteger(simpleGas));
+
+            String txHash1 = jsonRpc.eth_sendTransaction(simpleTxArgs);
             System.out.println("Tx hash: " + txHash1);
             assertTrue(TypeConverter.StringHexToBigInteger(txHash1).compareTo(BigInteger.ZERO) > 0);
 
@@ -144,6 +155,10 @@ public class JsonRpcTest {
             callArgs.data = compRes.code;
             callArgs.gasPrice = "0x10000000000";
             callArgs.gasLimit = "0x1000000";
+
+            String gasEstimate = jsonRpc.eth_estimateGas(callArgs);
+            assertTrue(TypeConverter.StringHexToBigInteger(gasEstimate).longValue() > 0);
+
             String txHash2 = jsonRpc.eth_sendTransaction(callArgs);
 
             String hash2 = mineBlock();
