@@ -60,7 +60,9 @@ public class SystemProperties {
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
     private final static String DEFAULT_BLOCKS_LOADER = "";
 
-    public final static SystemProperties CONFIG = new SystemProperties();
+    public static SystemProperties getDefault() {
+        return new SystemProperties(ConfigFactory.empty());
+    }
 
     /**
      * Marks config accessor methods which need to be called (for value validation)
@@ -76,8 +78,26 @@ public class SystemProperties {
     // mutable options for tests
     private String databaseDir = null;
     private Boolean databaseReset = null;
-    private String projectVersion = null;
-    private String projectVersionModifier = null;
+    private static String projectVersion = null;
+    private static String projectVersionModifier = null;
+
+    static {
+        Properties props = new Properties();
+        InputStream is = SystemProperties.class.getResourceAsStream("/version.properties");
+        try {
+            props.load(is);
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading project version info.");
+        }
+        projectVersion = props.getProperty("versionNumber");
+        projectVersion = projectVersion.replaceAll("'", "");
+
+        if (projectVersion == null) projectVersion = "-.-.-";
+
+        projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
+    }
+
+
 
     private String genesisInfo = null;
 
@@ -90,9 +110,7 @@ public class SystemProperties {
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
-    public SystemProperties() {
-        this(ConfigFactory.empty());
-    }
+    private final ClassLoader classLoader;
 
     public SystemProperties(File configFile) {
         this(ConfigFactory.parseFile(configFile));
@@ -103,7 +121,13 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig) {
+        this(apiConfig, SystemProperties.class.getClassLoader());
+    }
+
+    public SystemProperties(Config apiConfig, ClassLoader classLoader) {
         try {
+            this.classLoader = classLoader;
+
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
@@ -137,16 +161,6 @@ public class SystemProperties {
 
             config = javaSystemProperties.withFallback(config);
             validateConfig();
-
-            Properties props = new Properties();
-            InputStream is = getClass().getResourceAsStream("/version.properties");
-            props.load(is);
-            this.projectVersion = props.getProperty("versionNumber");
-            this.projectVersion = this.projectVersion.replaceAll("'", "");
-
-            if (this.projectVersion == null) this.projectVersion = "-.-.-";
-
-            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
@@ -242,7 +256,7 @@ public class SystemProperties {
             } else {
                 String className = config.getString("blockchain.config.class");
                 try {
-                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) Class.forName(className);
+                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
                     blockchainConfig = aClass.newInstance();
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
@@ -479,12 +493,12 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public String projectVersion() {
+    public static String projectVersion() {
         return projectVersion;
     }
 
     @ValidateMe
-    public String projectVersionModifier() {
+    public static String projectVersionModifier() {
         return projectVersionModifier;
     }
 
@@ -747,7 +761,7 @@ public class SystemProperties {
 
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this);
+            genesis = GenesisLoader.loadGenesis(this, classLoader);
         }
         return genesis;
     }

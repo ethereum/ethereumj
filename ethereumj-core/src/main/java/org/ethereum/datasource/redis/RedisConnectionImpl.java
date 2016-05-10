@@ -6,6 +6,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
@@ -24,13 +25,23 @@ import static org.springframework.util.StringUtils.isEmpty;
 @Component
 public class RedisConnectionImpl implements RedisConnection {
 
+    SystemProperties config;
+
     private static final Logger logger = LoggerFactory.getLogger("db");
 
     private JedisPool jedisPool;
 
+    private Serializers serializers;
+
+    @Autowired
+    public RedisConnectionImpl(SystemProperties config) {
+        this.config = config;
+        this.serializers = new Serializers(config);
+    }
+
     @PostConstruct
     public void tryConnect() {
-        if (!SystemProperties.CONFIG.isRedisEnabled()) return;
+        if (!config.isRedisEnabled()) return;
 
         String redisCloudUrl = System.getenv(REDISCLOUD_URL);
         if (isEmpty(redisCloudUrl)) {
@@ -92,12 +103,12 @@ public class RedisConnectionImpl implements RedisConnection {
 
     @Override
     public <T> Set<T> createSetFor(Class<T> clazz, String name) {
-        return new RedisSet<T>(name, jedisPool, Serializers.forClass(clazz));
+        return new RedisSet<T>(name, jedisPool, serializers.forClass(clazz));
     }
     
     @Override
     public <K,V> Map<K, V> createMapFor(Class<K> keyClass, Class<V> valueClass, String name) {
-        return new RedisMap<K, V>(name, jedisPool, Serializers.forClass(keyClass), Serializers.forClass(valueClass));     
+        return new RedisMap<K, V>(name, jedisPool, serializers.forClass(keyClass), serializers.forClass(valueClass));
     }
 
     @Override

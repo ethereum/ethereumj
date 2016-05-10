@@ -9,9 +9,10 @@ import org.junit.Test;
 public class SystemPropertiesTest {
     @Test
     public void punchBindIpTest() {
-        SystemProperties.CONFIG.overrideParams("peer.bind.ip", "");
+        SystemProperties config = SystemProperties.getDefault();
+        config.overrideParams("peer.bind.ip", "");
         long st = System.currentTimeMillis();
-        String ip = SystemProperties.CONFIG.bindIp();
+        String ip = config.bindIp();
         long t = System.currentTimeMillis() - st;
         System.out.println(ip + " in " + t + " msec");
         Assert.assertTrue(t < 10 * 1000);
@@ -20,9 +21,10 @@ public class SystemPropertiesTest {
 
     @Test
     public void externalIpTest() {
-        SystemProperties.CONFIG.overrideParams("peer.discovery.external.ip", "");
+        SystemProperties config = SystemProperties.getDefault();
+        config.overrideParams("peer.discovery.external.ip", "");
         long st = System.currentTimeMillis();
-        String ip = SystemProperties.CONFIG.externalIp();
+        String ip = config.externalIp();
         long t = System.currentTimeMillis() - st;
         System.out.println(ip + " in " + t + " msec");
         Assert.assertTrue(t < 10 * 1000);
@@ -31,10 +33,10 @@ public class SystemPropertiesTest {
 
     @Test
     public void blockchainNetConfigTest() {
-        SystemProperties systemProperties1 = new SystemProperties();
+        SystemProperties systemProperties1 = SystemProperties.getDefault();
         systemProperties1.overrideParams("blockchain.config.name", "olympic");
         BlockchainNetConfig blockchainConfig1 = systemProperties1.getBlockchainConfig();
-        SystemProperties systemProperties2 = new SystemProperties();
+        SystemProperties systemProperties2 = SystemProperties.getDefault();
         systemProperties2.overrideParams("blockchain.config.name", "morden");
         BlockchainNetConfig blockchainConfig2= systemProperties2.getBlockchainConfig();
         Assert.assertNotEquals(blockchainConfig1.getClass(), blockchainConfig2.getClass());

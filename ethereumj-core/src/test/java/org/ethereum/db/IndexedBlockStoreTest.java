@@ -36,6 +36,8 @@ public class IndexedBlockStoreTest {
     private List<Block> blocks = new ArrayList<>();
     private BigInteger cumDifficulty = ZERO;
 
+    private Genesis genesis = SystemProperties.getDefault().getGenesis();
+    
     @Before
     public void setup() throws URISyntaxException, IOException {
 
@@ -44,8 +46,7 @@ public class IndexedBlockStoreTest {
 
         File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-
-        Block genesis = Genesis.getInstance();
+        
         blocks.add(genesis);
         cumDifficulty = cumDifficulty.add(genesis.getCumulativeDifficulty());
 
@@ -65,6 +66,12 @@ public class IndexedBlockStoreTest {
 
         logger.info("total difficulty: {}", cumDifficulty);
         logger.info("total blocks loaded: {}", blocks.size());
+    }
+    
+    SystemProperties config = SystemProperties.getDefault();
+    
+    private LevelDbDataSource levelDb(String name) {
+        return new LevelDbDataSource(config, name);
     }
 
 
@@ -397,18 +404,17 @@ public class IndexedBlockStoreTest {
     }
 
 
-
     @Test // cache + leveldb + mapdb, save some load, flush to disk, and check it exist
     public void test4() throws IOException {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        config.setDataBaseDir(testDir);
 
-        LevelDbDataSource indexDB = new LevelDbDataSource("index");
+        LevelDbDataSource indexDB = levelDb("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = levelDb("blocks");
         blocksDB.init();
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
@@ -519,10 +525,10 @@ public class IndexedBlockStoreTest {
 
         // testing after: REOPEN
 
-        indexDB = new LevelDbDataSource("index");
+        indexDB = levelDb("index");
         indexDB.init();
 
-        blocksDB = new LevelDbDataSource("blocks");
+        blocksDB = levelDb("blocks");
         blocksDB.init();
 
         indexedBlockStore = new IndexedBlockStore();
@@ -549,12 +555,12 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        config.setDataBaseDir(testDir);
 
-        LevelDbDataSource indexDB = new LevelDbDataSource("index");
+        LevelDbDataSource indexDB = levelDb("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = levelDb("blocks");
         blocksDB.init();
 
         try {
@@ -681,10 +687,10 @@ public class IndexedBlockStoreTest {
 
             // testing after: REOPEN
 
-            indexDB = new LevelDbDataSource("index");
+            indexDB = levelDb("index");
             indexDB.init();
 
-            blocksDB = new LevelDbDataSource("blocks");
+            blocksDB = levelDb("blocks");
             blocksDB.init();
 
             indexedBlockStore = new IndexedBlockStore();
@@ -713,12 +719,12 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        config.setDataBaseDir(testDir);
 
-        KeyValueDataSource indexDB = new LevelDbDataSource("index");
+        KeyValueDataSource indexDB = levelDb("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = levelDb("blocks");
         blocksDB.init();
 
         try {
@@ -726,9 +732,9 @@ public class IndexedBlockStoreTest {
             IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
             indexedBlockStore.init(indexDB, blocksDB);
 
-            List<Block> bestLine = getRandomChain(Genesis.getInstance().getHash(), 1, 100);
+            List<Block> bestLine = getRandomChain(genesis.getHash(), 1, 100);
 
-            indexedBlockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+            indexedBlockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
             for (int i = 0; i < bestLine.size(); ++i){
 
@@ -757,7 +763,7 @@ public class IndexedBlockStoreTest {
 
             // calc all TDs
             Map<ByteArrayWrapper, BigInteger> tDiffs = new HashMap<>();
-            BigInteger td = Genesis.getInstance().getCumulativeDifficulty();
+            BigInteger td = genesis.getCumulativeDifficulty();
             for (Block block : bestLine){
                 td = td.add(block.getCumulativeDifficulty());
                 tDiffs.put(wrap(block.getHash()), td);
@@ -822,12 +828,12 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        config.setDataBaseDir(testDir);
 
-        KeyValueDataSource indexDB = new LevelDbDataSource("index");
+        KeyValueDataSource indexDB = levelDb("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = levelDb("blocks");
         blocksDB.init();
 
         try {
@@ -835,9 +841,9 @@ public class IndexedBlockStoreTest {
             IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
             indexedBlockStore.init(indexDB, blocksDB);
 
-            List<Block> bestLine = getRandomChain(Genesis.getInstance().getHash(), 1, 100);
+            List<Block> bestLine = getRandomChain(genesis.getHash(), 1, 100);
 
-            indexedBlockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+            indexedBlockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
             for (int i = 0; i < bestLine.size(); ++i){
 
@@ -890,24 +896,24 @@ public class IndexedBlockStoreTest {
 
     @Test // cache + leveldb + mapdb, multi branch, total re-branch test
     public void test8() throws IOException {
-
+        SystemProperties config = SystemProperties.getDefault();
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        config.setDataBaseDir(testDir);
 
-        KeyValueDataSource indexDB = new LevelDbDataSource("index");
+        KeyValueDataSource indexDB = new LevelDbDataSource(config, "index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = new LevelDbDataSource(config, "blocks");
         blocksDB.init();
 
         try {
             IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
             indexedBlockStore.init(indexDB, blocksDB);
 
-            List<Block> bestLine = getRandomChain(Genesis.getInstance().getHash(), 1, 100);
+            List<Block> bestLine = getRandomChain(genesis.getHash(), 1, 100);
 
-            indexedBlockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+            indexedBlockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
             for (int i = 0; i < bestLine.size(); ++i){
 

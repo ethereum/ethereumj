@@ -8,6 +8,7 @@ package org.ethereum.net.swarm;
  *
  * Created by Anton Nashatyrev on 18.06.2015.
  */
+
 public class LocalStore implements ChunkStore {
 
     public ChunkStore dbStore;

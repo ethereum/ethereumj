@@ -3,6 +3,7 @@ package org.ethereum.core;
 
 import org.ethereum.TestContext;
 import org.ethereum.config.NoAutoscan;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
@@ -32,7 +33,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertEquals;
 public class ImportTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
+    private SystemProperties config = SystemProperties.getDefault();
 
     @Configuration
     @ComponentScan(basePackages = "org.ethereum")
@@ -71,7 +73,7 @@ public class ImportTest {
     public void testScenario1() throws URISyntaxException, IOException {
 
         BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
-        logger.info("Running as: {}", CONFIG.genesisInfo());
+        logger.info("Running as: {}", config.genesisInfo());
 
         URL scenario1 = ClassLoader
                 .getSystemResource("blockload/scenario1.dmp");
@@ -79,7 +81,7 @@ public class ImportTest {
         File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
-        byte[] root = Genesis.getInstance().getStateRoot();
+        byte[] root = config.getGenesis().getStateRoot();
         for (String blockRLP : strData) {
             Block block = new Block(
                     Hex.decode(blockRLP));

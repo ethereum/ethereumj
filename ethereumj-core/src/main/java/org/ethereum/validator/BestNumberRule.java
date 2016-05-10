@@ -13,8 +13,12 @@ import org.ethereum.core.BlockHeader;
  */
 public class BestNumberRule extends DependentBlockHeaderRule {
 
-    private static int BEST_NUMBER_DIFF_LIMIT = SystemProperties.CONFIG.getBlockchainConfig().
-            getCommonConstants().getBEST_NUMBER_DIFF_LIMIT();
+    private final int BEST_NUMBER_DIFF_LIMIT;
+
+    public BestNumberRule(SystemProperties config) {
+        this.BEST_NUMBER_DIFF_LIMIT = config.getBlockchainConfig().
+                getCommonConstants().getBEST_NUMBER_DIFF_LIMIT();
+    }
 
     @Override
     public boolean validate(BlockHeader header, BlockHeader bestHeader) {

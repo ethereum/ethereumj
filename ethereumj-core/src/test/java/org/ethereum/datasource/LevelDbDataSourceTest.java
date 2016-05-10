@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.ethereum.config.SystemProperties;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class LevelDbDataSourceTest {
 
     @Test
     public void testBatchUpdating() {
-        LevelDbDataSource dataSource = new LevelDbDataSource("test");
+        LevelDbDataSource dataSource = new LevelDbDataSource(SystemProperties.getDefault(), "test");
         dataSource.init();
 
         final int batchSize = 100;
@@ -30,7 +31,7 @@ public class LevelDbDataSourceTest {
 
     @Test
     public void testPutting() {
-        LevelDbDataSource dataSource = new LevelDbDataSource("test");
+        LevelDbDataSource dataSource = new LevelDbDataSource(SystemProperties.getDefault(), "test");
         dataSource.init();
 
         byte[] key = randomBytes(32);

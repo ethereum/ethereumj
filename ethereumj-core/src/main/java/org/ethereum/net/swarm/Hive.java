@@ -26,9 +26,16 @@ public class Hive {
     private PeerAddress thisAddress;
     protected NodeTable nodeTable;
 
+    private NetStore netStore;
+
+    public void setNetStore(NetStore netStore) {
+        this.netStore = netStore;
+    }
+
     private Map<Node, BzzProtocol> connectedPeers = new IdentityHashMap<>();
 
-    public Hive(PeerAddress thisAddress) {
+    public Hive(NetStore netStore, PeerAddress thisAddress) {
+        this.netStore = netStore;
         this.thisAddress = thisAddress;
         nodeTable = new NodeTable(thisAddress.toNode());
     }
@@ -82,7 +89,7 @@ public class Hive {
                 if (--maxCount == 0) break;
             } else {
                 LOG.info("Hive connects to node " + node);
-                NetStore.getInstance().worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
+                netStore.worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
             }
         }
         return ret;

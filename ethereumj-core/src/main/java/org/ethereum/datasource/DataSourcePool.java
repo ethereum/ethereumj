@@ -1,9 +1,8 @@
 package org.ethereum.datasource;
 
+import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 
-import javax.annotation.Nonnull;
-import javax.xml.crypto.dsig.keyinfo.KeyValue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -12,19 +11,33 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class DataSourcePool {
 
     private static final Logger logger = getLogger("db");
-    private static ConcurrentMap<String, DataSource> pool = new ConcurrentHashMap<>();
+    private static ConcurrentMap<String, KeyValueDataSource> pool = new ConcurrentHashMap<>();
 
-    public static KeyValueDataSource hashMapDBByName(String name){
-        return (KeyValueDataSource) getDataSourceFromPool(name, new HashMapDB());
+    public interface DataSourceMaker {
+        KeyValueDataSource makeDataSource();
     }
 
-    public static KeyValueDataSource levelDbByName(String name) {
-        return (KeyValueDataSource) getDataSourceFromPool(name, new LevelDbDataSource());
+    private static final DataSourceMaker defaultDataSourceMaker = new DataSourceMaker() {
+        @Override
+        public KeyValueDataSource makeDataSource() {
+            return new LevelDbDataSource(SystemProperties.getDefault());
+        }
+    };
+
+    // TODO: remove this global state
+    private static DataSourceMaker dataSourceMaker = defaultDataSourceMaker;
+
+    public static void setDataSourceMaker(DataSourceMaker dataSourceMaker) {
+        DataSourcePool.dataSourceMaker = dataSourceMaker;
+    }
+    public static void setDefaultDataSourceMaker() {
+        DataSourcePool.dataSourceMaker = defaultDataSourceMaker;
     }
 
-    private static DataSource getDataSourceFromPool(String name, @Nonnull DataSource dataSource) {
+    public static KeyValueDataSource getDataSourceFromPool(String name) {
+        KeyValueDataSource dataSource = dataSourceMaker.makeDataSource();
         dataSource.setName(name);
-        DataSource result = pool.putIfAbsent(name, dataSource);
+        KeyValueDataSource result = pool.putIfAbsent(name, dataSource);
         if (result == null) {
             result = dataSource;
             logger.debug("Data source '{}' created and added to pool.", name);
@@ -41,7 +54,7 @@ public class DataSourcePool {
 
     public static void closeDataSource(String name){
 
-        DataSource dataSource = pool.remove(name);
+        KeyValueDataSource dataSource = pool.remove(name);
         if (dataSource != null){
             synchronized (dataSource) {
 

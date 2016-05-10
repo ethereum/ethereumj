@@ -23,9 +23,12 @@ import java.math.BigInteger;
  */
 public class TransactionStoreTest {
 
+    private static SystemProperties config;
+
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        config = SystemProperties.getDefault();
+        config.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -35,7 +38,7 @@ public class TransactionStoreTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        config.setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Test
@@ -46,7 +49,7 @@ public class TransactionStoreTest {
                 "}";
         HashMapDB txDb = new HashMapDB();
 
-        StandaloneBlockchain bc = new StandaloneBlockchain();
+        StandaloneBlockchain bc = new StandaloneBlockchain(config);
         bc.getBlockchain().withTransactionStore(new TransactionStore(new CachingDataSource(txDb)));
         SolidityContract contract = bc.submitNewContract(contractSrc);
         bc.createBlock();

@@ -1,16 +1,21 @@
 package org.ethereum.datasource.redis;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.util.Map;
 import java.util.Set;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.ethereum.util.Functional.Consumer;
 
 public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValueDataSource {
+
+    @Autowired
+    SystemProperties config;
 
     RedisDataSource(String namespace, JedisPool pool) {
         super(namespace, pool, null, null);
@@ -38,7 +43,7 @@ public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValu
 
     @Override
     public void init() {
-        if (CONFIG.databaseReset()) {
+        if (config.databaseReset()) {
             pooled(new Consumer<Jedis>() {
                 @Override
                 public void accept(Jedis jedis) {

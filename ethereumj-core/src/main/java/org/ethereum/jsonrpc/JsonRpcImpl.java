@@ -237,8 +237,8 @@ public class JsonRpcImpl implements JsonRpc {
 
     public String web3_clientVersion() {
 
-        String s = "EthereumJ" + "/v" + SystemProperties.CONFIG.projectVersion() + "/" +
-                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.CONFIG.projectVersionModifier();
+        String s = "EthereumJ" + "/v" + SystemProperties.projectVersion() + "/" +
+                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.projectVersionModifier();
         if (logger.isDebugEnabled()) logger.debug("web3_clientVersion(): " + s);
         return s;
     };

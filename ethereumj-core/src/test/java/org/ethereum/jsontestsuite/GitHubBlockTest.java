@@ -12,7 +12,7 @@ import org.junit.runners.MethodSorters;
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
@@ -23,26 +23,24 @@ public class GitHubBlockTest {
     @Ignore // test for conveniently running a single test
     @Test
     public void runSingleTest() throws ParseException, IOException {
-        CONFIG.setGenesisInfo("frontier.json");
-        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
+        SystemProperties config = SystemProperties.getDefault();
+        config.setGenesisInfo("frontier.json");
+        config.setBlockchainConfig(new HomesteadConfig());
 
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
+        new GitHubJSONTestSuite(config).runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
     }
 
     private void runFrontier(String name) throws IOException, ParseException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/" + name + ".json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
+        new GitHubJSONTestSuite(SystemProperties.getDefault()).runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
     }
 
     private void runHomestead(String name) throws IOException, ParseException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/" + name + ".json", shacommit);
-        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
-        try {
-            GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
-        } finally {
-            SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-        }
+        SystemProperties config = SystemProperties.getDefault();
+        config.setBlockchainConfig(new HomesteadConfig());
+        new GitHubJSONTestSuite(config).runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
     }
 
     private void run(String name, boolean frontier, boolean homestead) throws IOException, ParseException {
@@ -79,7 +77,7 @@ public class GitHubBlockTest {
 
     @Test
     public void runBCValidBlockTest() throws ParseException, IOException {
-        CONFIG.setGenesisInfo("frontier.json");
+//        CONFIG.setGenesisInfo("frontier.json");
         run("bcValidBlockTest", true, true);
     }
 

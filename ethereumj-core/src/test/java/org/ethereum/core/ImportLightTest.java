@@ -32,9 +32,11 @@ import java.util.Collections;
  */
 public class ImportLightTest {
 
+    static SystemProperties config = SystemProperties.getDefault();
+
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        config.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -42,15 +44,10 @@ public class ImportLightTest {
         }));
     }
 
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-    }
-
     @Test
     public void createFork() throws Exception {
         // importing forked chain
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = createBlockchain(config, GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
@@ -96,7 +93,7 @@ public class ImportLightTest {
     public void invalidBlockTest() throws Exception {
         // testing that bad block import effort doesn't affect the repository state
 
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = createBlockchain(config, GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
@@ -130,7 +127,7 @@ public class ImportLightTest {
     public void doubleTransactionTest() throws Exception {
         // Testing that blocks containing tx with invalid nonce are rejected
 
-        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = createBlockchain(config, GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
@@ -243,7 +240,7 @@ public class ImportLightTest {
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain();
+        StandaloneBlockchain bc = new StandaloneBlockchain(config);
         SolidityContract parent = bc.submitNewContract(contractSrc, "Parent");
         Block b1 = bc.createBlock();
         Block b2 = bc.createBlock();
@@ -276,7 +273,7 @@ public class ImportLightTest {
                 "}";
 
         {
-            StandaloneBlockchain bc = new StandaloneBlockchain();
+            StandaloneBlockchain bc = new StandaloneBlockchain(config);
             Block b1 = bc.createBlock();
             Block b2 = bc.createBlock();
             SolidityContract a = bc.submitNewContract(contractSrc, "A");
@@ -309,7 +306,7 @@ public class ImportLightTest {
                 "        child = (new B).value(20)();" +
                 "    }" +
                 "}";
-        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
+        StandaloneBlockchain bc = new StandaloneBlockchain(config).withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
         a.callFunction(10, "create");
@@ -335,7 +332,7 @@ public class ImportLightTest {
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain();
+        StandaloneBlockchain bc = new StandaloneBlockchain(config);
         Block b1 = bc.createBlock();
         SolidityContract a = bc.submitNewContract(contractA);
         Block b2 = bc.createBlock();
@@ -364,7 +361,7 @@ public class ImportLightTest {
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        StandaloneBlockchain bc = new StandaloneBlockchain(config).withGasPrice(1);
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
@@ -376,24 +373,24 @@ public class ImportLightTest {
     }
 
 
-    public static BlockchainImpl createBlockchain(Genesis genesis) {
+    public static BlockchainImpl createBlockchain(SystemProperties config, Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        Repository repository = new RepositoryImpl(config, new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+        BlockchainImpl blockchain = new BlockchainImpl(config, blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig(config, null, null).parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, listener, blockchain);
 
         pendingState.init();
 

@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -45,11 +46,10 @@ public class AccountState {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    public static final AccountState EMPTY = new AccountState();
+    public static BigInteger EMPTY_BALANCE = BigInteger.ZERO;
 
-
-    public AccountState() {
-        this(SystemProperties.CONFIG.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
+    public AccountState(BlockchainNetConfig config) {
+        this(config.getCommonConstants().getInitialNonce(), EMPTY_BALANCE);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {
@@ -148,10 +148,8 @@ public class AccountState {
     }
 
     public AccountState clone() {
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(this.getNonce(), this.getBalance());
 
-        accountState.addToBalance(this.getBalance());
-        accountState.setNonce(this.getNonce());
         accountState.setCodeHash(this.getCodeHash());
         accountState.setStateRoot(this.getStateRoot());
         accountState.setDirty(false);

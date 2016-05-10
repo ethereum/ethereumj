@@ -25,9 +25,11 @@ import static org.junit.Assert.assertArrayEquals;
  * Created by Anton Nashatyrev on 02.12.2015.
  */
 public class EthashTest {
+
+    private static SystemProperties config = SystemProperties.getDefault();
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        config.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -35,10 +37,6 @@ public class EthashTest {
         }));
     }
 
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
-    }
 
 
     @Test // check exact values

@@ -41,11 +41,14 @@ public class BlockStressTest {
     private MapDBFactory mapDBFactory;
     private byte[] nodeId = new byte[64];
 
+    private SystemProperties config;
+
     @Before
     public void setup() {
-        SystemProperties.CONFIG.setDataBaseDir(TEST_DB_DIR);
+        config = SystemProperties.getDefault();
+        config.setDataBaseDir(TEST_DB_DIR);
 
-        mapDBFactory = new MapDBFactoryImpl();
+        mapDBFactory = new MapDBFactoryImpl(config);
         blockSourceDB = mapDBFactory.createDB(BLOCK_SOURCE);
         blockSource = blockSourceDB.hashMapCreate(BLOCK_SOURCE)
                 .keySerializer(Serializer.BYTE_ARRAY)
@@ -116,7 +119,7 @@ public class BlockStressTest {
     public void testBlockQueue() {
         long start, end;
 
-        BlockQueue blockQueue = new BlockQueueImpl();
+        BlockQueue blockQueue = new BlockQueueImpl(config);
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 
@@ -155,7 +158,7 @@ public class BlockStressTest {
         long start, end;
         int threadsCount = 5;
 
-        BlockQueue blockQueue = new BlockQueueImpl();
+        BlockQueue blockQueue = new BlockQueueImpl(config);
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 

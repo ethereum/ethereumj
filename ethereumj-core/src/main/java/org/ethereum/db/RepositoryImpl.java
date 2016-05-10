@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -53,7 +53,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
-    private DetailsDataStore dds = new DetailsDataStore();
+    private DetailsDataStore dds;
 
     private DatabaseImpl stateDB = null;
 
@@ -65,19 +65,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private boolean isSnapshot = false;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
     @Autowired
     ApplicationContext applicationContext;
 
-    public RepositoryImpl() {
-
+    public RepositoryImpl(SystemProperties config) {
+        this.config = config;
     }
 
-    public RepositoryImpl(boolean createDb) {
-    }
+    public RepositoryImpl(SystemProperties config, KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+        this.config = config;
 
-    public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+        this.dds = new DetailsDataStore(config);
 
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
@@ -147,6 +147,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
+
 
         logger.trace("updatingBatch: detailsCache.size: {}", detailsCache.size());
 
@@ -261,7 +262,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized Repository startTracking() {
-        return applicationContext == null ? new RepositoryTrack(this) :
+        return applicationContext == null ? new RepositoryTrack(this, config) :
                 applicationContext.getBean(RepositoryTrack.class, this);
     }
 
@@ -305,7 +306,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
             ObjectNode blockNode = jsonFactory.objectNode();
 
-            JSONHelper.dumpBlock(blockNode, block, gasUsed,
+            JSONHelper.dumpBlock(config.getBlockchainConfig(), blockNode, block, gasUsed,
                     this.getRoot(),
                     keys, this);
 
@@ -401,7 +402,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized BigInteger getBalance(byte[] addr) {
         if (!isExist(addr)) return BigInteger.ZERO;
         AccountState account = getAccountState(addr);
-        return (account == null) ? AccountState.EMPTY.getBalance() : account.getBalance();
+        return (account == null) ? AccountState.EMPTY_BALANCE : account.getBalance();
     }
 
     @Override
@@ -474,7 +475,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
+        return accountState == null ? config.getBlockchainConfig().getCommonConstants().getInitialNonce() : accountState.getNonce();
     }
 
     @Nonnull
@@ -614,10 +615,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         trie.setRoot(root);
         trie.setCache(((TrieImpl)(worldState)).getCache());
 
-        RepositoryImpl repo = new RepositoryImpl();
+        RepositoryImpl repo = new RepositoryImpl(config);
         repo.worldState = trie;
         repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;
+        repo.config = this.config;
 
         repo.detailsDB = this.detailsDB;
         repo.detailsDS = this.detailsDS;

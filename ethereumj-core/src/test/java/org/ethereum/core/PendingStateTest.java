@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
@@ -35,16 +36,18 @@ public class PendingStateTest {
 
     private Repository repository;
 
+    private SystemProperties config;
     @Before
     public void setUp() {
+        config = SystemProperties.getDefault();
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        repository = new RepositoryImpl(config, new HashMapDB(), new HashMapDB());
 
-        blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), (BlockchainImpl) blockchain);
+        blockchain = new BlockchainImpl(config, blockStore, repository)
+                .withParentBlockHeaderValidator(new CommonConfig(config, null, null).parentHeaderValidator());
+        PendingStateImpl pendingState = new PendingStateImpl(config, new EthereumListenerAdapter(), (BlockchainImpl) blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 
@@ -98,11 +101,11 @@ public class PendingStateTest {
         // testing that PendingState correctly handles situation when the best fork switches
         // and the new block contains another set of transactions
 
-        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(SystemProperties.getDefault(), GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, new EthereumListenerAdapter(), blockchain);
         pendingState.setBlockchain(blockchain);
         pendingState.init();
 

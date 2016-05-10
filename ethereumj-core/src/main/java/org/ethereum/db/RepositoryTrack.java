@@ -45,10 +45,16 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     ApplicationContext applicationContext;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config;
 
+    // used by Spring wiring
     public RepositoryTrack(Repository repository) {
         this.repository = repository;
+    }
+
+    public RepositoryTrack(Repository repository, SystemProperties config) {
+        this.repository = repository;
+        this.config = config;
     }
 
     @Override
@@ -199,14 +205,14 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
+        return accountState == null ? config.getBlockchainConfig().getCommonConstants().getInitialNonce() : accountState.getNonce();
     }
 
     @Override
     public BigInteger getBalance(byte[] addr) {
         if (!isExist(addr)) return BigInteger.ZERO;
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getBalance() : accountState.getBalance();
+        return accountState == null ? AccountState.EMPTY_BALANCE : accountState.getBalance();
     }
 
     @Override
@@ -314,7 +320,7 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     public Repository startTracking() {
         logger.trace("start tracking: {}", this);
 
-        Repository repository = applicationContext == null ? new RepositoryTrack(this) :
+        Repository repository = applicationContext == null ? new RepositoryTrack(this, config) :
                 applicationContext.getBean(RepositoryTrack.class, this);
 
         return repository;

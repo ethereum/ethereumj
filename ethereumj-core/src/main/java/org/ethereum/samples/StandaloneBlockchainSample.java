@@ -36,10 +36,12 @@ public class StandaloneBlockchainSample {
             "  }" +
             "}";
 
+    private static SystemProperties CONFIG = SystemProperties.getDefault();
+
     public static void main(String[] args) throws Exception {
         // need to modify the default Frontier settings to keep the blocks difficulty
         // low to not waste a lot of time for block mining
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -48,7 +50,7 @@ public class StandaloneBlockchainSample {
 
         // Creating a blockchain which generates a new block for each transaction
         // just not to call createBlock() after each call transaction
-        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
+        StandaloneBlockchain bc = new StandaloneBlockchain(CONFIG).withAutoblock(true);
         System.out.println("Creating first empty block (need some time to generate DAG)...");
         // warning up the block miner just to understand how long
         // the initial miner dataset is generated

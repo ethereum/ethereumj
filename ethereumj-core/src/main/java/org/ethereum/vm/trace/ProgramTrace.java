@@ -1,5 +1,6 @@
 package org.ethereum.vm.trace;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Repository;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryTrack;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.format;
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
@@ -31,13 +32,15 @@ public class ProgramTrace {
     private boolean fullStorage;
     private int storageSize;
     private String contractAddress;
+    private SystemProperties config;
 
-    public ProgramTrace() {
-        this(null);
+    public ProgramTrace(SystemProperties config) {
+        this(config, null);
     }
 
-    public ProgramTrace(ProgramInvoke programInvoke) {
-        if (CONFIG.vmTrace() && programInvoke != null) {
+    public ProgramTrace(SystemProperties config, ProgramInvoke programInvoke) {
+        this.config = config;
+        if (config.vmTrace() && programInvoke != null) {
             contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
 
             ContractDetails contractDetails = getContractDetails(programInvoke);
@@ -46,7 +49,7 @@ public class ProgramTrace {
                 fullStorage = true;
             } else {
                 storageSize = contractDetails.getStorageSize();
-                if (storageSize <= CONFIG.vmTraceInitStorageLimit()) {
+                if (storageSize <= config.vmTraceInitStorageLimit()) {
                     fullStorage = true;
 
                     String address = toHexString(programInvoke.getOwnerAddress().getLast20Bytes());

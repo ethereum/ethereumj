@@ -60,7 +60,7 @@ public class ConfigTest {
 
     @Test
     public void ethereumjConfTest() {
-        System.out.println("'" + SystemProperties.CONFIG.databaseDir() + "'");
-        System.out.println(SystemProperties.CONFIG.peerActive());
+        System.out.println("'" + SystemProperties.getDefault().databaseDir() + "'");
+        System.out.println(SystemProperties.getDefault().peerActive());
     }
 }

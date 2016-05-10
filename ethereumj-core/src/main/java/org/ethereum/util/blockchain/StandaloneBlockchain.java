@@ -2,6 +2,7 @@ package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -68,8 +69,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     List<PendingTx> submittedTxes = new ArrayList<>();
 
-    public StandaloneBlockchain() {
-        withGenesis(GenesisLoader.loadGenesis(
+    SystemProperties config;
+
+    public StandaloneBlockchain(SystemProperties config) {
+        this.config = config;
+        withGenesis(GenesisLoader.loadGenesis(config,
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
         withGasPrice(50_000_000_000L);
         withGasLimit(5_000_000L);
@@ -149,7 +153,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 txes.add(transaction);
             }
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
-            Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+            Ethash.getForBlock(b.getNumber(), config).mineLight(b).get();
             ImportResult importResult = getBlockchain().tryToConnect(b);
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);
@@ -253,19 +257,19 @@ public class StandaloneBlockchain implements LocalBlockchain {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        Repository repository = new RepositoryImpl(config, new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository);
+        BlockchainImpl blockchain = new BlockchainImpl(config, blockStore, repository);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(config, listener, blockchain);
 
         pendingState.init();
 
@@ -345,7 +349,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
             try {
                 org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                        (tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
+                        (config, tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
                                 getBlockchain().getProgramInvokeFactory(), callBlock)
                         .setLocalCall(true);
 

@@ -1,5 +1,6 @@
 package org.ethereum.tck;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.jsontestsuite.*;
 import org.ethereum.jsontestsuite.runners.StateTestRunner;
 import org.json.simple.JSONObject;
@@ -50,7 +51,7 @@ public class RunTck {
             logger.info(" Test case: {}", testName);
 
             StateTestCase stateTestCase = testCases.get(testName);
-            List<String> result = StateTestRunner.run(stateTestCase);
+            List<String> result = StateTestRunner.run(SystemProperties.getDefault(), stateTestCase);
 
             if (!result.isEmpty())
                 summary.put(testName, false);

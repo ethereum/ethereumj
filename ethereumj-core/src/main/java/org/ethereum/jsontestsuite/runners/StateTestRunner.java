@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite.runners;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.Env;
@@ -23,8 +24,8 @@ public class StateTestRunner {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
-    public static List<String> run(StateTestCase stateTestCase2) {
-        return new StateTestRunner(stateTestCase2).runImpl();
+    public static List<String> run(SystemProperties config, StateTestCase stateTestCase2) {
+        return new StateTestRunner(config, stateTestCase2).runImpl();
     }
 
     protected StateTestCase stateTestCase;
@@ -34,8 +35,10 @@ public class StateTestRunner {
     protected Env env;
     protected ProgramInvokeFactory invokeFactory;
     protected Block block;
+    SystemProperties config;
 
-    public StateTestRunner(StateTestCase stateTestCase) {
+    public StateTestRunner(SystemProperties config, StateTestCase stateTestCase) {
+        this.config = config;
         this.stateTestCase = stateTestCase;
     }
 
@@ -43,7 +46,7 @@ public class StateTestRunner {
         Repository track = repository.startTracking();
 
         TransactionExecutor executor =
-                new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
+                new TransactionExecutor(config, transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
                         invokeFactory, blockchain.getBestBlock());
 
         try{
@@ -63,7 +66,7 @@ public class StateTestRunner {
     public List<String> runImpl() {
 
         logger.info("");
-        repository = RepositoryBuilder.build(stateTestCase.getPre());
+        repository = RepositoryBuilder.build(config, stateTestCase.getPre());
         logger.info("loaded repository");
 
         transaction = TransactionBuilder.build(stateTestCase.getTransaction());
@@ -90,7 +93,7 @@ public class StateTestRunner {
 
         List<String> logsResult = LogsValidator.valid(origLogs, postLogs);
 
-        Repository postRepository = RepositoryBuilder.build(stateTestCase.getPost());
+        Repository postRepository = RepositoryBuilder.build(config, stateTestCase.getPost());
         List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
 
         logger.info("--------- POST Validation---------");
@@ -98,9 +101,17 @@ public class StateTestRunner {
                 OutputValidator.valid(Hex.toHexString(programResult.getHReturn()), stateTestCase.getOut());
 
         List<String> results = new ArrayList<>();
+
         results.addAll(repoResults);
         results.addAll(logsResult);
         results.addAll(outputResults);
+
+        if (results.size() > 0 && programResult.getException() != null) {
+            RuntimeException e = programResult.getException();
+            StackTraceElement at = e.getStackTrace()[0];
+            String error = String.format("Additionally, there was an error while executing the program: %s at %s", e, at);
+            results.add(error);
+        }
 
         for (String result : results) {
             logger.error(result);

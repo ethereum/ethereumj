@@ -35,13 +35,19 @@ public class Ethash {
 
     public static boolean fileCacheEnabled = true;
 
+    SystemProperties config;
+
+    public static Ethash getForBlock(long blockNumber) {
+        return getForBlock(blockNumber, SystemProperties.getDefault());
+    }
+
     /**
      * Returns instance for the specified block number either from cache or calculates a new one
      */
-    public static Ethash getForBlock(long blockNumber) {
+    public static Ethash getForBlock(long blockNumber, SystemProperties config) {
         long epoch = blockNumber / ethashParams.getEPOCH_LENGTH();
         if (cachedInstance == null || epoch != cachedBlockEpoch) {
-            cachedInstance = new Ethash(blockNumber);
+            cachedInstance = new Ethash(blockNumber, config);
             cachedBlockEpoch = epoch;
         }
         return cachedInstance;
@@ -53,13 +59,14 @@ public class Ethash {
     private int[] cacheLight = null;
     private int[] fullData = null;
 
-    public Ethash(long blockNumber) {
+    public Ethash(long blockNumber, SystemProperties config) {
         this.blockNumber = blockNumber;
+        this.config = config;
     }
 
     public synchronized int[] getCacheLight() {
         if (cacheLight == null) {
-            File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag-light.dat");
+            File file = new File(config.databaseDir(), "mine-dag-light.dat");
             if (fileCacheEnabled && file.canRead()) {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading light dataset from " + file.getAbsolutePath());
@@ -98,7 +105,7 @@ public class Ethash {
 
     public synchronized int[] getFullDataset() {
         if (fullData == null) {
-            File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag.dat");
+            File file = new File(config.databaseDir(), "mine-dag.dat");
             if (fileCacheEnabled && file.canRead()) {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading dataset from " + file.getAbsolutePath());

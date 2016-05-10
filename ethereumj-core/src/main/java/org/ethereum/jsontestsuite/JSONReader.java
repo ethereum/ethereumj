@@ -28,17 +28,19 @@ import org.slf4j.LoggerFactory;
 public class JSONReader {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
+    
+    private static SystemProperties CONFIG = SystemProperties.getDefault();
 
     public static String loadJSON(String filename) {
         String json = "";
-        if (!SystemProperties.CONFIG.vmTestLoadLocal())
+        if (!CONFIG.vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/" + filename);
         return json.isEmpty() ? getFromLocal(filename) : json;
     }
 
     public static String loadJSONFromCommit(String filename, String shacommit) {
         String json = "";
-        if (!SystemProperties.CONFIG.vmTestLoadLocal())
+        if (!CONFIG.vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
         if (!json.isEmpty()) json = json.replaceAll("//", "data");
         return json.isEmpty() ? getFromLocal(filename) : json;

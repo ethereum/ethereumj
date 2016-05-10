@@ -3,13 +3,20 @@ package org.ethereum.datasource.redis;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.datasource.Serializer;
 import org.ethereum.db.ContractDetailsImpl;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public final class Serializers {
+
+    SystemProperties config;
+    public Serializers(SystemProperties config) {
+        this.config = config;
+    }
 
     private static abstract class BaseRedisSerializer<T> implements RedisSerializer<T> {
 
@@ -149,7 +156,7 @@ public final class Serializers {
         }
     }
 
-    private static class ContractDetailsSerializer extends BaseRedisSerializer<ContractDetailsImpl> {
+    private class ContractDetailsSerializer extends BaseRedisSerializer<ContractDetailsImpl> {
 
         @Override
         public boolean supports(Class<?> aClass) {
@@ -163,13 +170,13 @@ public final class Serializers {
 
         @Override
         public ContractDetailsImpl deserialize(byte[] bytes) {
-            return isEmpty(bytes) ? null : new ContractDetailsImpl(bytes);
+            return isEmpty(bytes) ? null : new ContractDetailsImpl(config, bytes);
         }
     }
 
 
     private static final byte[] EMPTY_ARRAY = new byte[0];
-    private static final Set<? extends BaseRedisSerializer> SERIALIZERS = new HashSet<BaseRedisSerializer>() {{
+    private final Set<? extends BaseRedisSerializer> SERIALIZERS = new HashSet<BaseRedisSerializer>() {{
         add(new TransactionSerializer());
         add(new PendingTransactionSerializer());
         add(new TransactionReceiptSerializer());
@@ -178,7 +185,7 @@ public final class Serializers {
         add(new ContractDetailsSerializer());
     }};
 
-    public static <T> RedisSerializer<T> forClass(Class<T> clazz) {
+    public <T> RedisSerializer<T> forClass(Class<T> clazz) {
         for (BaseRedisSerializer serializer : SERIALIZERS) {
             if (serializer.supports(clazz)) {
                 return serializer;

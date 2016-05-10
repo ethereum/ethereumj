@@ -56,7 +56,7 @@ public class TwoPeerTest {
 //            return new Eth62();
         }
 
-        static SystemProperties props = new SystemProperties();;
+        static SystemProperties props = SystemProperties.getDefault();;
         @Bean
         public SystemProperties systemProperties() {
             return props;
@@ -65,7 +65,7 @@ public class TwoPeerTest {
     @Configuration
     @NoAutoscan
     public static class SysPropConfig2 {
-        static SystemProperties props= new SystemProperties();
+        static SystemProperties props= SystemProperties.getDefault();
         @Bean
         public SystemProperties systemProperties() {
             return props;

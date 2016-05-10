@@ -1,5 +1,6 @@
 package org.ethereum.trie;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
@@ -869,7 +870,7 @@ public class TrieTest {
         JSONParser parser = new JSONParser();
         JSONArray dbDumpJSONArray = (JSONArray) parser.parse(testSrc);
 
-        KeyValueDataSource keyValueDataSource = new LevelDbDataSource("testState");
+        KeyValueDataSource keyValueDataSource = new LevelDbDataSource(SystemProperties.getDefault(), "testState");
         keyValueDataSource.init();
 
         DatabaseImpl db = new DatabaseImpl(keyValueDataSource);

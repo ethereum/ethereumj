@@ -1,5 +1,6 @@
 package org.ethereum.net.swarm;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.bzz.BzzMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
@@ -25,6 +26,9 @@ import static org.ethereum.crypto.HashUtil.sha3;
 public class BzzProtocolTest {
 
     interface Predicate<T> { boolean test(T t);}
+
+    SystemProperties config = SystemProperties.getDefault();
+
 
     public static class FilterPrinter extends PrintWriter {
         String filter;
@@ -183,7 +187,7 @@ public class BzzProtocolTest {
 //        NodeTable nodeTable;
 
         public SimpleHive(PeerAddress thisAddress) {
-            super(thisAddress);
+            super(new NetStore(SystemProperties.getDefault()), thisAddress);
 //            this.thisAddress = thisAddress;
 //            nodeTable = new NodeTable(thisAddress.toNode());
         }
@@ -280,7 +284,7 @@ public class BzzProtocolTest {
             this.peerAddress = peerAddress;
             localStore = new LocalStore(new MemStore(), new MemStore());
             hive = new SimpleHive(peerAddress).setThisPeer(this);
-            netStore = new NetStore(localStore, hive);
+            netStore = new NetStore(SystemProperties.getDefault(), localStore, hive);
 
             netStore.start(peerAddress);
 
@@ -565,8 +569,8 @@ public class BzzProtocolTest {
         LocalStore localStore2 = new LocalStore(new MemStore(), new MemStore());
         Hive hive1 = new SimpleHive(peerAddress1);
         Hive hive2 = new SimpleHive(peerAddress2);
-        NetStore netStore1 = new NetStore(localStore1, hive1);
-        NetStore netStore2 = new NetStore(localStore2, hive2);
+        NetStore netStore1 = new NetStore(config, localStore1, hive1);
+        NetStore netStore2 = new NetStore(config, localStore2, hive2);
 
 
         netStore1.start(peerAddress1);

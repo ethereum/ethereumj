@@ -3,6 +3,7 @@ package org.ethereum.datasource;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.datasource.redis.RedisConnection;
+import org.ethereum.datasource.redis.RedisConnectionImpl;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.InMemoryBlockStore;
 import org.ethereum.manager.WorldManager;
@@ -34,11 +35,6 @@ public abstract class AbstractRedisTest {
     @ComponentScan(basePackages = "org.ethereum")
     @NoAutoscan
     static class ContextConfiguration extends TestContext {
-        static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/" + "RedisAll");
-            SystemProperties.CONFIG.setDatabaseReset(true);
-        }
-
         @Bean
         @Transactional(propagation = Propagation.SUPPORTS)
         public BlockStore blockStore(SessionFactory sessionFactory){
@@ -46,7 +42,6 @@ public abstract class AbstractRedisTest {
         }
     }
 
-    @Autowired
     private RedisConnection redisConnection;
 
     @Autowired
@@ -61,6 +56,14 @@ public abstract class AbstractRedisTest {
     private Boolean connected;
 
     protected RedisConnection getRedisConnection() {
+        if (redisConnection == null) {
+            SystemProperties config = SystemProperties.getDefault();
+            config.setDataBaseDir("test_db/" + "RedisAll");
+            config.setDatabaseReset(true);
+
+            redisConnection = new RedisConnectionImpl(config);
+        }
+
         return redisConnection;
     }
 
@@ -76,7 +79,7 @@ public abstract class AbstractRedisTest {
                 System.out.printf("Cannot connect to '%s' Redis cloud.\n", url);
             }
 
-            assertFalse(connected ^ redisConnection.isAvailable());
+            assertFalse(connected ^ getRedisConnection().isAvailable());
         }
 
         return connected;

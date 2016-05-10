@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -29,8 +30,8 @@ public class RepositoryDummy extends RepositoryImpl {
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
-    public RepositoryDummy() {
-        super(false);
+    public RepositoryDummy(SystemProperties config) {
+        super(config);
     }
 
     @Override
@@ -117,7 +118,7 @@ public class RepositoryDummy extends RepositoryImpl {
 
     @Override
     public Repository startTracking() {
-        return new RepositoryTrack(this);
+        return new RepositoryTrack(this, config);
     }
 
     @Override
@@ -262,7 +263,7 @@ public class RepositoryDummy extends RepositoryImpl {
 
     @Override
     public AccountState createAccount(byte[] addr) {
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(config.getBlockchainConfig());
         worldState.put(wrap(addr), accountState);
 
         ContractDetails contractDetails = new ContractDetailsImpl();
@@ -289,7 +290,7 @@ public class RepositoryDummy extends RepositoryImpl {
         ContractDetails details = getContractDetails(addr);
 
         if (account == null)
-            account = new AccountState();
+            account = new AccountState(config.getBlockchainConfig());
         else
             account = account.clone();
 

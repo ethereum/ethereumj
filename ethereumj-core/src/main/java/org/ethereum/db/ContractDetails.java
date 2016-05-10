@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.vm.DataWord;
 
 import javax.annotation.Nullable;
@@ -22,7 +23,7 @@ public interface ContractDetails {
 
     byte[] getStorageHash();
 
-    void decode(byte[] rlpCode);
+    void decode(SystemProperties config, byte[] rlpCode);
 
     void setDirty(boolean dirty);
 

@@ -1,5 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.net.p2p.Peer;
 
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+
 
 /**
  * @author Roman Mandeleil
@@ -47,6 +48,8 @@ public class PeerDiscovery {
     @Autowired
     private ApplicationContext ctx;
 
+    @Autowired
+    SystemProperties config;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
@@ -59,7 +62,7 @@ public class PeerDiscovery {
         threadFactory = Executors.defaultThreadFactory();
 
         // creating the ThreadPoolExecutor
-        executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(), CONFIG.peerDiscoveryWorkers(), 10,
+        executorPool = new ThreadPoolExecutor(config.peerDiscoveryWorkers(), config.peerDiscoveryWorkers(), 10,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000), threadFactory, rejectionHandler);
 
         // start the monitoring thread
@@ -68,7 +71,7 @@ public class PeerDiscovery {
         monitorThread.start();
 
         // Initialize PeerData
-        List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+        List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(config.peerDiscoveryIPList());
         addPeers(peerDataList);
 
         for (PeerInfo peerData : this.peers) {

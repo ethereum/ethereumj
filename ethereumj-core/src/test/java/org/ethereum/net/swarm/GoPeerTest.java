@@ -1,6 +1,7 @@
 package org.ethereum.net.swarm;
 
 import org.ethereum.Start;
+import org.ethereum.config.SystemProperties;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -25,6 +26,6 @@ public class GoPeerTest {
 //            stdout.setFilter(Hex.toHexString(key.getBytes()));
         Chunk chunk = new Chunk(key, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 77, 88});
 
-        NetStore.getInstance().put(chunk);
+        new NetStore(SystemProperties.getDefault()).put(chunk);
     }
 }
