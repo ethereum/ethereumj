@@ -39,10 +39,6 @@ package org.ethereum.crypto.cryptohash;
 
 abstract class KeccakCore extends DigestEngine {
 
-	KeccakCore()
-	{
-	}
-
 	private long[] A;
 	private byte[] tmpOut;
 
@@ -60,6 +56,10 @@ abstract class KeccakCore extends DigestEngine {
 		0x8000000080008081L, 0x8000000000008080L,
 		0x0000000080000001L, 0x8000000080008008L
 	};
+
+	KeccakCore()
+	{
+	}
 
 	/**
 	 * Encode the 64-bit word {@code val} into the array

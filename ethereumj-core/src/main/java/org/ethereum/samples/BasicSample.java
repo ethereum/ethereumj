@@ -51,6 +51,98 @@ public class BasicSample implements Runnable {
     @Autowired
     protected SystemProperties config;
 
+    protected List<Node> nodesDiscovered = new Vector<>();
+
+    protected Block bestBlock = null;
+
+    boolean synced = false;
+    boolean syncComplete = false;
+
+    /**
+     * The main EthereumJ callback.
+     */
+    EthereumListener listener = new EthereumListenerAdapter() {
+        @Override
+        public void onSyncDone() {
+            synced = true;
+        }
+
+        @Override
+        public void onNodeDiscovered(Node node) {
+            if (nodesDiscovered.size() < 1000) {
+                nodesDiscovered.add(node);
+            }
+        }
+
+        @Override
+        public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
+            ethNodes.put(channel.getNode(), statusMessage);
+        }
+
+        @Override
+        public void onPeerAddedToSyncPool(Channel peer) {
+            syncPeers.add(peer.getNode());
+        }
+
+        @Override
+        public void onBlock(Block block, List<TransactionReceipt> receipts) {
+            bestBlock = block;
+            if (syncComplete) {
+                logger.info("New block: " + block.getShortDescr());
+            }
+        }
+        @Override
+        public void onRecvMessage(Channel channel, Message message) {
+        }
+
+        @Override
+        public void onSendMessage(Channel channel, Message message) {
+        }
+
+        @Override
+        public void onPeerDisconnect(String host, long port) {
+        }
+
+        @Override
+        public void onPendingTransactionsReceived(List<Transaction> transactions) {
+        }
+
+        @Override
+        public void onPendingStateChanged(PendingState pendingState) {
+        }
+        @Override
+        public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
+        }
+
+        @Override
+        public void onNoConnections() {
+        }
+
+        @Override
+        public void onVMTraceCreated(String transactionHash, String trace) {
+        }
+
+        @Override
+        public void onTransactionExecuted(TransactionExecutionSummary summary) {
+        }
+    };
+
+    protected Map<Node, StatusMessage> ethNodes = new Hashtable<>();
+
+    protected List<Node> syncPeers = new Vector<>();
+
+    public BasicSample() {
+        this("sample");
+    }
+
+    /**
+     * logger name can be passed if more than one EthereumJ instance is created
+     * in a single JVM to distinguish logging output from different instances
+     */
+    public BasicSample(String loggerName) {
+        this.loggerName = loggerName;
+    }
+
     // Spring config class which add this sample class as a bean to the components collections
     // and make it possible for autowiring other components
     private static class Config {
@@ -66,18 +158,6 @@ public class BasicSample implements Runnable {
         // Based on Config class the BasicSample would be created by Spring
         // and its springInit() method would be called as an entry point
         EthereumFactory.createEthereum(Config.class);
-    }
-
-    public BasicSample() {
-        this("sample");
-    }
-
-    /**
-     * logger name can be passed if more than one EthereumJ instance is created
-     * in a single JVM to distinguish logging output from different instances
-     */
-    public BasicSample(String loggerName) {
-        this.loggerName = loggerName;
     }
 
     private void setupLogging() {
@@ -148,8 +228,6 @@ public class BasicSample implements Runnable {
         logger.info("Monitoring new blocks in real-time...");
     }
 
-    protected List<Node> nodesDiscovered = new Vector<>();
-
     /**
      * Waits until any new nodes are discovered by the UDP discovery protocol
      */
@@ -178,8 +256,6 @@ public class BasicSample implements Runnable {
         }
     }
 
-    protected Map<Node, StatusMessage> ethNodes = new Hashtable<>();
-
     /**
      * Discovering nodes is only the first step. No we need to find among discovered nodes
      * those ones which are live, accepting inbound connections, and has compatible subprotocol versions
@@ -204,8 +280,6 @@ public class BasicSample implements Runnable {
         }
     }
 
-    protected List<Node> syncPeers = new Vector<>();
-
     /**
      * When live nodes found SyncManager should select from them the most
      * suitable and add them as peers for syncing the blocks
@@ -229,8 +303,6 @@ public class BasicSample implements Runnable {
             cnt++;
         }
     }
-
-    protected Block bestBlock = null;
 
     /**
      * Waits until blocks import started
@@ -257,9 +329,6 @@ public class BasicSample implements Runnable {
         }
     }
 
-    boolean synced = false;
-    boolean syncComplete = false;
-
     /**
      * Waits until the whole blockchain sync is complete
      */
@@ -278,72 +347,4 @@ public class BasicSample implements Runnable {
         }
     }
 
-    /**
-     * The main EthereumJ callback.
-     */
-    EthereumListener listener = new EthereumListenerAdapter() {
-        @Override
-        public void onSyncDone() {
-            synced = true;
-        }
-
-        @Override
-        public void onNodeDiscovered(Node node) {
-            if (nodesDiscovered.size() < 1000) {
-                nodesDiscovered.add(node);
-            }
-        }
-
-        @Override
-        public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-            ethNodes.put(channel.getNode(), statusMessage);
-        }
-
-        @Override
-        public void onPeerAddedToSyncPool(Channel peer) {
-            syncPeers.add(peer.getNode());
-        }
-
-        @Override
-        public void onBlock(Block block, List<TransactionReceipt> receipts) {
-            bestBlock = block;
-            if (syncComplete) {
-                logger.info("New block: " + block.getShortDescr());
-            }
-        }
-        @Override
-        public void onRecvMessage(Channel channel, Message message) {
-        }
-
-        @Override
-        public void onSendMessage(Channel channel, Message message) {
-        }
-
-        @Override
-        public void onPeerDisconnect(String host, long port) {
-        }
-
-        @Override
-        public void onPendingTransactionsReceived(List<Transaction> transactions) {
-        }
-
-        @Override
-        public void onPendingStateChanged(PendingState pendingState) {
-        }
-        @Override
-        public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
-        }
-
-        @Override
-        public void onNoConnections() {
-        }
-
-        @Override
-        public void onVMTraceCreated(String transactionHash, String trace) {
-        }
-
-        @Override
-        public void onTransactionExecuted(TransactionExecutionSummary summary) {
-        }
-    };
 }

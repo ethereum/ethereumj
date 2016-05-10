@@ -24,6 +24,10 @@ public class Utils {
 
     private static SecureRandom random = new SecureRandom();
 
+    static BigInteger _1000_ = new BigInteger("1000");
+
+    public static double JAVA_VERSION = getJavaVersion();
+
     /**
      * @param number should be in form '0x34fabd34....'
      * @return String
@@ -59,8 +63,6 @@ public class Utils {
         ImageIcon image = new ImageIcon(imageURL);
         return image;
     }
-
-    static BigInteger _1000_ = new BigInteger("1000");
 
     public static String getValueShortString(BigInteger number) {
         BigInteger result = number;
@@ -115,8 +117,6 @@ public class Utils {
     public static SecureRandom getRandom() {
         return random;
     }
-
-    public static double JAVA_VERSION = getJavaVersion();
 
     static double getJavaVersion() {
         String version = System.getProperty("java.version");

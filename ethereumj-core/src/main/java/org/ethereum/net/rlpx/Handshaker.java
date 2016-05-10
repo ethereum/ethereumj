@@ -27,18 +27,18 @@ public class Handshaker {
     private final byte[] nodeId;
     private Secrets secrets;
 
+    public Handshaker() {
+        myKey = new ECKey().decompress();
+        nodeId = myKey.getNodeId();
+        System.out.println("Node ID " + Hex.toHexString(nodeId));
+    }
+
     public static void main(String[] args) throws IOException, URISyntaxException {
         URI uri = new URI(args[0]);
         if (!uri.getScheme().equals("enode"))
             throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
 
         new Handshaker().doHandshake(uri.getHost(), uri.getPort(), uri.getUserInfo());
-    }
-
-    public Handshaker() {
-        myKey = new ECKey().decompress();
-        nodeId = myKey.getNodeId();
-        System.out.println("Node ID " + Hex.toHexString(nodeId));
     }
 
     /**

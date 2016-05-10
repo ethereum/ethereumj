@@ -23,6 +23,8 @@ import static org.spongycastle.util.Arrays.reverse;
 public class EthashAlgo {
     EthashParams params;
 
+    private static final int FNV_PRIME = 0x01000193;
+
     public EthashAlgo() {
         this(new EthashParams());
     }
@@ -92,7 +94,6 @@ public class EthashAlgo {
         return ret;
     }
 
-    private static final int FNV_PRIME = 0x01000193;
     private static int fnv(int v1, int v2) {
         return (v1 * FNV_PRIME) ^ v2;
     }

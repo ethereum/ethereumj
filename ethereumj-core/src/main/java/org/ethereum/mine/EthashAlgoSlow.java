@@ -25,6 +25,8 @@ import static org.spongycastle.util.Arrays.reverse;
  */
 public class EthashAlgoSlow {
     EthashParams params;
+    
+    private static final long FNV_PRIME = 0x01000193;
 
     public EthashAlgoSlow() {
         this(new EthashParams());
@@ -65,7 +67,6 @@ public class EthashAlgoSlow {
         return o;
     }
 
-    private static final long FNV_PRIME = 0x01000193;
     long fnv(long v1, long v2) {
         return ((v1 * FNV_PRIME) ^ v2) % (1L << 32);
     }

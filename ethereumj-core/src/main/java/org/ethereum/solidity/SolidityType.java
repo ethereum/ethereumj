@@ -80,15 +80,6 @@ public abstract class SolidityType {
 
 
     public static abstract class ArrayType extends SolidityType {
-        public static ArrayType getType(String typeName) {
-            int idx1 = typeName.indexOf("[");
-            int idx2 = typeName.indexOf("]", idx1);
-            if (idx1 + 1 == idx2) {
-                return new DynamicArrayType(typeName);
-            } else {
-                return new StaticArrayType(typeName);
-            }
-        }
 
         SolidityType elementType;
 
@@ -113,6 +104,16 @@ public abstract class SolidityType {
                 return encodeList((List) value);
             } else {
                 throw new RuntimeException("List value expected for type " + getName());
+            }
+        }
+
+        public static ArrayType getType(String typeName) {
+            int idx1 = typeName.indexOf("[");
+            int idx2 = typeName.indexOf("]", idx1);
+            if (idx1 + 1 == idx2) {
+                return new DynamicArrayType(typeName);
+            } else {
+                return new StaticArrayType(typeName);
             }
         }
 

@@ -49,6 +49,24 @@ package org.ethereum.crypto.cryptohash;
 
 public abstract class DigestEngine implements Digest {
 
+	private int digestLen, blockLen, inputLen;
+	private byte[] inputBuf, outputBuf;
+	private long blockCount;
+
+	/**
+	 * Instantiate the engine.
+	 */
+	public DigestEngine()
+	{
+		doInit();
+		digestLen = getDigestLength();
+		blockLen = getInternalBlockLength();
+		inputBuf = new byte[blockLen];
+		outputBuf = new byte[digestLen];
+		inputLen = 0;
+		blockCount = 0;
+	}
+
 	/**
 	 * Reset the hash algorithm state.
 	 */
@@ -80,24 +98,6 @@ public abstract class DigestEngine implements Digest {
 	 * {@link #getDigestLength}
 	 */
 	protected abstract void doInit();
-
-	private int digestLen, blockLen, inputLen;
-	private byte[] inputBuf, outputBuf;
-	private long blockCount;
-
-	/**
-	 * Instantiate the engine.
-	 */
-	public DigestEngine()
-	{
-		doInit();
-		digestLen = getDigestLength();
-		blockLen = getInternalBlockLength();
-		inputBuf = new byte[blockLen];
-		outputBuf = new byte[digestLen];
-		inputLen = 0;
-		blockCount = 0;
-	}
 
 	private void adjustDigestLen()
 	{

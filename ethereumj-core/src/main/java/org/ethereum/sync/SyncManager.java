@@ -57,61 +57,6 @@ public class SyncManager {
     @Autowired
     CompositeSyncListener compositeSyncListener;
 
-    @PostConstruct
-    public void init() {
-
-        // make it asynchronously
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                if (!config.isSyncEnabled()) {
-                    logger.info("Sync Manager: OFF");
-                    return;
-                }
-
-                logger.info("Sync Manager: ON");
-
-                // sync queue
-                queue.init();
-
-                // switch between Long and Short
-                compositeSyncListener.add(onNewBlock);
-
-                // recover a gap
-                compositeSyncListener.add(onNoParent);
-
-                // starting from long sync
-                logger.info("Start Long sync");
-                longSync.start();
-
-                ethereumListener.onLongSyncStarted();
-
-                if (logger.isInfoEnabled()) {
-                    startLogWorker();
-                }
-
-            }
-        }).start();
-    }
-
-    public boolean isSyncDone() {
-        return !longSync.inProgress();
-    }
-
-    private void onSyncDone(boolean done) {
-
-        channelManager.onSyncDone(done);
-
-        if (done) {
-            ethereumListener.onSyncDone();
-            ethereumListener.onLongSyncDone();
-            logger.info("Long sync is finished");
-        } else {
-            ethereumListener.onLongSyncStarted();
-        }
-    }
-
     // LISTENERS
 
     private final SyncListener onNewBlock = new SyncListenerAdapter() {
@@ -181,6 +126,61 @@ public class SyncManager {
             master.recoverGap(gapBlock);
         }
     };
+
+    @PostConstruct
+    public void init() {
+
+        // make it asynchronously
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                if (!config.isSyncEnabled()) {
+                    logger.info("Sync Manager: OFF");
+                    return;
+                }
+
+                logger.info("Sync Manager: ON");
+
+                // sync queue
+                queue.init();
+
+                // switch between Long and Short
+                compositeSyncListener.add(onNewBlock);
+
+                // recover a gap
+                compositeSyncListener.add(onNoParent);
+
+                // starting from long sync
+                logger.info("Start Long sync");
+                longSync.start();
+
+                ethereumListener.onLongSyncStarted();
+
+                if (logger.isInfoEnabled()) {
+                    startLogWorker();
+                }
+
+            }
+        }).start();
+    }
+
+    public boolean isSyncDone() {
+        return !longSync.inProgress();
+    }
+
+    private void onSyncDone(boolean done) {
+
+        channelManager.onSyncDone(done);
+
+        if (done) {
+            ethereumListener.onSyncDone();
+            ethereumListener.onLongSyncDone();
+            logger.info("Long sync is finished");
+        } else {
+            ethereumListener.onLongSyncStarted();
+        }
+    }
 
     // LOGS
 

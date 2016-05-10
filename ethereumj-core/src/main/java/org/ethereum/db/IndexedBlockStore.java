@@ -27,6 +27,34 @@ public class IndexedBlockStore extends AbstractBlockstore{
     KeyValueDataSource blocksDS;
     ObjectDataSource<Block> blocks;
 
+    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<List<BlockInfo>, byte[]>(){
+
+        @Override
+        public byte[] serialize(List<BlockInfo> value) {
+            try {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(value);
+
+                byte[] data = bos.toByteArray();
+                return data;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public List<BlockInfo> deserialize(byte[] bytes) {
+            try {
+                ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
+                ObjectInputStream ois = new ObjectInputStream(bis);
+                return (List<BlockInfo>)ois.readObject();
+            } catch (IOException|ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+
     public IndexedBlockStore(){
     }
 
@@ -369,36 +397,6 @@ public class IndexedBlockStore extends AbstractBlockstore{
             this.mainChain = mainChain;
         }
     }
-
-
-    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<List<BlockInfo>, byte[]>(){
-
-        @Override
-        public byte[] serialize(List<BlockInfo> value) {
-            try {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.writeObject(value);
-
-                byte[] data = bos.toByteArray();
-                return data;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public List<BlockInfo> deserialize(byte[] bytes) {
-            try {
-                ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
-                ObjectInputStream ois = new ObjectInputStream(bis);
-                return (List<BlockInfo>)ois.readObject();
-            } catch (IOException|ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    };
-
 
     public void printChain(){
 
