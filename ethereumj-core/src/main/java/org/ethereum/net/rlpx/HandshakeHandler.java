@@ -98,7 +98,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
         nodeId = myKey.getNodeId();
 
-        handshake = new EncryptionHandshake(ECKey.fromNodeId(nodeId).getPubKeyPoint());
+        handshake = new EncryptionHandshake(ECKey.fromNodeId(this.remoteId).getPubKeyPoint());
 
         Object msg;
         if (config.eip8()) {
