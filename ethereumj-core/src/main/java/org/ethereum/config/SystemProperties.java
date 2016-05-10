@@ -592,7 +592,7 @@ public class SystemProperties {
 
     @ValidateMe
     public int maxActivePeers() {
-        return config.getInt("peer.maxAcivePeers");
+        return config.getInt("peer.maxActivePeers");
     }
 
     @ValidateMe
