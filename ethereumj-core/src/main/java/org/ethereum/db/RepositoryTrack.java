@@ -15,12 +15,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -34,7 +32,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  */
 @Component
 @Scope("prototype")
-public class RepositoryTrack implements Repository {
+public class RepositoryTrack implements Repository, org.ethereum.facade.Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
 
@@ -272,6 +270,29 @@ public class RepositoryTrack implements Repository {
         }
     }
 
+    @Override
+    public int getStorageSize(byte[] addr) {
+        synchronized (repository) {
+            ContractDetails details = getContractDetails(addr);
+            return (details == null) ? 0 : details.getStorageSize();
+        }
+    }
+
+    @Override
+    public Set<DataWord> getStorageKeys(byte[] addr) {
+        synchronized (repository) {
+            ContractDetails details = getContractDetails(addr);
+            return (details == null) ? Collections.<DataWord>emptySet() : details.getStorageKeys();
+        }
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
+        synchronized (repository) {
+            ContractDetails details = getContractDetails(addr);
+            return (details == null) ? Collections.<DataWord, DataWord>emptyMap() : details.getStorage(keys);
+        }
+    }
 
     @Override
     public Set<byte[]> getAccountsKeys() {
