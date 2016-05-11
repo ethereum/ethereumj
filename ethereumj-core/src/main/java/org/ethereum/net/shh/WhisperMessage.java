@@ -121,7 +121,7 @@ public class WhisperMessage extends ShhMessage {
             byte[] msg = new byte[payload.length - WhisperMessage.SIGNATURE_LENGTH - 1];
             System.arraycopy(payload, 1, msg, 0, msg.length);
             payload = msg;
-            from = recover().decompress();
+            from = recover();
             return true;
         } else {
             byte[] msg = new byte[payload.length - 1];
@@ -156,7 +156,7 @@ public class WhisperMessage extends ShhMessage {
     private boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decryptSimple(privateKey.getPrivKey(), payload);
-            to = WhisperImpl.toIdentity(privateKey.decompress());
+            to = WhisperImpl.toIdentity(privateKey);
             encrypted = false;
             return true;
         } catch (Exception e) {
@@ -218,7 +218,7 @@ public class WhisperMessage extends ShhMessage {
 
         ECKey outKey = null;
         try {
-            outKey = ECKey.signatureToKey(msgHash, signature.toBase64());
+            outKey = ECKey.signatureToKey(msgHash, signature);
         } catch (SignatureException e) {
             logger.warn("Exception recovering signature: ", e);
             throw new RuntimeException(e);
