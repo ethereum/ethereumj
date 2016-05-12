@@ -152,7 +152,7 @@ public class TransactionExecutor {
             return;
         }
 
-        if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 acceptTransactionSignature(tx)) {
             logger.warn("Transaction signature not accepted: " + tx.getSignature());
             return;
