@@ -1,7 +1,6 @@
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.DataSourcePool;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
@@ -9,18 +8,27 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
  * @author Roman Mandeleil
  * @since 24.06.2014
  */
+@Component @Scope("prototype")
 public class ContractDetailsImpl extends AbstractContractDetails {
+    private static final Logger logger = LoggerFactory.getLogger("general");
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
 
     private byte[] rlpEncoded;
 
@@ -116,7 +124,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > SystemProperties.getDefault().detailsInMemoryStorageLimit())
+        externalStorage = (storage.getRLPData().length > commonConfig.config().detailsInMemoryStorageLimit())
                 || externalStorage;
 
         this.rlpEncoded = rlpCode;
@@ -220,14 +228,15 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         if (externalStorage) {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
-
-            DataSourcePool.closeDataSource("details-storage/" + toHexString(address));
+            externalStorageDataSource.close();
         }
     }
 
     private KeyValueDataSource getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = levelDbByName("details-storage/" + toHexString(address));
+            externalStorageDataSource = commonConfig.keyValueDataSource();
+            externalStorageDataSource.setName("details-storage/" + toHexString(address));
+            externalStorageDataSource.init();
         }
         return externalStorageDataSource;
     }
@@ -261,7 +270,9 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
         ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, getCodes());
         details.externalStorage = this.externalStorage;
+        details.externalStorageDataSource = this.externalStorageDataSource;
         details.keys = this.keys;
+        details.commonConfig = commonConfig;
 
         return details;
     }

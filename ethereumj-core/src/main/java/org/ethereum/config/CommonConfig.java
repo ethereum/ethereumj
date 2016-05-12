@@ -4,7 +4,9 @@ import org.ethereum.core.*;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.datasource.redis.RedisConnection;
+import org.ethereum.datasource.redis.RedisConnectionImpl;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
@@ -16,6 +18,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
@@ -36,12 +39,16 @@ public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
-    private RedisConnection redisConnection;
-    @Autowired
-    private MapDBFactory mapDBFactory;
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
+    ApplicationContext applicationContext;
 
+    @Bean
+    public SystemProperties config() {
+        return new SystemProperties();
+    }
+
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
 
     @Bean
     Repository repository() {
@@ -51,13 +58,13 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public KeyValueDataSource keyValueDataSource() {
-        String dataSource = config.getKeyValueDataSource();
+        String dataSource = config().getKeyValueDataSource();
         try {
-            if ("redis".equals(dataSource) && redisConnection.isAvailable()) {
+            if ("redis".equals(dataSource) && redisConnection().isAvailable()) {
                 // Name will be defined before initialization
-                return redisConnection.createDataSource("");
+                return redisConnection().createDataSource("");
             } else if ("mapdb".equals(dataSource)) {
-                return mapDBFactory.createDataSource();
+                return mapDBFactory().createDataSource();
             }
 
             dataSource = "leveldb";
@@ -68,11 +75,12 @@ public class CommonConfig {
     }
 
     @Bean
+    @Lazy
     public Set<PendingTransaction> wireTransactions() {
         String storage = "Redis";
         try {
-            if (redisConnection.isAvailable()) {
-                return redisConnection.createPendingTransactionSet("wireTransactions");
+            if (redisConnection().isAvailable()) {
+                return redisConnection().createPendingTransactionSet("wireTransactions");
             }
 
             storage = "In memory";
@@ -83,6 +91,7 @@ public class CommonConfig {
     }
 
     @Bean
+    @Lazy
     public List<Transaction> pendingStateTransactions() {
         return Collections.synchronizedList(new ArrayList<Transaction>());
     }
@@ -102,7 +111,7 @@ public class CommonConfig {
 
         Properties prop = new Properties();
 
-        if (config.databaseReset())
+        if (config().databaseReset())
             prop.put("hibernate.hbm2ddl.auto", "create-drop");
         else
             prop.put("hibernate.hbm2ddl.auto", "update");
@@ -137,7 +146,7 @@ public class CommonConfig {
 
         String url =
                 String.format("jdbc:h2:./%s/blockchain/blockchain.db;CACHE_SIZE=200000",
-                        config.databaseDir());
+                        config().databaseDir());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.h2.Driver");
@@ -160,7 +169,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public VM vm() {
-        return new VM();
+        return new VM(config());
     }
 
     @Bean
@@ -171,14 +180,28 @@ public class CommonConfig {
 
     @Bean
     @Primary
+    @Lazy
     public BlockQueue blockQueue() {
         return new BlockQueueMem();
     }
 
     @Bean
     @Primary
+    @Lazy
     public HeaderStore headerStore() {
         return new HeaderStoreMem();
+    }
+
+    @Bean
+    @Scope("prototype")
+    public ContractDetailsImpl contractDetailsImpl() {
+        return new ContractDetailsImpl();
+    }
+
+    @Bean
+    @Scope("prototype")
+    public RepositoryTrack repositoryTrack(Repository parent) {
+        return new RepositoryTrack(parent);
     }
 
     @Bean
@@ -186,9 +209,9 @@ public class CommonConfig {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
-                new ExtraDataRule(systemProperties()),
+                new ExtraDataRule(config()),
                 new ProofOfWorkRule(),
-                new GasLimitRule(systemProperties())
+                new GasLimitRule(config())
         ));
 
         return new BlockHeaderValidator(rules);
@@ -199,15 +222,22 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule(systemProperties()),
-                new ParentGasLimitRule(systemProperties())
+                new DifficultyRule(config()),
+                new ParentGasLimitRule(config())
         ));
 
         return new ParentBlockHeaderValidator(rules);
     }
 
     @Bean
-    public SystemProperties systemProperties() {
-        return SystemProperties.getDefault();
+    @Lazy
+    public RedisConnection redisConnection() {
+        return new RedisConnectionImpl();
+    }
+
+    @Bean
+    @Lazy
+    public MapDBFactory mapDBFactory() {
+        return new MapDBFactoryImpl();
     }
 }

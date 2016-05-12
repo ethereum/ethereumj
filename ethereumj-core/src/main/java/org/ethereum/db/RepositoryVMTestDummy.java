@@ -263,7 +263,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
 
     @Override
     public AccountState createAccount(byte[] addr) {
-        AccountState accountState = new AccountState(config);
+        AccountState accountState = new AccountState(config());
         worldState.put(wrap(addr), accountState);
 
         ContractDetails contractDetails = new ContractDetailsImpl();
@@ -290,7 +290,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
         ContractDetails details = getContractDetails(addr);
 
         if (account == null)
-            account = new AccountState(config);
+            account = new AccountState(config());
         else
             account = account.clone();
 

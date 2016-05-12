@@ -1,8 +1,12 @@
 package org.ethereum.db;
 
+import org.ethereum.config.CommonConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,13 +19,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.wrap;
 
+@Component
 public class DetailsDataStore {
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
 
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     private DatabaseImpl db = null;
     private Map<ByteArrayWrapper, ContractDetails> cache = new ConcurrentHashMap<>();
     private Set<ByteArrayWrapper> removes = new HashSet<>();
+
+    public DetailsDataStore() {
+    }
 
     public void setDB(DatabaseImpl db) {
         this.db = db;
@@ -38,7 +49,9 @@ public class DetailsDataStore {
             byte[] data = db.get(key);
             if (data == null) return null;
 
-            details = new ContractDetailsImpl(data);
+            details = commonConfig.contractDetailsImpl();
+            details.decode(data);
+
             cache.put(wrappedKey, details);
 
             float out = ((float) data.length) / 1048576;

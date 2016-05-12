@@ -262,10 +262,10 @@ public class RepositoryDummy extends RepositoryImpl {
 
     @Override
     public AccountState createAccount(byte[] addr) {
-        AccountState accountState = new AccountState(config);
+        AccountState accountState = new AccountState(config());
         worldState.put(wrap(addr), accountState);
 
-        ContractDetails contractDetails = new ContractDetailsImpl();
+        ContractDetails contractDetails = commonConfig.contractDetailsImpl();
         detailsDB.put(wrap(addr), contractDetails);
 
         return accountState;
@@ -289,12 +289,12 @@ public class RepositoryDummy extends RepositoryImpl {
         ContractDetails details = getContractDetails(addr);
 
         if (account == null)
-            account = new AccountState(config);
+            account = new AccountState(config());
         else
             account = account.clone();
 
         if (details == null)
-            details = new ContractDetailsImpl();
+            details = commonConfig.contractDetailsImpl();
         else
             details = details.clone();
 
