@@ -1,7 +1,6 @@
 package org.ethereum.facade;
 
 import org.ethereum.config.DefaultConfig;
-import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.shh.ShhHandler;
@@ -14,12 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -37,7 +31,7 @@ public class EthereumFactory {
     }
 
     public static Ethereum createEthereum(Class userSpringConfig) {
-        return createEthereum(SystemProperties.CONFIG, userSpringConfig);
+        return createEthereum(SystemProperties.getDefault(), userSpringConfig);
     }
 
     public static Ethereum createEthereum(SystemProperties config, Class userSpringConfig) {

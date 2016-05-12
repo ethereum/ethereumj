@@ -37,7 +37,7 @@ public class CommonConfig {
     @Autowired
     private MapDBFactory mapDBFactory;
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
 
     @Bean
@@ -172,6 +172,6 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.CONFIG;
+        return SystemProperties.getDefault();
     }
 }

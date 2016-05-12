@@ -60,7 +60,11 @@ public class SystemProperties {
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
     private final static String DEFAULT_BLOCKS_LOADER = "";
 
-    public final static SystemProperties CONFIG = new SystemProperties();
+    private final static SystemProperties CONFIG = new SystemProperties();
+
+    public static SystemProperties getDefault() {
+        return CONFIG;
+    }
 
     /**
      * Marks config accessor methods which need to be called (for value validation)

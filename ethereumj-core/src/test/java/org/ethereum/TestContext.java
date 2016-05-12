@@ -39,7 +39,7 @@ public class TestContext {
 
         Properties prop = new Properties();
 
-        if (SystemProperties.CONFIG.databaseReset())
+        if (SystemProperties.getDefault().databaseReset())
             prop.put("hibernate.hbm2ddl.auto", "create");
 
         prop.put("hibernate.format_sql", "true");
@@ -74,8 +74,8 @@ public class TestContext {
                 String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
                                 "create=%s;hsqldb.default_table_type=cached",
 
-                        SystemProperties.CONFIG.databaseDir(),
-                        SystemProperties.CONFIG.databaseReset());
+                        SystemProperties.getDefault().databaseDir(),
+                        SystemProperties.getDefault().databaseReset());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.hsqldb.jdbcDriver");

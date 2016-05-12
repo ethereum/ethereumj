@@ -31,8 +31,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -65,7 +63,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private boolean isSnapshot = false;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
     ApplicationContext applicationContext;

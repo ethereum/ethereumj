@@ -12,8 +12,6 @@ import org.junit.runners.MethodSorters;
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
@@ -23,8 +21,8 @@ public class GitHubBlockTest {
     @Ignore // test for conveniently running a single test
     @Test
     public void runSingleTest() throws ParseException, IOException {
-        CONFIG.setGenesisInfo("frontier.json");
-        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
+        SystemProperties.getDefault().setGenesisInfo("frontier.json");
+        SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
 
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
@@ -37,11 +35,11 @@ public class GitHubBlockTest {
 
     private void runHomestead(String name) throws IOException, ParseException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/" + name + ".json", shacommit);
-        SystemProperties.CONFIG.setBlockchainConfig(new HomesteadConfig());
+        SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
         try {
             GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
         } finally {
-            SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+            SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
         }
     }
 
@@ -79,7 +77,7 @@ public class GitHubBlockTest {
 
     @Test
     public void runBCValidBlockTest() throws ParseException, IOException {
-        CONFIG.setGenesisInfo("frontier.json");
+        SystemProperties.getDefault().setGenesisInfo("frontier.json");
         run("bcValidBlockTest", true, true);
     }
 

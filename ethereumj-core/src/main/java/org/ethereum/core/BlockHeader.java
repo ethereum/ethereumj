@@ -328,7 +328,7 @@ public class BlockHeader {
     }
 
     public BigInteger calcDifficulty(BlockHeader parent) {
-        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber()).
+        return SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(getNumber()).
                 calcDifficulty(this, parent);
     }
 

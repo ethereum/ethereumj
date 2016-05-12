@@ -59,7 +59,7 @@ public class Ethash {
 
     public synchronized int[] getCacheLight() {
         if (cacheLight == null) {
-            File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag-light.dat");
+            File file = new File(SystemProperties.getDefault().databaseDir(), "mine-dag-light.dat");
             if (fileCacheEnabled && file.canRead()) {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading light dataset from " + file.getAbsolutePath());
@@ -98,7 +98,7 @@ public class Ethash {
 
     public synchronized int[] getFullDataset() {
         if (fullData == null) {
-            File file = new File(SystemProperties.CONFIG.databaseDir(), "mine-dag.dat");
+            File file = new File(SystemProperties.getDefault().databaseDir(), "mine-dag.dat");
             if (fileCacheEnabled && file.canRead()) {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading dataset from " + file.getAbsolutePath());

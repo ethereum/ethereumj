@@ -67,7 +67,7 @@ public class CLIInterface {
             if (cliOptions.size() > 0) {
                 logger.info("Overriding config file with CLI options: " + cliOptions);
             }
-            SystemProperties.CONFIG.overrideParams(cliOptions);
+            SystemProperties.getDefault().overrideParams(cliOptions);
 
         } catch (Throwable e) {
             logger.error("Error parsing command line: [{}]", e.getMessage());

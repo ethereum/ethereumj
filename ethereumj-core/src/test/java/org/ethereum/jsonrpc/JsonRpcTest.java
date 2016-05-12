@@ -11,16 +11,12 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.EthereumImpl;
-import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static java.math.BigInteger.valueOf;
 import static org.junit.Assert.*;
@@ -60,7 +56,7 @@ public class JsonRpcTest {
         public SystemProperties systemProperties() {
             SystemProperties props = new SystemProperties();
             props.overrideParams(ConfigFactory.parseString(config.replaceAll("'", "\"")));
-            SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
                 @Override
                 public BigInteger getMINIMUM_DIFFICULTY() {
                     return BigInteger.ONE;

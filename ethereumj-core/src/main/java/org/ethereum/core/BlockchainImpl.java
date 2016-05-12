@@ -125,7 +125,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private PendingState pendingState;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -156,7 +156,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
-        initConst(SystemProperties.CONFIG);
+        initConst(SystemProperties.getDefault());
     }
 
     public BlockchainImpl withTransactionStore(TransactionStore transactionStore) {

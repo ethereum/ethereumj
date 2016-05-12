@@ -20,8 +20,6 @@ import java.math.BigInteger;
 
 import java.util.*;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
@@ -45,7 +43,7 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
     ApplicationContext applicationContext;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
     public RepositoryTrack(Repository repository) {
         this.repository = repository;

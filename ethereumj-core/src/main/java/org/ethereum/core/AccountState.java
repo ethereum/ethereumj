@@ -49,7 +49,7 @@ public class AccountState {
 
 
     public AccountState() {
-        this(SystemProperties.CONFIG.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
+        this(SystemProperties.getDefault().getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {

@@ -19,7 +19,6 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.util.ByteUtil.wrap;
@@ -27,7 +26,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 public class GenesisLoader {
 
     public static Block loadGenesis() {
-        return loadGenesis(CONFIG);
+        return loadGenesis(SystemProperties.getDefault());
     }
 
     public static Genesis loadGenesis(SystemProperties config)  {
@@ -38,7 +37,7 @@ public class GenesisLoader {
     }
 
     public static Genesis loadGenesis(InputStream genesisJsonIS) {
-        return loadGenesis(CONFIG, genesisJsonIS);
+        return loadGenesis(SystemProperties.getDefault(), genesisJsonIS);
     }
     
     public static Genesis loadGenesis(SystemProperties config, InputStream genesisJsonIS)  {

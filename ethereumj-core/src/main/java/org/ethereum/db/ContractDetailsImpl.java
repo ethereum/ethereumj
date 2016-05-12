@@ -9,7 +9,6 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.Arrays;
 
 import java.util.*;
 
@@ -117,7 +116,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > SystemProperties.CONFIG.detailsInMemoryStorageLimit())
+        externalStorage = (storage.getRLPData().length > SystemProperties.getDefault().detailsInMemoryStorageLimit())
                 || externalStorage;
 
         this.rlpEncoded = rlpCode;

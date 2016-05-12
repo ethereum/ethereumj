@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -14,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -63,7 +62,7 @@ public class BlockQueueImpl implements BlockQueue {
                             .serializer(Serializers.BYTE_ARRAY_WRAPPER)
                             .makeOrGet();
 
-                    if(CONFIG.databaseReset()) {
+                    if(SystemProperties.getDefault().databaseReset()) {
                         blocks.clear();
                         hashes.clear();
                         db.commit();

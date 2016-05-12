@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
@@ -13,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -50,7 +49,7 @@ public class HeaderStoreImpl implements HeaderStore {
                             .valueSerializer(Serializers.BLOCK_HEADER_WRAPPER)
                             .makeOrGet();
 
-                    if(CONFIG.databaseReset()) {
+                    if(SystemProperties.getDefault().databaseReset()) {
                         headers.clear();
                         db.commit();
                     }

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.vm.OpCode.CALL;
@@ -74,8 +73,8 @@ public class VM {
     private int vmCounter = 0;
 
     private static VMHook vmHook;
-    private final static boolean vmTrace = CONFIG.vmTrace();
-    private final static long dumpBlock = CONFIG.dumpBlock();
+    private final static boolean vmTrace = SystemProperties.getDefault().vmTrace();
+    private final static long dumpBlock = SystemProperties.getDefault().dumpBlock();
 
     public void step(Program program) {
 
@@ -90,7 +89,7 @@ public class VM {
             }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
-                if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
+                if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
                         getConstants().hasDelegateCallOpcode()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
@@ -1216,7 +1215,7 @@ public class VM {
                     gasBefore, gasCost, memWords)
      */
     private void dumpLine(OpCode op, long gasBefore, long gasCost, long memWords, Program program) {
-        if (CONFIG.dumpStyle().equals("standard+")) {
+        if (SystemProperties.getDefault().dumpStyle().equals("standard+")) {
             switch (op) {
                 case STOP:
                 case RETURN:
@@ -1241,7 +1240,7 @@ public class VM {
             String gasString = Hex.toHexString(program.getGas().getNoLeadZeroesData());
 
             dumpLogger.trace("{} {} {} {}", addressString, pcString, opString, gasString);
-        } else if (CONFIG.dumpStyle().equals("pretty")) {
+        } else if (SystemProperties.getDefault().dumpStyle().equals("pretty")) {
             dumpLogger.trace("    STACK");
             for (DataWord item : program.getStack()) {
                 dumpLogger.trace("{}", item);

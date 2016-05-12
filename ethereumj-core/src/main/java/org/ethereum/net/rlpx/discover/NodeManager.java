@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
@@ -22,7 +21,6 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static java.lang.Math.min;
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The central class for Peer Discovery machinery.
@@ -56,7 +54,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     EthereumListener ethereumListener;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
     Functional.Consumer<DiscoveryEvent> messageSender;
 
@@ -149,7 +147,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private void dbRead() {
         try {
             db = mapDBFactory.createTransactionalDB("network/discovery");
-            if (SystemProperties.CONFIG.databaseReset()) {
+            if (SystemProperties.getDefault().databaseReset()) {
                 logger.info("Resetting DB Node statistics...");
                 db.delete("nodeStats");
             }

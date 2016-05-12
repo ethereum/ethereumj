@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.util.FastByteComparisons;
 import org.mapdb.DB;
@@ -12,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -47,7 +46,7 @@ public class HashStoreImpl implements HashStore {
                             .valueSerializer(Serializer.BYTE_ARRAY)
                             .makeOrGet();
 
-                    if(CONFIG.databaseReset()) {
+                    if(SystemProperties.getDefault().databaseReset()) {
                         hashes.clear();
                         db.commit();
                     }

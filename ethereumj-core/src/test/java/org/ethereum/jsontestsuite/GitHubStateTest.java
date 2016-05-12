@@ -30,7 +30,7 @@ public class GitHubStateTest {
     public void setup() {
         // TODO remove this after Homestead launch and shacommit update with actual block number
         // for this JSON test commit the Homestead block was defined as 900000
-        SystemProperties.CONFIG.setBlockchainConfig(new AbstractNetConfig() {{
+        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
         }});
@@ -38,7 +38,7 @@ public class GitHubStateTest {
 
     @After
     public void clean() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Ignore

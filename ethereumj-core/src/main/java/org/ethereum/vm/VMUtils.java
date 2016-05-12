@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,6 @@ import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.springframework.util.StringUtils.isEmpty;
 
 public final class VMUtils {
@@ -36,9 +36,9 @@ public final class VMUtils {
     private static File createProgramTraceFile(String txHash) {
         File result = null;
 
-        if (CONFIG.vmTrace() && !isEmpty(CONFIG.vmTraceDir())) {
+        if (SystemProperties.getDefault().vmTrace() && !isEmpty(SystemProperties.getDefault().vmTraceDir())) {
 
-            File file = new File(new File(CONFIG.databaseDir(), CONFIG.vmTraceDir()), txHash + ".json");
+            File file = new File(new File(SystemProperties.getDefault().databaseDir(), SystemProperties.getDefault().vmTraceDir()), txHash + ".json");
 
             if (file.exists()) {
                 if (file.isFile() && file.canWrite()) {

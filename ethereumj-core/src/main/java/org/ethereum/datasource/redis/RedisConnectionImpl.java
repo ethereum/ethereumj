@@ -30,7 +30,7 @@ public class RedisConnectionImpl implements RedisConnection {
 
     @PostConstruct
     public void tryConnect() {
-        if (!SystemProperties.CONFIG.isRedisEnabled()) return;
+        if (!SystemProperties.getDefault().isRedisEnabled()) return;
 
         String redisCloudUrl = System.getenv(REDISCLOUD_URL);
         if (isEmpty(redisCloudUrl)) {

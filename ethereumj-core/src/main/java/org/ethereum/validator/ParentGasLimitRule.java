@@ -15,7 +15,7 @@ import java.math.BigInteger;
  */
 public class ParentGasLimitRule extends DependentBlockHeaderRule {
 
-    private static int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.CONFIG.getBlockchainConfig().
+    private static int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.getDefault().getBlockchainConfig().
             getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
 
     @Override

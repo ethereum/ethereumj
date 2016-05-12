@@ -9,7 +9,6 @@ import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.util.FileUtil;
 import org.junit.Before;
 import org.junit.Test;
-import org.mapdb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -403,7 +402,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         LevelDbDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -549,7 +548,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         LevelDbDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -713,7 +712,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         KeyValueDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -822,7 +821,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         KeyValueDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -893,7 +892,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         KeyValueDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();

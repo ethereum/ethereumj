@@ -16,7 +16,7 @@ import java.math.BigInteger;
  */
 public class GasLimitRule extends BlockHeaderRule {
 
-    private static int MIN_GAS_LIMIT = SystemProperties.CONFIG.getBlockchainConfig().
+    private static int MIN_GAS_LIMIT = SystemProperties.getDefault().getBlockchainConfig().
             getCommonConstants().getMIN_GAS_LIMIT();
 
     @Override

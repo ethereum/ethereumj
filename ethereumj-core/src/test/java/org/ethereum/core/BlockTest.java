@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
@@ -16,7 +17,6 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Set;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -117,8 +117,8 @@ public class BlockTest {
     @Test
     public void testFrontierGenesis(){
 
-        String prev = CONFIG.genesisInfo();
-        CONFIG.setGenesisInfo("frontier.json");
+        String prev = SystemProperties.getDefault().genesisInfo();
+        SystemProperties.getDefault().setGenesisInfo("frontier.json");
 
         Block genesis = GenesisLoader.loadGenesis();
 
@@ -128,7 +128,7 @@ public class BlockTest {
         assertEquals("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544", root);
         assertEquals("d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3", hash);
 
-        CONFIG.setGenesisInfo(prev);
+        SystemProperties.getDefault().setGenesisInfo(prev);
     }
 
 

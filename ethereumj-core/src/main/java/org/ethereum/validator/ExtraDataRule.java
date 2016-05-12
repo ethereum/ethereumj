@@ -12,7 +12,7 @@ import org.ethereum.core.BlockHeader;
  */
 public class ExtraDataRule extends BlockHeaderRule {
 
-    private static int MAXIMUM_EXTRA_DATA_SIZE = SystemProperties.CONFIG.getBlockchainConfig().
+    private static int MAXIMUM_EXTRA_DATA_SIZE = SystemProperties.getDefault().getBlockchainConfig().
             getCommonConstants().getMAXIMUM_EXTRA_DATA_SIZE();
 
     @Override

@@ -2,6 +2,7 @@ package org.ethereum.net.swarm;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The main logic of communicating with BZZ peers.
@@ -35,11 +34,11 @@ public class NetStore implements ChunkStore {
 
 
     public static PeerAddress createSelfAddress() {
-        return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());
+        return new PeerAddress(new byte[] {127,0,0,1}, SystemProperties.getDefault().listenPort(), getSelfNodeId());
     }
 
     public static byte[] getSelfNodeId() {
-        return CONFIG.nodeId();
+        return SystemProperties.getDefault().nodeId();
     }
 
     public int requesterCount = 3;

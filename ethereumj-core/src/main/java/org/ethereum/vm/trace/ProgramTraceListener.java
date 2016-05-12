@@ -1,13 +1,12 @@
 package org.ethereum.vm.trace;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.ProgramListenerAdaptor;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 public class ProgramTraceListener extends ProgramListenerAdaptor {
 
-    private final boolean enabled = CONFIG.vmTrace();
+    private final boolean enabled = SystemProperties.getDefault().vmTrace();
     private OpActions actions = new OpActions();
 
     @Override

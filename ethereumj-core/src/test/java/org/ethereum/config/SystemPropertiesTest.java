@@ -9,9 +9,9 @@ import org.junit.Test;
 public class SystemPropertiesTest {
     @Test
     public void punchBindIpTest() {
-        SystemProperties.CONFIG.overrideParams("peer.bind.ip", "");
+        SystemProperties.getDefault().overrideParams("peer.bind.ip", "");
         long st = System.currentTimeMillis();
-        String ip = SystemProperties.CONFIG.bindIp();
+        String ip = SystemProperties.getDefault().bindIp();
         long t = System.currentTimeMillis() - st;
         System.out.println(ip + " in " + t + " msec");
         Assert.assertTrue(t < 10 * 1000);
@@ -20,9 +20,9 @@ public class SystemPropertiesTest {
 
     @Test
     public void externalIpTest() {
-        SystemProperties.CONFIG.overrideParams("peer.discovery.external.ip", "");
+        SystemProperties.getDefault().overrideParams("peer.discovery.external.ip", "");
         long st = System.currentTimeMillis();
-        String ip = SystemProperties.CONFIG.externalIp();
+        String ip = SystemProperties.getDefault().externalIp();
         long t = System.currentTimeMillis() - st;
         System.out.println(ip + " in " + t + " msec");
         Assert.assertTrue(t < 10 * 1000);

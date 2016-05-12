@@ -1,5 +1,6 @@
 package org.ethereum.datasource.redis;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -7,7 +8,6 @@ import redis.clients.jedis.JedisPool;
 import java.util.Map;
 import java.util.Set;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.Functional.Consumer;
 
 public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValueDataSource {
@@ -38,7 +38,7 @@ public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValu
 
     @Override
     public void init() {
-        if (CONFIG.databaseReset()) {
+        if (SystemProperties.getDefault().databaseReset()) {
             pooled(new Consumer<Jedis>() {
                 @Override
                 public void accept(Jedis jedis) {

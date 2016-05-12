@@ -26,7 +26,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.program.ProgramResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -242,8 +241,8 @@ public class JsonRpcImpl implements JsonRpc {
 
     public String web3_clientVersion() {
 
-        String s = "EthereumJ" + "/v" + SystemProperties.CONFIG.projectVersion() + "/" +
-                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.CONFIG.projectVersionModifier();
+        String s = "EthereumJ" + "/v" + SystemProperties.getDefault().projectVersion() + "/" +
+                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.getDefault().projectVersionModifier();
         if (logger.isDebugEnabled()) logger.debug("web3_clientVersion(): " + s);
         return s;
     };

@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.apache.commons.collections4.map.LRUMap;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
@@ -20,7 +21,6 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static java.math.BigInteger.ZERO;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.toBI;
 
 /**
@@ -309,7 +309,7 @@ public class PendingStateImpl implements PendingState {
 
         synchronized (wireTransactions) {
             for (PendingTransaction tx : wireTransactions)
-                if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold())
+                if (blockNumber - tx.getBlockNumber() > SystemProperties.getDefault().txOutdatedThreshold())
                     outdated.add(tx);
         }
 

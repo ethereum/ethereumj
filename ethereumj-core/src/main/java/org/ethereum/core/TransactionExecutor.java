@@ -19,7 +19,6 @@ import java.util.List;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -145,7 +144,7 @@ public class TransactionExecutor {
             return;
         }
 
-        if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+        if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 acceptTransactionSignature(tx)) {
             logger.warn("Transaction signature not accepted: " + tx.getSignature());
             return;
@@ -254,7 +253,7 @@ public class TransactionExecutor {
             // Charge basic cost of the transaction
             program.spendGas(tx.transactionCost(currentBlock), "TRANSACTION COST");
 
-            if (CONFIG.playVM())
+            if (SystemProperties.getDefault().playVM())
                 vm.play(program);
 
             result = program.getResult();
@@ -268,7 +267,7 @@ public class TransactionExecutor {
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    if (!CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                    if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                             getConstants().createEmptyContractOnOOG()) {
                         program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                 returnDataGasValue, program));
@@ -345,14 +344,14 @@ public class TransactionExecutor {
 
         listener.onTransactionExecuted(summary);
 
-        if (CONFIG.vmTrace() && program != null && result != null) {
+        if (SystemProperties.getDefault().vmTrace() && program != null && result != null) {
             String trace = program.getTrace()
                     .result(result.getHReturn())
                     .error(result.getException())
                     .toString();
 
 
-            if (CONFIG.vmTraceCompressed()) {
+            if (SystemProperties.getDefault().vmTraceCompressed()) {
                 trace = zipAndEncode(trace);
             }
 

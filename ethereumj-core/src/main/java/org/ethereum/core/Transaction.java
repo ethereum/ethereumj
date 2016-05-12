@@ -9,7 +9,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
-import org.ethereum.vm.GasCost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,6 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
-import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
@@ -115,7 +113,7 @@ public class Transaction {
 
         if (!parsed) rlpParse();
 
-        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(block.getNumber()).
+        return SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
     }
 

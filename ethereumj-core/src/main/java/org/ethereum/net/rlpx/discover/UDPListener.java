@@ -29,7 +29,7 @@ public class UDPListener {
     private NodeManager nodeManager;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
     public UDPListener() {
     }
