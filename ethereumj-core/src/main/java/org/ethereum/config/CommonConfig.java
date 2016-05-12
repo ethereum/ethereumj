@@ -5,8 +5,7 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
-import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
@@ -168,6 +167,18 @@ public class CommonConfig {
     @Scope("prototype")
     public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
         return new Program(ops, programInvoke, transaction);
+    }
+
+    @Bean
+    @Primary
+    public BlockQueue blockQueue() {
+        return new BlockQueueMem();
+    }
+
+    @Bean
+    @Primary
+    public HeaderStore headerStore() {
+        return new HeaderStoreMem();
     }
 
     @Bean

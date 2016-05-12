@@ -11,6 +11,7 @@ import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
@@ -46,6 +47,9 @@ public class BlockQueueImpl implements BlockQueue {
     private final Object writeMutex = new Object();
     private final Object readMutex = new Object();
 
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
     @Override
     public void open() {
         new Thread(new Runnable() {
@@ -62,7 +66,7 @@ public class BlockQueueImpl implements BlockQueue {
                             .serializer(Serializers.BYTE_ARRAY_WRAPPER)
                             .makeOrGet();
 
-                    if(SystemProperties.getDefault().databaseReset()) {
+                    if(config.databaseReset()) {
                         blocks.clear();
                         hashes.clear();
                         db.commit();

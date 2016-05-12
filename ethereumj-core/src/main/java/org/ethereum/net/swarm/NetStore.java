@@ -32,15 +32,6 @@ public class NetStore implements ChunkStore {
     @Autowired
     WorldManager worldManager;
 
-
-    public static PeerAddress createSelfAddress() {
-        return new PeerAddress(new byte[] {127,0,0,1}, SystemProperties.getDefault().listenPort(), getSelfNodeId());
-    }
-
-    public static byte[] getSelfNodeId() {
-        return SystemProperties.getDefault().nodeId();
-    }
-
     public int requesterCount = 3;
     public int maxStorePeers = 3;
     public int maxSearchPeers = 6;
@@ -50,8 +41,10 @@ public class NetStore implements ChunkStore {
     private Hive hive;
     private PeerAddress selfAddress;
 
-    public NetStore() {
-        this(new LocalStore(new MemStore(), new MemStore()), new Hive(createSelfAddress()));
+    @Autowired
+    public NetStore(SystemProperties config) {
+        this(new LocalStore(new MemStore(), new MemStore()), new Hive(new PeerAddress(new byte[] {127,0,0,1},
+                config.listenPort(), config.nodeId())));
         start(hive.getSelfAddress());
         // FIXME bad dirty hack to workaround Spring DI machinery
         INST = this;
