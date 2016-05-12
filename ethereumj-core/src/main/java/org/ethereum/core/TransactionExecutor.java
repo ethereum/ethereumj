@@ -218,8 +218,8 @@ public class TransactionExecutor {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-                this.vm = new VM();
-                this.program = new Program(code, programInvoke, tx);
+                this.vm = commonConfig.vm();
+                this.program = commonConfig.program(code, programInvoke, tx);
             }
         }
 
@@ -235,8 +235,8 @@ public class TransactionExecutor {
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = new VM();
-            this.program = new Program(tx.getData(), programInvoke, tx);
+            this.vm = commonConfig.vm();
+            this.program = commonConfig.program(tx.getData(), programInvoke, tx);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network

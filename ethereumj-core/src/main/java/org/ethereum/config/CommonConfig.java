@@ -9,6 +9,9 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
+import org.ethereum.vm.VM;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -153,6 +156,18 @@ public class CommonConfig {
                                                    EthereumListener listener, long gasUsedInTheBlock) {
         return new TransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory,
                 currentBlock, listener, gasUsedInTheBlock);
+    }
+
+    @Bean
+    @Scope("prototype")
+    public VM vm() {
+        return new VM();
+    }
+
+    @Bean
+    @Scope("prototype")
+    public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
+        return new Program(ops, programInvoke, transaction);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
@@ -21,6 +22,7 @@ import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -76,6 +78,12 @@ public class Program {
     private boolean stopped;
 
     private Set<Integer> jumpdest = new HashSet<>();
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
+
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
 
     public Program(byte[] ops, ProgramInvoke programInvoke) {
         this.invoke = programInvoke;
@@ -395,7 +403,7 @@ public class Program {
         if (isNotEmpty(programCode)) {
 
             VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -408,7 +416,7 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {
@@ -517,7 +525,7 @@ public class Program {
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
             VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 

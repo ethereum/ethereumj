@@ -8,7 +8,9 @@ import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,8 +75,21 @@ public class VM {
     private int vmCounter = 0;
 
     private static VMHook vmHook;
-    private final static boolean vmTrace = SystemProperties.getDefault().vmTrace();
-    private final static long dumpBlock = SystemProperties.getDefault().dumpBlock();
+    private boolean vmTrace;
+    private long dumpBlock;
+
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
+    public VM() {
+        init();
+    }
+
+    @PostConstruct
+    private void init() {
+        vmTrace = config.vmTrace();
+        dumpBlock = config.dumpBlock();
+    }
 
     public void step(Program program) {
 
@@ -89,7 +104,7 @@ public class VM {
             }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
-                if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
+                if (!config.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
                         getConstants().hasDelegateCallOpcode()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
@@ -1215,7 +1230,7 @@ public class VM {
                     gasBefore, gasCost, memWords)
      */
     private void dumpLine(OpCode op, long gasBefore, long gasCost, long memWords, Program program) {
-        if (SystemProperties.getDefault().dumpStyle().equals("standard+")) {
+        if (config.dumpStyle().equals("standard+")) {
             switch (op) {
                 case STOP:
                 case RETURN:
@@ -1240,7 +1255,7 @@ public class VM {
             String gasString = Hex.toHexString(program.getGas().getNoLeadZeroesData());
 
             dumpLogger.trace("{} {} {} {}", addressString, pcString, opString, gasString);
-        } else if (SystemProperties.getDefault().dumpStyle().equals("pretty")) {
+        } else if (config.dumpStyle().equals("pretty")) {
             dumpLogger.trace("    STACK");
             for (DataWord item : program.getStack()) {
                 dumpLogger.trace("{}", item);
