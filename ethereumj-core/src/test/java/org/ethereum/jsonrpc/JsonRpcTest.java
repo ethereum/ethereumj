@@ -56,12 +56,14 @@ public class JsonRpcTest {
         public SystemProperties systemProperties() {
             SystemProperties props = new SystemProperties();
             props.overrideParams(ConfigFactory.parseString(config.replaceAll("'", "\"")));
-            SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            FrontierConfig config = new FrontierConfig(new FrontierConfig.FrontierConstants() {
                 @Override
                 public BigInteger getMINIMUM_DIFFICULTY() {
                     return BigInteger.ONE;
                 }
-            }));
+            });
+            SystemProperties.getDefault().setBlockchainConfig(config);
+            props.setBlockchainConfig(config);
             return props;
         }
 
