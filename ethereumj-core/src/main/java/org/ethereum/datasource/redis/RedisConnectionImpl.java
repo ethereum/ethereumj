@@ -22,7 +22,6 @@ import java.util.Set;
 
 import static org.springframework.util.StringUtils.isEmpty;
 
-@Component
 public class RedisConnectionImpl implements RedisConnection {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
