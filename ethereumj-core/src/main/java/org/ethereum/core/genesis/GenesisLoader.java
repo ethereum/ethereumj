@@ -25,10 +25,6 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class GenesisLoader {
 
-    public static Block loadGenesis() {
-        return loadGenesis(SystemProperties.getDefault());
-    }
-
     public static Genesis loadGenesis(SystemProperties config)  {
         String genesisFile = config.genesisInfo();
 

@@ -175,9 +175,9 @@ public class CommonConfig {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
-                new ExtraDataRule(),
+                new ExtraDataRule(systemProperties()),
                 new ProofOfWorkRule(),
-                new GasLimitRule()
+                new GasLimitRule(systemProperties())
         ));
 
         return new BlockHeaderValidator(rules);
@@ -188,8 +188,8 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule(),
-                new ParentGasLimitRule()
+                new DifficultyRule(systemProperties()),
+                new ParentGasLimitRule(systemProperties())
         ));
 
         return new ParentBlockHeaderValidator(rules);

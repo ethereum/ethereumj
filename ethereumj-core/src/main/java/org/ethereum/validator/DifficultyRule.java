@@ -15,12 +15,18 @@ import static org.ethereum.util.BIUtil.isEqual;
  */
 public class DifficultyRule extends DependentBlockHeaderRule {
 
+    private final SystemProperties config;
+
+    public DifficultyRule(SystemProperties config) {
+        this.config = config;
+    }
+
     @Override
     public boolean validate(BlockHeader header, BlockHeader parent) {
 
         errors.clear();
 
-        BigInteger calcDifficulty = header.calcDifficulty(SystemProperties.getDefault().getBlockchainConfig(), parent);
+        BigInteger calcDifficulty = header.calcDifficulty(config.getBlockchainConfig(), parent);
         BigInteger difficulty = header.getDifficultyBI();
 
         if (!isEqual(difficulty, calcDifficulty)) {

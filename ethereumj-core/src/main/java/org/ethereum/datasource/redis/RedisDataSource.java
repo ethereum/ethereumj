@@ -11,9 +11,11 @@ import java.util.Set;
 import static org.ethereum.util.Functional.Consumer;
 
 public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValueDataSource {
+    private boolean dbReset;
 
-    RedisDataSource(String namespace, JedisPool pool) {
+    RedisDataSource(boolean dbReset, String namespace, JedisPool pool) {
         super(namespace, pool, null, null);
+        this.dbReset = dbReset;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValu
 
     @Override
     public void init() {
-        if (SystemProperties.getDefault().databaseReset()) {
+        if (dbReset) {
             pooled(new Consumer<Jedis>() {
                 @Override
                 public void accept(Jedis jedis) {
