@@ -45,11 +45,8 @@ public class AccountState {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    public static final AccountState EMPTY = new AccountState();
-
-
-    public AccountState() {
-        this(SystemProperties.getDefault().getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
+    public AccountState(SystemProperties config) {
+        this(config.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {
@@ -148,10 +145,8 @@ public class AccountState {
     }
 
     public AccountState clone() {
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(this.getNonce(), this.getBalance());
 
-        accountState.addToBalance(this.getBalance());
-        accountState.setNonce(this.getNonce());
         accountState.setCodeHash(this.getCodeHash());
         accountState.setStateRoot(this.getStateRoot());
         accountState.setDirty(false);

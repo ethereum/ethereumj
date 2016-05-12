@@ -56,21 +56,21 @@ public class ImportLightTest {
 
         System.out.println("Mining #1 ...");
         Block b1 = blockchain.createNewBlock(parent, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
         ImportResult importResult = blockchain.tryToConnect(b1);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
         System.out.println("Mining #2 ...");
         Block b2 = blockchain.createNewBlock(b1, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
         System.out.println("Mining #3 ...");
         Block b3 = blockchain.createNewBlock(b2, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        Ethash.getForBlock(b3.getNumber()).mineLight(b3).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b3.getNumber()).mineLight(b3).get();
         importResult = blockchain.tryToConnect(b3);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
@@ -78,14 +78,14 @@ public class ImportLightTest {
         System.out.println("Mining #2' ...");
         Block b2_ = blockchain.createNewBlock(b1, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         b2_.setExtraData(new byte[]{77, 77}); // setting extra data to differ from block #2
-        Ethash.getForBlock(b2_.getNumber()).mineLight(b2_).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2_.getNumber()).mineLight(b2_).get();
         importResult = blockchain.tryToConnect(b2_);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
 
         System.out.println("Mining #3' ...");
         Block b3_ = blockchain.createNewBlock(b2_, Collections.EMPTY_LIST, Collections.singletonList(b2.getHeader()));
-        Ethash.getForBlock(b3_.getNumber()).mineLight(b3_).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b3_.getNumber()).mineLight(b3_).get();
         importResult = blockchain.tryToConnect(b3_);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
@@ -116,11 +116,11 @@ public class ImportLightTest {
         b1bad.getStateRoot()[0] = 0;
         b1bad.setStateRoot(b1bad.getStateRoot()); // invalidate block
 
-        Ethash.getForBlock(b1bad.getNumber()).mineLight(b1bad).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1bad.getNumber()).mineLight(b1bad).get();
         ImportResult importResult = blockchain.tryToConnect(b1bad);
         Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
         Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
         importResult = blockchain.tryToConnect(b1);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
     }
@@ -146,13 +146,13 @@ public class ImportLightTest {
         tx.sign(senderKey.getPrivKeyBytes());
 
         Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
         ImportResult importResult = blockchain.tryToConnect(b1);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
         System.out.println("Mining #2 (bad) ...");
         Block b2 = blockchain.createNewBlock(b1, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
 
@@ -163,7 +163,7 @@ public class ImportLightTest {
                 receiverAddr, new byte[]{77}, new byte[0]);
         tx1.sign(senderKey.getPrivKeyBytes());
         b2 = blockchain.createNewBlock(b1, Arrays.asList(tx1, tx1), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
 
@@ -174,7 +174,7 @@ public class ImportLightTest {
                 receiverAddr, new byte[]{77}, new byte[0]);
         tx2.sign(senderKey.getPrivKeyBytes());
         b2 = blockchain.createNewBlock(b1, Arrays.asList(tx1, tx2), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
@@ -185,7 +185,7 @@ public class ImportLightTest {
                 receiverAddr, new byte[]{88}, new byte[0]);
         tx1.sign(senderKey.getPrivKeyBytes());
         Block b2f = blockchain.createNewBlock(b1, Collections.singletonList(tx1), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2f.getNumber()).mineLight(b2f).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2f.getNumber()).mineLight(b2f).get();
         importResult = blockchain.tryToConnect(b2f);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
 
@@ -206,7 +206,7 @@ public class ImportLightTest {
                 receiverAddr, new byte[]{88}, new byte[0]);
         tx3.sign(senderKey.getPrivKeyBytes());
         Block b3 = blockchain.createNewBlock(b2, Arrays.asList(tx1, tx2, tx3), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b3.getNumber()).mineLight(b3).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b3.getNumber()).mineLight(b3).get();
         importResult = blockchain.tryToConnect(b3);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
     }

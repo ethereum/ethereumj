@@ -492,7 +492,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 block.getParentHash())) return false;
 
         if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
-            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
+            AdvancedDeviceUtils.adjustDetailedTracing(config, block.getNumber());
         }
 
         List<TransactionReceipt> receipts = processBlock(block);

@@ -201,7 +201,7 @@ public class HashStoreTest {
                     } else {
                         nullsCount = 0;
                     }
-                    Thread.sleep(50);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 logger.error(e.getMessage());
@@ -223,7 +223,7 @@ public class HashStoreTest {
                 for(byte[] hash : hashes) {
                     hashStore.add(hash);
                     logger.info("writer {}: {}", index, Hex.toHexString(hash));
-                    Thread.sleep(50);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 logger.error(e.getMessage());
@@ -251,7 +251,7 @@ public class HashStoreTest {
                     } else {
                         nullsCount = 0;
                     }
-                    Thread.sleep(50);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 logger.error(e.getMessage());
@@ -273,7 +273,7 @@ public class HashStoreTest {
                 for(int i = 0; i < 30; i++) {
                     hashStore.addFirstBatch(hashes);
                     logger.info("writer {}: batch {}", index, i);
-                    Thread.sleep(50);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 logger.error(e.getMessage());

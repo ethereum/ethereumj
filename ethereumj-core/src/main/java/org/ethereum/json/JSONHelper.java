@@ -1,5 +1,6 @@
 package org.ethereum.json;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.db.ByteArrayWrapper;
@@ -60,7 +61,8 @@ public class JSONHelper {
         }
 
         if (state == null)
-            state = AccountState.EMPTY;
+            state = new AccountState(SystemProperties.getDefault().getBlockchainConfig().getCommonConstants().getInitialNonce(),
+                    BigInteger.ZERO);
 
         account.put("balance", state.getBalance() == null ? "0" : state.getBalance().toString());
 //        account.put("codeHash", details.getCodeHash() == null ? "0x" : "0x" + Hex.toHexString(details.getCodeHash()));

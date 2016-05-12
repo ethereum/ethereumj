@@ -11,9 +11,9 @@ import java.net.URL;
  */
 public class AdvancedDeviceUtils {
 
-    public static void adjustDetailedTracing(long blockNum) {
+    public static void adjustDetailedTracing(SystemProperties config, long blockNum) {
         // here we can turn on the detail tracing in the middle of the chain
-        if (blockNum >= SystemProperties.getDefault().traceStartBlock() && SystemProperties.getDefault().traceStartBlock() != -1) {
+        if (blockNum >= config.traceStartBlock() && config.traceStartBlock() != -1) {
             URL configFile = ClassLoader.getSystemResource("log4j-detailed.properties");
             PropertyConfigurator.configure(configFile);
         }

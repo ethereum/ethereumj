@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.core.Repository;
@@ -62,7 +63,7 @@ public class VMComplexTest {
         byte[] codeB = Hex.decode(code);
 
         byte[] codeKey = HashUtil.sha3(codeB);
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(SystemProperties.getDefault());
         accountState.setCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
@@ -448,7 +449,7 @@ public class VMComplexTest {
         byte[] codeB = Hex.decode(code);
 
         byte[] codeKey = HashUtil.sha3(codeB);
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(SystemProperties.getDefault());
         accountState.setCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
@@ -507,7 +508,7 @@ public class VMComplexTest {
         byte[] codeB = Hex.decode(code);
 
         byte[] codeKey = HashUtil.sha3(codeB);
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(SystemProperties.getDefault());
         accountState.setCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
@@ -566,7 +567,7 @@ public class VMComplexTest {
         byte[] codeB = Hex.decode(code);
 
         byte[] codeKey = HashUtil.sha3(codeB);
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(SystemProperties.getDefault());
         accountState.setCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
@@ -625,7 +626,7 @@ public class VMComplexTest {
         byte[] codeB = Hex.decode(code);
 
         byte[] codeKey = HashUtil.sha3(codeB);
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(SystemProperties.getDefault());
         accountState.setCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();

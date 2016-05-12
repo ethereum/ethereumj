@@ -59,9 +59,9 @@ public class MineBlock {
         Block b = blockchain.createNewBlock(parent, pendingTx, Collections.EMPTY_LIST);
 
         System.out.println("Mining...");
-        Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
         System.out.println("Validating...");
-        boolean valid = Ethash.getForBlock(b.getNumber()).validate(b.getHeader());
+        boolean valid = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader());
         Assert.assertTrue(valid);
 
         System.out.println("Connecting...");

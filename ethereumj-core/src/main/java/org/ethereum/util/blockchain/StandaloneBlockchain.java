@@ -1,7 +1,7 @@
 package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -10,7 +10,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.manager.AdminInfo;
 import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
@@ -149,7 +148,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 txes.add(transaction);
             }
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
-            Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+            Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
             ImportResult importResult = getBlockchain().tryToConnect(b);
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);
