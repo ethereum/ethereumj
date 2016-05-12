@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
@@ -327,8 +328,8 @@ public class BlockHeader {
         return HashUtil.sha3(concat);
     }
 
-    public BigInteger calcDifficulty(BlockHeader parent) {
-        return SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(getNumber()).
+    public BigInteger calcDifficulty(BlockchainNetConfig config, BlockHeader parent) {
+        return config.getConfigForBlock(getNumber()).
                 calcDifficulty(this, parent);
     }
 

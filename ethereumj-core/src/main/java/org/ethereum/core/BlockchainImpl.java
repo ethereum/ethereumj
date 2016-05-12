@@ -439,7 +439,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             block.addUncle(uncle);
         }
 
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().calcDifficulty(parent.getHeader())));
+        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().
+                calcDifficulty(config.getBlockchainConfig(), parent.getHeader())));
 
         pushState(parent.getHash());
 
