@@ -52,6 +52,9 @@ public class PendingStateImpl implements PendingState {
     private static final Logger logger = LoggerFactory.getLogger("state");
 
     @Autowired
+    private SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
     private EthereumListener listener;
 
     @Autowired @Qualifier("repository")
@@ -309,7 +312,7 @@ public class PendingStateImpl implements PendingState {
 
         synchronized (wireTransactions) {
             for (PendingTransaction tx : wireTransactions)
-                if (blockNumber - tx.getBlockNumber() > SystemProperties.getDefault().txOutdatedThreshold())
+                if (blockNumber - tx.getBlockNumber() > config.txOutdatedThreshold())
                     outdated.add(tx);
         }
 
