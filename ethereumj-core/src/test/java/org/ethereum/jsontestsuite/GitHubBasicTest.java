@@ -47,7 +47,8 @@ public class GitHubBasicTest {
             BlockHeader current = testCase.getCurrent();
             BlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(parent));
+            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty
+                    (SystemProperties.getDefault().getBlockchainConfig(), parent));
         }
     }
 
@@ -67,7 +68,8 @@ public class GitHubBasicTest {
             BlockHeader current = testCase.getCurrent();
             BlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(parent));
+            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(
+                    SystemProperties.getDefault().getBlockchainConfig(), parent));
         }
     }
 
@@ -87,7 +89,8 @@ public class GitHubBasicTest {
             BlockHeader current = testCase.getCurrent();
             BlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(parent));
+            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(
+                    SystemProperties.getDefault().getBlockchainConfig(), parent));
         }
     }
 }

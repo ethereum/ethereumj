@@ -89,7 +89,7 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
-        basicTxCost = tx.transactionCost(currentBlock);
+        basicTxCost = tx.transactionCost(SystemProperties.getDefault().getBlockchainConfig(), currentBlock);
 
         if (localCall) {
             readyToExecute = true;
@@ -251,7 +251,7 @@ public class TransactionExecutor {
         try {
 
             // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(currentBlock), "TRANSACTION COST");
+            program.spendGas(tx.transactionCost(SystemProperties.getDefault().getBlockchainConfig(), currentBlock), "TRANSACTION COST");
 
             if (SystemProperties.getDefault().playVM())
                 vm.play(program);

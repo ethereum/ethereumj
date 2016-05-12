@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -109,11 +109,11 @@ public class Transaction {
         this.signature = signature;
     }
 
-    public long transactionCost(Block block){
+    public long transactionCost(BlockchainNetConfig config, Block block){
 
         if (!parsed) rlpParse();
 
-        return SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(block.getNumber()).
+        return config.getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
     }
 
