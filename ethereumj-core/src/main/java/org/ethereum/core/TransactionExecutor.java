@@ -364,7 +364,7 @@ public class TransactionExecutor {
             }
 
             String txHash = toHexString(tx.getHash());
-            saveProgramTraceFile(txHash, trace);
+            saveProgramTraceFile(config, txHash, trace);
             listener.onVMTraceCreated(txHash, trace);
         }
     }

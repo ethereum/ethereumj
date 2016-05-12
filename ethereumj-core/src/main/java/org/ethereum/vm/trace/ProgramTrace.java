@@ -33,11 +33,11 @@ public class ProgramTrace {
     private String contractAddress;
 
     public ProgramTrace() {
-        this(null);
+        this(null, null);
     }
 
-    public ProgramTrace(ProgramInvoke programInvoke) {
-        if (SystemProperties.getDefault().vmTrace() && programInvoke != null) {
+    public ProgramTrace(SystemProperties config, ProgramInvoke programInvoke) {
+        if (programInvoke != null && config.vmTrace()) {
             contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
 
             ContractDetails contractDetails = getContractDetails(programInvoke);
@@ -46,7 +46,7 @@ public class ProgramTrace {
                 fullStorage = true;
             } else {
                 storageSize = contractDetails.getStorageSize();
-                if (storageSize <= SystemProperties.getDefault().vmTraceInitStorageLimit()) {
+                if (storageSize <= config.vmTraceInitStorageLimit()) {
                     fullStorage = true;
 
                     String address = toHexString(programInvoke.getOwnerAddress().getLast20Bytes());

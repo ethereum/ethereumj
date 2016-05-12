@@ -93,7 +93,7 @@ public class Program {
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
         this.storage = setupProgramListener(new Storage(programInvoke));
-        this.trace = new ProgramTrace(programInvoke);
+        this.trace = new ProgramTrace(config, programInvoke);
 
         precompile();
     }

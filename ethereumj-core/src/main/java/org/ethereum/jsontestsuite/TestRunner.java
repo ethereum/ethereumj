@@ -1,6 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
@@ -18,10 +19,7 @@ import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
 import org.ethereum.jsontestsuite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
@@ -223,7 +221,7 @@ public class TestRunner {
                 e = ex;
             }
             String content = program.getTrace().asJsonString(true);
-            saveProgramTraceFile(testCase.getName(), content);
+            saveProgramTraceFile(SystemProperties.getDefault(), testCase.getName(), content);
 
             if (testCase.getPost().size() == 0) {
                 if (!vmDidThrowAnEception) {
