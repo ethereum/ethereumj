@@ -1,14 +1,15 @@
 package org.ethereum.config;
 
-import org.ethereum.core.PendingTransaction;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,6 +144,15 @@ public class CommonConfig {
 
         return ds;
 
+    }
+
+    @Bean
+    @Scope("prototype")
+    public TransactionExecutor transactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                                                   ProgramInvokeFactory programInvokeFactory, Block currentBlock,
+                                                   EthereumListener listener, long gasUsedInTheBlock) {
+        return new TransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory,
+                currentBlock, listener, gasUsedInTheBlock);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
@@ -13,6 +14,7 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -33,6 +35,12 @@ public class TransactionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger("execute");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
+
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
 
     private Transaction tx;
     private Repository track;
@@ -89,7 +97,7 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
-        basicTxCost = tx.transactionCost(SystemProperties.getDefault().getBlockchainConfig(), currentBlock);
+        basicTxCost = tx.transactionCost(config.getBlockchainConfig(), currentBlock);
 
         if (localCall) {
             readyToExecute = true;
@@ -251,9 +259,9 @@ public class TransactionExecutor {
         try {
 
             // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(SystemProperties.getDefault().getBlockchainConfig(), currentBlock), "TRANSACTION COST");
+            program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
 
-            if (SystemProperties.getDefault().playVM())
+            if (config.playVM())
                 vm.play(program);
 
             result = program.getResult();
@@ -267,7 +275,7 @@ public class TransactionExecutor {
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    if (!SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                    if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                             getConstants().createEmptyContractOnOOG()) {
                         program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                 returnDataGasValue, program));
@@ -344,14 +352,14 @@ public class TransactionExecutor {
 
         listener.onTransactionExecuted(summary);
 
-        if (SystemProperties.getDefault().vmTrace() && program != null && result != null) {
+        if (config.vmTrace() && program != null && result != null) {
             String trace = program.getTrace()
                     .result(result.getHReturn())
                     .error(result.getException())
                     .toString();
 
 
-            if (SystemProperties.getDefault().vmTraceCompressed()) {
+            if (config.vmTraceCompressed()) {
                 trace = zipAndEncode(trace);
             }
 

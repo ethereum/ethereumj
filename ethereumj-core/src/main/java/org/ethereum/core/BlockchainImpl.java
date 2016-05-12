@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
@@ -126,6 +127,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -783,9 +787,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
-                    track, blockStore,
-                    programInvokeFactory, block, listener, totalGasUsed);
+            TransactionExecutor executor = commonConfig.transactionExecutor(tx, block.getCoinbase(),
+                    track, blockStore, programInvokeFactory, block, listener, totalGasUsed);
 
             executor.init();
             executor.execute();

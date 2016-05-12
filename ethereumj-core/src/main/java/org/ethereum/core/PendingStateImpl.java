@@ -1,10 +1,12 @@
 package org.ethereum.core;
 
 import org.apache.commons.collections4.map.LRUMap;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -53,6 +55,9 @@ public class PendingStateImpl implements PendingState {
 
     @Autowired
     private SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
 
     @Autowired
     private EthereumListener listener;
@@ -365,10 +370,9 @@ public class PendingStateImpl implements PendingState {
 
         Block best = blockchain.getBestBlock();
 
-        TransactionExecutor executor = new TransactionExecutor(
+        TransactionExecutor executor = commonConfig.transactionExecutor(
                 tx, best.getCoinbase(), pendingState,
-                blockStore, programInvokeFactory, best
-        );
+                blockStore, programInvokeFactory, best, new EthereumListenerAdapter(), 0);
 
         executor.init();
         executor.execute();

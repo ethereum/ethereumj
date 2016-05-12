@@ -1,11 +1,13 @@
 package org.ethereum.facade;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.listener.GasPriceTracker;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -82,6 +84,10 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     CompositeEthereumListener compositeEthereumListener;
+
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
+
 
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
@@ -283,9 +289,9 @@ public class EthereumImpl implements Ethereum {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
+            org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                            programInvokeFactory, block)
+                            programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                     .setLocalCall(true);
 
             executor.init();
