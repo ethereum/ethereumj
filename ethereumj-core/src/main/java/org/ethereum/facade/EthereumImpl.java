@@ -86,7 +86,7 @@ public class EthereumImpl implements Ethereum {
     CompositeEthereumListener compositeEthereumListener;
 
     @Autowired
-    CommonConfig commonConfig = new CommonConfig();
+    CommonConfig commonConfig = CommonConfig.getDefault();
 
 
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();

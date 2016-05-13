@@ -34,12 +34,25 @@ import static java.util.Arrays.asList;
         basePackages = "org.ethereum",
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
-
     private static final Logger logger = LoggerFactory.getLogger("general");
+
+    private static CommonConfig defaultInstance;
+
+    public static CommonConfig getDefault() {
+        if (defaultInstance == null) {
+            defaultInstance = new CommonConfig();
+        }
+        return defaultInstance;
+    }
+
+    private SystemProperties config;
 
     @Bean
     public SystemProperties systemProperties() {
-        return new SystemProperties();
+        if (config == null) {
+            config = new SystemProperties();
+        }
+        return config;
     }
 
     @Bean

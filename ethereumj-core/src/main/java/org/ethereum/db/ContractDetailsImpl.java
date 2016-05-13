@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
@@ -29,7 +30,10 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
-    CommonConfig commonConfig = new CommonConfig();
+    CommonConfig commonConfig = CommonConfig.getDefault();
+
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
 
     private byte[] rlpEncoded;
 
@@ -125,7 +129,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > commonConfig.systemProperties().detailsInMemoryStorageLimit())
+        externalStorage = (storage.getRLPData().length > config.detailsInMemoryStorageLimit())
                 || externalStorage;
 
         this.rlpEncoded = rlpCode;

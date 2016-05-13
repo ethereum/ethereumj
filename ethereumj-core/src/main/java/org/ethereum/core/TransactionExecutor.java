@@ -40,7 +40,7 @@ public class TransactionExecutor {
     SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
-    CommonConfig commonConfig = new CommonConfig();
+    CommonConfig commonConfig = CommonConfig.getDefault();
 
     private Transaction tx;
     private Repository track;

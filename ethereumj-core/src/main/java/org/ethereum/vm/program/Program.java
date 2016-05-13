@@ -78,7 +78,7 @@ public class Program {
     private Set<Integer> jumpdest = new HashSet<>();
 
     @Autowired
-    CommonConfig commonConfig = new CommonConfig();
+    CommonConfig commonConfig = CommonConfig.getDefault();
 
     private final SystemProperties config;
 

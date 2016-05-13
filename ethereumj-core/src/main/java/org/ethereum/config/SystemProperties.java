@@ -64,6 +64,7 @@ public class SystemProperties {
 
     public static SystemProperties getDefault() {
         return CONFIG;
+//        return null;
     }
 
     /**

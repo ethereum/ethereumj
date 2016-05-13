@@ -23,7 +23,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 public class DetailsDataStore {
 
     @Autowired
-    CommonConfig commonConfig = new CommonConfig();
+    CommonConfig commonConfig = CommonConfig.getDefault();
 
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 

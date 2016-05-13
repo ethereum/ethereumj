@@ -89,7 +89,7 @@ public class TestRunner {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+                .withParentBlockHeaderValidator(CommonConfig.getDefault().parentHeaderValidator());
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);

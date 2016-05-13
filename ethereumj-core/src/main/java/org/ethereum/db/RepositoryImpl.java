@@ -52,6 +52,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     CommonConfig commonConfig = new CommonConfig();
 
     @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
     private DetailsDataStore dds = new DetailsDataStore();
 
     private Trie worldState;
@@ -255,7 +258,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     protected SystemProperties config() {
-        return commonConfig.systemProperties();
+        return config;
     }
 
     @Override

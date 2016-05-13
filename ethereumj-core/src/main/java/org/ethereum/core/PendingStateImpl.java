@@ -57,12 +57,12 @@ public class PendingStateImpl implements PendingState {
     private SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
-    CommonConfig commonConfig = new CommonConfig();
+    CommonConfig commonConfig = CommonConfig.getDefault();
 
     @Autowired
     private EthereumListener listener;
 
-    @Autowired @Qualifier("repository")
+    @Autowired
     private Repository repository;
 
     @Autowired
