@@ -15,7 +15,6 @@ import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 import org.ethereum.vm.trace.ProgramTraceListener;
 import org.ethereum.vm.trace.ProgramTrace;
@@ -62,7 +61,6 @@ public class Program {
 
     private ProgramOutListener listener;
     private ProgramTraceListener traceListener;
-    private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private Stack stack;
     private Memory memory;
@@ -127,10 +125,6 @@ public class Program {
     }
 
     private <T extends ProgramListenerAware> T setupProgramListener(T traceListenerAware) {
-        if (programListener.isEmpty()) {
-            programListener.addListener(traceListener);
-        }
-
         traceListenerAware.setTraceListener(traceListener);
         return traceListenerAware;
     }
