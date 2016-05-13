@@ -27,8 +27,6 @@ import static org.fusesource.leveldbjni.JniDBFactory.factory;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-@Component
-@Scope("prototype")
 public class LevelDbDataSource implements KeyValueDataSource {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
