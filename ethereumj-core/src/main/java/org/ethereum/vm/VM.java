@@ -78,15 +78,15 @@ public class VM {
     private boolean vmTrace;
     private long dumpBlock;
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
+    private final SystemProperties config;
 
     public VM() {
-        init();
+        this(SystemProperties.getDefault());
     }
 
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public VM(SystemProperties config) {
+        this.config = config;
         vmTrace = config.vmTrace();
         dumpBlock = config.dumpBlock();
     }
