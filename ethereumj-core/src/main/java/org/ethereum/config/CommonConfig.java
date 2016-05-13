@@ -174,7 +174,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        return new Program(ops, programInvoke, transaction);
+        return new Program(ops, programInvoke, transaction, systemProperties());
     }
 
     @Bean

@@ -1,13 +1,16 @@
 package org.ethereum.vm.trace;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.ProgramListenerAdaptor;
 
 public class ProgramTraceListener extends ProgramListenerAdaptor {
 
-    private final boolean enabled = SystemProperties.getDefault().vmTrace();
+    private final boolean enabled;
     private OpActions actions = new OpActions();
+
+    public ProgramTraceListener(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     @Override
     public void onMemoryExtend(int delta) {

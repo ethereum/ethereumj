@@ -61,7 +61,7 @@ public class Program {
     private ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 
     private ProgramOutListener listener;
-    private ProgramTraceListener traceListener = new ProgramTraceListener();
+    private ProgramTraceListener traceListener;
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private Stack stack;
@@ -82,25 +82,30 @@ public class Program {
     @Autowired
     CommonConfig commonConfig = new CommonConfig();
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
+    private final SystemProperties config;
 
     public Program(byte[] ops, ProgramInvoke programInvoke) {
+        this(ops, programInvoke, null);
+    }
+
+    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
+        this(ops, programInvoke, transaction, SystemProperties.getDefault());
+    }
+
+    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+        this.config = config;
         this.invoke = programInvoke;
+        this.transaction = transaction;
 
         this.ops = nullToEmpty(ops);
 
+        traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
 
         precompile();
-    }
-
-    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke);
-        this.transaction = transaction;
     }
 
     public int getCallDeep() {
