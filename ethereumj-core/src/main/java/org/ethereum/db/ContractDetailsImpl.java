@@ -124,7 +124,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > commonConfig.config().detailsInMemoryStorageLimit())
+        externalStorage = (storage.getRLPData().length > commonConfig.systemProperties().detailsInMemoryStorageLimit())
                 || externalStorage;
 
         this.rlpEncoded = rlpCode;

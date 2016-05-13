@@ -42,7 +42,7 @@ public class CommonConfig {
     ApplicationContext applicationContext;
 
     @Bean
-    public SystemProperties config() {
+    public SystemProperties systemProperties() {
         return new SystemProperties();
     }
 
@@ -51,14 +51,16 @@ public class CommonConfig {
     }
 
     @Bean
+    @Primary
     Repository repository() {
-        return new RepositoryImpl(keyValueDataSource(), keyValueDataSource());
+        return new RepositoryImpl();
     }
 
     @Bean
     @Scope("prototype")
+    @Primary
     public KeyValueDataSource keyValueDataSource() {
-        String dataSource = config().getKeyValueDataSource();
+        String dataSource = systemProperties().getKeyValueDataSource();
         try {
             if ("redis".equals(dataSource) && redisConnection().isAvailable()) {
                 // Name will be defined before initialization
@@ -111,7 +113,7 @@ public class CommonConfig {
 
         Properties prop = new Properties();
 
-        if (config().databaseReset())
+        if (systemProperties().databaseReset())
             prop.put("hibernate.hbm2ddl.auto", "create-drop");
         else
             prop.put("hibernate.hbm2ddl.auto", "update");
@@ -146,7 +148,7 @@ public class CommonConfig {
 
         String url =
                 String.format("jdbc:h2:./%s/blockchain/blockchain.db;CACHE_SIZE=200000",
-                        config().databaseDir());
+                        systemProperties().databaseDir());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.h2.Driver");
@@ -169,7 +171,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public VM vm() {
-        return new VM(config());
+        return new VM(systemProperties());
     }
 
     @Bean
@@ -209,9 +211,9 @@ public class CommonConfig {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
-                new ExtraDataRule(config()),
+                new ExtraDataRule(systemProperties()),
                 new ProofOfWorkRule(),
-                new GasLimitRule(config())
+                new GasLimitRule(systemProperties())
         ));
 
         return new BlockHeaderValidator(rules);
@@ -222,8 +224,8 @@ public class CommonConfig {
 
         List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
                 new ParentNumberRule(),
-                new DifficultyRule(config()),
-                new ParentGasLimitRule(config())
+                new DifficultyRule(systemProperties()),
+                new ParentGasLimitRule(systemProperties())
         ));
 
         return new ParentBlockHeaderValidator(rules);
