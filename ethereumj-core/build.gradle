@@ -93,17 +93,17 @@ test {
 }
 
 ext {
-    slf4jVersion = '1.7.7'
+    slf4jVersion = '1.7.21'
     leveldbVersion = '0.7'
     scastleVersion = '1.51.0.0'
     log4jVersion = '1.2.17'
-    springVersion = '4.2.0.RELEASE'
-    hibernateVersion = '4.3.7.Final'
-    junitVersion = '4.11'
+    springVersion = '4.2.5.RELEASE'
+    hibernateVersion = '4.3.11.Final'
+    junitVersion = '4.12'
 }
 
 dependencies {
-    compile "io.netty:netty-all:4.0.30.Final"
+    compile "io.netty:netty-all:4.0.36.Final"
     compile "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
     compile "com.madgag.spongycastle:prov:${scastleVersion}" // for SHA3 and SECP256K1
 
@@ -112,14 +112,14 @@ dependencies {
     compile "org.fusesource.leveldbjni:leveldbjni:1.8"
     compile "org.ethereum:leveldbjni-all:1.18.2"
 
-    compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
+    compile "com.cedarsoftware:java-util:1.22.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "log4j:log4j:${log4jVersion}"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
-    compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
-    compile "org.apache.commons:commons-collections4:4.0"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.7.3"
+    compile "org.apache.commons:commons-collections4:4.1"
     compile "org.apache.commons:commons-lang3:3.4"
     compile "commons-codec:commons-codec:1.10"
     compile "org.springframework:spring-context:${springVersion}"
@@ -132,7 +132,7 @@ dependencies {
     compile "com.h2database:h2:1.4.187"
     compile "com.typesafe:config:1.2.1"
 
-    compile "org.mapdb:mapdb:2.0-beta12"
+    compile "org.mapdb:mapdb:2.0-beta13"
 
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "log4j:apache-log4j-extras:${log4jVersion}"
