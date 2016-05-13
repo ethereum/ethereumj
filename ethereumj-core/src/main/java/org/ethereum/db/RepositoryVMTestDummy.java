@@ -26,10 +26,6 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
-    public RepositoryVMTestDummy() {
-        super(false);
-    }
-
     @Override
     public void reset() {
 

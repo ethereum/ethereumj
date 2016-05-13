@@ -29,10 +29,6 @@ public class RepositoryDummy extends RepositoryImpl {
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
-    public RepositoryDummy() {
-        super(false);
-    }
-
     @Override
     public void reset() {
 

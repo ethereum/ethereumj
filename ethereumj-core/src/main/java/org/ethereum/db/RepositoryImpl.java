@@ -60,23 +60,22 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     private DatabaseImpl stateDB = null;
 
-    private KeyValueDataSource detailsDS = null;
-    private KeyValueDataSource stateDS = null;
+    @Autowired
+    private KeyValueDataSource detailsDS;
+    @Autowired
+    private KeyValueDataSource stateDS;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private boolean isSnapshot = false;
 
     public RepositoryImpl() {
-
-    }
-
-    public RepositoryImpl(boolean createDb) {
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
         this.detailsDS = detailsDS;
         this.stateDS = stateDS;
+        init();
     }
 
     @PostConstruct
@@ -256,7 +255,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     protected SystemProperties config() {
-        return commonConfig.config();
+        return commonConfig.systemProperties();
     }
 
     @Override
