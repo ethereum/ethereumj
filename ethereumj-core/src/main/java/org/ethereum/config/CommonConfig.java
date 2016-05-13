@@ -17,8 +17,7 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
@@ -38,16 +37,14 @@ public class CommonConfig {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-    @Autowired
-    ApplicationContext applicationContext;
-
     @Bean
     public SystemProperties systemProperties() {
         return new SystemProperties();
     }
 
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
+    @Bean
+    BeanPostProcessor initializer() {
+        return new Initializer();
     }
 
     @Bean
