@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.ethereum.config.CommonConfig;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -18,8 +19,8 @@ public class DataSourcePool {
         return (KeyValueDataSource) getDataSourceFromPool(name, new HashMapDB());
     }
 
-    public static KeyValueDataSource levelDbByName(String name) {
-        return (KeyValueDataSource) getDataSourceFromPool(name, new LevelDbDataSource());
+    public static KeyValueDataSource dbByName(CommonConfig commonConfig, String name) {
+        return (KeyValueDataSource) getDataSourceFromPool(name, commonConfig.keyValueDataSource());
     }
 
     private static DataSource getDataSourceFromPool(String name, @Nonnull DataSource dataSource) {

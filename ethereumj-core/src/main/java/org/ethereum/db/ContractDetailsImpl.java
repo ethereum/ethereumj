@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
@@ -228,15 +229,13 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         if (externalStorage) {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
-            externalStorageDataSource.close();
+            DataSourcePool.closeDataSource("details-storage/" + toHexString(address));
         }
     }
 
     private KeyValueDataSource getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = commonConfig.keyValueDataSource();
-            externalStorageDataSource.setName("details-storage/" + toHexString(address));
-            externalStorageDataSource.init();
+            externalStorageDataSource = DataSourcePool.dbByName(commonConfig, "details-storage/" + toHexString(address));
         }
         return externalStorageDataSource;
     }
