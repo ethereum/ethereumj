@@ -105,10 +105,7 @@ public class Transaction {
 
     public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data, byte[] r, byte[] s, byte v) {
         this(nonce, gasPrice, gasLimit, receiveAddress, value, data);
-
-        ECDSASignature signature = new ECDSASignature(new BigInteger(r), new BigInteger(s));
-        signature.v = v;
-        this.signature = signature;
+        this.signature = ECDSASignature.fromComponents(r, s, v);
     }
 
     public long transactionCost(Block block){
@@ -236,14 +233,13 @@ public class Transaction {
 
     public ECKey getKey() {
         byte[] hash = getRawHash();
-        return ECKey.recoverFromSignature(signature.v, signature, hash, true);
+        return ECKey.recoverFromSignature(signature.v, signature, hash);
     }
 
     public synchronized byte[] getSender() {
         try {
             if (sendAddress == null) {
-                ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());
-                sendAddress = key.getAddress();
+                sendAddress = ECKey.signatureToAddress(getRawHash(), getSignature());
             }
             return sendAddress;
         } catch (SignatureException e) {
@@ -252,10 +248,15 @@ public class Transaction {
         return null;
     }
 
+    /**
+     * @deprecated should prefer #sign(ECKey) over this method
+     */
     public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
-        byte[] hash = this.getRawHash();
-        ECKey key = ECKey.fromPrivate(privKeyBytes).decompress();
-        this.signature = key.sign(hash);
+        sign(ECKey.fromPrivate(privKeyBytes));
+    }
+
+    public void sign(ECKey key) throws MissingPrivateKeyException {
+        this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
     }
 

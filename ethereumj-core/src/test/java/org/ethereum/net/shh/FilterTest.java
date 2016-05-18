@@ -14,8 +14,8 @@ import static org.junit.Assert.assertTrue;
 
 public class FilterTest {
 
-    String to = WhisperImpl.toIdentity(new ECKey().decompress());
-    String from = WhisperImpl.toIdentity(new ECKey().decompress());
+    String to = WhisperImpl.toIdentity(new ECKey());
+    String from = WhisperImpl.toIdentity(new ECKey());
     String[] topics = {"topic1", "topic2", "topic3", "topic4"};
 
     class FilterStub extends MessageWatcher {

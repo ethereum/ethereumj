@@ -89,7 +89,7 @@ public class PendingStateTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, ByteUtil.intToBytesNoLeadZeroes(val), new byte[0]);
-        tx.sign(senderKey.getPrivKeyBytes());
+        tx.sign(senderKey);
         return tx;
     }
 
