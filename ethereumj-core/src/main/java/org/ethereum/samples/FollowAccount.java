@@ -38,7 +38,7 @@ public class FollowAccount extends EthereumListenerAdapter {
         Block oldBlock = ethereum.getBlockchain().getBlockByNumber(oldNumber);
 
         Repository repository = ethereum.getRepository();
-        Repository snapshot = ethereum.getSnapshootTo(oldBlock.getStateRoot());
+        Repository snapshot = ethereum.getSnapshotTo(oldBlock.getStateRoot());
 
         BigInteger nonce_ = snapshot.getNonce(cow);
         BigInteger nonce = repository.getNonce(cow);
