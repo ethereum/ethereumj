@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -94,7 +95,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
     private static final int MAGIC_REWARD_OFFSET = 8;
 
-    @Autowired
+    @Autowired @Qualifier("repository")
     private Repository repository;
     private Repository track;
 
@@ -793,13 +794,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             totalGasUsed += executor.getGasUsed();
 
             track.commit();
-            TransactionReceipt receipt = new TransactionReceipt();
-            receipt.setCumulativeGas(totalGasUsed);
+            TransactionReceipt receipt = executor.getReceipt();
             receipt.setPostTxState(repository.getRoot());
-            receipt.setTransaction(tx);
-            receipt.setLogInfoList(executor.getVMLogs());
-            receipt.setGasUsed(executor.getGasUsed());
-            receipt.setExecutionResult(executor.getResult().getHReturn());
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(repository.getRoot()));

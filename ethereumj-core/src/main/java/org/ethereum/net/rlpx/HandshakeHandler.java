@@ -98,11 +98,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
         nodeId = myKey.getNodeId();
 
-        byte[] remotePublicBytes = new byte[remoteId.length + 1];
-        System.arraycopy(remoteId, 0, remotePublicBytes, 1, remoteId.length);
-        remotePublicBytes[0] = 0x04; // uncompressed
-        ECPoint remotePublic = ECKey.fromPublicOnly(remotePublicBytes).getPubKeyPoint();
-        handshake = new EncryptionHandshake(remotePublic);
+        handshake = new EncryptionHandshake(ECKey.fromNodeId(this.remoteId).getPubKeyPoint());
 
         Object msg;
         if (config.eip8()) {
@@ -303,7 +299,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
      * connection (e.g. for peer discovery)
      */
     public void generateTempKey() {
-        myKey = new ECKey().decompress();
+        myKey = new ECKey();
     }
 
     public byte[] getRemoteId() {

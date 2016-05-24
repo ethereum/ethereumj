@@ -271,7 +271,11 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public ProgramResult callConstant(Transaction tx, Block block) {
+    public TransactionReceipt callConstant(Transaction tx, Block block) {
+        return callConstantImpl(tx, block).getReceipt();
+    }
+
+    private org.ethereum.core.TransactionExecutor callConstantImpl(Transaction tx, Block block) {
         tx.sign(new byte[32]);
 
         Repository repository = ((Repository) worldManager.getRepository())
@@ -289,7 +293,7 @@ public class EthereumImpl implements Ethereum {
             executor.go();
             executor.finalization();
 
-            return executor.getResult();
+            return executor;
         } finally {
             repository.rollback();
         }
@@ -302,7 +306,7 @@ public class EthereumImpl implements Ethereum {
                 receiveAddress, 0, function, funcArgs);
         Block bestBlock = worldManager.getBlockchain().getBestBlock();
 
-        return callConstant(tx, bestBlock);
+        return callConstantImpl(tx, bestBlock).getResult();
     }
 
     @Override
@@ -316,7 +320,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public org.ethereum.facade.Repository getSnapshootTo(byte[] root){
+    public org.ethereum.facade.Repository getSnapshotTo(byte[] root){
 
         Repository repository = (Repository) worldManager.getRepository();
         org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);

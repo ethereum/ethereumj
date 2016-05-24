@@ -3,6 +3,7 @@ package org.ethereum.facade;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -118,7 +119,16 @@ public interface Ethereum {
     Future<Transaction> submitTransaction(Transaction transaction);
 
 
-    ProgramResult callConstant(Transaction tx, Block block);
+    /**
+     * Executes the transaction based on the specified block but doesn't change the blockchain state
+     * and doesn't send the transaction to the network
+     * @param tx     The transaction to execute. No need to sign the transaction and specify the correct nonce
+     * @param block  Transaction is executed the same way as if it was executed after all transactions existing
+     *               in that block. I.e. the root state is the same as this block's root state and this block
+     *               is assumed to be the current block
+     * @return       receipt of the executed transaction
+     */
+    TransactionReceipt callConstant(Transaction tx, Block block);
 
     /**
      * Call a contract function locally without sending transaction to the network
@@ -147,7 +157,7 @@ public interface Ethereum {
     void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
-    Repository getSnapshootTo(byte[] root);
+    Repository getSnapshotTo(byte[] root);
 
     AdminInfo getAdminInfo();
 

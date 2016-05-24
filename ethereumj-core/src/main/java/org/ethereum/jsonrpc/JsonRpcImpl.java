@@ -30,6 +30,7 @@ import org.ethereum.vm.program.ProgramResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -60,7 +61,10 @@ public class JsonRpcImpl implements JsonRpc {
         public long value;
         public byte[] data;
         public void setArguments(CallArguments args) throws Exception {
-            nonce =0;
+            nonce = 0;
+            if (args.nonce != null && args.nonce.length() != 0)
+                nonce = JSonHexToLong(args.nonce);
+
             gasPrice = 0;
             if (args.gasPrice != null && args.gasPrice.length()!=0)
                 gasPrice = JSonHexToLong(args.gasPrice);
@@ -69,7 +73,9 @@ public class JsonRpcImpl implements JsonRpc {
             if (args.gasLimit != null && args.gasLimit.length()!=0)
                 gasLimit = JSonHexToLong(args.gasLimit);
 
-            toAddress = JSonHexToHex(args.to);
+            toAddress = null;
+            if (args.to != null && !args.to.isEmpty())
+                toAddress = JSonHexToHex(args.to);
 
             value=0;
             if (args.value != null && args.value.length()!=0)
@@ -91,7 +97,7 @@ public class JsonRpcImpl implements JsonRpc {
     @Autowired
     public WorldManager worldManager;
 
-    @Autowired
+    @Autowired @Qualifier("repository")
     public Repository repository;
 
     @Autowired
@@ -506,7 +512,7 @@ public class JsonRpcImpl implements JsonRpc {
                 args.data = args.data.substring(2);
 
             Transaction tx = new Transaction(
-                    bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
+                    args.nonce != null ? StringHexToByteArray(args.nonce) : bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
                     args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : EMPTY_BYTE_ARRAY,
                     args.gasLimit != null ? StringHexToByteArray(args.gasLimit) : EMPTY_BYTE_ARRAY,
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
@@ -562,7 +568,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public ProgramResult createCallTxAndExecute(CallArguments args, Block block) throws Exception {
+    public TransactionReceipt createCallTxAndExecute(CallArguments args, Block block) throws Exception {
         BinaryCallArguments bca = new BinaryCallArguments();
         bca.setArguments(args);
         Transaction tx = CallTransaction.createRawTransaction(0,
@@ -572,16 +578,15 @@ public class JsonRpcImpl implements JsonRpc {
                 bca.value,
                 bca.data);
 
-        ProgramResult res = eth.callConstant(tx, block);
-        return res;
+        return eth.callConstant(tx, block);
     }
 
     public String eth_call(CallArguments args, String bnOrId) throws Exception {
 
         String s = null;
         try {
-            ProgramResult res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
-            return s = TypeConverter.toJsonHex(res.getHReturn());
+            TransactionReceipt res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
+            return s = TypeConverter.toJsonHex(res.getExecutionResult());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_call(" + args + "): " + s);
         }
@@ -590,7 +595,7 @@ public class JsonRpcImpl implements JsonRpc {
     public String eth_estimateGas(CallArguments args) throws Exception {
         String s = null;
         try {
-            ProgramResult res = createCallTxAndExecute(args, blockchain.getBestBlock());
+            TransactionReceipt res = createCallTxAndExecute(args, blockchain.getBestBlock());
             return s = TypeConverter.toJsonHex(res.getGasUsed());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_estimateGas(" + args + "): " + s);
