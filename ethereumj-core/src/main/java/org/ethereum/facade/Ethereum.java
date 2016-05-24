@@ -157,7 +157,7 @@ public interface Ethereum {
     void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
-    Repository getSnapshootTo(byte[] root);
+    Repository getSnapshotTo(byte[] root);
 
     AdminInfo getAdminInfo();
 
