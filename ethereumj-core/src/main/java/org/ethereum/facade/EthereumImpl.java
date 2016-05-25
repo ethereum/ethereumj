@@ -326,7 +326,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public org.ethereum.facade.Repository getSnapshootTo(byte[] root){
+    public org.ethereum.facade.Repository getSnapshotTo(byte[] root){
 
         Repository repository = (Repository) worldManager.getRepository();
         org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);

@@ -563,7 +563,7 @@ public class SystemProperties {
             if (file.canRead()) {
                 props.load(new FileReader(file));
             } else {
-                ECKey key = new ECKey().decompress();
+                ECKey key = new ECKey();
                 props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
                 props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
                 file.getParentFile().mkdirs();
@@ -579,7 +579,7 @@ public class SystemProperties {
 
     @ValidateMe
     public ECKey getMyKey() {
-        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
+        return ECKey.fromPrivate(Hex.decode(privateKey()));
     }
 
     /**

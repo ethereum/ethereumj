@@ -248,7 +248,7 @@ public class TwoPeerTest {
     }
 
     public static void main(String[] args) throws Exception {
-        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec")).decompress();
+        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec"));
         System.out.println(Hex.toHexString(k.getPrivKeyBytes()));
         System.out.println(Hex.toHexString(k.getAddress()));
         System.out.println(Hex.toHexString(k.getNodeId()));

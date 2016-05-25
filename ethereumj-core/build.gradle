@@ -26,6 +26,10 @@ sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
 applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
+
+if ( project.hasProperty('jvmArgs') ) {
+    applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
+}
 if (project.hasProperty("mainClass")) {
     mainClassName = mainClass
 }
