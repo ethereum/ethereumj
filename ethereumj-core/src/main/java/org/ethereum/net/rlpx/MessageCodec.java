@@ -202,20 +202,22 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     private byte getCode(Enum msgCommand){
         byte code = 0;
 
-        if (msgCommand instanceof P2pMessageCodes){
-            code = messageCodesResolver.withP2pOffset(((P2pMessageCodes) msgCommand).asByte());
-        }
+        if (messageCodesResolver != null) {
+            if (msgCommand instanceof P2pMessageCodes) {
+                code = messageCodesResolver.withP2pOffset(((P2pMessageCodes) msgCommand).asByte());
+            }
 
-        if (msgCommand instanceof EthMessageCodes){
-            code = messageCodesResolver.withEthOffset(((EthMessageCodes) msgCommand).asByte());
-        }
+            if (msgCommand instanceof EthMessageCodes) {
+                code = messageCodesResolver.withEthOffset(((EthMessageCodes) msgCommand).asByte());
+            }
 
-        if (msgCommand instanceof ShhMessageCodes){
-            code = messageCodesResolver.withShhOffset(((ShhMessageCodes)msgCommand).asByte());
-        }
+            if (msgCommand instanceof ShhMessageCodes) {
+                code = messageCodesResolver.withShhOffset(((ShhMessageCodes) msgCommand).asByte());
+            }
 
-        if (msgCommand instanceof BzzMessageCodes){
-            code = messageCodesResolver.withBzzOffset(((BzzMessageCodes) msgCommand).asByte());
+            if (msgCommand instanceof BzzMessageCodes) {
+                code = messageCodesResolver.withBzzOffset(((BzzMessageCodes) msgCommand).asByte());
+            }
         }
 
         return code;
