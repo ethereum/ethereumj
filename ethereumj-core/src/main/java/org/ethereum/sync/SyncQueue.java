@@ -5,6 +5,8 @@ import org.ethereum.core.*;
 import org.ethereum.db.*;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.net.eth.handler.Eth62;
+import org.ethereum.net.server.Channel;
 import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -14,11 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.core.ImportResult.IMPORTED_BEST;
@@ -38,12 +42,7 @@ public class SyncQueue {
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
     private static final int BLOCK_QUEUE_LIMIT = 20000;
-
-    /**
-     * Store holding a list of block headers of the heaviest chain on the network,
-     * for which this client doesn't have the blocks yet
-     */
-    private HeaderStore headerStore = new HeaderStoreMem();
+    private static final int HEADER_QUEUE_LIMIT = 20000;
 
     /**
      * Queue with blocks to be validated and added to the blockchain
@@ -73,6 +72,14 @@ public class SyncQueue {
     @Autowired
     private CompositeEthereumListener compositeEthereumListener;
 
+    @Autowired
+    SyncPool pool;
+
+    private SyncQueueIfc syncQueueNew;
+
+    private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
+    private CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
+
     /**
      * Loads HashStore and BlockQueue from disk,
      * starts {@link #produceQueue()} thread
@@ -81,7 +88,6 @@ public class SyncQueue {
 
         logger.info("Start loading sync queue");
 
-        headerStore.open();
         blockQueue.open();
 
         compositeEthereumListener.addListener(new EthereumListenerAdapter() {
@@ -105,6 +111,75 @@ public class SyncQueue {
 
         Thread t=new Thread (queueProducer, "SyncQueueThread");
         t.start();
+
+        try {
+            Thread.sleep(5000); // TODO !!!!!!!!!!!!!!!!!!!!!! blockchain is not initialized here
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        syncQueueNew = new SyncQueueImpl(blockchain);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                headerRetrieveLoop();
+            }
+        }, "NewSyncThreadHeaders").start();
+
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                blockRetrieveLoop();
+//            }
+//        }, "NewSyncThreadBlocks").start();
+    }
+
+    private void headerRetrieveLoop() {
+        while(true) {
+            try {
+
+                if (syncQueueNew.getHeadersCount() < HEADER_QUEUE_LIMIT) {
+                    Channel any = pool.getAnyIdle();
+
+                    if (any != null) {
+                        Eth62 eth = (Eth62) any.getEthHandler();
+
+                        SyncQueueIfc.HeadersRequest hReq = syncQueueNew.requestHeaders();
+                        eth.sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                    }
+                }
+                receivedHeadersLatch = new CountDownLatch(1);
+                receivedHeadersLatch.await(2000, TimeUnit.MILLISECONDS);
+
+            } catch (Exception e) {
+                logger.error("Unexpected: ", e);
+            }
+        }
+    }
+
+    private void blockRetrieveLoop() {
+        while(true) {
+            try {
+
+                if (blockQueue.size() < BLOCK_QUEUE_LIMIT) {
+                    SyncQueueIfc.BlocksRequest bReq = syncQueueNew.requestBlocks(1000);
+                    int reqBlocksCounter = 0;
+                    for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
+                        Channel any = pool.getAnyIdle();
+                        if (any == null) break;
+                        Eth62 eth = (Eth62) any.getEthHandler();
+                        eth.sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                        reqBlocksCounter ++;
+                    }
+                    receivedBlocksLatch = new CountDownLatch(reqBlocksCounter);
+                }
+
+                receivedBlocksLatch.await(2, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.error("Unexpected: ", e);
+            }
+        }
     }
 
     /**
@@ -119,7 +194,7 @@ public class SyncQueue {
 
                 wrapper = blockQueue.take();
 
-                logger.debug("BlockQueue size: {}", blockQueue.size());
+                logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueueNew.getHeadersCount());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
 
                 if (importResult == IMPORTED_BEST)
@@ -139,13 +214,8 @@ public class SyncQueue {
                 // In case we don't have a parent on the chain
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
-                    logger.info("No parent on the chain for block.number: {} block.hash: {}",
+                    logger.error("No parent on the chain for block.number: {} block.hash: {}",
                             wrapper.getNumber(), wrapper.getBlock().getShortHash());
-
-                    blockQueue.returnBlock(wrapper);
-                    compositeSyncListener.onNoParent(wrapper);
-
-                    waitForBlocks();
                 }
 
             } catch (Throwable e) {
@@ -168,14 +238,16 @@ public class SyncQueue {
             return;
         }
 
-        List<BlockWrapper> wrappers = new ArrayList<>(blocks.size());
-        for (Block b : blocks) {
+        List<Block> newBlocks = syncQueueNew.addBlocks(blocks);
+
+        List<BlockWrapper> wrappers = new ArrayList<>();
+        for (Block b : newBlocks) {
             wrappers.add(new BlockWrapper(b, nodeId));
         }
 
         blockQueue.addOrReplaceAll(wrappers);
 
-        fireBlocksAdded();
+        receivedBlocksLatch.countDown();
 
         if (logger.isDebugEnabled()) logger.debug(
                 "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
@@ -200,16 +272,21 @@ public class SyncQueue {
             return false;
         }
 
-        BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
-        wrapper.setReceivedAt(System.currentTimeMillis());
+        syncQueueNew.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
+        List<Block> newBlocks = syncQueueNew.addBlocks(singletonList(block));
 
-        blockQueue.addOrReplace(wrapper);
+        List<BlockWrapper> wrappers = new ArrayList<>();
+        for (Block b : newBlocks) {
+            BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
+            wrapper.setReceivedAt(System.currentTimeMillis());
+            wrappers.add(new BlockWrapper(b, nodeId));
+        }
 
-        fireBlocksAdded();
+        blockQueue.addOrReplaceAll(wrappers);
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
-                wrapper.getNumber());
+                block.getNumber());
 
         return true;
     }
@@ -243,122 +320,13 @@ public class SyncQueue {
             wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        headerStore.addBatch(wrappers);
-        fireHeadersNotEmpty();
+        syncQueueNew.addHeaders(wrappers);
+
+        receivedHeadersLatch.countDown();
 
         logger.debug("{} headers added", headers.size());
 
         return true;
-    }
-
-    /**
-     * Adds headers previously taken from the store <br>
-     * Doesn't run any validations and checks
-     *
-     * @param headers list of headers
-     */
-    public void returnHeaders(List<BlockHeaderWrapper> headers) {
-        headerStore.addBatch(headers);
-        fireHeadersNotEmpty();
-    }
-
-    /**
-     * Returns list of headers for blocks required to be downloaded
-     *
-     * @return list of headers
-     */
-    public List<BlockHeaderWrapper> pollHeaders() {
-        if (logger.isDebugEnabled() && !headerStore.isEmpty())
-            logger.debug("Headers list size: {}", headerStore.size());
-        return headerStore.pollBatch(config.maxBlocksAsk());
-    }
-
-    /**
-     * Performs the same work as {@link #pollHeaders()} does. <br>
-     * Blocks thread if header store is empty until new headers appears in the store
-     *
-     * @return list of headers
-     */
-    public List<BlockHeaderWrapper> takeHeaders() {
-
-        headersLock.lock();
-        try {
-            List<BlockHeaderWrapper> headers;
-            while ((headers = headerStore.pollBatch(config.maxBlocksAsk())).isEmpty()) {
-                headersNotEmpty.awaitUninterruptibly();
-                if (longSyncDone) return emptyList();
-            }
-            if (logger.isDebugEnabled() && !headerStore.isEmpty())
-                logger.debug("Headers list size: {}", headerStore.size());
-            return headers;
-        } finally {
-            headersLock.unlock();
-        }
-    }
-
-    public boolean isHeadersEmpty() {
-        return headerStore.isEmpty();
-    }
-
-    public boolean isBlocksEmpty() {
-        return blockQueue.isEmpty();
-    }
-
-    public boolean isLimitExceeded() {
-        return expectedBlocksCount() > BLOCK_QUEUE_LIMIT;
-    }
-
-    public boolean isMoreBlocksNeeded() {
-        return expectedBlocksCount() < BLOCK_QUEUE_LIMIT;
-    }
-
-    private int expectedBlocksCount() {
-        return headerStore.size() + blockQueue.size();
-    }
-
-    public int headerStoreSize() {
-        return headerStore.size();
-    }
-
-    /**
-     * Removes blocks sent by given peer
-     *
-     * @param nodeId peer's node id
-     */
-    public void dropBlocks(byte[] nodeId) {
-        blockQueue.drop(nodeId, 0);
-    }
-
-    /**
-     * Removes headers sent by given peer
-     *
-     * @param nodeId peer's node id
-     */
-    public void dropHeaders(byte[] nodeId) {
-        headerStore.drop(nodeId);
-    }
-
-    /**
-     * @return latest block in the queue
-     */
-    public BlockWrapper peekLastBlock() {
-        return blockQueue.peekLast();
-    }
-
-    /**
-     * @return latest block in the queue
-     */
-    public BlockWrapper peekFirstBlock() {
-        return blockQueue.peek();
-    }
-
-    /**
-     * Removes block if it's still on the queue
-     *
-     * @param block block to be removed
-     */
-    public void removeBlock(BlockWrapper block) {
-        blockQueue.remove(block);
     }
 
     /**
@@ -378,34 +346,5 @@ public class SyncQueue {
         }
 
         return true;
-    }
-
-    private void fireHeadersNotEmpty() {
-        headersLock.lock();
-        try {
-            headersNotEmpty.signalAll();
-        } finally {
-            headersLock.unlock();
-        }
-    }
-
-    private void fireBlocksAdded() {
-        blocksLock.lock();
-        try {
-            blocksAdded.signalAll();
-        } finally {
-            blocksLock.unlock();
-        }
-    }
-
-    private void waitForBlocks() {
-        blocksLock.lock();
-        try {
-            blocksAdded.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            blocksLock.unlock();
-        }
     }
 }

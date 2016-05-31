@@ -18,7 +18,6 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.ethereum.sync.strategy.AbstractSyncStrategy;
 import org.ethereum.sync.strategy.SyncStrategy;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
@@ -1068,20 +1067,6 @@ public class ShortSyncTest {
         @Bean
         public SystemProperties systemProperties() {
             return props;
-        }
-
-        @Bean
-        public SyncStrategy longSync() {
-            return new AbstractSyncStrategy() {
-                @Override
-                protected void doWork() {
-                }
-
-                @Override
-                public boolean inProgress() {
-                    return false;
-                }
-            };
         }
     }
 }

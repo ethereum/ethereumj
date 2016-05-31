@@ -295,10 +295,6 @@ public class Channel {
         eth.fetchBodies(headers);
     }
 
-    public void recoverGap(BlockWrapper block) {
-        eth.recoverGap(block);
-    }
-
     public boolean isEthCompatible(Channel peer) {
         return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
     }
@@ -317,10 +313,6 @@ public class Channel {
 
     public BigInteger getTotalDifficulty() {
         return nodeStatistics.getEthTotalDifficulty();
-    }
-
-    public void changeSyncState(SyncState newState) {
-        eth.changeState(newState);
     }
 
     public SyncStatistics getSyncStats() {

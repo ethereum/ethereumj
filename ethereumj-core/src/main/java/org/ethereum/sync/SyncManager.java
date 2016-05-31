@@ -118,35 +118,6 @@ public class SyncManager {
 
         @Override
         public void onNewBlockNumber(long newNumber) {
-
-            long bestNumber = blockchain.getBestBlock().getNumber();
-            long diff = newNumber - bestNumber;
-
-            if (diff < 0) return;
-
-            if (longSync.inProgress() && diff <= FORWARD_SWITCH_LIMIT) {
-
-                logger.debug("Switch to Short sync, best {} vs new {}", bestNumber, newNumber);
-
-                // stop master
-                Channel master = pool.getMaster();
-                if (master != null) master.changeSyncState(IDLE);
-
-                longSync.stop();
-                onSyncDone(true);
-
-            } else if (!longSync.inProgress() && diff > BACKWARD_SWITCH_LIMIT) {
-
-                logger.debug("Switch to Long sync, best {} vs new {}", bestNumber, newNumber);
-
-                // stop master
-                Channel master = pool.getMaster();
-                if (master != null) master.changeSyncState(IDLE);
-
-                longSync.start();
-                onSyncDone(false);
-
-            }
         }
     };
 
@@ -154,31 +125,6 @@ public class SyncManager {
 
         @Override
         public void onNoParent(BlockWrapper block) {
-
-            // recover gap only during Short sync
-            if (longSync.inProgress()) return;
-
-            BlockWrapper gapBlock = queue.peekFirstBlock();
-            Channel master = pool.getByNodeId(gapBlock.getNodeId());
-
-            // drop the block if there is no peer which sent it to us
-            if (master == null) {
-                if (logger.isTraceEnabled()) logger.trace("Peer {} not found, remove block #{}",
-                        Hex.toHexString(gapBlock.getNodeId()).substring(0, 6), gapBlock.getNumber());
-                queue.removeBlock(gapBlock);
-                return;
-            }
-
-            // wait if gap recovery is already in progress
-            if (!master.isIdle()) return;
-
-            if (logger.isDebugEnabled()) logger.debug(
-                    "Recover gap: best.number [{}] vs block.number [{}]",
-                    blockchain.getBestBlock().getNumber(),
-                    gapBlock.getNumber()
-            );
-
-            master.recoverGap(gapBlock);
         }
     };
 

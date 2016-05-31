@@ -46,10 +46,6 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void changeState(SyncState newState) {
-    }
-
-    @Override
     public boolean isHashRetrievingDone() {
         return false;
     }
@@ -101,10 +97,6 @@ public class EthAdapter implements Eth {
 
     @Override
     public void sendStatus() {
-    }
-
-    @Override
-    public void recoverGap(BlockWrapper block) {
     }
 
     @Override

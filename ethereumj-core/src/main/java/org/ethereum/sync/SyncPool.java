@@ -155,6 +155,18 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     @Nullable
+    public synchronized Channel getAnyIdle() {
+        ArrayList<Channel> channels = new ArrayList<>(activePeers);
+        Collections.shuffle(channels);
+        for (Channel peer : channels) {
+            if (peer.isIdle())
+                return peer;
+        }
+
+        return null;
+    }
+
+    @Nullable
     public synchronized Channel getBestIdle() {
 //        synchronized (activePeers) {
 
