@@ -7,10 +7,10 @@ import java.security.Security;
 
 public final class SpongyCastleProvider {
 
-  public static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
+  private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
 
   private static class Holder {
-    private static final BouncyCastleProvider INSTANCE;
+    private static final Provider INSTANCE;
 
     static {
       Provider provider = Security.getProvider(PROVIDER_NAME);
@@ -19,8 +19,7 @@ public final class SpongyCastleProvider {
         INSTANCE = new BouncyCastleProvider();
         Security.addProvider(INSTANCE);
       } else {
-        assert provider instanceof BouncyCastleProvider;
-        INSTANCE = (BouncyCastleProvider) provider;
+        INSTANCE = provider;
       }
     }
   }
