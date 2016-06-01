@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
@@ -82,6 +83,9 @@ public class SyncManager {
     SyncPool pool;
 
     @Autowired
+    WorldManager worldManager;
+
+    @Autowired
     SystemProperties config;
 
     @Autowired
@@ -110,6 +114,9 @@ public class SyncManager {
 
                 logger.info("Sync Manager: ON");
 
+                worldManager.waitForInit();
+                logger.info("Initializing SyncManager.");
+
                 Runnable queueProducer = new Runnable(){
 
                     @Override
@@ -120,12 +127,6 @@ public class SyncManager {
 
                 Thread t=new Thread (queueProducer, "SyncQueueThread");
                 t.start();
-
-                try {
-                    Thread.sleep(5000); // TODO !!!!!!!!!!!!!!!!!!!!!! blockchain is not initialized here
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
 
                 syncQueueNew = new SyncQueueImpl(blockchain);
 
