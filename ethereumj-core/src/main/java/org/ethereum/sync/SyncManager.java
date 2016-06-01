@@ -94,7 +94,7 @@ public class SyncManager {
     @Autowired
     ChannelManager channelManager;
 
-    private SyncQueueIfc syncQueueNew;
+    private SyncQueueIfc syncQueue;
 
     private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
     private CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
@@ -128,7 +128,7 @@ public class SyncManager {
                 Thread t=new Thread (queueProducer, "SyncQueueThread");
                 t.start();
 
-                syncQueueNew = new SyncQueueImpl(blockchain);
+                syncQueue = new SyncQueueImpl(blockchain);
 
                 new Thread(new Runnable() {
                     @Override
@@ -156,13 +156,13 @@ public class SyncManager {
         while(true) {
             try {
 
-                if (syncQueueNew.getHeadersCount() < HEADER_QUEUE_LIMIT) {
+                if (syncQueue.getHeadersCount() < HEADER_QUEUE_LIMIT) {
                     Channel any = pool.getAnyIdle();
 
                     if (any != null) {
                         Eth62 eth = (Eth62) any.getEthHandler();
 
-                        SyncQueueIfc.HeadersRequest hReq = syncQueueNew.requestHeaders();
+                        SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
                         eth.sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
                     }
                 }
@@ -180,7 +180,7 @@ public class SyncManager {
             try {
 
                 if (blockQueue.size() < BLOCK_QUEUE_LIMIT) {
-                    SyncQueueIfc.BlocksRequest bReq = syncQueueNew.requestBlocks(1000);
+                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(1000);
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
                         Channel any = pool.getAnyIdle();
@@ -213,7 +213,7 @@ public class SyncManager {
 
                 wrapper = blockQueue.take();
 
-                logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueueNew.getHeadersCount());
+                logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueue.getHeadersCount());
                 ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
 
                 if (importResult == IMPORTED_BEST) {
@@ -267,12 +267,19 @@ public class SyncManager {
             return;
         }
 
-        List<Block> newBlocks = syncQueueNew.addBlocks(blocks);
+        logger.debug("Adding new " + blocks.size() + " blocks to sync queue: " +
+                blocks.get(0).getShortDescr() + " ... " + blocks.get(blocks.size() - 1).getShortDescr());
+
+        List<Block> newBlocks = syncQueue.addBlocks(blocks);
 
         List<BlockWrapper> wrappers = new ArrayList<>();
         for (Block b : newBlocks) {
             wrappers.add(new BlockWrapper(b, nodeId));
         }
+
+
+        logger.debug("Pushing " + wrappers.size() + " blocks to import queue: " + (wrappers.isEmpty() ? "" :
+                wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
 
         exec1.pushAll(wrappers);
 
@@ -303,8 +310,9 @@ public class SyncManager {
 
         lastKnownBlockNumber = block.getNumber();
 
-        syncQueueNew.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
-        List<Block> newBlocks = syncQueueNew.addBlocks(singletonList(block));
+        logger.debug("Adding new block to sync queue: " + block.getShortDescr());
+        syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
+        List<Block> newBlocks = syncQueue.addBlocks(singletonList(block));
 
         List<BlockWrapper> wrappers = new ArrayList<>();
         for (Block b : newBlocks) {
@@ -314,6 +322,8 @@ public class SyncManager {
             wrappers.add(wrapper);
         }
 
+        logger.debug("Pushing " + wrappers.size() + " new blocks to import queue: " + (wrappers.isEmpty() ? "" :
+                wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
         exec1.pushAll(wrappers);
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
@@ -354,7 +364,7 @@ public class SyncManager {
             wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        syncQueueNew.addHeaders(wrappers);
+        syncQueue.addHeaders(wrappers);
 
         receivedHeadersLatch.countDown();
 
