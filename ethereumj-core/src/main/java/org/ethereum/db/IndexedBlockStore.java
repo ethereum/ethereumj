@@ -149,12 +149,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
             }
         }
 
-        // TODO remove this workaround later
-        // This is related to fix 557cbf154bbc175591a6d40a911d6dc73a300713
-        // Due to rebranch store bug we might have the only Fork block for number
-        // So to not to return null and return the right block (with high probability)
-        // we are returning any block existing for this number
-        return blockInfos.isEmpty() ? null : blocks.get(blockInfos.get(0).getHash());
+        return null;
     }
 
     @Override
