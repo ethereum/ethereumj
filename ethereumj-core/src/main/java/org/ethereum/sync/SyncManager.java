@@ -66,6 +66,7 @@ public class SyncManager {
      */
     private BlockingQueue<BlockWrapper> blockQueue = new LinkedBlockingQueue<>();
 
+    private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
 
     @Autowired
@@ -165,7 +166,7 @@ public class SyncManager {
                     }
                 }
                 receivedHeadersLatch = new CountDownLatch(1);
-                receivedHeadersLatch.await(2000, TimeUnit.MILLISECONDS);
+                receivedHeadersLatch.await(isSyncDone() ? 10000 : 2000, TimeUnit.MILLISECONDS);
 
             } catch (Exception e) {
                 logger.error("Unexpected: ", e);
@@ -299,6 +300,8 @@ public class SyncManager {
             return false;
         }
 
+        lastKnownBlockNumber = block.getNumber();
+
         syncQueueNew.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
         List<Block> newBlocks = syncQueueNew.addBlocks(singletonList(block));
 
@@ -377,8 +380,13 @@ public class SyncManager {
 
         return true;
     }
+
     public boolean isSyncDone() {
         return syncDone;
+    }
+
+    public long getLastKnownBlockNumber() {
+        return lastKnownBlockNumber;
     }
 
     private void startLogWorker() {
