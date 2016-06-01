@@ -155,7 +155,7 @@ public class LongSyncTest {
             }
         });
 
-        semaphore.await(10, SECONDS);
+        semaphore.await(40, SECONDS);
 
         // check if B == b10
         if(semaphore.getCount() > 0) {

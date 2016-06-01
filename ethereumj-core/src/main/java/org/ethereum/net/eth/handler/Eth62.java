@@ -6,8 +6,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.sync.SyncQueue;
-import org.ethereum.sync.listener.CompositeSyncListener;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
@@ -53,13 +52,10 @@ public class Eth62 extends EthHandler {
     protected BlockStore blockstore;
 
     @Autowired
-    protected SyncQueue queue;
+    protected SyncManager syncManager;
 
     @Autowired
     protected PendingState pendingState;
-
-    @Autowired
-    protected CompositeSyncListener compositeSyncListener;
 
     protected EthState ethState = EthState.INIT;
 
@@ -297,8 +293,6 @@ public class Eth62 extends EthHandler {
 
         updateBestBlock(identifiers);
 
-        compositeSyncListener.onNewBlockNumber(bestKnownBlock.getNumber());
-
         // queueing new blocks doesn't make sense
         // while Long sync is in progress
         if (!syncDone) return;
@@ -357,7 +351,7 @@ public class Eth62 extends EthHandler {
 
             logger.debug("Adding " + received.size() + " headers to the queue.");
 
-            if (!queue.validateAndAddHeaders(received, channel.getNodeId())) {
+            if (!syncManager.validateAndAddHeaders(received, channel.getNodeId())) {
 
                 dropConnection();
                 return;
@@ -399,7 +393,7 @@ public class Eth62 extends EthHandler {
             return;
         }
 
-        queue.addList(blocks, channel.getNodeId());
+        syncManager.addList(blocks, channel.getNodeId());
 
         syncState = IDLE;
     }
@@ -424,13 +418,7 @@ public class Eth62 extends EthHandler {
 
         updateBestBlock(newBlock);
 
-        compositeSyncListener.onNewBlockNumber(newBlock.getNumber());
-
-        // queueing new blocks doesn't make sense
-        // while Long sync is in progress
-        if (!syncDone) return;
-
-        if (!queue.validateAndAddNewBlock(newBlock, channel.getNodeId())) {
+        if (!syncManager.validateAndAddNewBlock(newBlock, channel.getNodeId())) {
             dropConnection();
         }
     }
