@@ -4,10 +4,7 @@ import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -72,13 +69,13 @@ public class LongSyncTest {
                 "peer.listen.port", "30334",
                 "peer.privateKey", "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
                 // nodeId: 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
-                "genesis", "genesis-light.json"
+                "genesis", "genesis-light-old.json"
         );
 
         SysPropConfigB.props.overrideParams(
                 "peer.listen.port", "30335",
                 "peer.privateKey", "6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec",
-                "genesis", "genesis-light.json",
+                "genesis", "genesis-light-old.json",
                 "sync.enabled", "true",
                 "sync.max.hashes.ask", "3",
                 "sync.max.blocks.ask", "2"
@@ -509,7 +506,8 @@ public class LongSyncTest {
 
         Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
         for (Block b : mainB1B10) {
-            blockchainA.tryToConnect(b);
+            ImportResult result = blockchainA.tryToConnect(b);
+            Assert.assertEquals(result, ImportResult.IMPORTED_BEST);
             if (b.equals(best)) break;
         }
 
