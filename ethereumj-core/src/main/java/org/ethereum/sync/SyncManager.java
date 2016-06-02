@@ -267,21 +267,23 @@ public class SyncManager {
             return;
         }
 
-        logger.debug("Adding new " + blocks.size() + " blocks to sync queue: " +
-                blocks.get(0).getShortDescr() + " ... " + blocks.get(blocks.size() - 1).getShortDescr());
+        synchronized (this) {
+            logger.debug("Adding new " + blocks.size() + " blocks to sync queue: " +
+                    blocks.get(0).getShortDescr() + " ... " + blocks.get(blocks.size() - 1).getShortDescr());
 
-        List<Block> newBlocks = syncQueue.addBlocks(blocks);
+            List<Block> newBlocks = syncQueue.addBlocks(blocks);
 
-        List<BlockWrapper> wrappers = new ArrayList<>();
-        for (Block b : newBlocks) {
-            wrappers.add(new BlockWrapper(b, nodeId));
+            List<BlockWrapper> wrappers = new ArrayList<>();
+            for (Block b : newBlocks) {
+                wrappers.add(new BlockWrapper(b, nodeId));
+            }
+
+
+            logger.debug("Pushing " + wrappers.size() + " blocks to import queue: " + (wrappers.isEmpty() ? "" :
+                    wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
+
+            exec1.pushAll(wrappers);
         }
-
-
-        logger.debug("Pushing " + wrappers.size() + " blocks to import queue: " + (wrappers.isEmpty() ? "" :
-                wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
-
-        exec1.pushAll(wrappers);
 
         receivedBlocksLatch.countDown();
 
@@ -312,19 +314,22 @@ public class SyncManager {
 
         logger.debug("Adding new block to sync queue: " + block.getShortDescr());
         syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
-        List<Block> newBlocks = syncQueue.addBlocks(singletonList(block));
 
-        List<BlockWrapper> wrappers = new ArrayList<>();
-        for (Block b : newBlocks) {
-            boolean newBlock = Arrays.equals(block.getHash(), b.getHash());
-            BlockWrapper wrapper = new BlockWrapper(b, newBlock, nodeId);
-            wrapper.setReceivedAt(System.currentTimeMillis());
-            wrappers.add(wrapper);
+        synchronized (this) {
+            List<Block> newBlocks = syncQueue.addBlocks(singletonList(block));
+
+            List<BlockWrapper> wrappers = new ArrayList<>();
+            for (Block b : newBlocks) {
+                boolean newBlock = Arrays.equals(block.getHash(), b.getHash());
+                BlockWrapper wrapper = new BlockWrapper(b, newBlock, nodeId);
+                wrapper.setReceivedAt(System.currentTimeMillis());
+                wrappers.add(wrapper);
+            }
+
+            logger.debug("Pushing " + wrappers.size() + " new blocks to import queue: " + (wrappers.isEmpty() ? "" :
+                    wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
+            exec1.pushAll(wrappers);
         }
-
-        logger.debug("Pushing " + wrappers.size() + " new blocks to import queue: " + (wrappers.isEmpty() ? "" :
-                wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
-        exec1.pushAll(wrappers);
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
