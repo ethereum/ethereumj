@@ -342,35 +342,34 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 }
                 return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
             }
-        }, BEST_DIFFICULTY_COMPARATOR, limit);
+        }, limit);
     }
 
     /**
      * Returns limited list of nodes matching {@code predicate} criteria<br>
-     * Sorting is performed before result truncation,
-     * therefore result list contains best nodes according to provided {@code comparator}
+     * The nodes are sorted then by their totalDifficulties
      *
      * @param predicate only those nodes which are satisfied to its condition are included in results
-     * @param comparator used to sort nodes before truncation
      * @param limit max size of returning list
      *
      * @return list of nodes matching criteria
      */
     private List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
-            Comparator<NodeHandler> comparator,
-            int limit
-    ) {
-        List<NodeHandler> filtered = new ArrayList<>();
+            int limit    ) {
+        TreeMap<BigInteger, NodeHandler> filtered = new TreeMap<>();
         synchronized (this) {
             for (NodeHandler handler : nodeHandlerMap.values()) {
                 if (predicate.test(handler)) {
-                    filtered.add(handler);
+                    filtered.put(handler.getNodeStatistics().getEthTotalDifficulty(), handler);
                 }
             }
         }
-        Collections.sort(filtered, comparator);
-        return CollectionUtils.truncate(filtered, limit);
+
+        ArrayList<NodeHandler> sorted = new ArrayList<>(filtered.values());
+        Collections.reverse(sorted);
+
+        return CollectionUtils.truncate(sorted, limit);
     }
 
     private synchronized void processListeners() {
@@ -440,27 +439,4 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }
     }
-
-    private static final Comparator<NodeHandler> BEST_DIFFICULTY_COMPARATOR = new Comparator<NodeHandler>() {
-        @Override
-        public int compare(NodeHandler n1, NodeHandler n2) {
-            BigInteger td1 = null;
-            BigInteger td2 = null;
-            if(n1.getNodeStatistics().getEthTotalDifficulty() != null) {
-                td1 = n1.getNodeStatistics().getEthTotalDifficulty();
-            }
-            if(n2.getNodeStatistics().getEthTotalDifficulty() != null) {
-                td2 = n2.getNodeStatistics().getEthTotalDifficulty();
-            }
-            if (td1 != null && td2 != null) {
-                return td2.compareTo(td1);
-            } else if (td1 == null && td2 == null) {
-                return 0;
-            } else if (td1 != null) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-    };
 }
