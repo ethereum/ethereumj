@@ -257,7 +257,7 @@ public class SyncPool implements Iterable<Channel> {
             logger.info("\n");
             logger.info("Active peers");
             logger.info("============");
-            for (Channel peer : activePeers) peer.logSyncStats();
+            for (Channel peer : new ArrayList<>(activePeers)) peer.logSyncStats();
 //        }
     }
 
