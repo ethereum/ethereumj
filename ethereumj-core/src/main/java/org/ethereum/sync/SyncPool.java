@@ -112,13 +112,8 @@ public class SyncPool implements Iterable<Channel> {
             return;
         }
 
-//        synchronized (peers) {
-            peers.put(peer.getNodeIdWrapper(), peer);
-//        }
-
-//        synchronized (pendingConnections) {
-            pendingConnections.remove(peer.getPeerId());
-//        }
+        peers.put(peer.getNodeIdWrapper(), peer);
+        pendingConnections.remove(peer.getPeerId());
 
         ethereumListener.onPeerAddedToSyncPool(peer);
 
@@ -126,32 +121,23 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     public synchronized void remove(Channel peer) {
-//        synchronized (peers) {
-            peers.values().remove(peer);
-//        }
+        peers.values().remove(peer);
     }
 
     @Nullable
     public synchronized Channel getMaster() {
+        for (Channel peer : peers.values())
+            if (peer.isMaster()) {
+                return peer;
+            }
 
-//        synchronized (peers) {
-
-            for (Channel peer : peers.values())
-                if (peer.isMaster()) {
-                    return peer;
-                }
-
-            return null;
-//        }
+        return null;
     }
 
     @Nullable
     public synchronized Channel getMasterCandidate() {
-//        synchronized (activePeers) {
-
-            if (activePeers.isEmpty()) return null;
-            return activePeers.get(0);
-//        }
+        if (activePeers.isEmpty()) return null;
+        return activePeers.get(0);
     }
 
     @Nullable
@@ -168,14 +154,10 @@ public class SyncPool implements Iterable<Channel> {
 
     @Nullable
     public synchronized Channel getBestIdle() {
-//        synchronized (activePeers) {
-
-            for (Channel peer : activePeers) {
-                if (peer.isIdle())
-                    return peer;
-            }
-//        }
-
+        for (Channel peer : activePeers) {
+            if (peer.isIdle())
+                return peer;
+        }
         return null;
     }
 
@@ -189,12 +171,8 @@ public class SyncPool implements Iterable<Channel> {
         if (peer.getNodeId() == null) return;
 
         boolean existed;
-//        synchronized (peers) {
-            existed = peers.values().remove(peer);
-//            synchronized (activePeers) {
-                activePeers.remove(peer);
-//            }
-//        }
+        existed = peers.values().remove(peer);
+        activePeers.remove(peer);
 
         // do not count disconnects for nodeId
         // if exact peer is not an active one
@@ -216,22 +194,16 @@ public class SyncPool implements Iterable<Channel> {
             return;
         }
 
-//        synchronized (pendingConnections) {
-            ethereum.connect(node);
-            pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
-//        }
+        ethereum.connect(node);
+        pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
     }
 
     public synchronized Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
-//        synchronized (peers) {
-            for (Channel peer : peers.values()) {
-                ids.add(peer.getPeerId());
-            }
-//        }
-//        synchronized (pendingConnections) {
-            ids.addAll(pendingConnections.keySet());
-//        }
+        for (Channel peer : peers.values()) {
+            ids.add(peer.getPeerId());
+        }
+        ids.addAll(pendingConnections.keySet());
         return ids;
     }
 
@@ -245,27 +217,21 @@ public class SyncPool implements Iterable<Channel> {
 
     @Override
     public synchronized Iterator<Channel> iterator() {
-//        synchronized (peers) {
-            return new ArrayList<>(peers.values()).iterator();
-//        }
+        return new ArrayList<>(peers.values()).iterator();
     }
 
     synchronized void logActivePeers() {
-//        synchronized (activePeers) {
-            if (activePeers.isEmpty()) return;
+        if (activePeers.isEmpty()) return;
 
-            logger.info("\n");
-            logger.info("Active peers");
-            logger.info("============");
-            for (Channel peer : new ArrayList<>(activePeers)) peer.logSyncStats();
-//        }
+        logger.info("\n");
+        logger.info("Active peers");
+        logger.info("============");
+        for (Channel peer : new ArrayList<>(activePeers)) peer.logSyncStats();
     }
 
     private void processConnections() {
-//        synchronized (pendingConnections) {
-            Set<String> exceeded = getTimeoutExceeded(pendingConnections);
-            pendingConnections.keySet().removeAll(exceeded);
-//        }
+        Set<String> exceeded = getTimeoutExceeded(pendingConnections);
+        pendingConnections.keySet().removeAll(exceeded);
     }
 
     private Set<String> getTimeoutExceeded(Map<String, Long> map) {
@@ -300,45 +266,42 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     private void prepareActive() {
-//        synchronized (peers) {
+        List<Channel> active = new ArrayList<>(peers.values());
 
-            List<Channel> active = new ArrayList<>(peers.values());
+        if (active.isEmpty()) return;
 
-            if (active.isEmpty()) return;
-
-            // filtering by 20% from top difficulty
-            Collections.sort(active, new Comparator<Channel>() {
-                @Override
-                public int compare(Channel c1, Channel c2) {
-                    return c2.getTotalDifficulty().compareTo(c1.getTotalDifficulty());
-                }
-            });
-
-            BigInteger highestDifficulty = active.get(0).getTotalDifficulty();
-            int thresholdIdx = min(config.syncPeerCount(), active.size()) - 1;
-
-            for (int i = thresholdIdx; i >= 0; i--) {
-                if (isIn20PercentRange(active.get(i).getTotalDifficulty(), highestDifficulty)) {
-                    thresholdIdx = i;
-                    break;
-                }
+        // filtering by 20% from top difficulty
+        Collections.sort(active, new Comparator<Channel>() {
+            @Override
+            public int compare(Channel c1, Channel c2) {
+                return c2.getTotalDifficulty().compareTo(c1.getTotalDifficulty());
             }
+        });
 
-            List<Channel> filtered = active.subList(0, thresholdIdx + 1);
+        BigInteger highestDifficulty = active.get(0).getTotalDifficulty();
+        int thresholdIdx = min(config.syncPeerCount(), active.size()) - 1;
 
-            // sorting by latency in asc order
-            Collections.sort(filtered, new Comparator<Channel>() {
-                @Override
-                public int compare(Channel c1, Channel c2) {
-                    return Double.valueOf(c1.getPeerStats().getAvgLatency()).compareTo(c2.getPeerStats().getAvgLatency());
-                }
-            });
-
-            synchronized (activePeers) {
-                activePeers.clear();
-                activePeers.addAll(filtered);
+        for (int i = thresholdIdx; i >= 0; i--) {
+            if (isIn20PercentRange(active.get(i).getTotalDifficulty(), highestDifficulty)) {
+                thresholdIdx = i;
+                break;
             }
-//        }
+        }
+
+        List<Channel> filtered = active.subList(0, thresholdIdx + 1);
+
+        // sorting by latency in asc order
+        Collections.sort(filtered, new Comparator<Channel>() {
+            @Override
+            public int compare(Channel c1, Channel c2) {
+                return Double.valueOf(c1.getPeerStats().getAvgLatency()).compareTo(c2.getPeerStats().getAvgLatency());
+            }
+        });
+
+        synchronized (activePeers) {
+            activePeers.clear();
+            activePeers.addAll(filtered);
+        }
     }
 
     private void logDiscoveredNodes(List<NodeHandler> nodes) {
