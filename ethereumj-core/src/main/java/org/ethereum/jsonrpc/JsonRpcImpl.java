@@ -22,6 +22,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
@@ -243,7 +244,7 @@ public class JsonRpcImpl implements JsonRpc {
     public String web3_clientVersion() {
 
         String s = "EthereumJ" + "/v" + SystemProperties.CONFIG.projectVersion() + "/" +
-                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.CONFIG.projectVersionModifier();
+                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.CONFIG.projectVersionModifier() + "-" + BuildInfo.buildHash;
         if (logger.isDebugEnabled()) logger.debug("web3_clientVersion(): " + s);
         return s;
     };
