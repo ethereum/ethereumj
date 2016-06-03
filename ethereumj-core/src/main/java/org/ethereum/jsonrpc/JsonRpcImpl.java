@@ -22,7 +22,6 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.listener.CompositeSyncListener;
 import org.ethereum.sync.listener.SyncListenerAdapter;
-import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
@@ -120,9 +119,6 @@ public class JsonRpcImpl implements JsonRpc {
     ChannelManager channelManager;
 
     @Autowired
-    CompositeSyncListener compositeSyncListener;
-
-    @Autowired
     CompositeEthereumListener compositeEthereumListener;
 
     @Autowired
@@ -135,19 +131,12 @@ public class JsonRpcImpl implements JsonRpc {
     PendingStateImpl pendingState;
 
     long initialBlockNumber;
-    long maxBlockNumberSeen;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
 
     @PostConstruct
     private void init() {
         initialBlockNumber = blockchain.getBestBlock().getNumber();
-        compositeSyncListener.add(new SyncListenerAdapter() {
-            @Override
-            public void onNewBlockNumber(long number) {
-                maxBlockNumberSeen = max(maxBlockNumberSeen, number);
-            }
-        });
 
         compositeEthereumListener.addListener(new EthereumListenerAdapter() {
             @Override
@@ -307,7 +296,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             s.startingBlock = TypeConverter.toJsonHex(initialBlockNumber);
             s.currentBlock = TypeConverter.toJsonHex(blockchain.getBestBlock().getNumber());
-            s.highestBlock = TypeConverter.toJsonHex(maxBlockNumberSeen);
+            s.highestBlock = TypeConverter.toJsonHex(syncManager.getLastKnownBlockNumber());
 
             return s;
         }finally {
