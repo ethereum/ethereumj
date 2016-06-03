@@ -68,7 +68,7 @@ public class IndexedBlockStoreTest {
         logger.info("total difficulty: {}", cumDifficulty);
         logger.info("total blocks loaded: {}", blocks.size());
 
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -78,7 +78,7 @@ public class IndexedBlockStoreTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
 

@@ -191,20 +191,6 @@ public class CommonConfig {
     }
 
     @Bean
-    @Primary
-    @Lazy
-    public BlockQueue blockQueue() {
-        return new BlockQueueMem();
-    }
-
-    @Bean
-    @Primary
-    @Lazy
-    public HeaderStore headerStore() {
-        return new HeaderStoreMem();
-    }
-
-    @Bean
     @Scope("prototype")
     public ContractDetailsImpl contractDetailsImpl() {
         return new ContractDetailsImpl();
