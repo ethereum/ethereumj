@@ -43,13 +43,6 @@ public interface Eth {
     void logSyncStats();
 
     /**
-     * Changes Sync state to the new one
-     *
-     * @param newState new state
-     */
-    void changeState(SyncState newState);
-
-    /**
      * @return true if syncState is DONE_HASH_RETRIEVING, false otherwise
      */
     boolean isHashRetrievingDone();
@@ -113,13 +106,6 @@ public interface Eth {
      * Sends {@link EthMessageCodes#STATUS} message
      */
     void sendStatus();
-
-    /**
-     * Tries to recover a gap
-     *
-     * @param block gap block
-     */
-    void recoverGap(BlockWrapper block);
 
     /**
      * Drops connection with remote peer.

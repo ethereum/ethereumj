@@ -1,6 +1,5 @@
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
@@ -10,11 +9,12 @@ import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -37,9 +37,6 @@ public class HeaderStoreImpl implements HeaderStore {
 
     private final Object mutex = new Object();
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
-
     @Override
     public void open() {
         new Thread(new Runnable() {
@@ -53,7 +50,7 @@ public class HeaderStoreImpl implements HeaderStore {
                             .valueSerializer(Serializers.BLOCK_HEADER_WRAPPER)
                             .makeOrGet();
 
-                    if(config.databaseReset()) {
+                    if(CONFIG.databaseReset()) {
                         headers.clear();
                         db.commit();
                     }

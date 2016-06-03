@@ -227,7 +227,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     @Override
     public SolidityContract createExistingContractFromABI(String ABI, byte[] contractAddress) {
-        SolidityContractImpl contract = createContract(ABI, null);
+        SolidityContractImpl contract = new SolidityContractImpl(ABI);
         contract.setAddress(contractAddress);
         return contract;
     }

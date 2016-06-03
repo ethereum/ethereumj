@@ -43,14 +43,12 @@ public class SyncQueue {
      * Store holding a list of block headers of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet
      */
-    @Autowired
-    private HeaderStore headerStore;
+    private HeaderStore headerStore = new HeaderStoreMem();
 
     /**
      * Queue with blocks to be validated and added to the blockchain
      */
-    @Autowired
-    private BlockQueue blockQueue;
+    private BlockQueue blockQueue = new BlockQueueMem();
 
     private final ReentrantLock headersLock = new ReentrantLock();
     private final Condition headersNotEmpty = headersLock.newCondition();

@@ -20,8 +20,7 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.sync.listener.CompositeSyncListener;
-import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
@@ -117,9 +116,6 @@ public class JsonRpcImpl implements JsonRpc {
     ChannelManager channelManager;
 
     @Autowired
-    CompositeSyncListener compositeSyncListener;
-
-    @Autowired
     CompositeEthereumListener compositeEthereumListener;
 
     @Autowired
@@ -132,19 +128,12 @@ public class JsonRpcImpl implements JsonRpc {
     PendingStateImpl pendingState;
 
     long initialBlockNumber;
-    long maxBlockNumberSeen;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
 
     @PostConstruct
     private void init() {
         initialBlockNumber = blockchain.getBestBlock().getNumber();
-        compositeSyncListener.add(new SyncListenerAdapter() {
-            @Override
-            public void onNewBlockNumber(long number) {
-                maxBlockNumberSeen = max(maxBlockNumberSeen, number);
-            }
-        });
 
         compositeEthereumListener.addListener(new EthereumListenerAdapter() {
             @Override
@@ -241,7 +230,7 @@ public class JsonRpcImpl implements JsonRpc {
     public String web3_clientVersion() {
 
         String s = "EthereumJ" + "/v" + config.projectVersion() + "/" +
-                System.getProperty("os.name") + "/Java1.7/" + config.projectVersionModifier();
+                System.getProperty("os.name") + "/Java1.7/" + config.projectVersionModifier() + "-" + BuildInfo.buildHash;
         if (logger.isDebugEnabled()) logger.debug("web3_clientVersion(): " + s);
         return s;
     };
@@ -304,7 +293,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             s.startingBlock = TypeConverter.toJsonHex(initialBlockNumber);
             s.currentBlock = TypeConverter.toJsonHex(blockchain.getBestBlock().getNumber());
-            s.highestBlock = TypeConverter.toJsonHex(maxBlockNumberSeen);
+            s.highestBlock = TypeConverter.toJsonHex(syncManager.getLastKnownBlockNumber());
 
             return s;
         }finally {

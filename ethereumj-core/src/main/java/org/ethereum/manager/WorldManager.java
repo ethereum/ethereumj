@@ -23,6 +23,7 @@ import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
@@ -73,9 +74,20 @@ public class WorldManager {
     @Autowired
     SystemProperties config;
 
+    private CountDownLatch initSemaphore = new CountDownLatch(1);
+
     @PostConstruct
     public void init() {
         loadBlockchain();
+        initSemaphore.countDown();
+    }
+
+    public void waitForInit() {
+        try {
+            initSemaphore.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void addListener(EthereumListener listener) {

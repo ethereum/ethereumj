@@ -1,14 +1,16 @@
 package org.ethereum.net.rlpx.discover;
 
-import org.ethereum.net.rlpx.discover.PeerConnectionTester;
 import org.junit.Test;
 
 import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Anton Nashatyrev on 03.08.2015.
  */
 public class QueueTest {
+
+    boolean exception = false;
 
     @Test
     public void simple() throws Exception {
@@ -21,16 +23,22 @@ public class QueueTest {
         });
 
         final int threadCnt = 8;
-        final int elemCnt = 100000;
+        final int elemCnt = 1000;
 
         Runnable adder = new Runnable() {
             @Override
             public void run() {
-                System.out.println("Adding...");
-                for (int i = 0; i < elemCnt; i++) {
-                    queue.add("aaa");
+                try {
+                    System.out.println("Adding...");
+                    for (int i = 0; i < elemCnt && !exception; i++) {
+                        queue.add("aaa" + i);
+                        if (i % 100 == 0) Thread.sleep(10);
+                    }
+                    System.out.println("Done.");
+                } catch (Exception e) {
+                    exception = true;
+                    e.printStackTrace();
                 }
-                System.out.println("Done.");
             }
         };
 
@@ -43,18 +51,20 @@ public class QueueTest {
             t1[i].start();
         }
 
+
         Runnable taker = new Runnable() {
             @Override
             public void run() {
-                System.out.println("Taking...");
-                for (int i = 0; i < elemCnt; i++) {
-                    try {
-                        queue.take();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                try {
+                    System.out.println("Taking...");
+                    for (int i = 0; i < elemCnt && !exception; i++) {
+                        queue.poll(1, TimeUnit.SECONDS);
                     }
+                    System.out.println("OK: " + queue.size());
+                } catch (Exception e) {
+                    exception = true;
+                    e.printStackTrace();
                 }
-                System.out.println("OK: " + queue.size());
             }
         };
         Thread t2[] = new Thread[threadCnt];
@@ -67,8 +77,10 @@ public class QueueTest {
         for (Thread thread : t1) {
             thread.join();
         }
-        for (Thread thread : t1) {
+        for (Thread thread : t2) {
             thread.join();
         }
+
+        if (exception) throw new RuntimeException("Test failed");
     }
 }
