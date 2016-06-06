@@ -78,6 +78,14 @@ public class EthAdapter implements Eth {
     }
 
     @Override
+    public void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    }
+
+    @Override
+    public void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+    }
+
+    @Override
     public void sendNewBlock(Block newBlock) {
     }
 
