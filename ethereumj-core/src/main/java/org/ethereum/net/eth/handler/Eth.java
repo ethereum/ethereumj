@@ -80,6 +80,16 @@ public interface Eth {
     void sendTransaction(List<Transaction> tx);
 
     /**
+     *  Send GET_BLOCK_HEADERS message to the peer
+     */
+    void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
+
+    /**
+     *  Send GET_BLOCK_BODIES message to the peer
+     */
+    void sendGetBlockBodies(List<BlockHeaderWrapper> headers);
+
+    /**
      * Sends new block to the wire
      */
     void sendNewBlock(Block newBlock);

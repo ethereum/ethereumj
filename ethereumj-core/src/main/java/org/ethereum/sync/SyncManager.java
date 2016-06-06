@@ -160,10 +160,8 @@ public class SyncManager {
                     Channel any = pool.getAnyIdle();
 
                     if (any != null) {
-                        Eth62 eth = (Eth62) any.getEthHandler();
-
                         SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
-                        eth.sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                        any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
                     }
                 }
                 receivedHeadersLatch = new CountDownLatch(1);
@@ -188,8 +186,7 @@ public class SyncManager {
                         for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
                             if (channel != null) {
-                                Eth62 eth = (Eth62) channel.getEthHandler();
-                                eth.sendGetBlockBodies(singletonList(blockHeaderWrapper));
+                                channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
                             }
                         }
                     }
@@ -198,8 +195,7 @@ public class SyncManager {
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
                         Channel any = pool.getAnyIdle();
                         if (any == null) break;
-                        Eth62 eth = (Eth62) any.getEthHandler();
-                        eth.sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                        any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
                         reqBlocksCounter ++;
                     }
                     receivedBlocksLatch = new CountDownLatch(reqBlocksCounter);

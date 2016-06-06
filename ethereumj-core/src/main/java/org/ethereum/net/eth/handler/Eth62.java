@@ -167,6 +167,7 @@ public class Eth62 extends EthHandler {
         sendMessage(msg);
     }
 
+    @Override
     public synchronized void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
 
         if(logger.isTraceEnabled()) logger.trace(
@@ -205,6 +206,7 @@ public class Eth62 extends EthHandler {
         sendNextHeaderRequest();
     }
 
+    @Override
     public synchronized void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
         syncState = BLOCK_RETRIEVING;
         sentHeaders.clear();
