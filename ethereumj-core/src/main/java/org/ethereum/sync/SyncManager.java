@@ -181,6 +181,19 @@ public class SyncManager {
 
                 if (blockQueue.size() < BLOCK_QUEUE_LIMIT) {
                     SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(1000);
+
+                    if (bReq.getBlockHeaders().size() <= 3) {
+                        // new blocks are better to request from the header senders first
+                        // to get more chances to receive block body promptly
+                        for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
+                            Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
+                            if (channel != null) {
+                                Eth62 eth = (Eth62) channel.getEthHandler();
+                                eth.sendGetBlockBodies(singletonList(blockHeaderWrapper));
+                            }
+                        }
+                    }
+
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
                         Channel any = pool.getAnyIdle();
