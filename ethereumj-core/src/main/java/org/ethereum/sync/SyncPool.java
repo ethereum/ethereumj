@@ -265,7 +265,7 @@ public class SyncPool implements Iterable<Channel> {
         }
     }
 
-    private void prepareActive() {
+    private synchronized void prepareActive() {
         List<Channel> active = new ArrayList<>(peers.values());
 
         if (active.isEmpty()) return;
@@ -298,10 +298,8 @@ public class SyncPool implements Iterable<Channel> {
             }
         });
 
-        synchronized (activePeers) {
-            activePeers.clear();
-            activePeers.addAll(filtered);
-        }
+        activePeers.clear();
+        activePeers.addAll(filtered);
     }
 
     private void logDiscoveredNodes(List<NodeHandler> nodes) {
