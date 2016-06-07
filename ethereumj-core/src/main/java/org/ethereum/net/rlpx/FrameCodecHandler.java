@@ -15,7 +15,7 @@ import java.util.List;
  *
  * Created by Anton Nashatyrev on 15.10.2015.
  */
-public class FrameCodecHandler extends NettiByteToMessageCodec<FrameCodec.Frame> {
+public class FrameCodecHandler extends NettyByteToMessageCodec<FrameCodec.Frame> {
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
