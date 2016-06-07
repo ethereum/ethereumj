@@ -522,6 +522,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             // block is bad so 'rollback' the state root to the original state
             ((RepositoryImpl) repository).setRoot(origRoot);
 
+            track.rollback();
+            // block is bad so 'rollback' the state root to the original state
+            ((RepositoryImpl) repository).setRoot(origRoot);
+
             if (config.exitOnBlockConflict()) {
                 adminInfo.lostConsensus();
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));

@@ -1,7 +1,6 @@
 package org.ethereum.vm.program;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -17,6 +16,7 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
+import org.ethereum.vm.program.listener.ProgramStorageChangeListener;
 import org.ethereum.vm.trace.ProgramTraceListener;
 import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
@@ -61,6 +61,7 @@ public class Program {
 
     private ProgramOutListener listener;
     private ProgramTraceListener traceListener = new ProgramTraceListener();
+    private ProgramStorageChangeListener storageDiffListener = new ProgramStorageChangeListener();
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private Stack stack;
@@ -114,13 +115,19 @@ public class Program {
         return result;
     }
 
-    private <T extends ProgramListenerAware> T setupProgramListener(T traceListenerAware) {
+    private <T extends ProgramListenerAware> T setupProgramListener(T programListenerAware) {
         if (programListener.isEmpty()) {
             programListener.addListener(traceListener);
+            programListener.addListener(storageDiffListener);
         }
 
-        traceListenerAware.setTraceListener(traceListener);
-        return traceListenerAware;
+        programListenerAware.setProgramListener(programListener);
+
+        return programListenerAware;
+    }
+
+    public Map<DataWord, DataWord> getStorageDiff() {
+        return storageDiffListener.getDiff();
     }
 
     public byte getOp(int pc) {
@@ -536,6 +543,8 @@ public class Program {
                 track.rollback();
                 stackPushZero();
                 return;
+            } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
+                storageDiffListener.merge(program.getStorageDiff());
             }
         }
 
@@ -826,7 +835,7 @@ public class Program {
 
     static String formatBinData(byte[] binData, int startPC) {
         StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < binData.length; i+= 16) {
+        for (int i = 0; i < binData.length; i += 16) {
             ret.append(Utils.align("" + Integer.toHexString(startPC + (i)) + ":", ' ', 8, false));
             ret.append(Hex.toHexString(binData, i, min(16, binData.length - i))).append('\n');
         }
@@ -849,7 +858,7 @@ public class Program {
                     binDataStartPC = index;
                 }
                 binData.write(code[index]);
-                index ++;
+                index++;
                 if (index < code.length) continue;
             }
 
@@ -864,7 +873,7 @@ public class Program {
 
             if (op == null) {
                 sb.append("<UNKNOWN>: ").append(0xFF & opCode).append("\n");
-                index ++;
+                index++;
                 continue;
             }
 
@@ -960,7 +969,7 @@ public class Program {
                 if (gotos.isEmpty()) break;
                 it.setPC(gotos.pollFirst());
             }
-        } while(it.next());
+        } while (it.next());
         return ret;
     }
 
@@ -976,7 +985,7 @@ public class Program {
 
             if (op == null) {
                 sb.append(" <UNKNOWN>: ").append(0xFF & opCode).append(" ");
-                index ++;
+                index++;
                 continue;
             }
 
@@ -997,7 +1006,6 @@ public class Program {
 
         return sb.toString();
     }
-
 
 
     public void addListener(ProgramOutListener listener) {

@@ -59,7 +59,17 @@ public interface Functional {
          */
         R apply(T t);
     }
-    
+
+    interface Supplier<T> {
+
+        /**
+         * Gets a result.
+         *
+         * @return a result
+         */
+        T get();
+    }
+
     interface InvokeWrapper {
         
         void invoke();
