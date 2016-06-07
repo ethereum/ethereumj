@@ -319,6 +319,10 @@ public class TransactionExecutor {
                     .internalTransactions(result.getInternalTransactions())
                     .storageDiff(track.getContractDetails(addr).getStorage());
 
+            if (program != null) {
+                summaryBuilder.touchedStorage(track.getContractDetails(addr).getStorage(), program.getStorageDiff());
+            }
+
             if (result.getException() != null) {
                 summaryBuilder.markAsFailed();
             }

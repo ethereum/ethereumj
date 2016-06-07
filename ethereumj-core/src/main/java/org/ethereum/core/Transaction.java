@@ -8,11 +8,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import org.ethereum.vm.GasCost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -20,8 +17,8 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.ethereum.util.ByteUtil.*;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
 /**
  * A transaction (formally, T) is a single cryptographically
@@ -41,29 +38,29 @@ public class Transaction {
     private byte[] hash;
 
     /* a counter used to make sure each transaction can only be processed once */
-    private byte[] nonce;
+    protected byte[] nonce;
 
     /* the amount of ether to transfer (calculated as wei) */
-    private byte[] value;
+    protected byte[] value;
 
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
-    private byte[] receiveAddress;
+    protected byte[] receiveAddress;
 
     /* the amount of ether to pay as a transaction fee
      * to the miner for each unit of gas */
-    private byte[] gasPrice;
+    protected byte[] gasPrice;
 
     /* the amount of "gas" to allow for the computation.
      * Gas is the fuel of the computational engine;
      * every computational step taken and every byte added
      * to the state or transaction list consumes some gas. */
-    private byte[] gasLimit;
+    protected byte[] gasLimit;
 
     /* An unlimited size byte array specifying
      * input [data] of the message call or
      * Initialization code for a new contract */
-    private byte[] data;
+    protected byte[] data;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
@@ -76,7 +73,7 @@ public class Transaction {
     private byte[] rlpRaw;
     /* Indicates if this transaction has been parsed
      * from the RLP-encoded data */
-    private boolean parsed = false;
+    protected boolean parsed = false;
 
     public Transaction(byte[] rawData) {
         this.rlpEncoded = rawData;

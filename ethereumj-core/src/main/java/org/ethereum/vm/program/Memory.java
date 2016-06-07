@@ -20,11 +20,11 @@ public class Memory implements ProgramListenerAware {
 
     private List<byte[]> chunks = new LinkedList<>();
     private int softSize;
-    private ProgramListener traceListener;
+    private ProgramListener programListener;
 
     @Override
-    public void setTraceListener(ProgramListener traceListener) {
-        this.traceListener = traceListener;
+    public void setProgramListener(ProgramListener traceListener) {
+        this.programListener = traceListener;
     }
 
     public byte[] read(int address, int size) {
@@ -84,7 +84,7 @@ public class Memory implements ProgramListenerAware {
             start += captured;
         }
 
-        if (traceListener != null) traceListener.onMemoryWrite(address, data, dataSize);
+        if (programListener != null) programListener.onMemoryWrite(address, data, dataSize);
     }
 
 
@@ -108,7 +108,7 @@ public class Memory implements ProgramListenerAware {
             toAllocate = (int) ceil((double) toAllocate / WORD_SIZE) * WORD_SIZE;
             softSize += toAllocate;
 
-            if (traceListener != null) traceListener.onMemoryExtend(toAllocate);
+            if (programListener != null) programListener.onMemoryExtend(toAllocate);
         }
     }
 

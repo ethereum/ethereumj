@@ -10,7 +10,7 @@ public interface Functional {
      *
      * @param <T> the type of the input to the operation
      */
-    public static interface Consumer<T> {
+    interface Consumer<T> {
 
         /**
          * Performs this operation on the given argument.
@@ -31,7 +31,7 @@ public interface Functional {
      *
      * @see org.ethereum.util.Functional.Consumer
      */
-    public interface BiConsumer<T, U> {
+    interface BiConsumer<T, U> {
 
         /**
          * Performs this operation on the given arguments.
@@ -49,7 +49,7 @@ public interface Functional {
      * @param <T> the type of the input to the function
      * @param <R> the type of the result of the function
      */
-    public static interface Function<T, R> {
+    interface Function<T, R> {
 
         /**
          * Applies this function to the given argument.
@@ -59,18 +59,28 @@ public interface Functional {
          */
         R apply(T t);
     }
-    
-    public static interface InvokeWrapper {
+
+    interface Supplier<T> {
+
+        /**
+         * Gets a result.
+         *
+         * @return a result
+         */
+        T get();
+    }
+
+    interface InvokeWrapper {
         
         void invoke();
     }
 
-    public static interface InvokeWrapperWithResult<R> {
+    interface InvokeWrapperWithResult<R> {
 
         R invoke();
     }
 
-    public static interface Predicate<T> {
+    interface Predicate<T> {
         boolean test(T t);
     }
 
