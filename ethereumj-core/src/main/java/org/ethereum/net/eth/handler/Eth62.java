@@ -12,6 +12,7 @@ import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -541,6 +542,12 @@ public class Eth62 extends EthHandler {
 
     @Nullable
     private List<Block> validateAndMerge(BlockBodiesMessage response) {
+        // merging received block bodies with requested headers
+        // the assumption is the following:
+        // - response may miss any bodies present in the request
+        // - response may not contain non-requested bodies
+        // - order of response bodies should be preserved
+        // Otherwise the response is assumed invalid and all bodies are dropped
 
         List<byte[]> bodyList = response.getBlockBodies();
 
@@ -550,27 +557,34 @@ public class Eth62 extends EthHandler {
         List<Block> blocks = new ArrayList<>(bodyList.size());
         List<BlockHeaderWrapper> coveredHeaders = new ArrayList<>(sentHeaders.size());
 
+        boolean blockMerged = true;
+        byte[] body = null;
         while (bodies.hasNext() && wrappers.hasNext()) {
+
             BlockHeaderWrapper wrapper = wrappers.next();
-            byte[] body = bodies.next();
+            if (blockMerged) {
+                body = bodies.next();
+            }
 
             Block b = new Block.Builder()
                     .withHeader(wrapper.getHeader())
                     .withBody(body)
                     .create();
 
-            // handle invalid merge
             if (b == null) {
+                blockMerged = false;
+            } else {
+                blockMerged = true;
 
-                if (logger.isInfoEnabled()) logger.info(
-                        "Peer {}: invalid response to [GET_BLOCK_BODIES], header {} can't be merged with body {}",
-                        channel.getPeerIdShort(), wrapper.getHeader(), toHexString(body)
-                );
-                return null;
+                coveredHeaders.add(wrapper);
+                blocks.add(b);
             }
+        }
 
-            coveredHeaders.add(wrapper);
-            blocks.add(b);
+        if (bodies.hasNext()) {
+            logger.info("Peer {}: invalid BLOCK_BODIES response: at least one block body doesn't correspond to any of requested headers: ",
+                    channel.getPeerIdShort(), Hex.toHexString(bodies.next()));
+            return null;
         }
 
         // remove headers covered by response
@@ -580,21 +594,7 @@ public class Eth62 extends EthHandler {
     }
 
     private boolean isValid(BlockBodiesMessage response) {
-        // check if peer didn't return a body
-        // corresponding to the header sent previously
-        if (response.getBlockBodies().size() < sentHeaders.size()) {
-            BlockHeaderWrapper header = sentHeaders.get(response.getBlockBodies().size());
-            if (header.sentBy(channel.getNodeId())) {
-
-                if (logger.isInfoEnabled()) logger.info(
-                        "Peer {}: invalid response to [GET_BLOCK_BODIES], body for {} wasn't returned",
-                        channel.getPeerIdShort(), toHexString(header.getHash())
-                );
-                return false;
-            }
-        }
-
-        return true;
+        return response.getBlockBodies().size() <= sentHeaders.size();
     }
 
     private boolean isValid(BlockHeadersMessage response, GetBlockHeadersMessageWrapper requestWrapper) {
