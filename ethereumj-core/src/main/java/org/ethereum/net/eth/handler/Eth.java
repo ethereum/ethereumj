@@ -6,6 +6,7 @@ import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -40,6 +41,8 @@ public interface Eth {
     String getSyncStats();
 
     BlockIdentifier getBestKnownBlock();
+
+    BigInteger getTotalDifficulty();
 
     /**
      * @return true if syncState is DONE_HASH_RETRIEVING, false otherwise

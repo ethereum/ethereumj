@@ -5,6 +5,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import static org.ethereum.net.eth.EthVersion.*;
@@ -116,5 +117,10 @@ public class EthAdapter implements Eth {
     @Override
     public BlockIdentifier getBestKnownBlock() {
         return null;
+    }
+
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return BigInteger.ZERO;
     }
 }

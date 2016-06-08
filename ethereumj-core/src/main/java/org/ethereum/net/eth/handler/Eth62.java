@@ -77,6 +77,7 @@ public class Eth62 extends EthHandler {
      * Number and hash of best known remote block
      */
     protected BlockIdentifier bestKnownBlock;
+    private BigInteger totalDifficulty;
 
     protected boolean commonAncestorFound = true;
 
@@ -421,7 +422,7 @@ public class Eth62 extends EthHandler {
             return;
         }
 
-        channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
+        updateTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
 
         updateBestBlock(newBlock);
 
@@ -491,6 +492,16 @@ public class Eth62 extends EthHandler {
     @Override
     public BlockIdentifier getBestKnownBlock() {
         return bestKnownBlock;
+    }
+
+    private void updateTotalDifficulty(BigInteger totalDiff) {
+        channel.getNodeStatistics().setEthTotalDifficulty(totalDiff);
+        this.totalDifficulty = totalDiff;
+    }
+
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty != null ? totalDifficulty : channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
     /*************************
@@ -762,7 +773,7 @@ public class Eth62 extends EthHandler {
                 channel.getPeerIdShort(),
                 syncState,
                 (int)channel.getPeerStats().getAvgLatency(),
-                nodeManager.getNodeStatistics(channel.getNode()).getEthTotalDifficulty(),
+                getTotalDifficulty(),
                 getBestKnownBlock().getNumber());
     }
 

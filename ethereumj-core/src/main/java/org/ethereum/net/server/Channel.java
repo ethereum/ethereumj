@@ -316,7 +316,7 @@ public class Channel {
     }
 
     public BigInteger getTotalDifficulty() {
-        return nodeStatistics.getEthTotalDifficulty();
+        return getEthHandler().getTotalDifficulty();
     }
 
     public SyncStatistics getSyncStats() {
