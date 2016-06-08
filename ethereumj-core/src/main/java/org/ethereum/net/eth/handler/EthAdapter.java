@@ -1,9 +1,6 @@
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeaderWrapper;
-import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
@@ -42,7 +39,8 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void logSyncStats() {
+    public String getSyncStats() {
+        return "";
     }
 
     @Override
@@ -113,5 +111,10 @@ public class EthAdapter implements Eth {
 
     @Override
     public void fetchBodies(List<BlockHeaderWrapper> headers) {
+    }
+
+    @Override
+    public BlockIdentifier getBestKnownBlock() {
+        return null;
     }
 }

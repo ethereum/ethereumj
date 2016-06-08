@@ -6,6 +6,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
@@ -57,6 +58,9 @@ public class Eth62 extends EthHandler {
 
     @Autowired
     protected PendingState pendingState;
+
+    @Autowired
+    protected NodeManager nodeManager;
 
     protected EthState ethState = EthState.INIT;
 
@@ -471,7 +475,9 @@ public class Eth62 extends EthHandler {
     }
 
     private void updateBestBlock(BlockHeader header) {
-        bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
+        if (bestKnownBlock == null || header.getNumber() > bestKnownBlock.getNumber()) {
+            bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
+        }
     }
 
     private void updateBestBlock(List<BlockIdentifier> identifiers) {
@@ -480,6 +486,11 @@ public class Eth62 extends EthHandler {
             if (bestKnownBlock == null || id.getNumber() > bestKnownBlock.getNumber()) {
                 bestKnownBlock = id;
             }
+    }
+
+    @Override
+    public BlockIdentifier getBestKnownBlock() {
+        return bestKnownBlock;
     }
 
     /*************************
@@ -743,32 +754,16 @@ public class Eth62 extends EthHandler {
      *************************/
 
     @Override
-    public void logSyncStats() {
-        if(!logger.isInfoEnabled()) {
-            return;
-        }
-        switch (syncState) {
-            case BLOCK_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, {}, blocks {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    syncStats.getBlocksCount(),
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
-            case HASH_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, {}, headers {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    syncStats.getHeadersCount(),
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
-            default: logger.info(
-                    "Peer {}: [ {}, state {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency()));
-        }
+    public String getSyncStats() {
+
+        return String.format(
+                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]",
+                version,
+                channel.getPeerIdShort(),
+                syncState,
+                (int)channel.getPeerStats().getAvgLatency(),
+                nodeManager.getNodeStatistics(channel.getNode()).getEthTotalDifficulty(),
+                getBestKnownBlock().getNumber());
     }
 
     protected enum EthState {

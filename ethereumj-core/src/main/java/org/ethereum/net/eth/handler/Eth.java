@@ -1,9 +1,6 @@
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeaderWrapper;
-import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.sync.SyncState;
@@ -40,7 +37,9 @@ public interface Eth {
     /**
      * Puts sync statistics to log output
      */
-    void logSyncStats();
+    String getSyncStats();
+
+    BlockIdentifier getBestKnownBlock();
 
     /**
      * @return true if syncState is DONE_HASH_RETRIEVING, false otherwise

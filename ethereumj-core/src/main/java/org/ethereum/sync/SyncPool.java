@@ -85,6 +85,7 @@ public class SyncPool implements Iterable<Channel> {
                             updateLowerUsefulDifficulty();
                             fillUp();
                             prepareActive();
+                            cleanupActive();
                         } catch (Throwable t) {
                             logger.error("Unhandled exception", t);
                         }
@@ -122,22 +123,6 @@ public class SyncPool implements Iterable<Channel> {
 
     public synchronized void remove(Channel peer) {
         peers.values().remove(peer);
-    }
-
-    @Nullable
-    public synchronized Channel getMaster() {
-        for (Channel peer : peers.values())
-            if (peer.isMaster()) {
-                return peer;
-            }
-
-        return null;
-    }
-
-    @Nullable
-    public synchronized Channel getMasterCandidate() {
-        if (activePeers.isEmpty()) return null;
-        return activePeers.get(0);
     }
 
     @Nullable
@@ -223,10 +208,16 @@ public class SyncPool implements Iterable<Channel> {
     synchronized void logActivePeers() {
         if (activePeers.isEmpty()) return;
 
-        logger.info("\n");
-        logger.info("Active peers");
-        logger.info("============");
-        for (Channel peer : new ArrayList<>(activePeers)) peer.logSyncStats();
+        if (logger.isInfoEnabled()) {
+            StringBuilder sb = new StringBuilder("Peer stats:\n");
+            sb.append("Active peers\n");
+            sb.append("============\n");
+            for (Channel peer : new ArrayList<>(activePeers)) sb.append(peer.logSyncStats()).append('\n');
+            sb.append("Connected peers\n");
+            sb.append("============\n");
+            for (Channel peer : new ArrayList<>(peers.values())) sb.append(peer.logSyncStats()).append('\n');
+            logger.info(sb.toString());
+        }
     }
 
     private void processConnections() {
@@ -301,6 +292,17 @@ public class SyncPool implements Iterable<Channel> {
         activePeers.clear();
         activePeers.addAll(filtered);
     }
+
+    private synchronized void cleanupActive() {
+        Iterator<Channel> iterator = activePeers.iterator();
+        while (iterator.hasNext()) {
+            Channel next = iterator.next();
+            if (next.isDisconnected()) {
+                iterator.remove();
+            }
+        }
+    }
+
 
     private void logDiscoveredNodes(List<NodeHandler> nodes) {
         StringBuilder sb = new StringBuilder();
