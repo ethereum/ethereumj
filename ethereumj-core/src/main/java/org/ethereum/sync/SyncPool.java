@@ -9,6 +9,7 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ import static org.ethereum.util.TimeUtils.*;
  * @since 10.08.2015
  */
 @Component
-public class SyncPool implements Iterable<Channel> {
+public class SyncPool {
 
     public static final Logger logger = LoggerFactory.getLogger("sync");
 
@@ -47,7 +48,6 @@ public class SyncPool implements Iterable<Channel> {
 
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
 
-    private final Map<ByteArrayWrapper, Channel> peers = new HashMap<>();
     private final List<Channel> activePeers = Collections.synchronizedList(new ArrayList<Channel>());
     private final Map<String, Long> pendingConnections = new HashMap<>();
 
@@ -67,6 +67,9 @@ public class SyncPool implements Iterable<Channel> {
 
     @Autowired
     private NodeManager nodeManager;
+
+    @Autowired
+    private ChannelManager channelManager;
 
     @PostConstruct
     public void init() {
@@ -94,37 +97,6 @@ public class SyncPool implements Iterable<Channel> {
         );
     }
 
-    public synchronized void add(Channel peer) {
-
-        if (!config.isSyncEnabled()) return;
-
-        if (logger.isTraceEnabled()) logger.trace(
-                "Peer {}: adding",
-                peer.getPeerIdShort()
-        );
-
-        if (!isIn20PercentRange(peer.getTotalDifficulty(), lowerUsefulDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: difficulty significantly lower than ours: {} vs {}, skipping",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peer.getTotalDifficulty().toString(),
-                    lowerUsefulDifficulty.toString()
-            );
-            return;
-        }
-
-        peers.put(peer.getNodeIdWrapper(), peer);
-        pendingConnections.remove(peer.getPeerId());
-
-        ethereumListener.onPeerAddedToSyncPool(peer);
-
-        logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
-    }
-
-    public synchronized void remove(Channel peer) {
-        peers.values().remove(peer);
-    }
-
     @Nullable
     public synchronized Channel getAnyIdle() {
         ArrayList<Channel> channels = new ArrayList<>(activePeers);
@@ -148,22 +120,13 @@ public class SyncPool implements Iterable<Channel> {
 
     @Nullable
     public synchronized Channel getByNodeId(byte[] nodeId) {
-        return peers.get(new ByteArrayWrapper(nodeId));
+        return channelManager.getActivePeer(nodeId);
     }
 
     public synchronized void onDisconnect(Channel peer) {
-
-        if (peer.getNodeId() == null) return;
-
-        boolean existed;
-        existed = peers.values().remove(peer);
-        activePeers.remove(peer);
-
-        // do not count disconnects for nodeId
-        // if exact peer is not an active one
-        if (!existed) return;
-
-        logger.info("Peer {}: disconnected", peer.getPeerIdShort());
+        if (activePeers.remove(peer)) {
+            logger.info("Peer {}: disconnected", peer.getPeerIdShort());
+        }
     }
 
     public synchronized void connect(Node node) {
@@ -185,7 +148,7 @@ public class SyncPool implements Iterable<Channel> {
 
     public synchronized Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
-        for (Channel peer : peers.values()) {
+        for (Channel peer : channelManager.getActivePeers()) {
             ids.add(peer.getPeerId());
         }
         ids.addAll(pendingConnections.keySet());
@@ -194,15 +157,6 @@ public class SyncPool implements Iterable<Channel> {
 
     public synchronized boolean isInUse(String nodeId) {
         return nodesInUse().contains(nodeId);
-    }
-
-    public synchronized boolean isEmpty() {
-        return peers.isEmpty();
-    }
-
-    @Override
-    public synchronized Iterator<Channel> iterator() {
-        return new ArrayList<>(peers.values()).iterator();
     }
 
     synchronized void logActivePeers() {
@@ -215,7 +169,7 @@ public class SyncPool implements Iterable<Channel> {
             for (Channel peer : new ArrayList<>(activePeers)) sb.append(peer.logSyncStats()).append('\n');
             sb.append("Connected peers\n");
             sb.append("============\n");
-            for (Channel peer : new ArrayList<>(peers.values())) sb.append(peer.logSyncStats()).append('\n');
+            for (Channel peer : new ArrayList<>(channelManager.getActivePeers())) sb.append(peer.logSyncStats()).append('\n');
             logger.info(sb.toString());
         }
     }
@@ -237,7 +191,7 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     private void fillUp() {
-        int lackSize = config.maxActivePeers() - peers.size();
+        int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         if(lackSize <= 0) return;
 
         Set<String> nodesInUse = nodesInUse();
@@ -257,7 +211,7 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     private synchronized void prepareActive() {
-        List<Channel> active = new ArrayList<>(peers.values());
+        List<Channel> active = new ArrayList<>(channelManager.getActivePeers());
 
         if (active.isEmpty()) return;
 
@@ -288,6 +242,12 @@ public class SyncPool implements Iterable<Channel> {
                 return Double.valueOf(c1.getPeerStats().getAvgLatency()).compareTo(c2.getPeerStats().getAvgLatency());
             }
         });
+
+        for (Channel channel : filtered) {
+            if (!activePeers.contains(channel)) {
+                ethereumListener.onPeerAddedToSyncPool(channel);
+            }
+        }
 
         activePeers.clear();
         activePeers.addAll(filtered);
@@ -327,7 +287,7 @@ public class SyncPool implements Iterable<Channel> {
     }
 
     private void heartBeat() {
-        for (Channel peer : this) {
+        for (Channel peer : channelManager.getActivePeers()) {
             if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
                 logger.info("Peer {}: no response after %d seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
                 peer.dropConnection();

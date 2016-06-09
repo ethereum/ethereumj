@@ -132,8 +132,9 @@ public class ChannelManager {
             if (syncManager.isSyncDone()) {
                 peer.onSyncDone(true);
             }
-            syncPool.add(peer);
-            activePeers.put(peer.getNodeIdWrapper(), peer);
+            synchronized (activePeers) {
+                activePeers.put(peer.getNodeIdWrapper(), peer);
+            }
         }
     }
 
@@ -192,6 +193,12 @@ public class ChannelManager {
     }
 
     public Collection<Channel> getActivePeers() {
-        return Collections.unmodifiableCollection(activePeers.values());
+        synchronized (activePeers) {
+            return new ArrayList<>(activePeers.values());
+        }
+    }
+
+    public Channel getActivePeer(byte[] nodeId) {
+        return activePeers.get(new ByteArrayWrapper(nodeId));
     }
 }
