@@ -46,15 +46,9 @@ public class SyncPool {
 
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
-    private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
-
     private final List<Channel> activePeers = Collections.synchronizedList(new ArrayList<Channel>());
-    private final Map<String, Long> pendingConnections = new HashMap<>();
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
-
-    @Autowired
-    private Ethereum ethereum;
 
     @Autowired
     private EthereumListener ethereumListener;
@@ -84,7 +78,6 @@ public class SyncPool {
                     public void run() {
                         try {
                             heartBeat();
-                            processConnections();
                             updateLowerUsefulDifficulty();
                             fillUp();
                             prepareActive();
@@ -129,34 +122,12 @@ public class SyncPool {
         }
     }
 
-    public synchronized void connect(Node node) {
-        if (logger.isTraceEnabled()) logger.trace(
-                "Peer {}: initiate connection",
-                node.getHexIdShort()
-        );
-        if (isInUse(node.getHexId())) {
-            if (logger.isTraceEnabled()) logger.trace(
-                    "Peer {}: connection already initiated",
-                    node.getHexIdShort()
-            );
-            return;
-        }
-
-        ethereum.connect(node);
-        pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
-    }
-
     public synchronized Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
         for (Channel peer : channelManager.getActivePeers()) {
             ids.add(peer.getPeerId());
         }
-        ids.addAll(pendingConnections.keySet());
         return ids;
-    }
-
-    public synchronized boolean isInUse(String nodeId) {
-        return nodesInUse().contains(nodeId);
     }
 
     synchronized void logActivePeers() {
@@ -172,22 +143,6 @@ public class SyncPool {
             for (Channel peer : new ArrayList<>(channelManager.getActivePeers())) sb.append(peer.logSyncStats()).append('\n');
             logger.info(sb.toString());
         }
-    }
-
-    private void processConnections() {
-        Set<String> exceeded = getTimeoutExceeded(pendingConnections);
-        pendingConnections.keySet().removeAll(exceeded);
-    }
-
-    private Set<String> getTimeoutExceeded(Map<String, Long> map) {
-        Set<String> exceeded = new HashSet<>();
-        final Long now = System.currentTimeMillis();
-        for (Map.Entry<String, Long> e : map.entrySet()) {
-            if (now >= e.getValue()) {
-                exceeded.add(e.getKey());
-            }
-        }
-        return exceeded;
     }
 
     private void fillUp() {
@@ -206,7 +161,7 @@ public class SyncPool {
         }
 
         for(NodeHandler n : newNodes) {
-            connect(n.getNode());
+            channelManager.connect(n.getNode());
         }
     }
 

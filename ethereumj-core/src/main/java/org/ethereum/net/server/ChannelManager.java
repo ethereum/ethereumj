@@ -7,7 +7,9 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
+import org.ethereum.facade.Ethereum;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.Node;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
@@ -56,6 +58,9 @@ public class ChannelManager {
     @Autowired
     SyncPool syncPool;
 
+    @Autowired
+    private Ethereum ethereum;
+
     @PostConstruct
     public void init() {
         maxActivePeers = config.maxActivePeers();
@@ -70,6 +75,30 @@ public class ChannelManager {
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
+    }
+
+    public void connect(Node node) {
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: initiate connection",
+                node.getHexIdShort()
+        );
+        if (nodesInUse().contains(node.getHexId())) {
+            if (logger.isTraceEnabled()) logger.trace(
+                    "Peer {}: connection already initiated",
+                    node.getHexIdShort()
+            );
+            return;
+        }
+
+        ethereum.connect(node);
+    }
+
+    public Set<String> nodesInUse() {
+        Set<String> ids = new HashSet<>();
+        for (Channel peer : getActivePeers()) {
+            ids.add(peer.getPeerId());
+        }
+        return ids;
     }
 
     private void processNewPeers() {
