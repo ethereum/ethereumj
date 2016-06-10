@@ -98,6 +98,9 @@ public class ChannelManager {
         for (Channel peer : getActivePeers()) {
             ids.add(peer.getPeerId());
         }
+        for (Channel peer : newPeers) {
+            ids.add(peer.getPeerId());
+        }
         return ids;
     }
 

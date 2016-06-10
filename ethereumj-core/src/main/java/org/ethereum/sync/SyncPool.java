@@ -213,6 +213,7 @@ public class SyncPool {
         while (iterator.hasNext()) {
             Channel next = iterator.next();
             if (next.isDisconnected()) {
+                logger.info("Removing peer " + next + " from active due to disconnect.");
                 iterator.remove();
             }
         }
