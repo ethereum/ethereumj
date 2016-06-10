@@ -1,6 +1,7 @@
 package org.ethereum.util.blockchain;
 
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 
 import java.math.BigInteger;
@@ -59,6 +60,12 @@ public interface EasyBlockchain {
      */
     SolidityContract createExistingContractFromABI(String ABI, byte[] contractAddress);
 
+    /**
+     * Takes a presigned Transaction object and submits it to the blockchain
+     * @param transaction
+     * @return transaction
+     */
+    Transaction submitTransaction(Transaction transaction);
     /**
      * Returns underlying Blockchain instance
      */

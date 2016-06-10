@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Created by Anton Nashatyrev on 23.03.2016.
@@ -66,7 +67,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    List<PendingTx> submittedTxes = new ArrayList<>();
+    List submittedTxes = new ArrayList();
 
     public StandaloneBlockchain() {
         withGenesis(GenesisLoader.loadGenesis(
@@ -127,26 +128,31 @@ public class StandaloneBlockchain implements LocalBlockchain {
             List<Transaction> txes = new ArrayList<>();
             Map<ByteArrayWrapper, Long> nonces = new HashMap<>();
             Repository repoSnapshot = getBlockchain().getRepository().getSnapshotTo(parent.getStateRoot());
-            for (PendingTx tx : submittedTxes) {
-                ByteArrayWrapper senderW = new ByteArrayWrapper(tx.sender.getAddress());
-                Long nonce = nonces.get(senderW);
-                if (nonce == null) {
-                    BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
-                    nonce = bcNonce.longValue();
-                }
-                nonces.put(senderW, nonce + 1);
+            for (Object pt : submittedTxes) {
+                if (pt instanceof PendingTx) {
+                    PendingTx tx = (PendingTx)pt;
+                    ByteArrayWrapper senderW = new ByteArrayWrapper(tx.sender.getAddress());
+                    Long nonce = nonces.get(senderW);
+                    if (nonce == null) {
+                        BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
+                        nonce = bcNonce.longValue();
+                    }
+                    nonces.put(senderW, nonce + 1);
 
-                byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
+                    byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
 
-                Transaction transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
-                        ByteUtil.longToBytesNoLeadZeroes(gasPrice),
-                        ByteUtil.longToBytesNoLeadZeroes(gasLimit),
-                        toAddress, ByteUtil.bigIntegerToBytes(tx.value), tx.data);
-                transaction.sign(tx.sender.getPrivKeyBytes());
-                if (tx.createdContract != null) {
-                    tx.createdContract.setAddress(transaction.getContractAddress());
+                    Transaction transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
+                            ByteUtil.longToBytesNoLeadZeroes(gasPrice),
+                            ByteUtil.longToBytesNoLeadZeroes(gasLimit),
+                            toAddress, ByteUtil.bigIntegerToBytes(tx.value), tx.data);
+                    transaction.sign(tx.sender.getPrivKeyBytes());
+                    if (tx.createdContract != null) {
+                        tx.createdContract.setAddress(transaction.getContractAddress());
+                    }
+                    txes.add(transaction);
+                } else if (pt instanceof Transaction) {
+                    txes.add((Transaction)pt);
                 }
-                txes.add(transaction);
             }
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
             Ethash.getForBlock(b.getNumber()).mineLight(b).get();
@@ -179,6 +185,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public void sendEther(byte[] toAddress, BigInteger weis) {
         submitNewTx(new PendingTx(toAddress, weis, new byte[0]));
+    }
+
+    public Transaction submitTransaction(Transaction transaction) {
+        submitNewTx(transaction);
+        return transaction;
     }
 
     @Override
@@ -242,7 +253,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return blockchain;
     }
 
-    private void submitNewTx(PendingTx tx) {
+    private void submitNewTx(Object tx) {
         submittedTxes.add(tx);
         if (autoBlock) {
             createBlock();
