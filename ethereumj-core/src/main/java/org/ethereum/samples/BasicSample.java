@@ -204,7 +204,7 @@ public class BasicSample implements Runnable {
         }
     }
 
-    protected List<Channel> syncPeers = new Vector<>();
+    protected List<Node> syncPeers = new Vector<>();
 
     /**
      * When live nodes found SyncManager should select from them the most
@@ -289,7 +289,9 @@ public class BasicSample implements Runnable {
 
         @Override
         public void onNodeDiscovered(Node node) {
-            nodesDiscovered.add(node);
+            if (nodesDiscovered.size() < 1000) {
+                nodesDiscovered.add(node);
+            }
         }
 
         @Override
@@ -299,7 +301,7 @@ public class BasicSample implements Runnable {
 
         @Override
         public void onPeerAddedToSyncPool(Channel peer) {
-            syncPeers.add(peer);
+            syncPeers.add(peer.getNode());
         }
 
         @Override

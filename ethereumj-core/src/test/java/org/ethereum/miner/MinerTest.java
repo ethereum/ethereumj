@@ -139,7 +139,7 @@ public class MinerTest {
                 Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
                         ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                         receiverAddr, new byte[]{77}, new byte[0]);
-                tx.sign(senderKey.getPrivKeyBytes());
+                tx.sign(senderKey);
                 System.out.println("=== Submitting tx: " + tx);
                 ethereum2.submitTransaction(tx);
 
@@ -272,7 +272,7 @@ public class MinerTest {
                 Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
                         ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                         receiverAddr, new byte[]{77}, new byte[0]);
-                tx.sign(senderKey.getPrivKeyBytes());
+                tx.sign(senderKey);
                 System.out.println("=== Submitting tx: " + tx);
                 ethereum1.submitTransaction(tx);
 
@@ -290,7 +290,7 @@ public class MinerTest {
     }
 
     public static void main(String[] args) throws Exception {
-        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec")).decompress();
+        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec"));
         System.out.println(Hex.toHexString(k.getPrivKeyBytes()));
         System.out.println(Hex.toHexString(k.getAddress()));
         System.out.println(Hex.toHexString(k.getNodeId()));

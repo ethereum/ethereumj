@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -23,6 +24,7 @@ import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
@@ -43,7 +45,7 @@ public class WorldManager {
     @Autowired
     private Blockchain blockchain;
 
-    @Autowired
+    @Autowired @Qualifier("repository")
     private Repository repository;
 
     @Autowired
@@ -73,9 +75,20 @@ public class WorldManager {
     @Autowired
     SystemProperties config;
 
+    private CountDownLatch initSemaphore = new CountDownLatch(1);
+
     @PostConstruct
     public void init() {
         loadBlockchain();
+        initSemaphore.countDown();
+    }
+
+    public void waitForInit() {
+        try {
+            initSemaphore.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void addListener(EthereumListener listener) {

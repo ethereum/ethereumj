@@ -1,13 +1,11 @@
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeaderWrapper;
-import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import static org.ethereum.net.eth.EthVersion.*;
@@ -42,11 +40,8 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void logSyncStats() {
-    }
-
-    @Override
-    public void changeState(SyncState newState) {
+    public String getSyncStats() {
+        return "";
     }
 
     @Override
@@ -82,6 +77,14 @@ public class EthAdapter implements Eth {
     }
 
     @Override
+    public void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    }
+
+    @Override
+    public void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+    }
+
+    @Override
     public void sendNewBlock(Block newBlock) {
     }
 
@@ -104,14 +107,20 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void recoverGap(BlockWrapper block) {
-    }
-
-    @Override
     public void dropConnection() {
     }
 
     @Override
     public void fetchBodies(List<BlockHeaderWrapper> headers) {
+    }
+
+    @Override
+    public BlockIdentifier getBestKnownBlock() {
+        return null;
+    }
+
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return BigInteger.ZERO;
     }
 }

@@ -86,7 +86,7 @@ public class TransactionTest {
         System.out.println("RLP encoded tx\t\t: " + Hex.toHexString(tx.getEncoded()));
 
         // retrieve the signer/sender of the transaction
-        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature().toBase64());
+        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature());
 
         System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString(tx.getEncodedRaw()));
         System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString(tx.getEncoded()));
@@ -128,7 +128,7 @@ public class TransactionTest {
         System.out.println("RLP encoded tx\t\t: " + Hex.toHexString(tx.getEncoded()));
 
         // retrieve the signer/sender of the transaction
-        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature().toBase64());
+        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature());
 
         System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString(tx.getEncodedRaw()));
         System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString(tx.getEncoded()));
@@ -310,6 +310,7 @@ public class TransactionTest {
         List<LogInfo> logs = new ArrayList<>();
         logs.add(logInfo1);
 
+        // TODO calculate cumulative gas
         TransactionReceipt receipt = new TransactionReceipt(stateRoot, gasUsed, bloom, logs);
 
         assertEquals(data,
@@ -551,7 +552,8 @@ public class TransactionTest {
         BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/genesis-light.json")));
 
-        ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+        ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")).compress();
+        System.out.println("address: " + Hex.toHexString(sender.getAddress()));
 
         if(cres.contracts.get("PsychoKiller") != null) {
             Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("PsychoKiller").bin), 1000000000L);
@@ -585,7 +587,7 @@ public class TransactionTest {
                 receiveAddress,
                 ByteUtil.longToBytesNoLeadZeroes(value),
                 data);
-        tx.sign(sender.getPrivKeyBytes());
+        tx.sign(sender);
         return tx;
     }
 

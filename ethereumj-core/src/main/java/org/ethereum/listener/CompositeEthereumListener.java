@@ -28,121 +28,182 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void trace(String output) {
-        for (EthereumListener listener : listeners) {
-            listener.trace(output);
+    public void trace(final String output) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.trace(output);
+                }
+            });
         }
     }
 
     @Override
-    public void onBlock(Block block, List<TransactionReceipt> receipts) {
-        for (EthereumListener listener : listeners) {
-            listener.onBlock(block, receipts);
+    public void onBlock(final Block block, final List<TransactionReceipt> receipts) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onBlock(block, receipts);
+                }
+            });
         }
     }
 
     @Override
-    public void onRecvMessage(Channel channel, Message message) {
-        for (EthereumListener listener : listeners) {
-            listener.onRecvMessage(channel, message);
+    public void onRecvMessage(final Channel channel, final Message message) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onRecvMessage(channel, message);
+                }
+            });
         }
     }
 
     @Override
-    public void onSendMessage(Channel channel, Message message) {
-        for (EthereumListener listener : listeners) {
-            listener.onSendMessage(channel, message);
+    public void onSendMessage(final Channel channel, final Message message) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onSendMessage(channel, message);
+                }
+            });
         }
     }
 
     @Override
-    public void onPeerDisconnect(String host, long port) {
-        for (EthereumListener listener : listeners) {
-            listener.onPeerDisconnect(host, port);
+    public void onPeerDisconnect(final String host, final long port) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onPeerDisconnect(host, port);
+                }
+            });
         }
     }
 
     @Override
-    public void onPendingTransactionsReceived(List<Transaction> transactions) {
-        for (EthereumListener listener : listeners) {
-            listener.onPendingTransactionsReceived(transactions);
+    public void onPendingTransactionsReceived(final List<Transaction> transactions) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onPendingTransactionsReceived(transactions);
+                }
+            });
         }
     }
 
     @Override
-    public void onPendingStateChanged(PendingState pendingState) {
-        for (EthereumListener listener : listeners) {
-            listener.onPendingStateChanged(pendingState);
+    public void onPendingStateChanged(final PendingState pendingState) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onPendingStateChanged(pendingState);
+                }
+            });
         }
     }
 
     @Override
     public void onSyncDone() {
-        for (EthereumListener listener : listeners) {
-            listener.onSyncDone();
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onSyncDone();
+                }
+            });
         }
     }
 
     @Override
     public void onNoConnections() {
-        for (EthereumListener listener : listeners) {
-            listener.onNoConnections();
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onNoConnections();
+                }
+            });
         }
     }
 
     @Override
-    public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
-        for (EthereumListener listener : listeners) {
-            listener.onHandShakePeer(channel, helloMessage);
+    public void onHandShakePeer(final Channel channel, final HelloMessage helloMessage) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onHandShakePeer(channel, helloMessage);
+                }
+            });
         }
     }
 
     @Override
-    public void onVMTraceCreated(String transactionHash, String trace) {
-        for (EthereumListener listener : listeners) {
-            listener.onVMTraceCreated(transactionHash, trace);
+    public void onVMTraceCreated(final String transactionHash, final String trace) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onVMTraceCreated(transactionHash, trace);
+                }
+            });
         }
     }
 
     @Override
-    public void onNodeDiscovered(Node node) {
-        for (EthereumListener listener : listeners) {
-            listener.onNodeDiscovered(node);
+    public void onNodeDiscovered(final Node node) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onNodeDiscovered(node);
+                }
+            });
         }
     }
 
     @Override
-    public void onEthStatusUpdated(Channel channel, StatusMessage status) {
-        for (EthereumListener listener : listeners) {
-            listener.onEthStatusUpdated(channel, status);
+    public void onEthStatusUpdated(final Channel channel, final StatusMessage status) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onEthStatusUpdated(channel, status);
+                }
+            });
         }
     }
 
     @Override
-    public void onTransactionExecuted(TransactionExecutionSummary summary) {
-        for (EthereumListener listener : listeners) {
-            listener.onTransactionExecuted(summary);
+    public void onTransactionExecuted(final TransactionExecutionSummary summary) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onTransactionExecuted(summary);
+                }
+            });
         }
     }
 
     @Override
-    public void onPeerAddedToSyncPool(Channel peer) {
-        for (EthereumListener listener : listeners) {
-            listener.onPeerAddedToSyncPool(peer);
-        }
-    }
-
-    @Override
-    public void onLongSyncDone() {
-        for (EthereumListener listener : listeners) {
-            listener.onLongSyncDone();
-        }
-    }
-
-    @Override
-    public void onLongSyncStarted() {
-        for (EthereumListener listener : listeners) {
-            listener.onLongSyncStarted();
+    public void onPeerAddedToSyncPool(final Channel peer) {
+        for (final EthereumListener listener : listeners) {
+            EventDispatchThread.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onPeerAddedToSyncPool(peer);
+                }
+            });
         }
     }
 }

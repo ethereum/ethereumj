@@ -12,7 +12,7 @@ import java.util.List;
  * overrides it to set the COMPOSITE_CUMULATOR for ByteToMessageDecoder as it
  * is more effective than the default one.
  */
-public abstract class NettiByteToMessageCodec<I> extends ByteToMessageCodec<I> {
+public abstract class NettyByteToMessageCodec<I> extends ByteToMessageCodec<I> {
 
     private final ByteToMessageDecoder decoder = new ByteToMessageDecoder() {
         {
@@ -21,14 +21,35 @@ public abstract class NettiByteToMessageCodec<I> extends ByteToMessageCodec<I> {
 
         @Override
         public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-            NettiByteToMessageCodec.this.decode(ctx, in, out);
+            NettyByteToMessageCodec.this.decode(ctx, in, out);
         }
 
         @Override
         protected void decodeLast(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-            NettiByteToMessageCodec.this.decodeLast(ctx, in, out);
+            NettyByteToMessageCodec.this.decodeLast(ctx, in, out);
         }
     };
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        decoder.channelReadComplete(ctx);
+        super.channelReadComplete(ctx);
+    }
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        decoder.channelInactive(ctx);
+        super.channelInactive(ctx);
+    }
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        decoder.handlerAdded(ctx);
+        super.handlerAdded(ctx);
+    }
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        decoder.handlerRemoved(ctx);
+        super.handlerRemoved(ctx);
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {

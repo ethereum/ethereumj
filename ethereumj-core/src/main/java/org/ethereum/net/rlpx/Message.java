@@ -110,7 +110,7 @@ public abstract class Message {
 
         ECKey outKey = null;
         try {
-            outKey = ECKey.signatureToKey(msgHash, signature.toBase64());
+            outKey = ECKey.signatureToKey(msgHash, signature);
         } catch (SignatureException e) {
             e.printStackTrace();
         }
@@ -119,9 +119,7 @@ public abstract class Message {
     }
 
     public byte[] getNodeId() {
-        byte[] nodeID = new byte[64];
-        System.arraycopy(getKey().getPubKey(), 1, nodeID, 0, 64);
-        return nodeID;
+        return getKey().getNodeId();
     }
 
     public byte[] getPacket() {

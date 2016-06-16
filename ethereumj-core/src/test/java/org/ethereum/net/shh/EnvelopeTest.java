@@ -48,8 +48,8 @@ public class EnvelopeTest {
 
     @Test
     public void testPow1() {
-        ECKey from = new ECKey().decompress();
-        ECKey to = new ECKey().decompress();
+        ECKey from = new ECKey();
+        ECKey to = new ECKey();
         System.out.println("From: " + Hex.toHexString(from.getPrivKeyBytes()));
         System.out.println("To: " + Hex.toHexString(to.getPrivKeyBytes()));
         WhisperMessage msg1 = new WhisperMessage()

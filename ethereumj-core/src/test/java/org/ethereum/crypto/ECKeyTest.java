@@ -2,6 +2,7 @@ package org.ethereum.crypto;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey.ECDSASignature;
+import org.ethereum.crypto.jce.SpongyCastleProvider;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -15,12 +16,18 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 
 import java.math.BigInteger;
 
+import java.security.KeyPairGenerator;
+import java.security.Provider;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.Signature;
 import java.security.SignatureException;
 
 import java.util.List;
@@ -33,21 +40,23 @@ import static org.junit.Assert.*;
 public class ECKeyTest {
     private static final Logger log = LoggerFactory.getLogger(ECKeyTest.class);
 
-    private String privString = "3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4";
-    private BigInteger privateKey = new BigInteger(Hex.decode(privString));
+    private static final SecureRandom secureRandom = new SecureRandom();
 
-    private String pubString = "0497466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f";
-    private String compressedPubString = "0397466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce7";
+    private String privString = "c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4";
+    private BigInteger privateKey = new BigInteger(privString, 16);
+
+    private String pubString = "040947751e3022ecf3016be03ec77ab0ce3c2662b4843898cb068d74f698ccc8ad75aa17564ae80a20bb044ee7a6d903e8e8df624b089c95d66a0570f051e5a05b";
+    private String compressedPubString = "030947751e3022ecf3016be03ec77ab0ce3c2662b4843898cb068d74f698ccc8ad";
     private byte[] pubKey = Hex.decode(pubString);
     private byte[] compressedPubKey = Hex.decode(compressedPubString);
-    private String address = "8a40bfaa73256b60764c1bf40675a99083efb075";
+    private String address = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
     private String exampleMessage = "This is an example of a signed message.";
-    private String sigBase64 = "HD5AsBr4wuH6UU9tXuSJhUvgfGayfwoY0cKT03sFUjnpQsupHznd/3mCIRfLuNHlRCVGdAyHecdyM8IVZMtc1I8=";
+    private String sigBase64 = "HNLOSI9Nop5o8iywXKwbGbdd8XChK0rRvdRTG46RFcb7dcH+UKlejM/8u1SCoeQvu91jJBMd/nXDs7f5p8ch7Ms=";
 
     @Test
     public void testHashCode() {
-        Assert.assertEquals(1866897155, ECKey.fromPrivate(privateKey).hashCode());
+        Assert.assertEquals(-351262686, ECKey.fromPrivate(privateKey).hashCode());
     }
 
     @Test
@@ -62,7 +71,7 @@ public class ECKeyTest {
 
     @Test
     public void testFromPrivateKey() {
-        ECKey key = ECKey.fromPrivate(privateKey).decompress();
+        ECKey key = ECKey.fromPrivate(privateKey);
         assertTrue(key.isPubKeyCanonical());
         assertTrue(key.hasPrivKey());
         assertArrayEquals(pubKey, key.getPubKey());
@@ -70,8 +79,17 @@ public class ECKeyTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testPrivatePublicKeyBytesNoArg() {
-        new ECKey(null, null);
+        new ECKey((BigInteger) null, null);
         fail("Expecting an IllegalArgumentException for using only null-parameters");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidPrivateKey() throws Exception {
+        new ECKey(
+            Security.getProvider("SunEC"),
+            KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate(),
+            ECKey.fromPublicOnly(pubKey).getPubKeyPoint());
+        fail("Expecting an IllegalArgumentException for using an non EC private key");
     }
 
     @Test
@@ -82,6 +100,36 @@ public class ECKeyTest {
         assertArrayEquals(key.getPubKey(), pubKey);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testSignIncorrectInputSize() {
+        ECKey key = new ECKey();
+        String message = "The quick brown fox jumps over the lazy dog.";
+        ECDSASignature sig = key.doSign(message.getBytes());
+        fail("Expecting an IllegalArgumentException for a non 32-byte input");
+    }
+
+    @Test(expected = ECKey.MissingPrivateKeyException.class)
+    public void testSignWithPubKeyOnly() {
+        ECKey key = ECKey.fromPublicOnly(pubKey);
+        String message = "The quick brown fox jumps over the lazy dog.";
+        byte[] input = HashUtil.sha3(message.getBytes());
+        ECDSASignature sig = key.doSign(input);
+        fail("Expecting an MissingPrivateKeyException for a public only ECKey");
+    }
+
+    @Test(expected = SignatureException.class)
+    public void testBadBase64Sig() throws SignatureException {
+        byte[] messageHash = new byte[32];
+        ECKey.signatureToKey(messageHash, "This is not valid Base64!");
+        fail("Expecting a SignatureException for invalid Base64");
+    }
+
+    @Test(expected = SignatureException.class)
+    public void testInvalidSignatureLength() throws SignatureException {
+        byte[] messageHash = new byte[32];
+        ECKey.signatureToKey(messageHash, "abcdefg");
+        fail("Expecting a SignatureException for invalid signature length");
+    }
 
     @Test
     public void testPublicKeyFromPrivate() {
@@ -109,8 +157,7 @@ public class ECKeyTest {
 
     @Test
     public void testEthereumSign() throws IOException {
-        // TODO: Understand why key must be decompressed for this to work
-        ECKey key = ECKey.fromPrivate(privateKey).decompress();
+        ECKey key = ECKey.fromPrivate(privateKey);
         System.out.println("Secret\t: " + Hex.toHexString(key.getPrivKeyBytes()));
         System.out.println("Pubkey\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Data\t: " + exampleMessage);
@@ -136,12 +183,25 @@ public class ECKeyTest {
         BigInteger s = new BigInteger("6ba4c2874299a55ad947dbc98a25ee895aabf6b625c26c435e84bfd70edf2f69", 16);
         ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 0x1b);
         byte[] rawtx = Hex.decode("f82804881bc16d674ec8000094cd2a3d9f938e13cd947ec05abc7fe734df8dd8268609184e72a0006480");
+        byte[] rawHash = HashUtil.sha3(rawtx);
+        byte[] address = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
         try {
-            ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), sig.toBase64());
+            ECKey key = ECKey.signatureToKey(rawHash, sig);
+
             System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
             System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
-            assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(key.getAddress()));
-            key.verify(HashUtil.sha3(rawtx), sig);
+
+            assertEquals(key, ECKey.signatureToKey(rawHash, sig.toBase64()));
+            assertEquals(key, ECKey.recoverFromSignature(0, sig, rawHash));
+            assertArrayEquals(key.getPubKey(), ECKey.recoverPubBytesFromSignature(0, sig, rawHash));
+
+
+            assertArrayEquals(address, key.getAddress());
+            assertArrayEquals(address, ECKey.signatureToAddress(rawHash, sig));
+            assertArrayEquals(address, ECKey.signatureToAddress(rawHash, sig.toBase64()));
+            assertArrayEquals(address, ECKey.recoverAddressFromSignature(0, sig, rawHash));
+
+            assertTrue(key.verify(rawHash, sig));
         } catch (SignatureException e) {
             fail();
         }
@@ -153,7 +213,7 @@ public class ECKeyTest {
         byte[] rawtx = Hex.decode("f86e80893635c9adc5dea000008609184e72a00082109f9479b08ad8787060333663d19704909ee7b1903e58801ba0899b92d0c76cbf18df24394996beef19c050baa9823b4a9828cd9b260c97112ea0c9e62eb4cf0a9d95ca35c8830afac567619d6b3ebee841a3c8be61d35acd8049");
 
         Transaction tx = new Transaction(rawtx);
-        ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), tx.getSignature().toBase64());
+        ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), tx.getSignature());
 
         System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
@@ -193,8 +253,29 @@ public class ECKeyTest {
     public void testSignVerify() {
         ECKey key = ECKey.fromPrivate(privateKey);
         String message = "This is an example of a signed message.";
-        ECDSASignature output = key.doSign(message.getBytes());
-        assertTrue(key.verify(message.getBytes(), output));
+        byte[] input = HashUtil.sha3(message.getBytes());
+        ECDSASignature sig = key.sign(input);
+        assertTrue(sig.validateComponents());
+        assertTrue(key.verify(input, sig));
+    }
+
+    private void testProviderRoundTrip(Provider provider) throws Exception {
+        ECKey key = new ECKey(provider, secureRandom);
+        String message = "The quick brown fox jumps over the lazy dog.";
+        byte[] input = HashUtil.sha3(message.getBytes());
+        ECDSASignature sig = key.sign(input);
+        assertTrue(sig.validateComponents());
+        assertTrue(key.verify(input, sig));
+    }
+
+    @Test
+    public void testSunECRoundTrip() throws Exception {
+        testProviderRoundTrip(Security.getProvider("SunEC"));
+    }
+
+    @Test
+    public void testSpongyCastleRoundTrip() throws Exception {
+        testProviderRoundTrip(SpongyCastleProvider.getInstance());
     }
 
     @Test
@@ -251,7 +332,7 @@ public class ECKeyTest {
         key = ECKey.fromPublicOnly(key.getPubKeyPoint());
         boolean found = false;
         for (int i = 0; i < 4; i++) {
-            ECKey key2 = ECKey.recoverFromSignature(i, sig, hash, true);
+            ECKey key2 = ECKey.recoverFromSignature(i, sig, hash);
             checkNotNull(key2);
             if (key.equals(key2)) {
                 found = true;
@@ -293,5 +374,12 @@ public class ECKeyTest {
         ECKey key = ECKey.fromPrivate(Hex.decode("abb51256c1324a1350598653f46aa3ad693ac3cf5d05f36eba3f495a1f51590f"));
         byte[] payload = key.decryptAES(Hex.decode("84a727bc81fa4b13947dc9728b88fd08"));
         System.out.println(Hex.toHexString(payload));
+    }
+
+    @Test
+    public void testNodeId() {
+        ECKey key = ECKey.fromPublicOnly(pubKey);
+
+        assertEquals(key, ECKey.fromNodeId(key.getNodeId()));
     }
 }

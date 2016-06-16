@@ -123,19 +123,20 @@ public class SystemProperties {
             Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
-            config = javaSystemProperties
-                    .withFallback(apiConfig)
+            config = apiConfig
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
-                    .withFallback(userConfig)
                     .withFallback(userDirConfig)
+                    .withFallback(userConfig)
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
-            validateConfig();
 
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
+
+            config = javaSystemProperties.withFallback(config);
+            validateConfig();
 
             Properties props = new Properties();
             InputStream is = getClass().getResourceAsStream("/version.properties");
@@ -216,7 +217,6 @@ public class SystemProperties {
         return (T) config.getAnyRef(propName);
     }
 
-    @ValidateMe
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
@@ -558,7 +558,7 @@ public class SystemProperties {
             if (file.canRead()) {
                 props.load(new FileReader(file));
             } else {
-                ECKey key = new ECKey().decompress();
+                ECKey key = new ECKey();
                 props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
                 props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
                 file.getParentFile().mkdirs();
@@ -574,7 +574,7 @@ public class SystemProperties {
 
     @ValidateMe
     public ECKey getMyKey() {
-        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
+        return ECKey.fromPrivate(Hex.decode(privateKey()));
     }
 
     /**
@@ -592,7 +592,7 @@ public class SystemProperties {
 
     @ValidateMe
     public int maxActivePeers() {
-        return config.getInt("peer.maxAcivePeers");
+        return config.getInt("peer.maxActivePeers");
     }
 
     @ValidateMe

@@ -62,7 +62,8 @@ public class EncryptionHandshake {
      */
     public AuthInitiateMessageV4 createAuthInitiateV4(ECKey key) {
         AuthInitiateMessageV4 message = new AuthInitiateMessageV4();
-        BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+
+        BigInteger secretScalar = key.keyAgreement(remotePublicKey);
         byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
 
         byte[] nonce = initiatorNonce;
@@ -128,12 +129,14 @@ public class EncryptionHandshake {
     AuthResponseMessageV4 makeAuthInitiateV4(AuthInitiateMessageV4 initiate, ECKey key) {
         initiatorNonce = initiate.nonce;
         remotePublicKey = initiate.publicKey;
-        BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+
+        BigInteger secretScalar = key.keyAgreement(remotePublicKey);
+
         byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         byte[] signed = xor(token, initiatorNonce);
 
         ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
-                initiate.signature, signed, false);
+                initiate.signature, signed);
         if (ephemeral == null) {
             throw new RuntimeException("failed to recover signatue from message");
         }
@@ -178,7 +181,7 @@ public class EncryptionHandshake {
         boolean isToken;
         if (token == null) {
             isToken = false;
-            BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+            BigInteger secretScalar = key.keyAgreement(remotePublicKey);
             token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         } else {
             isToken = true;
@@ -188,7 +191,7 @@ public class EncryptionHandshake {
         byte[] signed = xor(token, nonce);
         message.signature = ephemeralKey.sign(signed);
         message.isTokenUsed = isToken;
-        message.ephemeralPublicHash = sha3(ephemeralKey.getPubKeyPoint().getEncoded(false), 1, 64);
+        message.ephemeralPublicHash = sha3(ephemeralKey.getPubKey(), 1, 64);
         message.publicKey = key.getPubKeyPoint();
         message.nonce = initiatorNonce;
         return message;
@@ -240,7 +243,7 @@ public class EncryptionHandshake {
     }
 
     void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
-        BigInteger secretScalar = remoteEphemeralKey.multiply(ephemeralKey.getPrivKey()).normalize().getXCoord().toBigInteger();
+        BigInteger secretScalar = ephemeralKey.keyAgreement(remoteEphemeralKey);
         byte[] agreedSecret = ByteUtil.bigIntegerToBytes(secretScalar, SECRET_SIZE);
         byte[] sharedSecret = sha3(agreedSecret, sha3(responderNonce, initiatorNonce));
         byte[] aesSecret = sha3(agreedSecret, sharedSecret);
@@ -288,12 +291,12 @@ public class EncryptionHandshake {
     AuthResponseMessage makeAuthInitiate(AuthInitiateMessage initiate, ECKey key) {
         initiatorNonce = initiate.nonce;
         remotePublicKey = initiate.publicKey;
-        BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+        BigInteger secretScalar = key.keyAgreement(remotePublicKey);
         byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         byte[] signed = xor(token, initiatorNonce);
 
         ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
-                initiate.signature, signed, false);
+                initiate.signature, signed);
         if (ephemeral == null) {
             throw new RuntimeException("failed to recover signatue from message");
         }

@@ -27,8 +27,8 @@ public class RlpxConnectionTest {
 
     @Before
     public void setUp() throws Exception {
-        ECKey remoteKey = new ECKey().decompress();
-        ECKey myKey = new ECKey().decompress();
+        ECKey remoteKey = new ECKey();
+        ECKey myKey = new ECKey();
         initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
         responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);

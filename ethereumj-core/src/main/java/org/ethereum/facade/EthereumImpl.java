@@ -270,22 +270,22 @@ public class EthereumImpl implements Ethereum {
         };
     }
 
-
     @Override
-    public ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
-                                              Object... funcArgs) {
-        Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                receiveAddress, 0, function, funcArgs);
+    public TransactionReceipt callConstant(Transaction tx, Block block) {
+        return callConstantImpl(tx, block).getReceipt();
+    }
+
+    private org.ethereum.core.TransactionExecutor callConstantImpl(Transaction tx, Block block) {
         tx.sign(new byte[32]);
 
-        Block bestBlock = worldManager.getBlockchain().getBestBlock();
-
-        Repository repository = ((Repository) worldManager.getRepository()).startTracking();
+        Repository repository = ((Repository) worldManager.getRepository())
+                .getSnapshotTo(block.getStateRoot())
+                .startTracking();
 
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                    (tx, bestBlock.getCoinbase(), repository, worldManager.getBlockStore(),
-                    programInvokeFactory, bestBlock)
+                    (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
+                            programInvokeFactory, block)
                     .setLocalCall(true);
 
             executor.init();
@@ -293,10 +293,20 @@ public class EthereumImpl implements Ethereum {
             executor.go();
             executor.finalization();
 
-            return executor.getResult();
+            return executor;
         } finally {
             repository.rollback();
         }
+    }
+
+    @Override
+    public ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
+                                              Object... funcArgs) {
+        Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
+                receiveAddress, 0, function, funcArgs);
+        Block bestBlock = worldManager.getBlockchain().getBestBlock();
+
+        return callConstantImpl(tx, bestBlock).getResult();
     }
 
     @Override
@@ -310,7 +320,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public org.ethereum.facade.Repository getSnapshootTo(byte[] root){
+    public org.ethereum.facade.Repository getSnapshotTo(byte[] root){
 
         Repository repository = (Repository) worldManager.getRepository();
         org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);
@@ -357,5 +367,12 @@ public class EthereumImpl implements Ethereum {
     @Override
     public void exitOn(long number) {
         worldManager.getBlockchain().setExitOn(number);
+    }
+
+    /**
+     * For testing purposes and 'hackers'
+     */
+    public ApplicationContext getApplicationContext() {
+        return ctx;
     }
 }

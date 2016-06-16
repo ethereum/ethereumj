@@ -33,7 +33,7 @@ public class PeerConnectionTester {
     SystemProperties config = SystemProperties.CONFIG;
 
     // NodeHandler instance should be unique per Node instance
-    private Map<NodeHandler, ?> connectedCandidates = new IdentityHashMap<>();
+    private Map<NodeHandler, ?> connectedCandidates = Collections.synchronizedMap(new IdentityHashMap());
 
     // executor with Queue which picks up the Node with the best reputation
     private ExecutorService peerConnectionPool;
@@ -76,6 +76,8 @@ public class PeerConnectionTester {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                connectedCandidates.remove(nodeHandler);
             }
         }
     }
@@ -100,7 +102,7 @@ public class PeerConnectionTester {
     }
 
     public void nodeStatusChanged(final NodeHandler nodeHandler) {
-        if (!connectedCandidates.containsKey(nodeHandler)) {
+        if (connectedCandidates.size() < NodeManager.MAX_NODES && !connectedCandidates.containsKey(nodeHandler)) {
             logger.debug("Submitting node for RLPx connection : " + nodeHandler);
             connectedCandidates.put(nodeHandler, null);
             peerConnectionPool.execute(new ConnectTask(nodeHandler));
@@ -122,7 +124,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T take() throws InterruptedException {
+        public synchronized T take() throws InterruptedException {
             if (isEmpty()) {
                 return super.take();
             } else {
@@ -133,7 +135,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T poll(long timeout, TimeUnit unit) throws InterruptedException {
+        public synchronized T poll(long timeout, TimeUnit unit) throws InterruptedException {
             if (isEmpty()) {
                 return super.poll(timeout, unit);
             } else {
@@ -144,7 +146,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T poll() {
+        public synchronized T poll() {
             if (isEmpty()) {
                 return super.poll();
             } else {
@@ -155,7 +157,7 @@ public class PeerConnectionTester {
         }
 
         @Override
-        public T peek() {
+        public synchronized T peek() {
             if (isEmpty()) {
                 return super.peek();
             } else {

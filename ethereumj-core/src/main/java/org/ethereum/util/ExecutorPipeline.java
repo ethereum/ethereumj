@@ -1,6 +1,8 @@
 package org.ethereum.util;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -101,6 +103,12 @@ public class ExecutorPipeline <In, Out>{
                 }
             }
         });
+    }
+
+    public void pushAll(final List<In> list) {
+        for (In in : list) {
+            push(in);
+        }
     }
 
     public ExecutorPipeline<In, Out> setThreadPoolName(String threadPoolName) {

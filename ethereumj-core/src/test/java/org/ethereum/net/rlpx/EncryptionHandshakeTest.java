@@ -17,8 +17,8 @@ public class EncryptionHandshakeTest {
 
     @Before
     public void setUp() {
-        remoteKey = new ECKey().decompress();
-        myKey = new ECKey().decompress();
+        remoteKey = new ECKey();
+        myKey = new ECKey();
         initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
     }
 

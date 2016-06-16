@@ -7,7 +7,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeaderWrapper;
-import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
@@ -20,7 +19,6 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
-import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.StaticMessages;
@@ -94,6 +92,7 @@ public class Channel {
 
     private boolean discoveryMode;
     private boolean isActive;
+    private boolean isDisconnected;
 
     private PeerStatistics peerStats = new PeerStatistics();
 
@@ -237,6 +236,11 @@ public class Channel {
     }
 
     public void onDisconnect() {
+        isDisconnected = true;
+    }
+
+    public boolean isDisconnected() {
+        return isDisconnected;
     }
 
     public void onSyncDone(boolean done) {
@@ -295,10 +299,6 @@ public class Channel {
         eth.fetchBodies(headers);
     }
 
-    public void recoverGap(BlockWrapper block) {
-        eth.recoverGap(block);
-    }
-
     public boolean isEthCompatible(Channel peer) {
         return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
     }
@@ -311,16 +311,12 @@ public class Channel {
         return eth.hasStatusSucceeded();
     }
 
-    public void logSyncStats() {
-        eth.logSyncStats();
+    public String logSyncStats() {
+        return eth.getSyncStats();
     }
 
     public BigInteger getTotalDifficulty() {
-        return nodeStatistics.getEthTotalDifficulty();
-    }
-
-    public void changeSyncState(SyncState newState) {
-        eth.changeState(newState);
+        return getEthHandler().getTotalDifficulty();
     }
 
     public SyncStatistics getSyncStats() {

@@ -1018,6 +1018,36 @@ public class IndexedBlockStoreTest {
         assertEquals(block2.getCumulativeDifficulty(), indexedBlockStore.getTotalDifficultyForHash(block2.getHash()));
     }
 
+    @Test
+    public void myTest() throws Exception {
+        // check that IndexedStore rebranch changes are persisted
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        IndexedBlockStore ibs = (IndexedBlockStore) bc.getBlockchain().getBlockStore();
+
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b2_ = bc.createForkBlock(b1);
+        Assert.assertTrue(bc.getBlockchain().getBestBlock().isEqual(b2));
+        Block b3_ = bc.createForkBlock(b2_);
+        Assert.assertTrue(bc.getBlockchain().getBestBlock().isEqual(b3_));
+        Block sb2 = bc.getBlockchain().getBlockStore().getChainBlockByNumber(2);
+        Block sb3 = bc.getBlockchain().getBlockStore().getChainBlockByNumber(3);
+        Assert.assertTrue(sb2.isEqual(b2_));
+        Assert.assertTrue(sb3.isEqual(b3_));
+        Block b4_ = bc.createBlock();
+        bc.getBlockchain().flush();
+
+        IndexedBlockStore ibs1 = new IndexedBlockStore();
+        ibs1.init(ibs.indexDS, ibs.blocksDS);
+
+        sb2 = ibs1.getChainBlockByNumber(2);
+        sb3 = ibs1.getChainBlockByNumber(3);
+        Block sb4 = ibs1.getChainBlockByNumber(4);
+        Assert.assertTrue(sb2.isEqual(b2_));
+        Assert.assertTrue(sb3.isEqual(b3_));
+        Assert.assertTrue(sb4.isEqual(b4_));
+    }
+
 // todo: test this
 
 //    public byte[] getBlockHashByNumber(long blockNumber)

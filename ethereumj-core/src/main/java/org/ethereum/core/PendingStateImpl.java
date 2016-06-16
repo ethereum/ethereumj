@@ -54,7 +54,7 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     private EthereumListener listener;
 
-    @Autowired
+    @Autowired @Qualifier("repository")
     private Repository repository;
 
     @Autowired
@@ -69,6 +69,7 @@ public class PendingStateImpl implements PendingState {
 //    @Resource
 //    @Qualifier("wireTransactions")
     private final List<PendingTransaction> wireTransactions = new ArrayList<>();
+
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
     private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(500000);
@@ -164,13 +165,8 @@ public class PendingStateImpl implements PendingState {
         }
 
         if (!newTxs.isEmpty()) {
-            EventDispatchThread.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    listener.onPendingTransactionsReceived(newTxs);
-                    listener.onPendingStateChanged(PendingStateImpl.this);
-                }
-            });
+            listener.onPendingTransactionsReceived(newTxs);
+            listener.onPendingStateChanged(PendingStateImpl.this);
         }
         logger.info("Wire transaction list added: {} new, {} valid of received {}, #of known txs: {}", unknownTx, newTxs.size(), transactions.size(), redceivedTxs.size());
     }
@@ -201,19 +197,21 @@ public class PendingStateImpl implements PendingState {
     public synchronized void addPendingTransaction(final Transaction tx) {
         pendingStateTransactions.add(tx);
         executeTx(tx);
-        EventDispatchThread.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                listener.onPendingTransactionsReceived(Collections.singletonList(tx));
-                listener.onPendingStateChanged(PendingStateImpl.this);
-            }
-        });
+        listener.onPendingTransactionsReceived(Collections.singletonList(tx));
+        listener.onPendingStateChanged(PendingStateImpl.this);
     }
 
     @Override
     public List<Transaction> getPendingTransactions() {
         return pendingStateTransactions;
     }
+
+    public List<Transaction> getAllPendingTransactions() {
+        List<Transaction> ret = new ArrayList<>(pendingStateTransactions);
+        ret.addAll(getWireTransactions());
+        return ret;
+    }
+
 
     private Block findCommonAncestor(Block b1, Block b2) {
         while(!b1.isEqual(b2)) {
@@ -280,11 +278,7 @@ public class PendingStateImpl implements PendingState {
 
         updateState();
 
-        EventDispatchThread.invokeLater(new Runnable() {
-            public void run() {
-                listener.onPendingStateChanged(PendingStateImpl.this);
-            }
-        });
+        listener.onPendingStateChanged(PendingStateImpl.this);
     }
 
     private void processBestInternal(Block block) {
@@ -348,7 +342,7 @@ public class PendingStateImpl implements PendingState {
         }
     }
 
-    private void executeTx(Transaction tx) {
+    private TransactionReceipt executeTx(Transaction tx) {
 
         logger.info("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
 
@@ -363,6 +357,8 @@ public class PendingStateImpl implements PendingState {
         executor.execute();
         executor.go();
         executor.finalization();
+
+        return executor.getReceipt();
     }
 
     public void setBlockchain(Blockchain blockchain) {
