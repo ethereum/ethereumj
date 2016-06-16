@@ -7,7 +7,7 @@ public interface Blockchain {
 
     long getSize();
 
-    boolean add(Block block);
+    List<TransactionReceipt> add(Block block);
 
     ImportResult tryToConnect(Block block);
 
