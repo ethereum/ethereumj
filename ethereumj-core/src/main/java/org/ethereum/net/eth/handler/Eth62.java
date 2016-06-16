@@ -412,16 +412,6 @@ public class Eth62 extends EthHandler {
 
         logger.debug("New block received: block.index [{}]", newBlock.getNumber());
 
-        // skip new block if TD is lower than ours
-        if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
-            logger.debug(
-                    "New block difficulty lower than ours: [{}] vs [{}], skip",
-                    newBlockMessage.getDifficultyAsBigInt(),
-                    blockchain.getTotalDifficulty()
-            );
-            return;
-        }
-
         updateTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
 
         updateBestBlock(newBlock);
@@ -472,7 +462,7 @@ public class Eth62 extends EthHandler {
     }
 
     private void updateBestBlock(Block block) {
-        bestKnownBlock = new BlockIdentifier(block.getHash(), block.getNumber());
+        updateBestBlock(block.getHeader());
     }
 
     private void updateBestBlock(BlockHeader header) {
