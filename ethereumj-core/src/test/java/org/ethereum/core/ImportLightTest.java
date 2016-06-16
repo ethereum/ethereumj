@@ -213,6 +213,28 @@ public class ImportLightTest {
     }
 
     @Test
+    public void invalidBlockTotalDiff() throws Exception {
+        // Check that importing invalid block doesn't affect totalDifficulty
+
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
+        Block parent = blockchain.getBestBlock();
+
+        System.out.println("Mining #1 ...");
+
+        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+
+        Block b1 = blockchain.createNewBlock(parent, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        b1.setStateRoot(new byte[32]);
+        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        ImportResult importResult = blockchain.tryToConnect(b1);
+        Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
+        Assert.assertEquals(totalDifficulty, blockchain.getTotalDifficulty());
+
+    }
+
+    @Test
     public void createContractFork() throws Exception {
         //  #1 (Parent) --> #2 --> #3 (Child) ----------------------> #4 (call Child)
         //    \-------------------------------> #2' (forked Child)
