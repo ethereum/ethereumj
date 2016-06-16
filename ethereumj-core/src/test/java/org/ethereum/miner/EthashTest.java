@@ -1,6 +1,7 @@
 package org.ethereum.miner;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.TestUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
@@ -13,6 +14,7 @@ import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -198,6 +200,35 @@ public class EthashTest {
 
         Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
 
+    }
+
+    @Test
+    public void changeEpochTestLight()throws Exception {
+        List<Block> blocks = TestUtils.getRandomChain(new byte[32], 29999, 3);
+
+        for (Block b : blocks) {
+            b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
+            b.setNonce(new byte[0]);
+            long nonce = Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+            b.setNonce(longToBytes(nonce));
+
+            Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+        }
+    }
+
+    @Ignore // takes ~20 min
+    @Test
+    public void changeEpochTest()throws Exception {
+        List<Block> blocks = TestUtils.getRandomChain(new byte[32], 29999, 3);
+
+        for (Block b : blocks) {
+            b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
+            b.setNonce(new byte[0]);
+            long nonce = Ethash.getForBlock(b.getNumber()).mine(b).get();
+            b.setNonce(longToBytes(nonce));
+
+            Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+        }
     }
 
     @Test
