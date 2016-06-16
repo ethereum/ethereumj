@@ -232,11 +232,7 @@ public class SyncManager {
 
                     if (wrapper.isNewBlock() && !syncDone) {
                         syncDone = true;
-                        EventDispatchThread.invokeLater(new Runnable() {
-                            public void run() {
-                                compositeEthereumListener.onSyncDone();
-                            }
-                        });
+                        compositeEthereumListener.onSyncDone();
                     }
                 }
 

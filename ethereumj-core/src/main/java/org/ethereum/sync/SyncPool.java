@@ -131,8 +131,6 @@ public class SyncPool {
     }
 
     synchronized void logActivePeers() {
-        if (activePeers.isEmpty()) return;
-
         if (logger.isInfoEnabled()) {
             StringBuilder sb = new StringBuilder("Peer stats:\n");
             sb.append("Active peers\n");
