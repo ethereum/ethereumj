@@ -414,7 +414,7 @@ public class Eth62 extends EthHandler {
 
         // skip new block if TD is lower than ours
         if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
-            logger.trace(
+            logger.debug(
                     "New block difficulty lower than ours: [{}] vs [{}], skip",
                     newBlockMessage.getDifficultyAsBigInt(),
                     blockchain.getTotalDifficulty()
