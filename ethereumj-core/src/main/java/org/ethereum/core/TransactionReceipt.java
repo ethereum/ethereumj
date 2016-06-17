@@ -1,9 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
+import org.ethereum.util.*;
 import org.ethereum.vm.LogInfo;
 
 import org.spongycastle.util.BigIntegers;
@@ -11,6 +8,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +31,7 @@ public class TransactionReceipt {
 
     private byte[] gasUsed = EMPTY_BYTE_ARRAY;
     private byte[] executionResult = EMPTY_BYTE_ARRAY;
+    private String error = "";
 
     /* Tx Receipt in encoded form */
     private byte[] rlpEncoded;
@@ -57,6 +56,10 @@ public class TransactionReceipt {
         bloomFilter = new Bloom(bloomRLP.getRLPData());
         gasUsed = gasUsedRLP.getRLPData();
         executionResult = result.getRLPData();
+
+        if (receipt.size() > 6) {
+            error = new String(receipt.get(6).getRLPData(), StandardCharsets.UTF_8);
+        }
 
         for (RLPElement log : logs) {
             LogInfo logInfo = new LogInfo(log.getRLPData());
@@ -104,6 +107,17 @@ public class TransactionReceipt {
         return logInfoList;
     }
 
+    public boolean isValid() {
+        return ByteUtil.byteArrayToLong(gasUsed) > 0;
+    }
+
+    public boolean isSuccessful() {
+        return error.isEmpty();
+    }
+
+    public String getError() {
+        return error;
+    }
 
     /**
      *  Used for Receipt trie hash calculation. Should contain only the following items encoded:
@@ -147,7 +161,8 @@ public class TransactionReceipt {
         return receiptTrie ?
                 RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP):
                 RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP,
-                        RLP.encodeElement(gasUsed), RLP.encodeElement(executionResult));
+                        RLP.encodeElement(gasUsed), RLP.encodeElement(executionResult),
+                        RLP.encodeElement(error.getBytes(StandardCharsets.UTF_8)));
 
     }
 
@@ -179,6 +194,10 @@ public class TransactionReceipt {
     public void setExecutionResult(byte[] executionResult) {
         this.executionResult = executionResult;
         rlpEncoded = null;
+    }
+
+    public void setError(String error) {
+        this.error = error == null ? "" : error;
     }
 
     public void setLogInfoList(List<LogInfo> logInfoList) {

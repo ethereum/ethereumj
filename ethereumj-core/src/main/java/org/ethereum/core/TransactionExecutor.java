@@ -41,6 +41,7 @@ public class TransactionExecutor {
     private BlockStore blockStore;
     private final long gasUsedInTheBlock;
     private boolean readyToExecute = false;
+    private String execError;
 
     private ProgramInvokeFactory programInvokeFactory;
     private byte[] coinbase;
@@ -84,6 +85,11 @@ public class TransactionExecutor {
     }
 
 
+    private void execError(String err) {
+        logger.warn(err);
+        execError = err;
+    }
+
     /**
      * Do all the basic validation, if the executor
      * will be ready to run the transaction at the end
@@ -104,31 +110,24 @@ public class TransactionExecutor {
         if (cumulativeGasReached) {
 
             if (logger.isWarnEnabled())
-                logger.warn("Too much gas used in this block: Require: {} Got: {}", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue());
+                execError(String.format("Too much gas used in this block: Require: %s Got: %s", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue()));
 
-            // TODO: save reason for failure
             return;
         }
 
         if (txGasLimit.compareTo(BigInteger.valueOf(basicTxCost)) < 0) {
 
             if (logger.isWarnEnabled())
-                logger.warn("Not enough gas for transaction execution: Require: {} Got: {}", basicTxCost, txGasLimit);
+                execError(String.format("Not enough gas for transaction execution: Require: %s Got: %s", basicTxCost, txGasLimit));
 
-
-            // TODO: save reason for failure
             return;
         }
 
         BigInteger reqNonce = track.getNonce(tx.getSender());
         BigInteger txNonce = toBI(tx.getNonce());
         if (isNotEqual(reqNonce, txNonce)) {
+            execError(String.format("Invalid nonce: required: %s , tx.nonce: %s", reqNonce, txNonce));
 
-            if (logger.isWarnEnabled())
-                logger.warn("Invalid nonce: required: {} , tx.nonce: {}", reqNonce, txNonce);
-
-
-            // TODO: save reason for failure
             return;
         }
 
@@ -138,16 +137,14 @@ public class TransactionExecutor {
 
         if (!isCovers(senderBalance, totalCost)) {
 
-            if (logger.isWarnEnabled())
-                logger.warn("Not enough cash: Require: {}, Sender cash: {}", totalCost, senderBalance);
+            execError(String.format("Not enough cash: Require: %s, Sender cash: %s", totalCost, senderBalance));
 
-            // TODO: save reason for failure
             return;
         }
 
         if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 acceptTransactionSignature(tx)) {
-            logger.warn("Transaction signature not accepted: " + tx.getSignature());
+            execError("Transaction signature not accepted: " + tx.getSignature());
             return;
         }
 
@@ -292,6 +289,7 @@ public class TransactionExecutor {
 //            https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L241
             cacheTrack.rollback();
             m_endGas = BigInteger.ZERO;
+            execError(e.getMessage());
         }
     }
 
@@ -381,6 +379,7 @@ public class TransactionExecutor {
             receipt.setLogInfoList(getVMLogs());
             receipt.setGasUsed(getGasUsed());
             receipt.setExecutionResult(getResult().getHReturn());
+            receipt.setError(execError);
 //            receipt.setPostTxState(track.getRoot()); // TODO later when RepositoryTrack.getRoot() is implemented
         }
         return receipt;
