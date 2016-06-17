@@ -582,6 +582,26 @@ public class TransactionTest {
         ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
 
         {
+            // Receipt RLP backward compatibility
+            TransactionReceipt receipt = new TransactionReceipt(Hex.decode("f9010c80825208b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c082520880"));
+
+            Assert.assertTrue(receipt.isValid());
+            Assert.assertTrue(receipt.isSuccessful());
+        }
+
+        {
+            Transaction tx = createTx(blockchain, sender, new byte[32], new byte[0], 100);
+            TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
+
+            System.out.println(Hex.toHexString(receipt.getEncoded()));
+
+            receipt = new TransactionReceipt(receipt.getEncoded());
+
+            Assert.assertTrue(receipt.isValid());
+            Assert.assertTrue(receipt.isSuccessful());
+        }
+
+        {
             Transaction tx = createTx(blockchain, new ECKey(), new byte[32], new byte[0], 100);
             TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
 

@@ -58,7 +58,8 @@ public class TransactionReceipt {
         executionResult = result.getRLPData();
 
         if (receipt.size() > 6) {
-            error = new String(receipt.get(6).getRLPData(), StandardCharsets.UTF_8);
+            byte[] errBytes = receipt.get(6).getRLPData();
+            error = errBytes != null ? new String(errBytes, StandardCharsets.UTF_8) : "";
         }
 
         for (RLPElement log : logs) {
