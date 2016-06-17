@@ -82,6 +82,7 @@ public class TransactionExecutor {
         this.currentBlock = currentBlock;
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
+        this.m_endGas = toBI(tx.getGasLimit());
     }
 
 
@@ -182,18 +183,14 @@ public class TransactionExecutor {
         if (precompiledContract != null) {
 
             long requiredGas = precompiledContract.getGasForData(tx.getData());
-            BigInteger txGasLimit = toBI(tx.getGasLimit());
 
-//            if (!localCall && requiredGas > txGasLimit) {
-            if (!localCall && txGasLimit.compareTo(BigInteger.valueOf(requiredGas)) < 0) {
+            if (!localCall && m_endGas.compareTo(BigInteger.valueOf(requiredGas)) < 0) {
                 // no refund
                 // no endowment
                 return;
             } else {
 
-                m_endGas = txGasLimit.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
-//                BigInteger refundCost = toBI(m_endGas * toBI( tx.getGasPrice() ).longValue() );
-//                track.addBalance(tx.getSender(), refundCost);
+                m_endGas = m_endGas.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
 
                 // FIXME: save return for vm trace
                 byte[] out = precompiledContract.execute(tx.getData());
@@ -203,7 +200,7 @@ public class TransactionExecutor {
 
             byte[] code = track.getCode(targetAddress);
             if (isEmpty(code)) {
-                m_endGas = toBI(tx.getGasLimit()).subtract(BigInteger.valueOf(basicTxCost));
+                m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
             } else {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
@@ -220,7 +217,7 @@ public class TransactionExecutor {
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
         if (isEmpty(tx.getData())) {
-            m_endGas = toBI(tx.getGasLimit()).subtract(BigInteger.valueOf(basicTxCost));
+            m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
             cacheTrack.createAccount(tx.getContractAddress());
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
