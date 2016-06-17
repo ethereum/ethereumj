@@ -311,11 +311,15 @@ public class TransactionExecutor {
                     .gasUsed(toBI(result.getGasUsed()))
                     .gasRefund(toBI(gasRefund))
                     .deletedAccounts(result.getDeleteAccounts())
-                    .internalTransactions(result.getInternalTransactions())
-                    .storageDiff(track.getContractDetails(addr).getStorage());
+                    .internalTransactions(result.getInternalTransactions());
 
-            if (program != null) {
-                summaryBuilder.touchedStorage(track.getContractDetails(addr).getStorage(), program.getStorageDiff());
+            ContractDetails contractDetails = track.getContractDetails(addr);
+            if (contractDetails != null) {
+                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+
+                if (program != null) {
+                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+                }
             }
 
             if (result.getException() != null) {
