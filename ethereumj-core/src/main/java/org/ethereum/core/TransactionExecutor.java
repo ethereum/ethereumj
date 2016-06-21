@@ -3,6 +3,7 @@ package org.ethereum.core;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.*;
@@ -297,6 +298,15 @@ public class TransactionExecutor {
 
     public void finalization() {
         if (!readyToExecute) return;
+
+        String err = SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                validateTransactionChanges(blockStore, currentBlock, (RepositoryTrack) cacheTrack);
+        if (err != null) {
+            execError(err);
+            m_endGas = toBI(tx.getGasLimit());
+            cacheTrack.rollback();
+            return;
+        }
 
         cacheTrack.commit();
 
