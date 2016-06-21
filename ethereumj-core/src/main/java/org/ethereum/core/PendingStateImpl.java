@@ -16,10 +16,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.util.*;
 
-import static java.math.BigInteger.ZERO;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.toBI;
 
@@ -73,6 +71,7 @@ public class PendingStateImpl implements PendingState {
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
     private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(500000);
+    private final Object dummyObject = new Object();
 
     @Resource
     @Qualifier("pendingStateTransactions")
@@ -108,9 +107,9 @@ public class PendingStateImpl implements PendingState {
 
         List<Transaction> txs = new ArrayList<>();
 
-        for (PendingTransaction tx : wireTransactions) {
-            txs.add(tx.getTransaction());
-        }
+//        for (PendingTransaction tx : wireTransactions) {
+//            txs.add(tx.getTransaction());
+//        }
 
         return txs;
     }
@@ -123,82 +122,50 @@ public class PendingStateImpl implements PendingState {
     }
 
     private boolean addNewTxIfNotExist(Transaction tx) {
-        ByteArrayWrapper hash = new ByteArrayWrapper(tx.getHash());
         synchronized (redceivedTxs) {
-            if (!redceivedTxs.containsKey(hash)) {
-                redceivedTxs.put(hash, null);
-                return true;
-            } else {
-                return false;
-            }
+            return redceivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
         }
     }
 
     @Override
     public void addWireTransactions(List<Transaction> transactions) {
-
-        final List<Transaction> newTxs = new ArrayList<>();
-        final List<PendingTransaction> newPTxs = new ArrayList<>();
         int unknownTx = 0;
-
-        if (transactions.isEmpty()) return;
-
-        long number = getBestBlock().getNumber();
+        List<Transaction> newPending = new ArrayList<>();
         for (Transaction tx : transactions) {
-
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                PendingTransaction ptx = new PendingTransaction(tx, number);
-                if (isValid(ptx)) {
-                    newPTxs.add(ptx);
-                    newTxs.add(tx);
-                } else {
-                    logger.info("Non valid TX: " + tx);
+                if (addPendingTransactionImpl(tx)) {
+                    newPending.add(tx);
                 }
             }
         }
 
-        // tight synchronization here since a lot of duplicate transactions can arrive from many peers
-        // and isValid(tx) call is very expensive
-        synchronized (this) {
-            wireTransactions.addAll(newPTxs);
-        }
+        logger.info("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
+                transactions.size(), unknownTx, newPending, redceivedTxs.size());
 
-        if (!newTxs.isEmpty()) {
-            listener.onPendingTransactionsReceived(newTxs);
+        if (!newPending.isEmpty()) {
+            listener.onPendingTransactionsReceived(newPending);
             listener.onPendingStateChanged(PendingStateImpl.this);
         }
-        logger.info("Wire transaction list added: {} new, {} valid of received {}, #of known txs: {}", unknownTx, newTxs.size(), transactions.size(), redceivedTxs.size());
-    }
-
-    private boolean isValid(PendingTransaction tx) {
-        BigInteger txNonce = toBI(tx.getTransaction().getNonce());
-
-        byte[] txSender = tx.getSender();
-        AccountState accountState = repository.getAccountState(txSender);
-        if (accountState != null) {
-            BigInteger currNonce = accountState.getNonce();
-            if (currNonce.equals(txNonce)) return true;
-        }
-        for (int i = wireTransactions.size() - 1; i >=0; i--) {
-            if (Arrays.equals(wireTransactions.get(i).getSender(), txSender)) {
-                long pendingNonce = ByteUtil.byteArrayToLong(wireTransactions.get(i).getTransaction().getNonce());
-                if (txNonce.longValue() == pendingNonce + 1) {
-                    return true;
-                } else {
-                    break;
-                }
-            }
-        }
-        return txNonce.equals(ZERO);
     }
 
     @Override
-    public synchronized void addPendingTransaction(final Transaction tx) {
-        pendingStateTransactions.add(tx);
-        executeTx(tx);
-        listener.onPendingTransactionsReceived(Collections.singletonList(tx));
-        listener.onPendingStateChanged(PendingStateImpl.this);
+    public void addPendingTransaction(Transaction tx) {
+        if (addPendingTransactionImpl(tx)) {
+            listener.onPendingTransactionsReceived(Collections.singletonList(tx));
+            listener.onPendingStateChanged(PendingStateImpl.this);
+        }
+    }
+
+    private synchronized boolean addPendingTransactionImpl(final Transaction tx) {
+        TransactionReceipt txReceipt = executeTx(tx);
+        if (!txReceipt.isValid()) {
+            listener.onPendingTransactionUpdate(txReceipt, EthereumListener.PendingTransactionState.DROPPED);
+        } else {
+            pendingStateTransactions.add(tx);
+            listener.onPendingTransactionUpdate(txReceipt, EthereumListener.PendingTransactionState.PENDING);
+        }
+        return txReceipt.isValid();
     }
 
     @Override

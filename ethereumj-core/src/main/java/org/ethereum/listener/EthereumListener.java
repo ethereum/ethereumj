@@ -17,6 +17,12 @@ import java.util.Set;
  */
 public interface EthereumListener {
 
+    enum PendingTransactionState {
+        DROPPED,
+        PENDING,
+        INCLUDED
+    }
+
     void trace(String output);
 
     void onNodeDiscovered(Node node);
@@ -34,6 +40,8 @@ public interface EthereumListener {
     void onPeerDisconnect(String host, long port);
 
     void onPendingTransactionsReceived(List<Transaction> transactions);
+
+    void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state);
 
     void onPendingStateChanged(PendingState pendingState);
 

@@ -83,4 +83,9 @@ public class EthereumListenerAdapter implements EthereumListener {
     public void onPeerAddedToSyncPool(Channel peer) {
 
     }
+
+    @Override
+    public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state) {
+
+    }
 }
