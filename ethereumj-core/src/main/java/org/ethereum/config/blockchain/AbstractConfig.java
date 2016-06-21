@@ -4,8 +4,11 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
 
@@ -76,5 +79,10 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         return true;
+    }
+
+    @Override
+    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, RepositoryTrack repositoryTrack) {
+        return null;
     }
 }

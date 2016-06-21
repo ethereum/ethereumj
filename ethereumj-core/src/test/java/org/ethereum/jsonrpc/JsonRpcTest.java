@@ -114,8 +114,9 @@ public class JsonRpcTest {
             System.out.println("Tx hash: " + txHash1);
             assertTrue(TypeConverter.StringHexToBigInteger(txHash1).compareTo(BigInteger.ZERO) > 0);
 
-            for (int i = 0; i < 10 && changes.length == 0; i++) {
+            for (int i = 0; i < 50 && changes.length == 0; i++) {
                 changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
+                Thread.sleep(200);
             }
             assertEquals(1, changes.length);
             changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
