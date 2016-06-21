@@ -2,6 +2,7 @@ package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -38,6 +39,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long gasLimit;
     boolean autoBlock;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
+    int blockGasIncreasePercent = 0;
 
     class PendingTx {
         ECKey sender;
@@ -116,6 +118,17 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
+    /**
+     * [-100, 100]
+     * 0 - the same block gas limit as parent
+     * 100 - max available increase from parent gas limit
+     * -100 - max available decrease from parent gas limit
+     */
+    public StandaloneBlockchain withBlockGasIncrease(int blockGasIncreasePercent) {
+        this.blockGasIncreasePercent = blockGasIncreasePercent;
+        return this;
+    }
+
     @Override
     public Block createBlock() {
         return createForkBlock(getBlockchain().getBestBlock());
@@ -148,7 +161,16 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 }
                 txes.add(transaction);
             }
+
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
+
+            int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.CONFIG.getBlockchainConfig().
+                    getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
+            BigInteger newGas = ByteUtil.bytesToBigInteger(parent.getGasLimit())
+                    .multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR * 100 + blockGasIncreasePercent))
+                    .divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR * 100));
+            b.getHeader().setGasLimit(ByteUtil.bigIntegerToBytes(newGas));
+
             Ethash.getForBlock(b.getNumber()).mineLight(b).get();
             ImportResult importResult = getBlockchain().tryToConnect(b);
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
@@ -159,6 +181,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         } catch (InterruptedException|ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void resetSubmittedTransactions() {
+        submittedTxes.clear();
     }
 
     @Override
