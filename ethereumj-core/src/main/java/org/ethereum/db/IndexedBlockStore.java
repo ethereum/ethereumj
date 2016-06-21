@@ -73,7 +73,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     public byte[] getBlockHashByNumber(long blockNumber){
-        return getChainBlockByNumber(blockNumber).getHash(); // FIXME: can be improved by accessing the hash directly in the index
+        Block chainBlock = getChainBlockByNumber(blockNumber);
+        return chainBlock == null ? null : chainBlock.getHash(); // FIXME: can be improved by accessing the hash directly in the index
     }
 
 
