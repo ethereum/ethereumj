@@ -10,6 +10,8 @@ import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.mine.Ethash;
@@ -34,6 +36,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     Genesis genesis;
     byte[] coinbase;
     BlockchainImpl blockchain;
+    PendingStateImpl pendingState;
+    CompositeEthereumListener listener;
     ECKey txSender;
     long gasPrice;
     long gasLimit;
@@ -50,6 +54,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         SolidityContractImpl createdContract;
         SolidityContractImpl targetContract;
 
+        Transaction customTx;
+
         public PendingTx(byte[] toAddress, BigInteger value, byte[] data) {
             this.sender = txSender;
             this.toAddress = toAddress;
@@ -65,6 +71,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
             this.data = data;
             this.createdContract = createdContract;
             this.targetContract = targetContract;
+        }
+
+        public PendingTx(Transaction customTx) {
+            this.customTx = customTx;
         }
     }
 
@@ -141,24 +151,30 @@ public class StandaloneBlockchain implements LocalBlockchain {
             Map<ByteArrayWrapper, Long> nonces = new HashMap<>();
             Repository repoSnapshot = getBlockchain().getRepository().getSnapshotTo(parent.getStateRoot());
             for (PendingTx tx : submittedTxes) {
-                ByteArrayWrapper senderW = new ByteArrayWrapper(tx.sender.getAddress());
-                Long nonce = nonces.get(senderW);
-                if (nonce == null) {
-                    BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
-                    nonce = bcNonce.longValue();
-                }
-                nonces.put(senderW, nonce + 1);
+                Transaction transaction;
+                if (tx.customTx == null) {
+                    ByteArrayWrapper senderW = new ByteArrayWrapper(tx.sender.getAddress());
+                    Long nonce = nonces.get(senderW);
+                    if (nonce == null) {
+                        BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
+                        nonce = bcNonce.longValue();
+                    }
+                    nonces.put(senderW, nonce + 1);
 
-                byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
+                    byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
 
-                Transaction transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
-                        ByteUtil.longToBytesNoLeadZeroes(gasPrice),
-                        ByteUtil.longToBytesNoLeadZeroes(gasLimit),
-                        toAddress, ByteUtil.bigIntegerToBytes(tx.value), tx.data);
-                transaction.sign(tx.sender.getPrivKeyBytes());
-                if (tx.createdContract != null) {
-                    tx.createdContract.setAddress(transaction.getContractAddress());
+                    transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
+                            ByteUtil.longToBytesNoLeadZeroes(gasPrice),
+                            ByteUtil.longToBytesNoLeadZeroes(gasLimit),
+                            toAddress, ByteUtil.bigIntegerToBytes(tx.value), tx.data);
+                    transaction.sign(tx.sender.getPrivKeyBytes());
+                    if (tx.createdContract != null) {
+                        tx.createdContract.setAddress(transaction.getContractAddress());
+                    }
+                } else {
+                    transaction = tx.customTx;
                 }
+
                 txes.add(transaction);
             }
 
@@ -205,6 +221,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public void sendEther(byte[] toAddress, BigInteger weis) {
         submitNewTx(new PendingTx(toAddress, weis, new byte[0]));
+    }
+
+    public void submitTransaction(Transaction tx) {
+        submitNewTx(new PendingTx(tx));
     }
 
     @Override
@@ -268,6 +288,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return blockchain;
     }
 
+    public void addEthereumListener(EthereumListener listener) {
+        this.listener.addListener(listener);
+    }
+
     private void submitNewTx(PendingTx tx) {
         submittedTxes.add(tx);
         if (autoBlock) {
@@ -282,16 +306,17 @@ public class StandaloneBlockchain implements LocalBlockchain {
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
-        EthereumListenerAdapter listener = new EthereumListenerAdapter();
+        listener = new CompositeEthereumListener();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository);
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+                .withEthereumListener(listener);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
+        pendingState = new PendingStateImpl(listener, blockchain);
 
         pendingState.init();
 
