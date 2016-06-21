@@ -139,21 +139,13 @@ public class DAORescueTest {
 
         dao.callFunction("withdraw");
         daoRobber.callFunction("robDao", Hex.toHexString(dao.getAddress()));
-        try {
-            bc.createBlock(); // #5
-        } catch (Program.TransactionChangeValidationException e) {
-            bc.resetSubmittedTransactions();
-        }
+        bc.createBlock(); // #5
         Assert.assertEquals(BigInteger.valueOf(940),
                 bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
 
         dao.callFunction("withdraw");
         daoRobber.callFunction("robDao", Hex.toHexString(dao.getAddress()));
-        try {
-            bc.createBlock(); // #6
-        } catch (Program.TransactionChangeValidationException e) {
-            bc.resetSubmittedTransactions();
-        }
+        bc.createBlock(); // #6
         Assert.assertEquals(BigInteger.valueOf(920),
                 bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
     }
