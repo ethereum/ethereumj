@@ -302,7 +302,7 @@ public class TransactionExecutor {
         String err = SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 validateTransactionChanges(blockStore, currentBlock, (RepositoryTrack) cacheTrack);
         if (err != null) {
-            execError(err);
+            logger.warn(err);
             m_endGas = toBI(tx.getGasLimit());
             cacheTrack.rollback();
             return;
