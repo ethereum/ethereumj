@@ -6,7 +6,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -22,7 +21,7 @@ public class InternalTransaction extends Transaction {
     public InternalTransaction(byte[] rawData) {
         super(rawData);
     }
-
+    
     public InternalTransaction(byte[] parentHash, int deep, int index, byte[] nonce, DataWord gasPrice, DataWord gasLimit,
                                byte[] sendAddress, byte[] receiveAddress, byte[] value, byte[] data, String note) {
 
@@ -94,9 +93,9 @@ public class InternalTransaction extends Transaction {
         byte[] data = RLP.encodeElement(getData());
         byte[] parentHash = RLP.encodeElement(this.parentHash);
         byte[] type = RLP.encodeString(this.note);
-        byte[] deep = encodeInt(this.deep);
-        byte[] index = encodeInt(this.index);
-        byte[] rejected = encodeBool(this.rejected);
+        byte[] deep = RLP.encodeInt(this.deep);
+        byte[] index = RLP.encodeInt(this.index);
+        byte[] rejected = RLP.encodeInt(this.rejected ? 1 : 0);
 
         this.rlpEncoded = RLP.encodeList(nonce, parentHash, senderAddress, receiveAddress, value,
                 gasPrice, gasLimit, data, type, deep, index, rejected);
@@ -125,25 +124,13 @@ public class InternalTransaction extends Transaction {
         this.note = new String(transaction.get(8).getRLPData());
         this.deep = decodeInt(transaction.get(9).getRLPData());
         this.index = decodeInt(transaction.get(10).getRLPData());
-        this.rejected = decodeBool(transaction.get(11).getRLPData());
-
+        this.rejected = decodeInt(transaction.get(11).getRLPData()) == 1;
+        
         this.parsed = true;
     }
 
-    private static byte[] encodeInt(int value) {
-        return RLP.encodeString(Integer.toHexString(value));
-    }
-
     private static int decodeInt(byte[] encoded) {
-        return isEmpty(encoded) ? 0 : Integer.valueOf(new String(encoded), 16);
-    }
-
-    private static byte[] encodeBool(boolean value) {
-        return encodeInt(value ? 1 : 0);
-    }
-
-    private static boolean decodeBool(byte[] encoded) {
-        return decodeInt(encoded) == 1;
+        return isEmpty(encoded) ? 0 : RLP.decodeInt(encoded, 0);
     }
 
     @Override
@@ -158,7 +145,7 @@ public class InternalTransaction extends Transaction {
 
     @Override
     public String toString() {
-        return "TransactionData [" +
+        return "TransactionData [" + 
                 "  parentHash=" + toHexString(getParentHash()) +
                 ", hash=" + toHexString(getHash()) +
                 ", nonce=" + toHexString(getNonce()) +
