@@ -163,11 +163,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
                     byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
 
-                    transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
-                            ByteUtil.longToBytesNoLeadZeroes(gasPrice),
-                            ByteUtil.longToBytesNoLeadZeroes(gasLimit),
-                            toAddress, ByteUtil.bigIntegerToBytes(tx.value), tx.data);
-                    transaction.sign(tx.sender.getPrivKeyBytes());
+                    transaction = createTransaction(tx.sender, nonce, toAddress, tx.value, tx.data);
+
                     if (tx.createdContract != null) {
                         tx.createdContract.setAddress(transaction.getContractAddress());
                     }
@@ -197,6 +194,18 @@ public class StandaloneBlockchain implements LocalBlockchain {
         } catch (InterruptedException|ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Transaction createTransaction(long nonce, byte[] toAddress, long value, byte[] data) {
+        return createTransaction(getSender(), nonce, toAddress, BigInteger.valueOf(value), data);
+    }
+    public Transaction createTransaction(ECKey sender, long nonce, byte[] toAddress, BigInteger value, byte[] data) {
+        Transaction transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
+                ByteUtil.longToBytesNoLeadZeroes(gasPrice),
+                ByteUtil.longToBytesNoLeadZeroes(gasLimit),
+                toAddress, ByteUtil.bigIntegerToBytes(value), data);
+        transaction.sign(sender);
+        return transaction;
     }
 
     public void resetSubmittedTransactions() {
