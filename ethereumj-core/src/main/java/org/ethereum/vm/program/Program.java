@@ -577,7 +577,7 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        logger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
         if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
