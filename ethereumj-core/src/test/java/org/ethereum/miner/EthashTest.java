@@ -209,10 +209,10 @@ public class EthashTest {
         for (Block b : blocks) {
             b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
             b.setNonce(new byte[0]);
-            long nonce = Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
             b.setNonce(longToBytes(nonce));
 
-            Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+            Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
         }
     }
 
@@ -224,10 +224,10 @@ public class EthashTest {
         for (Block b : blocks) {
             b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
             b.setNonce(new byte[0]);
-            long nonce = Ethash.getForBlock(b.getNumber()).mine(b).get();
+            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mine(b).get();
             b.setNonce(longToBytes(nonce));
 
-            Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+            Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
         }
     }
 

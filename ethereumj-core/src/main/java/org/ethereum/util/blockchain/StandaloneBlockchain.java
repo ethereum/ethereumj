@@ -176,7 +176,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
 
-            int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.CONFIG.getBlockchainConfig().
+            int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.getDefault().getBlockchainConfig().
                     getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
             BigInteger newGas = ByteUtil.bytesToBigInteger(parent.getGasLimit())
                     .multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR * 100 + blockGasIncreasePercent))

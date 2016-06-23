@@ -38,7 +38,7 @@ public class PendingStateTest {
 
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -48,7 +48,7 @@ public class PendingStateTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     static class PendingListener extends EthereumListenerAdapter {
@@ -154,7 +154,7 @@ public class PendingStateTest {
         Assert.assertTrue(pendingState.getRepository().getBalance(alice.getAddress()).
                 compareTo(BigInteger.valueOf(2000000 - 100000)) > 0);
 
-        for (int i = 0; i < SystemProperties.CONFIG.txOutdatedThreshold() + 1; i++) {
+        for (int i = 0; i < SystemProperties.getDefault().txOutdatedThreshold() + 1; i++) {
             bc.createBlock();
             txUpd = l.pollTxUpdate(tx3);
             if (txUpd.getMiddle() != PENDING) break;

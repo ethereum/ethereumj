@@ -301,7 +301,7 @@ public class TransactionExecutor {
     public void finalization() {
         if (!readyToExecute) return;
 
-        String err = SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+        String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 validateTransactionChanges(blockStore, currentBlock, (RepositoryTrack) cacheTrack);
         if (err != null) {
             execError(err);

@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.apache.commons.collections4.map.LRUMap;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
@@ -17,16 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
-import static java.math.BigInteger.ZERO;
-import static org.ethereum.util.BIUtil.toBI;
 
 /**
  * Keeps logic providing pending state management
@@ -79,9 +74,6 @@ public class PendingStateImpl implements PendingState {
 
     @Autowired
     private ProgramInvokeFactory programInvokeFactory;
-
-    @Autowired
-    private SystemProperties config = SystemProperties.CONFIG;
 
     private final List<PendingTransaction> pendingTransactions = new ArrayList<>();
 
@@ -299,7 +291,7 @@ public class PendingStateImpl implements PendingState {
                 outdated.add(tx);
 
                 fireTxUpdate(createDroppedReceipt(tx.getTransaction(),
-                        "Tx was not included into last " + CONFIG.txOutdatedThreshold() + " blocks"),
+                        "Tx was not included into last " + config.txOutdatedThreshold() + " blocks"),
                         DROPPED, getBestBlock());
             }
         }

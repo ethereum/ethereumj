@@ -226,7 +226,7 @@ public class ImportLightTest {
 
         Block b1 = blockchain.createNewBlock(parent, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         b1.setStateRoot(new byte[32]);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
         ImportResult importResult = blockchain.tryToConnect(b1);
         Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
         Assert.assertEquals(totalDifficulty, blockchain.getTotalDifficulty());

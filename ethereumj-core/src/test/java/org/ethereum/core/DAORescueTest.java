@@ -45,13 +45,13 @@ public class DAORescueTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(easyMiningConst));
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(easyMiningConst));
 
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract dao = bc.submitNewContract(daoEmulator, "TestDAO");
         final byte[] codeHash = bc.getBlockchain().getRepository().getAccountState(dao.getAddress()).getCodeHash();
 
-        SystemProperties.CONFIG.setBlockchainConfig(new AbstractNetConfig() {
+        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {
             {
                 add(0, new HomesteadConfig(easyMiningConst));
                 add(5, new HomesteadDAOConfig(easyMiningConst, 5, 0x1_000_000_001L, codeHash));
@@ -61,7 +61,7 @@ public class DAORescueTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Test
