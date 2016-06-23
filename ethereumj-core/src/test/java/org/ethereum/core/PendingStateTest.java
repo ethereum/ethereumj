@@ -233,16 +233,8 @@ public class PendingStateTest {
         Assert.assertTrue(pendingState.getRepository().getBalance(alice.getAddress()).
                 compareTo(BigInteger.valueOf(2000000)) == 0);
     }
+
     @Test
-    public static void main(String[] a) throws InterruptedException {
-        try {
-            setup();
-            new PendingStateTest().testRebranch2_();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        Thread.sleep(1000000000);
-    }
     public void testRebranch2_() throws InterruptedException {
         StandaloneBlockchain bc = new StandaloneBlockchain();
         PendingListener l = new PendingListener();
