@@ -232,6 +232,7 @@ public class SyncManager {
 
                     if (wrapper.isNewBlock() && !syncDone) {
                         syncDone = true;
+                        channelManager.onSyncDone(true);
                         compositeEthereumListener.onSyncDone();
                     }
                 }
