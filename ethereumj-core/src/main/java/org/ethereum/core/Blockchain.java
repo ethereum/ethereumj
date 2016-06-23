@@ -38,6 +38,8 @@ public interface Blockchain {
     /**
      * Returns the transaction info stored in the blockchain
      * This doesn't involve pending transactions
+     * If transaction was included to more than one block (from different forks)
+     * the method returns TransactionInfo from the block on the main chain.
      */
     TransactionInfo getTransactionInfo(byte[] hash);
 

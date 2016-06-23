@@ -227,7 +227,8 @@ public class TransactionReceipt {
         return "TransactionReceipt[" +
                 "\n  , postTxState=" + Hex.toHexString(postTxState) +
                 "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
-                "\n  , cumulativeGas=" + Hex.toHexString(gasUsed) +
+                "\n  , gasUsed=" + Hex.toHexString(gasUsed) +
+                "\n  , error=" + error +
                 "\n  , executionResult=" + Hex.toHexString(executionResult) +
                 "\n  , bloom=" + bloomFilter.toString() +
                 "\n  , logs=" + logInfoList +

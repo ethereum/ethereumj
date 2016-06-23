@@ -15,6 +15,7 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
@@ -211,10 +212,29 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public TransactionInfo getTransactionInfo(byte[] hash) {
 
-        TransactionInfo txInfo = transactionStore.get(hash);
+        List<TransactionInfo> infos = transactionStore.get(hash);
 
-        if (txInfo == null)
+        if (infos == null || infos.isEmpty())
             return null;
+
+        TransactionInfo txInfo = null;
+        if (infos.size() == 1) {
+            txInfo = infos.get(0);
+        } else {
+            // pick up the receipt from the block on the main chain
+            for (TransactionInfo info : infos) {
+                Block block = blockStore.getBlockByHash(info.blockHash);
+                Block mainBlock = blockStore.getChainBlockByNumber(block.getNumber());
+                if (FastByteComparisons.equal(info.blockHash, mainBlock.getHash())) {
+                    txInfo = info;
+                    break;
+                }
+            }
+        }
+        if (txInfo == null) {
+            logger.warn("Can't find block from main chain for transaction " + Hex.toHexString(hash));
+            return null;
+        }
 
         Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
         txInfo.setTransaction(tx);
@@ -370,7 +390,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         // The simple case got the block
         // to connect to the main chain
-        List<TransactionReceipt> receipts = null;
+        final List<TransactionReceipt> receipts;
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
             receipts = add(block);
@@ -387,6 +407,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 ret = receipts == null ? INVALID_BLOCK :
                         (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
             } else {
+                receipts = null;
                 ret = NO_PARENT;
             }
 
@@ -400,7 +421,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 EventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        pendingState.processBest(block);
+                        pendingState.processBest(block, receipts);
                     }
                 });
             }
@@ -535,8 +556,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         track.commit();
         updateTotalDifficulty(block);
-        storeBlock(block, receipts);
 
+        storeBlock(block, receipts);
 
         if (!byTest && needFlush(block)) {
             flush();
@@ -808,8 +829,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (block.getNumber() >= config.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
-            transactionStore.put(tx.getHash(), new TransactionInfo(receipt, block.getHash(), receipts.size()));
-
             receipts.add(receipt);
         }
 
@@ -862,6 +881,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockStore.saveBlock(block, totalDifficulty, false);
         else
             blockStore.saveBlock(block, totalDifficulty, true);
+
+        for (int i = 0; i < receipts.size(); i++) {
+            transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
+        }
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);

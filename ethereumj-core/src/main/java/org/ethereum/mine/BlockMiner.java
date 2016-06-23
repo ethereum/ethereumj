@@ -125,7 +125,6 @@ public class BlockMiner {
     protected List<Transaction> getAllPendingTransactions() {
         PendingStateImpl.TransactionSortedSet ret = new PendingStateImpl.TransactionSortedSet();
         ret.addAll(pendingState.getPendingTransactions());
-        ret.addAll(pendingState.getWireTransactions());
         Iterator<Transaction> it = ret.iterator();
         while(it.hasNext()) {
             Transaction tx = it.next();

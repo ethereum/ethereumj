@@ -207,7 +207,7 @@ public class JsonRpcImpl implements JsonRpc {
 
     private List<Transaction> getTransactionsByJsonBlockId(String id) {
         if ("pending".equalsIgnoreCase(id)) {
-            return pendingState.getAllPendingTransactions();
+            return pendingState.getPendingTransactions();
         } else {
             Block block = getByJsonBlockId(id);
             return block != null ? block.getTransactionsList() : null;
@@ -652,7 +652,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             Block b;
             if ("pending".equalsIgnoreCase(bnOrId)) {
-                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getAllPendingTransactions(), Collections.<BlockHeader>emptyList());
+                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.<BlockHeader>emptyList());
             } else {
                 b = getByJsonBlockId(bnOrId);
             }
@@ -665,7 +665,7 @@ public class JsonRpcImpl implements JsonRpc {
     public TransactionResultDTO eth_getTransactionByHash(String transactionHash) throws Exception {
         TransactionResultDTO s = null;
         try {
-            TransactionInfo txInfo = transactionStore.get(StringHexToByteArray(transactionHash));
+            TransactionInfo txInfo = blockchain.getTransactionInfo(StringHexToByteArray(transactionHash));
             if (txInfo == null) {
                 return null;
             }
@@ -715,7 +715,7 @@ public class JsonRpcImpl implements JsonRpc {
         TransactionReceiptDTO s = null;
         try {
             byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
-            TransactionInfo txInfo = txStore.get(hash);
+            TransactionInfo txInfo = blockchain.getTransactionInfo(hash);
 
             if (txInfo == null)
                 return null;
@@ -918,7 +918,7 @@ public class JsonRpcImpl implements JsonRpc {
 
         void onTransaction(Transaction tx, Block b, int txIndex) {
             if (logFilter.matchesContractAddress(tx.getReceiveAddress())) {
-                TransactionInfo txInfo = transactionStore.get(tx.getHash());
+                TransactionInfo txInfo = blockchain.getTransactionInfo(tx.getHash());
                 onTransactionReceipt(txInfo.getReceipt(), b, txIndex);
             }
         }
