@@ -79,9 +79,6 @@ public class PendingStateImpl implements PendingState {
     private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(500000);
     private final Object dummyObject = new Object();
 
-    @Resource
-    @Qualifier("pendingStateTransactions")
-
     private Repository pendingState;
 
     private Block best = null;
@@ -189,7 +186,7 @@ public class PendingStateImpl implements PendingState {
     // validations which are not performed within executeTx
     private String validate(Transaction tx) {
 
-        if (config.getMineMinGasPrice().compareTo(ByteUtil.bytesToBigInteger(tx.gasPrice)) >= 0) {
+        if (config.getMineMinGasPrice().compareTo(ByteUtil.bytesToBigInteger(tx.gasPrice)) > 0) {
             return "Too low gas price for transaction: " + ByteUtil.bytesToBigInteger(tx.gasPrice);
         }
 
