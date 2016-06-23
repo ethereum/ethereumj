@@ -6,6 +6,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListener.PendingTransactionState;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -17,11 +18,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.util.BIUtil.toBI;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
 
 /**
  * Keeps logic providing pending state management
@@ -49,7 +49,7 @@ public class PendingStateImpl implements PendingState {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger("state");
+    private static final Logger logger = LoggerFactory.getLogger("pending");
 
     @Autowired
     private EthereumListener listener;
@@ -76,7 +76,7 @@ public class PendingStateImpl implements PendingState {
 
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
-    private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(500000);
+    private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(100000);
     private final Object dummyObject = new Object();
 
     private Repository pendingState;
@@ -101,7 +101,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public Repository getRepository() {
+    public synchronized Repository getRepository() {
         return pendingState;
     }
 
@@ -125,9 +125,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private boolean addNewTxIfNotExist(Transaction tx) {
-        synchronized (redceivedTxs) {
-            return redceivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
-        }
+        return redceivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
     }
 
     @Override
@@ -136,7 +134,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public void addPendingTransactions(List<Transaction> transactions) {
+    public synchronized void addPendingTransactions(List<Transaction> transactions) {
         int unknownTx = 0;
         List<Transaction> newPending = new ArrayList<>();
         for (Transaction tx : transactions) {
@@ -148,7 +146,7 @@ public class PendingStateImpl implements PendingState {
             }
         }
 
-        logger.info("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
+        logger.debug("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
                 transactions.size(), unknownTx, newPending, redceivedTxs.size());
 
         if (!newPending.isEmpty()) {
@@ -157,10 +155,20 @@ public class PendingStateImpl implements PendingState {
         }
     }
 
-    private synchronized boolean addPendingTransactionImpl(final Transaction tx) {
+    private void fireTxUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]",
+                    getPendingTransactions().size(),
+                    state, Hex.toHexString(txReceipt.getTransaction().getSender()).substring(0, 8),
+                    ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
+                    block.getShortDescr(), txReceipt.getError()));
+        }
+        listener.onPendingTransactionUpdate(txReceipt, state, block);
+    }
+
+    private boolean addPendingTransactionImpl(final Transaction tx) {
         TransactionReceipt newReceipt = new TransactionReceipt();
         newReceipt.setTransaction(tx);
-        listener.onPendingTransactionUpdate(newReceipt, EthereumListener.PendingTransactionState.NEW, getBestBlock());
 
         String err = validate(tx);
 
@@ -172,10 +180,10 @@ public class PendingStateImpl implements PendingState {
         }
 
         if (!txReceipt.isValid()) {
-            listener.onPendingTransactionUpdate(txReceipt, EthereumListener.PendingTransactionState.DROPPED, getBestBlock());
+            fireTxUpdate(txReceipt, DROPPED, getBestBlock());
         } else {
             pendingTransactions.add(new PendingTransaction(tx, getBestBlock().getNumber()));
-            listener.onPendingTransactionUpdate(txReceipt, EthereumListener.PendingTransactionState.PENDING, getBestBlock());
+            fireTxUpdate(txReceipt, NEW_PENDING, getBestBlock());
         }
         return txReceipt.isValid();
     }
@@ -231,7 +239,7 @@ public class PendingStateImpl implements PendingState {
             while(!rollback.isEqual(commonAncestor)) {
                 List<PendingTransaction> blockTxs = new ArrayList<>();
                 for (Transaction tx : rollback.getTransactionsList()) {
-                    logger.debug("Returning transaction back to pending: " + tx);
+                    logger.trace("Returning transaction back to pending: " + tx);
                     blockTxs.add(new PendingTransaction(tx, commonAncestor.getNumber()));
                 }
                 pendingTransactions.addAll(0, blockTxs);
@@ -267,7 +275,7 @@ public class PendingStateImpl implements PendingState {
 
     private void processBestInternal(Block block, List<TransactionReceipt> receipts) {
 
-        clearWire(block, receipts);
+        clearPending(block, receipts);
 
         clearOutdated(block.getNumber());
     }
@@ -275,23 +283,22 @@ public class PendingStateImpl implements PendingState {
     private void clearOutdated(final long blockNumber) {
         List<PendingTransaction> outdated = new ArrayList<>();
 
-        synchronized (pendingTransactions) {
-            for (PendingTransaction tx : pendingTransactions)
-                if (blockNumber - tx.getBlockNumber() > config.txOutdatedThreshold()) {
-                    outdated.add(tx);
+        for (PendingTransaction tx : pendingTransactions) {
+            if (blockNumber - tx.getBlockNumber() > config.txOutdatedThreshold()) {
+                outdated.add(tx);
 
-                    listener.onPendingTransactionUpdate(
-                            createDroppedReceipt(tx.getTransaction(), "Tx was not included into last " + CONFIG.txOutdatedThreshold() + " blocks"),
-                            EthereumListener.PendingTransactionState.DROPPED, getBestBlock());
-                }
+                fireTxUpdate(createDroppedReceipt(tx.getTransaction(),
+                        "Tx was not included into last " + CONFIG.txOutdatedThreshold() + " blocks"),
+                        DROPPED, getBestBlock());
+            }
         }
 
         if (outdated.isEmpty()) return;
 
-        if (logger.isInfoEnabled())
+        if (logger.isDebugEnabled())
             for (PendingTransaction tx : outdated)
-                logger.info(
-                        "Clear outdated wire transaction, block.number: [{}] hash: [{}]",
+                logger.trace(
+                        "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
                         tx.getBlockNumber(),
                         Hex.toHexString(tx.getHash())
                 );
@@ -299,14 +306,14 @@ public class PendingStateImpl implements PendingState {
         pendingTransactions.removeAll(outdated);
     }
 
-    private void clearWire(Block block, List<TransactionReceipt> receipts) {
+    private void clearPending(Block block, List<TransactionReceipt> receipts) {
         for (int i = 0; i < block.getTransactionsList().size(); i++) {
             Transaction tx = block.getTransactionsList().get(i);
             PendingTransaction pend = new PendingTransaction(tx);
 
             if (pendingTransactions.remove(pend)) {
                 try {
-                    logger.info("Clear pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+                    logger.trace("Clear pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
                     TransactionReceipt receipt;
                     if (receipts != null) {
                         receipt = receipts.get(i);
@@ -314,7 +321,7 @@ public class PendingStateImpl implements PendingState {
                         TransactionInfo info = transactionStore.get(tx.getHash(), block.getHash());
                         receipt = info.getReceipt();
                     }
-                    listener.onPendingTransactionUpdate(receipt, EthereumListener.PendingTransactionState.INCLUDED, block);
+                    fireTxUpdate(receipt, INCLUDED, block);
                 } catch (Exception e) {
                     logger.error("Exception creating onPendingTransactionUpdate (block: " + block.getShortDescr() + ", tx: " + i, e);
                 }
@@ -328,13 +335,13 @@ public class PendingStateImpl implements PendingState {
 
         for (PendingTransaction tx : pendingTransactions) {
             TransactionReceipt receipt = executeTx(tx.getTransaction());
-            listener.onPendingTransactionUpdate(receipt, EthereumListener.PendingTransactionState.PENDING, block);
+            fireTxUpdate(receipt, PENDING, block);
         }
     }
 
     private TransactionReceipt executeTx(Transaction tx) {
 
-        logger.info("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
+        logger.trace("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
 
         Block best = getBestBlock();
 
