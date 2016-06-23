@@ -397,6 +397,23 @@ public class ImportLightTest {
         Assert.assertEquals(46634, spent);
     }
 
+    @Test
+    public void deepRecursionTest() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  function recursive(){" +
+                "    this.recursive();" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        a.callFunction("recursive");
+        bc.createBlock();
+
+        // no StackOverflowException
+    }
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
