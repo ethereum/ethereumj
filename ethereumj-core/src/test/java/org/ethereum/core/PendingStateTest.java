@@ -25,9 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
 import static org.ethereum.util.BIUtil.toBI;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
@@ -129,10 +127,10 @@ public class PendingStateTest {
         pendingState.addPendingTransaction(tx3);
 
         txUpd = l.pollTxUpdate(tx2);
-        Assert.assertEquals(txUpd.getMiddle(), PENDING);
+        Assert.assertEquals(txUpd.getMiddle(), NEW_PENDING);
         Assert.assertTrue(txUpd.getLeft().isValid());
         txUpd = l.pollTxUpdate(tx3);
-        Assert.assertEquals(txUpd.getMiddle(), PENDING);
+        Assert.assertEquals(txUpd.getMiddle(), NEW_PENDING);
         Assert.assertTrue(txUpd.getLeft().isValid());
         Assert.assertTrue(pendingState.getRepository().getBalance(alice.getAddress()).
                 compareTo(BigInteger.valueOf(2000000 - 100000)) > 0);
@@ -191,8 +189,8 @@ public class PendingStateTest {
         Transaction tx2 = bc.createTransaction(charlie, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);;
         pendingState.addPendingTransaction(tx2);
 
-        Assert.assertEquals(l.pollTxUpdateState(tx1), PENDING);
-        Assert.assertEquals(l.pollTxUpdateState(tx2), PENDING);
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+        Assert.assertEquals(l.pollTxUpdateState(tx2), NEW_PENDING);
         Assert.assertTrue(pendingState.getRepository().getBalance(alice.getAddress()).
                 compareTo(BigInteger.valueOf(2000000)) == 0);
 
@@ -235,7 +233,7 @@ public class PendingStateTest {
     }
 
     @Test
-    public void testRebranch2_() throws InterruptedException {
+    public void testRebranch2() throws InterruptedException {
         StandaloneBlockchain bc = new StandaloneBlockchain();
         PendingListener l = new PendingListener();
         bc.addEthereumListener(l);
@@ -256,8 +254,8 @@ public class PendingStateTest {
         Transaction tx2 = bc.createTransaction(charlie, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);;
         pendingState.addPendingTransaction(tx2);
 
-        Assert.assertEquals(l.pollTxUpdateState(tx1), PENDING);
-        Assert.assertEquals(l.pollTxUpdateState(tx2), PENDING);
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+        Assert.assertEquals(l.pollTxUpdateState(tx2), NEW_PENDING);
         Assert.assertTrue(pendingState.getRepository().getBalance(alice.getAddress()).
                 compareTo(BigInteger.valueOf(2000000)) == 0);
 
