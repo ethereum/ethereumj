@@ -18,6 +18,7 @@ import java.util.Set;
 public interface EthereumListener {
 
     enum PendingTransactionState {
+        NEW,
         DROPPED,
         PENDING,
         INCLUDED
