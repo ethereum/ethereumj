@@ -208,12 +208,13 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onPendingTransactionUpdate(final TransactionReceipt txReceipt, final PendingTransactionState state) {
+    public void onPendingTransactionUpdate(final TransactionReceipt txReceipt, final PendingTransactionState state,
+                                           final Block block) {
         for (final EthereumListener listener : listeners) {
             EventDispatchThread.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    listener.onPendingTransactionUpdate(txReceipt, state);
+                    listener.onPendingTransactionUpdate(txReceipt, state, block);
                 }
             });
         }

@@ -390,7 +390,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         // The simple case got the block
         // to connect to the main chain
-        List<TransactionReceipt> receipts = null;
+        final List<TransactionReceipt> receipts;
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
             receipts = add(block);
@@ -407,6 +407,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 ret = receipts == null ? INVALID_BLOCK :
                         (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
             } else {
+                receipts = null;
                 ret = NO_PARENT;
             }
 
@@ -420,7 +421,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 EventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        pendingState.processBest(block);
+                        pendingState.processBest(block, receipts);
                     }
                 });
             }

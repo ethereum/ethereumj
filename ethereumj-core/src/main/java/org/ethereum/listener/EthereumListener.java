@@ -41,7 +41,7 @@ public interface EthereumListener {
 
     void onPendingTransactionsReceived(List<Transaction> transactions);
 
-    void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state);
+    void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block);
 
     void onPendingStateChanged(PendingState pendingState);
 

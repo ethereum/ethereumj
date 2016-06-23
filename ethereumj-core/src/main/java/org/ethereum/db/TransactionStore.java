@@ -74,6 +74,16 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         return true;
     }
 
+    public TransactionInfo get(byte[] txHash, byte[] blockHash) {
+        List<TransactionInfo> existingInfos = get(txHash);
+        for (TransactionInfo info : existingInfos) {
+            if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
+                return info;
+            }
+        }
+        return null;
+    }
+
     public TransactionStore(KeyValueDataSource src) {
         super(src, serializer);
         withCacheSize(256);

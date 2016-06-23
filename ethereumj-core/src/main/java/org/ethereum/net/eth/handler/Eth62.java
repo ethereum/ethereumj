@@ -26,13 +26,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.util.Collections.reverse;
 import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.SyncState.*;
 import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
-import static org.ethereum.util.BIUtil.isLessThan;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
@@ -319,7 +317,7 @@ public class Eth62 extends EthHandler {
         }
 
         List<Transaction> txSet = msg.getTransactions();
-        pendingState.addWireTransactions(txSet);
+        pendingState.addPendingTransactions(txSet);
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {

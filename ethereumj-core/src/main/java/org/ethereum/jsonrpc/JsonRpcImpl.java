@@ -207,7 +207,7 @@ public class JsonRpcImpl implements JsonRpc {
 
     private List<Transaction> getTransactionsByJsonBlockId(String id) {
         if ("pending".equalsIgnoreCase(id)) {
-            return pendingState.getAllPendingTransactions();
+            return pendingState.getPendingTransactions();
         } else {
             Block block = getByJsonBlockId(id);
             return block != null ? block.getTransactionsList() : null;
@@ -652,7 +652,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             Block b;
             if ("pending".equalsIgnoreCase(bnOrId)) {
-                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getAllPendingTransactions(), Collections.<BlockHeader>emptyList());
+                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.<BlockHeader>emptyList());
             } else {
                 b = getByJsonBlockId(bnOrId);
             }

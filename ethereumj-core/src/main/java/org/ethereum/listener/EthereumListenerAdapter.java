@@ -85,7 +85,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state) {
+    public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
 
     }
 }
