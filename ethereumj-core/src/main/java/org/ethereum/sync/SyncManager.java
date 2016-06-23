@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
+import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
 import static org.ethereum.core.ImportResult.*;
 
@@ -198,7 +199,7 @@ public class SyncManager {
                         any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
                         reqBlocksCounter ++;
                     }
-                    receivedBlocksLatch = new CountDownLatch(reqBlocksCounter);
+                    receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter, 1));
                 } else {
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
