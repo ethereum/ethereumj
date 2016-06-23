@@ -158,6 +158,10 @@ public class PendingStateImpl implements PendingState {
     }
 
     private synchronized boolean addPendingTransactionImpl(final Transaction tx) {
+        TransactionReceipt newReceipt = new TransactionReceipt();
+        newReceipt.setTransaction(tx);
+        listener.onPendingTransactionUpdate(newReceipt, EthereumListener.PendingTransactionState.NEW, getBestBlock());
+
         String err = validate(tx);
 
         TransactionReceipt txReceipt;
