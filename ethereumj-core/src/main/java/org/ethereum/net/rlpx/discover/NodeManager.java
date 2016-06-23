@@ -355,19 +355,22 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
             int limit    ) {
-        TreeMap<BigInteger, NodeHandler> filtered = new TreeMap<>();
+        ArrayList<NodeHandler> filtered = new ArrayList<>();
         synchronized (this) {
             for (NodeHandler handler : nodeHandlerMap.values()) {
                 if (predicate.test(handler)) {
-                    filtered.put(handler.getNodeStatistics().getEthTotalDifficulty(), handler);
+                    filtered.add(handler);
                 }
             }
         }
-
-        ArrayList<NodeHandler> sorted = new ArrayList<>(filtered.values());
-        Collections.reverse(sorted);
-
-        return CollectionUtils.truncate(sorted, limit);
+        Collections.sort(filtered, new Comparator<NodeHandler>() {
+            @Override
+            public int compare(NodeHandler o1, NodeHandler o2) {
+                return o2.getNodeStatistics().getEthTotalDifficulty().compareTo(
+                        o1.getNodeStatistics().getEthTotalDifficulty());
+            }
+        });
+        return CollectionUtils.truncate(filtered, limit);
     }
 
     private synchronized void processListeners() {

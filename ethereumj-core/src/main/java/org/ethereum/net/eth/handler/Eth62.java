@@ -6,12 +6,14 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -24,13 +26,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.util.Collections.reverse;
 import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.SyncState.*;
 import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
-import static org.ethereum.util.BIUtil.isLessThan;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
@@ -57,6 +57,9 @@ public class Eth62 extends EthHandler {
     @Autowired
     protected PendingState pendingState;
 
+    @Autowired
+    protected NodeManager nodeManager;
+
     protected EthState ethState = EthState.INIT;
 
     protected SyncState syncState = IDLE;
@@ -72,6 +75,7 @@ public class Eth62 extends EthHandler {
      * Number and hash of best known remote block
      */
     protected BlockIdentifier bestKnownBlock;
+    private BigInteger totalDifficulty;
 
     protected boolean commonAncestorFound = true;
 
@@ -167,6 +171,7 @@ public class Eth62 extends EthHandler {
         sendMessage(msg);
     }
 
+    @Override
     public synchronized void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
 
         if(logger.isTraceEnabled()) logger.trace(
@@ -205,6 +210,7 @@ public class Eth62 extends EthHandler {
         sendNextHeaderRequest();
     }
 
+    @Override
     public synchronized void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
         syncState = BLOCK_RETRIEVING;
         sentHeaders.clear();
@@ -311,7 +317,7 @@ public class Eth62 extends EthHandler {
         }
 
         List<Transaction> txSet = msg.getTransactions();
-        pendingState.addWireTransactions(txSet);
+        pendingState.addPendingTransactions(txSet);
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {
@@ -404,17 +410,7 @@ public class Eth62 extends EthHandler {
 
         logger.debug("New block received: block.index [{}]", newBlock.getNumber());
 
-        // skip new block if TD is lower than ours
-        if (isLessThan(newBlockMessage.getDifficultyAsBigInt(), blockchain.getTotalDifficulty())) {
-            logger.trace(
-                    "New block difficulty lower than ours: [{}] vs [{}], skip",
-                    newBlockMessage.getDifficultyAsBigInt(),
-                    blockchain.getTotalDifficulty()
-            );
-            return;
-        }
-
-        channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
+        updateTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
 
         updateBestBlock(newBlock);
 
@@ -464,11 +460,13 @@ public class Eth62 extends EthHandler {
     }
 
     private void updateBestBlock(Block block) {
-        bestKnownBlock = new BlockIdentifier(block.getHash(), block.getNumber());
+        updateBestBlock(block.getHeader());
     }
 
     private void updateBestBlock(BlockHeader header) {
-        bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
+        if (bestKnownBlock == null || header.getNumber() > bestKnownBlock.getNumber()) {
+            bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
+        }
     }
 
     private void updateBestBlock(List<BlockIdentifier> identifiers) {
@@ -477,6 +475,21 @@ public class Eth62 extends EthHandler {
             if (bestKnownBlock == null || id.getNumber() > bestKnownBlock.getNumber()) {
                 bestKnownBlock = id;
             }
+    }
+
+    @Override
+    public BlockIdentifier getBestKnownBlock() {
+        return bestKnownBlock;
+    }
+
+    private void updateTotalDifficulty(BigInteger totalDiff) {
+        channel.getNodeStatistics().setEthTotalDifficulty(totalDiff);
+        this.totalDifficulty = totalDiff;
+    }
+
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty != null ? totalDifficulty : channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
     /*************************
@@ -539,6 +552,12 @@ public class Eth62 extends EthHandler {
 
     @Nullable
     private List<Block> validateAndMerge(BlockBodiesMessage response) {
+        // merging received block bodies with requested headers
+        // the assumption is the following:
+        // - response may miss any bodies present in the request
+        // - response may not contain non-requested bodies
+        // - order of response bodies should be preserved
+        // Otherwise the response is assumed invalid and all bodies are dropped
 
         List<byte[]> bodyList = response.getBlockBodies();
 
@@ -548,27 +567,34 @@ public class Eth62 extends EthHandler {
         List<Block> blocks = new ArrayList<>(bodyList.size());
         List<BlockHeaderWrapper> coveredHeaders = new ArrayList<>(sentHeaders.size());
 
+        boolean blockMerged = true;
+        byte[] body = null;
         while (bodies.hasNext() && wrappers.hasNext()) {
+
             BlockHeaderWrapper wrapper = wrappers.next();
-            byte[] body = bodies.next();
+            if (blockMerged) {
+                body = bodies.next();
+            }
 
             Block b = new Block.Builder()
                     .withHeader(wrapper.getHeader())
                     .withBody(body)
                     .create();
 
-            // handle invalid merge
             if (b == null) {
+                blockMerged = false;
+            } else {
+                blockMerged = true;
 
-                if (logger.isInfoEnabled()) logger.info(
-                        "Peer {}: invalid response to [GET_BLOCK_BODIES], header {} can't be merged with body {}",
-                        channel.getPeerIdShort(), wrapper.getHeader(), toHexString(body)
-                );
-                return null;
+                coveredHeaders.add(wrapper);
+                blocks.add(b);
             }
+        }
 
-            coveredHeaders.add(wrapper);
-            blocks.add(b);
+        if (bodies.hasNext()) {
+            logger.info("Peer {}: invalid BLOCK_BODIES response: at least one block body doesn't correspond to any of requested headers: ",
+                    channel.getPeerIdShort(), Hex.toHexString(bodies.next()));
+            return null;
         }
 
         // remove headers covered by response
@@ -578,21 +604,7 @@ public class Eth62 extends EthHandler {
     }
 
     private boolean isValid(BlockBodiesMessage response) {
-        // check if peer didn't return a body
-        // corresponding to the header sent previously
-        if (response.getBlockBodies().size() < sentHeaders.size()) {
-            BlockHeaderWrapper header = sentHeaders.get(response.getBlockBodies().size());
-            if (header.sentBy(channel.getNodeId())) {
-
-                if (logger.isInfoEnabled()) logger.info(
-                        "Peer {}: invalid response to [GET_BLOCK_BODIES], body for {} wasn't returned",
-                        channel.getPeerIdShort(), toHexString(header.getHash())
-                );
-                return false;
-            }
-        }
-
-        return true;
+        return response.getBlockBodies().size() <= sentHeaders.size();
     }
 
     private boolean isValid(BlockHeadersMessage response, GetBlockHeadersMessageWrapper requestWrapper) {
@@ -741,32 +753,16 @@ public class Eth62 extends EthHandler {
      *************************/
 
     @Override
-    public void logSyncStats() {
-        if(!logger.isInfoEnabled()) {
-            return;
-        }
-        switch (syncState) {
-            case BLOCK_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, {}, blocks {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    syncStats.getBlocksCount(),
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
-            case HASH_RETRIEVING: logger.info(
-                    "Peer {}: [ {}, {}, headers {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    syncStats.getHeadersCount(),
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency())); break;
-            default: logger.info(
-                    "Peer {}: [ {}, state {}, ping {} ms ]",
-                    version,
-                    channel.getPeerIdShort(),
-                    syncState,
-                    String.format("%.2f", channel.getPeerStats().getAvgLatency()));
-        }
+    public String getSyncStats() {
+
+        return String.format(
+                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]",
+                version,
+                channel.getPeerIdShort(),
+                syncState,
+                (int)channel.getPeerStats().getAvgLatency(),
+                getTotalDifficulty(),
+                getBestKnownBlock().getNumber());
     }
 
     protected enum EthState {

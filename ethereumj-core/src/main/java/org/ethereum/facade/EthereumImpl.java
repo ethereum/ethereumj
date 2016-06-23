@@ -347,7 +347,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public List<Transaction> getWireTransactions() {
-        return worldManager.getPendingState().getWireTransactions();
+        return worldManager.getPendingState().getPendingTransactions();
     }
 
     @Override

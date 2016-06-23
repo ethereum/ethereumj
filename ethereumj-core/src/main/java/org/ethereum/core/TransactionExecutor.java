@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.*;
@@ -48,6 +49,7 @@ public class TransactionExecutor {
     private BlockStore blockStore;
     private final long gasUsedInTheBlock;
     private boolean readyToExecute = false;
+    private String execError;
 
     private ProgramInvokeFactory programInvokeFactory;
     private byte[] coinbase;
@@ -88,8 +90,14 @@ public class TransactionExecutor {
         this.currentBlock = currentBlock;
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
+        this.m_endGas = toBI(tx.getGasLimit());
     }
 
+
+    private void execError(String err) {
+        logger.warn(err);
+        execError = err;
+    }
 
     /**
      * Do all the basic validation, if the executor
@@ -111,31 +119,24 @@ public class TransactionExecutor {
         if (cumulativeGasReached) {
 
             if (logger.isWarnEnabled())
-                logger.warn("Too much gas used in this block: Require: {} Got: {}", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue());
+                execError(String.format("Too much gas used in this block: Require: %s Got: %s", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue()));
 
-            // TODO: save reason for failure
             return;
         }
 
         if (txGasLimit.compareTo(BigInteger.valueOf(basicTxCost)) < 0) {
 
             if (logger.isWarnEnabled())
-                logger.warn("Not enough gas for transaction execution: Require: {} Got: {}", basicTxCost, txGasLimit);
+                execError(String.format("Not enough gas for transaction execution: Require: %s Got: %s", basicTxCost, txGasLimit));
 
-
-            // TODO: save reason for failure
             return;
         }
 
         BigInteger reqNonce = track.getNonce(tx.getSender());
         BigInteger txNonce = toBI(tx.getNonce());
         if (isNotEqual(reqNonce, txNonce)) {
+            execError(String.format("Invalid nonce: required: %s , tx.nonce: %s", reqNonce, txNonce));
 
-            if (logger.isWarnEnabled())
-                logger.warn("Invalid nonce: required: {} , tx.nonce: {}", reqNonce, txNonce);
-
-
-            // TODO: save reason for failure
             return;
         }
 
@@ -145,16 +146,14 @@ public class TransactionExecutor {
 
         if (!isCovers(senderBalance, totalCost)) {
 
-            if (logger.isWarnEnabled())
-                logger.warn("Not enough cash: Require: {}, Sender cash: {}", totalCost, senderBalance);
+            execError(String.format("Not enough cash: Require: %s, Sender cash: %s", totalCost, senderBalance));
 
-            // TODO: save reason for failure
             return;
         }
 
         if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 acceptTransactionSignature(tx)) {
-            logger.warn("Transaction signature not accepted: " + tx.getSignature());
+            execError("Transaction signature not accepted: " + tx.getSignature());
             return;
         }
 
@@ -192,18 +191,14 @@ public class TransactionExecutor {
         if (precompiledContract != null) {
 
             long requiredGas = precompiledContract.getGasForData(tx.getData());
-            BigInteger txGasLimit = toBI(tx.getGasLimit());
 
-//            if (!localCall && requiredGas > txGasLimit) {
-            if (!localCall && txGasLimit.compareTo(BigInteger.valueOf(requiredGas)) < 0) {
+            if (!localCall && m_endGas.compareTo(BigInteger.valueOf(requiredGas)) < 0) {
                 // no refund
                 // no endowment
                 return;
             } else {
 
-                m_endGas = txGasLimit.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
-//                BigInteger refundCost = toBI(m_endGas * toBI( tx.getGasPrice() ).longValue() );
-//                track.addBalance(tx.getSender(), refundCost);
+                m_endGas = m_endGas.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
 
                 // FIXME: save return for vm trace
                 byte[] out = precompiledContract.execute(tx.getData());
@@ -213,7 +208,7 @@ public class TransactionExecutor {
 
             byte[] code = track.getCode(targetAddress);
             if (isEmpty(code)) {
-                m_endGas = toBI(tx.getGasLimit()).subtract(BigInteger.valueOf(basicTxCost));
+                m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
             } else {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
@@ -230,7 +225,7 @@ public class TransactionExecutor {
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
         if (isEmpty(tx.getData())) {
-            m_endGas = toBI(tx.getGasLimit()).subtract(BigInteger.valueOf(basicTxCost));
+            m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
             cacheTrack.createAccount(tx.getContractAddress());
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
@@ -299,11 +294,21 @@ public class TransactionExecutor {
 //            https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L241
             cacheTrack.rollback();
             m_endGas = BigInteger.ZERO;
+            execError(e.getMessage());
         }
     }
 
     public void finalization() {
         if (!readyToExecute) return;
+
+        String err = SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                validateTransactionChanges(blockStore, currentBlock, (RepositoryTrack) cacheTrack);
+        if (err != null) {
+            execError(err);
+            m_endGas = toBI(tx.getGasLimit());
+            cacheTrack.rollback();
+            return;
+        }
 
         cacheTrack.commit();
 
@@ -323,8 +328,16 @@ public class TransactionExecutor {
                     .gasUsed(toBI(result.getGasUsed()))
                     .gasRefund(toBI(gasRefund))
                     .deletedAccounts(result.getDeleteAccounts())
-                    .internalTransactions(result.getInternalTransactions())
-                    .storageDiff(track.getContractDetails(addr).getStorage());
+                    .internalTransactions(result.getInternalTransactions());
+
+            ContractDetails contractDetails = track.getContractDetails(addr);
+            if (contractDetails != null) {
+                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+
+                if (program != null) {
+                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+                }
+            }
 
             if (result.getException() != null) {
                 summaryBuilder.markAsFailed();
@@ -384,6 +397,7 @@ public class TransactionExecutor {
             receipt.setLogInfoList(getVMLogs());
             receipt.setGasUsed(getGasUsed());
             receipt.setExecutionResult(getResult().getHReturn());
+            receipt.setError(execError);
 //            receipt.setPostTxState(track.getRoot()); // TODO later when RepositoryTrack.getRoot() is implemented
         }
         return receipt;

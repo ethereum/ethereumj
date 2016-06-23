@@ -16,6 +16,7 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
@@ -214,10 +215,29 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public TransactionInfo getTransactionInfo(byte[] hash) {
 
-        TransactionInfo txInfo = transactionStore.get(hash);
+        List<TransactionInfo> infos = transactionStore.get(hash);
 
-        if (txInfo == null)
+        if (infos == null || infos.isEmpty())
             return null;
+
+        TransactionInfo txInfo = null;
+        if (infos.size() == 1) {
+            txInfo = infos.get(0);
+        } else {
+            // pick up the receipt from the block on the main chain
+            for (TransactionInfo info : infos) {
+                Block block = blockStore.getBlockByHash(info.blockHash);
+                Block mainBlock = blockStore.getChainBlockByNumber(block.getNumber());
+                if (FastByteComparisons.equal(info.blockHash, mainBlock.getHash())) {
+                    txInfo = info;
+                    break;
+                }
+            }
+        }
+        if (txInfo == null) {
+            logger.warn("Can't find block from main chain for transaction " + Hex.toHexString(hash));
+            return null;
+        }
 
         Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
         txInfo.setTransaction(tx);
@@ -303,18 +323,21 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         stateStack.pop();
     }
 
-    public synchronized ImportResult tryConnectAndFork(final Block block) {
+    private synchronized List<TransactionReceipt> tryConnectAndFork(final Block block) {
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
+        final List<TransactionReceipt> receipts;
         try {
 
             // FIXME: adding block with no option for flush
-            if (!add(block)) {
-                return INVALID_BLOCK;
+            receipts = add(block);
+            if (receipts == null) {
+                return null;
             }
         } catch (Throwable th) {
             logger.error("Unexpected error: ", th);
+            return null;
         } finally {
             this.fork = false;
         }
@@ -338,21 +361,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
 
             dropState();
-
-//            EDT.invokeLater(new Runnable() {
-//                @Override
-//                public void run() {
-//                    pendingState.processBest(block);
-//                }
-//            });
-//
-            return IMPORTED_BEST;
         } else {
             // Stay on previous branch
             popState();
-
-            return IMPORTED_NOT_BEST;
         }
+
+        return receipts;
     }
 
 
@@ -375,43 +389,48 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return EXIST;
         }
 
+        final ImportResult ret;
+
         // The simple case got the block
         // to connect to the main chain
+        final List<TransactionReceipt> receipts;
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
+            receipts = add(block);
 
-            if (add(block)) {
-                EventDispatchThread.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        pendingState.processBest(block);
-                    }
-                });
-                return IMPORTED_BEST;
-            } else {
-                return INVALID_BLOCK;
-            }
+            ret = receipts == null ? INVALID_BLOCK : IMPORTED_BEST;
         } else {
 
             if (blockStore.isBlockExist(block.getParentHash())) {
+                BigInteger oldTotalDiff = getTotalDifficulty();
+
                 recordBlock(block);
-                ImportResult result = tryConnectAndFork(block);
+                receipts = tryConnectAndFork(block);
 
-                if (result == IMPORTED_BEST) {
-                    EventDispatchThread.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            pendingState.processBest(block);
-                        }
-                    });
-                }
-
-                return result;
+                ret = receipts == null ? INVALID_BLOCK :
+                        (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
+            } else {
+                receipts = null;
+                ret = NO_PARENT;
             }
 
         }
 
-        return NO_PARENT;
+        if (ret.isSuccessful()) {
+            listener.onBlock(block, receipts);
+            listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
+
+            if (ret == IMPORTED_BEST) {
+                EventDispatchThread.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        pendingState.processBest(block, receipts);
+                    }
+                });
+            }
+        }
+
+        return ret;
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
@@ -466,7 +485,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public synchronized boolean add(Block block) {
+    public synchronized List<TransactionReceipt> add(Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
@@ -477,18 +496,18 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!isValid(block)) {
             logger.warn("Invalid block with number: {}", block.getNumber());
-            return false;
+            return null;
         }
 
         track = repository.startTracking();
         byte[] origRoot = repository.getRoot();
 
         if (block == null)
-            return false;
+            return null;
 
         // keep chain continuity
         if (!Arrays.equals(bestBlock.getHash(),
-                block.getParentHash())) return false;
+                block.getParentHash())) return null;
 
         if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
             AdvancedDeviceUtils.adjustDetailedTracing(config, block.getNumber());
@@ -526,27 +545,29 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             // block is bad so 'rollback' the state root to the original state
             ((RepositoryImpl) repository).setRoot(origRoot);
 
+            track.rollback();
+            // block is bad so 'rollback' the state root to the original state
+            ((RepositoryImpl) repository).setRoot(origRoot);
+
             if (config.exitOnBlockConflict()) {
                 adminInfo.lostConsensus();
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
                 System.exit(1);
             } else {
-                return false;
+                return null;
             }
         }
 
         track.commit();
-        storeBlock(block, receipts);
+        updateTotalDifficulty(block);
 
+        storeBlock(block, receipts);
 
         if (!byTest && needFlush(block)) {
             flush();
         }
 
-        listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
-        listener.onBlock(block, receipts);
-
-        return true;
+        return receipts;
     }
 
     public void flush() {
@@ -811,13 +832,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (block.getNumber() >= config.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
-            transactionStore.put(tx.getHash(), new TransactionInfo(receipt, block.getHash(), receipts.size()));
-
             receipts.add(receipt);
         }
 
         addReward(block);
-        updateTotalDifficulty(block);
 
         track.commit();
 
@@ -866,6 +884,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockStore.saveBlock(block, totalDifficulty, false);
         else
             blockStore.saveBlock(block, totalDifficulty, true);
+
+        for (int i = 0; i < receipts.size(); i++) {
+            transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
+        }
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);

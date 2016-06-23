@@ -565,7 +565,7 @@ public class TransactionTest {
             byte[] callData = contract1.getByName("multipleHomocide").encode();
 
             Transaction tx1 = createTx(blockchain, sender, contractAddress, callData);
-            ProgramResult programResult = executeTransaction(blockchain, tx1);
+            ProgramResult programResult = executeTransaction(blockchain, tx1).getResult();
 
             // suicide of a single account should be counted only once
             Assert.assertEquals(programResult.getFutureRefund(), 24000);
@@ -574,11 +574,87 @@ public class TransactionTest {
         }
     }
 
-    protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress, byte[] data) throws InterruptedException {
+    @Test
+    public void receiptErrorTest() throws Exception {
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+
+        ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+
+        {
+            // Receipt RLP backward compatibility
+            TransactionReceipt receipt = new TransactionReceipt(Hex.decode("f9010c80825208b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c082520880"));
+
+            Assert.assertTrue(receipt.isValid());
+            Assert.assertTrue(receipt.isSuccessful());
+        }
+
+        {
+            Transaction tx = createTx(blockchain, sender, new byte[32], new byte[0], 100);
+            TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
+
+            System.out.println(Hex.toHexString(receipt.getEncoded()));
+
+            receipt = new TransactionReceipt(receipt.getEncoded());
+
+            Assert.assertTrue(receipt.isValid());
+            Assert.assertTrue(receipt.isSuccessful());
+        }
+
+        {
+            Transaction tx = createTx(blockchain, new ECKey(), new byte[32], new byte[0], 100);
+            TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
+
+            receipt = new TransactionReceipt(receipt.getEncoded());
+
+            Assert.assertFalse(receipt.isValid());
+            Assert.assertFalse(receipt.isSuccessful());
+            Assert.assertTrue(receipt.getError().contains("Not enough"));
+        }
+
+        {
+            Transaction tx = new Transaction(
+                    ByteUtil.intToBytesNoLeadZeroes(100500),
+                    ByteUtil.longToBytesNoLeadZeroes(1),
+                    ByteUtil.longToBytesNoLeadZeroes(3_000_000),
+                    new byte[0],
+                    ByteUtil.longToBytesNoLeadZeroes(0),
+                    new byte[0]);
+            tx.sign(sender);
+            TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
+            receipt = new TransactionReceipt(receipt.getEncoded());
+            Assert.assertFalse(receipt.isValid());
+            Assert.assertFalse(receipt.isSuccessful());
+            Assert.assertTrue(receipt.getError().contains("nonce"));
+        }
+
+        {
+            String contract =
+                    "contract GasConsumer {" +
+                    "    function GasConsumer() {" +
+                    "        int i = 0;" +
+                    "        while(true) sha3(i++);" +
+                    "    }" +
+                    "}";
+            SolidityCompiler.Result res = SolidityCompiler.compile(
+                    contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+            System.out.println(res.errors);
+            CompilationResult cres = CompilationResult.parse(res.output);
+            Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("GasConsumer").bin), 0);
+            TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
+            receipt = new TransactionReceipt(receipt.getEncoded());
+
+            Assert.assertTrue(receipt.isValid());
+            Assert.assertFalse(receipt.isSuccessful());
+            Assert.assertTrue(receipt.getError().contains("Not enough gas"));
+        }
+    }
+
+    protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress, byte[] data) {
         return createTx(blockchain, sender, receiveAddress, data, 1);
     }
     protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress,
-                                   byte[] data, long value) throws InterruptedException {
+                                   byte[] data, long value) {
         BigInteger nonce = blockchain.getRepository().getNonce(sender.getAddress());
         Transaction tx = new Transaction(
                 ByteUtil.bigIntegerToBytes(nonce),
@@ -591,7 +667,7 @@ public class TransactionTest {
         return tx;
     }
 
-    public ProgramResult executeTransaction(BlockchainImpl blockchain, Transaction tx) {
+    public TransactionExecutor executeTransaction(BlockchainImpl blockchain, Transaction tx) {
         Repository track = blockchain.getRepository().startTracking();
         TransactionExecutor executor = new TransactionExecutor(tx, new byte[32], blockchain.getRepository(),
                 blockchain.getBlockStore(), blockchain.getProgramInvokeFactory(), blockchain.getBestBlock());
@@ -602,6 +678,6 @@ public class TransactionTest {
         executor.finalization();
 
         track.commit();
-        return executor.getResult();
+        return executor;
     }
 }

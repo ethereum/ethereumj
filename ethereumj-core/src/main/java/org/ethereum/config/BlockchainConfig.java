@@ -1,7 +1,10 @@
 package org.ethereum.config;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
 
 import java.math.BigInteger;
@@ -37,4 +40,13 @@ public interface BlockchainConfig {
      * Validates Tx signature (introduced in Homestead)
      */
     boolean acceptTransactionSignature(Transaction tx);
+
+    /**
+     * Validates transaction by the changes made by it in the repository
+     * @param blockStore
+     * @param curBlock The block being imported
+     * @param repositoryTrack The repository track changed by transaction
+     * @return null if all is fine or String validation error
+     */
+    String validateTransactionChanges(BlockStore blockStore, Block curBlock, RepositoryTrack repositoryTrack);
 }

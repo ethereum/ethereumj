@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
+import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
 import static org.ethereum.core.ImportResult.*;
 
@@ -160,10 +161,8 @@ public class SyncManager {
                     Channel any = pool.getAnyIdle();
 
                     if (any != null) {
-                        Eth62 eth = (Eth62) any.getEthHandler();
-
                         SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
-                        eth.sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                        any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
                     }
                 }
                 receivedHeadersLatch = new CountDownLatch(1);
@@ -181,15 +180,26 @@ public class SyncManager {
 
                 if (blockQueue.size() < BLOCK_QUEUE_LIMIT) {
                     SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(1000);
+
+                    if (bReq.getBlockHeaders().size() <= 3) {
+                        // new blocks are better to request from the header senders first
+                        // to get more chances to receive block body promptly
+                        for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
+                            Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
+                            if (channel != null) {
+                                channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
+                            }
+                        }
+                    }
+
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
                         Channel any = pool.getAnyIdle();
                         if (any == null) break;
-                        Eth62 eth = (Eth62) any.getEthHandler();
-                        eth.sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                        any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
                         reqBlocksCounter ++;
                     }
-                    receivedBlocksLatch = new CountDownLatch(reqBlocksCounter);
+                    receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter, 1));
                 } else {
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
@@ -223,11 +233,8 @@ public class SyncManager {
 
                     if (wrapper.isNewBlock() && !syncDone) {
                         syncDone = true;
-                        EventDispatchThread.invokeLater(new Runnable() {
-                            public void run() {
-                                compositeEthereumListener.onSyncDone();
-                            }
-                        });
+                        channelManager.onSyncDone(true);
+                        compositeEthereumListener.onSyncDone();
                     }
                 }
 

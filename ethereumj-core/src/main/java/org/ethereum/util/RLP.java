@@ -143,7 +143,7 @@ public class RLP {
             byte length = (byte) (data[index] - OFFSET_SHORT_ITEM);
             byte pow = (byte) (length - 1);
             for (int i = 1; i <= length; ++i) {
-                value += data[index + i] << (8 * pow);
+                value += (data[index + i] & 0xFF) << (8 * pow);
                 pow--;
             }
         } else {
@@ -172,7 +172,7 @@ public class RLP {
             byte length = (byte) (data[index] - OFFSET_SHORT_ITEM);
             byte pow = (byte) (length - 1);
             for (int i = 1; i <= length; ++i) {
-                value += data[index + i] << (8 * pow);
+                value += (data[index + i] & 0xFF) << (8 * pow);
                 pow--;
             }
         } else {

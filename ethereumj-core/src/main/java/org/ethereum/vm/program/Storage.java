@@ -19,7 +19,7 @@ public class Storage implements Repository, ProgramListenerAware {
 
     private final Repository repository;
     private final DataWord address;
-    private ProgramListener traceListener;
+    private ProgramListener programListener;
 
     public Storage(ProgramInvoke programInvoke) {
         this.address = programInvoke.getOwnerAddress();
@@ -27,8 +27,8 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
-    public void setTraceListener(ProgramListener listener) {
-        this.traceListener = listener;
+    public void setProgramListener(ProgramListener listener) {
+        this.programListener = listener;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class Storage implements Repository, ProgramListenerAware {
 
     @Override
     public void delete(byte[] addr) {
-        if (canListenTrace(addr)) traceListener.onStorageClear();
+        if (canListenTrace(addr)) programListener.onStorageClear();
         repository.delete(addr);
     }
 
@@ -84,12 +84,12 @@ public class Storage implements Repository, ProgramListenerAware {
 
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-        if (canListenTrace(addr)) traceListener.onStoragePut(key, value);
+        if (canListenTrace(addr)) programListener.onStoragePut(key, value);
         repository.addStorageRow(addr, key, value);
     }
 
     private boolean canListenTrace(byte[] address) {
-        return this.address.equals(new DataWord(address)) && (traceListener != null);
+        return (programListener != null) && this.address.equals(new DataWord(address));
     }
 
     @Override
@@ -170,10 +170,10 @@ public class Storage implements Repository, ProgramListenerAware {
 
             ContractDetails details = contractDetails.get(address);
             if (details.isDeleted()) {
-                traceListener.onStorageClear();
+                programListener.onStorageClear();
             } else if (details.isDirty()) {
                 for (Map.Entry<DataWord, DataWord> entry : details.getStorage().entrySet()) {
-                    traceListener.onStoragePut(entry.getKey(), entry.getValue());
+                    programListener.onStoragePut(entry.getKey(), entry.getValue());
                 }
             }
         }
