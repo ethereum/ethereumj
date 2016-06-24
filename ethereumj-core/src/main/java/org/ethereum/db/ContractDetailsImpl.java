@@ -35,6 +35,9 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Autowired
     SystemProperties config = SystemProperties.getDefault();
 
+    @Autowired
+    DataSourcePool dataSourcePool;
+
     private byte[] rlpEncoded;
 
     private byte[] address = EMPTY_BYTE_ARRAY;
@@ -233,13 +236,13 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         if (externalStorage) {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
-            DataSourcePool.closeDataSource("details-storage/" + toHexString(address));
+            dataSourcePool.closeDataSource("details-storage/" + toHexString(address));
         }
     }
 
     private KeyValueDataSource getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = DataSourcePool.dbByName(commonConfig, "details-storage/" + toHexString(address));
+            externalStorageDataSource = dataSourcePool.dbByName(commonConfig, "details-storage/" + toHexString(address));
         }
         return externalStorageDataSource;
     }
@@ -275,7 +278,9 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         details.externalStorage = this.externalStorage;
         details.externalStorageDataSource = this.externalStorageDataSource;
         details.keys = this.keys;
+        details.config = config;
         details.commonConfig = commonConfig;
+        details.dataSourcePool = dataSourcePool;
 
         return details;
     }
