@@ -55,7 +55,7 @@ public class TransactionReceipt {
         cumulativeGas = cumulativeGasRLP.getRLPData();
         bloomFilter = new Bloom(bloomRLP.getRLPData());
         gasUsed = gasUsedRLP.getRLPData();
-        executionResult = result.getRLPData();
+        executionResult = (executionResult = result.getRLPData()) == null ? EMPTY_BYTE_ARRAY : executionResult;
 
         if (receipt.size() > 6) {
             byte[] errBytes = receipt.get(6).getRLPData();
