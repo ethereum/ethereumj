@@ -39,20 +39,15 @@ public class CommonConfig {
     private static CommonConfig defaultInstance;
 
     public static CommonConfig getDefault() {
-        if (defaultInstance == null) {
+        if (defaultInstance == null && !SystemProperties.isUseOnlySpringConfig()) {
             defaultInstance = new CommonConfig();
         }
         return defaultInstance;
     }
 
-    private SystemProperties config;
-
     @Bean
     public SystemProperties systemProperties() {
-        if (config == null) {
-            config = new SystemProperties();
-        }
-        return config;
+        return SystemProperties.getSpringDefault();
     }
 
     @Bean
