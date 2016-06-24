@@ -613,6 +613,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
         RepositoryImpl repo = new RepositoryImpl();
         repo.commonConfig = commonConfig;
+        repo.config = config;
         repo.worldState = trie;
         repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;
