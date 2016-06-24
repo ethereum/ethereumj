@@ -2,12 +2,6 @@ package org.ethereum.facade;
 
 import org.ethereum.config.DefaultConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.shh.ShhHandler;
-
-import org.ethereum.net.swarm.bzz.BzzHandler;
-import org.ethereum.util.BuildInfo;
-import org.ethereum.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +18,6 @@ import org.springframework.stereotype.Component;
 public class EthereumFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
-    public static ApplicationContext context = null;
 
     public static Ethereum createEthereum() {
         return createEthereum((Class) null);
@@ -50,7 +43,8 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum(Class ... springConfigs) {
         logger.info("Starting EthereumJ...");
-        context = new AnnotationConfigApplicationContext(springConfigs);
+        ApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
+
         return context.getBean(Ethereum.class);
     }
 }
