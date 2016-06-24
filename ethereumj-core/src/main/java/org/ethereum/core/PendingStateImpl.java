@@ -321,7 +321,7 @@ public class PendingStateImpl implements PendingState {
                     if (receipts != null) {
                         receipt = receipts.get(i);
                     } else {
-                        TransactionInfo info = transactionStore.get(tx.getHash(), block.getHash());
+                        TransactionInfo info = getTransactionInfo(tx.getHash(), block.getHash());
                         receipt = info.getReceipt();
                     }
                     fireTxUpdate(receipt, INCLUDED, block);
@@ -330,6 +330,13 @@ public class PendingStateImpl implements PendingState {
                 }
             }
         }
+    }
+
+    private TransactionInfo getTransactionInfo(byte[] txHash, byte[] blockHash) {
+        TransactionInfo info = transactionStore.get(txHash, blockHash);
+        Transaction tx = blockchain.getBlockByHash(info.getBlockHash()).getTransactionsList().get(info.getIndex());
+        info.getReceipt().setTransaction(tx);
+        return info;
     }
 
     private void updateState(Block block) {

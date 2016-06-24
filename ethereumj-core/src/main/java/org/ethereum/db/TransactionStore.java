@@ -2,7 +2,6 @@ package org.ethereum.db;
 
 import org.ethereum.datasource.*;
 import org.ethereum.core.TransactionInfo;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -17,6 +16,10 @@ import java.util.List;
  *
  * Since a transaction could be included into blocks from different forks and
  * have different receipts the class stores all of them (the same manner fork blocks are stored)
+ *
+ * NOTE: the TransactionInfo instances returned contains TransactionReceipt which
+ * has no initialized Transaction object. If needed use BlockStore to retrieve and setup
+ * Transaction instance
  *
  * Created by Anton Nashatyrev on 07.04.2016.
  */

@@ -216,6 +216,7 @@ public class TransactionReceipt {
     }
 
     public Transaction getTransaction() {
+        if (transaction == null) throw new NullPointerException("Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
         return transaction;
     }
 
