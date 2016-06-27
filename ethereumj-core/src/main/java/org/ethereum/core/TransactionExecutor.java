@@ -298,8 +298,8 @@ public class TransactionExecutor {
         }
     }
 
-    public void finalization() {
-        if (!readyToExecute) return;
+    public TransactionExecutionSummary finalization() {
+        if (!readyToExecute) return null;
 
         String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 validateTransactionChanges(blockStore, currentBlock, (RepositoryTrack) cacheTrack);
@@ -307,7 +307,7 @@ public class TransactionExecutor {
             execError(err);
             m_endGas = toBI(tx.getGasLimit());
             cacheTrack.rollback();
-            return;
+            return null;
         }
 
         cacheTrack.commit();
@@ -380,6 +380,7 @@ public class TransactionExecutor {
             saveProgramTraceFile(config, txHash, trace);
             listener.onVMTraceCreated(txHash, trace);
         }
+        return summary;
     }
 
     public TransactionExecutor setLocalCall(boolean localCall) {

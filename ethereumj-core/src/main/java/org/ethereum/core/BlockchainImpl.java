@@ -323,16 +323,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         stateStack.pop();
     }
 
-    private synchronized List<TransactionReceipt> tryConnectAndFork(final Block block) {
+    private synchronized BlockSummary tryConnectAndFork(final Block block) {
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
-        final List<TransactionReceipt> receipts;
+        final BlockSummary summary;
         try {
 
             // FIXME: adding block with no option for flush
-            receipts = add(block);
-            if (receipts == null) {
+            summary = add(block);
+            if (summary == null) {
                 return null;
             }
         } catch (Throwable th) {
@@ -366,7 +366,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             popState();
         }
 
-        return receipts;
+        return summary;
     }
 
 
@@ -393,38 +393,38 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         // The simple case got the block
         // to connect to the main chain
-        final List<TransactionReceipt> receipts;
+        final BlockSummary summary;
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
-            receipts = add(block);
+            summary = add(block);
 
-            ret = receipts == null ? INVALID_BLOCK : IMPORTED_BEST;
+            ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
         } else {
 
             if (blockStore.isBlockExist(block.getParentHash())) {
                 BigInteger oldTotalDiff = getTotalDifficulty();
 
                 recordBlock(block);
-                receipts = tryConnectAndFork(block);
+                summary = tryConnectAndFork(block);
 
-                ret = receipts == null ? INVALID_BLOCK :
+                ret = summary == null ? INVALID_BLOCK :
                         (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
             } else {
-                receipts = null;
+                summary = null;
                 ret = NO_PARENT;
             }
 
         }
 
         if (ret.isSuccessful()) {
-            listener.onBlock(block, receipts);
+            listener.onBlock(summary);
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
                 EventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        pendingState.processBest(block, receipts);
+                        pendingState.processBest(block, summary.getTxReceipts());
                     }
                 });
             }
@@ -467,7 +467,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         pushState(parent.getHash());
 
         track = repository.startTracking();
-        List<TransactionReceipt> receipts = applyBlock(block);
+        BlockSummary summary = applyBlock(block);
+        List<TransactionReceipt> receipts = summary.getTxReceipts();
         track.commit();
         block.setStateRoot(getRepository().getRoot());
 
@@ -485,7 +486,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public synchronized List<TransactionReceipt> add(Block block) {
+    public synchronized BlockSummary add(Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
@@ -513,7 +514,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             AdvancedDeviceUtils.adjustDetailedTracing(config, block.getNumber());
         }
 
-        List<TransactionReceipt> receipts = processBlock(block);
+        BlockSummary summary = processBlock(block);
+        List<TransactionReceipt> receipts = summary.getTxReceipts();
 
         // Sanity checks
         String receiptHash = Hex.toHexString(block.getReceiptsRoot());
@@ -567,7 +569,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             flush();
         }
 
-        return receipts;
+        return summary;
     }
 
     public void flush() {
@@ -782,27 +784,26 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return ret;
     }
 
-    private List<TransactionReceipt> processBlock(Block block) {
+    private BlockSummary processBlock(Block block) {
 
-        List<TransactionReceipt> receipts = new ArrayList<>();
-        if (!block.isGenesis()) {
-            if (!config.blockChainOnly()) {
-//                wallet.addTransactions(block.getTransactionsList());
-                receipts = applyBlock(block);
-//                wallet.processBlock(block);
-            }
+        if (!block.isGenesis() && !config.blockChainOnly()) {
+            // wallet.addTransactions(block.getTransactionsList());
+            return applyBlock(block);
+            // wallet.processBlock(block);
         }
-
-        return receipts;
+        else {
+            return new BlockSummary(block, new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
+        }
     }
 
-    private List<TransactionReceipt> applyBlock(Block block) {
+    private BlockSummary applyBlock(Block block) {
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
         long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;
         List<TransactionReceipt> receipts = new ArrayList<>();
+        List<TransactionExecutionSummary> summaries = new ArrayList<>();
 
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
@@ -813,7 +814,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             executor.init();
             executor.execute();
             executor.go();
-            executor.finalization();
+            TransactionExecutionSummary summary = executor.finalization();
 
             totalGasUsed += executor.getGasUsed();
 
@@ -833,6 +834,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
             receipts.add(receipt);
+            if (summary != null) {
+                summaries.add(summary);
+            }
         }
 
         addReward(block);
@@ -851,7 +855,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         adminInfo.addBlockExecTime(totalTime);
         logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
-        return receipts;
+        return new BlockSummary(block, receipts, summaries);
     }
 
     /**
