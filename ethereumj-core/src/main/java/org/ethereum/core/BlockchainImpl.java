@@ -424,7 +424,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 EventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        pendingState.processBest(block, summary.getTxReceipts());
+                        pendingState.processBest(block, summary.getReceipts());
                     }
                 });
             }
@@ -468,7 +468,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         track = repository.startTracking();
         BlockSummary summary = applyBlock(block);
-        List<TransactionReceipt> receipts = summary.getTxReceipts();
+        List<TransactionReceipt> receipts = summary.getReceipts();
         track.commit();
         block.setStateRoot(getRepository().getRoot());
 
@@ -515,7 +515,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         BlockSummary summary = processBlock(block);
-        List<TransactionReceipt> receipts = summary.getTxReceipts();
+        List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
         String receiptHash = Hex.toHexString(block.getReceiptsRoot());
@@ -792,7 +792,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             // wallet.processBlock(block);
         }
         else {
-            return new BlockSummary(block, new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
+            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
         }
     }
 
@@ -839,7 +839,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
         }
 
-        addReward(block);
+        Map<byte[], BigInteger> rewards = addReward(block, summaries);
 
         track.commit();
 
@@ -855,7 +855,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         adminInfo.addBlockExecTime(totalTime);
         logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
-        return new BlockSummary(block, receipts, summaries);
+        return new BlockSummary(block, rewards, receipts, summaries);
     }
 
     /**
@@ -864,21 +864,37 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      *
      * @param block object containing the header and uncles
      */
-    private void addReward(Block block) {
+    private Map<byte[], BigInteger> addReward(Block block, List<TransactionExecutionSummary> summaries) {
 
-        BigInteger standardTotalBlockReward = BLOCK_REWARD;
+        Map<byte[], BigInteger> rewards = new HashMap<>();
 
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                track.addBalance(
-                        uncle.getCoinbase(),
-                        BLOCK_REWARD.multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber())).divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET))
-                );
-                standardTotalBlockReward = standardTotalBlockReward.add(INCLUSION_REWARD);
+                BigInteger uncleReward = BLOCK_REWARD
+                        .multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber()))
+                        .divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET));
+
+                track.addBalance(uncle.getCoinbase(),uncleReward);
+                BigInteger existingUncleReward = rewards.get(uncle.getCoinbase());
+                if (existingUncleReward == null) {
+                    rewards.put(uncle.getCoinbase(), uncleReward);
+                } else {
+                    rewards.put(uncle.getCoinbase(), existingUncleReward.add(uncleReward));
+                }
             }
         }
-        track.addBalance(block.getCoinbase(), standardTotalBlockReward);
+
+        BigInteger minerReward = BLOCK_REWARD.add(INCLUSION_REWARD.multiply(BigInteger.valueOf(block.getUncleList().size())));
+
+        BigInteger totalFees = BigInteger.ZERO;
+        for (TransactionExecutionSummary summary : summaries) {
+            totalFees = totalFees.add(summary.getFee());
+        }
+
+        rewards.put(block.getCoinbase(), minerReward.add(totalFees));
+        track.addBalance(block.getCoinbase(), minerReward); // fees are already given to the miner during tx execution
+        return rewards;
     }
 
     @Override
