@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.datasource.*;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.util.FastByteComparisons;
@@ -29,6 +30,9 @@ import java.util.List;
 @Component
 public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
     private static final Logger logger = LoggerFactory.getLogger("db");
+
+    private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
+    private final Object object = new Object();
 
     private final static Serializer<List<TransactionInfo>, byte[]> serializer =
             new Serializer<List<TransactionInfo>, byte[]>() {
@@ -66,7 +70,16 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
      */
     public boolean put(TransactionInfo tx) {
         byte[] txHash = tx.getReceipt().getTransaction().getHash();
-        List<TransactionInfo> existingInfos = get(txHash);
+
+        List<TransactionInfo> existingInfos = null;
+        synchronized (lastSavedTxHash) {
+            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
+                existingInfos = get(txHash);
+            }
+        }
+        // else it is highly unlikely that the transaction was included into another block
+        // earlier than 5000 transactions before with regard to regular block import process
+
         if (existingInfos == null) {
             existingInfos = new ArrayList<>();
         } else {
