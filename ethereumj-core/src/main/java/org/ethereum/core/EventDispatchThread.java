@@ -24,6 +24,24 @@ public class EventDispatchThread {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    private static EventDispatchThread eventDispatchThread;
+
+    /**
+     * Returns the default instance for initialization of Autowired instances
+     * to be used in tests
+     */
+    public static EventDispatchThread getDefault() {
+        if (eventDispatchThread == null) {
+            eventDispatchThread = new EventDispatchThread() {
+                @Override
+                public void invokeLater(Runnable r) {
+                    r.run();
+                }
+            };
+        }
+        return eventDispatchThread;
+    }
+
     public void invokeLater(final Runnable r) {
         if (executor.isShutdown()) return;
         executor.submit(new Runnable() {

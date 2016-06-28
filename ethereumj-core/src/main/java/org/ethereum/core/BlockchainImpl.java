@@ -21,6 +21,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -163,7 +164,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
-        this.eventDispatchThread = new EventDispatchThread();
+        this.eventDispatchThread = EventDispatchThread.getDefault();
+        this.programInvokeFactory = new ProgramInvokeFactoryImpl(this);
         initConst(SystemProperties.getDefault());
     }
 

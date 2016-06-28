@@ -20,12 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CompositeEthereumListener implements EthereumListener {
 
     @Autowired
-    EventDispatchThread eventDispatchThread = new EventDispatchThread() {
-        @Override
-        public void invokeLater(Runnable r) {
-            r.run();
-        }
-    };
+    EventDispatchThread eventDispatchThread = EventDispatchThread.getDefault();
     
     List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
 
