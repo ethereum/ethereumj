@@ -4,6 +4,7 @@ import org.ethereum.config.Constants;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.RepositoryTrack;
@@ -19,36 +20,43 @@ import java.util.Set;
  */
 public class HomesteadDAOConfig extends HomesteadConfig {
 
-    public static final long DAO_RESCUE_BLOCK = 1_760_000;
+    public static final long DAO_RESCUE_BLOCK = 1_800_000;
     public static final long DAO_RESCUE_GAS_LIMIT_TRIGGER = 4_000_000;
     public static final byte[] DAO_CODE_HASH = Hex.decode("6a5d24750f78441e56fec050dc52fe8e911976485b7472faac7464a176a67caa");
+    public static final byte[][] WHITELISTED_RECIPIENTS = new byte[][] {
+            Hex.decode("Da4a4626d3E16e094De3225A751aAb7128e96526"),
+            Hex.decode("2ba9D006C1D72E67A70b5526Fc6b4b0C0fd6D334")
+    };
 
 
     private final long daoRescueBlock;
     private final long daoRescueGasLimitTrigger;
     private final byte[] daoCodeHash;
+    private final byte[][] whitelist;
     private Boolean rescue = null;
 
     public HomesteadDAOConfig() {
-        this(DAO_RESCUE_BLOCK, DAO_RESCUE_GAS_LIMIT_TRIGGER, DAO_CODE_HASH);
+        this(DAO_RESCUE_BLOCK, DAO_RESCUE_GAS_LIMIT_TRIGGER, DAO_CODE_HASH, WHITELISTED_RECIPIENTS);
     }
 
     public HomesteadDAOConfig(Constants constants) {
-        this(constants, DAO_RESCUE_BLOCK, DAO_RESCUE_GAS_LIMIT_TRIGGER, DAO_CODE_HASH);
+        this(constants, DAO_RESCUE_BLOCK, DAO_RESCUE_GAS_LIMIT_TRIGGER, DAO_CODE_HASH, WHITELISTED_RECIPIENTS);
     }
 
-    public HomesteadDAOConfig(long daoRescueBlock, long daoRescueGasLimitTrigger, byte[] daoCodeHash) {
+    public HomesteadDAOConfig(long daoRescueBlock, long daoRescueGasLimitTrigger, byte[] daoCodeHash, byte[][] whitelist) {
         this.daoRescueBlock = daoRescueBlock;
         this.daoRescueGasLimitTrigger = daoRescueGasLimitTrigger;
         this.daoCodeHash = daoCodeHash;
+        this.whitelist = whitelist;
     }
 
     public HomesteadDAOConfig(Constants constants, long daoRescueBlock, long daoRescueGasLimitTrigger,
-                              byte[] daoCodeHash) {
+                              byte[] daoCodeHash, byte[][] whitelist) {
         super(constants);
         this.daoRescueBlock = daoRescueBlock;
         this.daoRescueGasLimitTrigger = daoRescueGasLimitTrigger;
         this.daoCodeHash = daoCodeHash;
+        this.whitelist = whitelist;
     }
 
     private boolean shouldRescueDAO(BlockStore bs, Block curBlock) {
@@ -74,7 +82,8 @@ public class HomesteadDAOConfig extends HomesteadConfig {
     }
 
     @Override
-    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, RepositoryTrack repositoryTrack) {
+    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
+                                             RepositoryTrack repositoryTrack) {
         if (shouldRescueDAO(blockStore, curBlock)) {
             Set<ByteArrayWrapper> changedAddresses = repositoryTrack.getFullAddressSet();
             for (ByteArrayWrapper address : changedAddresses) {
@@ -84,7 +93,13 @@ public class HomesteadDAOConfig extends HomesteadConfig {
                     BigInteger newBalance = repositoryTrack.getBalance(address.getData());
                     BigInteger oldBalance = repositoryTrack.getOriginRepository().getBalance(address.getData());
                     if (newBalance.compareTo(oldBalance) < 0) {
-                        return String.format("RescueDAO: DAO balance decrease %s > %s", oldBalance, newBalance);
+                        for (byte[] whiteRecipient : whitelist) {
+                            if (FastByteComparisons.equal(tx.getReceiveAddress(), whiteRecipient)) {
+                                return null;
+                            }
+                        }
+                        return String.format("RescueDAO: DAO balance decrease %s > %s, recipient is not whitelisted: %s",
+                                oldBalance, newBalance, Hex.toHexString(tx.getReceiveAddress()));
                     }
                 }
             }
