@@ -5,8 +5,11 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +28,8 @@ import java.util.List;
  */
 @Component
 public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
+    private static final Logger logger = LoggerFactory.getLogger("db");
+
     private final static Serializer<List<TransactionInfo>, byte[]> serializer =
             new Serializer<List<TransactionInfo>, byte[]>() {
         @Override
@@ -97,6 +102,17 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
     public void flush() {
         if (getSrc() instanceof Flushable) {
             ((Flushable) getSrc()).flush();
+        }
+    }
+
+    @Override
+    @PreDestroy
+    public void close() {
+        try {
+            logger.info("Closing TransactionStore...");
+            super.close();
+        } catch (Exception e) {
+            logger.warn("Problems closing TransactionStore", e);
         }
     }
 }

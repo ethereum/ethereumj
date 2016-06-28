@@ -100,6 +100,11 @@ public class SyncManager {
     private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
     private CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
 
+    private Thread syncQueueThread;
+    private Thread getHeadersThread;
+    private Thread getBodiesThread;
+    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
+
     @PostConstruct
     public void init() {
 
@@ -126,24 +131,26 @@ public class SyncManager {
                     }
                 };
 
-                Thread t=new Thread (queueProducer, "SyncQueueThread");
-                t.start();
+                syncQueueThread =new Thread (queueProducer, "SyncQueueThread");
+                syncQueueThread.start();
 
                 syncQueue = new SyncQueueImpl(blockchain);
 
-                new Thread(new Runnable() {
+                getHeadersThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         headerRetrieveLoop();
                     }
-                }, "NewSyncThreadHeaders").start();
+                }, "NewSyncThreadHeaders");
+                getHeadersThread.start();
 
-                new Thread(new Runnable() {
+                getBodiesThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         blockRetrieveLoop();
                     }
-                }, "NewSyncThreadBlocks").start();
+                }, "NewSyncThreadBlocks");
+                getBodiesThread.start();
 
                 if (logger.isInfoEnabled()) {
                     startLogWorker();
@@ -154,7 +161,7 @@ public class SyncManager {
     }
 
     private void headerRetrieveLoop() {
-        while(true) {
+        while(!Thread.currentThread().isInterrupted()) {
             try {
 
                 if (syncQueue.getHeadersCount() < HEADER_QUEUE_LIMIT) {
@@ -168,6 +175,8 @@ public class SyncManager {
                 receivedHeadersLatch = new CountDownLatch(1);
                 receivedHeadersLatch.await(isSyncDone() ? 10000 : 2000, TimeUnit.MILLISECONDS);
 
+            } catch (InterruptedException e) {
+                break;
             } catch (Exception e) {
                 logger.error("Unexpected: ", e);
             }
@@ -175,7 +184,7 @@ public class SyncManager {
     }
 
     private void blockRetrieveLoop() {
-        while(true) {
+        while(!Thread.currentThread().isInterrupted()) {
             try {
 
                 if (blockQueue.size() < BLOCK_QUEUE_LIMIT) {
@@ -205,6 +214,8 @@ public class SyncManager {
                 }
 
                 receivedBlocksLatch.await(2000, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                break;
             } catch (Exception e) {
                 logger.error("Unexpected: ", e);
             }
@@ -216,7 +227,7 @@ public class SyncManager {
      */
     private void produceQueue() {
 
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
 
             BlockWrapper wrapper = null;
             try {
@@ -254,6 +265,8 @@ public class SyncManager {
                             wrapper.getNumber(), wrapper.getBlock().getShortHash());
                 }
 
+            } catch (InterruptedException e) {
+                break;
             } catch (Throwable e) {
                 logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
                 logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
@@ -413,7 +426,7 @@ public class SyncManager {
     }
 
     private void startLogWorker() {
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
+        logExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -425,5 +438,18 @@ public class SyncManager {
                 }
             }
         }, 0, 30, TimeUnit.SECONDS);
+    }
+
+    public void close() {
+        pool.close();
+        try {
+            exec1.shutdown();
+            if (getHeadersThread != null) getHeadersThread.interrupt();
+            if (getBodiesThread != null) getBodiesThread.interrupt();
+            if (syncQueueThread != null) syncQueueThread.interrupt();
+            logExecutor.shutdown();
+        } catch (Exception e) {
+            logger.warn("Problems closing SyncManager", e);
+        }
     }
 }

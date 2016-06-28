@@ -8,6 +8,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
 import org.ethereum.facade.Ethereum;
+import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.sync.SyncManager;
@@ -61,6 +62,9 @@ public class ChannelManager {
     @Autowired
     private Ethereum ethereum;
 
+    @Autowired
+    PeerServer peerServer;
+
     @PostConstruct
     public void init() {
         maxActivePeers = config.maxActivePeers();
@@ -75,6 +79,15 @@ public class ChannelManager {
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
+
+        if (config.listenPort() > 0) {
+            new Thread(new Runnable() {
+                        public void run() {
+                            peerServer.start(config.listenPort());
+                        }
+                    },
+            "PeerServerThread").start();
+        }
     }
 
     public void connect(Node node) {
@@ -232,5 +245,29 @@ public class ChannelManager {
 
     public Channel getActivePeer(byte[] nodeId) {
         return activePeers.get(new ByteArrayWrapper(nodeId));
+    }
+
+    public void close() {
+        try {
+            logger.info("Shutting down ChannelManager worker thread...");
+            mainWorker.shutdownNow();
+            mainWorker.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.warn("Problems shutting down", e);
+        }
+        peerServer.close();
+
+        synchronized (activePeers) {
+            ArrayList<Channel> allPeers = new ArrayList<>(activePeers.values());
+            allPeers.addAll(newPeers);
+
+            for (Channel channel : allPeers) {
+                try {
+                    channel.dropConnection();
+                } catch (Exception e) {
+                    logger.warn("Problems disconnecting channel " + channel, e);
+                }
+            }
+        }
     }
 }

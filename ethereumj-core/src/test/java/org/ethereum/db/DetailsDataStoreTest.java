@@ -149,7 +149,7 @@ public class DetailsDataStoreTest {
         byte[] addrWithInternalStorage = randomAddress();
         final int inMemoryStorageLimit = SystemProperties.getDefault().detailsInMemoryStorageLimit();
 
-        DataSourcePool dataSourcePool = new DataSourcePool();
+        DataSourcePool dataSourcePool = DataSourcePool.getDefault();
         HashMapDB externalStorage =
             (HashMapDB) dataSourcePool.hashMapDBByName("details-storage/" + toHexString(addrWithExternalStorage));
 

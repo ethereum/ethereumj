@@ -124,6 +124,15 @@ public class ExecutorPipeline <In, Out>{
         return orderMap;
     }
 
+    public void shutdown() {
+        try {
+            exec.shutdown();
+        } catch (Exception e) {}
+        if (next != null) {
+            exec.shutdown();
+        }
+    }
+
     private static class LimitedQueue<E> extends LinkedBlockingQueue<E> {
         public LimitedQueue(int maxSize) {
             super(maxSize);

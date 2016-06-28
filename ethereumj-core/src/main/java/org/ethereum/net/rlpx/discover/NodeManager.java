@@ -74,6 +74,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private DB db;
     private HTreeMap<Node, NodeStatistics.Persistent> nodeStatsDB;
     private boolean inited = false;
+    private Timer logStatsTimer = new Timer();
+    private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
 
     public NodeManager() {
     }
@@ -93,8 +95,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         homeNode = new Node(config.nodeId(), config.externalIp(), config.listenPort());
         table = new NodeTable(homeNode, config.isPublicHomeNode());
 
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        logStatsTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 logger.trace("Statistics:\n {}", dumpAllStatistics());
@@ -116,12 +117,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             // no another init on a new channel activation
             inited = true;
 
-            Timer timer = new Timer("NodeManagerTasks");
-
             // this task is done asynchronously with some fixed rate
             // to avoid any overhead in the NodeStatistics classes keeping them lightweight
             // (which might be critical since they might be invoked from time critical sections)
-            timer.scheduleAtFixedRate(new TimerTask() {
+            nodeManagerTasksTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
                     processListeners();
@@ -130,7 +129,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
             if (PERSIST) {
                 dbRead();
-                timer.scheduleAtFixedRate(new TimerTask() {
+                nodeManagerTasksTimer.scheduleAtFixedRate(new TimerTask() {
                     @Override
                     public void run() {
                         dbWrite();
@@ -414,6 +413,26 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
+    }
+
+    public void close() {
+        peerConnectionManager.close();
+        try {
+            nodeManagerTasksTimer.cancel();
+        } catch (Exception e) {
+            logger.warn("Problems canceling nodeManagerTasksTimer", e);
+        }
+        try {
+            logStatsTimer.cancel();
+        } catch (Exception e) {
+            logger.warn("Problems canceling logStatsTimer", e);
+        }
+        try {
+            logger.info("Closing discovery DB...");
+            db.close();
+        } catch (Throwable e) {
+            logger.warn("Problems closing db", e);
+        }
     }
 
     private class ListenerHandler {

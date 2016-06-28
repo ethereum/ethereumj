@@ -41,7 +41,6 @@ public class PeerConnectionTester {
     private Timer reconnectTimer = new Timer("DiscoveryReconnectTimer");
     private int reconnectPeersCount = 0;
 
-
     private class ConnectTask implements Runnable {
         NodeHandler nodeHandler;
 
@@ -99,6 +98,20 @@ public class PeerConnectionTester {
                                 h1.nodeHandler.getNodeStatistics().getReputation();
                     }
                 }));
+    }
+
+    public void close() {
+        logger.info("Closing PeerConnectionTester...");
+        try {
+            peerConnectionPool.shutdownNow();
+        } catch (Exception e) {
+            logger.warn("Problems closing PeerConnectionTester", e);
+        }
+        try {
+            reconnectTimer.cancel();
+        } catch (Exception e) {
+            logger.warn("Problems cancelling reconnectTimer", e);
+        }
     }
 
     public void nodeStatusChanged(final NodeHandler nodeHandler) {

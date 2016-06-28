@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
-import javax.xml.crypto.dsig.keyinfo.KeyValue;
+import javax.annotation.PreDestroy;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -13,9 +13,18 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
 public class DataSourcePool {
-
     private static final Logger logger = getLogger("db");
+    private static DataSourcePool inst;
+
+    public static DataSourcePool getDefault() {
+        if (inst == null) {
+            inst = new DataSourcePool();
+        }
+        return inst;
+    }
+
     private ConcurrentMap<String, DataSource> pool = new ConcurrentHashMap<>();
+    private boolean closed = false;
 
     public KeyValueDataSource hashMapDBByName(String name){
         return (KeyValueDataSource) getDataSourceFromPool(name, new HashMapDB());
@@ -25,7 +34,9 @@ public class DataSourcePool {
         return (KeyValueDataSource) getDataSourceFromPool(name, commonConfig.keyValueDataSource());
     }
 
-    private DataSource getDataSourceFromPool(String name, @Nonnull DataSource dataSource) {
+    private synchronized DataSource getDataSourceFromPool(String name, @Nonnull DataSource dataSource) {
+        if (closed) throw new IllegalStateException("Pool is closed");
+
         dataSource.setName(name);
         DataSource result = pool.putIfAbsent(name, dataSource);
         if (result == null) {
@@ -42,7 +53,7 @@ public class DataSourcePool {
         return result;
     }
 
-    public void closeDataSource(String name){
+    public synchronized void closeDataSource(String name){
 
         DataSource dataSource = pool.remove(name);
         if (dataSource != null){
@@ -54,6 +65,19 @@ public class DataSourcePool {
                     dataSource.close();
 
                 logger.debug("Data source '%s' closed and removed from pool.\n", dataSource.getName());
+            }
+        }
+    }
+
+    @PreDestroy
+    public synchronized void close() {
+        logger.info("Shutting down DataSourcePool: " + pool.size() + " dbs are to be closed");
+        closed = true;
+        for (DataSource dataSource : pool.values()) {
+            try {
+                dataSource.close();
+            } catch (Exception e) {
+                logger.warn("Problems closing DB " + dataSource.getName(), e);
             }
         }
     }

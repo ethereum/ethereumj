@@ -5,9 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -135,5 +135,15 @@ public class DetailsDataStore {
             fos.close();
             System.out.println("drafted: " + addr);
         } catch (IOException e) {e.printStackTrace();}
+    }
+
+    @PreDestroy
+    public void close() {
+        try {
+            gLogger.info("Closing DetailsDataStore");
+            db.close();
+        } catch (Exception e) {
+            gLogger.warn("Problems closing DetailsDataStore", e);
+        }
     }
 }

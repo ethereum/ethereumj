@@ -36,7 +36,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
-    DataSourcePool dataSourcePool;
+    DataSourcePool dataSourcePool = DataSourcePool.getDefault();
 
     private byte[] rlpEncoded;
 

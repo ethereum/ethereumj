@@ -2,12 +2,12 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +71,12 @@ public class WorldManager {
     private PendingState pendingState;
 
     @Autowired
+    private UDPListener discoveryUdpListener;
+
+    @Autowired
+    private EventDispatchThread eventDispatchThread;
+
+    @Autowired
     SystemProperties config;
 
     private CountDownLatch initSemaphore = new CountDownLatch(1);
@@ -96,13 +101,11 @@ public class WorldManager {
     }
 
     public void startPeerDiscovery() {
-        if (!peerDiscovery.isStarted())
-            peerDiscovery.start();
     }
 
     public void stopPeerDiscovery() {
-        if (peerDiscovery.isStarted())
-            peerDiscovery.stop();
+        discoveryUdpListener.close();
+        nodeManager.close();
     }
 
     public ChannelManager getChannelManager() {
@@ -204,12 +207,19 @@ public class WorldManager {
 */
     }
 
-
-    @PreDestroy
     public void close() {
+        logger.info("close: stopping peer discovery ...");
         stopPeerDiscovery();
-        repository.close();
+        logger.info("close: stopping ChannelManager ...");
+        channelManager.close();
+        logger.info("close: stopping SyncManager ...");
+        syncManager.close();
+        logger.info("close: shutting down event dispatch thread used by EventBus ...");
+        eventDispatchThread.shutdown();
+        logger.info("close: closing Blockchain instance ...");
         blockchain.close();
+        logger.info("close: closing main repository ...");
+        repository.close();
     }
 
 }

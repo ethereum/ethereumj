@@ -126,6 +126,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private PendingState pendingState;
 
     @Autowired
+    EventDispatchThread eventDispatchThread;
+
+    @Autowired
     SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
@@ -160,6 +163,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
+        this.eventDispatchThread = new EventDispatchThread();
         initConst(SystemProperties.getDefault());
     }
 
@@ -421,7 +425,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
-                EventDispatchThread.invokeLater(new Runnable() {
+                eventDispatchThread.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         pendingState.processBest(block, receipts);
@@ -933,7 +937,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
+        blockStore.close();
     }
 
     @Override

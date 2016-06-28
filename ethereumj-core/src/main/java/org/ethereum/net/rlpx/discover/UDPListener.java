@@ -18,6 +18,7 @@ import java.net.BindException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class UDPListener {
@@ -32,6 +33,10 @@ public class UDPListener {
 
     @Autowired
     SystemProperties config = SystemProperties.getDefault();
+
+    private Channel channel;
+    private volatile boolean shutdown = false;
+    private DiscoveryExecutor discoveryExecutor;
 
     public UDPListener() {
     }
@@ -93,10 +98,10 @@ public class UDPListener {
 
 
         try {
-            DiscoveryExecutor discoveryExecutor = new DiscoveryExecutor(nodeManager);
+            discoveryExecutor = new DiscoveryExecutor(nodeManager);
             discoveryExecutor.start();
 
-            while (true) {
+            while (!shutdown) {
                 Bootstrap b = new Bootstrap();
                 b.group(group)
                         .channel(NioDatagramChannel.class)
@@ -111,9 +116,13 @@ public class UDPListener {
                             }
                         });
 
-                Channel channel = b.bind(address, port).sync().channel();
+                channel = b.bind(address, port).sync().channel();
 
                 channel.closeFuture().sync();
+                if (shutdown) {
+                    logger.info("Shutdown discovery UDPListener");
+                    break;
+                }
                 logger.warn("UDP channel closed. Recreating after 5 sec pause...");
                 Thread.sleep(5000);
             }
@@ -125,6 +134,26 @@ public class UDPListener {
             }
         } finally {
             group.shutdownGracefully().sync();
+        }
+    }
+
+    public void close() {
+        logger.info("Closing UDPListener...");
+        shutdown = true;
+        if (channel != null) {
+            try {
+                channel.close().await(10, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.warn("Problems closing UDPListener", e);
+            }
+        }
+
+        if (discoveryExecutor != null) {
+            try {
+                discoveryExecutor.close();
+            } catch (Exception e) {
+                logger.warn("Problems closing DiscoveryExecutor", e);
+            }
         }
     }
 
