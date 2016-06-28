@@ -95,6 +95,7 @@ public class GitHubStateTest {
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
+        excluded.add("CallRecursiveBombPreCall"); // Max Gas value is pending to be < 2^63
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
 

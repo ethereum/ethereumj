@@ -22,6 +22,8 @@ public interface ProgramInvoke {
 
     DataWord getGas();
 
+    long getGasLong();
+
     DataWord getCallValue();
 
     DataWord getDataSize();

@@ -592,7 +592,7 @@ public class Program {
     public void spendGas(long gasValue, String cause) {
         logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
-        if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
+        if (getGas().longValue() < gasValue) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -663,7 +663,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGas().value().subtract(valueOf(getResult().getGasUsed())).toByteArray());
+        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {
