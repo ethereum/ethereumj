@@ -20,7 +20,7 @@ import java.util.Set;
  */
 public class HomesteadDAOConfig extends HomesteadConfig {
 
-    public static final long DAO_RESCUE_BLOCK = 1_800_000;
+    public static final long DAO_RESCUE_BLOCK = 1_787_300;
     public static final long DAO_RESCUE_GAS_LIMIT_TRIGGER = 4_000_000;
     public static final byte[] DAO_CODE_HASH = Hex.decode("6a5d24750f78441e56fec050dc52fe8e911976485b7472faac7464a176a67caa");
     public static final byte[][] WHITELISTED_RECIPIENTS = new byte[][] {
@@ -87,7 +87,10 @@ public class HomesteadDAOConfig extends HomesteadConfig {
         if (shouldRescueDAO(blockStore, curBlock)) {
             Set<ByteArrayWrapper> changedAddresses = repositoryTrack.getFullAddressSet();
             for (ByteArrayWrapper address : changedAddresses) {
-                AccountState accountState = repositoryTrack.getOriginRepository().getAccountState(address.getData());
+                AccountState accountState = repositoryTrack.getAccountState(address.getData());
+                if (accountState == null) {
+                    return null;
+                }
                 byte[] codeHash = accountState.getCodeHash();
                 if (codeHash != null && FastByteComparisons.compareTo(daoCodeHash, 0, 32, codeHash, 0, 32) == 0) {
                     BigInteger newBalance = repositoryTrack.getBalance(address.getData());

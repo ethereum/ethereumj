@@ -7,6 +7,7 @@ import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.blockchain.HomesteadDAOConfig;
 import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.program.Program;
@@ -45,6 +46,11 @@ public class DAORescueTest {
             "contract WhiteHat {" +
                     "function saveDao(address daoAddr) {" +
                     "  TestDAO(daoAddr).withdraw();" +
+                    "}" +
+            "}" +
+            "contract Suicide {" +
+                    "function selfDestroy() {" +
+                    "  suicide(msg.sender);" +
                     "}" +
             "}";
 
@@ -126,6 +132,24 @@ public class DAORescueTest {
             Assert.assertEquals(BigInteger.valueOf(balance),
                     bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
         }
+
+        ECKey rndReceiver = new ECKey();
+        bc.sendEther(rndReceiver.getAddress(), BigInteger.valueOf(10000));
+        bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(10000),
+                bc.getBlockchain().getRepository().getBalance(rndReceiver.getAddress()));
+
+        SolidityContract suicide = bc.submitNewContract(daoEmulator, "Suicide");
+        bc.createBlock();
+        bc.sendEther(suicide.getAddress(), BigInteger.valueOf(10000));
+        bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(10000),
+                bc.getBlockchain().getRepository().getBalance(suicide.getAddress()));
+        suicide.callFunction("selfDestroy");
+        bc.createBlock();
+        Assert.assertEquals(BigInteger.ZERO,
+                bc.getBlockchain().getRepository().getBalance(suicide.getAddress()));
+
     }
 
     @Test
