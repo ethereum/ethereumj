@@ -20,7 +20,7 @@ import java.util.Set;
  */
 public class HomesteadDAOConfig extends HomesteadConfig {
 
-    public static final long DAO_RESCUE_BLOCK = 1_787_300;
+    public static final long DAO_RESCUE_BLOCK = 1_800_000;
     public static final long DAO_RESCUE_GAS_LIMIT_TRIGGER = 4_000_000;
     public static final byte[] DAO_CODE_HASH = Hex.decode("6a5d24750f78441e56fec050dc52fe8e911976485b7472faac7464a176a67caa");
     public static final byte[][] WHITELISTED_RECIPIENTS = new byte[][] {
