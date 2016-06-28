@@ -41,6 +41,11 @@ public class DAORescueTest {
                     "function robDao(address daoAddr) {" +
                     "  TestDAO(daoAddr).withdraw();" +
                     "}" +
+            "}" +
+            "contract WhiteHat {" +
+                    "function saveDao(address daoAddr) {" +
+                    "  TestDAO(daoAddr).withdraw();" +
+                    "}" +
             "}";
 
     @BeforeClass
@@ -50,11 +55,13 @@ public class DAORescueTest {
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract dao = bc.submitNewContract(daoEmulator, "TestDAO");
         final byte[] codeHash = bc.getBlockchain().getRepository().getAccountState(dao.getAddress()).getCodeHash();
+        SolidityContract white = bc.submitNewContract(daoEmulator, "WhiteHat");
+        final byte[] whiteAddr = white.getAddress();
 
         SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {
             {
                 add(0, new HomesteadConfig(easyMiningConst));
-                add(5, new HomesteadDAOConfig(easyMiningConst, 5, 0x1_000_000_001L, codeHash));
+                add(5, new HomesteadDAOConfig(easyMiningConst, 5, 0x1_000_000_001L, codeHash, new byte[][] {whiteAddr}));
             }
         });
     }
@@ -69,6 +76,7 @@ public class DAORescueTest {
         StandaloneBlockchain bc = new StandaloneBlockchain()
                 .withAutoblock(false);
         SolidityContract dao = bc.submitNewContract(daoEmulator, "TestDAO");
+        SolidityContract white = bc.submitNewContract(daoEmulator, "WhiteHat");
         bc.createBlock(); // #1
         SolidityContract daoRobber = bc.submitNewContract(daoEmulator, "DAORobber");
         bc.sendEther(dao.getAddress(), BigInteger.valueOf(1000));
@@ -91,10 +99,12 @@ public class DAORescueTest {
         dao.callFunction("withdraw");
         bc.createBlock(); // #5 invalid
         daoRobber.callFunction("robDao", Hex.toHexString(dao.getAddress()));
-        bc.createBlock(); // #6 invalid
+        bc.createBlock();// #6 invalid
+        white.callFunction("saveDao", Hex.toHexString(dao.getAddress()));
+        bc.createBlock();// #6 invalid
 
         long balance = bc.getBlockchain().getRepository().getBalance(dao.getAddress()).longValue();
-        Assert.assertEquals(960, balance);
+        Assert.assertEquals(950, balance);
 
         for (int i = 0; i < 10; i++) {
             dao.callFunction(10, "deposit");
@@ -109,6 +119,12 @@ public class DAORescueTest {
             bc.createBlock();
             Assert.assertEquals(BigInteger.valueOf(balance),
                     bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
+
+            white.callFunction("saveDao", Hex.toHexString(dao.getAddress()));
+            bc.createBlock();// #6 invalid
+            balance -= 10;
+            Assert.assertEquals(BigInteger.valueOf(balance),
+                    bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
         }
     }
 
@@ -118,6 +134,7 @@ public class DAORescueTest {
                 .withAutoblock(false)
                 .withBlockGasIncrease(100);
         SolidityContract dao = bc.submitNewContract(daoEmulator, "TestDAO");
+        SolidityContract white = bc.submitNewContract(daoEmulator, "WhiteHat");
         bc.createBlock(); // #1
         SolidityContract daoRobber = bc.submitNewContract(daoEmulator, "DAORobber");
         bc.sendEther(dao.getAddress(), BigInteger.valueOf(1000));
@@ -155,6 +172,7 @@ public class DAORescueTest {
         StandaloneBlockchain bc = new StandaloneBlockchain()
                 .withAutoblock(false);
         SolidityContract dao = bc.submitNewContract(daoEmulator, "TestDAO");
+        SolidityContract white = bc.submitNewContract(daoEmulator, "WhiteHat");
         bc.createBlock(); // #1
         SolidityContract daoRobber = bc.submitNewContract(daoEmulator, "DAORobber");
         bc.sendEther(dao.getAddress(), BigInteger.valueOf(1000));
@@ -170,23 +188,27 @@ public class DAORescueTest {
 
         dao.callFunction("withdraw");
         daoRobber.callFunction("robDao", Hex.toHexString(dao.getAddress()));
-        bc.createForkBlock(b5y); // #6 invalid
+        Block b6y = bc.createForkBlock(b5y);// #6
         Assert.assertEquals(BigInteger.valueOf(1000),
+                bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
+        white.callFunction("saveDao", Hex.toHexString(dao.getAddress()));
+        Block b7y = bc.createForkBlock(b6y);// #6
+        Assert.assertEquals(BigInteger.valueOf(990),
                 bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
 
         dao.callFunction("withdraw");
         daoRobber.callFunction("robDao", Hex.toHexString(dao.getAddress()));
         Block b6n = bc.createForkBlock(b5n);// #6'
         Block b7n = bc.createForkBlock(b6n); // #7'
+        Block b8n = bc.createForkBlock(b7n); // #8'
         Assert.assertEquals(BigInteger.valueOf(980),
                 bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
 
 
-        Block b6 = bc.createForkBlock(b5y);// #6
-        Block b7 = bc.createForkBlock(b6);// #7 (main)
-        Block b8 = bc.createForkBlock(b7);// #7 (main)
+        Block b8 = bc.createForkBlock(b7y);// #7 (main)
+        Block b9 = bc.createForkBlock(b8);// #7 (main)
 
-        Assert.assertEquals(BigInteger.valueOf(1000),
+        Assert.assertEquals(BigInteger.valueOf(990),
                 bc.getBlockchain().getRepository().getBalance(dao.getAddress()));
     }
 }

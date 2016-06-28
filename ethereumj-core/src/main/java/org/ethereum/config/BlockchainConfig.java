@@ -48,5 +48,6 @@ public interface BlockchainConfig {
      * @param repositoryTrack The repository track changed by transaction
      * @return null if all is fine or String validation error
      */
-    String validateTransactionChanges(BlockStore blockStore, Block curBlock, RepositoryTrack repositoryTrack);
+    String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
+                                      RepositoryTrack repositoryTrack);
 }

@@ -82,7 +82,8 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
-    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, RepositoryTrack repositoryTrack) {
+    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
+                                               RepositoryTrack repositoryTrack) {
         return null;
     }
 }
