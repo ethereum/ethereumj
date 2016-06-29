@@ -19,8 +19,12 @@ public class EthereumListenerAdapter implements EthereumListener {
     public void trace(String output) {
     }
 
-    @Override
     public void onBlock(Block block, List<TransactionReceipt> receipts) {
+    }
+
+    @Override
+    public void onBlock(BlockSummary blockSummary) {
+        onBlock(blockSummary.getBlock(), blockSummary.getReceipts());
     }
 
     @Override

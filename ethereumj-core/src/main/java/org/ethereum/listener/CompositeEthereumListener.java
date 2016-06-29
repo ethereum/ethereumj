@@ -44,12 +44,12 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onBlock(final Block block, final List<TransactionReceipt> receipts) {
+    public void onBlock(final BlockSummary blockSummary) {
         for (final EthereumListener listener : listeners) {
             eventDispatchThread.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    listener.onBlock(block, receipts);
+                    listener.onBlock(blockSummary);
                 }
             });
         }
