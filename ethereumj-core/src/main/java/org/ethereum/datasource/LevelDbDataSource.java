@@ -51,14 +51,14 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     public LevelDbDataSource(String name) {
         this.name = name;
-        logger.info("New LevelDbDataSource: " + name);
+        logger.debug("New LevelDbDataSource: " + name);
     }
 
     @Override
     public void init() {
         resetDbLock.writeLock().lock();
         try {
-            logger.debug("~> LevelDbDataSource.init(): " + name);
+            logger.info("~> LevelDbDataSource.init(): " + name);
 
             if (isAlive()) return;
 
