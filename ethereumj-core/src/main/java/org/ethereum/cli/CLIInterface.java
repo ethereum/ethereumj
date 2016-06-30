@@ -6,7 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,7 +24,7 @@ public class CLIInterface {
     public static void call(String[] args) {
 
         try {
-            Map<String, String> cliOptions = new HashMap<>();
+            Map<String, Object> cliOptions = new HashMap<>();
             for (int i = 0; i < args.length; ++i) {
 
                 // override the db directory
@@ -47,13 +49,18 @@ public class CLIInterface {
                 }
 
                 // override the connect host:port directory
-                if (args[i].equals("-connect") && i + 1 < args.length) {
+                if (args[i].startsWith("-connect") && i + 1 < args.length) {
                     String connectStr = args[i + 1];
                     logger.info("Connect URI set to [{}]", connectStr);
                     URI uri = new URI(connectStr);
                     if (!uri.getScheme().equals("enode"))
                         throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
-                    cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, "[{url='" + connectStr + "'}]");
+                    List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
+                    cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
+                }
+
+                if (args[i].equals("-connectOnly")) {
+                    cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
                 }
 
                 // override the listen port directory
@@ -89,9 +96,10 @@ public class CLIInterface {
         System.out.println("-reset <yes/no>       -- reset yes/no the all database ");
         System.out.println("-db <db>              -- to setup the path for the database directory ");
         System.out.println("-listen  <port>       -- port to listen on for incoming connections ");
-        System.out.println("-connect <host:port>  -- address actively connect to  ");
+        System.out.println("-connect <enode://pubKey@host:port>  -- address actively connect to  ");
+        System.out.println("-connectOnly <enode://pubKey@host:port>  -- like 'connect', but will not attempt to connect to other peers  ");
         System.out.println("");
-        System.out.println("e.g: cli -reset no -db db-1 -listen 20202 -connect poc-7.ethdev.com:30300 ");
+        System.out.println("e.g: cli -reset no -db db-1 -listen 20202 -connect enode://0be5b4@poc-7.ethdev.com:30300 ");
         System.out.println("");
 
     }

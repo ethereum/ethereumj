@@ -55,6 +55,7 @@ public class SystemProperties {
     public final static String PROPERTY_LISTEN_PORT = "peer.listen.port";
     public final static String PROPERTY_PEER_ACTIVE = "peer.active";
     public final static String PROPERTY_DB_RESET = "database.reset";
+    public final static String PROPERTY_PEER_DISCOVERY_ENABLED = "peer.discovery.enabled";
 
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
@@ -227,7 +228,7 @@ public class SystemProperties {
      *
      * @param cliOptions -  command line options to take presidency
      */
-    public void overrideParams(Map<String, String> cliOptions) {
+    public void overrideParams(Map<String, ? extends Object> cliOptions) {
         Config cliConf = ConfigFactory.parseMap(cliOptions);
         overrideParams(cliConf);
     }
