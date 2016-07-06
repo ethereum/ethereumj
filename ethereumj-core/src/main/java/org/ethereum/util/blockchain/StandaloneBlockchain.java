@@ -43,6 +43,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     boolean autoBlock;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
+    private HashMapDB detailsDS;
+    private HashMapDB stateDS;
 
     class PendingTx {
         ECKey sender;
@@ -307,11 +309,22 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
+    public HashMapDB getStateDS() {
+        return stateDS;
+    }
+
+    public HashMapDB getDetailsDS() {
+        return detailsDS;
+    }
+
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        detailsDS = new HashMapDB();
+        stateDS = new HashMapDB();
+        Repository repository = new RepositoryImpl(detailsDS, stateDS)
+                .withBlockStore(blockStore);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
