@@ -236,15 +236,20 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     @Override
-    public SolidityContract submitNewContract(String soliditySrc) {
-        return submitNewContract(soliditySrc, null);
+    public SolidityContract submitNewContract(String soliditySrc, Object... constructorArgs) {
+        return submitNewContract(soliditySrc, null, constructorArgs);
     }
 
     @Override
-    public SolidityContract submitNewContract(String soliditySrc, String contractName) {
+    public SolidityContract submitNewContract(String soliditySrc, String contractName, Object... constructorArgs) {
         SolidityContractImpl contract = createContract(soliditySrc, contractName);
+        CallTransaction.Function constructor = contract.contract.getConstructor();
+        if (constructor == null && constructorArgs.length > 0) {
+            throw new RuntimeException("No constructor with params found");
+        }
+        byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
         submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
-                Hex.decode(contract.getBinary()), contract, null));
+                ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null));
         return contract;
     }
 
