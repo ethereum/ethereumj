@@ -5,10 +5,9 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
@@ -25,11 +24,37 @@ public class Cache {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     private KeyValueDataSource dataSource;
-    private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
+//    private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
+    private Map<ByteArrayWrapper, Node> nodes = new HashMap<>();
+    private Set<ByteArrayWrapper> removedNodes = new HashSet<>();
     private boolean isDirty;
     
     public Cache(KeyValueDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public int decRef(byte[] key) {
+        removedNodes.add(new ByteArrayWrapper(key));
+//        ByteArrayWrapper keyW = new ByteArrayWrapper(key);
+//        Node remove = nodes.remove(keyW);
+//        if (remove != null && !remove.isDirty()) {
+//            nodes.put(new ByteArrayWrapper(key), null);
+//        }
+
+        return 0;
+//        Node node = nodes.get(new ByteArrayWrapper(key));
+//        if (node == null) {
+//            System.err.println("No node found: " + Hex.toHexString(key));
+//            return -1;
+////            throw new RuntimeException("No node found: " + Hex.toHexString(key));
+//        }
+//        if (node.refCounter == 0) {
+//            System.err.println("RefCount == 0 for " + node);
+//            return -1;
+////            throw new RuntimeException("RefCount == 0 for " + node);
+//        }
+//        node.refCounter--;
+//        return node.refCounter;
     }
 
     /**
@@ -43,7 +68,9 @@ public class Cache {
         byte[] enc = value.encode();
         if (enc.length >= 32) {
             byte[] sha = value.hash();
-            this.nodes.put(wrap(sha), new Node(value, true));
+            ByteArrayWrapper key = wrap(sha);
+            this.nodes.put(key, new Node(value, true));
+            this.removedNodes.remove(key);
             this.isDirty = true;
 
             return sha;
@@ -85,26 +112,35 @@ public class Cache {
         for (ByteArrayWrapper nodeKey : this.nodes.keySet()) {
             Node node = this.nodes.get(nodeKey);
 
-            if (node.isDirty()) {
-                node.setDirty(false);
+            if (node == null || node.isDirty()) {
+                byte[] value;
+                if (node != null) {
+                    node.setDirty(false);
+                    value = node.getValue().encode();
+                } else {
+                    value = null;
+                }
 
-                byte[] value = node.getValue().encode();
                 byte[] key = nodeKey.getData();
 
                 batch.put(key, value);
                 batchMemorySize += length(key, value);
             }
         }
+        for (ByteArrayWrapper removedNode : removedNodes) {
+            batch.put(removedNode.getData(), null);
+        }
 
         this.dataSource.updateBatch(batch);
         this.isDirty = false;
         this.nodes.clear();
+        this.removedNodes.clear();
 
-        long finish = System.nanoTime();
-
-        float flushSize = (float) batchMemorySize / 1048576;
-        float flushTime = (float) (finish - start) / 1_000_000;
-        logger.info(format("Flush '%s' in: %02.2f ms, %d nodes, %02.2fMB", dataSource.getName(), flushTime, batch.size(), flushSize));
+//        long finish = System.nanoTime();
+//
+//        float flushSize = (float) batchMemorySize / 1048576;
+//        float flushTime = (float) (finish - start) / 1_000_000;
+//        logger.info(format("Flush '%s' in: %02.2f ms, %d nodes, %02.2fMB", dataSource.getName(), flushTime, batch.size(), flushSize));
     }
 
     public void undo() {
@@ -151,7 +187,9 @@ public class Cache {
         if (this.dataSource == null) {
             for (ByteArrayWrapper key : nodes.keySet()) {
                 Node node = nodes.get(key);
-                if (!node.isDirty()) {
+                if (node == null) {
+                    rows.put(key.getData(), null);
+                }else if (!node.isDirty()) {
                     rows.put(key.getData(), node.getValue().encode());
                 }
             }

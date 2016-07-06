@@ -142,6 +142,9 @@ public class TrieImpl implements Trie {
             throw new NullPointerException("Key should not be blank");
         byte[] k = binToNibbles(key);
 
+        if (isEmptyNode(root)) {
+            cache.decRef(getRootHash());
+        }
         this.root = this.insertOrDelete(this.root, k, value);
         if (logger.isDebugEnabled()) {
             logger.debug("Added key {} and value {}", Hex.toHexString(key), Hex.toHexString(value));
@@ -268,6 +271,8 @@ public class TrieImpl implements Trie {
                 newHash = this.putToCache(scaledSlice);
             }
 
+            cache.decRef(currentNode.hash());
+
             if (matchingLength == 0) {
                 // End of the chain, return
                 return newHash;
@@ -282,6 +287,12 @@ public class TrieImpl implements Trie {
 
             // Replace the first nibble in the key
             newNode[key[0]] = this.insert(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length), value);
+
+            cache.decRef(currentNode.hash());
+            if (!isEmptyNode(currentNode.get(key[0]))) {
+                cache.decRef(currentNode.get(key[0]).asBytes());
+            }
+
             return this.putToCache(newNode);
         }
     }
@@ -390,8 +401,9 @@ public class TrieImpl implements Trie {
         Object[] itemList = emptyStringSlice(LIST_SIZE);
         for (int i = 0; i < LIST_SIZE; i++) {
             Object cpy = currentNode.get(i).asObj();
-            if (cpy != null)
+            if (cpy != null) {
                 itemList[i] = cpy;
+            }
         }
         return itemList;
     }
@@ -476,7 +488,7 @@ public class TrieImpl implements Trie {
         this.getCache().getNodes();
     }
 
-    private void scanTree(byte[] hash, ScanAction scanAction) {
+    public void scanTree(byte[] hash, ScanAction scanAction) {
 
         Value node = this.getCache().get(hash);
         if (node == null) return;
@@ -527,11 +539,13 @@ public class TrieImpl implements Trie {
 
         Set<ByteArrayWrapper> keys = map.keySet();
         for (ByteArrayWrapper key : keys){
+            Node node = map.get(key);
+            if (node == null) continue;
 
             byte[] keyBytes =  key.getData();
             keysTotalSize += keyBytes.length;
 
-            byte[] valBytes = map.get(key).getValue().getData();
+            byte[] valBytes = node.getValue().getData();
             valsTotalSize += valBytes.length + calcElementPrefixSize(valBytes);
         }
 
@@ -574,6 +588,8 @@ public class TrieImpl implements Trie {
         int k_1 = 0;
         int k_2 = 0;
         for (ByteArrayWrapper key : keys){
+            Node node = map.get(key);
+            if (node == null) continue;
 
             System.arraycopy(key.getData(), 0, rlpData,
                     (listHeader.length + keysHeader.length + k_1),
@@ -581,7 +597,7 @@ public class TrieImpl implements Trie {
 
             k_1 += key.getData().length;
 
-            byte[] valBytes =  RLP.encodeElement( map.get(key).getValue().getData() );
+            byte[] valBytes =  RLP.encodeElement( node.getValue().getData() );
 
             System.arraycopy(valBytes, 0, rlpData,
                     listHeader.length + keysHeader.length + keysTotalSize + valsHeader.length + k_2,

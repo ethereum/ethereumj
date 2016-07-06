@@ -6,10 +6,13 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
+import org.ethereum.trie.JournalDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -57,20 +60,25 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Autowired
     private DetailsDataStore dds = new DetailsDataStore();
 
+    @Autowired
+    private BlockStore blockStore;
+
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
-
-    private DatabaseImpl stateDB = null;
 
     @Autowired
     private KeyValueDataSource detailsDS;
     @Autowired
     private KeyValueDataSource stateDS;
+    private CachingDataSource stateDSCache;
+    private JournalDataSource stateDSPrune;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private boolean isSnapshot = false;
+    private long bestBlockNumber = 0;
+    private long pruneBlockCount = 192 * 2;
 
     public RepositoryImpl() {
     }
@@ -81,6 +89,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         init();
     }
 
+    public RepositoryImpl withBlockStore(BlockStore blockStore) {
+        this.blockStore = blockStore;
+        return this;
+    }
+
     @PostConstruct
     void init() {
         detailsDS.setName(DETAILS_DB);
@@ -88,12 +101,14 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
         stateDS.setName(STATE_DB);
         stateDS.init();
+        stateDSCache = new CachingDataSource(stateDS);
+        stateDSPrune = new JournalDataSource(stateDSCache);
 
         detailsDB = new DatabaseImpl(detailsDS);
         dds.setDB(detailsDB);
 
-        stateDB = new DatabaseImpl(stateDS);
-        worldState = new SecureTrie(stateDB.getDb());
+        worldState = new SecureTrie(stateDSPrune);
+//        worldState = new SecureTrie(stateDS);
     }
 
     @Override
@@ -106,8 +121,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             detailsDB = new DatabaseImpl(detailsDS);
 
             stateDS.init();
-            stateDB = new DatabaseImpl(stateDS);
-            worldState = new SecureTrie(stateDB.getDb());
+            worldState = new SecureTrie(stateDS);
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -123,9 +137,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             }
 
 
-            if (stateDB != null) {
-                stateDB.close();
-                stateDB = null;
+            if (stateDS != null) {
+                stateDS.close();
+                stateDS = null;
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -134,7 +148,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public boolean isClosed() {
-        return stateDB == null;
+        return stateDS == null;
     }
 
     @Override
@@ -225,6 +239,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
                 dds.flush();
                 worldState.sync();
+                stateDSCache.flush();
 
                 gLogger.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
         } finally {
@@ -604,6 +619,32 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         worldState.setRoot(root);
     }
 
+    public void setPruneBlockCount(long pruneBlockCount) {
+        this.pruneBlockCount = pruneBlockCount;
+    }
+
+    public synchronized void commitBlock(BlockHeader blockHeader) {
+        worldState.sync();
+
+        if (pruneBlockCount >= 0) {
+            stateDSPrune.storeBlockChanges(blockHeader);
+            pruneBlocks(blockHeader);
+        }
+    }
+
+    private void pruneBlocks(BlockHeader curBlock) {
+        if (bestBlockNumber > 0 && curBlock.getNumber() > bestBlockNumber) {
+            long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
+            if (pruneBlockNumber > 0) {
+                byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
+                if (pruneBlockHash != null) {
+                    stateDSPrune.prune(blockStore.getBlockByHash(pruneBlockHash).getHeader());
+                }
+            }
+        }
+        bestBlockNumber = curBlock.getNumber();
+    }
+
     @Override
     public synchronized Repository getSnapshotTo(byte[] root){
 
@@ -615,8 +656,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         repo.commonConfig = commonConfig;
         repo.config = config;
         repo.worldState = trie;
-        repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;
+        repo.stateDSCache = this.stateDSCache;
+        repo.stateDSPrune = this.stateDSPrune;
 
         repo.detailsDB = this.detailsDB;
         repo.detailsDS = this.detailsDS;

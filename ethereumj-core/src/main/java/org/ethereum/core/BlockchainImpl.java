@@ -915,6 +915,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
 
+        ((RepositoryImpl) repository).commitBlock(block.getHeader());
+
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
 
