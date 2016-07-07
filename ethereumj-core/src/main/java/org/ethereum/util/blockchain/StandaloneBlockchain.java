@@ -409,8 +409,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         @Override
         public Object[] callConstFunction(Block callBlock, String functionName, Object... args) {
 
+            CallTransaction.Function func = contract.getByName(functionName);
+            if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
             Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                    Hex.toHexString(getAddress()), 0, contract.getByName(functionName), args);
+                    Hex.toHexString(getAddress()), 0, func, args);
             tx.sign(new byte[32]);
 
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
@@ -426,7 +428,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 executor.go();
                 executor.finalization();
 
-                return contract.getByName(functionName).decodeResult(executor.getResult().getHReturn());
+                return func.decodeResult(executor.getResult().getHReturn());
             } finally {
                 repository.rollback();
             }
