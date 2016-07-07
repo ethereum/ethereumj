@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.spongycastle.util.encoders.Hex;
@@ -296,6 +297,29 @@ public class DataWordTest {
         DataWord x = new DataWord();
 
         x.signExtend(k); // should throw an exception
+    }
+
+    @Test
+    public void testAddModOverflow() {
+        testAddMod("9999999999999999999999999999999999999999999999999999999999999999",
+                "8888888888888888888888888888888888888888888888888888888888888888",
+                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        testAddMod("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    }
+
+    void testAddMod(String v1, String v2, String v3) {
+        DataWord dv1 = new DataWord(Hex.decode(v1));
+        DataWord dv2 = new DataWord(Hex.decode(v2));
+        DataWord dv3 = new DataWord(Hex.decode(v3));
+        BigInteger bv1 = new BigInteger(v1, 16);
+        BigInteger bv2 = new BigInteger(v2, 16);
+        BigInteger bv3 = new BigInteger(v3, 16);
+
+        dv1.addmod(dv2, dv3);
+        BigInteger br = bv1.add(bv2).mod(bv3);
+        Assert.assertEquals(dv1.value(), br);
     }
 
     @Test
