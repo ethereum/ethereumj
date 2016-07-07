@@ -2,10 +2,7 @@ package org.ethereum.trie;
 
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
-import org.ethereum.util.Value;
+import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -288,9 +285,11 @@ public class TrieImpl implements Trie {
             // Replace the first nibble in the key
             newNode[key[0]] = this.insert(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length), value);
 
-            cache.decRef(currentNode.hash());
-            if (!isEmptyNode(currentNode.get(key[0]))) {
-                cache.decRef(currentNode.get(key[0]).asBytes());
+            if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+                cache.decRef(currentNode.hash());
+                if (!isEmptyNode(currentNode.get(key[0]))) {
+                    cache.decRef(currentNode.get(key[0]).asBytes());
+                }
             }
 
             return this.putToCache(newNode);
