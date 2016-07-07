@@ -63,6 +63,7 @@ public class SystemProperties {
 
     private static SystemProperties CONFIG;
     private static boolean useOnlySpringConfig = false;
+    private String generatedNodePrivateKey;
 
     /**
      * Returns the static config instance. If the config is passed
@@ -587,24 +588,31 @@ public class SystemProperties {
     }
 
     private String getGeneratedNodePrivateKey() {
-        try {
-            File file = new File(databaseDir(), "nodeId.properties");
-            Properties props = new Properties();
-            if (file.canRead()) {
-                props.load(new FileReader(file));
-            } else {
-                ECKey key = new ECKey();
-                props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
-                props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
-                file.getParentFile().mkdirs();
-                props.store(new FileWriter(file), "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
-                logger.info("New nodeID generated: " + props.getProperty("nodeId"));
-                logger.info("Generated nodeID and its private key stored in " + file);
+        if (generatedNodePrivateKey == null) {
+            try {
+                File file = new File(databaseDir(), "nodeId.properties");
+                Properties props = new Properties();
+                if (file.canRead()) {
+                    try (Reader r = new FileReader(file)) {
+                        props.load(r);
+                    }
+                } else {
+                    ECKey key = new ECKey();
+                    props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
+                    props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
+                    file.getParentFile().mkdirs();
+                    try (Writer w = new FileWriter(file)) {
+                        props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
+                    }
+                    logger.info("New nodeID generated: " + props.getProperty("nodeId"));
+                    logger.info("Generated nodeID and its private key stored in " + file);
+                }
+                generatedNodePrivateKey = props.getProperty("nodeIdPrivateKey");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            return props.getProperty("nodeIdPrivateKey");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return generatedNodePrivateKey;
     }
 
     @ValidateMe
