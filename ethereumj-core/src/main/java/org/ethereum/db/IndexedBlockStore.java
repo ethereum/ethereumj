@@ -459,4 +459,18 @@ public class IndexedBlockStore extends AbstractBlockstore{
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void close() {
+        logger.info("Closing IndexedBlockStore...");
+        try {
+            indexDS.close();
+        } catch (Exception e) {
+            logger.warn("Problems closing indexDS", e);
+        }
+        try {
+            blocksDS.close();
+        } catch (Exception e) {
+            logger.warn("Problems closing blocksDS", e);
+        }
+    }
 }

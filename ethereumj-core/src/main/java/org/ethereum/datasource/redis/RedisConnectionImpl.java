@@ -6,6 +6,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
@@ -21,16 +22,18 @@ import java.util.Set;
 
 import static org.springframework.util.StringUtils.isEmpty;
 
-@Component
 public class RedisConnectionImpl implements RedisConnection {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
     private JedisPool jedisPool;
 
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
     @PostConstruct
     public void tryConnect() {
-        if (!SystemProperties.CONFIG.isRedisEnabled()) return;
+        if (!config.isRedisEnabled()) return;
 
         String redisCloudUrl = System.getenv(REDISCLOUD_URL);
         if (isEmpty(redisCloudUrl)) {
@@ -112,6 +115,6 @@ public class RedisConnectionImpl implements RedisConnection {
 
     @Override
     public KeyValueDataSource createDataSource(String name) {
-        return new RedisDataSource(name, jedisPool);
+        return new RedisDataSource(config.databaseReset(), name, jedisPool);
     }
 }

@@ -26,10 +26,6 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
-    public RepositoryVMTestDummy() {
-        super(false);
-    }
-
     @Override
     public void reset() {
 
@@ -263,7 +259,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
 
     @Override
     public AccountState createAccount(byte[] addr) {
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(config());
         worldState.put(wrap(addr), accountState);
 
         ContractDetails contractDetails = new ContractDetailsImpl();
@@ -290,7 +286,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
         ContractDetails details = getContractDetails(addr);
 
         if (account == null)
-            account = new AccountState();
+            account = new AccountState(config());
         else
             account = account.clone();
 

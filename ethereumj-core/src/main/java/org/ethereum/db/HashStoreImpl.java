@@ -2,18 +2,18 @@ package org.ethereum.db;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.util.FastByteComparisons;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -34,6 +34,9 @@ public class HashStoreImpl implements HashStore {
     private final ReentrantLock initLock = new ReentrantLock();
     private final Condition init = initLock.newCondition();
 
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
     @Override
     public void open() {
         new Thread(new Runnable() {
@@ -47,7 +50,7 @@ public class HashStoreImpl implements HashStore {
                             .valueSerializer(Serializer.BYTE_ARRAY)
                             .makeOrGet();
 
-                    if(CONFIG.databaseReset()) {
+                    if(config.databaseReset()) {
                         hashes.clear();
                         db.commit();
                     }

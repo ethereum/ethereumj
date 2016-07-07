@@ -20,7 +20,7 @@ public interface PendingState extends org.ethereum.facade.PendingState {
      *
      * @param transactions txs received from the net
      */
-    void addWireTransactions(List<Transaction> transactions);
+    void addPendingTransactions(List<Transaction> transactions);
 
     /**
      * Adds transaction to the list of pending state txs  <br>
@@ -42,5 +42,5 @@ public interface PendingState extends org.ethereum.facade.PendingState {
      *
      * @param block block imported into blockchain as a <b>BEST</b> one
      */
-    void processBest(Block block);
+    void processBest(Block block, List<TransactionReceipt> receipts);
 }

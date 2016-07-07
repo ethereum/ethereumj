@@ -29,7 +29,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class EthashTest {
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -39,7 +39,7 @@ public class EthashTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
 
@@ -161,7 +161,7 @@ public class EthashTest {
         byte[] rlp = Hex.decode("f9021af90215a06b42cf11dbb8a448a118939d1a68773f3deca05f8063d26113dac5f9f8ce6713a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d493479452bc44d5378309ee2abf1539bf71de1b7d7be3b5a037b5b65861017992bd33375bb71e0752d57eb94972a9496177f056aa340a2843a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008606b6e75611ca830a2ace832fefd880845668803198d783010203844765746887676f312e342e32856c696e7578a08eddfce4ba14ac38363b0534d12ed7ad4c224897dd443730256f04c6f835449f88108919adc0f2952bc0c0");
         Block b = new Block(rlp);
         System.out.println(b);
-        boolean valid = Ethash.getForBlock(b.getNumber()).validate(b.getHeader());
+        boolean valid = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader());
 
         Assert.assertTrue(valid);
     }
@@ -180,7 +180,7 @@ public class EthashTest {
         for (String s : blocks.split("\\n")) {
             Block b = new Block(Hex.decode(s));
             System.out.println(b);
-            boolean valid = Ethash.getForBlock(b.getNumber()).validate(b.getHeader());
+            boolean valid = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader());
 
             Assert.assertTrue(valid);
         }
@@ -195,10 +195,10 @@ public class EthashTest {
 
         System.out.println(b);
 
-        long nonce = Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+        long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
         b.setNonce(longToBytes(nonce));
 
-        Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+        Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
 
     }
 
@@ -209,10 +209,10 @@ public class EthashTest {
         for (Block b : blocks) {
             b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
             b.setNonce(new byte[0]);
-            long nonce = Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
             b.setNonce(longToBytes(nonce));
 
-            Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+            Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
         }
     }
 
@@ -224,10 +224,10 @@ public class EthashTest {
         for (Block b : blocks) {
             b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
             b.setNonce(new byte[0]);
-            long nonce = Ethash.getForBlock(b.getNumber()).mine(b).get();
+            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mine(b).get();
             b.setNonce(longToBytes(nonce));
 
-            Assert.assertTrue(Ethash.getForBlock(b.getNumber()).validate(b.getHeader()));
+            Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
         }
     }
 
@@ -242,10 +242,10 @@ public class EthashTest {
 
         // first warming up for the cache to be created
         System.out.println("Warming...");
-        long res = Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+        long res = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
 
         System.out.println("Submitting...");
-        Future<Long> light = Ethash.getForBlock(b.getNumber()).mineLight(difficultBlock, 8);
+        Future<Long> light = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(difficultBlock, 8);
 
         Thread.sleep(200);
 
@@ -266,8 +266,8 @@ public class EthashTest {
         Assert.assertTrue(light.isCancelled());
 
         b.setNonce(new byte[0]);
-        Ethash.getForBlock(b.getNumber()).mineLight(b, 8).get();
-        boolean validate = Ethash.getForBlock(b.getNumber()).validate(b.getHeader());
+        Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b, 8).get();
+        boolean validate = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader());
         Assert.assertTrue(validate);
     }
 
@@ -302,7 +302,7 @@ public class EthashTest {
         Block b = new Block(rlp);
         b.getHeader().setDifficulty(longToBytesNoLeadZeroes(0x20000));
         b.setExtraData(new byte[] {});
-        Ethash ethash = Ethash.getForBlock(0);
+        Ethash ethash = Ethash.getForBlock(SystemProperties.getDefault(), 0);
         System.out.println("Generating DAG...");
         ethash.mine(b).get();
         System.out.println("DAG generated...");

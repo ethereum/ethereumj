@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -8,6 +8,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -17,6 +18,7 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
+import static org.ethereum.util.ByteUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
@@ -105,11 +107,11 @@ public class Transaction {
         this.signature = ECDSASignature.fromComponents(r, s, v);
     }
 
-    public long transactionCost(Block block){
+    public long transactionCost(BlockchainNetConfig config, Block block){
 
         if (!parsed) rlpParse();
 
-        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(block.getNumber()).
+        return config.getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
     }
 

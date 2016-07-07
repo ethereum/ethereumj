@@ -14,6 +14,7 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ public class BasicSample implements Runnable {
 
     @Autowired
     protected SystemProperties config;
+
+    private volatile long txCount;
+    private volatile long gasSpent;
 
     // Spring config class which add this sample class as a bean to the components collections
     // and make it possible for autowiring other components
@@ -274,7 +278,10 @@ public class BasicSample implements Runnable {
                 return;
             }
 
-            logger.info("Blockchain sync in progress. Last imported block: " + bestBlock.getShortDescr());
+            logger.info("Blockchain sync in progress. Last imported block: " + bestBlock.getShortDescr() +
+                    " (Total: txs: " + txCount + ", gas: " + (gasSpent / 1000) + "k)");
+            txCount = 0;
+            gasSpent = 0;
         }
     }
 
@@ -307,6 +314,10 @@ public class BasicSample implements Runnable {
         @Override
         public void onBlock(Block block, List<TransactionReceipt> receipts) {
             bestBlock = block;
+            txCount += receipts.size();
+            for (TransactionReceipt receipt : receipts) {
+                gasSpent += ByteUtil.byteArrayToLong(receipt.getGasUsed());
+            }
             if (syncComplete) {
                 logger.info("New block: " + block.getShortDescr());
             }

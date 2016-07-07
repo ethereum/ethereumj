@@ -21,6 +21,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     private final DataWord address;
     private final DataWord origin, caller,
             balance, gas, gasPrice, callValue;
+    private final long gasLong;
 
     byte[] msgData;
 
@@ -50,6 +51,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.balance = balance;
         this.gasPrice = gasPrice;
         this.gas = gas;
+        this.gasLong = this.gas.longValueSafe();
         this.callValue = callValue;
         this.msgData = msgData;
 
@@ -92,6 +94,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.balance = new DataWord(balance);
         this.gasPrice = new DataWord(gasPrice);
         this.gas = new DataWord(gas);
+        this.gasLong = this.gas.longValueSafe();
         this.callValue = new DataWord(callValue);
         this.msgData = msgData;
 
@@ -135,6 +138,11 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*           GAS op       */
     public DataWord getGas() {
         return gas;
+    }
+
+    @Override
+    public long getGasLong() {
+        return gasLong;
     }
 
     /*          CALLVALUE op    */

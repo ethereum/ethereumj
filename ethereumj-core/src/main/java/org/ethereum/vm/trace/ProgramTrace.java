@@ -1,5 +1,9 @@
 package org.ethereum.vm.trace;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Repository;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
@@ -9,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.String.format;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
@@ -21,11 +24,11 @@ public class ProgramTrace {
     private String contractAddress;
 
     public ProgramTrace() {
-        this(null);
+        this(null, null);
     }
 
-    public ProgramTrace(ProgramInvoke programInvoke) {
-        if (CONFIG.vmTrace() && programInvoke != null) {
+    public ProgramTrace(SystemProperties config, ProgramInvoke programInvoke) {
+        if (programInvoke != null && config.vmTrace()) {
             contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
         }
     }

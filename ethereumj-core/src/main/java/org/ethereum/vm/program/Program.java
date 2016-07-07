@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
@@ -22,6 +23,7 @@ import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -60,7 +62,7 @@ public class Program {
     private ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 
     private ProgramOutListener listener;
-    private ProgramTraceListener traceListener = new ProgramTraceListener();
+    private ProgramTraceListener traceListener;
     private ProgramStorageChangeListener storageDiffListener = new ProgramStorageChangeListener();
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
@@ -79,22 +81,33 @@ public class Program {
 
     private Set<Integer> jumpdest = new HashSet<>();
 
+    @Autowired
+    CommonConfig commonConfig = CommonConfig.getDefault();
+
+    private final SystemProperties config;
+
     public Program(byte[] ops, ProgramInvoke programInvoke) {
-        this.invoke = programInvoke;
-
-        this.ops = nullToEmpty(ops);
-
-        this.memory = setupProgramListener(new Memory());
-        this.stack = setupProgramListener(new Stack());
-        this.storage = setupProgramListener(new Storage(programInvoke));
-        this.trace = new ProgramTrace(programInvoke);
-
-        precompile();
+        this(ops, programInvoke, null);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke);
+        this(ops, programInvoke, transaction, SystemProperties.getDefault());
+    }
+
+    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+        this.config = config;
+        this.invoke = programInvoke;
         this.transaction = transaction;
+
+        this.ops = nullToEmpty(ops);
+
+        traceListener = new ProgramTraceListener(config.vmTrace());
+        this.memory = setupProgramListener(new Memory());
+        this.stack = setupProgramListener(new Stack());
+        this.storage = setupProgramListener(new Storage(programInvoke));
+        this.trace = new ProgramTrace(config, programInvoke);
+
+        precompile();
     }
 
     public int getCallDeep() {
@@ -402,8 +415,8 @@ public class Program {
         ProgramResult result = ProgramResult.empty();
         if (isNotEmpty(programCode)) {
 
-            VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            VM vm = commonConfig.vm();
+            Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -416,7 +429,7 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {
@@ -524,8 +537,8 @@ public class Program {
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            VM vm = commonConfig.vm();
+            Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -577,9 +590,9 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        logger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
-        if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
+        if (getGas().longValue() < gasValue) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -650,7 +663,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGas().value().subtract(valueOf(getResult().getGasUsed())).toByteArray());
+        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {

@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -17,10 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.PostConstruct;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -30,9 +31,6 @@ import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static java.lang.Thread.sleep;
-import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -50,42 +48,46 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private static final Logger logger = LoggerFactory.getLogger("repository");
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
+    @Autowired
+    CommonConfig commonConfig = new CommonConfig();
+
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
+    private DetailsDataStore dds = new DetailsDataStore();
+
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
-    private DetailsDataStore dds = new DetailsDataStore();
 
     private DatabaseImpl stateDB = null;
 
-    private KeyValueDataSource detailsDS = null;
-    private KeyValueDataSource stateDS = null;
+    @Autowired
+    private KeyValueDataSource detailsDS;
+    @Autowired
+    private KeyValueDataSource stateDS;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private boolean isSnapshot = false;
 
-    @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
-
-    @Autowired
-    ApplicationContext applicationContext;
-
     public RepositoryImpl() {
-
-    }
-
-    public RepositoryImpl(boolean createDb) {
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+        this.detailsDS = detailsDS;
+        this.stateDS = stateDS;
+        init();
+    }
 
+    @PostConstruct
+    void init() {
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
-        this.detailsDS = detailsDS;
 
         stateDS.setName(STATE_DB);
         stateDS.init();
-        this.stateDS = stateDS;
 
         detailsDB = new DatabaseImpl(detailsDS);
         dds.setDB(detailsDB);
@@ -93,15 +95,6 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         stateDB = new DatabaseImpl(stateDS);
         worldState = new SecureTrie(stateDB.getDb());
     }
-
-    public RepositoryImpl(String detailsDbName, String stateDbName) {
-        detailsDB = new DatabaseImpl(detailsDbName);
-        dds.setDB(detailsDB);
-
-        stateDB = new DatabaseImpl(stateDbName);
-        worldState = new SecureTrie(stateDB.getDb());
-    }
-
 
     @Override
     public void reset() {
@@ -166,7 +159,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
                 ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetails;
                 if (contractDetailsCache.origContract == null) {
-                    contractDetailsCache.origContract = new ContractDetailsImpl();
+                    contractDetailsCache.origContract = commonConfig.contractDetailsImpl();
                     contractDetailsCache.origContract.setAddress(hash.getData());
                     contractDetailsCache.commit();
                 }
@@ -261,25 +254,28 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized Repository startTracking() {
-        return applicationContext == null ? new RepositoryTrack(this) :
-                applicationContext.getBean(RepositoryTrack.class, this);
+        return commonConfig.repositoryTrack(this);
+    }
+
+    protected SystemProperties config() {
+        return config;
     }
 
     @Override
     public synchronized void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
         dumpTrie(block);
 
-        if (!(config.dumpFull() || config.dumpBlock() == block.getNumber()))
+        if (!(config().dumpFull() || config().dumpBlock() == block.getNumber()))
             return;
 
         // todo: dump block header and the relevant tx
 
         if (block.getNumber() == 0 && txNumber == 0)
-            if (config.dumpCleanOnRestart()) {
-                FileSystemUtils.deleteRecursively(new File(config.dumpDir()));
+            if (config().dumpCleanOnRestart()) {
+                FileSystemUtils.deleteRecursively(new File(config().dumpDir()));
             }
 
-        String dir = config.dumpDir() + "/";
+        String dir = config().dumpDir() + "/";
 
         String fileName = "";
         if (txHash != null)
@@ -335,11 +331,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     public synchronized void dumpTrie(Block block) {
 
-        if (!(config.dumpFull() || config.dumpBlock() == block.getNumber()))
+        if (!(config().dumpFull() || config().dumpBlock() == block.getNumber()))
             return;
 
         String fileName = String.format("%07d_trie.dmp", block.getNumber());
-        String dir = config.dumpDir() + "/";
+        String dir = config().dumpDir() + "/";
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
         BufferedWriter bw = null;
@@ -401,7 +397,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized BigInteger getBalance(byte[] addr) {
         if (!isExist(addr)) return BigInteger.ZERO;
         AccountState account = getAccountState(addr);
-        return (account == null) ? AccountState.EMPTY.getBalance() : account.getBalance();
+        return (account == null) ? BigInteger.ZERO : account.getBalance();
     }
 
     @Override
@@ -474,7 +470,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? AccountState.EMPTY.getNonce() : accountState.getNonce();
+        return accountState == null ? config().getBlockchainConfig().getCommonConstants().getInitialNonce() :
+                accountState.getNonce();
     }
 
     @Nonnull
@@ -567,10 +564,10 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized AccountState createAccount(final byte[] addr) {
         AccountState accountState = new AccountState(
-                config.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
+                config().getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
 
         updateAccountState(addr, accountState);
-        updateContractDetails(addr, new ContractDetailsImpl());
+        updateContractDetails(addr, commonConfig.contractDetailsImpl());
 
         return accountState;
     }
@@ -588,7 +585,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         AccountState account = getAccountState(addr);
         ContractDetails details = getContractDetails(addr);
 
-        account = (account == null) ? new AccountState(config.getBlockchainConfig().getCommonConstants().
+        account = (account == null) ? new AccountState(config().getBlockchainConfig().getCommonConstants().
                 getInitialNonce(), BigInteger.ZERO) : account.clone();
         details = new ContractDetailsCacheImpl(details);
 //        details.setAddress(addr);
@@ -615,6 +612,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         trie.setCache(((TrieImpl)(worldState)).getCache());
 
         RepositoryImpl repo = new RepositoryImpl();
+        repo.commonConfig = commonConfig;
+        repo.config = config;
         repo.worldState = trie;
         repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;

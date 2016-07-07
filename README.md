@@ -26,7 +26,6 @@ http://ethereumj.io
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
      <version>1.1.0-RELEASE</version>
-     <type>zip</type>
    </dependency>
 ```
 

@@ -102,4 +102,7 @@ public class BlockStoreDummy implements BlockStore {
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
         return null;
     }
+
+    @Override
+    public void close() {}
 }

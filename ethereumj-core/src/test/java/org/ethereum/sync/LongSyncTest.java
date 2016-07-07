@@ -56,12 +56,12 @@ public class LongSyncTest {
     @BeforeClass
     public static void setup() throws IOException, URISyntaxException {
 
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        FrontierConfig easyMineConfig = new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
             }
-        }));
+        });
 
         nodeA = new Node("enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334");
 
@@ -71,6 +71,7 @@ public class LongSyncTest {
                 // nodeId: 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
                 "genesis", "genesis-light-old.json"
         );
+        SysPropConfigA.props.setBlockchainConfig(easyMineConfig);
 
         SysPropConfigB.props.overrideParams(
                 "peer.listen.port", "30335",
@@ -80,6 +81,7 @@ public class LongSyncTest {
                 "sync.max.hashes.ask", "3",
                 "sync.max.blocks.ask", "2"
         );
+        SysPropConfigB.props.setBlockchainConfig(easyMineConfig);
 
         /*
          1  => ed1b6f07d738ad92c5bdc3b98fe25afea9c863dd351711776d9ce1ffb9e3d276
@@ -114,7 +116,7 @@ public class LongSyncTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Before
@@ -502,7 +504,7 @@ public class LongSyncTest {
 
     private void setupPeers(Block best) throws InterruptedException {
 
-        ethereumA = EthereumFactory.createEthereum(SysPropConfigA.props, SysPropConfigA.class);
+        ethereumA = EthereumFactory.createEthereum(SysPropConfigA.class);
 
         Blockchain blockchainA = (Blockchain) ethereumA.getBlockchain();
         for (Block b : mainB1B10) {

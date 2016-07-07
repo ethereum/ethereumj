@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
@@ -14,13 +15,13 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.List;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -35,6 +36,12 @@ public class TransactionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger("execute");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
+
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
+    CommonConfig commonConfig = CommonConfig.getDefault();
 
     private Transaction tx;
     private Repository track;
@@ -98,7 +105,7 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
-        basicTxCost = tx.transactionCost(currentBlock);
+        basicTxCost = tx.transactionCost(config.getBlockchainConfig(), currentBlock);
 
         if (localCall) {
             readyToExecute = true;
@@ -144,7 +151,7 @@ public class TransactionExecutor {
             return;
         }
 
-        if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 acceptTransactionSignature(tx)) {
             execError("Transaction signature not accepted: " + tx.getSignature());
             return;
@@ -206,8 +213,8 @@ public class TransactionExecutor {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-                this.vm = new VM();
-                this.program = new Program(code, programInvoke, tx);
+                this.vm = commonConfig.vm();
+                this.program = commonConfig.program(code, programInvoke, tx);
             }
         }
 
@@ -223,8 +230,8 @@ public class TransactionExecutor {
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = new VM();
-            this.program = new Program(tx.getData(), programInvoke, tx);
+            this.vm = commonConfig.vm();
+            this.program = commonConfig.program(tx.getData(), programInvoke, tx);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
@@ -247,9 +254,9 @@ public class TransactionExecutor {
         try {
 
             // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(currentBlock), "TRANSACTION COST");
+            program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
 
-            if (CONFIG.playVM())
+            if (config.playVM())
                 vm.play(program);
 
             result = program.getResult();
@@ -263,7 +270,7 @@ public class TransactionExecutor {
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    if (!CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                    if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                             getConstants().createEmptyContractOnOOG()) {
                         program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                 returnDataGasValue, program));
@@ -291,16 +298,16 @@ public class TransactionExecutor {
         }
     }
 
-    public void finalization() {
-        if (!readyToExecute) return;
+    public TransactionExecutionSummary finalization() {
+        if (!readyToExecute) return null;
 
-        String err = SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+        String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
                 validateTransactionChanges(blockStore, currentBlock, tx, (RepositoryTrack) cacheTrack);
         if (err != null) {
             execError(err);
             m_endGas = toBI(tx.getGasLimit());
             cacheTrack.rollback();
-            return;
+            return null;
         }
 
         cacheTrack.commit();
@@ -358,21 +365,22 @@ public class TransactionExecutor {
 
         listener.onTransactionExecuted(summary);
 
-        if (CONFIG.vmTrace() && program != null && result != null) {
+        if (config.vmTrace() && program != null && result != null) {
             String trace = program.getTrace()
                     .result(result.getHReturn())
                     .error(result.getException())
                     .toString();
 
 
-            if (CONFIG.vmTraceCompressed()) {
+            if (config.vmTraceCompressed()) {
                 trace = zipAndEncode(trace);
             }
 
             String txHash = toHexString(tx.getHash());
-            saveProgramTraceFile(txHash, trace);
+            saveProgramTraceFile(config, txHash, trace);
             listener.onVMTraceCreated(txHash, trace);
         }
+        return summary;
     }
 
     public TransactionExecutor setLocalCall(boolean localCall) {

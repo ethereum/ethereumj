@@ -275,5 +275,8 @@ public class InMemoryBlockStore extends AbstractBlockstore{
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
         return null;
     }
+
+    @Override
+    public void close() {}
 }
 

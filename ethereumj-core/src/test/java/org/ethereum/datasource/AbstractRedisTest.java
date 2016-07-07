@@ -35,8 +35,8 @@ public abstract class AbstractRedisTest {
     @NoAutoscan
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/" + "RedisAll");
-            SystemProperties.CONFIG.setDatabaseReset(true);
+            SystemProperties.getDefault().setDataBaseDir("test_db/" + "RedisAll");
+            SystemProperties.getDefault().setDatabaseReset(true);
         }
 
         @Bean

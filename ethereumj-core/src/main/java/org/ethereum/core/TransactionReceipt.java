@@ -55,7 +55,7 @@ public class TransactionReceipt {
         cumulativeGas = cumulativeGasRLP.getRLPData();
         bloomFilter = new Bloom(bloomRLP.getRLPData());
         gasUsed = gasUsedRLP.getRLPData();
-        executionResult = result.getRLPData();
+        executionResult = (executionResult = result.getRLPData()) == null ? EMPTY_BYTE_ARRAY : executionResult;
 
         if (receipt.size() > 6) {
             byte[] errBytes = receipt.get(6).getRLPData();
@@ -216,6 +216,7 @@ public class TransactionReceipt {
     }
 
     public Transaction getTransaction() {
+        if (transaction == null) throw new NullPointerException("Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
         return transaction;
     }
 
@@ -227,7 +228,8 @@ public class TransactionReceipt {
         return "TransactionReceipt[" +
                 "\n  , postTxState=" + Hex.toHexString(postTxState) +
                 "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
-                "\n  , cumulativeGas=" + Hex.toHexString(gasUsed) +
+                "\n  , gasUsed=" + Hex.toHexString(gasUsed) +
+                "\n  , error=" + error +
                 "\n  , executionResult=" + Hex.toHexString(executionResult) +
                 "\n  , bloom=" + bloomFilter.toString() +
                 "\n  , logs=" + logInfoList +

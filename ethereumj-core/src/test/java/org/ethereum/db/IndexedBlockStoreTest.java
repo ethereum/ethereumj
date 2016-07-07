@@ -68,7 +68,7 @@ public class IndexedBlockStoreTest {
         logger.info("total difficulty: {}", cumDifficulty);
         logger.info("total blocks loaded: {}", blocks.size());
 
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -78,7 +78,7 @@ public class IndexedBlockStoreTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
 
@@ -417,7 +417,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         LevelDbDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -563,7 +563,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         LevelDbDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -727,7 +727,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         KeyValueDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -836,7 +836,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         KeyValueDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
@@ -907,7 +907,7 @@ public class IndexedBlockStoreTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         String testDir = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDir);
+        SystemProperties.getDefault().setDataBaseDir(testDir);
 
         KeyValueDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();

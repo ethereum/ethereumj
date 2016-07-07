@@ -2,6 +2,7 @@ package org.ethereum.net.swarm;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The main logic of communicating with BZZ peers.
@@ -33,15 +32,6 @@ public class NetStore implements ChunkStore {
     @Autowired
     WorldManager worldManager;
 
-
-    public static PeerAddress createSelfAddress() {
-        return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());
-    }
-
-    public static byte[] getSelfNodeId() {
-        return CONFIG.nodeId();
-    }
-
     public int requesterCount = 3;
     public int maxStorePeers = 3;
     public int maxSearchPeers = 6;
@@ -51,8 +41,10 @@ public class NetStore implements ChunkStore {
     private Hive hive;
     private PeerAddress selfAddress;
 
-    public NetStore() {
-        this(new LocalStore(new MemStore(), new MemStore()), new Hive(createSelfAddress()));
+    @Autowired
+    public NetStore(SystemProperties config) {
+        this(new LocalStore(new MemStore(), new MemStore()), new Hive(new PeerAddress(new byte[] {127,0,0,1},
+                config.listenPort(), config.nodeId())));
         start(hive.getSelfAddress());
         // FIXME bad dirty hack to workaround Spring DI machinery
         INST = this;

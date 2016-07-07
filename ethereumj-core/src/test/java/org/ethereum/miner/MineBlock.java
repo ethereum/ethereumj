@@ -26,7 +26,7 @@ public class MineBlock {
 
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -36,7 +36,7 @@ public class MineBlock {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
 
@@ -59,9 +59,9 @@ public class MineBlock {
         Block b = blockchain.createNewBlock(parent, pendingTx, Collections.EMPTY_LIST);
 
         System.out.println("Mining...");
-        Ethash.getForBlock(b.getNumber()).mineLight(b).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
         System.out.println("Validating...");
-        boolean valid = Ethash.getForBlock(b.getNumber()).validate(b.getHeader());
+        boolean valid = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader());
         Assert.assertTrue(valid);
 
         System.out.println("Connecting...");

@@ -15,14 +15,12 @@ import java.util.Set;
 
 import static java.lang.System.getProperty;
 
-@Component
-@Scope("prototype")
 public class MapDBDataSource implements KeyValueDataSource {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
 
     @Autowired
-    SystemProperties config;
+    SystemProperties config = SystemProperties.getDefault();
 
     private DB db;
     private Map<byte[], byte[]> map;

@@ -78,9 +78,4 @@ public class DefaultConfig {
         CachingDataSource cachingDataSource = new CachingDataSource(ds);
         return new TransactionStore(cachingDataSource);
     }
-
-    @Bean @Scope("prototype")
-    LevelDbDataSource levelDbDataSource(String name) {
-        return new LevelDbDataSource(name);
-    }
 }

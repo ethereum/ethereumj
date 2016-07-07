@@ -97,7 +97,7 @@ public class HomesteadDAOConfig extends HomesteadConfig {
                     BigInteger oldBalance = repositoryTrack.getOriginRepository().getBalance(address.getData());
                     if (newBalance.compareTo(oldBalance) < 0) {
                         for (byte[] whiteRecipient : whitelist) {
-                            if (FastByteComparisons.compareTo(tx.getReceiveAddress(), 0, 20, whiteRecipient, 0, 20) == 0) {
+                            if (FastByteComparisons.equal(tx.getReceiveAddress(), whiteRecipient)) {
                                 return null;
                             }
                         }

@@ -2,10 +2,7 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
@@ -22,11 +19,11 @@ import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.min;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
-import static org.ethereum.util.TimeUtils.*;
 
 /**
  * <p>Encapsulates logic which manages peers involved in blockchain sync</p>
@@ -64,6 +61,7 @@ public class SyncPool {
 
     @Autowired
     private ChannelManager channelManager;
+    private ScheduledExecutorService poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @PostConstruct
     public void init() {
@@ -72,7 +70,7 @@ public class SyncPool {
 
         updateLowerUsefulDifficulty();
 
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
+        poolLoopExecutor.scheduleWithFixedDelay(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -88,6 +86,14 @@ public class SyncPool {
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
         );
+    }
+
+    public void close() {
+        try {
+            poolLoopExecutor.shutdownNow();
+        } catch (Exception e) {
+            logger.warn("Problems shutting down executor", e);
+        }
     }
 
     @Nullable

@@ -30,6 +30,12 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     @Autowired
     private Blockchain blockchain;
 
+    public ProgramInvokeFactoryImpl() {
+    }
+
+    public ProgramInvokeFactoryImpl(Blockchain blockchain) {
+        this.blockchain = blockchain;
+    }
 
     // Invocation by the wire tx
     @Override
