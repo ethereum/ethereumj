@@ -130,6 +130,8 @@ public class JsonRpcImpl implements JsonRpc {
     long initialBlockNumber;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
+    AtomicInteger filterCounter = new AtomicInteger(1);
+    Map<Integer, Filter> installedFilters = new Hashtable<>();
 
     @PostConstruct
     private void init() {
@@ -819,10 +821,11 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     static class Filter {
+        static final int MAX_EVENT_COUNT = 1024; // prevent OOM when Filers are forgotten
         static abstract class FilterEvent {
             public abstract Object getJsonEventObject();
         }
-        List<FilterEvent> events = new ArrayList<>();
+        List<FilterEvent> events = new LinkedList<>();
 
         public synchronized boolean hasNew() { return !events.isEmpty();}
 
@@ -837,6 +840,7 @@ public class JsonRpcImpl implements JsonRpc {
 
         protected synchronized void add(FilterEvent evt) {
             events.add(evt);
+            if (events.size() > MAX_EVENT_COUNT) events.remove(0);
         }
 
         public void newBlockReceived(Block b) {}
@@ -942,9 +946,6 @@ public class JsonRpcImpl implements JsonRpc {
 //            if (onPendingTx)
         }
     }
-
-    AtomicInteger filterCounter = new AtomicInteger(1);
-    Map<Integer, Filter> installedFilters = new Hashtable<>();
 
     @Override
     public String eth_newFilter(FilterRequest fr) throws Exception {
