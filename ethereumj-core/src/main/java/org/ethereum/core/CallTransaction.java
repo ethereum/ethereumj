@@ -568,6 +568,15 @@ public class CallTransaction {
             return null;
         }
 
+        public Function getConstructor() {
+            for (Function function : functions) {
+                if (function.type == FunctionType.constructor) {
+                    return function;
+                }
+            }
+            return null;
+        }
+
         public Function[] functions;
     }
 

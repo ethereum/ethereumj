@@ -261,7 +261,6 @@ public class DataWord implements Comparable<DataWord> {
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
-
     // TODO: improve with no BigInteger
     public void sub(DataWord word) {
         BigInteger result = value().subtract(word.value());
@@ -311,7 +310,7 @@ public class DataWord implements Comparable<DataWord> {
 
     public void mulmod(DataWord word1, DataWord word2) {
 
-        if (word2.isZero()) {
+        if (this.isZero() || word1.isZero() || word2.isZero()) {
             this.data = new byte[32];
             return;
         }

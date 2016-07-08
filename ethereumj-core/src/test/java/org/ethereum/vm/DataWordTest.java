@@ -1,6 +1,5 @@
 package org.ethereum.vm;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import org.spongycastle.util.encoders.Hex;
@@ -319,7 +318,79 @@ public class DataWordTest {
 
         dv1.addmod(dv2, dv3);
         BigInteger br = bv1.add(bv2).mod(bv3);
-        Assert.assertEquals(dv1.value(), br);
+        assertEquals(dv1.value(), br);
+    }
+
+    @Test
+    public void testMulMod1() {
+        DataWord wr = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
+        DataWord w1 = new DataWord(Hex.decode("01"));
+        DataWord w2 = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999998"));
+
+        wr.mulmod(w1, w2);
+
+        assertEquals(32, wr.getData().length);
+        assertEquals("0000000000000000000000000000000000000000000000000000000000000001", Hex.toHexString(wr.getData()));
+    }
+
+    @Test
+    public void testMulMod2() {
+        DataWord wr = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
+        DataWord w1 = new DataWord(Hex.decode("01"));
+        DataWord w2 = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
+
+        wr.mulmod(w1, w2);
+
+        assertEquals(32, wr.getData().length);
+        assertTrue(wr.isZero());
+    }
+
+    @Test
+    public void testMulModZero() {
+        DataWord wr = new DataWord(Hex.decode("00"));
+        DataWord w1 = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
+        DataWord w2 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+
+        wr.mulmod(w1, w2);
+
+        assertEquals(32, wr.getData().length);
+        assertTrue(wr.isZero());
+    }
+
+    @Test
+    public void testMulModZeroWord1() {
+        DataWord wr = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
+        DataWord w1 = new DataWord(Hex.decode("00"));
+        DataWord w2 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+
+        wr.mulmod(w1, w2);
+
+        assertEquals(32, wr.getData().length);
+        assertTrue(wr.isZero());
+    }
+
+    @Test
+    public void testMulModZeroWord2() {
+        DataWord wr = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
+        DataWord w1 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        DataWord w2 = new DataWord(Hex.decode("00"));
+
+        wr.mulmod(w1, w2);
+
+        assertEquals(32, wr.getData().length);
+        assertTrue(wr.isZero());
+    }
+
+    @Test
+    public void testMulModOverflow() {
+        DataWord wr = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        DataWord w1 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        DataWord w2 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+
+        wr.mulmod(w1, w2);
+
+        assertEquals(32, wr.getData().length);
+        assertTrue(wr.isZero());
     }
 
     public static BigInteger pow(BigInteger x, BigInteger y) {
@@ -342,5 +413,4 @@ public class DataWordTest {
         }
         return result;
     }
-
 }
