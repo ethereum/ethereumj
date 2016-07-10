@@ -16,7 +16,7 @@ public class BestNumberRule extends DependentBlockHeaderRule {
     private final int BEST_NUMBER_DIFF_LIMIT;
 
     public BestNumberRule(SystemProperties config) {
-        BEST_NUMBER_DIFF_LIMIT = SystemProperties.getDefault().getBlockchainConfig().
+        BEST_NUMBER_DIFF_LIMIT = config.getBlockchainConfig().
                 getCommonConstants().getBEST_NUMBER_DIFF_LIMIT();
     }
 

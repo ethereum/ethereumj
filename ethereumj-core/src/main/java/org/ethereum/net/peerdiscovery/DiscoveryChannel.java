@@ -39,6 +39,9 @@ public class DiscoveryChannel {
     private boolean peerDiscoveryMode = false;
 
     @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
     EthereumListener ethereumListener;
 
     @Autowired
@@ -76,7 +79,7 @@ public class DiscoveryChannel {
 
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, SystemProperties.getDefault().peerConnectionTimeout());
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerConnectionTimeout());
             b.remoteAddress(host, port);
 
 
@@ -101,7 +104,7 @@ public class DiscoveryChannel {
                             logger.info("Open connection, channel: {}", ch.toString());
 
                             ch.pipeline().addLast("readTimeoutHandler",
-                                    new ReadTimeoutHandler(SystemProperties.getDefault().peerChannelReadTimeout(), TimeUnit.SECONDS));
+                                    new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
 //                            ch.pipeline().addLast("initiator", decoder.getInitiator());
                             ch.pipeline().addLast("messageCodec", decoder);
                             ch.pipeline().addLast(Capability.P2P, p2pHandler);
