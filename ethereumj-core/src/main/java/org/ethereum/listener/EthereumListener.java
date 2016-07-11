@@ -64,7 +64,7 @@ public interface EthereumListener {
 
     void onSendMessage(Channel channel, Message message);
 
-    void onBlock(BlockSummary blockSummary);
+    void onBlock(BlockSummary blockSummary, boolean isBestBlock);
 
     void onPeerDisconnect(String host, long port);
 
