@@ -138,6 +138,41 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
+    private List<Transaction> createTransactions(Block parent) {
+        List<Transaction> txes = new ArrayList<>();
+        Map<ByteArrayWrapper, Long> nonces = new HashMap<>();
+        Repository repoSnapshot = getBlockchain().getRepository().getSnapshotTo(parent.getStateRoot());
+        for (PendingTx tx : submittedTxes) {
+            Transaction transaction;
+            if (tx.customTx == null) {
+                ByteArrayWrapper senderW = new ByteArrayWrapper(tx.sender.getAddress());
+                Long nonce = nonces.get(senderW);
+                if (nonce == null) {
+                    BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
+                    nonce = bcNonce.longValue();
+                }
+                nonces.put(senderW, nonce + 1);
+
+                byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
+
+                transaction = createTransaction(tx.sender, nonce, toAddress, tx.value, tx.data);
+
+                if (tx.createdContract != null) {
+                    tx.createdContract.setAddress(transaction.getContractAddress());
+                }
+            } else {
+                transaction = tx.customTx;
+            }
+
+            txes.add(transaction);
+        }
+        return txes;
+    }
+
+    public void generatePendingTransactions() {
+        pendingState.addPendingTransactions(createTransactions(getBlockchain().getBestBlock()));
+    }
+
     @Override
     public Block createBlock() {
         return createForkBlock(getBlockchain().getBestBlock());
@@ -146,33 +181,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public Block createForkBlock(Block parent) {
         try {
-            List<Transaction> txes = new ArrayList<>();
-            Map<ByteArrayWrapper, Long> nonces = new HashMap<>();
-            Repository repoSnapshot = getBlockchain().getRepository().getSnapshotTo(parent.getStateRoot());
-            for (PendingTx tx : submittedTxes) {
-                Transaction transaction;
-                if (tx.customTx == null) {
-                    ByteArrayWrapper senderW = new ByteArrayWrapper(tx.sender.getAddress());
-                    Long nonce = nonces.get(senderW);
-                    if (nonce == null) {
-                        BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
-                        nonce = bcNonce.longValue();
-                    }
-                    nonces.put(senderW, nonce + 1);
-
-                    byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
-
-                    transaction = createTransaction(tx.sender, nonce, toAddress, tx.value, tx.data);
-
-                    if (tx.createdContract != null) {
-                        tx.createdContract.setAddress(transaction.getContractAddress());
-                    }
-                } else {
-                    transaction = tx.customTx;
-                }
-
-                txes.add(transaction);
-            }
+            List<Transaction> txes = createTransactions(parent);
 
             Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
 
