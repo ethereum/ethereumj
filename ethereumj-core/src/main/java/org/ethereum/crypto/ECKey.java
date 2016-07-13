@@ -735,7 +735,7 @@ public class ECKey implements Serializable {
 
 
     /**
-     * Takes the sha3 hash (32 bytes) of data and returns the ECDSA signature
+     * Takes the keccak hash (32 bytes) of data and returns the ECDSA signature
      *
      * @param messageHash -
      * @return -

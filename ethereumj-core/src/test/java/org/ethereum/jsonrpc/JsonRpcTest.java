@@ -5,7 +5,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.facade.Ethereum;
@@ -19,6 +18,7 @@ import org.springframework.context.annotation.Scope;
 import java.math.BigInteger;
 
 import static java.math.BigInteger.valueOf;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.junit.Assert.*;
 
 /**
@@ -179,7 +179,7 @@ public class JsonRpcTest {
                     valueOf(3_000_000),
                     TypeConverter.StringHexToByteArray(receipt2.contractAddress),
                     valueOf(0), function.encode(0x777));
-            rawTx.sign(SHA3Helper.sha3("cow".getBytes()));
+            rawTx.sign(sha3("cow".getBytes()));
 
             String txHash3 = jsonRpc.eth_sendRawTransaction(TypeConverter.toJsonHex(rawTx.getEncoded()));
 

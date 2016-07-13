@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.db.TransactionStore;
@@ -36,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.jsonrpc.TypeConverter.*;
 import static org.ethereum.jsonrpc.TypeConverter.StringHexToByteArray;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -219,7 +219,7 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     protected Account addAccount(String seed) {
-        return addAccount(ECKey.fromPrivate(SHA3Helper.sha3(seed.getBytes())));
+        return addAccount(ECKey.fromPrivate(sha3(seed.getBytes())));
     }
 
     protected Account addAccount(ECKey key) {
