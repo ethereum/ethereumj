@@ -49,7 +49,11 @@ public interface EthereumListener {
          * INCLUDED: when a fork became the main chain and tx is included into another
          *           block from the new main chain
          */
-        INCLUDED
+        INCLUDED;
+
+        public boolean isPending() {
+            return this == NEW_PENDING || this == PENDING;
+        }
     }
 
     void trace(String output);
