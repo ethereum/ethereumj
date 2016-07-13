@@ -6,7 +6,7 @@ import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.crypto.digests.SHA3Digest;
+import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.math.ec.ECPoint;
 
 import javax.annotation.Nullable;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Created by devrandom on 2015-04-08.
@@ -256,17 +256,17 @@ public class EncryptionHandshake {
 //        System.out.println("shared " + Hex.toHexString(sharedSecret));
 //        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
 
-        SHA3Digest mac1 = new SHA3Digest(MAC_SIZE);
+        KeccakDigest mac1 = new KeccakDigest(MAC_SIZE);
         mac1.update(xor(secrets.mac, responderNonce), 0, secrets.mac.length);
         byte[] buf = new byte[32];
-        new SHA3Digest(mac1).doFinal(buf, 0);
+        new KeccakDigest(mac1).doFinal(buf, 0);
         mac1.update(initiatePacket, 0, initiatePacket.length);
-        new SHA3Digest(mac1).doFinal(buf, 0);
-        SHA3Digest mac2 = new SHA3Digest(MAC_SIZE);
+        new KeccakDigest(mac1).doFinal(buf, 0);
+        KeccakDigest mac2 = new KeccakDigest(MAC_SIZE);
         mac2.update(xor(secrets.mac, initiatorNonce), 0, secrets.mac.length);
-        new SHA3Digest(mac2).doFinal(buf, 0);
+        new KeccakDigest(mac2).doFinal(buf, 0);
         mac2.update(responsePacket, 0, responsePacket.length);
-        new SHA3Digest(mac2).doFinal(buf, 0);
+        new KeccakDigest(mac2).doFinal(buf, 0);
         if (isInitiator) {
             secrets.egressMac = mac1;
             secrets.ingressMac = mac2;
@@ -345,8 +345,8 @@ public class EncryptionHandshake {
         byte[] aes;
         byte[] mac;
         byte[] token;
-        SHA3Digest egressMac;
-        SHA3Digest ingressMac;
+        KeccakDigest egressMac;
+        KeccakDigest ingressMac;
 
         public byte[] getAes() {
             return aes;
@@ -360,11 +360,11 @@ public class EncryptionHandshake {
             return token;
         }
 
-        public SHA3Digest getIngressMac() {
+        public KeccakDigest getIngressMac() {
             return ingressMac;
         }
 
-        public SHA3Digest getEgressMac() {
+        public KeccakDigest getEgressMac() {
             return egressMac;
         }
     }

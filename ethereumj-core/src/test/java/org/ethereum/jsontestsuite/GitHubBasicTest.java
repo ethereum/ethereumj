@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 public class GitHubBasicTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    public String shacommit = "99afe8f5aad7bca5d0f1b1685390a4dea32d73c3";
+    public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
 
     @After
     public void recover() {
