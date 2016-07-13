@@ -3,6 +3,8 @@ package org.ethereum.core;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -340,6 +342,12 @@ public class CallTransaction {
             }
             return addr;
         }
+
+        @Override
+        public Object decode(byte[] encoded, int offset) {
+            BigInteger bi = (BigInteger) super.decode(encoded, offset);
+            return ByteUtil.bigIntegerToBytes(bi, 20);
+        }
     }
 
     public static class IntType extends Type {
@@ -373,6 +381,8 @@ public class CallTransaction {
                 bigInt = (BigInteger) value;
             } else  if (value instanceof Number) {
                 bigInt = new BigInteger(value.toString());
+            } else  if (value instanceof byte[]) {
+                bigInt = ByteUtil.bytesToBigInteger((byte[]) value);
             } else {
                 throw new RuntimeException("Invalid value for type '" + this + "': " + value + " (" + value.getClass() + ")");
             }
@@ -505,11 +515,14 @@ public class CallTransaction {
             return format("%s(%s)", name, stripEnd(paramsTypes.toString(), ","));
         }
 
-        public byte[] encodeSignature() {
+        public byte[] encodeSignatureLong() {
             String signature = formatSignature();
             byte[] sha3Fingerprint = sha3(signature.getBytes());
+            return sha3Fingerprint;
+        }
 
-            return Arrays.copyOfRange(sha3Fingerprint, 0, 4);
+        public byte[] encodeSignature() {
+            return Arrays.copyOfRange(encodeSignatureLong(), 0, 4);
         }
 
         @Override
@@ -577,7 +590,69 @@ public class CallTransaction {
             return null;
         }
 
+        private Function getBySignatureHash(byte[] hash) {
+            if (hash.length == 4 ) {
+                for (Function function : functions) {
+                    if (FastByteComparisons.equal(function.encodeSignature(), hash)) {
+                        return function;
+                    }
+                }
+            } else if (hash.length == 32 ) {
+                for (Function function : functions) {
+                    if (FastByteComparisons.equal(function.encodeSignatureLong(), hash)) {
+                        return function;
+                    }
+                }
+            } else {
+                throw new RuntimeException("Function signature hash should be 4 or 32 bytes length");
+            }
+            return null;
+        }
+
+        /**
+         * Parses function and its arguments from transaction invocation binary data
+         */
+        public Invocation parseInvocation(byte[] data) {
+            if (data.length < 4) throw new RuntimeException("Invalid data length: " + data.length);
+            Function function = getBySignatureHash(Arrays.copyOfRange(data, 0, 4));
+            if (function == null) throw new RuntimeException("Can't find function/event by it signature");
+            Object[] args = function.decode(data);
+            return new Invocation(this, function, args);
+        }
+
+        /**
+         * Parses Solidity Event and its data members from transaction receipt LogInfo
+         */
+        public Invocation parseEvent(LogInfo eventLog) {
+            CallTransaction.Function event = getBySignatureHash(eventLog.getTopics().get(0).getData());
+            if (event == null) return null;
+            Object[] args = event.decode(ByteUtil.merge(new byte[4], eventLog.getData()));
+            return new Invocation(this, event, args);
+        }
+
         public Function[] functions;
     }
 
+    /**
+     * Represents either function invocation with its arguments
+     * or Event instance with its data members
+     */
+    public static class Invocation {
+        public final Contract contract;
+        public final Function function;
+        public final Object[] args;
+
+        public Invocation(Contract contract, Function function, Object[] args) {
+            this.contract = contract;
+            this.function = function;
+            this.args = args;
+        }
+
+        @Override
+        public String toString() {
+            return "[" + "contract=" + contract +
+                    (function.type == FunctionType.event ? ", event=" : ", function=")
+                    + function + ", args=" + Arrays.toString(args) + ']';
+        }
+    }
 }
