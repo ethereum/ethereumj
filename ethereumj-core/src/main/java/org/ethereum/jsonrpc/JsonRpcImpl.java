@@ -798,7 +798,7 @@ public class JsonRpcImpl implements JsonRpc {
             ret.info.language = "Solidity";
             ret.info.languageVersion = "0";
             ret.info.compilerVersion = result.version;
-            ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi);
+            ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi).functions;
             return s = ret;
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_compileSolidity(" + contract + ")" + s);

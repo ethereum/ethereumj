@@ -145,7 +145,7 @@ public class JsonRpcTest {
                             "  num = a; " +
                             "  log1(0x1111, 0x2222);" +
                             "}}");
-            assertTrue(compRes.info.abiDefinition.getByName("set") != null);
+            assertEquals(compRes.info.abiDefinition[0].name, "set");
             assertTrue(compRes.code.length() > 10);
 
             JsonRpc.CallArguments callArgs = new JsonRpc.CallArguments();
