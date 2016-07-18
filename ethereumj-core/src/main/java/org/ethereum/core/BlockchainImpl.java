@@ -805,6 +805,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BlockSummary applyBlock(Block block) {
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
+
+        config.getBlockchainConfig().getConfigForBlock(block.getNumber()).hardForkTransfers(block, track);
+
         long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;
