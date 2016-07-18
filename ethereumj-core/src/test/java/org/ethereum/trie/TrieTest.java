@@ -1,11 +1,11 @@
 package org.ethereum.trie;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
-import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.DatabaseImpl;
-import org.ethereum.util.*;
+import org.ethereum.util.RLP;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -17,8 +17,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Pipeline;
 
 import java.io.File;
 import java.io.IOException;
@@ -598,46 +596,6 @@ public class TrieTest {
             }
         }
     }
-
-
-    @Ignore
-    @Test
-    public void reddisTest() throws URISyntaxException, IOException {
-
-        URL massiveUpload_1 = ClassLoader
-                .getSystemResource("trie/massive-upload.dmp");
-
-        File file = new File(massiveUpload_1.toURI());
-        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-        String dbName = "state";
-
-        long startTime = System.currentTimeMillis();
-
-        Jedis jedis = new Jedis("localhost");
-        jedis.flushAll();
-        Pipeline pipeline = jedis.pipelined();
-        Set<String> keys = jedis.keys("*");
-        System.out.println("before: all " + keys.size());
-
-        for (String aStrData : strData) {
-            String[] keyVal = aStrData.split("=");
-
-            if (keyVal[0].equals("*"))
-                pipeline.del(keyVal[1].getBytes());
-            else
-                pipeline.set(keyVal[0].getBytes(), keyVal[1].getBytes());
-        }
-
-        pipeline.sync();
-        keys = jedis.keys("*");
-        System.out.println("all " + keys.size());
-        for (String key : keys)
-            System.out.println(key + " -> " + jedis.get(key));
-
-
-        System.out.println("time: " + (System.currentTimeMillis() - startTime));
-    }
-
 
     @Ignore
     @Test
