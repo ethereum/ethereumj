@@ -9,8 +9,7 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
-import org.spongycastle.crypto.digests.SHA3Digest;
-import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
@@ -74,8 +73,8 @@ public class Handshaker {
 
         initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
         byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
-        new SHA3Digest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
-        new SHA3Digest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
+        new KeccakDigest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
+        new KeccakDigest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
 
         RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
         HandshakeMessage handshakeMessage = new HandshakeMessage(

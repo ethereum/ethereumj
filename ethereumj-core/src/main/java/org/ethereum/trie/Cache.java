@@ -36,7 +36,7 @@ public class Cache {
      * Put the node in the cache if RLP encoded value is longer than 32 bytes
      *
      * @param o the Node which could be a pair-, multi-item Node or single Value
-     * @return sha3 hash of RLP encoded node if length &gt; 32 otherwise return node itself
+     * @return keccak hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
     public Object put(Object o) {
         Value value = new Value(o);

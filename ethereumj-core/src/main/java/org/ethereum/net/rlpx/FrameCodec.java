@@ -7,16 +7,14 @@ import org.ethereum.net.swarm.Util;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.crypto.StreamCipher;
-import org.spongycastle.crypto.digests.SHA3Digest;
+import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,8 +26,8 @@ import static org.ethereum.util.RLP.decode2OneItem;
 public class FrameCodec {
     private final StreamCipher enc;
     private final StreamCipher dec;
-    private final SHA3Digest egressMac;
-    private final SHA3Digest ingressMac;
+    private final KeccakDigest egressMac;
+    private final KeccakDigest ingressMac;
     private final byte[] mac;
     boolean isHeadRead;
     private int totalBodySize;
@@ -62,7 +60,6 @@ public class FrameCodec {
 
         int totalFrameSize = -1;
         int contextId = -1;
-
 
         public Frame(long type, int size, InputStream payload) {
             this.type = type;
@@ -211,7 +208,7 @@ public class FrameCodec {
         return Collections.singletonList(frame);
     }
 
-    private byte[] updateMac(SHA3Digest mac, byte[] seed, int offset, byte[] out, int outOffset, boolean egress) throws IOException {
+    private byte[] updateMac(KeccakDigest mac, byte[] seed, int offset, byte[] out, int outOffset, boolean egress) throws IOException {
         byte[] aesBlock = new byte[mac.getDigestSize()];
         doSum(mac, aesBlock);
         makeMacCipher().processBlock(aesBlock, 0, aesBlock, 0);
@@ -235,9 +232,9 @@ public class FrameCodec {
         return result;
     }
 
-    private void doSum(SHA3Digest mac, byte[] out) {
+    private void doSum(KeccakDigest mac, byte[] out) {
         // doFinal without resetting the MAC by using clone of digest state
-        new SHA3Digest(mac).doFinal(out, 0);
+        new KeccakDigest(mac).doFinal(out, 0);
     }
 
 }

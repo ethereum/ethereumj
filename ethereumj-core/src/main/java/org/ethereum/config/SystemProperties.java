@@ -31,7 +31,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.*;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files
@@ -384,7 +384,7 @@ public class SystemProperties {
                 } else {
                     if (configObject.toConfig().hasPath("nodeName")) {
                         String nodeName = configObject.toConfig().getString("nodeName").trim();
-                        // FIXME should be sha3-512 here ?
+                        // FIXME should be keccak-512 here ?
                         nodeId = ECKey.fromPrivate(sha3(nodeName.getBytes())).getNodeId();
                     } else {
                         throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);

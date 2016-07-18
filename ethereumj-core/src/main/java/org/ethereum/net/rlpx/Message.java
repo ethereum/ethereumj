@@ -62,7 +62,7 @@ public abstract class Message {
 
     public Message encode(byte[] type, byte[] data, ECKey privKey) {
 
-        /* [1] Calc sha3 - prepare for sig */
+        /* [1] Calc keccak - prepare for sig */
         byte[] payload = new byte[type.length + data.length];
         payload[0] = type[0];
         System.arraycopy(data, 0, payload, 1, data.length);
