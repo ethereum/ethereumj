@@ -583,7 +583,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         blockStore.flush();
         transactionStore.flush();
 
-        System.gc();
+        if (isMemoryBoundFlush()) {
+            System.gc();
+        }
+    }
+
+    private boolean isMemoryBoundFlush() {
+        return config.cacheFlushMemory() > 0 || config.cacheFlushBlocks() == 0;
     }
 
     private boolean needFlush(Block block) {
