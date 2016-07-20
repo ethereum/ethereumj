@@ -2,7 +2,6 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.hibernate.SessionFactory;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -49,7 +48,6 @@ public interface BlockStore {
     void reBranch(Block forkBlock);
 
     void load();
-    void setSessionFactory(SessionFactory sessionFactory);
 
     void close();
 }
