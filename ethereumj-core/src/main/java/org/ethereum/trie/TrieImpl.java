@@ -46,6 +46,14 @@ import static org.spongycastle.util.Arrays.concatenate;
  *
  * <b>Note:</b> the data isn't persisted unless `sync` is explicitly called.
  *
+ * This Trie implementation supports node pruning (i.e. obsolete nodes are marked
+ * for removal in the Cache and actually removed from the underlying storage
+ * on [sync] call), but the algorithm is not suitable for the most general case.
+ * In general case a trie node might be referenced from several parent nodes
+ * and for correct pruning the reference counting algorithm needs to be implemented.
+ * As soon as the real life tree keys are hashes it is very unlikely the case so
+ * the pruning algorithm is simplified in this implementation.
+ *
  * @author Nick Savers
  * @since 20.05.2014
  */
@@ -59,6 +67,7 @@ public class TrieImpl implements Trie {
     private Object prevRoot;
     private Object root;
     private Cache cache;
+    private boolean pruningEnabled;
 
     public TrieImpl(KeyValueDataSource db) {
         this(db, "");
@@ -105,6 +114,15 @@ public class TrieImpl implements Trie {
         }
     }
 
+    public boolean isPruningEnabled() {
+        return pruningEnabled;
+    }
+
+    public TrieImpl withPruningEnabled(boolean pruningEnabled) {
+        this.pruningEnabled = pruningEnabled;
+        return this;
+    }
+
     /**************************************
      * Public (query) interface functions *
      **************************************/
@@ -140,7 +158,7 @@ public class TrieImpl implements Trie {
         byte[] k = binToNibbles(key);
 
         if (isEmptyNode(root)) {
-            cache.decRef(getRootHash());
+            cache.markRemoved(getRootHash());
         }
         this.root = this.insertOrDelete(this.root, k, value);
         if (logger.isDebugEnabled()) {
@@ -268,7 +286,7 @@ public class TrieImpl implements Trie {
                 newHash = this.putToCache(scaledSlice);
             }
 
-            cache.decRef(currentNode.hash());
+            markRemoved(currentNode.hash());
 
             if (matchingLength == 0) {
                 // End of the chain, return
@@ -286,9 +304,9 @@ public class TrieImpl implements Trie {
             newNode[key[0]] = this.insert(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length), value);
 
             if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
-                cache.decRef(currentNode.hash());
+                markRemoved(currentNode.hash());
                 if (!isEmptyNode(currentNode.get(key[0]))) {
-                    cache.decRef(currentNode.get(key[0]).asBytes());
+                    markRemoved(currentNode.get(key[0]).asBytes());
                 }
             }
 
@@ -324,6 +342,7 @@ public class TrieImpl implements Trie {
                 } else {
                     newNode = new Object[]{currentNode.get(0), hash};
                 }
+                markRemoved(currentNode.hash());
                 return this.putToCache(newNode);
             } else {
                 return node;
@@ -360,7 +379,19 @@ public class TrieImpl implements Trie {
             } else {
                 newNode = itemList;
             }
+
+            markRemoved(currentNode.hash());
+            if (!isEmptyNode(currentNode.get(key[0]))) {
+                markRemoved(currentNode.get(key[0]).asBytes());
+            }
+
             return this.putToCache(newNode);
+        }
+    }
+
+    private void markRemoved(byte[] hash) {
+        if (pruningEnabled) {
+            cache.markRemoved(hash);
         }
     }
 
@@ -400,9 +431,8 @@ public class TrieImpl implements Trie {
         Object[] itemList = emptyStringSlice(LIST_SIZE);
         for (int i = 0; i < LIST_SIZE; i++) {
             Object cpy = currentNode.get(i).asObj();
-            if (cpy != null) {
+            if (cpy != null)
                 itemList[i] = cpy;
-            }
         }
         return itemList;
     }
