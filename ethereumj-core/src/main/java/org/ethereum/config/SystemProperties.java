@@ -369,6 +369,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public int databasePruneDepth() {
+        return config.getBoolean("database.prune.enabled") ? config.getInt("database.prune.maxDepth") : -1;
+    }
+
+    @ValidateMe
     public List<Node> peerActive() {
         if (!config.hasPath("peer.active")) {
             return Collections.EMPTY_LIST;
