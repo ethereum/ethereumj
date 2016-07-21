@@ -4,7 +4,6 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.Flushable;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -453,10 +452,6 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     @Override
     public void load() {
-    }
-
-    public void setSessionFactory(SessionFactory sessionFactory){
-        throw new UnsupportedOperationException();
     }
 
     @Override

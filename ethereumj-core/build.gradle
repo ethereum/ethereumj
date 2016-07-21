@@ -129,11 +129,6 @@ dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
-    compile "org.hibernate:hibernate-core:${hibernateVersion}"
-    compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
-    compile "commons-dbcp:commons-dbcp:1.4"
-    compile "redis.clients:jedis:2.6.0"
-    compile "com.h2database:h2:1.4.187"
     compile "com.typesafe:config:1.2.1"
 
     compile "org.mapdb:mapdb:2.0-beta12"
