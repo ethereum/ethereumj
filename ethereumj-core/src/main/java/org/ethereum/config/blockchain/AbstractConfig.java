@@ -6,6 +6,7 @@ import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryTrack;
@@ -86,4 +87,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
                                                RepositoryTrack repositoryTrack) {
         return null;
     }
+
+    @Override
+    public void hardForkTransfers(Block block, Repository repo) {}
 }

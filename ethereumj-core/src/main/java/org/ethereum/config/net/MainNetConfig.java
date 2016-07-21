@@ -1,5 +1,6 @@
 package org.ethereum.config.net;
 
+import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 
@@ -12,5 +13,6 @@ public class MainNetConfig extends AbstractNetConfig {
     public MainNetConfig() {
         add(0, new FrontierConfig());
         add(1_150_000, new HomesteadConfig());
+        add(1_920_000, new DaoHFConfig());
     }
 }

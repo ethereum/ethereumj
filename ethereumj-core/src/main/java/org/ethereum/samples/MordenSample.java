@@ -2,14 +2,10 @@ package org.ethereum.samples;
 
 import com.typesafe.config.ConfigFactory;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.ImportResult;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.SHA3Helper;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -25,7 +21,7 @@ public class MordenSample extends BasicSample {
     /**
      * Use that sender key to sign transactions
      */
-    protected final byte[] senderPrivateKey = SHA3Helper.sha3("cow".getBytes());
+    protected final byte[] senderPrivateKey = HashUtil.sha3("cow".getBytes());
     // sender address is derived from the private key aacc23ff079d96a5502b31fefcda87a6b3fbdcfb
     protected final byte[] senderAddress = ECKey.fromPrivate(senderPrivateKey).getAddress();
 

@@ -9,6 +9,7 @@ import java.util.Map;
 
 public class BlockTestCase {
 
+    private String acomment;
     private List<BlockTck> blocks;
     private BlockHeaderTck genesisBlockHeader;
     private String genesisRLP;
@@ -70,6 +71,14 @@ public class BlockTestCase {
 
     public void setNoBlockChainHistory(int noBlockChainHistory) {
         this.noBlockChainHistory = noBlockChainHistory;
+    }
+
+    public String getAcomment() {
+        return acomment;
+    }
+
+    public void setAcomment(String acomment) {
+        this.acomment = acomment;
     }
 
     @Override

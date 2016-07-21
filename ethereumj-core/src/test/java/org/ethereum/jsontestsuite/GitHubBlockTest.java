@@ -1,7 +1,11 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
@@ -16,7 +20,7 @@ import java.util.Collections;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
 
     @Ignore // test for conveniently running a single test
     @Test
@@ -124,5 +128,24 @@ public class GitHubBlockTest {
     @Test
     public void runBCMultiChainTest() throws ParseException, IOException {
         run("bcMultiChainTest", true, true);
+    }
+
+
+    @Test
+    public void runDaoHardForkTest() throws Exception {
+        String json = JSONReader.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/hardfork/BlockchainTests/TestNetwork/bcTheDaoTest.json");
+
+        BlockchainNetConfig testConfig = new AbstractNetConfig() {
+            {
+                add(0, new FrontierConfig());
+                add(5, new HomesteadConfig());
+                add(8, new DaoHFConfig().withForkBlock(8));
+            }
+        };
+
+        SystemProperties.getDefault().setGenesisInfo("frontier.json");
+        SystemProperties.getDefault().setBlockchainConfig(testConfig);
+
+        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
     }
 }

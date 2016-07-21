@@ -46,6 +46,9 @@ public class PeerDiscovery {
     @Autowired
     private ApplicationContext ctx;
 
+    @Autowired
+    private SystemProperties config = SystemProperties.getDefault();
+
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
@@ -58,7 +61,7 @@ public class PeerDiscovery {
         threadFactory = Executors.defaultThreadFactory();
 
         // creating the ThreadPoolExecutor
-        executorPool = new ThreadPoolExecutor(SystemProperties.getDefault().peerDiscoveryWorkers(), SystemProperties.getDefault().peerDiscoveryWorkers(), 10,
+        executorPool = new ThreadPoolExecutor(config.peerDiscoveryWorkers(), config.peerDiscoveryWorkers(), 10,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000), threadFactory, rejectionHandler);
 
         // start the monitoring thread
@@ -67,7 +70,7 @@ public class PeerDiscovery {
         monitorThread.start();
 
         // Initialize PeerData
-        List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(SystemProperties.getDefault().peerDiscoveryIPList());
+        List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(config.peerDiscoveryIPList());
         addPeers(peerDataList);
 
         for (PeerInfo peerData : this.peers) {

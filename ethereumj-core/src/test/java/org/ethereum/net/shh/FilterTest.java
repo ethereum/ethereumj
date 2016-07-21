@@ -1,14 +1,8 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.Start;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.util.RLP;
 import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
 
-import javax.persistence.Table;
-
-import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
