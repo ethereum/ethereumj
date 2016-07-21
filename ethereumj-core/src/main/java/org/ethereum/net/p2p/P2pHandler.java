@@ -20,6 +20,7 @@ import org.ethereum.net.shh.ShhHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +147,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case PONG:
                 msgQueue.receivedMessage(msg);
+                channel.getNodeStatistics().lastPongReplyTime.set(Util.curTime());
                 break;
             case GET_PEERS:
                 msgQueue.receivedMessage(msg);
