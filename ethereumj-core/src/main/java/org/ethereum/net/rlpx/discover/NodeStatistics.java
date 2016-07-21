@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -71,6 +72,7 @@ public class NodeStatistics {
     public final StatHandler discoverInNeighbours = new StatHandler();
     public final StatHandler discoverOutNeighbours = new StatHandler();
     public final Statter.SimpleStatter discoverMessageLatency;
+    public final AtomicLong lastPongReplyTime = new AtomicLong(0l); // in milliseconds
 
     // rlpx stat
     public final StatHandler rlpxConnectionAttempts = new StatHandler();
