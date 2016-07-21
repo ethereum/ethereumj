@@ -490,7 +490,9 @@ public class TrieImpl implements Trie {
     public void scanTree(byte[] hash, ScanAction scanAction) {
 
         Value node = this.getCache().get(hash);
-        if (node == null) return;
+        if (node == null) {
+            throw new RuntimeException("Not found: " + Hex.toHexString(hash));
+        }
 
         if (node.isList()) {
             List<Object> siblings = node.asList();
