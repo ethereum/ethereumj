@@ -7,9 +7,17 @@ import org.ethereum.db.ByteArrayWrapper;
 import java.util.*;
 
 /**
+ * The DataSource which doesn't immediately forward delete updates (unlike inserts)
+ * but collects them tied to the block where these changes were made (the changes
+ * are mapped to a block upon [storeBlockChanges] call).
+ * When the [prune] is called for a block the deletes for this block are
+ * submitted to the underlying DataSource with respect to following inserts.
+ * E.g. if the key was deleted at block N and then inserted at block N + 10 this
+ * delete is not passed.
+ *
  * Created by Anton Nashatyrev on 01.07.2016.
  */
-public class JournalDataSource implements KeyValueDataSource {
+public class JournalPruneDataSource implements KeyValueDataSource {
     private class Updates {
         BlockHeader blockHeader;
         Set<ByteArrayWrapper> insertedKeys = new HashSet<>();
@@ -21,7 +29,7 @@ public class JournalDataSource implements KeyValueDataSource {
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
 
-    public JournalDataSource(KeyValueDataSource src) {
+    public JournalPruneDataSource(KeyValueDataSource src) {
         this.src = src;
     }
 

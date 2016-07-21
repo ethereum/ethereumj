@@ -12,7 +12,7 @@ import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
-import org.ethereum.trie.JournalDataSource;
+import org.ethereum.trie.JournalPruneDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -72,13 +72,13 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Autowired
     private KeyValueDataSource stateDS;
     private CachingDataSource stateDSCache;
-    private JournalDataSource stateDSPrune;
+    private JournalPruneDataSource stateDSPrune;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private boolean isSnapshot = false;
     private long bestBlockNumber = 0;
-    private long pruneBlockCount = 192 * 2;
+    private long pruneBlockCount;
 
     public RepositoryImpl() {
     }
@@ -102,29 +102,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         stateDS.setName(STATE_DB);
         stateDS.init();
         stateDSCache = new CachingDataSource(stateDS);
-        stateDSPrune = new JournalDataSource(stateDSCache);
+        stateDSPrune = new JournalPruneDataSource(stateDSCache);
 
         detailsDB = new DatabaseImpl(detailsDS);
         dds.setDB(detailsDB);
 
-        worldState = new SecureTrie(stateDSPrune);
-//        worldState = new SecureTrie(stateDS);
+        pruneBlockCount = config.databasePruneDepth();
+
+        worldState = new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
     }
 
     @Override
     public void reset() {
-        rwLock.writeLock().lock();
-        try {
-            close();
-
-            detailsDS.init();
-            detailsDB = new DatabaseImpl(detailsDS);
-
-            stateDS.init();
-            worldState = new SecureTrie(stateDS);
-        } finally {
-            rwLock.writeLock().unlock();
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
