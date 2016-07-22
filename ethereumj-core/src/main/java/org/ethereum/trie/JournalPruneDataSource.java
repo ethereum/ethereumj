@@ -72,10 +72,10 @@ public class JournalPruneDataSource implements KeyValueDataSource {
             Map.Entry<ByteArrayWrapper, Updates> cur;
             while(!(cur = it.next()).getKey().equals(blockHashW)) it.remove();
             it.remove();
-            while(true) {
-                updates.deletedKeys.removeAll(cur.getValue().insertedKeys);
-                if (!it.hasNext()) break;
+
+            while(it.hasNext()) {
                 cur = it.next();
+                updates.deletedKeys.removeAll(cur.getValue().insertedKeys);
             }
             Map<byte[], byte[]> batchRemove = new HashMap<>();
             for (ByteArrayWrapper key : updates.deletedKeys) {
