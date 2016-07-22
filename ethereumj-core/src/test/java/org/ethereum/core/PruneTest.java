@@ -48,14 +48,31 @@ public class PruneTest {
 
     @Test
     public void simpleTest() throws Exception {
-        StandaloneBlockchain bc = new StandaloneBlockchain();
         final int pruneCount = 3;
-        ((RepositoryImpl) bc.getBlockchain().getRepository()).setPruneBlockCount(pruneCount);
+        SystemProperties.getDefault().overrideParams(
+                "database.prune.enabled", "true",
+                "database.prune.maxDepth", "" + pruneCount);
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+//        ((RepositoryImpl) bc.getBlockchain().getRepository()).setPruneBlockCount(pruneCount);
 
         ECKey alice = new ECKey();
         ECKey bob = new ECKey();
 
 //        System.out.println("Gen root: " + Hex.toHexString(bc.getBlockchain().getBestBlock().getStateRoot()));
+        bc.createBlock();
+        Block b0 = bc.getBlockchain().getBestBlock();
+        bc.sendEther(alice.getAddress(), convert(30, ETHER));
+        Block b1_1 = bc.createBlock();
+
+        bc.sendEther(alice.getAddress(), convert(30, ETHER));
+        Block b1_2 = bc.createForkBlock(b0);
+
+        bc.sendEther(alice.getAddress(), convert(30, ETHER));
+        Block b1_3 = bc.createForkBlock(b0);
+
+        bc.sendEther(alice.getAddress(), convert(30, ETHER));
+        Block b1_4 = bc.createForkBlock(b0);
 
         for (int i = 0; i < 10; i++) {
             bc.sendEther(alice.getAddress(), convert(3, ETHER));
