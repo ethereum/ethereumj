@@ -81,7 +81,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     public StandaloneBlockchain() {
         withGenesis(GenesisLoader.loadGenesis(
-                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+                getClass().getResourceAsStream("/genesis/genesis-light-sb.json")));
         withGasPrice(50_000_000_000L);
         withGasLimit(5_000_000L);
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
