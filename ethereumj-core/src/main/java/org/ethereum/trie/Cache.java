@@ -32,7 +32,9 @@ public class Cache {
     }
 
     public void markRemoved(byte[] key) {
-        removedNodes.add(new ByteArrayWrapper(key));
+        ByteArrayWrapper keyW = new ByteArrayWrapper(key);
+        removedNodes.add(keyW);
+        nodes.remove(keyW);
     }
 
     /**
