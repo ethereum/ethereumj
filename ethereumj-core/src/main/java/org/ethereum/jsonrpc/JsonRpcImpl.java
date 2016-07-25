@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.db.TransactionStore;
@@ -20,13 +19,11 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.sync.listener.CompositeSyncListener;
-import org.ethereum.sync.listener.SyncListenerAdapter;
+import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.program.ProgramResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.jsonrpc.TypeConverter.*;
 import static org.ethereum.jsonrpc.TypeConverter.StringHexToByteArray;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -60,7 +58,10 @@ public class JsonRpcImpl implements JsonRpc {
         public long value;
         public byte[] data;
         public void setArguments(CallArguments args) throws Exception {
-            nonce =0;
+            nonce = 0;
+            if (args.nonce != null && args.nonce.length() != 0)
+                nonce = JSonHexToLong(args.nonce);
+
             gasPrice = 0;
             if (args.gasPrice != null && args.gasPrice.length()!=0)
                 gasPrice = JSonHexToLong(args.gasPrice);
@@ -69,7 +70,9 @@ public class JsonRpcImpl implements JsonRpc {
             if (args.gasLimit != null && args.gasLimit.length()!=0)
                 gasLimit = JSonHexToLong(args.gasLimit);
 
-            toAddress = JSonHexToHex(args.to);
+            toAddress = null;
+            if (args.to != null && !args.to.isEmpty())
+                toAddress = JSonHexToHex(args.to);
 
             value=0;
             if (args.value != null && args.value.length()!=0)
@@ -113,9 +116,6 @@ public class JsonRpcImpl implements JsonRpc {
     ChannelManager channelManager;
 
     @Autowired
-    CompositeSyncListener compositeSyncListener;
-
-    @Autowired
     CompositeEthereumListener compositeEthereumListener;
 
     @Autowired
@@ -128,19 +128,14 @@ public class JsonRpcImpl implements JsonRpc {
     PendingStateImpl pendingState;
 
     long initialBlockNumber;
-    long maxBlockNumberSeen;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
+    AtomicInteger filterCounter = new AtomicInteger(1);
+    Map<Integer, Filter> installedFilters = new Hashtable<>();
 
     @PostConstruct
     private void init() {
         initialBlockNumber = blockchain.getBestBlock().getNumber();
-        compositeSyncListener.add(new SyncListenerAdapter() {
-            @Override
-            public void onNewBlockNumber(long number) {
-                maxBlockNumberSeen = max(maxBlockNumberSeen, number);
-            }
-        });
 
         compositeEthereumListener.addListener(new EthereumListenerAdapter() {
             @Override
@@ -212,7 +207,7 @@ public class JsonRpcImpl implements JsonRpc {
 
     private List<Transaction> getTransactionsByJsonBlockId(String id) {
         if ("pending".equalsIgnoreCase(id)) {
-            return pendingState.getAllPendingTransactions();
+            return pendingState.getPendingTransactions();
         } else {
             Block block = getByJsonBlockId(id);
             return block != null ? block.getTransactionsList() : null;
@@ -224,7 +219,7 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     protected Account addAccount(String seed) {
-        return addAccount(ECKey.fromPrivate(SHA3Helper.sha3(seed.getBytes())));
+        return addAccount(ECKey.fromPrivate(sha3(seed.getBytes())));
     }
 
     protected Account addAccount(ECKey key) {
@@ -236,8 +231,8 @@ public class JsonRpcImpl implements JsonRpc {
 
     public String web3_clientVersion() {
 
-        String s = "EthereumJ" + "/v" + SystemProperties.CONFIG.projectVersion() + "/" +
-                System.getProperty("os.name") + "/Java1.7/" + SystemProperties.CONFIG.projectVersionModifier();
+        String s = "EthereumJ" + "/v" + config.projectVersion() + "/" +
+                System.getProperty("os.name") + "/Java1.7/" + config.projectVersionModifier() + "-" + BuildInfo.buildHash;
         if (logger.isDebugEnabled()) logger.debug("web3_clientVersion(): " + s);
         return s;
     };
@@ -300,7 +295,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             s.startingBlock = TypeConverter.toJsonHex(initialBlockNumber);
             s.currentBlock = TypeConverter.toJsonHex(blockchain.getBestBlock().getNumber());
-            s.highestBlock = TypeConverter.toJsonHex(maxBlockNumberSeen);
+            s.highestBlock = TypeConverter.toJsonHex(syncManager.getLastKnownBlockNumber());
 
             return s;
         }finally {
@@ -506,7 +501,7 @@ public class JsonRpcImpl implements JsonRpc {
                 args.data = args.data.substring(2);
 
             Transaction tx = new Transaction(
-                    bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
+                    args.nonce != null ? StringHexToByteArray(args.nonce) : bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
                     args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : EMPTY_BYTE_ARRAY,
                     args.gasLimit != null ? StringHexToByteArray(args.gasLimit) : EMPTY_BYTE_ARRAY,
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
@@ -562,7 +557,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public ProgramResult createCallTxAndExecute(CallArguments args, Block block) throws Exception {
+    public TransactionReceipt createCallTxAndExecute(CallArguments args, Block block) throws Exception {
         BinaryCallArguments bca = new BinaryCallArguments();
         bca.setArguments(args);
         Transaction tx = CallTransaction.createRawTransaction(0,
@@ -572,16 +567,15 @@ public class JsonRpcImpl implements JsonRpc {
                 bca.value,
                 bca.data);
 
-        ProgramResult res = eth.callConstant(tx, block);
-        return res;
+        return eth.callConstant(tx, block);
     }
 
     public String eth_call(CallArguments args, String bnOrId) throws Exception {
 
         String s = null;
         try {
-            ProgramResult res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
-            return s = TypeConverter.toJsonHex(res.getHReturn());
+            TransactionReceipt res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
+            return s = TypeConverter.toJsonHex(res.getExecutionResult());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_call(" + args + "): " + s);
         }
@@ -590,7 +584,7 @@ public class JsonRpcImpl implements JsonRpc {
     public String eth_estimateGas(CallArguments args) throws Exception {
         String s = null;
         try {
-            ProgramResult res = createCallTxAndExecute(args, blockchain.getBestBlock());
+            TransactionReceipt res = createCallTxAndExecute(args, blockchain.getBestBlock());
             return s = TypeConverter.toJsonHex(res.getGasUsed());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_estimateGas(" + args + "): " + s);
@@ -658,7 +652,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             Block b;
             if ("pending".equalsIgnoreCase(bnOrId)) {
-                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getAllPendingTransactions(), Collections.<BlockHeader>emptyList());
+                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.<BlockHeader>emptyList());
             } else {
                 b = getByJsonBlockId(bnOrId);
             }
@@ -671,7 +665,7 @@ public class JsonRpcImpl implements JsonRpc {
     public TransactionResultDTO eth_getTransactionByHash(String transactionHash) throws Exception {
         TransactionResultDTO s = null;
         try {
-            TransactionInfo txInfo = transactionStore.get(StringHexToByteArray(transactionHash));
+            TransactionInfo txInfo = blockchain.getTransactionInfo(StringHexToByteArray(transactionHash));
             if (txInfo == null) {
                 return null;
             }
@@ -721,7 +715,7 @@ public class JsonRpcImpl implements JsonRpc {
         TransactionReceiptDTO s = null;
         try {
             byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
-            TransactionInfo txInfo = txStore.get(hash);
+            TransactionInfo txInfo = blockchain.getTransactionInfo(hash);
 
             if (txInfo == null)
                 return null;
@@ -804,7 +798,7 @@ public class JsonRpcImpl implements JsonRpc {
             ret.info.language = "Solidity";
             ret.info.languageVersion = "0";
             ret.info.compilerVersion = result.version;
-            ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi);
+            ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi).functions;
             return s = ret;
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_compileSolidity(" + contract + ")" + s);
@@ -827,10 +821,11 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     static class Filter {
+        static final int MAX_EVENT_COUNT = 1024; // prevent OOM when Filers are forgotten
         static abstract class FilterEvent {
             public abstract Object getJsonEventObject();
         }
-        List<FilterEvent> events = new ArrayList<>();
+        List<FilterEvent> events = new LinkedList<>();
 
         public synchronized boolean hasNew() { return !events.isEmpty();}
 
@@ -845,6 +840,7 @@ public class JsonRpcImpl implements JsonRpc {
 
         protected synchronized void add(FilterEvent evt) {
             events.add(evt);
+            if (events.size() > MAX_EVENT_COUNT) events.remove(0);
         }
 
         public void newBlockReceived(Block b) {}
@@ -924,7 +920,7 @@ public class JsonRpcImpl implements JsonRpc {
 
         void onTransaction(Transaction tx, Block b, int txIndex) {
             if (logFilter.matchesContractAddress(tx.getReceiveAddress())) {
-                TransactionInfo txInfo = transactionStore.get(tx.getHash());
+                TransactionInfo txInfo = blockchain.getTransactionInfo(tx.getHash());
                 onTransactionReceipt(txInfo.getReceipt(), b, txIndex);
             }
         }
@@ -950,9 +946,6 @@ public class JsonRpcImpl implements JsonRpc {
 //            if (onPendingTx)
         }
     }
-
-    AtomicInteger filterCounter = new AtomicInteger(1);
-    Map<Integer, Filter> installedFilters = new Hashtable<>();
 
     @Override
     public String eth_newFilter(FilterRequest fr) throws Exception {

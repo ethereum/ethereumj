@@ -5,24 +5,20 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.EthereumImpl;
-import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static java.math.BigInteger.valueOf;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.junit.Assert.*;
 
 /**
@@ -60,12 +56,14 @@ public class JsonRpcTest {
         public SystemProperties systemProperties() {
             SystemProperties props = new SystemProperties();
             props.overrideParams(ConfigFactory.parseString(config.replaceAll("'", "\"")));
-            SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            FrontierConfig config = new FrontierConfig(new FrontierConfig.FrontierConstants() {
                 @Override
                 public BigInteger getMINIMUM_DIFFICULTY() {
                     return BigInteger.ONE;
                 }
-            }));
+            });
+            SystemProperties.getDefault().setBlockchainConfig(config);
+            props.setBlockchainConfig(config);
             return props;
         }
 
@@ -100,13 +98,23 @@ public class JsonRpcTest {
             Object[] changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
             assertEquals(0, changes.length);
 
+            JsonRpc.CallArguments ca = new JsonRpc.CallArguments();
+            ca.from = cowAcct;
+            ca.to = "0x0000000000000000000000000000000000001234";
+            ca.gasLimit = "0x300000";
+            ca.gasPrice = "0x10000000000";
+            ca.value = "0x7777";
+            ca.data = "0x";
+            long sGas = TypeConverter.StringHexToBigInteger(jsonRpc.eth_estimateGas(ca)).longValue();
+
             String txHash1 = jsonRpc.eth_sendTransaction(cowAcct, "0x0000000000000000000000000000000000001234", "0x300000",
                     "0x10000000000", "0x7777", "0x", "0x00");
             System.out.println("Tx hash: " + txHash1);
             assertTrue(TypeConverter.StringHexToBigInteger(txHash1).compareTo(BigInteger.ZERO) > 0);
 
-            for (int i = 0; i < 10 && changes.length == 0; i++) {
+            for (int i = 0; i < 50 && changes.length == 0; i++) {
                 changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
+                Thread.sleep(200);
             }
             assertEquals(1, changes.length);
             changes = jsonRpc.eth_getFilterChanges(pendingTxFilterId);
@@ -124,6 +132,7 @@ public class JsonRpcTest {
             TransactionReceiptDTO receipt1 = jsonRpc.eth_getTransactionReceipt(txHash1);
             assertEquals(1, receipt1.blockNumber);
             assertTrue(receipt1.gasUsed > 0);
+            assertEquals(sGas, receipt1.gasUsed);
 
             String bal1 = jsonRpc.eth_getBalance(cowAcct);
             System.out.println("Balance: " + bal0);
@@ -136,7 +145,8 @@ public class JsonRpcTest {
                             "  num = a; " +
                             "  log1(0x1111, 0x2222);" +
                             "}}");
-            assertTrue(compRes.info.abiDefinition.getByName("set") != null);
+            assertEquals(compRes.info.abiDefinition[0].name, "num");
+            assertEquals(compRes.info.abiDefinition[1].name, "set");
             assertTrue(compRes.code.length() > 10);
 
             JsonRpc.CallArguments callArgs = new JsonRpc.CallArguments();
@@ -145,6 +155,7 @@ public class JsonRpcTest {
             callArgs.gasPrice = "0x10000000000";
             callArgs.gasLimit = "0x1000000";
             String txHash2 = jsonRpc.eth_sendTransaction(callArgs);
+            sGas = TypeConverter.StringHexToBigInteger(jsonRpc.eth_estimateGas(callArgs)).longValue();
 
             String hash2 = mineBlock();
 
@@ -154,6 +165,7 @@ public class JsonRpcTest {
             TransactionReceiptDTO receipt2 = jsonRpc.eth_getTransactionReceipt(txHash2);
             assertTrue(receipt2.blockNumber > 1);
             assertTrue(receipt2.gasUsed > 0);
+            assertEquals(sGas, receipt2.gasUsed);
             assertTrue(TypeConverter.StringHexToByteArray(receipt2.contractAddress).length == 20);
 
             JsonRpc.FilterRequest filterReq = new JsonRpc.FilterRequest();
@@ -168,7 +180,7 @@ public class JsonRpcTest {
                     valueOf(3_000_000),
                     TypeConverter.StringHexToByteArray(receipt2.contractAddress),
                     valueOf(0), function.encode(0x777));
-            rawTx.sign(SHA3Helper.sha3("cow".getBytes()));
+            rawTx.sign(sha3("cow".getBytes()));
 
             String txHash3 = jsonRpc.eth_sendRawTransaction(TypeConverter.toJsonHex(rawTx.getEncoded()));
 

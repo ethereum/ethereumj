@@ -3,11 +3,9 @@ package org.ethereum.net.swarm;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.swarm.bzz.BzzPeersMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -102,7 +100,7 @@ public class Hive {
     }
 
     protected void peersAdded() {
-        for (HiveTask task : new ArrayList<>(hiveTasks)) {
+        for (HiveTask task : new ArrayList<>(hiveTasks.keySet())) {
             if (!task.peersAdded()) {
                 hiveTasks.remove(task);
                 LOG.debug("HiveTask removed from queue: " + task);
@@ -135,11 +133,11 @@ public class Hive {
     public void addTask(HiveTask t) {
         if (t.peersAdded()) {
             LOG.debug("Added a HiveTask to queue: " + t);
-            hiveTasks.add(t);
+            hiveTasks.put(t, null);
         }
     }
 
-    private Set<HiveTask> hiveTasks = new IdentitySet();
+    private Map<HiveTask, Object> hiveTasks = new IdentityHashMap<>();
 
     /**
      * The task to be executed when another one closest Peer is discovered
@@ -147,7 +145,7 @@ public class Hive {
      */
     public abstract class HiveTask {
         Key targetKey;
-        Set<BzzProtocol> processedPeers = new IdentitySet();
+        Map<BzzProtocol, Object> processedPeers = new IdentityHashMap<>();
         long expireTime;
         int maxPeers;
 
@@ -166,9 +164,9 @@ public class Hive {
             if (Util.curTime() > expireTime) return false;
             Collection<BzzProtocol> peers = getPeers(targetKey, maxPeers);
             for (BzzProtocol peer : peers) {
-                if (!processedPeers.contains(peer)) {
+                if (!processedPeers.containsKey(peer)) {
                     processPeer(peer);
-                    processedPeers.add(peer);
+                    processedPeers.put(peer, null);
                     if (processedPeers.size() > maxPeers) {
                         return false;
                     }

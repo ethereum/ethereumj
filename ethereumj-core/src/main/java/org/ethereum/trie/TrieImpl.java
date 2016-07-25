@@ -452,7 +452,7 @@ public class TrieImpl implements Trie {
 
         this.scanTree(this.getRootHash(), collectAction);
 
-        Set<byte[]> hashSet = collectAction.getCollectedHashes();
+        Set<ByteArrayWrapper> hashSet = collectAction.getCollectedHashes();
         Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
         Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
 

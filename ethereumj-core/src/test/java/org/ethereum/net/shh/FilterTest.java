@@ -1,21 +1,15 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.Start;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.util.RLP;
 import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
 
-import javax.persistence.Table;
-
-import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class FilterTest {
 
-    String to = WhisperImpl.toIdentity(new ECKey().decompress());
-    String from = WhisperImpl.toIdentity(new ECKey().decompress());
+    String to = WhisperImpl.toIdentity(new ECKey());
+    String from = WhisperImpl.toIdentity(new ECKey());
     String[] topics = {"topic1", "topic2", "topic3", "topic4"};
 
     class FilterStub extends MessageWatcher {

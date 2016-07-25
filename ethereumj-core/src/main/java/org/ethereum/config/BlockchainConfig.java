@@ -1,7 +1,11 @@
 package org.ethereum.config;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
 
 import java.math.BigInteger;
@@ -37,4 +41,23 @@ public interface BlockchainConfig {
      * Validates Tx signature (introduced in Homestead)
      */
     boolean acceptTransactionSignature(Transaction tx);
+
+    /**
+     * Validates transaction by the changes made by it in the repository
+     * @param blockStore
+     * @param curBlock The block being imported
+     * @param repositoryTrack The repository track changed by transaction
+     * @return null if all is fine or String validation error
+     */
+    String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
+                                      RepositoryTrack repositoryTrack);
+
+
+    /**
+     * Prior to block processing performs some repository manipulations according
+     * to HardFork rules.
+     * This method is normally executes the logic on a specific hardfork block only
+     * for other blocks it just does nothing
+     */
+    void hardForkTransfers(Block block, Repository repo);
 }

@@ -26,16 +26,16 @@ public interface EasyBlockchain {
 
     /**
      * Creates and sends the transaction with the Solidity contract creation code
-     * If the soliditySrc has more than one contract the {@link #submitNewContract(String, String)}
+     * If the soliditySrc has more than one contract the {@link #submitNewContract(String, String, Object[])}
      * method should be used. This method will generate exception in this case
      */
-    SolidityContract submitNewContract(String soliditySrc);
+    SolidityContract submitNewContract(String soliditySrc, Object... constructorArgs);
 
     /**
      * Creates and sends the transaction with the Solidity contract creation code
      * The contract name is specified when the soliditySrc has more than one contract
      */
-    SolidityContract submitNewContract(String soliditySrc, String contractName);
+    SolidityContract submitNewContract(String soliditySrc, String contractName, Object... constructorArgs);
 
     /**
      * Creates an interface to the Solidity contract already existing on the blockchain.

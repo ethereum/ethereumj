@@ -3,7 +3,6 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.crypto.HashUtil;
-import org.hibernate.SessionFactory;
 
 import java.math.BigInteger;
 
@@ -83,11 +82,6 @@ public class BlockStoreDummy implements BlockStore {
     }
 
     @Override
-    public void setSessionFactory(SessionFactory sessionFactory) {
-    }
-
-
-    @Override
     public long getMaxNumber() {
         return 0;
     }
@@ -102,4 +96,7 @@ public class BlockStoreDummy implements BlockStore {
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
         return null;
     }
+
+    @Override
+    public void close() {}
 }

@@ -30,7 +30,7 @@ public class GitHubStateTest {
     public void setup() {
         // TODO remove this after Homestead launch and shacommit update with actual block number
         // for this JSON test commit the Homestead block was defined as 900000
-        SystemProperties.CONFIG.setBlockchainConfig(new AbstractNetConfig() {{
+        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
         }});
@@ -38,7 +38,7 @@ public class GitHubStateTest {
 
     @After
     public void clean() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Ignore
@@ -95,6 +95,7 @@ public class GitHubStateTest {
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
+        excluded.add("CallRecursiveBombPreCall"); // Max Gas value is pending to be < 2^63
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
 

@@ -9,8 +9,7 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
-import org.spongycastle.crypto.digests.SHA3Digest;
-import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
@@ -36,7 +35,7 @@ public class Handshaker {
     }
 
     public Handshaker() {
-        myKey = new ECKey().decompress();
+        myKey = new ECKey();
         nodeId = myKey.getNodeId();
         System.out.println("Node ID " + Hex.toHexString(nodeId));
     }
@@ -59,14 +58,10 @@ public class Handshaker {
      */
     public void doHandshake(String host, int port, String remoteIdHex) throws IOException {
         byte[] remoteId = Hex.decode(remoteIdHex);
-        byte[] remotePublicBytes = new byte[remoteId.length + 1];
-        System.arraycopy(remoteId, 0, remotePublicBytes, 1, remoteId.length);
-        remotePublicBytes[0] = 0x04; // uncompressed
-        ECPoint remotePublic = ECKey.fromPublicOnly(remotePublicBytes).getPubKeyPoint();
+        EncryptionHandshake initiator = new EncryptionHandshake(ECKey.fromNodeId(remoteId).getPubKeyPoint());
         Socket sock = new Socket(host, port);
         InputStream inp = sock.getInputStream();
         OutputStream out = sock.getOutputStream();
-        EncryptionHandshake initiator = new EncryptionHandshake(remotePublic);
         AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null, myKey);
         byte[] initiatePacket = initiator.encryptAuthMessage(initiateMessage);
 
@@ -78,8 +73,8 @@ public class Handshaker {
 
         initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
         byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
-        new SHA3Digest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
-        new SHA3Digest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
+        new KeccakDigest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
+        new KeccakDigest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
 
         RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
         HandshakeMessage handshakeMessage = new HandshakeMessage(

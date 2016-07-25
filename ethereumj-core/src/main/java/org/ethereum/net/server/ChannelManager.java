@@ -7,7 +7,10 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
+import org.ethereum.facade.Ethereum;
+import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.Node;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
@@ -56,6 +59,12 @@ public class ChannelManager {
     @Autowired
     SyncPool syncPool;
 
+    @Autowired
+    private Ethereum ethereum;
+
+    @Autowired
+    PeerServer peerServer;
+
     @PostConstruct
     public void init() {
         maxActivePeers = config.maxActivePeers();
@@ -70,6 +79,42 @@ public class ChannelManager {
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
+
+        if (config.listenPort() > 0) {
+            new Thread(new Runnable() {
+                        public void run() {
+                            peerServer.start(config.listenPort());
+                        }
+                    },
+            "PeerServerThread").start();
+        }
+    }
+
+    public void connect(Node node) {
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: initiate connection",
+                node.getHexIdShort()
+        );
+        if (nodesInUse().contains(node.getHexId())) {
+            if (logger.isTraceEnabled()) logger.trace(
+                    "Peer {}: connection already initiated",
+                    node.getHexIdShort()
+            );
+            return;
+        }
+
+        ethereum.connect(node);
+    }
+
+    public Set<String> nodesInUse() {
+        Set<String> ids = new HashSet<>();
+        for (Channel peer : getActivePeers()) {
+            ids.add(peer.getPeerId());
+        }
+        for (Channel peer : newPeers) {
+            ids.add(peer.getPeerId());
+        }
+        return ids;
     }
 
     private void processNewPeers() {
@@ -132,8 +177,9 @@ public class ChannelManager {
             if (syncManager.isSyncDone()) {
                 peer.onSyncDone(true);
             }
-            syncPool.add(peer);
-            activePeers.put(peer.getNodeIdWrapper(), peer);
+            synchronized (activePeers) {
+                activePeers.put(peer.getNodeIdWrapper(), peer);
+            }
         }
     }
 
@@ -192,6 +238,36 @@ public class ChannelManager {
     }
 
     public Collection<Channel> getActivePeers() {
-        return Collections.unmodifiableCollection(activePeers.values());
+        synchronized (activePeers) {
+            return new ArrayList<>(activePeers.values());
+        }
+    }
+
+    public Channel getActivePeer(byte[] nodeId) {
+        return activePeers.get(new ByteArrayWrapper(nodeId));
+    }
+
+    public void close() {
+        try {
+            logger.info("Shutting down ChannelManager worker thread...");
+            mainWorker.shutdownNow();
+            mainWorker.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.warn("Problems shutting down", e);
+        }
+        peerServer.close();
+
+        synchronized (activePeers) {
+            ArrayList<Channel> allPeers = new ArrayList<>(activePeers.values());
+            allPeers.addAll(newPeers);
+
+            for (Channel channel : allPeers) {
+                try {
+                    channel.dropConnection();
+                } catch (Exception e) {
+                    logger.warn("Problems disconnecting channel " + channel, e);
+                }
+            }
+        }
     }
 }

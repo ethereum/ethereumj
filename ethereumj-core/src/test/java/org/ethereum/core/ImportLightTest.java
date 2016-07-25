@@ -11,7 +11,6 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.manager.AdminInfo;
 import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -34,7 +33,7 @@ public class ImportLightTest {
 
     @BeforeClass
     public static void setup() {
-        SystemProperties.CONFIG.setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;
@@ -44,7 +43,7 @@ public class ImportLightTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.CONFIG.setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
     @Test
@@ -57,21 +56,21 @@ public class ImportLightTest {
 
         System.out.println("Mining #1 ...");
         Block b1 = blockchain.createNewBlock(parent, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
         ImportResult importResult = blockchain.tryToConnect(b1);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
         System.out.println("Mining #2 ...");
         Block b2 = blockchain.createNewBlock(b1, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
         System.out.println("Mining #3 ...");
         Block b3 = blockchain.createNewBlock(b2, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        Ethash.getForBlock(b3.getNumber()).mineLight(b3).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b3.getNumber()).mineLight(b3).get();
         importResult = blockchain.tryToConnect(b3);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
@@ -79,17 +78,51 @@ public class ImportLightTest {
         System.out.println("Mining #2' ...");
         Block b2_ = blockchain.createNewBlock(b1, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         b2_.setExtraData(new byte[]{77, 77}); // setting extra data to differ from block #2
-        Ethash.getForBlock(b2_.getNumber()).mineLight(b2_).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2_.getNumber()).mineLight(b2_).get();
         importResult = blockchain.tryToConnect(b2_);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
 
         System.out.println("Mining #3' ...");
         Block b3_ = blockchain.createNewBlock(b2_, Collections.EMPTY_LIST, Collections.singletonList(b2.getHeader()));
-        Ethash.getForBlock(b3_.getNumber()).mineLight(b3_).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b3_.getNumber()).mineLight(b3_).get();
         importResult = blockchain.tryToConnect(b3_);
         System.out.println("Best: " + blockchain.getBestBlock().getShortDescr());
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
+    }
+
+    @Test
+    public void invalidBlockTest() throws Exception {
+        // testing that bad block import effort doesn't affect the repository state
+
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
+        Block parent = blockchain.getBestBlock();
+
+        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+        byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+
+        System.out.println("Mining #1 ...");
+
+        Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(0),
+                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
+                ByteUtil.longToBytesNoLeadZeroes(0xfffff),
+                receiverAddr, new byte[]{77}, new byte[0]);
+        tx.sign(senderKey.getPrivKeyBytes());
+
+        Block b1bad = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
+        // making the block bad
+        b1bad.getStateRoot()[0] = 0;
+        b1bad.setStateRoot(b1bad.getStateRoot()); // invalidate block
+
+        Ethash.getForBlock(SystemProperties.getDefault(), b1bad.getNumber()).mineLight(b1bad).get();
+        ImportResult importResult = blockchain.tryToConnect(b1bad);
+        Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
+        Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
+        importResult = blockchain.tryToConnect(b1);
+        Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
     }
 
     @Test
@@ -110,16 +143,16 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{77}, new byte[0]);
-        tx.sign(senderKey.getPrivKeyBytes());
+        tx.sign(senderKey);
 
         Block b1 = blockchain.createNewBlock(parent, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b1.getNumber()).mineLight(b1).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
         ImportResult importResult = blockchain.tryToConnect(b1);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
         System.out.println("Mining #2 (bad) ...");
         Block b2 = blockchain.createNewBlock(b1, Collections.singletonList(tx), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
 
@@ -128,9 +161,9 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{77}, new byte[0]);
-        tx1.sign(senderKey.getPrivKeyBytes());
+        tx1.sign(senderKey);
         b2 = blockchain.createNewBlock(b1, Arrays.asList(tx1, tx1), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
 
@@ -139,9 +172,9 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{77}, new byte[0]);
-        tx2.sign(senderKey.getPrivKeyBytes());
+        tx2.sign(senderKey);
         b2 = blockchain.createNewBlock(b1, Arrays.asList(tx1, tx2), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2.getNumber()).mineLight(b2).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2.getNumber()).mineLight(b2).get();
         importResult = blockchain.tryToConnect(b2);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
 
@@ -150,9 +183,9 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx1.sign(senderKey.getPrivKeyBytes());
+        tx1.sign(senderKey);
         Block b2f = blockchain.createNewBlock(b1, Collections.singletonList(tx1), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b2f.getNumber()).mineLight(b2f).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b2f.getNumber()).mineLight(b2f).get();
         importResult = blockchain.tryToConnect(b2f);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_NOT_BEST);
 
@@ -161,21 +194,43 @@ public class ImportLightTest {
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx1.sign(senderKey.getPrivKeyBytes());
+        tx1.sign(senderKey);
         tx2 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(4),
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx2.sign(senderKey.getPrivKeyBytes());
+        tx2.sign(senderKey);
         Transaction tx3 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(5),
                 ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
                 ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                 receiverAddr, new byte[]{88}, new byte[0]);
-        tx3.sign(senderKey.getPrivKeyBytes());
+        tx3.sign(senderKey);
         Block b3 = blockchain.createNewBlock(b2, Arrays.asList(tx1, tx2, tx3), Collections.EMPTY_LIST);
-        Ethash.getForBlock(b3.getNumber()).mineLight(b3).get();
+        Ethash.getForBlock(SystemProperties.getDefault(), b3.getNumber()).mineLight(b3).get();
         importResult = blockchain.tryToConnect(b3);
         Assert.assertTrue(importResult == ImportResult.IMPORTED_BEST);
+    }
+
+    @Test
+    public void invalidBlockTotalDiff() throws Exception {
+        // Check that importing invalid block doesn't affect totalDifficulty
+
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
+        Block parent = blockchain.getBestBlock();
+
+        System.out.println("Mining #1 ...");
+
+        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+
+        Block b1 = blockchain.createNewBlock(parent, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        b1.setStateRoot(new byte[32]);
+        Ethash.getForBlock(SystemProperties.getDefault(), b1.getNumber()).mineLight(b1).get();
+        ImportResult importResult = blockchain.tryToConnect(b1);
+        Assert.assertTrue(importResult == ImportResult.INVALID_BLOCK);
+        Assert.assertEquals(totalDifficulty, blockchain.getTotalDifficulty());
+
     }
 
     @Test
@@ -215,7 +270,7 @@ public class ImportLightTest {
         Block b2 = bc.createBlock();
         parent.callFunction("createChild", 100);
         Block b3 = bc.createBlock();
-        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) parent.callConstFunction("child")[0], 20);
+        byte[] childAddress = (byte[]) parent.callConstFunction("child")[0];
         parent.callFunction("createChild", 200);
         Block b2_ = bc.createForkBlock(b1);
         SolidityContract child = bc.createExistingContractFromSrc(contractSrc, "Child", childAddress);
@@ -279,7 +334,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contract, "A");
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
         a.callFunction(10, "create");
-        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) a.callConstFunction("child")[0], 20);
+        byte[] childAddress = (byte[]) a.callConstFunction("child")[0];
         SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
         BigInteger val = (BigInteger) b.callConstFunction("valReceived")[0];
         Assert.assertEquals(20, val.longValue());
@@ -341,6 +396,23 @@ public class ImportLightTest {
         Assert.assertEquals(46634, spent);
     }
 
+    @Test
+    public void deepRecursionTest() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  function recursive(){" +
+                "    this.recursive();" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        a.callFunction("recursive");
+        bc.createBlock();
+
+        // no StackOverflowException
+    }
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();

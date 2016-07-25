@@ -21,21 +21,18 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.System.getProperty;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
 
 /**
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-@Component
-@Scope("prototype")
 public class LevelDbDataSource implements KeyValueDataSource {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
     @Autowired
-    SystemProperties config  = SystemProperties.CONFIG; // initialized for standalone test
+    SystemProperties config  = SystemProperties.getDefault(); // initialized for standalone test
 
     String name;
     DB db;
@@ -54,7 +51,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     public LevelDbDataSource(String name) {
         this.name = name;
-        logger.info("New LevelDbDataSource: " + name);
+        logger.debug("New LevelDbDataSource: " + name);
     }
 
     @Override
@@ -75,6 +72,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
             options.cacheSize(0);
             options.paranoidChecks(true);
             options.verifyChecksums(true);
+            options.maxOpenFiles(32);
 
             try {
                 logger.debug("Opening database");
@@ -135,7 +133,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
                 if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
                 return ret;
             } catch (DBException e) {
-                logger.error("Exception. Retrying again...", e);
+                logger.warn("Exception. Retrying again...", e);
                 byte[] ret = db.get(key);
                 if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
                 return ret;
@@ -194,7 +192,11 @@ public class LevelDbDataSource implements KeyValueDataSource {
     private void updateBatchInternal(Map<byte[], byte[]> rows) throws IOException {
         try (WriteBatch batch = db.createWriteBatch()) {
             for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
-                batch.put(entry.getKey(), entry.getValue());
+                if (entry.getValue() == null) {
+                    batch.delete(entry.getKey());
+                } else {
+                    batch.put(entry.getKey(), entry.getValue());
+                }
             }
             db.write(batch);
         }

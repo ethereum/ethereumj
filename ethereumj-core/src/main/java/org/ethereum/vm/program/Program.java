@@ -1,7 +1,7 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -17,11 +17,13 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
+import org.ethereum.vm.program.listener.ProgramStorageChangeListener;
 import org.ethereum.vm.trace.ProgramTraceListener;
 import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -60,7 +62,8 @@ public class Program {
     private ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 
     private ProgramOutListener listener;
-    private ProgramTraceListener traceListener = new ProgramTraceListener();
+    private ProgramTraceListener traceListener;
+    private ProgramStorageChangeListener storageDiffListener = new ProgramStorageChangeListener();
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private Stack stack;
@@ -78,22 +81,33 @@ public class Program {
 
     private Set<Integer> jumpdest = new HashSet<>();
 
+    @Autowired
+    CommonConfig commonConfig = CommonConfig.getDefault();
+
+    private final SystemProperties config;
+
     public Program(byte[] ops, ProgramInvoke programInvoke) {
-        this.invoke = programInvoke;
-
-        this.ops = nullToEmpty(ops);
-
-        this.memory = setupProgramListener(new Memory());
-        this.stack = setupProgramListener(new Stack());
-        this.storage = setupProgramListener(new Storage(programInvoke));
-        this.trace = new ProgramTrace(programInvoke);
-
-        precompile();
+        this(ops, programInvoke, null);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke);
+        this(ops, programInvoke, transaction, SystemProperties.getDefault());
+    }
+
+    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+        this.config = config;
+        this.invoke = programInvoke;
         this.transaction = transaction;
+
+        this.ops = nullToEmpty(ops);
+
+        traceListener = new ProgramTraceListener(config.vmTrace());
+        this.memory = setupProgramListener(new Memory());
+        this.stack = setupProgramListener(new Stack());
+        this.storage = setupProgramListener(new Storage(programInvoke));
+        this.trace = new ProgramTrace(config, programInvoke);
+
+        precompile();
     }
 
     public int getCallDeep() {
@@ -114,13 +128,19 @@ public class Program {
         return result;
     }
 
-    private <T extends ProgramListenerAware> T setupProgramListener(T traceListenerAware) {
+    private <T extends ProgramListenerAware> T setupProgramListener(T programListenerAware) {
         if (programListener.isEmpty()) {
             programListener.addListener(traceListener);
+            programListener.addListener(storageDiffListener);
         }
 
-        traceListenerAware.setTraceListener(traceListener);
-        return traceListenerAware;
+        programListenerAware.setProgramListener(programListener);
+
+        return programListenerAware;
+    }
+
+    public Map<DataWord, DataWord> getStorageDiff() {
+        return storageDiffListener.getDiff();
     }
 
     public byte getOp(int pc) {
@@ -395,8 +415,8 @@ public class Program {
         ProgramResult result = ProgramResult.empty();
         if (isNotEmpty(programCode)) {
 
-            VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            VM vm = commonConfig.vm();
+            Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -409,7 +429,7 @@ public class Program {
         long storageCost = getLength(code) * GasCost.CREATE_DATA;
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (!SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {
@@ -517,8 +537,8 @@ public class Program {
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, internalTx);
+            VM vm = commonConfig.vm();
+            Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -536,6 +556,8 @@ public class Program {
                 track.rollback();
                 stackPushZero();
                 return;
+            } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
+                storageDiffListener.merge(program.getStorageDiff());
             }
         }
 
@@ -568,9 +590,9 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        logger.info("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
-        if ((getGas().value().compareTo(valueOf(gasValue)) < 0)) {
+        if (getGas().longValue() < gasValue) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -641,7 +663,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGas().value().subtract(valueOf(getResult().getGasUsed())).toByteArray());
+        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {
@@ -826,7 +848,7 @@ public class Program {
 
     static String formatBinData(byte[] binData, int startPC) {
         StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < binData.length; i+= 16) {
+        for (int i = 0; i < binData.length; i += 16) {
             ret.append(Utils.align("" + Integer.toHexString(startPC + (i)) + ":", ' ', 8, false));
             ret.append(Hex.toHexString(binData, i, min(16, binData.length - i))).append('\n');
         }
@@ -849,7 +871,7 @@ public class Program {
                     binDataStartPC = index;
                 }
                 binData.write(code[index]);
-                index ++;
+                index++;
                 if (index < code.length) continue;
             }
 
@@ -864,7 +886,7 @@ public class Program {
 
             if (op == null) {
                 sb.append("<UNKNOWN>: ").append(0xFF & opCode).append("\n");
-                index ++;
+                index++;
                 continue;
             }
 
@@ -960,7 +982,7 @@ public class Program {
                 if (gotos.isEmpty()) break;
                 it.setPC(gotos.pollFirst());
             }
-        } while(it.next());
+        } while (it.next());
         return ret;
     }
 
@@ -976,7 +998,7 @@ public class Program {
 
             if (op == null) {
                 sb.append(" <UNKNOWN>: ").append(0xFF & opCode).append(" ");
-                index ++;
+                index++;
                 continue;
             }
 
@@ -997,7 +1019,6 @@ public class Program {
 
         return sb.toString();
     }
-
 
 
     public void addListener(ProgramOutListener listener) {

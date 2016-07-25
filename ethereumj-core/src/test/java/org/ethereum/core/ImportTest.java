@@ -1,13 +1,12 @@
 package org.ethereum.core;
 
 
-import org.ethereum.TestContext;
 import org.ethereum.config.NoAutoscan;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.manager.WorldManager;
-import org.hibernate.SessionFactory;
 import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,10 +28,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.List;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -45,10 +42,10 @@ public class ImportTest {
     @Configuration
     @ComponentScan(basePackages = "org.ethereum")
     @NoAutoscan
-    static class ContextConfiguration extends TestContext {
+    static class ContextConfiguration {
 
         @Bean
-        public BlockStore blockStore(SessionFactory sessionFactory){
+        public BlockStore blockStore(){
 
             IndexedBlockStore blockStore = new IndexedBlockStore();
             blockStore.init(new HashMapDB(), new HashMapDB());
@@ -71,7 +68,7 @@ public class ImportTest {
     public void testScenario1() throws URISyntaxException, IOException {
 
         BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
-        logger.info("Running as: {}", CONFIG.genesisInfo());
+        logger.info("Running as: {}", SystemProperties.getDefault().genesisInfo());
 
         URL scenario1 = ClassLoader
                 .getSystemResource("blockload/scenario1.dmp");

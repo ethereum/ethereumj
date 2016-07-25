@@ -30,14 +30,14 @@ public class BlockLoader {
     SystemProperties config;
 
     @Autowired
-    private Blockchain blockchain;
+    private BlockchainImpl blockchain;
 
     Scanner scanner = null;
 
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
     private void blockWork(Block block) {
-        if (block.getNumber() >= blockchain.getBestBlock().getNumber()) {
+        if (block.getNumber() >= blockchain.getBestBlock().getNumber() || blockchain.getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
@@ -76,7 +76,11 @@ public class BlockLoader {
         exec2 = exec1.add(1, 1000, new Functional.Consumer<Block>() {
             @Override
             public void accept(Block block) {
-                blockWork(block);
+                try {
+                    blockWork(block);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -98,6 +102,15 @@ public class BlockLoader {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+        try {
+            exec1.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        blockchain.flush();
 
         System.out.println(" * Done * ");
     }

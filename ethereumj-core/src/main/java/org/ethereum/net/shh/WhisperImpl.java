@@ -120,8 +120,7 @@ public class WhisperImpl extends Whisper {
     }
 
     public static String toIdentity(ECKey key) {
-        byte[] pubKey = key.getPubKey();
-        return Hex.toHexString(Arrays.copyOfRange(pubKey, 1, pubKey.length));
+        return Hex.toHexString(key.getNodeId());
     }
 
     public static ECKey fromIdentityToPub(String identity) {
@@ -142,7 +141,7 @@ public class WhisperImpl extends Whisper {
 
     @Override
     public String newIdentity() {
-        return addIdentity(new ECKey().decompress());
+        return addIdentity(new ECKey());
     }
 
     public ECKey getIdentity(String identity) {

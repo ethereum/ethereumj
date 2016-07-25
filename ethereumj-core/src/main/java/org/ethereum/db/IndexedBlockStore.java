@@ -4,7 +4,6 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.Flushable;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +72,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     public byte[] getBlockHashByNumber(long blockNumber){
-        return getChainBlockByNumber(blockNumber).getHash(); // FIXME: can be improved by accessing the hash directly in the index
+        Block chainBlock = getChainBlockByNumber(blockNumber);
+        return chainBlock == null ? null : chainBlock.getHash(); // FIXME: can be improved by accessing the hash directly in the index
     }
 
 
@@ -277,7 +277,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
             while(currentLevel > bestBlock.getNumber()){
                 List<BlockInfo> blocks =  getBlockInfoForLevel(currentLevel);
                 BlockInfo blockInfo = getBlockInfoForHash(blocks, forkLine.getHash());
-                if (blockInfo != null) blockInfo.setMainChain(true);
+                if (blockInfo != null)  {
+                    blockInfo.setMainChain(true);
+                    setBlockInfoForLevel(currentLevel, blocks);
+                }
                 forkLine = getBlockByHash(forkLine.getParentHash());
                 --currentLevel;
             }
@@ -290,7 +293,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
                 List<BlockInfo> blocks =  getBlockInfoForLevel(currentLevel);
                 BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
-                if (blockInfo != null) blockInfo.setMainChain(false);
+                if (blockInfo != null)  {
+                    blockInfo.setMainChain(false);
+                    setBlockInfoForLevel(currentLevel, blocks);
+                }
                 bestLine = getBlockByHash(bestLine.getParentHash());
                 --currentLevel;
             }
@@ -302,10 +308,16 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(currentLevel);
             BlockInfo bestInfo = getBlockInfoForHash(levelBlocks, bestLine.getHash());
-            if (bestInfo != null) bestInfo.setMainChain(false);
+            if (bestInfo != null) {
+                bestInfo.setMainChain(false);
+                setBlockInfoForLevel(currentLevel, levelBlocks);
+            }
 
             BlockInfo forkInfo = getBlockInfoForHash(levelBlocks, forkLine.getHash());
-            if (forkInfo != null) forkInfo.setMainChain(true);
+            if (forkInfo != null) {
+                forkInfo.setMainChain(true);
+                setBlockInfoForLevel(currentLevel, levelBlocks);
+            }
 
 
             bestLine = getBlockByHash(bestLine.getParentHash());
@@ -426,6 +438,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
         return index.get((int) level);
     }
 
+    private void setBlockInfoForLevel(long level, List<BlockInfo> infos){
+        index.set((int) level, infos);
+    }
+
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash){
 
         for (BlockInfo blockInfo : blocks)
@@ -438,8 +454,18 @@ public class IndexedBlockStore extends AbstractBlockstore{
     public void load() {
     }
 
-    public void setSessionFactory(SessionFactory sessionFactory){
-        throw new UnsupportedOperationException();
+    @Override
+    public void close() {
+        logger.info("Closing IndexedBlockStore...");
+        try {
+            indexDS.close();
+        } catch (Exception e) {
+            logger.warn("Problems closing indexDS", e);
+        }
+        try {
+            blocksDS.close();
+        } catch (Exception e) {
+            logger.warn("Problems closing blocksDS", e);
+        }
     }
-
 }

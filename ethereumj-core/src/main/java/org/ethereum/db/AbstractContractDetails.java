@@ -5,8 +5,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**

@@ -19,9 +19,9 @@ import static org.apache.commons.collections4.ListUtils.select;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
-import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.solidity.SolidityType.IntType.decodeInt;
 import static org.ethereum.solidity.SolidityType.IntType.encodeInt;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 public class Abi extends ArrayList<Abi.Entry> {
 

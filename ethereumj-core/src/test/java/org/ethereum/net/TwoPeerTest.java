@@ -1,23 +1,16 @@
 package org.ethereum.net;
 
-import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
-import org.ethereum.mine.Miner;
 import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
-import org.ethereum.net.message.Message;
-import org.ethereum.net.rlpx.MessageCodec;
-import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;
@@ -191,9 +184,9 @@ public class TwoPeerTest {
 
 //        Block b1b = addNextBlock(blockchain, bGen, "chain B");
         Block b1b = createNextBlock(bGen, "7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a", "chain B");
-        Ethash.getForBlock(b1b.getNumber()).mineLight(b1b);
+        Ethash.getForBlock(SystemProperties.getDefault(), b1b.getNumber()).mineLight(b1b);
         Block b2b = createNextBlock(b1b, Hex.toHexString(b2.getStateRoot()), "chain B");
-        Ethash.getForBlock(b2b.getNumber()).mineLight(b2b);
+        Ethash.getForBlock(SystemProperties.getDefault(), b2b.getNumber()).mineLight(b2b);
 
         alternativeFork.add(bGen);
         alternativeFork.add(b1b);
@@ -255,7 +248,7 @@ public class TwoPeerTest {
     }
 
     public static void main(String[] args) throws Exception {
-        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec")).decompress();
+        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec"));
         System.out.println(Hex.toHexString(k.getPrivKeyBytes()));
         System.out.println(Hex.toHexString(k.getAddress()));
         System.out.println(Hex.toHexString(k.getNodeId()));

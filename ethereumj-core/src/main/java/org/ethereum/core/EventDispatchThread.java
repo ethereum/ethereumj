@@ -2,9 +2,11 @@ package org.ethereum.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The class intended to serve as an 'Event Bus' where all EthereumJ events are
@@ -16,12 +18,32 @@ import java.util.concurrent.Executors;
  *
  * Created by Anton Nashatyrev on 29.12.2015.
  */
+@Component
 public class EventDispatchThread {
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
 
-    private final static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public static void invokeLater(final Runnable r) {
+    private static EventDispatchThread eventDispatchThread;
+
+    /**
+     * Returns the default instance for initialization of Autowired instances
+     * to be used in tests
+     */
+    public static EventDispatchThread getDefault() {
+        if (eventDispatchThread == null) {
+            eventDispatchThread = new EventDispatchThread() {
+                @Override
+                public void invokeLater(Runnable r) {
+                    r.run();
+                }
+            };
+        }
+        return eventDispatchThread;
+    }
+
+    public void invokeLater(final Runnable r) {
+        if (executor.isShutdown()) return;
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -32,5 +54,15 @@ public class EventDispatchThread {
                 }
             }
         });
+    }
+
+
+    public void shutdown() {
+        executor.shutdownNow();
+        try {
+            executor.awaitTermination(10L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("shutdown: executor interrupted: {}", e.getMessage());
+        }
     }
 }

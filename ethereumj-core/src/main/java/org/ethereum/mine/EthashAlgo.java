@@ -11,7 +11,7 @@ import java.util.Random;
 
 import static java.lang.System.arraycopy;
 import static java.math.BigInteger.valueOf;
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.*;
 import static org.spongycastle.util.Arrays.reverse;
 

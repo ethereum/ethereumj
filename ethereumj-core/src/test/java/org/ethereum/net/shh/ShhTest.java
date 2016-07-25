@@ -21,7 +21,7 @@ public class ShhTest {
 /*
     private byte[] payload = "Hello whisper!".getBytes();
     private ECKey privKey = ECKey.fromPrivate(BigInteger.TEN);
-    private byte[] pubKey = privKey.decompress().getPubKey();
+    private byte[] pubKey = privKey.getPubKey();
     private int ttl = 10000;
     private Topic[] topics = new Topic[]{
             new Topic("topic 1"),
@@ -66,7 +66,7 @@ public class ShhTest {
         WhisperMessage received = e.open(null);
         ECKey recovered = received.recover();
 
-        assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
+        assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.getPubKey()));
     }
 
     @Test */
@@ -107,13 +107,13 @@ public class ShhTest {
 
         assertEquals(Hex.toHexString(sent.getBytes()), Hex.toHexString(received.getBytes()));
         assertEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
-        assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
+        assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.getPubKey()));
     }
 
     @Test
     public void test5() {
-        ECKey fromKey = ECKey.fromPrivate(Hex.decode("ba43d10d069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8")).decompress();
-        ECKey toKey = ECKey.fromPrivate(Hex.decode("00000000069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8")).decompress();
+        ECKey fromKey = ECKey.fromPrivate(Hex.decode("ba43d10d069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8"));
+        ECKey toKey = ECKey.fromPrivate(Hex.decode("00000000069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8"));
 //        System.out.println("Sending from: " + Hex.toHexString(fromKey.getPubKey()) + "\n to: " + Hex.toHexString(toKey.getPubKey()));
         byte[] bytes = post(fromKey, Hex.toHexString(toKey.getPubKey()), new String[]{"myTopic"}, "Hello all!", 1, 1);
 

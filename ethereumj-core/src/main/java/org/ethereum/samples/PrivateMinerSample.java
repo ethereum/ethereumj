@@ -1,22 +1,16 @@
 package org.ethereum.samples;
 
 import com.typesafe.config.ConfigFactory;
-import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.mine.MinerListener;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
-
-import java.util.List;
 
 /**
  * The sample creates a small private net with two peers: one is the miner, another is a regular peer
@@ -89,7 +83,7 @@ public class PrivateMinerSample {
                 logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
                 // calling this just for indication of the dataset generation
                 // basically this is not required
-                Ethash ethash = Ethash.getForBlock(ethereum.getBlockchain().getBestBlock().getNumber());
+                Ethash ethash = Ethash.getForBlock(config, ethereum.getBlockchain().getBestBlock().getNumber());
                 ethash.getFullDataset();
                 logger.info("Full dataset generated (loaded).");
             }
@@ -203,7 +197,7 @@ public class PrivateMinerSample {
                     Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
                             ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                             receiverAddr, new byte[]{77}, new byte[0]);
-                    tx.sign(senderKey.getPrivKeyBytes());
+                    tx.sign(senderKey);
                     logger.info("<== Submitting tx: " + tx);
                     ethereum.submitTransaction(tx);
                 }

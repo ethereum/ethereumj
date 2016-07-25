@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
@@ -22,7 +21,6 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static java.lang.Math.min;
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The central class for Peer Discovery machinery.
@@ -56,7 +54,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     EthereumListener ethereumListener;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
 
     Functional.Consumer<DiscoveryEvent> messageSender;
 
@@ -76,6 +74,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private DB db;
     private HTreeMap<Node, NodeStatistics.Persistent> nodeStatsDB;
     private boolean inited = false;
+    private Timer logStatsTimer = new Timer();
+    private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
 
     public NodeManager() {
     }
@@ -95,8 +95,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         homeNode = new Node(config.nodeId(), config.externalIp(), config.listenPort());
         table = new NodeTable(homeNode, config.isPublicHomeNode());
 
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        logStatsTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 logger.trace("Statistics:\n {}", dumpAllStatistics());
@@ -118,12 +117,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             // no another init on a new channel activation
             inited = true;
 
-            Timer timer = new Timer("NodeManagerTasks");
-
             // this task is done asynchronously with some fixed rate
             // to avoid any overhead in the NodeStatistics classes keeping them lightweight
             // (which might be critical since they might be invoked from time critical sections)
-            timer.scheduleAtFixedRate(new TimerTask() {
+            nodeManagerTasksTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
                     processListeners();
@@ -132,7 +129,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
             if (PERSIST) {
                 dbRead();
-                timer.scheduleAtFixedRate(new TimerTask() {
+                nodeManagerTasksTimer.scheduleAtFixedRate(new TimerTask() {
                     @Override
                     public void run() {
                         dbWrite();
@@ -149,7 +146,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private void dbRead() {
         try {
             db = mapDBFactory.createTransactionalDB("network/discovery");
-            if (SystemProperties.CONFIG.databaseReset()) {
+            if (config.databaseReset()) {
                 logger.info("Resetting DB Node statistics...");
                 db.delete("nodeStats");
             }
@@ -342,26 +339,22 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 }
                 return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
             }
-        }, BEST_DIFFICULTY_COMPARATOR, limit);
+        }, limit);
     }
 
     /**
      * Returns limited list of nodes matching {@code predicate} criteria<br>
-     * Sorting is performed before result truncation,
-     * therefore result list contains best nodes according to provided {@code comparator}
+     * The nodes are sorted then by their totalDifficulties
      *
      * @param predicate only those nodes which are satisfied to its condition are included in results
-     * @param comparator used to sort nodes before truncation
      * @param limit max size of returning list
      *
      * @return list of nodes matching criteria
      */
     private List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
-            Comparator<NodeHandler> comparator,
-            int limit
-    ) {
-        List<NodeHandler> filtered = new ArrayList<>();
+            int limit    ) {
+        ArrayList<NodeHandler> filtered = new ArrayList<>();
         synchronized (this) {
             for (NodeHandler handler : nodeHandlerMap.values()) {
                 if (predicate.test(handler)) {
@@ -369,7 +362,13 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 }
             }
         }
-        Collections.sort(filtered, comparator);
+        Collections.sort(filtered, new Comparator<NodeHandler>() {
+            @Override
+            public int compare(NodeHandler o1, NodeHandler o2) {
+                return o2.getNodeStatistics().getEthTotalDifficulty().compareTo(
+                        o1.getNodeStatistics().getEthTotalDifficulty());
+            }
+        });
         return CollectionUtils.truncate(filtered, limit);
     }
 
@@ -416,6 +415,26 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return sb.toString();
     }
 
+    public void close() {
+        peerConnectionManager.close();
+        try {
+            nodeManagerTasksTimer.cancel();
+        } catch (Exception e) {
+            logger.warn("Problems canceling nodeManagerTasksTimer", e);
+        }
+        try {
+            logStatsTimer.cancel();
+        } catch (Exception e) {
+            logger.warn("Problems canceling logStatsTimer", e);
+        }
+        try {
+            logger.info("Closing discovery DB...");
+            db.close();
+        } catch (Throwable e) {
+            logger.warn("Problems closing db", e);
+        }
+    }
+
     private class ListenerHandler {
         Map<NodeHandler, Object> discoveredNodes = new IdentityHashMap<>();
         DiscoverListener listener;
@@ -440,27 +459,4 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }
     }
-
-    private static final Comparator<NodeHandler> BEST_DIFFICULTY_COMPARATOR = new Comparator<NodeHandler>() {
-        @Override
-        public int compare(NodeHandler n1, NodeHandler n2) {
-            BigInteger td1 = null;
-            BigInteger td2 = null;
-            if(n1.getNodeStatistics().getEthTotalDifficulty() != null) {
-                td1 = n1.getNodeStatistics().getEthTotalDifficulty();
-            }
-            if(n2.getNodeStatistics().getEthTotalDifficulty() != null) {
-                td2 = n2.getNodeStatistics().getEthTotalDifficulty();
-            }
-            if (td1 != null && td2 != null) {
-                return td2.compareTo(td1);
-            } else if (td1 == null && td2 == null) {
-                return 0;
-            } else if (td1 != null) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-    };
 }

@@ -1,6 +1,8 @@
 package org.ethereum.util;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -103,6 +105,12 @@ public class ExecutorPipeline <In, Out>{
         });
     }
 
+    public void pushAll(final List<In> list) {
+        for (In in : list) {
+            push(in);
+        }
+    }
+
     public ExecutorPipeline<In, Out> setThreadPoolName(String threadPoolName) {
         this.threadPoolName = threadPoolName;
         return this;
@@ -114,6 +122,26 @@ public class ExecutorPipeline <In, Out>{
 
     public Map<Long, Out> getOrderMap() {
         return orderMap;
+    }
+
+    public void shutdown() {
+        try {
+            exec.shutdown();
+        } catch (Exception e) {}
+        if (next != null) {
+            exec.shutdown();
+        }
+    }
+
+    /**
+     * Shutdowns executors and waits until all pipeline
+     * submitted tasks complete
+     * @throws InterruptedException
+     */
+    public void join() throws InterruptedException {
+        exec.shutdown();
+        exec.awaitTermination(10, TimeUnit.MINUTES);
+        if (next != null) next.join();
     }
 
     private static class LimitedQueue<E> extends LinkedBlockingQueue<E> {

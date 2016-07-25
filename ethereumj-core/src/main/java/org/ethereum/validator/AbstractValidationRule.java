@@ -23,7 +23,7 @@ public abstract class AbstractValidationRule implements ValidationRule {
     public void logErrors(Logger logger) {
         if (logger.isErrorEnabled())
             for (String msg : errors) {
-                logger.error("{} invalid: {}", getEntityClass().getSimpleName(), msg);
+                logger.warn("{} invalid: {}", getEntityClass().getSimpleName(), msg);
             }
     }
 

@@ -16,7 +16,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     private Map<DataWord, DataWord> storage = new HashMap<>();
 
-    ContractDetails origContract = new ContractDetailsImpl();
+    ContractDetails origContract;
 
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;

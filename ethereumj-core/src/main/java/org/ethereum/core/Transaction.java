@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -9,10 +9,8 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
-import org.ethereum.vm.GasCost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -20,8 +18,9 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
-import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.ethereum.util.ByteUtil.*;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
 /**
  * A transaction (formally, T) is a single cryptographically
@@ -41,29 +40,29 @@ public class Transaction {
     private byte[] hash;
 
     /* a counter used to make sure each transaction can only be processed once */
-    private byte[] nonce;
+    protected byte[] nonce;
 
     /* the amount of ether to transfer (calculated as wei) */
-    private byte[] value;
+    protected byte[] value;
 
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
-    private byte[] receiveAddress;
+    protected byte[] receiveAddress;
 
     /* the amount of ether to pay as a transaction fee
      * to the miner for each unit of gas */
-    private byte[] gasPrice;
+    protected byte[] gasPrice;
 
     /* the amount of "gas" to allow for the computation.
      * Gas is the fuel of the computational engine;
      * every computational step taken and every byte added
      * to the state or transaction list consumes some gas. */
-    private byte[] gasLimit;
+    protected byte[] gasLimit;
 
     /* An unlimited size byte array specifying
      * input [data] of the message call or
      * Initialization code for a new contract */
-    private byte[] data;
+    protected byte[] data;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
@@ -76,7 +75,7 @@ public class Transaction {
     private byte[] rlpRaw;
     /* Indicates if this transaction has been parsed
      * from the RLP-encoded data */
-    private boolean parsed = false;
+    protected boolean parsed = false;
 
     public Transaction(byte[] rawData) {
         this.rlpEncoded = rawData;
@@ -105,17 +104,14 @@ public class Transaction {
 
     public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data, byte[] r, byte[] s, byte v) {
         this(nonce, gasPrice, gasLimit, receiveAddress, value, data);
-
-        ECDSASignature signature = new ECDSASignature(new BigInteger(r), new BigInteger(s));
-        signature.v = v;
-        this.signature = signature;
+        this.signature = ECDSASignature.fromComponents(r, s, v);
     }
 
-    public long transactionCost(Block block){
+    public long transactionCost(BlockchainNetConfig config, Block block){
 
         if (!parsed) rlpParse();
 
-        return SystemProperties.CONFIG.getBlockchainConfig().getConfigForBlock(block.getNumber()).
+        return config.getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
     }
 
@@ -236,14 +232,13 @@ public class Transaction {
 
     public ECKey getKey() {
         byte[] hash = getRawHash();
-        return ECKey.recoverFromSignature(signature.v, signature, hash, true);
+        return ECKey.recoverFromSignature(signature.v, signature, hash);
     }
 
     public synchronized byte[] getSender() {
         try {
             if (sendAddress == null) {
-                ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());
-                sendAddress = key.getAddress();
+                sendAddress = ECKey.signatureToAddress(getRawHash(), getSignature());
             }
             return sendAddress;
         } catch (SignatureException e) {
@@ -252,10 +247,15 @@ public class Transaction {
         return null;
     }
 
+    /**
+     * @deprecated should prefer #sign(ECKey) over this method
+     */
     public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
-        byte[] hash = this.getRawHash();
-        ECKey key = ECKey.fromPrivate(privKeyBytes).decompress();
-        this.signature = key.sign(hash);
+        sign(ECKey.fromPrivate(privKeyBytes));
+    }
+
+    public void sign(ECKey key) throws MissingPrivateKeyException {
+        this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
     }
 

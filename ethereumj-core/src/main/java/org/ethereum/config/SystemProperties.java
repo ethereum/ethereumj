@@ -31,7 +31,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.*;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files
@@ -55,12 +55,48 @@ public class SystemProperties {
     public final static String PROPERTY_LISTEN_PORT = "peer.listen.port";
     public final static String PROPERTY_PEER_ACTIVE = "peer.active";
     public final static String PROPERTY_DB_RESET = "database.reset";
+    public final static String PROPERTY_PEER_DISCOVERY_ENABLED = "peer.discovery.enabled";
 
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
     private final static String DEFAULT_BLOCKS_LOADER = "";
 
-    public final static SystemProperties CONFIG = new SystemProperties();
+    private static SystemProperties CONFIG;
+    private static boolean useOnlySpringConfig = false;
+    private String generatedNodePrivateKey;
+
+    /**
+     * Returns the static config instance. If the config is passed
+     * as a Spring bean by the application this instance shouldn't
+     * be used
+     * This method is mainly used for testing purposes
+     * (Autowired fields are initialized with this static instance
+     * but when running within Spring context they replaced with the
+     * bean config instance)
+     */
+    public static SystemProperties getDefault() {
+        return useOnlySpringConfig ? null : getSpringDefault();
+    }
+
+    static SystemProperties getSpringDefault() {
+        if (CONFIG == null) {
+            CONFIG = new SystemProperties();
+        }
+        return CONFIG;
+    }
+
+    /**
+     * Used mostly for testing purposes to ensure the application
+     * refers only to the config passed as a Spring bean.
+     * If this property is set to true {@link #getDefault()} returns null
+     */
+    public static void setUseOnlySpringConfig(boolean useOnlySpringConfig) {
+        SystemProperties.useOnlySpringConfig = useOnlySpringConfig;
+    }
+
+    static boolean isUseOnlySpringConfig() {
+        return useOnlySpringConfig;
+    }
 
     /**
      * Marks config accessor methods which need to be called (for value validation)
@@ -90,6 +126,8 @@ public class SystemProperties {
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
+    private final ClassLoader classLoader;
+
     public SystemProperties() {
         this(ConfigFactory.empty());
     }
@@ -103,7 +141,13 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig) {
+        this(apiConfig, SystemProperties.class.getClassLoader());
+    }
+
+    public SystemProperties(Config apiConfig, ClassLoader classLoader) {
         try {
+            this.classLoader = classLoader;
+
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
@@ -127,8 +171,8 @@ public class SystemProperties {
                     .withFallback(cmdLineConfigFile)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)
-                    .withFallback(userConfig)
                     .withFallback(userDirConfig)
+                    .withFallback(userConfig)
                     .withFallback(cmdLineConfigRes)
                     .withFallback(referenceConfig);
 
@@ -193,7 +237,7 @@ public class SystemProperties {
      *
      * @param cliOptions -  command line options to take presidency
      */
-    public void overrideParams(Map<String, String> cliOptions) {
+    public void overrideParams(Map<String, ? extends Object> cliOptions) {
         Config cliConf = ConfigFactory.parseMap(cliOptions);
         overrideParams(cliConf);
     }
@@ -217,7 +261,6 @@ public class SystemProperties {
         return (T) config.getAnyRef(propName);
     }
 
-    @ValidateMe
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
@@ -243,7 +286,7 @@ public class SystemProperties {
             } else {
                 String className = config.getString("blockchain.config.class");
                 try {
-                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) Class.forName(className);
+                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
                     blockchainConfig = aClass.newInstance();
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
@@ -349,7 +392,7 @@ public class SystemProperties {
                 } else {
                     if (configObject.toConfig().hasPath("nodeName")) {
                         String nodeName = configObject.toConfig().getString("nodeName").trim();
-                        // FIXME should be sha3-512 here ?
+                        // FIXME should be keccak-512 here ?
                         nodeId = ECKey.fromPrivate(sha3(nodeName.getBytes())).getNodeId();
                     } else {
                         throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);
@@ -553,29 +596,36 @@ public class SystemProperties {
     }
 
     private String getGeneratedNodePrivateKey() {
-        try {
-            File file = new File(databaseDir(), "nodeId.properties");
-            Properties props = new Properties();
-            if (file.canRead()) {
-                props.load(new FileReader(file));
-            } else {
-                ECKey key = new ECKey().decompress();
-                props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
-                props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
-                file.getParentFile().mkdirs();
-                props.store(new FileWriter(file), "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
-                logger.info("New nodeID generated: " + props.getProperty("nodeId"));
-                logger.info("Generated nodeID and its private key stored in " + file);
+        if (generatedNodePrivateKey == null) {
+            try {
+                File file = new File(databaseDir(), "nodeId.properties");
+                Properties props = new Properties();
+                if (file.canRead()) {
+                    try (Reader r = new FileReader(file)) {
+                        props.load(r);
+                    }
+                } else {
+                    ECKey key = new ECKey();
+                    props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
+                    props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
+                    file.getParentFile().mkdirs();
+                    try (Writer w = new FileWriter(file)) {
+                        props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
+                    }
+                    logger.info("New nodeID generated: " + props.getProperty("nodeId"));
+                    logger.info("Generated nodeID and its private key stored in " + file);
+                }
+                generatedNodePrivateKey = props.getProperty("nodeIdPrivateKey");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            return props.getProperty("nodeIdPrivateKey");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return generatedNodePrivateKey;
     }
 
     @ValidateMe
     public ECKey getMyKey() {
-        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
+        return ECKey.fromPrivate(Hex.decode(privateKey()));
     }
 
     /**
@@ -593,7 +643,7 @@ public class SystemProperties {
 
     @ValidateMe
     public int maxActivePeers() {
-        return config.getInt("peer.maxAcivePeers");
+        return config.getInt("peer.maxActivePeers");
     }
 
     @ValidateMe
@@ -748,7 +798,7 @@ public class SystemProperties {
 
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this);
+            genesis = GenesisLoader.loadGenesis(this, classLoader);
         }
         return genesis;
     }

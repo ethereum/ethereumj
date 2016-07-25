@@ -1,11 +1,13 @@
 package org.ethereum.facade;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.listener.GasPriceTracker;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -15,7 +17,6 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.FutureAdapter;
 
@@ -37,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
@@ -60,9 +61,6 @@ public class EthereumImpl implements Ethereum {
     ChannelManager channelManager;
 
     @Autowired
-    PeerServer peerServer;
-
-    @Autowired
     ApplicationContext ctx;
 
     @Autowired
@@ -83,6 +81,10 @@ public class EthereumImpl implements Ethereum {
     @Autowired
     CompositeEthereumListener compositeEthereumListener;
 
+    @Autowired
+    CommonConfig commonConfig = CommonConfig.getDefault();
+
+
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
     public EthereumImpl() {
@@ -91,15 +93,6 @@ public class EthereumImpl implements Ethereum {
 
     @PostConstruct
     public void init() {
-        if (config.listenPort() > 0) {
-            Executors.newSingleThreadExecutor().submit(
-                    new Runnable() {
-                        public void run() {
-                            peerServer.start(config.listenPort());
-                        }
-                    }
-            );
-        }
         compositeEthereumListener.addListener(gasPriceTracker);
 
         gLogger.info("EthereumJ node started: enode://" + Hex.toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
@@ -215,7 +208,9 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public void close() {
-//        worldManager.close();
+        logger.info("Shutting down Ethereum instance...");
+        worldManager.close();
+        ((AbstractApplicationContext)getApplicationContext()).close();
     }
 
     @Override
@@ -271,7 +266,11 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public ProgramResult callConstant(Transaction tx, Block block) {
+    public TransactionReceipt callConstant(Transaction tx, Block block) {
+        return callConstantImpl(tx, block).getReceipt();
+    }
+
+    private org.ethereum.core.TransactionExecutor callConstantImpl(Transaction tx, Block block) {
         tx.sign(new byte[32]);
 
         Repository repository = ((Repository) worldManager.getRepository())
@@ -279,9 +278,9 @@ public class EthereumImpl implements Ethereum {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
+            org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                            programInvokeFactory, block)
+                            programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                     .setLocalCall(true);
 
             executor.init();
@@ -289,7 +288,7 @@ public class EthereumImpl implements Ethereum {
             executor.go();
             executor.finalization();
 
-            return executor.getResult();
+            return executor;
         } finally {
             repository.rollback();
         }
@@ -302,7 +301,7 @@ public class EthereumImpl implements Ethereum {
                 receiveAddress, 0, function, funcArgs);
         Block bestBlock = worldManager.getBlockchain().getBestBlock();
 
-        return callConstant(tx, bestBlock);
+        return callConstantImpl(tx, bestBlock).getResult();
     }
 
     @Override
@@ -316,7 +315,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public org.ethereum.facade.Repository getSnapshootTo(byte[] root){
+    public org.ethereum.facade.Repository getSnapshotTo(byte[] root){
 
         Repository repository = (Repository) worldManager.getRepository();
         org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);
@@ -337,7 +336,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public List<Transaction> getWireTransactions() {
-        return worldManager.getPendingState().getWireTransactions();
+        return worldManager.getPendingState().getPendingTransactions();
     }
 
     @Override

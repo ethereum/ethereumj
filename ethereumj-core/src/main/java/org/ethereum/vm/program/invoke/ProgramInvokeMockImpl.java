@@ -94,6 +94,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(gasLimit);
     }
 
+    @Override
+    public long getGasLong() {
+        return gasLimit;
+    }
+
     public void setGas(long gasLimit) {
         this.gasLimit = gasLimit;
     }

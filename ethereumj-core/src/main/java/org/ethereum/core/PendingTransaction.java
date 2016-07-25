@@ -23,7 +23,6 @@ public class PendingTransaction {
      * number of block that was best at the moment when transaction's been added
      */
     private long blockNumber;
-    private byte[] sender;
 
     public PendingTransaction(byte[] bytes) {
         parse(bytes);
@@ -47,10 +46,7 @@ public class PendingTransaction {
     }
 
     public byte[] getSender() {
-        if (sender == null) {
-            sender = transaction.getSender();
-        }
-        return sender;
+        return transaction.getSender();
     }
 
     public byte[] getHash() {

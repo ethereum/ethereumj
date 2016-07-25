@@ -5,6 +5,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -16,6 +17,9 @@ import java.net.BindException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.ethereum.crypto.HashUtil.sha3;
 
 @Component
 public class UDPListener {
@@ -29,7 +33,11 @@ public class UDPListener {
     private NodeManager nodeManager;
 
     @Autowired
-    SystemProperties config = SystemProperties.CONFIG;
+    SystemProperties config = SystemProperties.getDefault();
+
+    private Channel channel;
+    private volatile boolean shutdown = false;
+    private DiscoveryExecutor discoveryExecutor;
 
     public UDPListener() {
     }
@@ -81,20 +89,20 @@ public class UDPListener {
 
         final List<Node> bootNodes = new ArrayList<>();
 
-        // FIXME: setting nodes from ip.list and attaching node nodeId [f35cc8] constantly
         for (String boot: args) {
-            bootNodes.add(new Node("enode://f35cc8a29929c7dc36bd46472d6cc68f104ede7fd42f1749c3533eb33a0fb6b45f2182c009271b83ca7f1d08ea5b1329056caf34c61e8f9e06314e39ec6f80b1" +
-                    "@" + boot));
+            // since discover IP list has no NodeIds we will generate random but persistent
+            byte[] nodeId = ECKey.fromPrivate(sha3(boot.getBytes())).getNodeId();
+            bootNodes.add(new Node("enode://" + Hex.toHexString(nodeId) + "@" + boot));
         }
 
         nodeManager.setBootNodes(bootNodes);
 
 
         try {
-            DiscoveryExecutor discoveryExecutor = new DiscoveryExecutor(nodeManager);
+            discoveryExecutor = new DiscoveryExecutor(nodeManager);
             discoveryExecutor.start();
 
-            while (true) {
+            while (!shutdown) {
                 Bootstrap b = new Bootstrap();
                 b.group(group)
                         .channel(NioDatagramChannel.class)
@@ -109,9 +117,13 @@ public class UDPListener {
                             }
                         });
 
-                Channel channel = b.bind(address, port).sync().channel();
+                channel = b.bind(address, port).sync().channel();
 
                 channel.closeFuture().sync();
+                if (shutdown) {
+                    logger.info("Shutdown discovery UDPListener");
+                    break;
+                }
                 logger.warn("UDP channel closed. Recreating after 5 sec pause...");
                 Thread.sleep(5000);
             }
@@ -123,6 +135,26 @@ public class UDPListener {
             }
         } finally {
             group.shutdownGracefully().sync();
+        }
+    }
+
+    public void close() {
+        logger.info("Closing UDPListener...");
+        shutdown = true;
+        if (channel != null) {
+            try {
+                channel.close().await(10, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.warn("Problems closing UDPListener", e);
+            }
+        }
+
+        if (discoveryExecutor != null) {
+            try {
+                discoveryExecutor.close();
+            } catch (Exception e) {
+                logger.warn("Problems closing DiscoveryExecutor", e);
+            }
         }
     }
 

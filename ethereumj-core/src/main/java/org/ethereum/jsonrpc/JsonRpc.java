@@ -36,6 +36,7 @@ public interface JsonRpc {
         public String gasPrice;
         public String value;
         public String data; // compiledCode
+        public String nonce;
 
         @Override
         public String toString() {
@@ -46,6 +47,7 @@ public interface JsonRpc {
                     ", gasPrice='" + gasPrice + '\'' +
                     ", value='" + value + '\'' +
                     ", data='" + data + '\'' +
+                    ", nonce='" + nonce + '\'' +
                     '}';
         }
     }
@@ -98,8 +100,8 @@ public interface JsonRpc {
     }
 
     class CompilationResult {
-        String code;
-        CompilationInfo info;
+        public String code;
+        public CompilationInfo info;
 
         @Override
         public String toString() {
@@ -111,13 +113,13 @@ public interface JsonRpc {
     }
 
     class CompilationInfo {
-        String source;
-        String language;
-        String languageVersion;
-        String compilerVersion;
-        CallTransaction.Contract abiDefinition;
-        String userDoc;
-        String developerDoc;
+        public String source;
+        public String language;
+        public String languageVersion;
+        public String compilerVersion;
+        public CallTransaction.Function[] abiDefinition;
+        public String userDoc;
+        public String developerDoc;
 
         @Override
         public String toString() {

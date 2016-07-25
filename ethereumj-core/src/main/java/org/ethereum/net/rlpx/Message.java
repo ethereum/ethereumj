@@ -62,7 +62,7 @@ public abstract class Message {
 
     public Message encode(byte[] type, byte[] data, ECKey privKey) {
 
-        /* [1] Calc sha3 - prepare for sig */
+        /* [1] Calc keccak - prepare for sig */
         byte[] payload = new byte[type.length + data.length];
         payload[0] = type[0];
         System.arraycopy(data, 0, payload, 1, data.length);
@@ -110,7 +110,7 @@ public abstract class Message {
 
         ECKey outKey = null;
         try {
-            outKey = ECKey.signatureToKey(msgHash, signature.toBase64());
+            outKey = ECKey.signatureToKey(msgHash, signature);
         } catch (SignatureException e) {
             e.printStackTrace();
         }
@@ -119,9 +119,7 @@ public abstract class Message {
     }
 
     public byte[] getNodeId() {
-        byte[] nodeID = new byte[64];
-        System.arraycopy(getKey().getPubKey(), 1, nodeID, 0, 64);
-        return nodeID;
+        return getKey().getNodeId();
     }
 
     public byte[] getPacket() {

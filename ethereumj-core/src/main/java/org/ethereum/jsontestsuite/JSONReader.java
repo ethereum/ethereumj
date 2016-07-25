@@ -15,10 +15,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
@@ -31,14 +29,14 @@ public class JSONReader {
 
     public static String loadJSON(String filename) {
         String json = "";
-        if (!SystemProperties.CONFIG.vmTestLoadLocal())
+        if (!SystemProperties.getDefault().vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/" + filename);
         return json.isEmpty() ? getFromLocal(filename) : json;
     }
 
     public static String loadJSONFromCommit(String filename, String shacommit) {
         String json = "";
-        if (!SystemProperties.CONFIG.vmTestLoadLocal())
+        if (!SystemProperties.getDefault().vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
         if (!json.isEmpty()) json = json.replaceAll("//", "data");
         return json.isEmpty() ? getFromLocal(filename) : json;

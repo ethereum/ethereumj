@@ -3,12 +3,15 @@ package org.ethereum.datasource;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.ByteArrayWrapper;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * Created by Anton Nashatyrev on 17.03.2016.
  */
 public class ObjectDataSource<V> implements Flushable{
     private KeyValueDataSource src;
-    private LRUMap<ByteArrayWrapper, V> cache = new LRUMap<>(256);
+    private Map<ByteArrayWrapper, V> cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(256));
     Serializer<V, byte[]> serializer;
     boolean cacheOnWrite = true;
 
@@ -18,7 +21,7 @@ public class ObjectDataSource<V> implements Flushable{
     }
 
     public ObjectDataSource<V> withCacheSize(int cacheSize) {
-        cache = new LRUMap<>(cacheSize);
+        cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(cacheSize));
         return this;
     }
 
@@ -38,7 +41,7 @@ public class ObjectDataSource<V> implements Flushable{
         // for write-back type cache only
     }
 
-    public void put(byte[] key, V value) {
+    public synchronized void put(byte[] key, V value) {
         byte[] bytes = serializer.serialize(value);
         src.put(key, bytes);
         if (cacheOnWrite) {
@@ -46,7 +49,7 @@ public class ObjectDataSource<V> implements Flushable{
         }
     }
 
-    public V get(byte[] key) {
+    public synchronized V get(byte[] key) {
         ByteArrayWrapper keyW = new ByteArrayWrapper(key);
         V ret = cache.get(keyW);
         if (ret == null) {
@@ -60,5 +63,9 @@ public class ObjectDataSource<V> implements Flushable{
 
     protected KeyValueDataSource getSrc() {
         return src;
+    }
+
+    public void close() {
+        src.close();
     }
 }

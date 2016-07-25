@@ -17,6 +17,45 @@ import java.util.Set;
  */
 public interface EthereumListener {
 
+    enum PendingTransactionState {
+        /**
+         * Transaction may be dropped due to:
+         * - Invalid transaction (invalid nonce, low gas price, insufficient account funds,
+         *         invalid signature)
+         * - Timeout (when pending transaction is not included to any block for
+         *         last [transaction.outdated.threshold] blocks
+         * This is the final state
+         */
+        DROPPED,
+
+        /**
+         * The same as PENDING when transaction is just arrived
+         * Next state can be either PENDING or INCLUDED
+         */
+        NEW_PENDING,
+
+        /**
+         * State when transaction is not included to any blocks (on the main chain), and
+         * was executed on the last best block. The repository state is reflected in the PendingState
+         * Next state can be either INCLUDED, DROPPED (due to timeout)
+         * or again PENDING when a new block (without this transaction) arrives
+         */
+        PENDING,
+
+        /**
+         * State when the transaction is included to a block.
+         * This could be the final state, however next state could also be
+         * PENDING: when a fork became the main chain but doesn't include this tx
+         * INCLUDED: when a fork became the main chain and tx is included into another
+         *           block from the new main chain
+         */
+        INCLUDED;
+
+        public boolean isPending() {
+            return this == NEW_PENDING || this == PENDING;
+        }
+    }
+
     void trace(String output);
 
     void onNodeDiscovered(Node node);
@@ -29,18 +68,34 @@ public interface EthereumListener {
 
     void onSendMessage(Channel channel, Message message);
 
-    void onBlock(Block block, List<TransactionReceipt> receipts);
+    void onBlock(BlockSummary blockSummary);
 
     void onPeerDisconnect(String host, long port);
 
+    /**
+     * @deprecated use onPendingTransactionUpdate filtering state NEW_PENDING
+     * Will be removed in the next release
+     */
     void onPendingTransactionsReceived(List<Transaction> transactions);
 
+    /**
+     * PendingState changes on either new pending transaction or new best block receive
+     * When a new transaction arrives it is executed on top of the current pending state
+     * When a new best block arrives the PendingState is adjusted to the new Repository state
+     * and all transactions which remain pending are executed on top of the new PendingState
+     */
     void onPendingStateChanged(PendingState pendingState);
 
     /**
-     * @deprecated What should be used instead?
+     * Is called when PendingTransaction arrives, executed or dropped and included to a block
+     *
+     * @param txReceipt Receipt of the tx execution on the current PendingState
+     * @param state Current state of pending tx
+     * @param block The block which the current pending state is based on (for PENDING tx state)
+     *              or the block which tx was included to (for INCLUDED state)
      */
-    @Deprecated
+    void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block);
+
     void onSyncDone();
 
     void onNoConnections();
@@ -50,8 +105,4 @@ public interface EthereumListener {
     void onTransactionExecuted(TransactionExecutionSummary summary);
 
     void onPeerAddedToSyncPool(Channel peer);
-
-    void onLongSyncDone();
-
-    void onLongSyncStarted();
 }

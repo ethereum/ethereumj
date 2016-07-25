@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ContractDetailsTest {
 
-    private static final int IN_MEMORY_STORAGE_LIMIT = SystemProperties.CONFIG.detailsInMemoryStorageLimit();
+    private static final int IN_MEMORY_STORAGE_LIMIT = SystemProperties.getDefault().detailsInMemoryStorageLimit();
 
     @Test
     public void test_1(){

@@ -22,17 +22,14 @@ plugins {
 apply plugin: 'propdeps-maven'
 apply plugin: 'com.jfrog.artifactory-upload'
 
-
-repositories {
-    maven {
-        url "http://dl.bintray.com/ethereum/maven"
-    }
-}
-
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
 applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
+
+if ( project.hasProperty('jvmArgs') ) {
+    applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
+}
 if (project.hasProperty("mainClass")) {
     mainClassName = mainClass
 }
@@ -102,7 +99,7 @@ test {
 ext {
     slf4jVersion = '1.7.7'
     leveldbVersion = '0.7'
-    scastleVersion = '1.51.0.0'
+    scastleVersion = '1.53.0.0'
     log4jVersion = '1.2.17'
     springVersion = '4.2.0.RELEASE'
     hibernateVersion = '4.3.7.Final'
@@ -117,7 +114,7 @@ dependencies {
     compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
 
     compile "org.fusesource.leveldbjni:leveldbjni:1.8"
-    compile "org.ethereum:leveldbjni-all:1.18"
+    compile "org.ethereum:leveldbjni-all:1.18.2"
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
@@ -132,11 +129,6 @@ dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
-    compile "org.hibernate:hibernate-core:${hibernateVersion}"
-    compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
-    compile "commons-dbcp:commons-dbcp:1.4"
-    compile "redis.clients:jedis:2.6.0"
-    compile "com.h2database:h2:1.4.187"
     compile "com.typesafe:config:1.2.1"
 
     compile "org.mapdb:mapdb:2.0-beta12"
@@ -322,6 +314,8 @@ def buildTime() {
 }
 
 def gitCurBranch() {
+    def branchName = System.getenv('TRAVIS_BRANCH')
+    if (branchName) return branchName
     def process = "git rev-parse --abbrev-ref HEAD".execute()
     return process.text.trim()
 }

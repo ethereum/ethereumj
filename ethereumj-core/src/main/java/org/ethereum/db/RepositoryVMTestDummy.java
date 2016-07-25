@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -25,10 +25,6 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
     private static final Logger logger = LoggerFactory.getLogger("repository");
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
-
-    public RepositoryVMTestDummy() {
-        super(false);
-    }
 
     @Override
     public void reset() {
@@ -263,7 +259,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
 
     @Override
     public AccountState createAccount(byte[] addr) {
-        AccountState accountState = new AccountState();
+        AccountState accountState = new AccountState(config());
         worldState.put(wrap(addr), accountState);
 
         ContractDetails contractDetails = new ContractDetailsImpl();
@@ -290,7 +286,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
         ContractDetails details = getContractDetails(addr);
 
         if (account == null)
-            account = new AccountState();
+            account = new AccountState(config());
         else
             account = account.clone();
 

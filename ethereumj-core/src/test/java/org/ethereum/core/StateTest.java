@@ -65,7 +65,7 @@ public class StateTest {
         trie.update(contractAddress, account_2.getEncoded());
 
 //        this is saved in the db
-//        trie.update(HashUtil.sha3(codeData), codeData);
+//        trie.update(HashUtil.keccak(codeData), codeData);
 
         // Update miner in world state
         byte[] minerAddress = Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600");

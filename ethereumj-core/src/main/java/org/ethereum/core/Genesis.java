@@ -1,25 +1,13 @@
 package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.util.ByteUtil.wrap;
 /**
  * The genesis block is the first block in the chain and has fixed values according to
  * the protocol specification. The genesis block is 13 items, and is specified thus:
@@ -57,7 +45,7 @@ public class Genesis extends Block {
     }
 
     public static Block getInstance() {
-        return SystemProperties.CONFIG.getGenesis();
+        return SystemProperties.getDefault().getGenesis();
     }
 
     public static Block getInstance(SystemProperties config) {
