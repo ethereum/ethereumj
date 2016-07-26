@@ -19,6 +19,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.spongycastle.util.encoders.Hex;
 
@@ -295,6 +296,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
             }
 
             SolidityContractImpl contract = new SolidityContractImpl(result.contracts.get(contractName));
+
+            for (CompilationResult.ContractMetadata metadata : result.contracts.values()) {
+                contract.addRelatedContract(metadata.abi);
+            }
             return contract;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -388,13 +393,19 @@ public class StandaloneBlockchain implements LocalBlockchain {
         byte[] address;
         CompilationResult.ContractMetadata compiled;
         CallTransaction.Contract contract;
+        List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
 
         public SolidityContractImpl(String abi) {
             contract = new CallTransaction.Contract(abi);
         }
         public SolidityContractImpl(CompilationResult.ContractMetadata result) {
+            this(result.abi);
             compiled = result;
-            contract = new CallTransaction.Contract(compiled.abi);
+        }
+
+        public void addRelatedContract(String abi) {
+            CallTransaction.Contract c = new CallTransaction.Contract(abi);
+            relatedContracts.add(c);
         }
 
         void setAddress(byte[] address) {
@@ -418,7 +429,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         public SolidityCallResult callFunction(long value, String functionName, Object... args) {
             CallTransaction.Function function = contract.getByName(functionName);
             byte[] data = function.encode(args);
-            SolidityCallResult res = new SolidityCallResult(contract, function);
+            SolidityCallResult res = new SolidityCallResultImpl(this, function);
             submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
             return res;
         }
@@ -476,6 +487,49 @@ public class StandaloneBlockchain implements LocalBlockchain {
             throw new UnsupportedOperationException();
         }
     }
+
+    public class SolidityCallResultImpl extends SolidityCallResult {
+        SolidityContractImpl contract;
+        CallTransaction.Function function;
+
+        SolidityCallResultImpl(SolidityContractImpl contract, CallTransaction.Function function) {
+            this.contract = contract;
+            this.function = function;
+        }
+
+        @Override
+        public CallTransaction.Function getFunction() {
+            return function;
+        }
+
+        public List<CallTransaction.Invocation> getEvents() {
+            List<CallTransaction.Invocation> ret = new ArrayList<>();
+            for (LogInfo logInfo : getReceipt().getLogInfoList()) {
+                for (CallTransaction.Contract c : contract.relatedContracts) {
+                    CallTransaction.Invocation event = c.parseEvent(logInfo);
+                    if (event != null) ret.add(event);
+                }
+            }
+            return ret;
+        }
+
+        @Override
+        public String toString() {
+            String ret = "SolidityCallResult{" +
+                    function + ": " +
+                    (isIncluded() ? "EXECUTED" : "PENDING") + ", ";
+            if (isIncluded()) {
+                ret += isSuccessful() ? "SUCCESS" : ("ERR (" + getReceipt().getError() + ")");
+                ret += ", ";
+                if (isSuccessful()) {
+                    ret += "Ret: " + Arrays.toString(getReturnValues()) + ", ";
+                    ret += "Events: " + getEvents() + ", ";
+                }
+            }
+            return ret + "}";
+        }
+    }
+
 
     class SolidityStorageImpl implements SolidityStorage {
         byte[] contractAddr;
