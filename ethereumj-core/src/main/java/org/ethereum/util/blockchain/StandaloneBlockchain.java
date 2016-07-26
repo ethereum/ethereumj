@@ -43,6 +43,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
     boolean autoBlock;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
+    private HashMapDB detailsDS;
+    private HashMapDB stateDS;
+    private BlockSummary lastSummary;
 
     class PendingTx {
         ECKey sender;
@@ -55,6 +58,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         Transaction customTx;
 
+        TransactionResult txResult = new TransactionResult();
+
         public PendingTx(byte[] toAddress, BigInteger value, byte[] data) {
             this.sender = txSender;
             this.toAddress = toAddress;
@@ -63,13 +68,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         public PendingTx(byte[] toAddress, BigInteger value, byte[] data,
-                         SolidityContractImpl createdContract, SolidityContractImpl targetContract) {
+                         SolidityContractImpl createdContract, SolidityContractImpl targetContract, TransactionResult res) {
             this.sender = txSender;
             this.toAddress = toAddress;
             this.value = value;
             this.data = data;
             this.createdContract = createdContract;
             this.targetContract = targetContract;
+            this.txResult = res;
         }
 
         public PendingTx(Transaction customTx) {
@@ -87,6 +93,12 @@ public class StandaloneBlockchain implements LocalBlockchain {
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
         setSender(ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")));
 //        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
+        addEthereumListener(new EthereumListenerAdapter() {
+            @Override
+            public void onBlock(BlockSummary blockSummary) {
+                lastSummary = blockSummary;
+            }
+        });
     }
 
     public StandaloneBlockchain withGenesis(Genesis genesis) {
@@ -138,8 +150,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
-    private List<Transaction> createTransactions(Block parent) {
-        List<Transaction> txes = new ArrayList<>();
+    private Map<PendingTx, Transaction> createTransactions(Block parent) {
+        Map<PendingTx, Transaction> txes = new LinkedHashMap<>();
         Map<ByteArrayWrapper, Long> nonces = new HashMap<>();
         Repository repoSnapshot = getBlockchain().getRepository().getSnapshotTo(parent.getStateRoot());
         for (PendingTx tx : submittedTxes) {
@@ -164,13 +176,13 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 transaction = tx.customTx;
             }
 
-            txes.add(transaction);
+            txes.put(tx, transaction);
         }
         return txes;
     }
 
     public void generatePendingTransactions() {
-        pendingState.addPendingTransactions(createTransactions(getBlockchain().getBestBlock()));
+        pendingState.addPendingTransactions(new ArrayList<>(createTransactions(getBlockchain().getBestBlock()).values()));
     }
 
     @Override
@@ -181,9 +193,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public Block createForkBlock(Block parent) {
         try {
-            List<Transaction> txes = createTransactions(parent);
+            Map<PendingTx, Transaction> txes = createTransactions(parent);
 
-            Block b = getBlockchain().createNewBlock(parent, txes, Collections.EMPTY_LIST);
+            Block b = getBlockchain().createNewBlock(parent, new ArrayList<>(txes.values()), Collections.EMPTY_LIST);
 
             int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.getDefault().getBlockchainConfig().
                     getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
@@ -197,6 +209,13 @@ public class StandaloneBlockchain implements LocalBlockchain {
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);
             }
+
+            List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
+            for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
+                pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
+                pendingTxes.get(i).txResult.executionSummary = lastSummary.getSummaries().get(i);
+            }
+
             submittedTxes.clear();
             return b;
         } catch (InterruptedException|ExecutionException e) {
@@ -258,7 +277,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
         byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
         submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
-                ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null));
+                ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null, new TransactionResult()));
         return contract;
     }
 
@@ -391,15 +410,17 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         @Override
-        public Object[] callFunction(String functionName, Object... args) {
+        public SolidityCallResult callFunction(String functionName, Object... args) {
             return callFunction(0, functionName, args);
         }
 
         @Override
-        public Object[] callFunction(long value, String functionName, Object... args) {
-            byte[] data = contract.getByName(functionName).encode(args);
-            submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this));
-            return null; // TODO return either Future or pending state
+        public SolidityCallResult callFunction(long value, String functionName, Object... args) {
+            CallTransaction.Function function = contract.getByName(functionName);
+            byte[] data = function.encode(args);
+            SolidityCallResult res = new SolidityCallResult(contract, function);
+            submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
+            return res;
         }
 
         @Override
