@@ -16,6 +16,7 @@ import org.ethereum.trie.JournalPruneDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,13 +80,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private boolean isSnapshot = false;
     private long bestBlockNumber = 0;
     private long pruneBlockCount;
+    private boolean pruneEnabled = true;
 
     public RepositoryImpl() {
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+        this(detailsDS, stateDS, false);
+    }
+
+    public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS, boolean pruneEnabled) {
         this.detailsDS = detailsDS;
         this.stateDS = stateDS;
+        this.pruneEnabled = pruneEnabled;
         init();
     }
 
@@ -107,7 +114,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         detailsDB = new DatabaseImpl(detailsDS);
         dds.setDB(detailsDB);
 
-        pruneBlockCount = config.databasePruneDepth();
+        pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
 
         worldState = new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
     }
