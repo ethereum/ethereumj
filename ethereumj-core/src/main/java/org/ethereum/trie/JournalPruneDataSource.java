@@ -24,6 +24,21 @@ public class JournalPruneDataSource implements KeyValueDataSource {
         Set<ByteArrayWrapper> deletedKeys = new HashSet<>();
     }
 
+    private static class Ref {
+        boolean dbRef;
+        int journalRefs;
+
+        public Ref(boolean dbRef) {
+            this.dbRef = dbRef;
+        }
+
+        public int getTotRefs() {
+            return journalRefs + (dbRef ? 1 : 0);
+        }
+    }
+
+    Map<ByteArrayWrapper, Ref> refCount = new HashMap<>();
+
     private KeyValueDataSource src;
     // block hash => updates
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
@@ -36,8 +51,15 @@ public class JournalPruneDataSource implements KeyValueDataSource {
     /*******  updates  *******/
 
     public synchronized byte[] put(byte[] key, byte[] value) {
-        currentUpdates.insertedKeys.add(new ByteArrayWrapper(key));
-        return src.put(key, value);
+        ByteArrayWrapper keyW = new ByteArrayWrapper(key);
+        if (value != null) {
+            currentUpdates.insertedKeys.add(keyW);
+            incRef(keyW);
+            return src.put(key, value);
+        } else {
+            currentUpdates.deletedKeys.add(keyW);
+            return value;
+        }
     }
 
     public synchronized void delete(byte[] key) {
@@ -48,14 +70,35 @@ public class JournalPruneDataSource implements KeyValueDataSource {
     public synchronized void updateBatch(Map<byte[], byte[]> rows) {
         Map<byte[], byte[]> insertsOnly = new HashMap<>();
         for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
+            ByteArrayWrapper keyW = new ByteArrayWrapper(entry.getKey());
             if (entry.getValue() != null) {
-                currentUpdates.insertedKeys.add(new ByteArrayWrapper(entry.getKey()));
+                currentUpdates.insertedKeys.add(keyW);
+                incRef(keyW);
                 insertsOnly.put(entry.getKey(), entry.getValue());
             } else {
-                currentUpdates.deletedKeys.add(new ByteArrayWrapper(entry.getKey()));
+                currentUpdates.deletedKeys.add(keyW);
             }
         }
+
         src.updateBatch(insertsOnly);
+    }
+
+    private void incRef(ByteArrayWrapper keyW) {
+        Ref cnt = refCount.get(keyW);
+        if (cnt == null) {
+            cnt = new Ref(src.get(keyW.getData()) != null);
+            refCount.put(keyW, cnt);
+        }
+        cnt.journalRefs++;
+    }
+
+    private Ref decRef(ByteArrayWrapper keyW) {
+        Ref cnt = refCount.get(keyW);
+        cnt.journalRefs -= 1;
+        if (cnt.journalRefs == 0) {
+            refCount.remove(keyW);
+        }
+        return cnt;
     }
 
     public synchronized void storeBlockChanges(BlockHeader header) {
@@ -66,23 +109,54 @@ public class JournalPruneDataSource implements KeyValueDataSource {
 
     public synchronized void prune(BlockHeader header) {
         ByteArrayWrapper blockHashW = new ByteArrayWrapper(header.getHash());
-        Updates updates = blockUpdates.get(blockHashW);
+        Updates updates = blockUpdates.remove(blockHashW);
         if (updates != null) {
-            Iterator<Map.Entry<ByteArrayWrapper, Updates>> it = blockUpdates.entrySet().iterator();
-            Map.Entry<ByteArrayWrapper, Updates> cur;
-            while(!(cur = it.next()).getKey().equals(blockHashW)) it.remove();
-            it.remove();
-
-            while(it.hasNext()) {
-                cur = it.next();
-                updates.deletedKeys.removeAll(cur.getValue().insertedKeys);
+            for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
+                decRef(insertedKey).dbRef = true;
             }
+
             Map<byte[], byte[]> batchRemove = new HashMap<>();
             for (ByteArrayWrapper key : updates.deletedKeys) {
-                batchRemove.put(key.getData(), null);
+                Ref ref = refCount.get(key);
+                if (ref == null || ref.journalRefs == 0) {
+                    batchRemove.put(key.getData(), null);
+                } else if (ref != null) {
+                    ref.dbRef = false;
+                }
             }
             src.updateBatch(batchRemove);
+
+            rollbackForkBlocks(header.getNumber());
         }
+    }
+
+    private void rollbackForkBlocks(long blockNum) {
+        for (Updates updates : new ArrayList<>(blockUpdates.values())) {
+            if (updates.blockHeader.getNumber() == blockNum) {
+                rollback(updates.blockHeader);
+            }
+        }
+    }
+
+    private synchronized void rollback(BlockHeader header) {
+        ByteArrayWrapper blockHashW = new ByteArrayWrapper(header.getHash());
+        Updates updates = blockUpdates.remove(blockHashW);
+        Map<byte[], byte[]> batchRemove = new HashMap<>();
+        for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
+            Ref ref = decRef(insertedKey);
+            if (ref.getTotRefs() == 0) {
+                batchRemove.put(insertedKey.getData(), null);
+            }
+        }
+        src.updateBatch(batchRemove);
+    }
+
+    public Map<ByteArrayWrapper, Ref> getRefCount() {
+        return refCount;
+    }
+
+    public LinkedHashMap<ByteArrayWrapper, Updates> getBlockUpdates() {
+        return blockUpdates;
     }
 
     /***** other *****/
