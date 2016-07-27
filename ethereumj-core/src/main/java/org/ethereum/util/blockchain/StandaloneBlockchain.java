@@ -337,7 +337,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         detailsDS = new HashMapDB();
         stateDS = new HashMapDB();
-        Repository repository = new RepositoryImpl(detailsDS, stateDS)
+        RepositoryImpl repository = new RepositoryImpl(detailsDS, stateDS, true)
                 .withBlockStore(blockStore);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
@@ -369,6 +369,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         track.commit();
+        repository.commitBlock(genesis.getHeader());
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
