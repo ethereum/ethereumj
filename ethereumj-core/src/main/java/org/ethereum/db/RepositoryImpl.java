@@ -632,7 +632,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private void pruneBlocks(BlockHeader curBlock) {
         if (curBlock.getNumber() > bestBlockNumber) { // pruning only on increasing blocks
             long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
-            if (pruneBlockNumber > 0) {
+            if (pruneBlockNumber >= 0) {
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
                 if (pruneBlockHash != null) {
                     stateDSPrune.prune(blockStore.getBlockByHash(pruneBlockHash).getHeader());
@@ -640,6 +640,10 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             }
         }
         bestBlockNumber = curBlock.getNumber();
+    }
+
+    public Trie getWorldState() {
+        return worldState;
     }
 
     @Override
