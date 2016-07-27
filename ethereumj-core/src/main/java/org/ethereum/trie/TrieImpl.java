@@ -669,7 +669,21 @@ public class TrieImpl implements Trie {
     }
 
     public boolean validate() {
-        return cache.get(getRootHash()) != null;
+        logger.info("Validating state trie...");
+        final int[] cnt = new int[1];
+        try {
+            scanTree(getRootHash(), new TrieImpl.ScanAction() {
+                @Override
+                public void doOnNode(byte[] hash, Value node) {
+                    cnt[0]++;
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Bad trie", e);
+            return false;
+        }
+        logger.info("Done. Nodes: " + cnt[0]);
+        return true;
     }
 
 
