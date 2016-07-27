@@ -83,6 +83,10 @@ public class HashMapDB implements KeyValueDataSource {
         return this;
     }
 
+    public int getSize() {
+        return storage.size();
+    }
+
     @Override
     public void close() {
         if (clearOnClose) {
