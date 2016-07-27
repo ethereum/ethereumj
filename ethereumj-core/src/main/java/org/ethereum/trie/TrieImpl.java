@@ -23,9 +23,7 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
 import static org.ethereum.util.ByteUtil.wrap;
-import static org.ethereum.util.CompactEncoder.binToNibbles;
-import static org.ethereum.util.CompactEncoder.packNibbles;
-import static org.ethereum.util.CompactEncoder.unpackToNibbles;
+import static org.ethereum.util.CompactEncoder.*;
 import static org.ethereum.util.RLP.calcElementPrefixSize;
 import static org.spongycastle.util.Arrays.concatenate;
 
@@ -536,7 +534,7 @@ public class TrieImpl implements Trie {
             List<Object> siblings = node.asList();
             if (siblings.size() == PAIR_SIZE) {
                 Value val = new Value(siblings.get(1));
-                if (val.isHashCode())
+                if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
                     scanTree(val.asBytes(), scanAction);
             } else {
                 for (int j = 0; j < LIST_SIZE; ++j) {
@@ -650,7 +648,12 @@ public class TrieImpl implements Trie {
     public String getTrieDump() {
 
         TraceAllNodes traceAction = new TraceAllNodes();
-        this.scanTree(this.getRootHash(), traceAction);
+        Value value = new Value(root);
+        if (value.isHashCode()) {
+            this.scanTree(this.getRootHash(), traceAction);
+        } else {
+            traceAction.doOnNode(this.getRootHash(), value);
+        }
 
         final String root;
         if (this.getRoot() instanceof Value) {
