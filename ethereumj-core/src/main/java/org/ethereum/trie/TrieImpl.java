@@ -251,6 +251,10 @@ public class TrieImpl implements Trie {
 
         Value currentNode = this.getNode(node);
 
+        if (currentNode == null) {
+            throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
+        }
+
         // Check for "special" 2 slice type node
         if (currentNode.length() == PAIR_SIZE) {
             // Decode the key
@@ -322,6 +326,10 @@ public class TrieImpl implements Trie {
 
         // New node
         Value currentNode = this.getNode(node);
+        if (currentNode == null) {
+            throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
+        }
+
         // Check for "special" 2 slice type node
         if (currentNode.length() == PAIR_SIZE) {
             // Decode the key
