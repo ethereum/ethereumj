@@ -145,6 +145,10 @@ public class CallTransaction {
             }
         }
 
+        public Type getElementType() {
+            return elementType;
+        }
+
         public abstract byte[] encodeList(List l);
     }
 
