@@ -386,9 +386,9 @@ public class TrieImpl implements Trie {
                 newNode = itemList;
             }
 
-            markRemoved(currentNode.hash());
-            if (!isEmptyNode(currentNode.get(key[0]))) {
-                markRemoved(currentNode.get(key[0]).asBytes());
+
+            if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+                markRemoved(currentNode.hash());
             }
 
             return this.putToCache(newNode);
