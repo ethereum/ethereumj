@@ -33,13 +33,13 @@ public interface SolidityContract extends Contract {
      * or return Future which is available upon block including trnasaction
      * or combine both approaches
      */
-    Object[] callFunction(String functionName, Object ... args);
+    SolidityCallResult callFunction(String functionName, Object ... args);
 
     /**
      * Submits the transaction which invokes the specified contract function
      * with corresponding arguments and sends the specified value to the contract
      */
-    Object[] callFunction(long value, String functionName, Object ... args);
+    SolidityCallResult callFunction(long value, String functionName, Object ... args);
 
     /**
      * Call the function without submitting a transaction and without
