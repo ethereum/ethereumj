@@ -608,6 +608,7 @@ public class SystemProperties {
                     ECKey key = new ECKey();
                     props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
                     props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
+                    props.setProperty("Address", Hex.toHexString(key.getAddress())); // put address in nodeId.properties
                     file.getParentFile().mkdirs();
                     try (Writer w = new FileWriter(file)) {
                         props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
