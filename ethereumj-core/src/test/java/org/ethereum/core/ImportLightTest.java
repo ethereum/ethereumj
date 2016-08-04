@@ -418,7 +418,7 @@ public class ImportLightTest {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -445,6 +445,7 @@ public class ImportLightTest {
         }
 
         track.commit();
+        repository.commitBlock(genesis.getHeader());
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 

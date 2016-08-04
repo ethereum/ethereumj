@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
@@ -45,7 +46,7 @@ public class WorldManager {
     private Blockchain blockchain;
 
     @Autowired
-    private Repository repository;
+    private RepositoryImpl repository;
 
     @Autowired
     private PeerClient activePeer;
@@ -159,6 +160,7 @@ public class WorldManager {
                 repository.createAccount(key.getData());
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
+            repository.commitBlock(genesis.getHeader());
 
             blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
 
