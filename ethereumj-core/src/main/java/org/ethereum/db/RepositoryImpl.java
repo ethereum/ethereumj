@@ -116,7 +116,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
         pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
 
-        worldState = new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
+        worldState = createStateTrie();
+    }
+
+    private Trie createStateTrie() {
+        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
     }
 
     @Override
@@ -649,26 +653,22 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Override
     public synchronized Repository getSnapshotTo(byte[] root){
 
-        TrieImpl trie = new SecureTrie(stateDS);
-        trie.setRoot(root);
-        trie.setCache(((TrieImpl)(worldState)).getCache());
-
         RepositoryImpl repo = new RepositoryImpl();
         repo.commonConfig = commonConfig;
         repo.blockStore = blockStore;
         repo.config = config;
-        repo.worldState = trie;
         repo.stateDS = this.stateDS;
         repo.stateDSCache = this.stateDSCache;
         repo.stateDSPrune = this.stateDSPrune;
         repo.pruneBlockCount = this.pruneBlockCount;
-
         repo.detailsDB = this.detailsDB;
         repo.detailsDS = this.detailsDS;
-
         repo.dds = this.dds;
-
         repo.isSnapshot = true;
+
+        repo.worldState = repo.createStateTrie();
+        repo.worldState.setRoot(root);
+
 
         return repo;
     }
