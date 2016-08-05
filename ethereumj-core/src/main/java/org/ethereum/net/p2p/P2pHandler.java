@@ -237,6 +237,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 
         channel.getNodeStatistics().setClientId(msg.getClientId());
+        channel.getNodeStatistics().capabilities.clear();
         channel.getNodeStatistics().capabilities.addAll(msg.getCapabilities());
 
         this.ethInbound = channel.getNodeStatistics().ethInbound.get();
