@@ -293,10 +293,6 @@ public class Channel {
         return peerStats;
     }
 
-    public HelloMessage getHelloMessage() {
-        return p2pHandler.getHandshakeHelloMessage();
-    }
-
     // ETH sub protocol
 
     public void fetchBlockBodies(List<BlockHeaderWrapper> headers) {
