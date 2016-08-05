@@ -169,8 +169,13 @@ public class SyncManager {
 
                     if (any != null) {
                         SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
+                        logger.debug("headerRetrieveLoop: request headers (" + hReq.getStart() + ") from " + any.getNode());
                         any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                    } else {
+                        logger.debug("headerRetrieveLoop: No IDLE peers found");
                     }
+                } else {
+                    logger.debug("headerRetrieveLoop: HeaderQueue is full");
                 }
                 receivedHeadersLatch = new CountDownLatch(1);
                 receivedHeadersLatch.await(isSyncDone() ? 10000 : 2000, TimeUnit.MILLISECONDS);
@@ -204,12 +209,18 @@ public class SyncManager {
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
                         Channel any = pool.getAnyIdle();
-                        if (any == null) break;
-                        any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
-                        reqBlocksCounter ++;
+                        if (any == null) {
+                            logger.debug("blockRetrieveLoop: No IDLE peers found");
+                            break;
+                        } else {
+                            logger.debug("blockRetrieveLoop: Requesting " + blocksRequest.getBlockHeaders().size() + " blocks from " + any.getNode());
+                            any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                            reqBlocksCounter++;
+                        }
                     }
                     receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter, 1));
                 } else {
+                    logger.debug("blockRetrieveLoop: BlockQueue is full");
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
 
