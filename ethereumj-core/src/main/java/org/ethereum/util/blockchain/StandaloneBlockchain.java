@@ -182,6 +182,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return txes;
     }
 
+    public PendingStateImpl getPendingState() {
+        return pendingState;
+    }
+
     public void generatePendingTransactions() {
         pendingState.addPendingTransactions(new ArrayList<>(createTransactions(getBlockchain().getBestBlock()).values()));
     }
