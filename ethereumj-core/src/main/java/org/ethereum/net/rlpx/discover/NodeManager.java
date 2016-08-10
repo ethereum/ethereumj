@@ -78,8 +78,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
 
     @Autowired
-    public NodeManager(SystemProperties config) {
+    public NodeManager(SystemProperties config, EthereumListener ethereumListener) {
         this.config = config;
+        this.ethereumListener = ethereumListener;
 
         PERSIST = config.peerDiscoveryPersist();
         discoveryEnabled = config.peerDiscovery();
