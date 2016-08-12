@@ -35,6 +35,13 @@ public class TransactionInfo {
         this.index = index;
     }
 
+    /**
+     * Creates a pending tx info
+     */
+    public TransactionInfo(TransactionReceipt receipt) {
+        this.receipt = receipt;
+    }
+
     public TransactionInfo(byte[] rlp) {
         RLPList params = RLP.decode2(rlp);
         RLPList txInfo = (RLPList) params.get(0);

@@ -101,7 +101,7 @@ public class JsonRpcTest {
             JsonRpc.CallArguments ca = new JsonRpc.CallArguments();
             ca.from = cowAcct;
             ca.to = "0x0000000000000000000000000000000000001234";
-            ca.gasLimit = "0x300000";
+            ca.gas = "0x300000";
             ca.gasPrice = "0x10000000000";
             ca.value = "0x7777";
             ca.data = "0x";
@@ -153,7 +153,7 @@ public class JsonRpcTest {
             callArgs.from = cowAcct;
             callArgs.data = compRes.code;
             callArgs.gasPrice = "0x10000000000";
-            callArgs.gasLimit = "0x1000000";
+            callArgs.gas = "0x1000000";
             String txHash2 = jsonRpc.eth_sendTransaction(callArgs);
             sGas = TypeConverter.StringHexToBigInteger(jsonRpc.eth_estimateGas(callArgs)).longValue();
 

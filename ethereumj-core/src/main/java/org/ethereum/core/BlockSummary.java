@@ -10,6 +10,7 @@ public class BlockSummary {
     private final Map<byte[], BigInteger> rewards;
     private final List<TransactionReceipt> receipts;
     private final List<TransactionExecutionSummary> summaries;
+    private BigInteger totalDifficulty = BigInteger.ZERO;
 
     public BlockSummary(Block block, Map<byte[], BigInteger> rewards, List<TransactionReceipt> receipts, List<TransactionExecutionSummary> summaries) {
         this.block = block;
@@ -35,5 +36,13 @@ public class BlockSummary {
      */
     public Map<byte[], BigInteger> getRewards() {
         return rewards;
+    }
+
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty = totalDifficulty;
+    }
+
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty;
     }
 }

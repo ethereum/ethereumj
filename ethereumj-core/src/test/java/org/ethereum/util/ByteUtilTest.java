@@ -336,6 +336,8 @@ public class ByteUtilTest {
         assertArrayEquals(bytes, Hex.decode("ff"));
         bytes = ByteUtil.intToBytesNoLeadZeroes(256);
         assertArrayEquals(bytes, Hex.decode("0100"));
+        bytes = ByteUtil.intToBytesNoLeadZeroes(0);
+        assertArrayEquals(bytes, new byte[0]);
 
         bytes = ByteUtil.intToBytes(-1);
         assertArrayEquals(bytes, Hex.decode("ffffffff"));
@@ -345,7 +347,9 @@ public class ByteUtilTest {
         assertArrayEquals(bytes, Hex.decode("000000ff"));
         bytes = ByteUtil.intToBytes(256);
         assertArrayEquals(bytes, Hex.decode("00000100"));
-        
+        bytes = ByteUtil.intToBytes(0);
+        assertArrayEquals(bytes, Hex.decode("00000000"));
+
         bytes = ByteUtil.longToBytesNoLeadZeroes(-1);
         assertArrayEquals(bytes, Hex.decode("ffffffffffffffff"));
         bytes = ByteUtil.longToBytesNoLeadZeroes(1);
@@ -354,6 +358,8 @@ public class ByteUtilTest {
         assertArrayEquals(bytes, Hex.decode("ff"));
         bytes = ByteUtil.longToBytesNoLeadZeroes(1L << 32);
         assertArrayEquals(bytes, Hex.decode("0100000000"));
+        bytes = ByteUtil.longToBytesNoLeadZeroes(0);
+        assertArrayEquals(bytes, new byte[0]);
 
         bytes = ByteUtil.longToBytes(-1);
         assertArrayEquals(bytes, Hex.decode("ffffffffffffffff"));
@@ -363,5 +369,7 @@ public class ByteUtilTest {
         assertArrayEquals(bytes, Hex.decode("00000000000000ff"));
         bytes = ByteUtil.longToBytes(256);
         assertArrayEquals(bytes, Hex.decode("0000000000000100"));
+        bytes = ByteUtil.longToBytes(0);
+        assertArrayEquals(bytes, Hex.decode("0000000000000000"));
     }
 }

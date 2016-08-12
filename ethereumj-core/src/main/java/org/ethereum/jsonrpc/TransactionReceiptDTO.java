@@ -27,17 +27,19 @@ public class TransactionReceiptDTO {
 
         transactionHash = toJsonHex(receipt.getTransaction().getHash());
         transactionIndex = txInfo.getIndex();
-        blockHash = toJsonHex(txInfo.getBlockHash());
-        blockNumber = block.getNumber();
         cumulativeGasUsed = ByteUtil.byteArrayToLong(receipt.getCumulativeGas());
         gasUsed = ByteUtil.byteArrayToLong(receipt.getGasUsed());
         if (receipt.getTransaction().getContractAddress() != null)
             contractAddress = toJsonHex(receipt.getTransaction().getContractAddress());
         logs = new JsonRpc.LogFilterElement[receipt.getLogInfoList().size()];
-        for (int i = 0; i < logs.length; i++) {
-            LogInfo logInfo = receipt.getLogInfoList().get(i);
-            logs[i] = new JsonRpc.LogFilterElement(logInfo, block, txInfo.getIndex(),
-                    txInfo.getReceipt().getTransaction(), i);
+        if (block != null) {
+            blockNumber = block.getNumber();
+            blockHash = toJsonHex(txInfo.getBlockHash());
+            for (int i = 0; i < logs.length; i++) {
+                LogInfo logInfo = receipt.getLogInfoList().get(i);
+                logs[i] = new JsonRpc.LogFilterElement(logInfo, block, txInfo.getIndex(),
+                        txInfo.getReceipt().getTransaction(), i);
+            }
         }
     }
 }
