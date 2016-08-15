@@ -4,6 +4,7 @@ import java.util.List;
 
 public class BlockTck {
 
+    String acomment;
     BlockHeaderTck blockHeader;
     List<TransactionTck> transactions;
     List<BlockHeaderTck> uncleHeaders;
@@ -69,6 +70,14 @@ public class BlockTck {
 
     public void setReverted(boolean reverted) {
         this.reverted = reverted;
+    }
+
+    public String getAcomment() {
+        return acomment;
+    }
+
+    public void setAcomment(String acomment) {
+        this.acomment = acomment;
     }
 
     @Override
