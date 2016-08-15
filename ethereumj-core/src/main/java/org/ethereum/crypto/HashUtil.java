@@ -1,6 +1,7 @@
 package org.ethereum.crypto;
 
 import org.ethereum.crypto.cryptohash.Keccak256;
+import org.ethereum.crypto.cryptohash.Keccak512;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
 import org.spongycastle.crypto.Digest;
@@ -13,12 +14,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
-import static org.ethereum.crypto.SHA3Helper.Size.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class HashUtil {
 
-    private static final int MAX_ENTRIES = 100; // Should contain most commonly hashed values
     public static final byte[] EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList());
     public static final byte[] EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
@@ -47,8 +46,11 @@ public class HashUtil {
         return digest.digest();
     }
 
-    public static byte[] sha512(byte[] input) {
-        return SHA3Helper.sha3(input, S512);
+    public static byte[] sha3(byte[] input1, byte[] input2) {
+        Keccak256 digest =  new Keccak256();
+        digest.update(input1, 0, input1.length);
+        digest.update(input2, 0, input2.length);
+        return digest.digest();
     }
 
     /**
@@ -56,12 +58,19 @@ public class HashUtil {
      * @param input - data for hash
      * @param start - start of hashing chunk
      * @param length - length of hashing chunk
-     * @return - sha3 hash of the chunk
+     * @return - keccak hash of the chunk
      */
     public static byte[] sha3(byte[] input, int start, int length) {
-        return SHA3Helper.sha3(input, start, length);
+        Keccak256 digest =  new Keccak256();
+        digest.update(input, start, length);
+        return digest.digest();
     }
 
+    public static byte[] sha512(byte[] input) {
+        Keccak512 digest =  new Keccak512();
+        digest.update(input);
+        return digest.digest();
+    }
 
     /**
      * @param data - message to hash
@@ -78,12 +87,11 @@ public class HashUtil {
         throw new NullPointerException("Can't hash a NULL value");
     }
 
-
     /**
      * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.
      * *
      * @param input - data
-     * @return - 20 right bytes of the hash sha3 of the data
+     * @return - 20 right bytes of the hash keccak of the data
      */
     public static byte[] sha3omit12(byte[] input) {
         byte[] hash = sha3(input);

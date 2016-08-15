@@ -41,7 +41,7 @@ public class Ethash {
     public static Ethash getForBlock(SystemProperties config, long blockNumber) {
         long epoch = blockNumber / ethashParams.getEPOCH_LENGTH();
         if (cachedInstance == null || epoch != cachedBlockEpoch) {
-            cachedInstance = new Ethash(config, blockNumber);
+            cachedInstance = new Ethash(config, epoch * ethashParams.getEPOCH_LENGTH());
             cachedBlockEpoch = epoch;
         }
         return cachedInstance;

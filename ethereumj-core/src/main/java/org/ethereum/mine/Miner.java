@@ -1,7 +1,6 @@
 package org.ethereum.mine;
 
 import org.ethereum.core.Block;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 
@@ -12,6 +11,8 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
+
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * The Miner performs the proof-of-work needed for a valid block
@@ -73,7 +74,7 @@ public class Miner {
                 (new BigInteger(1, newBlock.getGasLimit()).longValue() * (1024 - 1) + (newBlock.getGasUsed() * 6 / 5)) / 1024);
         newBlock.getHeader().setGasLimit(BigInteger.valueOf(newGasLimit).toByteArray());
 
-        byte[] hash = SHA3Helper.sha3(newBlock.getEncodedWithoutNonce());
+        byte[] hash = sha3(newBlock.getEncodedWithoutNonce());
 
         byte[] testNonce = new byte[32];
         byte[] concat;
@@ -87,7 +88,7 @@ public class Miner {
             if (testNonce[31] == 0)
                 sleep();
             concat = Arrays.concatenate(hash, testNonce);
-            byte[] result = SHA3Helper.sha3(concat);
+            byte[] result = sha3(concat);
             if (FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0) {
                 newBlock.setNonce(testNonce);
                 return true;

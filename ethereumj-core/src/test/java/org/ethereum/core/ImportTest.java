@@ -1,14 +1,12 @@
 package org.ethereum.core;
 
 
-import org.ethereum.TestContext;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.manager.WorldManager;
-import org.hibernate.SessionFactory;
 import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,10 +42,10 @@ public class ImportTest {
     @Configuration
     @ComponentScan(basePackages = "org.ethereum")
     @NoAutoscan
-    static class ContextConfiguration extends TestContext {
+    static class ContextConfiguration {
 
         @Bean
-        public BlockStore blockStore(SessionFactory sessionFactory){
+        public BlockStore blockStore(){
 
             IndexedBlockStore blockStore = new IndexedBlockStore();
             blockStore.init(new HashMapDB(), new HashMapDB());

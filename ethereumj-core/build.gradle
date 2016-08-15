@@ -14,7 +14,7 @@ buildscript {
 plugins {
     id 'application'
     id 'jacoco'
-    id 'com.github.johnrengelman.shadow' version '1.2.0'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.0.1x'
     id 'com.jfrog.bintray' version '1.0'
 }
@@ -99,7 +99,7 @@ test {
 ext {
     slf4jVersion = '1.7.7'
     leveldbVersion = '0.7'
-    scastleVersion = '1.51.0.0'
+    scastleVersion = '1.53.0.0'
     log4jVersion = '1.2.17'
     springVersion = '4.2.0.RELEASE'
     hibernateVersion = '4.3.7.Final'
@@ -129,11 +129,6 @@ dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
-    compile "org.hibernate:hibernate-core:${hibernateVersion}"
-    compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
-    compile "commons-dbcp:commons-dbcp:1.4"
-    compile "redis.clients:jedis:2.6.0"
-    compile "com.h2database:h2:1.4.187"
     compile "com.typesafe:config:1.2.1"
 
     compile "org.mapdb:mapdb:2.0-beta12"

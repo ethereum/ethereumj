@@ -209,6 +209,7 @@ public class NodeHandler {
             waitForPong = false;
             getNodeStatistics().discoverInPong.add();
             getNodeStatistics().discoverMessageLatency.add(Util.curTime() - pingSent);
+            getNodeStatistics().lastPongReplyTime.set(Util.curTime());
             changeState(State.Alive);
         }
     }

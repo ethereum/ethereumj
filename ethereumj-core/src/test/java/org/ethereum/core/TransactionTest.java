@@ -48,7 +48,7 @@ public class TransactionTest {
         byte[] data = Hex.decode(txRLPRawData);
 
         // step 1: serialize + RLP encode
-        // step 2: hash = sha3(step1)
+        // step 2: hash = keccak(step1)
         byte[] txHash = HashUtil.sha3(data);
 
         String signature = key.doSign(txHash).toBase64();

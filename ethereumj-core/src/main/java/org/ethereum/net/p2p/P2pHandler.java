@@ -20,6 +20,7 @@ import org.ethereum.net.shh.ShhHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +147,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case PONG:
                 msgQueue.receivedMessage(msg);
+                channel.getNodeStatistics().lastPongReplyTime.set(Util.curTime());
                 break;
             case GET_PEERS:
                 msgQueue.receivedMessage(msg);
@@ -235,6 +237,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 
         channel.getNodeStatistics().setClientId(msg.getClientId());
+        channel.getNodeStatistics().capabilities.clear();
+        channel.getNodeStatistics().capabilities.addAll(msg.getCapabilities());
 
         this.ethInbound = channel.getNodeStatistics().ethInbound.get();
         this.ethOutbound = channel.getNodeStatistics().ethOutbound.get();
@@ -315,7 +319,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     logger.error("Unhandled exception", t);
                 }
             }
-        }, 2, config.getProperty("peer.p2p.pingInterval", 5), TimeUnit.SECONDS);
+        }, 2, config.getProperty("peer.p2p.pingInterval", 5L), TimeUnit.SECONDS);
     }
 
     public void killTimers() {

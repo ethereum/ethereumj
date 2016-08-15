@@ -31,7 +31,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.*;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files
@@ -63,6 +63,7 @@ public class SystemProperties {
 
     private static SystemProperties CONFIG;
     private static boolean useOnlySpringConfig = false;
+    private String generatedNodePrivateKey;
 
     /**
      * Returns the static config instance. If the config is passed
@@ -125,6 +126,8 @@ public class SystemProperties {
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
+    private final ClassLoader classLoader;
+
     public SystemProperties() {
         this(ConfigFactory.empty());
     }
@@ -138,7 +141,13 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig) {
+        this(apiConfig, SystemProperties.class.getClassLoader());
+    }
+
+    public SystemProperties(Config apiConfig, ClassLoader classLoader) {
         try {
+            this.classLoader = classLoader;
+
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
@@ -277,7 +286,7 @@ public class SystemProperties {
             } else {
                 String className = config.getString("blockchain.config.class");
                 try {
-                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) Class.forName(className);
+                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
                     blockchainConfig = aClass.newInstance();
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
@@ -383,7 +392,7 @@ public class SystemProperties {
                 } else {
                     if (configObject.toConfig().hasPath("nodeName")) {
                         String nodeName = configObject.toConfig().getString("nodeName").trim();
-                        // FIXME should be sha3-512 here ?
+                        // FIXME should be keccak-512 here ?
                         nodeId = ECKey.fromPrivate(sha3(nodeName.getBytes())).getNodeId();
                     } else {
                         throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);
@@ -587,24 +596,31 @@ public class SystemProperties {
     }
 
     private String getGeneratedNodePrivateKey() {
-        try {
-            File file = new File(databaseDir(), "nodeId.properties");
-            Properties props = new Properties();
-            if (file.canRead()) {
-                props.load(new FileReader(file));
-            } else {
-                ECKey key = new ECKey();
-                props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
-                props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
-                file.getParentFile().mkdirs();
-                props.store(new FileWriter(file), "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
-                logger.info("New nodeID generated: " + props.getProperty("nodeId"));
-                logger.info("Generated nodeID and its private key stored in " + file);
+        if (generatedNodePrivateKey == null) {
+            try {
+                File file = new File(databaseDir(), "nodeId.properties");
+                Properties props = new Properties();
+                if (file.canRead()) {
+                    try (Reader r = new FileReader(file)) {
+                        props.load(r);
+                    }
+                } else {
+                    ECKey key = new ECKey();
+                    props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
+                    props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
+                    file.getParentFile().mkdirs();
+                    try (Writer w = new FileWriter(file)) {
+                        props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
+                    }
+                    logger.info("New nodeID generated: " + props.getProperty("nodeId"));
+                    logger.info("Generated nodeID and its private key stored in " + file);
+                }
+                generatedNodePrivateKey = props.getProperty("nodeIdPrivateKey");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            return props.getProperty("nodeIdPrivateKey");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return generatedNodePrivateKey;
     }
 
     @ValidateMe
@@ -782,7 +798,7 @@ public class SystemProperties {
 
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this);
+            genesis = GenesisLoader.loadGenesis(this, classLoader);
         }
         return genesis;
     }

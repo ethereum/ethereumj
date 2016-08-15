@@ -317,4 +317,221 @@ public class PendingStateTest {
         Assert.assertTrue(pendingState.getRepository().getBalance(alice.getAddress()).
                 compareTo(BigInteger.valueOf(4000000)) == 0);
     }
+
+    @Test
+    public void testRebranch3() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+        ECKey charlie = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+        bc.sendEther(charlie.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        pendingState.addPendingTransaction(tx1);
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+
+        bc.submitTransaction(tx1);
+        Block b2 = bc.createBlock();
+
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        Block b3 = bc.createBlock();
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        bc.submitTransaction(tx1);
+        Block b2_ = bc.createForkBlock(b1);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        Block b3_ = bc.createForkBlock(b2_);
+        Block b4_ = bc.createForkBlock(b3_);
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
+        Assert.assertArrayEquals(txUpd.getRight().getHash(), b2_.getHash());
+
+        Block b4 = bc.createForkBlock(b3);
+        Block b5 = bc.createForkBlock(b4);
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
+        Assert.assertArrayEquals(txUpd.getRight().getHash(), b2.getHash());
+    }
+
+    @Test
+    public void testOldBlockIncluded() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+        ECKey charlie = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+
+        for (int i = 0; i < 16; i++) {
+            bc.createBlock();
+        }
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        pendingState.addPendingTransaction(tx1);
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+
+        bc.submitTransaction(tx1);
+        Block b2_ = bc.createForkBlock(b1);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        bc.submitTransaction(tx1);
+        Block b18 = bc.createBlock();
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
+        Assert.assertArrayEquals(txUpd.getRight().getHash(), b18.getHash());
+    }
+
+    @Test
+    public void testBlockOnlyIncluded() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        bc.submitTransaction(tx1);
+        Block b2 = bc.createBlock();
+
+        Block b2_ = bc.createForkBlock(b1);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+        Block b3_ = bc.createForkBlock(b2_);
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), PENDING);
+    }
+
+    @Test
+    public void testTrackTx1() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b3 = bc.createBlock();
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        bc.submitTransaction(tx1);
+        Block b2_ = bc.createForkBlock(b1);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        pendingState.trackTransaction(tx1);
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+
+        Block b3_ = bc.createForkBlock(b2_);
+        Block b4_ = bc.createForkBlock(b3_);
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
+        Assert.assertArrayEquals(txUpd.getRight().getHash(), b2_.getHash());
+    }
+
+    @Test
+    public void testTrackTx2() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+        Block b1 = bc.createBlock();
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        bc.submitTransaction(tx1);
+        Block b2 = bc.createBlock();
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        pendingState.trackTransaction(tx1);
+
+        txUpd = l.pollTxUpdate(tx1);
+        Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
+        Assert.assertArrayEquals(txUpd.getRight().getHash(), b2.getHash());
+
+        Block b2_ = bc.createForkBlock(b1);
+        Block b3_ = bc.createForkBlock(b2_);
+        Assert.assertEquals(l.pollTxUpdateState(tx1), PENDING);
+    }
+
+    @Test
+    public void testRejected1() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+        ECKey charlie = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+        bc.sendEther(charlie.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        pendingState.addPendingTransaction(tx1);
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+
+        bc.submitTransaction(tx1);
+        Block b2_ = bc.createForkBlock(b1);
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), INCLUDED);
+
+        Block b2 = bc.createForkBlock(b1);
+        Block b3 = bc.createForkBlock(b2);
+        Assert.assertEquals(l.pollTxUpdateState(tx1), PENDING);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+
+        for (int i = 0; i < 16; i++) {
+            bc.createBlock();
+            EthereumListener.PendingTransactionState state = l.pollTxUpdateState(tx1);
+            if (state == EthereumListener.PendingTransactionState.DROPPED) {
+                break;
+            }
+            if (i == 15) {
+                throw new RuntimeException("Transaction was not dropped");
+            }
+        }
+    }
 }

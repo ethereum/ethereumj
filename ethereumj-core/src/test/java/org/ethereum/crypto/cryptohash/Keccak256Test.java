@@ -1,9 +1,6 @@
 package org.ethereum.crypto.cryptohash;
 
 import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * This class is a program entry point; it includes tests for the
@@ -39,37 +36,7 @@ import static org.junit.Assert.assertArrayEquals;
  * @version   $Revision: 257 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
-public class Keccak256Test {
-
-    private static void testKat(Digest dig, byte[] buf, byte[] exp) {
-        /*
-         * First test the hashing itself.
-         */
-        byte[] out = dig.digest(buf);
-        assertArrayEquals(exp, out);
-
-        /*
-         * Now the update() API; this also exercises auto-reset.
-         */
-        for (int i = 0; i < buf.length; i ++)
-            dig.update(buf[i]);
-        assertArrayEquals(exp, dig.digest());
-
-        /*
-         * The cloning API.
-         */
-        int blen = buf.length;
-        dig.update(buf, 0, blen / 2);
-        Digest dig2 = dig.copy();
-        dig.update(buf, blen / 2, blen - (blen / 2));
-        assertArrayEquals(exp, dig.digest());
-        dig2.update(buf, blen / 2, blen - (blen / 2));
-        assertArrayEquals(exp, dig2.digest());
-    }
-
-    private static void testKatHex(Digest dig, String data, String ref) {
-        testKat(dig, Hex.decode(data), Hex.decode(ref));
-    }
+public class Keccak256Test extends AbstractCryptoTest {
 
     @Test
     public void testKeccak256() {

@@ -120,7 +120,7 @@ public class BlockTest {
         String prev = SystemProperties.getDefault().genesisInfo();
         SystemProperties.getDefault().setGenesisInfo("frontier.json");
 
-        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault());
+        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault(), getClass().getClassLoader());
 
         String hash = Hex.toHexString(genesis.getHash());
         String root = Hex.toHexString(genesis.getStateRoot());

@@ -1,5 +1,6 @@
 package org.ethereum.net.rlpx.discover;
 
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
@@ -12,7 +13,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -71,6 +75,7 @@ public class NodeStatistics {
     public final StatHandler discoverInNeighbours = new StatHandler();
     public final StatHandler discoverOutNeighbours = new StatHandler();
     public final Statter.SimpleStatter discoverMessageLatency;
+    public final AtomicLong lastPongReplyTime = new AtomicLong(0l); // in milliseconds
 
     // rlpx stat
     public final StatHandler rlpxConnectionAttempts = new StatHandler();
@@ -82,6 +87,8 @@ public class NodeStatistics {
     public final StatHandler rlpxInMessages = new StatHandler();
 
     private String clientId = "";
+
+    public final List<Capability> capabilities = new ArrayList<>();
 
     private ReasonCode rlpxLastRemoteDisconnectReason = null;
     private ReasonCode rlpxLastLocalDisconnectReason = null;
@@ -166,6 +173,10 @@ public class NodeStatistics {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public String getClientId() {
+        return clientId;
     }
 
     public void setPredefined(boolean isPredefined) {

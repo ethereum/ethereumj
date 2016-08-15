@@ -77,17 +77,11 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private Timer logStatsTimer = new Timer();
     private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
 
-    public NodeManager() {
-    }
+    @Autowired
+    public NodeManager(SystemProperties config, EthereumListener ethereumListener) {
+        this.config = config;
+        this.ethereumListener = ethereumListener;
 
-//    public NodeManager(NodeTable table, ECKey key) {
-//        this.table = table;
-//        homeNode = table.getNode();
-//        this.key = key;
-//    }
-
-    @PostConstruct
-    void init() {
         PERSIST = config.peerDiscoveryPersist();
         discoveryEnabled = config.peerDiscovery();
 

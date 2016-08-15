@@ -5,7 +5,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.facade.Ethereum;
@@ -19,6 +18,7 @@ import org.springframework.context.annotation.Scope;
 import java.math.BigInteger;
 
 import static java.math.BigInteger.valueOf;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.junit.Assert.*;
 
 /**
@@ -101,7 +101,7 @@ public class JsonRpcTest {
             JsonRpc.CallArguments ca = new JsonRpc.CallArguments();
             ca.from = cowAcct;
             ca.to = "0x0000000000000000000000000000000000001234";
-            ca.gasLimit = "0x300000";
+            ca.gas = "0x300000";
             ca.gasPrice = "0x10000000000";
             ca.value = "0x7777";
             ca.data = "0x";
@@ -145,14 +145,15 @@ public class JsonRpcTest {
                             "  num = a; " +
                             "  log1(0x1111, 0x2222);" +
                             "}}");
-            assertTrue(compRes.info.abiDefinition.getByName("set") != null);
+            assertEquals(compRes.info.abiDefinition[0].name, "num");
+            assertEquals(compRes.info.abiDefinition[1].name, "set");
             assertTrue(compRes.code.length() > 10);
 
             JsonRpc.CallArguments callArgs = new JsonRpc.CallArguments();
             callArgs.from = cowAcct;
             callArgs.data = compRes.code;
             callArgs.gasPrice = "0x10000000000";
-            callArgs.gasLimit = "0x1000000";
+            callArgs.gas = "0x1000000";
             String txHash2 = jsonRpc.eth_sendTransaction(callArgs);
             sGas = TypeConverter.StringHexToBigInteger(jsonRpc.eth_estimateGas(callArgs)).longValue();
 
@@ -179,7 +180,7 @@ public class JsonRpcTest {
                     valueOf(3_000_000),
                     TypeConverter.StringHexToByteArray(receipt2.contractAddress),
                     valueOf(0), function.encode(0x777));
-            rawTx.sign(SHA3Helper.sha3("cow".getBytes()));
+            rawTx.sign(sha3("cow".getBytes()));
 
             String txHash3 = jsonRpc.eth_sendRawTransaction(TypeConverter.toJsonHex(rawTx.getEncoded()));
 
