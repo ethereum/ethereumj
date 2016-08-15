@@ -1,5 +1,6 @@
 package org.ethereum.net.rlpx.discover;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.codec.binary.Hex;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
@@ -97,7 +98,7 @@ public class PeerConnectionTester {
                         return h2.nodeHandler.getNodeStatistics().getReputation() -
                                 h1.nodeHandler.getNodeStatistics().getReputation();
                     }
-                }));
+                }), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("discovery-tester-%d").build());
     }
 
     public void close() {

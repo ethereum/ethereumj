@@ -118,16 +118,14 @@ public class TransactionExecutor {
         boolean cumulativeGasReached = txGasLimit.add(BigInteger.valueOf(gasUsedInTheBlock)).compareTo(curBlockGasLimit) > 0;
         if (cumulativeGasReached) {
 
-            if (logger.isWarnEnabled())
-                execError(String.format("Too much gas used in this block: Require: %s Got: %s", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue()));
+            execError(String.format("Too much gas used in this block: Require: %s Got: %s", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue()));
 
             return;
         }
 
         if (txGasLimit.compareTo(BigInteger.valueOf(basicTxCost)) < 0) {
 
-            if (logger.isWarnEnabled())
-                execError(String.format("Not enough gas for transaction execution: Require: %s Got: %s", basicTxCost, txGasLimit));
+            execError(String.format("Not enough gas for transaction execution: Require: %s Got: %s", basicTxCost, txGasLimit));
 
             return;
         }
@@ -189,12 +187,14 @@ public class TransactionExecutor {
         precompiledContract = PrecompiledContracts.getContractForAddress(new DataWord(targetAddress));
 
         if (precompiledContract != null) {
-
             long requiredGas = precompiledContract.getGasForData(tx.getData());
 
-            if (!localCall && m_endGas.compareTo(BigInteger.valueOf(requiredGas)) < 0) {
+            if (!localCall && m_endGas.compareTo(BigInteger.valueOf(requiredGas + basicTxCost)) < 0) {
                 // no refund
                 // no endowment
+                execError("Out of Gas calling precompiled contract 0x" + Hex.toHexString(targetAddress) +
+                        ", required: " + (requiredGas + basicTxCost) + ", left: " + m_endGas);
+                m_endGas = BigInteger.ZERO;
                 return;
             } else {
 

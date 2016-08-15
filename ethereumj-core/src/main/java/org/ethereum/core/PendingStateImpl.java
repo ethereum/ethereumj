@@ -158,6 +158,22 @@ public class PendingStateImpl implements PendingState {
         }
     }
 
+    public synchronized void trackTransaction(Transaction tx) {
+        List<TransactionInfo> infos = transactionStore.get(tx.getHash());
+        if (!infos.isEmpty()) {
+            for (TransactionInfo info : infos) {
+                Block txBlock = blockStore.getBlockByHash(info.getBlockHash());
+                if (txBlock.isEqual(blockStore.getChainBlockByNumber(txBlock.getNumber()))) {
+                    // transaction included to the block on main chain
+                    info.getReceipt().setTransaction(tx);
+                    fireTxUpdate(info.getReceipt(), INCLUDED, txBlock);
+                    return;
+                }
+            }
+        }
+        addPendingTransaction(tx);
+    }
+
     private void fireTxUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]",

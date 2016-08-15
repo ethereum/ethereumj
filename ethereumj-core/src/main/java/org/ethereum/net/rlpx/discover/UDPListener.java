@@ -39,16 +39,11 @@ public class UDPListener {
     private volatile boolean shutdown = false;
     private DiscoveryExecutor discoveryExecutor;
 
-    public UDPListener() {
-    }
+    @Autowired
+    public UDPListener(SystemProperties config, NodeManager nodeManager) {
+        this.config = config;
+        this.nodeManager = nodeManager;
 
-    public UDPListener(String address, int port) {
-        this.address = address;
-        this.port = port;
-    }
-
-    @PostConstruct
-    void init() {
         this.address = config.bindIp();
         port = config.listenPort();
         if (config.peerDiscovery()) {
@@ -71,6 +66,11 @@ public class UDPListener {
                 }.start();
             }
         }
+    }
+
+    public UDPListener(String address, int port) {
+        this.address = address;
+        this.port = port;
     }
 
     public static Node parseNode(String s) {
