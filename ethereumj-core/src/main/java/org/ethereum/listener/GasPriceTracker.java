@@ -26,7 +26,7 @@ public class GasPriceTracker extends EthereumListenerAdapter {
     private long lastVal;
 
     @Override
-    public void onBlock(BlockSummary blockSummary) {
+    public void onBlock(BlockSummary blockSummary, boolean isBestBlock) {
         for (Transaction tx : blockSummary.getBlock().getTransactionsList()) {
             onTransaction(tx);
         }
