@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -142,6 +143,20 @@ public interface Ethereum {
     ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
                                        Object... funcArgs);
 
+
+    /**
+     * Call a contract function locally without sending transaction to the network
+     * and without changing contract storage.
+     * @param receiveAddress hex encoded contract address
+     * @param senderPrivateKey  Normally the constant call doesn't require a sender though
+     *                          in some cases it may affect the result (e.g. if function refers to msg.sender)
+     * @param function  contract function
+     * @param funcArgs  function arguments
+     * @return function result. The return value can be fetched via {@link ProgramResult#getHReturn()}
+     * and decoded with {@link org.ethereum.core.CallTransaction.Function#decodeResult(byte[])}.
+     */
+    ProgramResult callConstantFunction(String receiveAddress, ECKey senderPrivateKey,
+                                       CallTransaction.Function function, Object... funcArgs);
 
     /**
      * @return - repository for all state data.

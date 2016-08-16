@@ -5,6 +5,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -267,11 +268,13 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public TransactionReceipt callConstant(Transaction tx, Block block) {
+        if (tx.getSignature() == null) {
+            tx.sign(ECKey.fromPrivate(new byte[32]));
+        }
         return callConstantImpl(tx, block).getReceipt();
     }
 
     private org.ethereum.core.TransactionExecutor callConstantImpl(Transaction tx, Block block) {
-        tx.sign(new byte[32]);
 
         Repository repository = ((Repository) worldManager.getRepository())
                 .getSnapshotTo(block.getStateRoot())
@@ -295,10 +298,17 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
-                                              Object... funcArgs) {
+    public ProgramResult callConstantFunction(String receiveAddress,
+                                              CallTransaction.Function function, Object... funcArgs) {
+        return callConstantFunction(receiveAddress, ECKey.fromPrivate(new byte[32]), function, funcArgs);
+    }
+
+    @Override
+    public ProgramResult callConstantFunction(String receiveAddress, ECKey senderPrivateKey,
+                                              CallTransaction.Function function, Object... funcArgs) {
         Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
                 receiveAddress, 0, function, funcArgs);
+        tx.sign(senderPrivateKey);
         Block bestBlock = worldManager.getBlockchain().getBestBlock();
 
         return callConstantImpl(tx, bestBlock).getResult();
