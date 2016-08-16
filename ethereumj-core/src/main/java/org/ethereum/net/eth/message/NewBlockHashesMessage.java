@@ -63,6 +63,7 @@ public class NewBlockHashesMessage extends EthMessage {
     }
 
     public List<BlockIdentifier> getBlockIdentifiers() {
+        if (!parsed) parse();
         return blockIdentifiers;
     }
 
