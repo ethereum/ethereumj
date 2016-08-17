@@ -9,6 +9,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
@@ -57,4 +58,19 @@ public class StandaloneBlockchainTest {
         Assert.assertEquals("This string is longer than 32 bytes...", b.callConstFunction("a")[0]);
         Assert.assertEquals(BigInteger.valueOf(777), b.callConstFunction("b")[0]);
     }
+
+    @Test
+    public void encodeTest1() {
+        StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
+        SolidityContract a = sb.submitNewContract(
+                "contract A {" +
+                        "  uint public a;" +
+                        "  function f(uint a_) {a = a_;}" +
+                        "}");
+        a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        BigInteger r = (BigInteger) a.callConstFunction("a")[0];
+        System.out.println(r.toString(16));
+        Assert.assertEquals(new BigInteger(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
+    }
+
 }
