@@ -48,6 +48,7 @@ public interface EthereumListener {
          * PENDING: when a fork became the main chain but doesn't include this tx
          * INCLUDED: when a fork became the main chain and tx is included into another
          *           block from the new main chain
+         * DROPPED: If switched to a new (long enough) main chain without this Tx
          */
         INCLUDED;
 
