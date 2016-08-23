@@ -7,6 +7,9 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -21,7 +24,7 @@ public class InternalTransaction extends Transaction {
     public InternalTransaction(byte[] rawData) {
         super(rawData);
     }
-    
+
     public InternalTransaction(byte[] parentHash, int deep, int index, byte[] nonce, DataWord gasPrice, DataWord gasLimit,
                                byte[] sendAddress, byte[] receiveAddress, byte[] value, byte[] data, String note) {
 
@@ -77,28 +80,26 @@ public class InternalTransaction extends Transaction {
 
     @Override
     public byte[] getEncoded() {
-        if (rlpEncoded != null) return rlpEncoded;
+        if (rlpEncoded == null) {
 
-        byte[] nonce = getNonce();
-        if (isEmpty(nonce) || getLength(nonce) == 1 && nonce[0] == 0) {
-            nonce = RLP.encodeElement(null);
-        } else {
-            nonce = RLP.encodeElement(nonce);
+            byte[] nonce = getNonce();
+            boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
+
+            this.rlpEncoded = RLP.encodeList(
+                    RLP.encodeElement(isEmptyNonce ? null : nonce),
+                    RLP.encodeElement(this.parentHash),
+                    RLP.encodeElement(getSender()),
+                    RLP.encodeElement(getReceiveAddress()),
+                    RLP.encodeElement(getValue()),
+                    RLP.encodeElement(getGasPrice()),
+                    RLP.encodeElement(getGasLimit()),
+                    RLP.encodeElement(getData()),
+                    RLP.encodeString(this.note),
+                    encodeInt(this.deep),
+                    encodeInt(this.index),
+                    encodeInt(this.rejected ? 1 : 0)
+            );
         }
-        byte[] senderAddress = RLP.encodeElement(getSender());
-        byte[] receiveAddress = RLP.encodeElement(getReceiveAddress());
-        byte[] value = RLP.encodeElement(getValue());
-        byte[] gasPrice = RLP.encodeElement(getGasPrice());
-        byte[] gasLimit = RLP.encodeElement(getGasLimit());
-        byte[] data = RLP.encodeElement(getData());
-        byte[] parentHash = RLP.encodeElement(this.parentHash);
-        byte[] type = RLP.encodeString(this.note);
-        byte[] deep = RLP.encodeInt(this.deep);
-        byte[] index = RLP.encodeInt(this.index);
-        byte[] rejected = RLP.encodeInt(this.rejected ? 1 : 0);
-
-        this.rlpEncoded = RLP.encodeList(nonce, parentHash, senderAddress, receiveAddress, value,
-                gasPrice, gasLimit, data, type, deep, index, rejected);
 
         return rlpEncoded;
     }
@@ -125,12 +126,16 @@ public class InternalTransaction extends Transaction {
         this.deep = decodeInt(transaction.get(9).getRLPData());
         this.index = decodeInt(transaction.get(10).getRLPData());
         this.rejected = decodeInt(transaction.get(11).getRLPData()) == 1;
-        
+
         this.parsed = true;
     }
 
+    private static byte[] encodeInt(int value) {
+        return RLP.encodeElement(ByteBuffer.allocate(4).putInt(value).array());
+    }
+
     private static int decodeInt(byte[] encoded) {
-        return isEmpty(encoded) ? 0 : RLP.decodeInt(encoded, 0);
+        return isEmpty(encoded) ? 0 : new BigInteger(encoded).intValue();
     }
 
     @Override
@@ -145,7 +150,7 @@ public class InternalTransaction extends Transaction {
 
     @Override
     public String toString() {
-        return "TransactionData [" + 
+        return "TransactionData [" +
                 "  parentHash=" + toHexString(getParentHash()) +
                 ", hash=" + toHexString(getHash()) +
                 ", nonce=" + toHexString(getNonce()) +

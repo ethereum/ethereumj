@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -35,9 +36,7 @@ import org.springframework.util.concurrent.FutureAdapter;
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -185,7 +184,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public org.ethereum.facade.Blockchain getBlockchain() {
-        return (org.ethereum.facade.Blockchain)worldManager.getBlockchain();
+        return (org.ethereum.facade.Blockchain) worldManager.getBlockchain();
     }
 
     public ImportResult addNewMinedBlock(Block block) {
@@ -210,7 +209,7 @@ public class EthereumImpl implements Ethereum {
     public void close() {
         logger.info("Shutting down Ethereum instance...");
         worldManager.close();
-        ((AbstractApplicationContext)getApplicationContext()).close();
+        ((AbstractApplicationContext) getApplicationContext()).close();
     }
 
     @Override
@@ -270,6 +269,39 @@ public class EthereumImpl implements Ethereum {
         return callConstantImpl(tx, block).getReceipt();
     }
 
+    public BlockSummary replayBlock(Block block) {
+        List<TransactionReceipt> receipts = new ArrayList<>();
+        List<TransactionExecutionSummary> summaries = new ArrayList<>();
+
+        Repository repository = ((Repository) worldManager.getRepository())
+                .getSnapshotTo(block.getStateRoot())
+                .startTracking();
+
+        try {
+            for (Transaction tx : block.getTransactionsList()) {
+                org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor(
+                        tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
+                        programInvokeFactory, block, worldManager.getListener(), 0);
+
+                executor.setLocalCall(true);
+                executor.init();
+                executor.execute();
+                executor.go();
+
+                TransactionExecutionSummary summary = executor.finalization();
+                TransactionReceipt receipt = executor.getReceipt();
+                // TODO: change to repository.getRoot() after RepositoryTrack implementation
+                receipt.setPostTxState(ArrayUtils.EMPTY_BYTE_ARRAY);
+                receipts.add(receipt);
+                summaries.add(summary);
+            }
+        } finally {
+            repository.rollback();
+        }
+
+        return new BlockSummary(block, new HashMap<byte[], BigInteger>(), receipts, summaries);
+    }
+
     private org.ethereum.core.TransactionExecutor callConstantImpl(Transaction tx, Block block) {
         tx.sign(new byte[32]);
 
@@ -315,7 +347,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public org.ethereum.facade.Repository getSnapshotTo(byte[] root){
+    public org.ethereum.facade.Repository getSnapshotTo(byte[] root) {
 
         Repository repository = (Repository) worldManager.getRepository();
         org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);
@@ -345,8 +377,8 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public BlockLoader getBlockLoader(){
-        return  blockLoader;
+    public BlockLoader getBlockLoader() {
+        return blockLoader;
     }
 
     @Override
