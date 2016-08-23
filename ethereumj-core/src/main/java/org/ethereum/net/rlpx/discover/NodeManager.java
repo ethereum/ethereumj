@@ -278,7 +278,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     public void stateChanged(NodeHandler nodeHandler, NodeHandler.State oldState, NodeHandler.State newState) {
-        if (discoveryEnabled) {
+        if (discoveryEnabled && peerConnectionManager != null) {  // peerConnectionManager can be null if component not inited yet
             peerConnectionManager.nodeStatusChanged(nodeHandler);
         }
     }
