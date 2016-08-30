@@ -1,6 +1,13 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.jsontestsuite.runners.StateTestRunner;
+import org.ethereum.jsontestsuite.suite.BlockTestCase;
+import org.ethereum.jsontestsuite.suite.BlockTestSuite;
+import org.ethereum.jsontestsuite.suite.StateTestCase;
+import org.ethereum.jsontestsuite.suite.StateTestSuite;
+import org.ethereum.jsontestsuite.suite.TestCase;
+import org.ethereum.jsontestsuite.suite.TestRunner;
+import org.ethereum.jsontestsuite.suite.TestSuite;
+import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
