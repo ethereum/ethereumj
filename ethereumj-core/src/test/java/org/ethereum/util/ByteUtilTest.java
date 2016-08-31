@@ -401,4 +401,32 @@ public class ByteUtilTest {
         bytes = ByteUtil.longToBytes(0);
         assertArrayEquals(bytes, Hex.decode("0000000000000000"));
     }
+
+    @Test
+    public void testHexStringToBytes() {
+        {
+            String str = "0000";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0, 0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0x0000";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0, 0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0x45a6";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {69, -90};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "1963093cee500c081443e1045c40264b670517af";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = Hex.decode(str);
+            assertArrayEquals(expected, actuals);
+        }
+    }
 }
