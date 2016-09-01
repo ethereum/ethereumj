@@ -1,6 +1,7 @@
 package org.ethereum.config.blockchain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.Constants;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -9,6 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,7 +19,9 @@ import java.util.List;
 public class DaoHFConfig extends HomesteadConfig {
     private final List<byte[]> daoAccounts = new ArrayList<>();
     private final byte[] withdrawAccount = Hex.decode("bf4ed7b27f1d666546e30d74d50d173d20bca754");
-        private long forkBlockNumber = 1_920_000;
+    private long forkBlockNumber = 1_920_000;
+
+    public static final byte[] EthForkBlockHash = Hex.decode("4985f5ca3d2afbec36529aa96f74de3cc10a2a4a6c44f2157a57d2c6059a11bb");
 
     public DaoHFConfig() {
         super();
@@ -57,6 +61,11 @@ public class DaoHFConfig extends HomesteadConfig {
                 repo.addBalance(withdrawAccount, balance);
             }
         }
+    }
+
+    @Override
+    public List<Pair<Long, byte[]>> blockHashConstraints() {
+        return Collections.singletonList(Pair.of(forkBlockNumber, EthForkBlockHash));
     }
 
     private static class DaoAcct {
