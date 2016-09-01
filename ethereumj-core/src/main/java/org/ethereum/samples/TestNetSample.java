@@ -39,6 +39,7 @@ public class TestNetSample extends BasicSample {
                 "sync.enabled = true \n" +
                 // special genesis for this test network
                 "genesis = frontier-test.json \n" +
+                "blockchain.config.name = 'testnet' \n" +
                 "database.dir = testnetSampleDb \n" +
                 "cache.flush.memory = 0";
 

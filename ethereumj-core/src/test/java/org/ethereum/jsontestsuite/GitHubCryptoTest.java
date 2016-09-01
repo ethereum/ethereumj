@@ -2,6 +2,8 @@ package org.ethereum.jsontestsuite;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
+import org.ethereum.jsontestsuite.suite.CryptoTestCase;
+import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

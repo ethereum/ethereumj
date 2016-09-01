@@ -72,4 +72,9 @@ public class Node {
     public Value getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "[" + dirty + ", " + value + "]";
+    }
 }

@@ -5,10 +5,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.jsontestsuite.Utils;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
@@ -25,10 +23,10 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class GenesisLoader {
 
-    public static Genesis loadGenesis(SystemProperties config)  {
+    public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader)  {
         String genesisFile = config.genesisInfo();
 
-        InputStream is = GenesisLoader.class.getResourceAsStream("/genesis/" + genesisFile);
+        InputStream is = classLoader.getResourceAsStream("genesis/" + genesisFile);
         return loadGenesis(config, is);
     }
 
@@ -70,18 +68,18 @@ public class GenesisLoader {
 
     private static Genesis createBlockForJson(GenesisJson genesisJson){
 
-        byte[] nonce       = Utils.parseData(genesisJson.nonce);
-        byte[] difficulty  = Utils.parseData(genesisJson.difficulty);
-        byte[] mixHash     = Utils.parseData(genesisJson.mixhash);
-        byte[] coinbase    = Utils.parseData(genesisJson.coinbase);
+        byte[] nonce       = ByteUtil.hexStringToBytes(genesisJson.nonce);
+        byte[] difficulty  = ByteUtil.hexStringToBytes(genesisJson.difficulty);
+        byte[] mixHash     = ByteUtil.hexStringToBytes(genesisJson.mixhash);
+        byte[] coinbase    = ByteUtil.hexStringToBytes(genesisJson.coinbase);
 
-        byte[] timestampBytes = Utils.parseData(genesisJson.timestamp);
+        byte[] timestampBytes = ByteUtil.hexStringToBytes(genesisJson.timestamp);
         long   timestamp         = ByteUtil.byteArrayToLong(timestampBytes);
 
-        byte[] parentHash  = Utils.parseData(genesisJson.parentHash);
-        byte[] extraData   = Utils.parseData(genesisJson.extraData);
+        byte[] parentHash  = ByteUtil.hexStringToBytes(genesisJson.parentHash);
+        byte[] extraData   = ByteUtil.hexStringToBytes(genesisJson.extraData);
 
-        byte[] gasLimitBytes    = Utils.parseData(genesisJson.gasLimit);
+        byte[] gasLimitBytes    = ByteUtil.hexStringToBytes(genesisJson.gasLimit);
         long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
 
         return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,

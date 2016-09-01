@@ -35,7 +35,7 @@ import java.util.Vector;
  *
  *  This class is a Spring Component which makes it convenient to easily get access (autowire) to
  *  all components created within EthereumJ. However almost all this could be done without dealing
- *  with the Spring machinery from withing a simple main method
+ *  with the Spring machinery from within a simple main method
  *
  *  Created by Anton Nashatyrev on 05.02.2016.
  */

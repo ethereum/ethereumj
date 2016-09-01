@@ -41,8 +41,6 @@ public class ECIESTest {
 
     @BeforeClass
     public static void beforeAll() {
-        if (Security.getProvider("SC") == null)
-            Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
         curve = new ECDomainParameters(IES_CURVE_PARAM.getCurve(), IES_CURVE_PARAM.getG(), IES_CURVE_PARAM.getN(), IES_CURVE_PARAM.getH());
     }
 

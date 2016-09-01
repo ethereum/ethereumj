@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
@@ -143,6 +144,10 @@ public class CallTransaction {
             } else {
                 throw new RuntimeException("List value expected for type " + getName());
             }
+        }
+
+        public Type getElementType() {
+            return elementType;
         }
 
         public abstract byte[] encodeList(List l);
@@ -403,11 +408,7 @@ public class CallTransaction {
             return encodeInt(new BigInteger("" + i));
         }
         public static byte[] encodeInt(BigInteger bigInt) {
-            byte[] ret = new byte[32];
-            Arrays.fill(ret, bigInt.signum() < 0 ? (byte) 0xFF : 0);
-            byte[] bytes = bigInt.toByteArray();
-            System.arraycopy(bytes, 0, ret, 32 - bytes.length, bytes.length);
-            return ret;
+            return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
         }
     }
 

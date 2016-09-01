@@ -7,7 +7,6 @@ import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -177,7 +176,7 @@ public class BzzProtocolTest {
     }
 
     public static class SimpleHive extends Hive {
-        Set<BzzProtocol> peers = new IdentitySet();
+        Map<BzzProtocol, Object> peers = new IdentityHashMap<>();
 //        PeerAddress thisAddress;
         TestPeer thisPeer;
 //        NodeTable nodeTable;
@@ -195,7 +194,7 @@ public class BzzProtocolTest {
 
         @Override
         public void addPeer(BzzProtocol peer) {
-            peers.add(peer);
+            peers.put(peer, null);
             super.addPeer(peer);
 //            nodeTable.addNode(peer.getNode().toNode());
 //            peersAdded();
@@ -228,7 +227,7 @@ public class BzzProtocolTest {
 
         @Override
         public Collection<BzzProtocol> getPeers(Key key, int maxCount) {
-            if (thisPeer == null) return peers;
+            if (thisPeer == null) return peers.keySet();
 //            TreeMap<Key, TestPeer> sort = new TreeMap<Key, TestPeer>(new Comparator<Key>() {
 //                @Override
 //                public int compare(Key o1, Key o2) {

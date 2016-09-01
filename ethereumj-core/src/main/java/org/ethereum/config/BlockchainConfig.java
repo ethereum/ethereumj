@@ -1,5 +1,6 @@
 package org.ethereum.config;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
@@ -9,6 +10,7 @@ import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
 
 import java.math.BigInteger;
+import java.util.List;
 
 /**
  * Describes constants and algorithms used for a specific blockchain at specific stage
@@ -60,4 +62,6 @@ public interface BlockchainConfig {
      * for other blocks it just does nothing
      */
     void hardForkTransfers(Block block, Repository repo);
+
+    List<Pair<Long, byte[]>> blockHashConstraints();
 }

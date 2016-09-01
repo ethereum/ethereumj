@@ -568,6 +568,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         track.commit();
         updateTotalDifficulty(block);
+        summary.setTotalDifficulty(getTotalDifficulty());
 
         storeBlock(block, receipts);
 
@@ -923,6 +924,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         for (int i = 0; i < receipts.size(); i++) {
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
+
+        ((RepositoryImpl) repository).commitBlock(block.getHeader());
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);

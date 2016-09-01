@@ -2,7 +2,6 @@ package org.ethereum.net.swarm;
 
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -28,21 +27,21 @@ public class KademliaTest {
         Map<Node, Set<Node>> reachable = new IdentityHashMap<>();
 
         for (Node node : nodes) {
-            Set<Node> reachnodes = new IdentitySet();
-            reachable.put(node, reachnodes);
+            Map<Node, Object> reachnodes = new IdentityHashMap<>();
+            reachable.put(node, reachnodes.keySet());
             List<Node> closestNodes = table.getClosestNodes(node.getId());
             int max = 16;
             for (Node closestNode : closestNodes) {
-                reachnodes.add(closestNode);
+                reachnodes.put(closestNode, null);
                 if (--max == 0) break;
             }
         }
 
         for (Node node : nodes) {
             System.out.println("Closing node " + nameMap.get(node));
-            Set<Node> closure = new IdentitySet();
-            addAll(reachable, reachable.get(node), closure);
-            reachable.put(node, closure);
+            Map<Node, Object> closure = new IdentityHashMap<>();
+            addAll(reachable, reachable.get(node), closure.keySet());
+            reachable.put(node, closure.keySet());
         }
 
         for (Map.Entry<Node, Set<Node>> entry : reachable.entrySet()) {

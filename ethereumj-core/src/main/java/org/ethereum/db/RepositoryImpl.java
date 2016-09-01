@@ -6,13 +6,17 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
+import org.ethereum.trie.JournalPruneDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,28 +61,44 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Autowired
     private DetailsDataStore dds = new DetailsDataStore();
 
+    @Autowired
+    private BlockStore blockStore;
+
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
-
-    private DatabaseImpl stateDB = null;
 
     @Autowired
     private KeyValueDataSource detailsDS;
     @Autowired
     private KeyValueDataSource stateDS;
+    private CachingDataSource stateDSCache;
+    private JournalPruneDataSource stateDSPrune;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private boolean isSnapshot = false;
+    private long bestBlockNumber = 0;
+    private long pruneBlockCount;
+    private boolean pruneEnabled = true;
 
     public RepositoryImpl() {
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
+        this(detailsDS, stateDS, false);
+    }
+
+    public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS, boolean pruneEnabled) {
         this.detailsDS = detailsDS;
         this.stateDS = stateDS;
+        this.pruneEnabled = pruneEnabled;
         init();
+    }
+
+    public RepositoryImpl withBlockStore(BlockStore blockStore) {
+        this.blockStore = blockStore;
+        return this;
     }
 
     @PostConstruct
@@ -88,29 +108,24 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
         stateDS.setName(STATE_DB);
         stateDS.init();
+        stateDSCache = new CachingDataSource(stateDS);
+        stateDSPrune = new JournalPruneDataSource(stateDSCache);
 
         detailsDB = new DatabaseImpl(detailsDS);
         dds.setDB(detailsDB);
 
-        stateDB = new DatabaseImpl(stateDS);
-        worldState = new SecureTrie(stateDB.getDb());
+        pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
+
+        worldState = createStateTrie();
+    }
+
+    private Trie createStateTrie() {
+        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
     }
 
     @Override
     public void reset() {
-        rwLock.writeLock().lock();
-        try {
-            close();
-
-            detailsDS.init();
-            detailsDB = new DatabaseImpl(detailsDS);
-
-            stateDS.init();
-            stateDB = new DatabaseImpl(stateDS);
-            worldState = new SecureTrie(stateDB.getDb());
-        } finally {
-            rwLock.writeLock().unlock();
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -123,9 +138,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             }
 
 
-            if (stateDB != null) {
-                stateDB.close();
-                stateDB = null;
+            if (stateDS != null) {
+                stateDS.close();
+                stateDS = null;
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -134,7 +149,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public boolean isClosed() {
-        return stateDB == null;
+        return stateDS == null;
     }
 
     @Override
@@ -225,6 +240,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
                 dds.flush();
                 worldState.sync();
+                stateDSCache.flush();
 
                 gLogger.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
         } finally {
@@ -604,26 +620,55 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         worldState.setRoot(root);
     }
 
+    public void setPruneBlockCount(long pruneBlockCount) {
+        this.pruneBlockCount = pruneBlockCount;
+    }
+
+    public synchronized void commitBlock(BlockHeader blockHeader) {
+        worldState.sync();
+
+        if (pruneBlockCount >= 0) {
+            stateDSPrune.storeBlockChanges(blockHeader);
+            pruneBlocks(blockHeader);
+        }
+    }
+
+    private void pruneBlocks(BlockHeader curBlock) {
+        if (curBlock.getNumber() > bestBlockNumber) { // pruning only on increasing blocks
+            long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
+            if (pruneBlockNumber >= 0) {
+                byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
+                if (pruneBlockHash != null) {
+                    stateDSPrune.prune(blockStore.getBlockByHash(pruneBlockHash).getHeader());
+                }
+            }
+        }
+        bestBlockNumber = curBlock.getNumber();
+    }
+
+    public Trie getWorldState() {
+        return worldState;
+    }
+
     @Override
     public synchronized Repository getSnapshotTo(byte[] root){
 
-        TrieImpl trie = new SecureTrie(stateDS);
-        trie.setRoot(root);
-        trie.setCache(((TrieImpl)(worldState)).getCache());
-
         RepositoryImpl repo = new RepositoryImpl();
         repo.commonConfig = commonConfig;
+        repo.blockStore = blockStore;
         repo.config = config;
-        repo.worldState = trie;
-        repo.stateDB = this.stateDB;
         repo.stateDS = this.stateDS;
-
+        repo.stateDSCache = this.stateDSCache;
+        repo.stateDSPrune = this.stateDSPrune;
+        repo.pruneBlockCount = this.pruneBlockCount;
         repo.detailsDB = this.detailsDB;
         repo.detailsDS = this.detailsDS;
-
         repo.dds = this.dds;
-
         repo.isSnapshot = true;
+
+        repo.worldState = repo.createStateTrie();
+        repo.worldState.setRoot(root);
+
 
         return repo;
     }

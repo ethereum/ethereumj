@@ -2,10 +2,7 @@ package org.ethereum.trie;
 
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
-import org.ethereum.util.Value;
+import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -26,9 +23,7 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
 import static org.ethereum.util.ByteUtil.wrap;
-import static org.ethereum.util.CompactEncoder.binToNibbles;
-import static org.ethereum.util.CompactEncoder.packNibbles;
-import static org.ethereum.util.CompactEncoder.unpackToNibbles;
+import static org.ethereum.util.CompactEncoder.*;
 import static org.ethereum.util.RLP.calcElementPrefixSize;
 import static org.spongycastle.util.Arrays.concatenate;
 
@@ -49,6 +44,14 @@ import static org.spongycastle.util.Arrays.concatenate;
  *
  * <b>Note:</b> the data isn't persisted unless `sync` is explicitly called.
  *
+ * This Trie implementation supports node pruning (i.e. obsolete nodes are marked
+ * for removal in the Cache and actually removed from the underlying storage
+ * on [sync] call), but the algorithm is not suitable for the most general case.
+ * In general case a trie node might be referenced from several parent nodes
+ * and for correct pruning the reference counting algorithm needs to be implemented.
+ * As soon as the real life tree keys are hashes it is very unlikely the case so
+ * the pruning algorithm is simplified in this implementation.
+ *
  * @author Nick Savers
  * @since 20.05.2014
  */
@@ -62,6 +65,7 @@ public class TrieImpl implements Trie {
     private Object prevRoot;
     private Object root;
     private Cache cache;
+    private boolean pruningEnabled;
 
     public TrieImpl(KeyValueDataSource db) {
         this(db, "");
@@ -108,6 +112,15 @@ public class TrieImpl implements Trie {
         }
     }
 
+    public boolean isPruningEnabled() {
+        return pruningEnabled;
+    }
+
+    public TrieImpl withPruningEnabled(boolean pruningEnabled) {
+        this.pruningEnabled = pruningEnabled;
+        return this;
+    }
+
     /**************************************
      * Public (query) interface functions *
      **************************************/
@@ -142,6 +155,9 @@ public class TrieImpl implements Trie {
             throw new NullPointerException("Key should not be blank");
         byte[] k = binToNibbles(key);
 
+        if (isEmptyNode(root)) {
+            cache.markRemoved(getRootHash());
+        }
         this.root = this.insertOrDelete(this.root, k, value);
         if (logger.isDebugEnabled()) {
             logger.debug("Added key {} and value {}", Hex.toHexString(key), Hex.toHexString(value));
@@ -233,6 +249,10 @@ public class TrieImpl implements Trie {
 
         Value currentNode = this.getNode(node);
 
+        if (currentNode == null) {
+            throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
+        }
+
         // Check for "special" 2 slice type node
         if (currentNode.length() == PAIR_SIZE) {
             // Decode the key
@@ -268,6 +288,8 @@ public class TrieImpl implements Trie {
                 newHash = this.putToCache(scaledSlice);
             }
 
+            markRemoved(currentNode.hash());
+
             if (matchingLength == 0) {
                 // End of the chain, return
                 return newHash;
@@ -282,6 +304,14 @@ public class TrieImpl implements Trie {
 
             // Replace the first nibble in the key
             newNode[key[0]] = this.insert(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length), value);
+
+            if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+                markRemoved(currentNode.hash());
+                if (!isEmptyNode(currentNode.get(key[0]))) {
+                    markRemoved(currentNode.get(key[0]).asBytes());
+                }
+            }
+
             return this.putToCache(newNode);
         }
     }
@@ -294,6 +324,10 @@ public class TrieImpl implements Trie {
 
         // New node
         Value currentNode = this.getNode(node);
+        if (currentNode == null) {
+            throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
+        }
+
         // Check for "special" 2 slice type node
         if (currentNode.length() == PAIR_SIZE) {
             // Decode the key
@@ -314,6 +348,7 @@ public class TrieImpl implements Trie {
                 } else {
                     newNode = new Object[]{currentNode.get(0), hash};
                 }
+                markRemoved(currentNode.hash());
                 return this.putToCache(newNode);
             } else {
                 return node;
@@ -350,7 +385,19 @@ public class TrieImpl implements Trie {
             } else {
                 newNode = itemList;
             }
+
+
+            if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+                markRemoved(currentNode.hash());
+            }
+
             return this.putToCache(newNode);
+        }
+    }
+
+    private void markRemoved(byte[] hash) {
+        if (pruningEnabled) {
+            cache.markRemoved(hash);
         }
     }
 
@@ -476,16 +523,18 @@ public class TrieImpl implements Trie {
         this.getCache().getNodes();
     }
 
-    private void scanTree(byte[] hash, ScanAction scanAction) {
+    public void scanTree(byte[] hash, ScanAction scanAction) {
 
         Value node = this.getCache().get(hash);
-        if (node == null) return;
+        if (node == null) {
+            throw new RuntimeException("Not found: " + Hex.toHexString(hash));
+        }
 
         if (node.isList()) {
             List<Object> siblings = node.asList();
             if (siblings.size() == PAIR_SIZE) {
                 Value val = new Value(siblings.get(1));
-                if (val.isHashCode())
+                if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
                     scanTree(val.asBytes(), scanAction);
             } else {
                 for (int j = 0; j < LIST_SIZE; ++j) {
@@ -527,11 +576,13 @@ public class TrieImpl implements Trie {
 
         Set<ByteArrayWrapper> keys = map.keySet();
         for (ByteArrayWrapper key : keys){
+            Node node = map.get(key);
+            if (node == null) continue;
 
             byte[] keyBytes =  key.getData();
             keysTotalSize += keyBytes.length;
 
-            byte[] valBytes = map.get(key).getValue().getData();
+            byte[] valBytes = node.getValue().getData();
             valsTotalSize += valBytes.length + calcElementPrefixSize(valBytes);
         }
 
@@ -574,6 +625,8 @@ public class TrieImpl implements Trie {
         int k_1 = 0;
         int k_2 = 0;
         for (ByteArrayWrapper key : keys){
+            Node node = map.get(key);
+            if (node == null) continue;
 
             System.arraycopy(key.getData(), 0, rlpData,
                     (listHeader.length + keysHeader.length + k_1),
@@ -581,7 +634,7 @@ public class TrieImpl implements Trie {
 
             k_1 += key.getData().length;
 
-            byte[] valBytes =  RLP.encodeElement( map.get(key).getValue().getData() );
+            byte[] valBytes =  RLP.encodeElement( node.getValue().getData() );
 
             System.arraycopy(valBytes, 0, rlpData,
                     listHeader.length + keysHeader.length + keysTotalSize + valsHeader.length + k_2,
@@ -595,7 +648,12 @@ public class TrieImpl implements Trie {
     public String getTrieDump() {
 
         TraceAllNodes traceAction = new TraceAllNodes();
-        this.scanTree(this.getRootHash(), traceAction);
+        Value value = new Value(root);
+        if (value.isHashCode()) {
+            this.scanTree(this.getRootHash(), traceAction);
+        } else {
+            traceAction.doOnNode(this.getRootHash(), value);
+        }
 
         final String root;
         if (this.getRoot() instanceof Value) {
@@ -611,7 +669,21 @@ public class TrieImpl implements Trie {
     }
 
     public boolean validate() {
-        return cache.get(getRootHash()) != null;
+        logger.info("Validating state trie...");
+        final int[] cnt = new int[1];
+        try {
+            scanTree(getRootHash(), new TrieImpl.ScanAction() {
+                @Override
+                public void doOnNode(byte[] hash, Value node) {
+                    cnt[0]++;
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Bad trie", e);
+            return false;
+        }
+        logger.info("Done. Nodes: " + cnt[0]);
+        return true;
     }
 
 
