@@ -85,6 +85,9 @@ public class NodeStatistics {
     public final StatHandler rlpxHandshake = new StatHandler();
     public final StatHandler rlpxOutMessages = new StatHandler();
     public final StatHandler rlpxInMessages = new StatHandler();
+    // Not the fork we are working on
+    // Set only after specific block hashes received
+    public boolean wrongFork;
 
     private String clientId = "";
 
@@ -110,6 +113,8 @@ public class NodeStatistics {
         return getSessionFairReputation() + (isPredefined ? REPUTATION_PREDEFINED : 0);
     }
     int getSessionFairReputation() {
+        if (wrongFork) return 0;
+
         int discoverReput = 0;
 
         discoverReput += min(discoverInPong.get(), 10) * (discoverOutPing.get() == discoverInPong.get() ? 2 : 1);

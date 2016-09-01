@@ -57,7 +57,7 @@ public class EventDispatchThread {
                     r.run();
                     long t = (System.nanoTime() - s) / 1_000_000;
                     if (t > 1000) {
-                        logger.warn("EDT task executed in more than 1 sec: " + t + " ms, " + this +
+                        logger.warn("EDT task executed in more than 1 sec: " + r + " ms, " + this +
                         ". Executor queue size: " + executorQueue.size());
 
                     }
