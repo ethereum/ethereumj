@@ -5,6 +5,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -15,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
+import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {

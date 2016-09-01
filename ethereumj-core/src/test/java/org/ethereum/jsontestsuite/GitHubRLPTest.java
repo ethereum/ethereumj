@@ -2,19 +2,15 @@ package org.ethereum.jsontestsuite;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
-import org.ethereum.util.*;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.ethereum.jsontestsuite.suite.JSONReader;
+import org.ethereum.jsontestsuite.suite.RLPTestCase;
 import org.json.simple.parser.ParseException;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

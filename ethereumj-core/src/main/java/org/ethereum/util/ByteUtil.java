@@ -600,4 +600,15 @@ public class ByteUtil {
     public static byte[] shortToBytes(short n) {
         return ByteBuffer.allocate(2).putShort(n).array();
     }
+
+    /**
+     * Converts string hex representation to data bytes
+     * @param data  String like '0xa5e..' or just 'a5e..'
+     * @return  decoded bytes array
+     */
+    public static byte[] hexStringToBytes(String data) {
+        if (data == null) return EMPTY_BYTE_ARRAY;
+        if (data.startsWith("0x")) data = data.substring(2);
+        return Hex.decode(data);
+    }
 }
