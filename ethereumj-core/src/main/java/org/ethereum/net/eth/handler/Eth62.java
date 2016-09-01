@@ -459,7 +459,7 @@ public class Eth62 extends EthHandler {
             List<Pair<Long, byte[]>> constraints = config.getBlockchainConfig().
                     getConfigForBlock(first.getNumber()).blockHashConstraints();
 
-            blockHashCheck = Collections.synchronizedMap(new HashMap<>());
+            blockHashCheck = Collections.synchronizedMap(new HashMap<Long, byte[]>());
             for (Pair<Long, byte[]> constraint : constraints) {
                 if (constraint.getLeft() <= getBestKnownBlock().getNumber()) {
                     blockHashCheck.put(constraint.getLeft(), constraint.getRight());
