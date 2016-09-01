@@ -1,18 +1,18 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
+import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {

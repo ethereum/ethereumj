@@ -48,6 +48,18 @@ public class ByteUtil {
         return bytes;
     }
 
+    public static byte[] bigIntegerToBytesSigned(BigInteger b, int numBytes) {
+        if (b == null)
+            return null;
+        byte[] bytes = new byte[numBytes];
+        Arrays.fill(bytes, b.signum() < 0 ? (byte) 0xFF : 0x00);
+        byte[] biBytes = b.toByteArray();
+        int start = (biBytes.length == numBytes + 1) ? 1 : 0;
+        int length = Math.min(biBytes.length, numBytes);
+        System.arraycopy(biBytes, start, bytes, numBytes - length, length);
+        return bytes;
+    }
+
     /**
      * Omitting sign indication byte.
      * <br><br>
@@ -587,5 +599,16 @@ public class ByteUtil {
 
     public static byte[] shortToBytes(short n) {
         return ByteBuffer.allocate(2).putShort(n).array();
+    }
+
+    /**
+     * Converts string hex representation to data bytes
+     * @param data  String like '0xa5e..' or just 'a5e..'
+     * @return  decoded bytes array
+     */
+    public static byte[] hexStringToBytes(String data) {
+        if (data == null) return EMPTY_BYTE_ARRAY;
+        if (data.startsWith("0x")) data = data.substring(2);
+        return Hex.decode(data);
     }
 }

@@ -75,7 +75,7 @@ task tckRun(type:JavaExec){
     }
 
     main = "org.ethereum.tck.RunTck"
-    classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.test.runtimeClasspath
 }
 
 

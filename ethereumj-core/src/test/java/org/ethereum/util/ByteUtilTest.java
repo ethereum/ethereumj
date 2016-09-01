@@ -33,6 +33,35 @@ public class ByteUtilTest {
     }
 
     @Test
+    public void testBigIntegerToBytesSign() {
+        {
+            BigInteger b = BigInteger.valueOf(-2);
+            byte[] actuals = ByteUtil.bigIntegerToBytesSigned(b, 8);
+            assertArrayEquals(Hex.decode("fffffffffffffffe"), actuals);
+        }
+        {
+            BigInteger b = BigInteger.valueOf(2);
+            byte[] actuals = ByteUtil.bigIntegerToBytesSigned(b, 8);
+            assertArrayEquals(Hex.decode("0000000000000002"), actuals);
+        }
+        {
+            BigInteger b = BigInteger.valueOf(0);
+            byte[] actuals = ByteUtil.bigIntegerToBytesSigned(b, 8);
+            assertArrayEquals(Hex.decode("0000000000000000"), actuals);
+        }
+        {
+            BigInteger b = new BigInteger("eeeeeeeeeeeeee", 16);
+            byte[] actuals = ByteUtil.bigIntegerToBytesSigned(b, 8);
+            assertArrayEquals(Hex.decode("00eeeeeeeeeeeeee"), actuals);
+        }
+        {
+            BigInteger b = new BigInteger("eeeeeeeeeeeeeeee", 16);
+            byte[] actuals = ByteUtil.bigIntegerToBytesSigned(b, 8);
+            assertArrayEquals(Hex.decode("eeeeeeeeeeeeeeee"), actuals);
+        }
+    }
+
+    @Test
     public void testBigIntegerToBytesNegative() {
         byte[] expecteds = new byte[]{(byte) 0xff, 0x0, 0x13, (byte) 0x88};
         BigInteger b = BigInteger.valueOf(-16772216);
@@ -371,5 +400,33 @@ public class ByteUtilTest {
         assertArrayEquals(bytes, Hex.decode("0000000000000100"));
         bytes = ByteUtil.longToBytes(0);
         assertArrayEquals(bytes, Hex.decode("0000000000000000"));
+    }
+
+    @Test
+    public void testHexStringToBytes() {
+        {
+            String str = "0000";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0, 0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0x0000";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0, 0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0x45a6";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {69, -90};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "1963093cee500c081443e1045c40264b670517af";
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = Hex.decode(str);
+            assertArrayEquals(expected, actuals);
+        }
     }
 }

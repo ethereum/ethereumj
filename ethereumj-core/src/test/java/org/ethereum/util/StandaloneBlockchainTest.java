@@ -10,6 +10,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
@@ -101,4 +102,19 @@ public class StandaloneBlockchainTest {
             String a2 = "0x2222222222222222222222222222222222222222";
         }
     }
+
+    @Test
+    public void encodeTest1() {
+        StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
+        SolidityContract a = sb.submitNewContract(
+                "contract A {" +
+                        "  uint public a;" +
+                        "  function f(uint a_) {a = a_;}" +
+                        "}");
+        a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        BigInteger r = (BigInteger) a.callConstFunction("a")[0];
+        System.out.println(r.toString(16));
+        Assert.assertEquals(new BigInteger(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
+    }
+
 }

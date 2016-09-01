@@ -534,4 +534,47 @@ public class PendingStateTest {
             }
         }
     }
+
+    @Test
+    public void testIncludedRejected() throws InterruptedException {
+        // check INCLUDED => DROPPED state transition when a new (long) fork without
+        // the transaction becomes the main chain
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+        ECKey charlie = new ECKey();
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+        bc.sendEther(charlie.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+
+        Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        pendingState.addPendingTransaction(tx1);
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
+
+        bc.submitTransaction(tx1);
+        Block b2 = bc.createForkBlock(b1);
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), INCLUDED);
+
+        for (int i = 0; i < 10; i++) {
+            bc.createBlock();
+        }
+
+        Block b_ = bc.createForkBlock(b1);
+
+        for (int i = 0; i < 11; i++) {
+            b_ = bc.createForkBlock(b_);
+        }
+
+        Assert.assertEquals(l.pollTxUpdateState(tx1), DROPPED);
+        Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+    }
 }
