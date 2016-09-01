@@ -13,6 +13,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -70,6 +71,9 @@ public class WorldManager {
     private SyncManager syncManager;
 
     @Autowired
+    private SyncPool pool;
+
+    @Autowired
     private PendingState pendingState;
 
     @Autowired
@@ -108,6 +112,11 @@ public class WorldManager {
     public void stopPeerDiscovery() {
         discoveryUdpListener.close();
         nodeManager.close();
+    }
+
+    public void initSyncing() {
+        syncManager.init();
+        pool.init();
     }
 
     public ChannelManager getChannelManager() {

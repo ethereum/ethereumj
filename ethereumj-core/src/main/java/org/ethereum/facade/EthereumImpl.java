@@ -374,6 +374,12 @@ public class EthereumImpl implements Ethereum {
         worldManager.getBlockchain().setExitOn(number);
     }
 
+    @Override
+    public void initSyncing() {
+        worldManager.initSyncing();
+    }
+
+
     /**
      * For testing purposes and 'hackers'
      */
