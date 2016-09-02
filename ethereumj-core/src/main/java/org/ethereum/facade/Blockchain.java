@@ -35,4 +35,9 @@ public interface Blockchain {
      * @return - last added block from blockchain
      */
     Block getBestBlock();
+
+    /**
+     * Flush the content of local storage objects to disk
+     */
+    void flush();
 }
