@@ -10,7 +10,6 @@ import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
@@ -27,48 +26,6 @@ import java.util.concurrent.Future;
  * @since 27.07.2014
  */
 public interface Ethereum {
-
-    /**
-     * Find a peer but not this one
-     *
-     * @param excludePeer - peer to exclude
-     * @return online peer if available otherwise null
-     */
-    PeerInfo findOnlinePeer(PeerInfo excludePeer);
-
-    /**
-     * Find an online peer but not from excluded list
-     *
-     * @param excludePeerSet - peers to exclude
-     * @return online peer if available otherwise null
-     */
-    PeerInfo findOnlinePeer(Set<PeerInfo> excludePeerSet);
-
-    /**
-     * @return online peer if available
-     */
-    PeerInfo findOnlinePeer();
-
-
-    /**
-     * That block will block until online peer was found.
-     *
-     * @return online peer.
-     */
-    PeerInfo waitForOnlinePeer();
-
-    /*
-     *
-     *  The set of peers returned
-     *  by the method is not thread
-     *  safe then should be traversed
-     *  sync safe:
-     *    synchronized (peers){
-     *        for (final Peer peer : newPeers) {}
-     *    }
-     *
-     */
-    Set<PeerInfo> getPeers();
 
     void startPeerDiscovery();
 

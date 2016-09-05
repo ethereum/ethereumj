@@ -12,8 +12,6 @@ import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
-import org.ethereum.net.peerdiscovery.PeerDiscovery;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 
@@ -76,16 +74,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private boolean peerDiscoveryMode = false;
 
     private HelloMessage handshakeHelloMessage = null;
-    private Set<PeerInfo> lastPeersSent;
 
     private int ethInbound;
     private int ethOutbound;
 
     @Autowired
     EthereumListener ethereumListener;
-
-    @Autowired
-    PeerDiscovery peerDiscovery;
 
     @Autowired
     ConfigCapabilities configCapabilities;
@@ -149,13 +143,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 msgQueue.receivedMessage(msg);
                 channel.getNodeStatistics().lastPongReplyTime.set(Util.curTime());
                 break;
-            case GET_PEERS:
-                msgQueue.receivedMessage(msg);
-                sendPeers(); // todo: implement session management for peer request
-                break;
             case PEERS:
                 msgQueue.receivedMessage(msg);
-                processPeers(ctx, (PeersMessage) msg);
 
                 if (peerDiscoveryMode ||
                         !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)) {
@@ -205,33 +194,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
     }
 
-    private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
-        peerDiscovery.addPeers(peersMessage.getPeers());
-    }
-
     private void sendGetPeers() {
         msgQueue.sendMessage(StaticMessages.GET_PEERS_MESSAGE);
     }
-
-    private void sendPeers() {
-
-        Set<PeerInfo> peers = peerDiscovery.getPeers();
-
-        if (lastPeersSent != null && peers.equals(lastPeersSent)) {
-            logger.info("No new peers discovered don't answer for GetPeers");
-            return;
-        }
-
-        Set<Peer> peerSet = new HashSet<>();
-        for (PeerInfo peer : peers) {
-            new Peer(peer.getAddress(), peer.getPort(), peer.getPeerId());
-        }
-
-        PeersMessage msg = new PeersMessage(peerSet);
-        lastPeersSent = peers;
-        msgQueue.sendMessage(msg);
-    }
-
 
 
     public void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
@@ -270,14 +235,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 }
             }
 
-            InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
-            int port = msg.getListenPort();
-            PeerInfo confirmedPeer = new PeerInfo(address, port, msg.getPeerId());
-            confirmedPeer.setOnline(false);
-            confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
-
             //todo calculate the Offsets
-            peerDiscovery.getPeers().add(confirmedPeer);
             ethereumListener.onHandShakePeer(channel, msg);
 
         }

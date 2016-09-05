@@ -15,7 +15,6 @@ import org.ethereum.manager.BlockLoader;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
@@ -97,64 +96,6 @@ public class EthereumImpl implements Ethereum {
         compositeEthereumListener.addListener(gasPriceTracker);
 
         gLogger.info("EthereumJ node started: enode://" + Hex.toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
-    }
-
-    /**
-     * Find a peer but not this one
-     *
-     * @param peer - peer to exclude
-     * @return online peer
-     */
-    @Override
-    public PeerInfo findOnlinePeer(PeerInfo peer) {
-        Set<PeerInfo> excludePeers = new HashSet<>();
-        excludePeers.add(peer);
-        return findOnlinePeer(excludePeers);
-    }
-
-    @Override
-    public PeerInfo findOnlinePeer() {
-        Set<PeerInfo> excludePeers = new HashSet<>();
-        return findOnlinePeer(excludePeers);
-    }
-
-    @Override
-    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeers) {
-        logger.info("Looking for online peers...");
-
-        final EthereumListener listener = worldManager.getListener();
-        listener.trace("Looking for online peer");
-
-        worldManager.startPeerDiscovery();
-
-        final Set<PeerInfo> peers = worldManager.getPeerDiscovery().getPeers();
-        for (PeerInfo peer : peers) { // it blocks until a peer is available.
-            if (peer.isOnline() && !excludePeers.contains(peer)) {
-                logger.info("Found peer: {}", peer.toString());
-                listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
-                return peer;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public PeerInfo waitForOnlinePeer() {
-        PeerInfo peer = null;
-        while (peer == null) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            peer = this.findOnlinePeer();
-        }
-        return peer;
-    }
-
-    @Override
-    public Set<PeerInfo> getPeers() {
-        return worldManager.getPeerDiscovery().getPeers();
     }
 
     @Override

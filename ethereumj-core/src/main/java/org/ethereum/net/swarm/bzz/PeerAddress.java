@@ -3,7 +3,6 @@ package org.ethereum.net.swarm.bzz;
 import com.google.common.base.Joiner;
 import org.apache.commons.codec.binary.StringUtils;
 import org.ethereum.net.p2p.Peer;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.Util;
