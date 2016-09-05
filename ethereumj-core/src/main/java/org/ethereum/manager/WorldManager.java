@@ -10,7 +10,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
@@ -50,9 +49,6 @@ public class WorldManager {
 
     @Autowired
     private PeerClient activePeer;
-
-    @Autowired
-    private PeerDiscovery peerDiscovery;
 
     @Autowired
     private BlockStore blockStore;
@@ -112,10 +108,6 @@ public class WorldManager {
 
     public ChannelManager getChannelManager() {
         return channelManager;
-    }
-
-    public PeerDiscovery getPeerDiscovery() {
-        return peerDiscovery;
     }
 
     public EthereumListener getListener() {
