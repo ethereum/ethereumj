@@ -46,7 +46,8 @@ public class PrivateMinerSample {
                 "database.dir = sampleDB-1 \n" +
                 // when more than 1 miner exist on the network extraData helps to identify the block creator
                 "mine.extraDataHex = cccccccccccccccccccc \n" +
-                "mine.cpuMineThreads = 2";
+                "mine.cpuMineThreads = 2 \n" +
+                "cache.flush.blocks = 1";
 
         @Bean
         public MinerNode node() {

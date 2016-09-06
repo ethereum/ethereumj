@@ -32,7 +32,7 @@ public interface JsonRpc {
     class CallArguments {
         public String from;
         public String to;
-        public String gasLimit;
+        public String gas;
         public String gasPrice;
         public String value;
         public String data; // compiledCode
@@ -43,7 +43,7 @@ public interface JsonRpc {
             return "CallArguments{" +
                     "from='" + from + '\'' +
                     ", to='" + to + '\'' +
-                    ", gasLimit='" + gasLimit + '\'' +
+                    ", gasLimit='" + gas + '\'' +
                     ", gasPrice='" + gasPrice + '\'' +
                     ", value='" + value + '\'' +
                     ", data='" + data + '\'' +
@@ -100,8 +100,8 @@ public interface JsonRpc {
     }
 
     class CompilationResult {
-        String code;
-        CompilationInfo info;
+        public String code;
+        public CompilationInfo info;
 
         @Override
         public String toString() {
@@ -113,13 +113,13 @@ public interface JsonRpc {
     }
 
     class CompilationInfo {
-        String source;
-        String language;
-        String languageVersion;
-        String compilerVersion;
-        CallTransaction.Contract abiDefinition;
-        String userDoc;
-        String developerDoc;
+        public String source;
+        public String language;
+        public String languageVersion;
+        public String compilerVersion;
+        public CallTransaction.Function[] abiDefinition;
+        public String userDoc;
+        public String developerDoc;
 
         @Override
         public String toString() {
@@ -230,6 +230,8 @@ public interface JsonRpc {
     TransactionResultDTO eth_getTransactionByBlockHashAndIndex(String blockHash,String index) throws Exception;
     TransactionResultDTO eth_getTransactionByBlockNumberAndIndex(String bnOrId,String index) throws Exception;
     TransactionReceiptDTO eth_getTransactionReceipt(String transactionHash) throws Exception;
+
+    TransactionReceiptDTOExt ethj_getTransactionReceipt(String transactionHash) throws Exception;
 
     BlockResult eth_getUncleByBlockHashAndIndex(String blockHash, String uncleIdx) throws Exception;
 

@@ -4,12 +4,12 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
@@ -45,13 +45,10 @@ public class WorldManager {
     private Blockchain blockchain;
 
     @Autowired
-    private Repository repository;
+    private RepositoryImpl repository;
 
     @Autowired
     private PeerClient activePeer;
-
-    @Autowired
-    private PeerDiscovery peerDiscovery;
 
     @Autowired
     private BlockStore blockStore;
@@ -113,10 +110,6 @@ public class WorldManager {
         return channelManager;
     }
 
-    public PeerDiscovery getPeerDiscovery() {
-        return peerDiscovery;
-    }
-
     public EthereumListener getListener() {
         return listener;
     }
@@ -159,6 +152,7 @@ public class WorldManager {
                 repository.createAccount(key.getData());
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
+            repository.commitBlock(genesis.getHeader());
 
             blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
 

@@ -7,6 +7,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -20,7 +21,7 @@ import java.util.Collections;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "0895e096ca9de6ba745bad238cb579964bd90cea";
+    public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
 
     @Ignore // test for conveniently running a single test
     @Test

@@ -44,8 +44,7 @@ public class CachingDataSource implements KeyValueDataSource, Flushable {
 
     @Override
     public synchronized void delete(byte[] key) {
-        cache.remove(new ByteArrayWrapper(key));
-        source.delete(key);
+        put(key, null);
     }
 
     @Override

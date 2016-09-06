@@ -1,13 +1,14 @@
 package org.ethereum.jsonrpc;
 
 import org.ethereum.core.Bloom;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Created by Anton Nashatyrev on 12.04.2016.
@@ -42,7 +43,7 @@ public class LogFilter {
             } else {
                 filterBlooms[i] = new Bloom[orTopics.length];
                 for (int j = 0; j < orTopics.length; j++) {
-                    filterBlooms[i][j] = Bloom.create(SHA3Helper.sha3(orTopics[j]));
+                    filterBlooms[i][j] = Bloom.create(sha3(orTopics[j]));
                 }
             }
         }

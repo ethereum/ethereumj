@@ -4,12 +4,12 @@ import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
@@ -26,48 +26,6 @@ import java.util.concurrent.Future;
  * @since 27.07.2014
  */
 public interface Ethereum {
-
-    /**
-     * Find a peer but not this one
-     *
-     * @param excludePeer - peer to exclude
-     * @return online peer if available otherwise null
-     */
-    PeerInfo findOnlinePeer(PeerInfo excludePeer);
-
-    /**
-     * Find an online peer but not from excluded list
-     *
-     * @param excludePeerSet - peers to exclude
-     * @return online peer if available otherwise null
-     */
-    PeerInfo findOnlinePeer(Set<PeerInfo> excludePeerSet);
-
-    /**
-     * @return online peer if available
-     */
-    PeerInfo findOnlinePeer();
-
-
-    /**
-     * That block will block until online peer was found.
-     *
-     * @return online peer.
-     */
-    PeerInfo waitForOnlinePeer();
-
-    /*
-     *
-     *  The set of peers returned
-     *  by the method is not thread
-     *  safe then should be traversed
-     *  sync safe:
-     *    synchronized (peers){
-     *        for (final Peer peer : newPeers) {}
-     *    }
-     *
-     */
-    Set<PeerInfo> getPeers();
 
     void startPeerDiscovery();
 
@@ -142,6 +100,20 @@ public interface Ethereum {
     ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
                                        Object... funcArgs);
 
+
+    /**
+     * Call a contract function locally without sending transaction to the network
+     * and without changing contract storage.
+     * @param receiveAddress hex encoded contract address
+     * @param senderPrivateKey  Normally the constant call doesn't require a sender though
+     *                          in some cases it may affect the result (e.g. if function refers to msg.sender)
+     * @param function  contract function
+     * @param funcArgs  function arguments
+     * @return function result. The return value can be fetched via {@link ProgramResult#getHReturn()}
+     * and decoded with {@link org.ethereum.core.CallTransaction.Function#decodeResult(byte[])}.
+     */
+    ProgramResult callConstantFunction(String receiveAddress, ECKey senderPrivateKey,
+                                       CallTransaction.Function function, Object... funcArgs);
 
     /**
      * @return - repository for all state data.

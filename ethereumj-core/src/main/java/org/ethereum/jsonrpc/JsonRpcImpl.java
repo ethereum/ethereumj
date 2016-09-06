@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.db.TransactionStore;
@@ -22,6 +21,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.LRUMap;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.jsonrpc.TypeConverter.*;
 import static org.ethereum.jsonrpc.TypeConverter.StringHexToByteArray;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -67,8 +68,8 @@ public class JsonRpcImpl implements JsonRpc {
                 gasPrice = JSonHexToLong(args.gasPrice);
 
             gasLimit = 4_000_000;
-            if (args.gasLimit != null && args.gasLimit.length()!=0)
-                gasLimit = JSonHexToLong(args.gasLimit);
+            if (args.gas != null && args.gas.length()!=0)
+                gasLimit = JSonHexToLong(args.gas);
 
             toAddress = null;
             if (args.to != null && !args.to.isEmpty())
@@ -132,6 +133,7 @@ public class JsonRpcImpl implements JsonRpc {
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
     AtomicInteger filterCounter = new AtomicInteger(1);
     Map<Integer, Filter> installedFilters = new Hashtable<>();
+    Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(0, 1024));
 
     @PostConstruct
     private void init() {
@@ -151,6 +153,16 @@ public class JsonRpcImpl implements JsonRpc {
                     for (Transaction tx : transactions) {
                         filter.newPendingTx(tx);
                     }
+                }
+            }
+
+            @Override
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+                ByteArrayWrapper txHashW = new ByteArrayWrapper(txReceipt.getTransaction().getHash());
+                if (state.isPending() || state == PendingTransactionState.DROPPED) {
+                    pendingReceipts.put(txHashW, txReceipt);
+                } else {
+                    pendingReceipts.remove(txHashW);
                 }
             }
         });
@@ -219,7 +231,7 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     protected Account addAccount(String seed) {
-        return addAccount(ECKey.fromPrivate(SHA3Helper.sha3(seed.getBytes())));
+        return addAccount(ECKey.fromPrivate(sha3(seed.getBytes())));
     }
 
     protected Account addAccount(ECKey key) {
@@ -502,8 +514,8 @@ public class JsonRpcImpl implements JsonRpc {
 
             Transaction tx = new Transaction(
                     args.nonce != null ? StringHexToByteArray(args.nonce) : bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
-                    args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : EMPTY_BYTE_ARRAY,
-                    args.gasLimit != null ? StringHexToByteArray(args.gasLimit) : EMPTY_BYTE_ARRAY,
+                    args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : ByteUtil.longToBytesNoLeadZeroes(eth.getGasPrice()),
+                    args.gas != null ? StringHexToByteArray(args.gas) : ByteUtil.longToBytes(90_000),
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
                     args.value != null ? StringHexToByteArray(args.value) : EMPTY_BYTE_ARRAY,
                     args.data != null ? StringHexToByteArray(args.data) : EMPTY_BYTE_ARRAY);
@@ -665,18 +677,29 @@ public class JsonRpcImpl implements JsonRpc {
     public TransactionResultDTO eth_getTransactionByHash(String transactionHash) throws Exception {
         TransactionResultDTO s = null;
         try {
-            TransactionInfo txInfo = blockchain.getTransactionInfo(StringHexToByteArray(transactionHash));
+            byte[] txHash = StringHexToByteArray(transactionHash);
+            Block block = null;
+
+            TransactionInfo txInfo = blockchain.getTransactionInfo(txHash);
+
             if (txInfo == null) {
-                return null;
-            }
-            Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
-            // need to return txes only from main chain
-            Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
-            if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
-                return null;
+                TransactionReceipt receipt = pendingReceipts.get(new ByteArrayWrapper(txHash));
+
+                if (receipt == null) {
+                    return null;
+                }
+                txInfo = new TransactionInfo(receipt);
+            } else {
+                block = blockchain.getBlockByHash(txInfo.getBlockHash());
+                // need to return txes only from main chain
+                Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
+                if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
+                    return null;
+                }
+                txInfo.setTransaction(block.getTransactionsList().get(txInfo.getIndex()));
             }
 
-            return s = new TransactionResultDTO(block, txInfo.getIndex(), block.getTransactionsList().get(txInfo.getIndex()));
+            return s = new TransactionResultDTO(block, txInfo.getIndex(), txInfo.getReceipt().getTransaction());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_getTransactionByHash(" + transactionHash + "): " + s);
         }
@@ -715,20 +738,66 @@ public class JsonRpcImpl implements JsonRpc {
         TransactionReceiptDTO s = null;
         try {
             byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
-            TransactionInfo txInfo = blockchain.getTransactionInfo(hash);
 
-            if (txInfo == null)
-                return null;
+            TransactionReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(hash));
 
-            Block block = blockchain.getBlockByHash(txInfo.getBlockHash());
+            TransactionInfo txInfo;
+            Block block;
 
-            // need to return txes only from main chain
-            Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
-            if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
-                return null;
+            if (pendingReceipt != null) {
+                txInfo = new TransactionInfo(pendingReceipt);
+                block = null;
+            } else {
+                txInfo = blockchain.getTransactionInfo(hash);
+
+                if (txInfo == null)
+                    return null;
+
+                block = blockchain.getBlockByHash(txInfo.getBlockHash());
+
+                // need to return txes only from main chain
+                Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
+                if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
+                    return null;
+                }
             }
 
             return s = new TransactionReceiptDTO(block, txInfo);
+        } finally {
+            if (logger.isDebugEnabled()) logger.debug("eth_getTransactionReceipt(" + transactionHash + "): " + s);
+        }
+    }
+
+    @Override
+    public TransactionReceiptDTOExt ethj_getTransactionReceipt(String transactionHash) throws Exception {
+        TransactionReceiptDTOExt s = null;
+        try {
+            byte[] hash = TypeConverter.StringHexToByteArray(transactionHash);
+
+            TransactionReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(hash));
+
+            TransactionInfo txInfo;
+            Block block;
+
+            if (pendingReceipt != null) {
+                txInfo = new TransactionInfo(pendingReceipt);
+                block = null;
+            } else {
+                txInfo = blockchain.getTransactionInfo(hash);
+
+                if (txInfo == null)
+                    return null;
+
+                block = blockchain.getBlockByHash(txInfo.getBlockHash());
+
+                // need to return txes only from main chain
+                Block mainBlock = blockchain.getBlockByNumber(block.getNumber());
+                if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
+                    return null;
+                }
+            }
+
+            return s = new TransactionReceiptDTOExt(block, txInfo);
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_getTransactionReceipt(" + transactionHash + "): " + s);
         }
@@ -798,7 +867,7 @@ public class JsonRpcImpl implements JsonRpc {
             ret.info.language = "Solidity";
             ret.info.languageVersion = "0";
             ret.info.compilerVersion = result.version;
-            ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi);
+            ret.info.abiDefinition = new CallTransaction.Contract(contractMetadata.abi).functions;
             return s = ret;
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_compileSolidity(" + contract + ")" + s);

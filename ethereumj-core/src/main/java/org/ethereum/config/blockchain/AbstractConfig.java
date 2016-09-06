@@ -1,5 +1,6 @@
 package org.ethereum.config.blockchain;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
@@ -14,6 +15,8 @@ import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
 
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.List;
 
 import static org.ethereum.util.BIUtil.max;
 
@@ -90,4 +93,9 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public void hardForkTransfers(Block block, Repository repo) {}
+
+    @Override
+    public List<Pair<Long, byte[]>> blockHashConstraints() {
+        return Collections.emptyList();
+    }
 }

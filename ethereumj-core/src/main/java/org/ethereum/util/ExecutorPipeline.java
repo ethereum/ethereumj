@@ -133,6 +133,17 @@ public class ExecutorPipeline <In, Out>{
         }
     }
 
+    /**
+     * Shutdowns executors and waits until all pipeline
+     * submitted tasks complete
+     * @throws InterruptedException
+     */
+    public void join() throws InterruptedException {
+        exec.shutdown();
+        exec.awaitTermination(10, TimeUnit.MINUTES);
+        if (next != null) next.join();
+    }
+
     private static class LimitedQueue<E> extends LinkedBlockingQueue<E> {
         public LimitedQueue(int maxSize) {
             super(maxSize);

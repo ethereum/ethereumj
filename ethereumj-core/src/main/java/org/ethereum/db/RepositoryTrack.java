@@ -20,7 +20,7 @@ import java.math.BigInteger;
 
 import java.util.*;
 
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
 

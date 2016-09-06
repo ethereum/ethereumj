@@ -270,7 +270,7 @@ public class ImportLightTest {
         Block b2 = bc.createBlock();
         parent.callFunction("createChild", 100);
         Block b3 = bc.createBlock();
-        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) parent.callConstFunction("child")[0], 20);
+        byte[] childAddress = (byte[]) parent.callConstFunction("child")[0];
         parent.callFunction("createChild", 200);
         Block b2_ = bc.createForkBlock(b1);
         SolidityContract child = bc.createExistingContractFromSrc(contractSrc, "Child", childAddress);
@@ -334,7 +334,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contract, "A");
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
         a.callFunction(10, "create");
-        byte[] childAddress = ByteUtil.bigIntegerToBytes((BigInteger) a.callConstFunction("child")[0], 20);
+        byte[] childAddress = (byte[]) a.callConstFunction("child")[0];
         SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
         BigInteger val = (BigInteger) b.callConstFunction("valReceived")[0];
         Assert.assertEquals(20, val.longValue());
@@ -418,7 +418,7 @@ public class ImportLightTest {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -445,6 +445,7 @@ public class ImportLightTest {
         }
 
         track.commit();
+        repository.commitBlock(genesis.getHeader());
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 

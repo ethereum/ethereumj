@@ -6,7 +6,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -19,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static org.ethereum.crypto.HashUtil.sha3;
 
 @Component
 public class UDPListener {
@@ -90,7 +91,7 @@ public class UDPListener {
 
         for (String boot: args) {
             // since discover IP list has no NodeIds we will generate random but persistent
-            byte[] nodeId = ECKey.fromPrivate(SHA3Helper.sha3(boot.getBytes())).getNodeId();
+            byte[] nodeId = ECKey.fromPrivate(sha3(boot.getBytes())).getNodeId();
             bootNodes.add(new Node("enode://" + Hex.toHexString(nodeId) + "@" + boot));
         }
 

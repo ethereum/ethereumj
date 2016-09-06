@@ -99,6 +99,10 @@ public class CompactEncoder {
         return buffer.toByteArray();
     }
 
+    public static boolean hasTerminator(byte[] packedKey) {
+        return ((packedKey[0] >> 4) & 2) != 0;
+    }
+
     /**
      * Unpack a binary string to its nibbles equivalent
      *

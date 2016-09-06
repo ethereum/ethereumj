@@ -44,9 +44,16 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     static final int MAX_NODES = 2000;
     static final int NODES_TRIM_THRESHOLD = 3000;
 
+    @Autowired
     PeerConnectionTester peerConnectionManager;
+
+    @Autowired
     MapDBFactory mapDBFactory;
+
+    @Autowired
     EthereumListener ethereumListener;
+
+    @Autowired
     SystemProperties config = SystemProperties.getDefault();
 
     Functional.Consumer<DiscoveryEvent> messageSender;
@@ -71,11 +78,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
 
     @Autowired
-    public NodeManager(SystemProperties config, EthereumListener ethereumListener, MapDBFactory mapDBFactory, PeerConnectionTester peerConnectionManager) {
+    public NodeManager(SystemProperties config, EthereumListener ethereumListener) {
         this.config = config;
         this.ethereumListener = ethereumListener;
-        this.mapDBFactory = mapDBFactory;
-        this.peerConnectionManager = peerConnectionManager;
 
         PERSIST = config.peerDiscoveryPersist();
         discoveryEnabled = config.peerDiscovery();

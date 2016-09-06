@@ -3,7 +3,6 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
@@ -55,6 +54,7 @@ import static org.ethereum.core.ImportResult.IMPORTED_BEST;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.INVALID_BLOCK;
 import static org.ethereum.core.ImportResult.NO_PARENT;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
@@ -446,7 +446,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
         Block block = new Block(parent.getHash(),
-                SHA3Helper.sha3(RLP.encodeList(new byte[0])), // uncleHash
+                sha3(RLP.encodeList(new byte[0])), // uncleHash
                 minerCoinbase,
                 new byte[0], // log bloom - from tx receipts
                 new byte[0], // difficulty computed right after block creation
@@ -568,6 +568,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         track.commit();
         updateTotalDifficulty(block);
+        summary.setTotalDifficulty(getTotalDifficulty());
 
         storeBlock(block, receipts);
 
@@ -578,12 +579,19 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return summary;
     }
 
+    @Override
     public void flush() {
         repository.flush();
         blockStore.flush();
         transactionStore.flush();
 
-        System.gc();
+        if (isMemoryBoundFlush()) {
+            System.gc();
+        }
+    }
+
+    private boolean isMemoryBoundFlush() {
+        return config.cacheFlushMemory() > 0 || config.cacheFlushBlocks() == 0;
     }
 
     private boolean needFlush(Block block) {
@@ -917,6 +925,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         for (int i = 0; i < receipts.size(); i++) {
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
+
+        ((RepositoryImpl) repository).commitBlock(block.getHeader());
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);

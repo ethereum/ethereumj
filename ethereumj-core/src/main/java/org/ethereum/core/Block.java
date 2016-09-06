@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.*;
@@ -14,6 +13,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information
@@ -399,7 +400,7 @@ public class Block {
 
     public void addUncle(BlockHeader uncle) {
         uncleList.add(uncle);
-        this.getHeader().setUnclesHash(SHA3Helper.sha3(getUnclesEncoded()));
+        this.getHeader().setUnclesHash(sha3(getUnclesEncoded()));
         rlpEncoded = null;
     }
 

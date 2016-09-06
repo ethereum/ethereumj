@@ -69,14 +69,22 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public synchronized void updateBatch(Map<byte[], byte[]> rows) {
-        for (byte[] key :  rows.keySet()){
-            storage.put(wrap(key), rows.get(key));
+        for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
+            if (entry.getValue() == null) {
+                storage.remove(wrap(entry.getKey()));
+            } else {
+                storage.put(wrap(entry.getKey()), entry.getValue());
+            }
         }
     }
 
     public HashMapDB setClearOnClose(boolean clearOnClose) {
         this.clearOnClose = clearOnClose;
         return this;
+    }
+
+    public int getSize() {
+        return storage.size();
     }
 
     @Override

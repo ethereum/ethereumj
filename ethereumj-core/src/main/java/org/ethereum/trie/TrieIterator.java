@@ -24,7 +24,7 @@ public class TrieIterator {
     }
 
     // Some time in the near future this will need refactoring :-)
-    // XXX Note to self, IsSlice == inline node. Str == sha3 to node
+    // XXX Note to self, IsSlice == inline node. Str == keccak to node
     private void workNode(Value currentNode) {
         if (currentNode.length() == 2) {
             byte[] k = unpackToNibbles(currentNode.get(0).asBytes());

@@ -883,6 +883,7 @@ public class RepositoryTest {
         track2.addStorageRow(cow, cowKey1, cowVal1);
         track2.addStorageRow(horse, horseKey1, horseVal1);
         track2.commit();
+        repository.commitBlock(null);
 
         byte[] root2 = repository.getRoot();
 
@@ -890,6 +891,7 @@ public class RepositoryTest {
         track2.addStorageRow(cow, cowKey2, cowVal0);
         track2.addStorageRow(horse, horseKey2, horseVal0);
         track2.commit();
+        repository.commitBlock(null);
 
         byte[] root3 = repository.getRoot();
 

@@ -8,8 +8,8 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.jsontestsuite.StateTestSuite;
-import org.ethereum.jsontestsuite.runners.StateTestRunner;
+import org.ethereum.jsontestsuite.suite.StateTestSuite;
+import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -48,7 +48,7 @@ public class TransactionTest {
         byte[] data = Hex.decode(txRLPRawData);
 
         // step 1: serialize + RLP encode
-        // step 2: hash = sha3(step1)
+        // step 2: hash = keccak(step1)
         byte[] txHash = HashUtil.sha3(data);
 
         String signature = key.doSign(txHash).toBase64();

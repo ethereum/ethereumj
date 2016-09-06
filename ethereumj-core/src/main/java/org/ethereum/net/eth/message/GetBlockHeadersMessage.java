@@ -7,7 +7,6 @@ import org.ethereum.util.RLPList;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.SHA3Helper.DEFAULT_SIZE_BYTES;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
 
@@ -21,6 +20,7 @@ import static org.ethereum.util.ByteUtil.byteArrayToLong;
  */
 public class GetBlockHeadersMessage extends EthMessage {
 
+    private static final int DEFAULT_SIZE_BYTES = 32;
     /**
      * Block number from which to start sending block headers
      */

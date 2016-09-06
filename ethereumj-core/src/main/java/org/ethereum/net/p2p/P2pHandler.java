@@ -12,14 +12,13 @@ import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
-import org.ethereum.net.peerdiscovery.PeerDiscovery;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,16 +74,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private boolean peerDiscoveryMode = false;
 
     private HelloMessage handshakeHelloMessage = null;
-    private Set<PeerInfo> lastPeersSent;
 
     private int ethInbound;
     private int ethOutbound;
 
     @Autowired
     EthereumListener ethereumListener;
-
-    @Autowired
-    PeerDiscovery peerDiscovery;
 
     @Autowired
     ConfigCapabilities configCapabilities;
@@ -146,14 +141,10 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case PONG:
                 msgQueue.receivedMessage(msg);
-                break;
-            case GET_PEERS:
-                msgQueue.receivedMessage(msg);
-                sendPeers(); // todo: implement session management for peer request
+                channel.getNodeStatistics().lastPongReplyTime.set(Util.curTime());
                 break;
             case PEERS:
                 msgQueue.receivedMessage(msg);
-                processPeers(ctx, (PeersMessage) msg);
 
                 if (peerDiscoveryMode ||
                         !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)) {
@@ -203,38 +194,16 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
     }
 
-    private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
-        peerDiscovery.addPeers(peersMessage.getPeers());
-    }
-
     private void sendGetPeers() {
         msgQueue.sendMessage(StaticMessages.GET_PEERS_MESSAGE);
     }
-
-    private void sendPeers() {
-
-        Set<PeerInfo> peers = peerDiscovery.getPeers();
-
-        if (lastPeersSent != null && peers.equals(lastPeersSent)) {
-            logger.info("No new peers discovered don't answer for GetPeers");
-            return;
-        }
-
-        Set<Peer> peerSet = new HashSet<>();
-        for (PeerInfo peer : peers) {
-            new Peer(peer.getAddress(), peer.getPort(), peer.getPeerId());
-        }
-
-        PeersMessage msg = new PeersMessage(peerSet);
-        lastPeersSent = peers;
-        msgQueue.sendMessage(msg);
-    }
-
 
 
     public void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 
         channel.getNodeStatistics().setClientId(msg.getClientId());
+        channel.getNodeStatistics().capabilities.clear();
+        channel.getNodeStatistics().capabilities.addAll(msg.getCapabilities());
 
         this.ethInbound = channel.getNodeStatistics().ethInbound.get();
         this.ethOutbound = channel.getNodeStatistics().ethOutbound.get();
@@ -266,14 +235,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 }
             }
 
-            InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
-            int port = msg.getListenPort();
-            PeerInfo confirmedPeer = new PeerInfo(address, port, msg.getPeerId());
-            confirmedPeer.setOnline(false);
-            confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
-
             //todo calculate the Offsets
-            peerDiscovery.getPeers().add(confirmedPeer);
             ethereumListener.onHandShakePeer(channel, msg);
 
         }
@@ -315,7 +277,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     logger.error("Unhandled exception", t);
                 }
             }
-        }, 2, config.getProperty("peer.p2p.pingInterval", 5), TimeUnit.SECONDS);
+        }, 2, config.getProperty("peer.p2p.pingInterval", 5L), TimeUnit.SECONDS);
     }
 
     public void killTimers() {

@@ -1048,6 +1048,7 @@ public class IndexedBlockStoreTest {
         Assert.assertTrue(sb4.isEqual(b4_));
     }
 
+
 // todo: test this
 
 //    public byte[] getBlockHashByNumber(long blockNumber)

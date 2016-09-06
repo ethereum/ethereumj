@@ -1,9 +1,6 @@
 package org.ethereum.trie;
 
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.KeyValueDataSource;
-
-import static org.ethereum.crypto.SHA3Helper.sha3;
 
 public class FatTrie implements Trie{
 

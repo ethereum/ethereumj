@@ -4,6 +4,9 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.jsontestsuite.suite.DifficultyTestCase;
+import org.ethereum.jsontestsuite.suite.DifficultyTestSuite;
+import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.FixMethodOrder;
@@ -24,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 public class GitHubBasicTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    public String shacommit = "99afe8f5aad7bca5d0f1b1685390a4dea32d73c3";
+    public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
 
     @After
     public void recover() {

@@ -32,9 +32,9 @@ import org.ethereum.util.Value;
  *
  * Where a node is referenced inside a node, what is included is:
  *
- *      H(rlp.encode(x)) where H(x) = sha3(x) if len(x) &gt;= 32 else x
+ *      H(rlp.encode(x)) where H(x) = keccak(x) if len(x) &gt;= 32 else x
  *
- * Note that when updating a trie, you will need to store the key/value pair (sha3(x), x)
+ * Note that when updating a trie, you will need to store the key/value pair (keccak(x), x)
  * in a persistent lookup table when you create a node with length &gt;= 32,
  * but if the node is shorter than that then you do not need to store anything
  * when length &lt; 32 for the obvious reason that the function f(x) = x is reversible.
@@ -71,5 +71,10 @@ public class Node {
 
     public Value getValue() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + dirty + ", " + value + "]";
     }
 }

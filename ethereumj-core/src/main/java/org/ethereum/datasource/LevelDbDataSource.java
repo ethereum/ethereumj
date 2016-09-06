@@ -130,7 +130,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
                 if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
                 return ret;
             } catch (DBException e) {
-                logger.error("Exception. Retrying again...", e);
+                logger.warn("Exception. Retrying again...", e);
                 byte[] ret = db.get(key);
                 if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
                 return ret;
