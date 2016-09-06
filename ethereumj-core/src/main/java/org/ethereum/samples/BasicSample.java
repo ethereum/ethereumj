@@ -84,7 +84,7 @@ public class BasicSample implements Runnable {
         this.loggerName = loggerName;
     }
 
-    private void setupLogging() {
+    protected void setupLogging() {
         // Turn off all logging to stdout except of sample logging
         LogManager.getRootLogger().removeAppender("stdout");
         ConsoleAppender appender = new ConsoleAppender(stdoutAppender.getLayout());
