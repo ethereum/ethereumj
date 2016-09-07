@@ -116,8 +116,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public void connect(final String ip, final int port, final String remoteId) {
         logger.info("Connecting to: {}:{}", ip, port);
-        final PeerClient peerClient = ctx.getBean(PeerClient.class);
-        peerClient.connectAsync(ip, port, remoteId, false);
+        worldManager.getActivePeer().connectAsync(ip, port, remoteId, false);
     }
 
     @Override
@@ -157,14 +156,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @Override
     public PeerClient getDefaultPeer() {
-
-        PeerClient peer = worldManager.getActivePeer();
-        if (peer == null) {
-
-            peer = new PeerClient();
-            worldManager.setActivePeer(peer);
-        }
-        return peer;
+        return worldManager.getActivePeer();
     }
 
     @Override

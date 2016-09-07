@@ -126,10 +126,6 @@ public class WorldManager {
         return blockchain;
     }
 
-    public void setActivePeer(PeerClient peer) {
-        this.activePeer = peer;
-    }
-
     public PeerClient getActivePeer() {
         return activePeer;
     }
@@ -214,7 +210,7 @@ public class WorldManager {
         logger.info("close: stopping SyncManager ...");
         syncManager.close();
         logger.info("close: stopping PeerClient ...");
-        ctx.getBean(PeerClient.class).close();
+        activePeer.close();
         logger.info("close: shutting down event dispatch thread used by EventBus ...");
         eventDispatchThread.shutdown();
         logger.info("close: closing Blockchain instance ...");
