@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.ethereum.util.ByteUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
@@ -144,6 +145,8 @@ public class Transaction {
     }
 
     public byte[] getHash() {
+        if (!isEmpty(hash)) return hash;
+
         if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncoded();
         return HashUtil.sha3(plainMsg);

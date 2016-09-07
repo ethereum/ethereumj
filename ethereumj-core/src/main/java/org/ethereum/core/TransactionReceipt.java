@@ -2,16 +2,15 @@ package org.ethereum.core;
 
 import org.ethereum.util.*;
 import org.ethereum.vm.LogInfo;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -51,7 +50,7 @@ public class TransactionReceipt {
         RLPItem gasUsedRLP = (RLPItem) receipt.get(4);
         RLPItem result = (RLPItem) receipt.get(5);
 
-        postTxState = postTxStateRLP.getRLPData();
+        postTxState = nullToEmpty(postTxStateRLP.getRLPData());
         cumulativeGas = cumulativeGasRLP.getRLPData();
         bloomFilter = new Bloom(bloomRLP.getRLPData());
         gasUsed = gasUsedRLP.getRLPData();
