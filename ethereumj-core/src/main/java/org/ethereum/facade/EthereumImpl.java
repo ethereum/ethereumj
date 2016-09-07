@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.FutureAdapter;
@@ -45,7 +46,7 @@ import java.util.concurrent.Future;
  * @since 27.07.2014
  */
 @Component
-public class EthereumImpl implements Ethereum {
+public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
     private static final Logger gLogger = LoggerFactory.getLogger("general");
@@ -352,5 +353,39 @@ public class EthereumImpl implements Ethereum {
      */
     public ApplicationContext getApplicationContext() {
         return ctx;
+    }
+
+    @Override
+    public boolean isAutoStartup() {
+        return false;
+    }
+
+    /**
+     * Shutting down all app beans
+     */
+    @Override
+    public void stop(Runnable callback) {
+        logger.info("### Shutdown initiated ### ");
+        close();
+        callback.run();
+    }
+
+    @Override
+    public void start() {}
+
+    @Override
+    public void stop() {}
+
+    @Override
+    public boolean isRunning() {
+        return true;
+    }
+
+    /**
+     * Called first on shutdown lifecycle
+     */
+    @Override
+    public int getPhase() {
+        return Integer.MAX_VALUE;
     }
 }
