@@ -6,11 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 public class NodeHandler {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
-    private static ScheduledExecutorService pongTimer = Executors.newSingleThreadScheduledExecutor();
     static long PingTimeout = 15000; //KademliaOptions.REQ_TIMEOUT;
     private static volatile int msgInCount = 0, msgOutCount = 0;
     private static boolean initialLogging = true;
@@ -260,7 +255,7 @@ public class NodeHandler {
         sendMessage(ping);
         getNodeStatistics().discoverOutPing.add();
 
-        pongTimer.schedule(new Runnable() {
+        nodeManager.getPongTimer().schedule(new Runnable() {
             public void run() {
                 try {
                     if (waitForPong) {

@@ -7,7 +7,6 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -29,7 +28,7 @@ public class PeerConnectionTester {
     private long ReconnectMaxPeers;
 
     @Autowired
-    private ApplicationContext ctx;
+    private PeerClient peerClient;
 
     @Autowired
     SystemProperties config = SystemProperties.getDefault();
@@ -57,7 +56,6 @@ public class PeerConnectionTester {
                     nodeHandler.getNodeStatistics().rlpxConnectionAttempts.add();
                     logger.debug("Trying node connection: " + nodeHandler);
                     Node node = nodeHandler.getNode();
-                    PeerClient peerClient = ctx.getBean(PeerClient.class);
                     peerClient.connect(node.getHost(), node.getPort(),
                             Hex.encodeHexString(node.getId()), true);
                     logger.debug("Terminated node connection: " + nodeHandler);
