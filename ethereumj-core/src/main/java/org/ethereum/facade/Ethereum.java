@@ -158,6 +158,11 @@ public interface Ethereum {
     BlockMiner getBlockMiner();
 
     /**
+     * Start listening for peer connections
+     */
+    void initSyncing();
+
+    /**
      * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
      * Normally the price returned should be sufficient to execute a transaction since ~25% of the latest
      * transactions were executed at this or lower price.
