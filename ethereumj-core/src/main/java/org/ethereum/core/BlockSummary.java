@@ -1,8 +1,18 @@
 package org.ethereum.core;
 
+import org.ethereum.util.Functional;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class BlockSummary {
 

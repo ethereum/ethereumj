@@ -158,7 +158,7 @@ public interface Ethereum {
     BlockMiner getBlockMiner();
 
     /**
-     * Start listening for peer connections
+     * Initiates blockchain syncing process
      */
     void initSyncing();
 
