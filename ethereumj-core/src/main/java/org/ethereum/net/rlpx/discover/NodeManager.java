@@ -93,10 +93,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }, 1 * 1000, 60 * 1000);
 
+        this.pongTimer = Executors.newSingleThreadScheduledExecutor();
         for (Node node : config.peerActive()) {
             getNodeHandler(node).getNodeStatistics().setPredefined(true);
         }
-        this.pongTimer = Executors.newSingleThreadScheduledExecutor();
     }
 
     public ScheduledExecutorService getPongTimer() {
