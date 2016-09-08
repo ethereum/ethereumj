@@ -5,7 +5,7 @@ import org.ethereum.util.Functional;
 /**
  * Created by Anton Nashatyrev on 08.09.2016.
  */
-public interface TransactionObserver extends AbsatractObserver<TransactionState>{
+public interface TransactionObserver extends AbstractObserver<TransactionState> {
 
     TransactionState getCurrentState();
 
