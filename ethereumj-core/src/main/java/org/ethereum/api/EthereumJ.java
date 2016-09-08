@@ -6,6 +6,7 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.api.type.*;
+import org.ethereum.net.rlpx.Node;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 /**
  * Created by Anton Nashatyrev on 07.09.2016.
  */
-public interface Blockchain {
+public interface EthereumJ {
 
     /*****  General Callback  ******/
 
@@ -55,4 +56,16 @@ public interface Blockchain {
     List<Block> getForkBlocks(long blockNum);
 
     TransactionObserver trackTransaction(Hash256 txHash);
+
+    /******* Network  ********/
+
+    List<Node> getConnectedNodes();
+
+    void connect(Node node);
+
+    void disconnect(Node node);
+
+    void setDiscoveryState(boolean enabled);
+
+    void setAllowInboundConnections(boolean enabled);
 }
