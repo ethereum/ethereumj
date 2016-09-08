@@ -8,7 +8,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 
 import org.ethereum.facade.Ethereum;
-import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.sync.SyncManager;

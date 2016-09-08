@@ -14,11 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.lang.Math.min;
 
@@ -69,6 +70,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private boolean inited = false;
     private Timer logStatsTimer = new Timer();
     private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
+    private ScheduledExecutorService pongTimer;
 
     @Autowired
     public NodeManager(SystemProperties config, EthereumListener ethereumListener, MapDBFactory mapDBFactory, PeerConnectionTester peerConnectionManager) {
@@ -91,9 +93,14 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }, 1 * 1000, 60 * 1000);
 
+        this.pongTimer = Executors.newSingleThreadScheduledExecutor();
         for (Node node : config.peerActive()) {
             getNodeHandler(node).getNodeStatistics().setPredefined(true);
         }
+    }
+
+    public ScheduledExecutorService getPongTimer() {
+        return pongTimer;
     }
 
     void setBootNodes(List<Node> bootNodes) {
@@ -410,6 +417,12 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             nodeManagerTasksTimer.cancel();
         } catch (Exception e) {
             logger.warn("Problems canceling nodeManagerTasksTimer", e);
+        }
+        try {
+            logger.info("Cancelling pongTimer");
+            pongTimer.shutdownNow();
+        } catch (Exception e) {
+            logger.warn("Problems cancelling pongTimer", e);
         }
         try {
             logStatsTimer.cancel();

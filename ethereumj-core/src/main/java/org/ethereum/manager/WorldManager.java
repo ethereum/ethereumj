@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -81,6 +82,9 @@ public class WorldManager {
     @Autowired
     SystemProperties config;
 
+    @Autowired
+    ApplicationContext ctx;
+
     private CountDownLatch initSemaphore = new CountDownLatch(1);
 
     @PostConstruct
@@ -129,10 +133,6 @@ public class WorldManager {
 
     public Blockchain getBlockchain() {
         return blockchain;
-    }
-
-    public void setActivePeer(PeerClient peer) {
-        this.activePeer = peer;
     }
 
     public PeerClient getActivePeer() {
@@ -218,6 +218,8 @@ public class WorldManager {
         channelManager.close();
         logger.info("close: stopping SyncManager ...");
         syncManager.close();
+        logger.info("close: stopping PeerClient ...");
+        activePeer.close();
         logger.info("close: shutting down event dispatch thread used by EventBus ...");
         eventDispatchThread.shutdown();
         logger.info("close: closing Blockchain instance ...");
