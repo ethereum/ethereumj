@@ -23,7 +23,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onBlock(BlockSummary blockSummary) {
+    public void onBlock(BlockSummary blockSummary, boolean isBestBlock) {
         onBlock(blockSummary.getBlock(), blockSummary.getReceipts());
     }
 
