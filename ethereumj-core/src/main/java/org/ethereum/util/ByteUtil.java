@@ -85,7 +85,7 @@ public class ByteUtil {
     }
 
     public static BigInteger bytesToBigInteger(byte[] bb) {
-        return new BigInteger(1, bb);
+        return bb.length == 0 ? BigInteger.ZERO : new BigInteger(1, bb);
     }
 
     /**
