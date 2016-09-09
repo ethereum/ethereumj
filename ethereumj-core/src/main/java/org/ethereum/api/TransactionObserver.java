@@ -9,7 +9,9 @@ public interface TransactionObserver extends AbstractObserver<TransactionState> 
 
     TransactionState getCurrentState();
 
-    TransactionState waitTillConfirmed(int confirmationBlocksCount);
+    TransactionState waitConfirmed(int confirmationBlocksCount) throws InvalidTransactionException;
+
+    TransactionState waitPending() throws InvalidTransactionException;
 
     void notifyOnConfirmed(Functional.Consumer<TransactionState> listener, int confirmationBlocksCount);
 }
