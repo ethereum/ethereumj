@@ -11,6 +11,7 @@ import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
@@ -135,6 +136,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
+    @Autowired
+    SyncManager syncManager;
+
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
 
@@ -181,6 +185,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public BlockchainImpl withEthereumListener(EthereumListener listener) {
         this.listener = listener;
+        return this;
+    }
+
+    public BlockchainImpl withSyncManager(SyncManager syncManager) {
+        this.syncManager = syncManager;
         return this;
     }
 
@@ -591,11 +600,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     private boolean isMemoryBoundFlush() {
-        return config.cacheFlushMemory() > 0 || config.cacheFlushBlocks() == 0;
+        return !syncManager.isSyncDone() && config.cacheFlushMemory() > 0 || config.cacheFlushBlocks() == 0;
     }
 
     private boolean needFlush(Block block) {
-        if (config.cacheFlushMemory() > 0) {
+        if (syncManager.isSyncDone()) {
+            return true;
+        } else if (config.cacheFlushMemory() > 0) {
             return needFlushByMemory(config.cacheFlushMemory());
         } else if (config.cacheFlushBlocks() > 0) {
             return block.getNumber() % config.cacheFlushBlocks() == 0;
