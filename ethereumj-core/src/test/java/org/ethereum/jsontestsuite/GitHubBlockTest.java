@@ -29,8 +29,8 @@ public class GitHubBlockTest {
         SystemProperties.getDefault().setGenesisInfo("frontier.json");
         SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
 
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
+        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcMultiChainTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "ChainAtoChainB_BlockHash");
     }
 
     private void runFrontier(String name) throws IOException, ParseException {

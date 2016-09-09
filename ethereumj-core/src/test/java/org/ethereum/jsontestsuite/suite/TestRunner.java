@@ -98,7 +98,6 @@ public class TestRunner {
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.setPendingState(pendingState);
         pendingState.setBlockchain(blockchain);

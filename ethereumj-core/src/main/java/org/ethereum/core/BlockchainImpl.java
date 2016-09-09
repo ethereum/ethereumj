@@ -165,7 +165,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
         this.eventDispatchThread = EventDispatchThread.getDefault();
-        this.programInvokeFactory = new ProgramInvokeFactoryImpl(this);
+        this.programInvokeFactory = new ProgramInvokeFactoryImpl();
         initConst(SystemProperties.getDefault());
     }
 

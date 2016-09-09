@@ -373,7 +373,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 .withEthereumListener(listener);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 

@@ -27,23 +27,10 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
-    @Autowired
-    private Blockchain blockchain;
-
-    public ProgramInvokeFactoryImpl() {
-    }
-
-    public ProgramInvokeFactoryImpl(Blockchain blockchain) {
-        this.blockchain = blockchain;
-    }
-
     // Invocation by the wire tx
     @Override
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository,
                                              BlockStore blockStore) {
-
-        // https://ethereum.etherpad.mozilla.org/26
-        Block lastBlock = blockchain.getBestBlock();
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
@@ -75,7 +62,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         byte[] data = tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY : nullToEmpty(tx.getData());
 
         /***    PREVHASH  op  ***/
-        byte[] lastHash = lastBlock.getHash();
+        byte[] lastHash = block.getParentHash();
 
         /***   COINBASE  op ***/
         byte[] coinbase = block.getCoinbase();
@@ -191,9 +178,5 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
                 repository, program.getCallDeep() + 1, blockStore, byTestingSuite);
-    }
-
-    public void setBlockchain(Blockchain blockchain) {
-        this.blockchain = blockchain;
     }
 }

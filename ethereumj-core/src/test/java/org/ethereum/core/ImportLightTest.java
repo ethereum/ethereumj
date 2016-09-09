@@ -414,6 +414,37 @@ public class ImportLightTest {
         // no StackOverflowException
     }
 
+    @Test
+    public void prevBlockHashOnFork() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  bytes32 public blockHash;" +
+                "  function a(){" +
+                "    blockHash = block.blockhash(block.number - 1);" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b3 = bc.createBlock();
+        Block b4 = bc.createBlock();
+        Block b5 = bc.createBlock();
+        Block b6 = bc.createBlock();
+        Block b2_ = bc.createForkBlock(b1);
+        a.callFunction("a");
+        Block b3_ = bc.createForkBlock(b2_);
+        Object hash = a.callConstFunction(b3_, "blockHash")[0];
+
+        System.out.println(Hex.toHexString((byte[]) hash));
+        System.out.println(Hex.toHexString(b2_.getHash()));
+
+        // no StackOverflowException
+    }
+
+
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
@@ -427,7 +458,6 @@ public class ImportLightTest {
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
