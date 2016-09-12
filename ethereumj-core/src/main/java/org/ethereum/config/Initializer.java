@@ -20,6 +20,7 @@ class Initializer implements BeanPostProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
+    // Util to ensure database directory is compatible with code
     private CheckDatabaseVersionSafe checkDatabaseVersionSafe = new CheckDatabaseVersionSafe();
 
     /**
@@ -92,7 +93,7 @@ class Initializer implements BeanPostProcessor {
             if (isDatabaseDirectoryExists(config)) {
                 final Integer actualVersion = getDatabaseVersion(versionFile);
                 if (actualVersion.equals(expectedVersion)) {
-                    logger.info("Database version is verified and is " + actualVersion);
+                    logger.info(String.format("Database directory location: '%s', version: %d", config.databaseDir(), actualVersion));
                 } else {
                     handleIncompatibleVersion(config, expectedVersion, actualVersion, versionFile);
                 }
@@ -111,7 +112,8 @@ class Initializer implements BeanPostProcessor {
                 logger.error("Detected incompatible database version. Detected:%d, required:%d", actualVersion, expectedVersion);
                 logger.error("Please remove database directory manually or set `database.autoResetOldVersion` to `true`");
                 logger.error("Database directory location is " + config.databaseDir());
-                throw new RuntimeException("Incompatible database version " + actualVersion);
+                throw new RuntimeException("Incompatible database version " + actualVersion + ". Please remove database " +
+                        "directory manually or set `database.autoResetOldVersion` to `true`");
             }
         }
 
