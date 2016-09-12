@@ -30,8 +30,7 @@ public class Solc {
         SystemProperties defaultProps = SystemProperties.getDefault();
         if (defaultProps != null && defaultProps.customSolcPath() != null) {
             solc = new File(defaultProps.customSolcPath());
-            solc.setExecutable(true);
-            if (solc == null || !solc.canExecute()) {
+            if (!solc.canExecute()) {
                 throw new RuntimeException(String.format(
                         "Solidity compiler from config solc.path: %s is not a valid executable",
                         defaultProps.customSolcPath()
