@@ -21,7 +21,7 @@ class Initializer implements BeanPostProcessor {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     // Util to ensure database directory is compatible with code
-    private CheckDatabaseVersionSafe checkDatabaseVersionSafe = new CheckDatabaseVersionSafe();
+    private CheckDatabaseVersionWithReset checkDatabaseVersion = new CheckDatabaseVersionWithReset();
 
     /**
      * Method to be called right after the config is instantiated.
@@ -36,8 +36,7 @@ class Initializer implements BeanPostProcessor {
             logger.info("Database reset done");
         }
 
-        // temporary using safe database versioning without reset effect
-        checkDatabaseVersionSafe.validateDatabaseVersion(config);
+        checkDatabaseVersion.validateDatabaseVersion(config);
 
         if (config.getConfig().getBoolean("database.autoResetOldVersion")) {
             FileUtil.recursiveDelete(config.databaseDir());
@@ -72,16 +71,9 @@ class Initializer implements BeanPostProcessor {
 
     /**
      * We need to persist the DB version, so after core upgrade we can either reset older incompatible db
-     * or make a warning and let the user reset DB manually. Database version is stored in ${database}/version.properties
-     *
-     * Rules:
-     *  - check if database directory exist:
-     *    - not exists -> create file with version;
-     *    - dir exists -> read version value and compare with required:
-     *         - versions are match -> done;
-     *         - versions are diff  -> check for special flag:
-     *              - flag is true -> remove database directory;
-     *              - flag is false -> throw error to user
+     * or make a warning and let the user reset DB manually.
+     * Database version is stored in ${database}/version.properties
+     * Logic will assume that database has version 1 if file with version is absent.
      */
     public static class CheckDatabaseVersionWithReset {
 
@@ -91,29 +83,31 @@ class Initializer implements BeanPostProcessor {
             // Detect database version
             final Integer expectedVersion = config.databaseVersion();
             if (isDatabaseDirectoryExists(config)) {
-                final Integer actualVersion = getDatabaseVersion(versionFile);
-                if (actualVersion.equals(expectedVersion)) {
+                final Integer actualVersionRaw = getDatabaseVersion(versionFile);
+                final boolean isFirstVersionWithoutFile = actualVersionRaw.equals(-1) && expectedVersion.equals(1);
+                final Integer actualVersion = isFirstVersionWithoutFile ? 1 : actualVersionRaw;
+
+                if (actualVersion.equals(expectedVersion) || isFirstVersionWithoutFile) {
+                    if (isFirstVersionWithoutFile) {
+                        putDatabaseVersion(versionFile, config.databaseVersion());
+                    }
                     logger.info(String.format("Database directory location: '%s', version: %d", config.databaseDir(), actualVersion));
                 } else {
-                    handleIncompatibleVersion(config, expectedVersion, actualVersion, versionFile);
+                    if (config.getProperty("database.autoResetOldVersion", false)) {
+                        FileUtil.recursiveDelete(config.databaseDir());
+                        logger.info("Detected incompatible database directory: %d", actualVersion);
+                        logger.warn("Auto reset database directory according to flag");
+                    } else {
+                        logger.error("Detected incompatible database version. Detected:%d, required:%d", actualVersion, expectedVersion);
+                        logger.error("Please remove database directory manually or set `database.autoResetOldVersion` to `true`");
+                        logger.error("Database directory location is " + config.databaseDir());
+                        throw new RuntimeException("Incompatible database version " + actualVersion + ". Please remove database " +
+                                "directory manually or set `database.autoResetOldVersion` to `true`");
+                    }
                 }
             } else {
                 putDatabaseVersion(versionFile, config.databaseVersion());
                 logger.info("Created database version file");
-            }
-        }
-
-        protected void handleIncompatibleVersion(SystemProperties config, Integer expectedVersion, Integer actualVersion, File versionFile) {
-            if (config.getProperty("database.autoResetOldVersion", false)) {
-                FileUtil.recursiveDelete(config.databaseDir());
-                logger.info("Detected incompatible database directory: %d", actualVersion);
-                logger.warn("Auto reset database directory according to flag");
-            } else {
-                logger.error("Detected incompatible database version. Detected:%d, required:%d", actualVersion, expectedVersion);
-                logger.error("Please remove database directory manually or set `database.autoResetOldVersion` to `true`");
-                logger.error("Database directory location is " + config.databaseDir());
-                throw new RuntimeException("Incompatible database version " + actualVersion + ". Please remove database " +
-                        "directory manually or set `database.autoResetOldVersion` to `true`");
             }
         }
 
@@ -124,11 +118,11 @@ class Initializer implements BeanPostProcessor {
 
         /**
          * @return database version stored in specific location in database dir
-         *         or 0 if can't detect version due to error
+         *         or -1 if can't detect version due to error
          */
         public Integer getDatabaseVersion(File file) {
             if (!file.exists()) {
-                return 0;
+                return -1;
             }
 
             try (Reader reader = new FileReader(file)) {
@@ -137,7 +131,7 @@ class Initializer implements BeanPostProcessor {
                 return Integer.valueOf(prop.getProperty("databaseVersion"));
             } catch (Exception e) {
                 logger.error("Problem reading current database version.", e);
-                return 0;
+                return -1;
             }
         }
 
@@ -149,22 +143,6 @@ class Initializer implements BeanPostProcessor {
                 prop.store(writer, "Generated database version");
             } catch (Exception e) {
                 throw new RuntimeException("Problem writing current database version ", e);
-            }
-        }
-    }
-
-    /**
-     * Temp class while all users will have their database version properly set
-     */
-    public static class CheckDatabaseVersionSafe extends CheckDatabaseVersionWithReset {
-
-        @Override
-        protected void handleIncompatibleVersion(SystemProperties config, Integer expectedVersion, Integer actualVersion, File versionFile) {
-            if (actualVersion.equals(0)) {
-                putDatabaseVersion(versionFile, config.databaseVersion());
-                logger.info("Created database version file");
-            } else {
-                logger.warn("Found database with unknown version " + actualVersion + ". Leaving unchanged.");
             }
         }
     }

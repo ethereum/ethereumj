@@ -11,6 +11,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Stan Reshetnyk on 11.09.16.
@@ -18,8 +19,6 @@ import java.io.File;
 public class InitializerTest {
 
     final Initializer.CheckDatabaseVersionWithReset resetHelper = new Initializer.CheckDatabaseVersionWithReset();
-
-    final Initializer.CheckDatabaseVersionSafe safeHelper = new Initializer.CheckDatabaseVersionSafe();
 
     File tempFile;
     String databaseDir;
@@ -40,32 +39,40 @@ public class InitializerTest {
         FileUtil.recursiveDelete(tempFile.getAbsolutePath());
     }
 
-    private void testCreateVersionFile(Initializer.CheckDatabaseVersionWithReset helper) {
-        SystemProperties props = withConfig(1, true);
-
-        // state without database
-        assertEquals(new Integer(0), helper.getDatabaseVersion(versionFile));
-        assertTrue(!helper.isDatabaseDirectoryExists(props));
-
-        // create database version file
-        helper.validateDatabaseVersion(props);
-
-        // state with just created database
-        assertEquals(new Integer(1), helper.getDatabaseVersion(versionFile));
-        assertTrue(helper.isDatabaseDirectoryExists(props));
-
-        // running validate for a second time should change nothing
-        helper.validateDatabaseVersion(props);
-        assertEquals(new Integer(1), helper.getDatabaseVersion(versionFile));
-        assertTrue(helper.isDatabaseDirectoryExists(props));
-    }
-
     // RESET
 
     @Test
     public void reset_shouldCreateVersionFile() {
-        testCreateVersionFile(resetHelper);
+        SystemProperties props = withConfig(1, true);
+
+        // state without database
+        assertEquals(new Integer(-1), resetHelper.getDatabaseVersion(versionFile));
+        assertTrue(!resetHelper.isDatabaseDirectoryExists(props));
+
+        // create database version file
+        resetHelper.validateDatabaseVersion(props);
+
+        // state with just created database
+        assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
+        assertTrue(resetHelper.isDatabaseDirectoryExists(props));
+
+        // running validate for a second time should change nothing
+        resetHelper.validateDatabaseVersion(props);
+        assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
+        assertTrue(resetHelper.isDatabaseDirectoryExists(props));
     }
+
+    @Test(expected = RuntimeException.class)
+    public void reset_shouldStop_whenNoVersionFileAndNotFirstVersion() throws IOException {
+        SystemProperties props = withConfig(2, NOT_RESET);
+        resetHelper.validateDatabaseVersion(props);
+
+        // database is assumed to exist if dir is not empty
+        versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
+
+        resetHelper.validateDatabaseVersion(props);
+    }
+
 
     @Test
     public void reset_shouldReset_whenDifferentVersionAndFlag() {
@@ -85,26 +92,6 @@ public class InitializerTest {
         final SystemProperties props2 = withConfig(2, NOT_RESET);
         resetHelper.validateDatabaseVersion(props2);
         assertTrue(resetHelper.isDatabaseDirectoryExists(props2));
-    }
-
-    // SAFE
-
-    @Test
-    public void safe_shouldCreateVersionFile() {
-        testCreateVersionFile(resetHelper);
-    }
-
-    @Test
-    public void safe_shouldNotReset() {
-        SystemProperties props1 = withConfig(1, true);
-        safeHelper.validateDatabaseVersion(props1);
-
-        SystemProperties props2 = withConfig(2, RESET);
-        safeHelper.validateDatabaseVersion(props2);
-        assertTrue(safeHelper.isDatabaseDirectoryExists(props2));
-
-        // safe checker should not change version when it is already exists
-        assertEquals(new Integer(1), safeHelper.getDatabaseVersion(versionFile));
     }
 
 
