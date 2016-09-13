@@ -12,20 +12,19 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import static org.ethereum.config.Initializer.IncompatibleDatabaseHandler.Behavior;
+import static org.ethereum.config.Initializer.IncompatibleDatabaseHandler.Behavior.*;
 
 /**
  * Created by Stan Reshetnyk on 11.09.16.
  */
 public class InitializerTest {
 
-    final Initializer.CheckDatabaseVersionWithReset resetHelper = new Initializer.CheckDatabaseVersionWithReset();
+    final Initializer.IncompatibleDatabaseHandler resetHelper = new Initializer.IncompatibleDatabaseHandler();
 
     File tempFile;
     String databaseDir;
     File versionFile;
-
-    final static boolean RESET = true;
-    final static boolean NOT_RESET = false;
 
     @Before
     public void before() {
@@ -42,64 +41,101 @@ public class InitializerTest {
     // RESET
 
     @Test
-    public void reset_shouldCreateVersionFile() {
-        SystemProperties props = withConfig(1, true);
+    public void helper_shouldCreateVersionFile() {
+        SystemProperties props = withConfig(1, null);
 
         // state without database
         assertEquals(new Integer(-1), resetHelper.getDatabaseVersion(versionFile));
         assertTrue(!resetHelper.isDatabaseDirectoryExists(props));
 
         // create database version file
-        resetHelper.validateDatabaseVersion(props);
+        resetHelper.process(props);
 
         // state with just created database
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
         assertTrue(resetHelper.isDatabaseDirectoryExists(props));
 
-        // running validate for a second time should change nothing
-        resetHelper.validateDatabaseVersion(props);
+        // running process for a second time should change nothing
+        resetHelper.process(props);
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
         assertTrue(resetHelper.isDatabaseDirectoryExists(props));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void reset_shouldStop_whenNoVersionFileAndNotFirstVersion() throws IOException {
-        SystemProperties props = withConfig(2, NOT_RESET);
-        resetHelper.validateDatabaseVersion(props);
+    @Test
+    public void helper_shouldCreateVersionFile_whenOldVersion() {
+        // create database without version
+        SystemProperties props1 = withConfig(1, null);
+        resetHelper.process(props1);
+        versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
+
+        SystemProperties props2 = withConfig(2, IGNORE);
+        resetHelper.process(props2);
+
+        assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
+        assertTrue(resetHelper.isDatabaseDirectoryExists(props2));
+    }
+
+    @Test(expected = Error.class)
+    public void helper_shouldStop_whenNoVersionFileAndNotFirstVersion() throws IOException {
+        SystemProperties props = withConfig(2, EXIT);
+        resetHelper.process(props);
 
         // database is assumed to exist if dir is not empty
         versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
 
-        resetHelper.validateDatabaseVersion(props);
+        resetHelper.process(props);
     }
 
-
     @Test
-    public void reset_shouldReset_whenDifferentVersionAndFlag() {
-        SystemProperties props1 = withConfig(1, true);
-        resetHelper.validateDatabaseVersion(props1);
+    public void helper_shouldReset_whenDifferentVersionAndFlag() {
+        SystemProperties props1 = withConfig(1, null);
+        resetHelper.process(props1);
 
         SystemProperties props2 = withConfig(2, RESET);
-        resetHelper.validateDatabaseVersion(props2);
+        resetHelper.process(props2);
         assertTrue(!resetHelper.isDatabaseDirectoryExists(props2));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void reset_shouldNotReset_whenDifferentVersionAndNoFlag() {
-        final SystemProperties props1 = withConfig(1, true);
-        resetHelper.validateDatabaseVersion(props1);
+    @Test(expected = Error.class)
+    public void helper_shouldExit_whenDifferentVersionAndFlag() {
+        final SystemProperties props1 = withConfig(1, null);
+        resetHelper.process(props1);
 
-        final SystemProperties props2 = withConfig(2, NOT_RESET);
-        resetHelper.validateDatabaseVersion(props2);
+        final SystemProperties props2 = withConfig(2, EXIT);
+        resetHelper.process(props2);
+    }
+
+    @Test(expected = Error.class)
+    public void helper_shouldExit_byDefault() {
+        final SystemProperties props1 = withConfig(1, null);
+        resetHelper.process(props1);
+
+        final SystemProperties props2 = withConfig(2, null);
+        resetHelper.process(props2);
+    }
+
+    @Test
+    public void helper_shouldIgnore_whenDifferentVersionAndFlag() {
+        final SystemProperties props1 = withConfig(1, EXIT);
+        resetHelper.process(props1);
+
+        final SystemProperties props2 = withConfig(2, IGNORE);
+        resetHelper.process(props2);
         assertTrue(resetHelper.isDatabaseDirectoryExists(props2));
+        assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
     }
 
 
     // HELPERS
 
-    private SystemProperties withConfig(int databaseVersion, boolean autoResetOldVersion) {
-        Config config = ConfigFactory.empty()
-                .withValue("database.autoResetOldVersion", ConfigValueFactory.fromAnyRef(autoResetOldVersion));
+    private SystemProperties withConfig(int databaseVersion, Behavior behavior) {
+        Config config = ConfigFactory.empty();
+
+        if (behavior != null) {
+            config = config.withValue("database.incompatibleDatabaseBehavior",
+                    ConfigValueFactory.fromAnyRef(behavior.toString().toLowerCase()));
+        }
+
 
         SPO systemProperties = new SPO(config);
         systemProperties.setDataBaseDir(databaseDir);
