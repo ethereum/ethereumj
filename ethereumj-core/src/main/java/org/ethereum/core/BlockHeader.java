@@ -21,6 +21,9 @@ import static org.ethereum.util.ByteUtil.toHexString;
  */
 public class BlockHeader {
 
+    public static final int NONCE_LENGTH = 8;
+    public static final int HASH_LENGTH = 32;
+    public static final int ADDRESS_LENGTH = 20;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     private byte[] parentHash;
