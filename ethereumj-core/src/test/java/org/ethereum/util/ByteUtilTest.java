@@ -428,5 +428,35 @@ public class ByteUtilTest {
             byte[] expected = Hex.decode(str);
             assertArrayEquals(expected, actuals);
         }
+        {
+            String str = "0x"; // Empty
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0"; // Empty
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0x00"; // This case shouldn't be empty array
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0xd"; // Should work with odd length, adding leading 0
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {13};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0xd0d"; // Should work with odd length, adding leading 0
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {13, 13};
+            assertArrayEquals(expected, actuals);
+        }
     }
 }

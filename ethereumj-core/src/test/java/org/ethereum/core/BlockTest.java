@@ -79,6 +79,23 @@ public class BlockTest {
         assertEquals(GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
     }
 
+    /**
+     * Test genesis loading from JSON with some
+     * freedom for user like odd length of hex values etc.
+     */
+    @Test
+    public void testGenesisFromNewMessy() {
+
+        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic-messy.json"));
+        logger.info(genesis.toString());
+
+        logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));
+        logger.info("genesis rlp: [{}]", Hex.toHexString(genesis.getEncoded()));
+
+        assertEquals(GENESIS_HASH, Hex.toHexString(genesis.getHash()));
+        assertEquals(GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
+    }
+
     @Test
     public void testGenesisPremineData() {
         Genesis genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
