@@ -66,14 +66,19 @@ public class BlockTest {
         assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
     }
 
-    @Test
-    public void testGenesisFromNew() {
-
-        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
+    private Block loadGenesisFromFile(String resPath) {
+        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream(resPath));
         logger.info(genesis.toString());
 
         logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));
         logger.info("genesis rlp: [{}]", Hex.toHexString(genesis.getEncoded()));
+
+        return genesis;
+    }
+
+    @Test
+    public void testGenesisFromNew() {
+        Block genesis = loadGenesisFromFile("/genesis/olympic.json");
 
         assertEquals(GENESIS_HASH, Hex.toHexString(genesis.getHash()));
         assertEquals(GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
@@ -85,15 +90,23 @@ public class BlockTest {
      */
     @Test
     public void testGenesisFromNewMessy() {
-
-        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic-messy.json"));
-        logger.info(genesis.toString());
-
-        logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));
-        logger.info("genesis rlp: [{}]", Hex.toHexString(genesis.getEncoded()));
+        Block genesis = loadGenesisFromFile("/genesis/olympic-messy.json");
 
         assertEquals(GENESIS_HASH, Hex.toHexString(genesis.getHash()));
         assertEquals(GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
+    }
+
+    /**
+     * Test genesis with incorrect nonce length
+     */
+    @Test
+    public void testGenesisShortNonce() {
+        Block genesis = loadGenesisFromFile("/genesis/nonce-messy.json");
+
+        assertEquals("b096cfdeb2a3c0abd3ce9f77cf5adc92a8cead34aa4d2be54c004373e3986788",
+                Hex.toHexString(genesis.getHash()));
+        assertEquals("f901f8f901f3a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a0da3d5bd4c2f8443fbca1f12c0b9eaa4996825e9d32d239ffb302b8f98f202c97a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008301000080832fefd8808080a00000000000000000000000000000000000000000000000000000000000000000880000000000000000c0c0",
+                Hex.toHexString(genesis.getEncoded()));
     }
 
     @Test
