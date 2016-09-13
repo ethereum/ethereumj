@@ -538,7 +538,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!receiptHash.equals(receiptListHash)) {
             logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
-            //return false;
+            //return null;
         }
 
         String logBloomHash = Hex.toHexString(block.getLogBloom());
@@ -546,8 +546,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!logBloomHash.equals(logBloomListHash)) {
             logger.warn("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
-            //track.rollback();
-            //return;
+            track.rollback();
+            return null;
         }
 
         String blockStateRootHash = Hex.toHexString(block.getStateRoot());
