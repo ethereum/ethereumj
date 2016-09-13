@@ -21,10 +21,16 @@ import org.ethereum.crypto.jce.ECKeyFactory;
 import org.ethereum.crypto.jce.ECKeyPairGenerator;
 import org.ethereum.crypto.jce.ECSignatureFactory;
 import org.ethereum.crypto.jce.SpongyCastleProvider;
-import org.ethereum.jsonrpc.TypeConverter;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
+import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.spongycastle.jce.spec.ECParameterSpec;
+import org.spongycastle.jce.spec.ECPrivateKeySpec;
+import org.spongycastle.jce.spec.ECPublicKeySpec;
+
 import org.spongycastle.asn1.ASN1InputStream;
 import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.DLSequence;
@@ -35,18 +41,9 @@ import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
-import org.spongycastle.crypto.params.ECDomainParameters;
-import org.spongycastle.crypto.params.ECPrivateKeyParameters;
-import org.spongycastle.crypto.params.ECPublicKeyParameters;
-import org.spongycastle.crypto.params.KeyParameter;
-import org.spongycastle.crypto.params.ParametersWithIV;
+import org.spongycastle.crypto.params.*;
 import org.spongycastle.crypto.signers.ECDSASigner;
 import org.spongycastle.crypto.signers.HMacDSAKCalculator;
-import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
-import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
-import org.spongycastle.jce.spec.ECParameterSpec;
-import org.spongycastle.jce.spec.ECPrivateKeySpec;
-import org.spongycastle.jce.spec.ECPublicKeySpec;
 import org.spongycastle.math.ec.ECAlgorithms;
 import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
@@ -674,16 +671,19 @@ public class ECKey implements Serializable {
             return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
         }
 
-        public String toHex() {
+        public byte[] toByteArray() {
             final byte fixedV = this.v >= 27
                     ? (byte) (this.v - 27)
                     :this.v;
 
-            final String hexR = ByteUtil.toHexString(ByteUtil.bigIntegerToBytes(this.r));
-            final String hexS = ByteUtil.toHexString(ByteUtil.bigIntegerToBytes(this.s));
-            final String hexV = ByteUtil.toHexString(new byte[]{fixedV});
+            return ByteUtil.merge(
+                    ByteUtil.bigIntegerToBytes(this.r),
+                    ByteUtil.bigIntegerToBytes(this.s),
+                    new byte[]{fixedV});
+        }
 
-            return TypeConverter.toJsonHex(hexR + hexS + hexV);
+        public String toHex() {
+            return Hex.toHexString(toByteArray());
         }
 
         @Override

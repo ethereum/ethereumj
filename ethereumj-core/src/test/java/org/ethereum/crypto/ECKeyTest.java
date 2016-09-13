@@ -50,7 +50,7 @@ public class ECKeyTest {
 
     private String exampleMessage = "This is an example of a signed message.";
     private String sigBase64 = "HNLOSI9Nop5o8iywXKwbGbdd8XChK0rRvdRTG46RFcb7dcH+UKlejM/8u1SCoeQvu91jJBMd/nXDs7f5p8ch7Ms=";
-    private String sigHex = "0xd2ce488f4da29e68f22cb05cac1b19b75df170a12b4ad1bdd4531b8e9115c6fb75c1fe50a95e8ccffcbb5482a1e42fbbdd6324131dfe75c3b3b7f9a7c721eccb01";
+    private String signatureHex = "d2ce488f4da29e68f22cb05cac1b19b75df170a12b4ad1bdd4531b8e9115c6fb75c1fe50a95e8ccffcbb5482a1e42fbbdd6324131dfe75c3b3b7f9a7c721eccb01";
 
     @Test
     public void testHashCode() {
@@ -172,8 +172,8 @@ public class ECKeyTest {
         byte[] messageHash = HashUtil.sha3(exampleMessage.getBytes());
         ECDSASignature signature = key.sign(messageHash);
         String output = signature.toHex();
-        System.out.println("Signtr\t: " + output + " (Hex, length: " + output.length() + ")");
-        assertEquals(sigHex, output);
+        System.out.println("Signature\t: " + output + " (Hex, length: " + output.length() + ")");
+        assertEquals(signatureHex, output);
     }
 
     @Test
