@@ -435,9 +435,9 @@ public class ByteUtilTest {
             assertArrayEquals(expected, actuals);
         }
         {
-            String str = "0"; // Empty
+            String str = "0"; // Same as 0x00
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {};
+            byte[] expected = new byte[] {0};
             assertArrayEquals(expected, actuals);
         }
         {
