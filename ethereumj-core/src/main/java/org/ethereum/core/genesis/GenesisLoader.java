@@ -66,7 +66,7 @@ public class GenesisLoader {
     }
 
 
-    private static Genesis createBlockForJson(GenesisJson genesisJson) throws Exception {
+    private static Genesis createBlockForJson(GenesisJson genesisJson) {
 
         byte[] nonce       = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
         byte[] difficulty  = ByteUtil.hexStringToBytes(genesisJson.difficulty);
@@ -93,7 +93,7 @@ public class GenesisLoader {
      * @return  correct nonce
      * @throws RuntimeException when nonce is too long
      */
-    private static byte[] prepareNonce(byte[] nonceUnchecked) throws RuntimeException {
+    private static byte[] prepareNonce(byte[] nonceUnchecked) {
         if (nonceUnchecked.length > 8) {
             throw new RuntimeException(String.format("Invalid nonce, should be %s length", NONCE_LENGTH));
         } else if (nonceUnchecked.length == 8) {
