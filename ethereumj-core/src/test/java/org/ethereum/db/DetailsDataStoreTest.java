@@ -1,7 +1,6 @@
 package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
@@ -12,7 +11,6 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 import static org.ethereum.TestUtils.*;
-import static org.ethereum.util.ByteUtil.toHexString;
 import static org.junit.Assert.*;
 
 public class DetailsDataStoreTest {
@@ -149,10 +147,7 @@ public class DetailsDataStoreTest {
         byte[] addrWithInternalStorage = randomAddress();
         final int inMemoryStorageLimit = SystemProperties.getDefault().detailsInMemoryStorageLimit();
 
-        DataSourcePool dataSourcePool = DataSourcePool.getDefault();
-        HashMapDB externalStorage =
-            (HashMapDB) dataSourcePool.hashMapDBByName("details-storage/" + toHexString(addrWithExternalStorage));
-
+        HashMapDB externalStorage = new HashMapDB();
         HashMapDB internalStorage = new HashMapDB();
 
         ContractDetails detailsWithExternalStorage = randomContractDetails(512, inMemoryStorageLimit / 64 + 10, externalStorage, true);

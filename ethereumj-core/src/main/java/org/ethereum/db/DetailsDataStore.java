@@ -49,8 +49,10 @@ public class DetailsDataStore {
             byte[] data = db.get(key);
             if (data == null) return null;
 
-            details = commonConfig.contractDetailsImpl();
-            details.decode(data);
+            ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
+            detailsImpl.setDataSource(db.getDb());
+            detailsImpl.decode(data);
+            details = detailsImpl;
 
             cache.put(wrappedKey, details);
 

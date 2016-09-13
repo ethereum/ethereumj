@@ -2,8 +2,8 @@ package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.XorDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
@@ -35,8 +36,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Autowired
     SystemProperties config = SystemProperties.getDefault();
 
-    @Autowired
-    DataSourcePool dataSourcePool = DataSourcePool.getDefault();
+    KeyValueDataSource dataSource;
 
     private byte[] rlpEncoded;
 
@@ -236,13 +236,17 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         if (externalStorage) {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
-            dataSourcePool.closeDataSource("details-storage/" + toHexString(address));
         }
+    }
+
+    public void setDataSource(KeyValueDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     private KeyValueDataSource getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = dataSourcePool.dbByName(commonConfig, "details-storage/" + toHexString(address));
+            externalStorageDataSource = new XorDataSource(dataSource,
+                    sha3(("details-storage/" + toHexString(address)).getBytes()));
         }
         return externalStorageDataSource;
     }
@@ -280,7 +284,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         details.keys = this.keys;
         details.config = config;
         details.commonConfig = commonConfig;
-        details.dataSourcePool = dataSourcePool;
+        details.dataSource = dataSource;
 
         return details;
     }
