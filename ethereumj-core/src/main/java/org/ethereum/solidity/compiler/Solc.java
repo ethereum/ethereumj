@@ -14,26 +14,23 @@ import org.ethereum.config.SystemProperties;
  */
 public class Solc {
 
-    public static final Solc INSTANCE = new Solc();
-
     private File solc = null;
 
-    private Solc() {
+    Solc(SystemProperties config) {
         try {
-            init();
+            init(config);
         } catch (IOException e) {
             throw new RuntimeException("Can't init solc compiler: ", e);
         }
     }
 
-    private void init() throws IOException {
-        SystemProperties defaultProps = SystemProperties.getDefault();
-        if (defaultProps != null && defaultProps.customSolcPath() != null) {
-            solc = new File(defaultProps.customSolcPath());
+    private void init(SystemProperties config) throws IOException {
+        if (config != null && config.customSolcPath() != null) {
+            solc = new File(config.customSolcPath());
             if (!solc.canExecute()) {
                 throw new RuntimeException(String.format(
                         "Solidity compiler from config solc.path: %s is not a valid executable",
-                        defaultProps.customSolcPath()
+                        config.customSolcPath()
                 ));
             }
         } else {
@@ -63,7 +60,7 @@ public class Solc {
         }
     }
 
-    private static String getOS() {
+    private String getOS() {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
             return "win";
