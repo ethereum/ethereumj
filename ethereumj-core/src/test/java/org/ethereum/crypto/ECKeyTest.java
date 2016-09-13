@@ -166,6 +166,9 @@ public class ECKeyTest {
         assertEquals(sigBase64, output);
     }
 
+    /**
+     * Verified via https://etherchain.org/verify/signature
+     */
     @Test
     public void testEthereumSignToHex() {
         ECKey key = ECKey.fromPrivate(privateKey);
