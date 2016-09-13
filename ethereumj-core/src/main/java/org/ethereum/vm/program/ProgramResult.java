@@ -133,6 +133,12 @@ public class ProgramResult {
         }
     }
 
+    public void rejectLogInfos() {
+        for (LogInfo logInfo : getLogInfoList()) {
+            logInfo.reject();
+        }
+    }
+
     public void addFutureRefund(long gasValue) {
         futureRefund += gasValue;
     }

@@ -18,6 +18,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -312,9 +313,17 @@ public class TransactionExecutor {
 
         cacheTrack.commit();
 
+        // Should include only LogInfo's that was added during not rejected transactions
+        List<LogInfo> notRejectedLogInfos = new ArrayList<>();
+        for (LogInfo logInfo: result.getLogInfoList()) {
+            if (!logInfo.isRejected()) {
+                notRejectedLogInfos.add(logInfo);
+            }
+        }
+
         TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
                 .gasLeftover(m_endGas)
-                .logs(result.getLogInfoList())
+                .logs(notRejectedLogInfos)
                 .result(result.getHReturn());
 
         if (result != null) {
@@ -355,7 +364,7 @@ public class TransactionExecutor {
         logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), summary.getFee());
 
         if (result != null) {
-            logs = result.getLogInfoList();
+            logs = notRejectedLogInfos;
             // Traverse list of suicides
             for (DataWord address : result.getDeleteAccounts()) {
                 track.delete(address.getLast20Bytes());
