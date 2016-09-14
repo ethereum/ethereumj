@@ -594,6 +594,10 @@ public class SystemProperties {
         return config.getString("vm.structured.dir");
     }
 
+    public String customSolcPath() {
+        return config.hasPath("solc.path") ? config.getString("solc.path"): null;
+    }
+
     @ValidateMe
     public String privateKey() {
         if (config.hasPath("peer.privateKey")) {
