@@ -33,9 +33,9 @@ public class DetailsDataStore {
 
     private DatabaseImpl db = null;
 
-    private KeyValueDataSource largeDS;
-    private CachingDataSource largeDSCache;
-    private JournalPruneDataSource largeDSPrune;
+    private KeyValueDataSource storageDS;
+    private CachingDataSource storageDSCache;
+    private JournalPruneDataSource storageDSPrune;
 
     private Map<ByteArrayWrapper, ContractDetails> cache = new ConcurrentHashMap<>();
     private Set<ByteArrayWrapper> removes = new HashSet<>();
@@ -45,15 +45,19 @@ public class DetailsDataStore {
 
     @PostConstruct
     void init() {
-        largeDS = commonConfig.keyValueDataSource();
-        largeDS.setName("detailsLarge");
-        largeDS.init();
-        largeDSCache = new CachingDataSource(largeDS);
-        largeDSPrune = new JournalPruneDataSource(largeDSCache);
+        setStorageDS(commonConfig.keyValueDataSource());
     }
 
     public void setDB(DatabaseImpl db) {
         this.db = db;
+    }
+
+    public void setStorageDS(KeyValueDataSource storageDS) {
+        this.storageDS = storageDS;
+        this.storageDS.setName("storage");
+        this.storageDS.init();
+        this.storageDSCache = new CachingDataSource(storageDS);
+        this.storageDSPrune = new JournalPruneDataSource(storageDSCache);
     }
 
     public ContractDetails get(byte[] key) {
@@ -68,7 +72,7 @@ public class DetailsDataStore {
             if (data == null) return null;
 
             ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
-            detailsImpl.setDataSource(largeDSPrune);
+            detailsImpl.setDataSource(storageDSPrune);
             detailsImpl.decode(data);
             details = detailsImpl;
 
@@ -114,10 +118,11 @@ public class DetailsDataStore {
     private long flushInternal() {
         long totalSize = 0;
 
+        syncLargeStorage();
+
         Map<byte[], byte[]> batch = new HashMap<>();
         for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
             ContractDetails details = entry.getValue();
-            details.syncStorage();
 
             byte[] key = entry.getKey().getData();
             byte[] value = details.getEncoded();
@@ -127,6 +132,7 @@ public class DetailsDataStore {
         }
 
         db.getDb().updateBatch(batch);
+        storageDSCache.flush();
 
         for (ByteArrayWrapper key : removes) {
             db.delete(key.getData());
@@ -145,8 +151,8 @@ public class DetailsDataStore {
         }
     }
 
-    public JournalPruneDataSource getLargeDSPrune() {
-        return largeDSPrune;
+    public JournalPruneDataSource getStorageDSPrune() {
+        return storageDSPrune;
     }
 
     public Set<ByteArrayWrapper> keys() {

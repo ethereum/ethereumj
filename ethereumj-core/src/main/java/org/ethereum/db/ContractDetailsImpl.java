@@ -128,6 +128,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         }
 
         if (externalStorage) {
+            storageTrie.withPruningEnabled(config.databasePruneDepth() >= 0);
             storageTrie.setRoot(storageRoot.getRLPData());
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
@@ -234,6 +235,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Override
     public void syncStorage() {
         if (externalStorage) {
+            storageTrie.withPruningEnabled(config.databasePruneDepth() >= 0);
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
         }
@@ -274,7 +276,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         SecureTrie snapStorage = wrap(hash).equals(wrap(EMPTY_TRIE_HASH)) ?
             new SecureTrie(keyValueDataSource, "".getBytes()):
             new SecureTrie(keyValueDataSource, hash);
-
+        snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
 
         snapStorage.setCache(this.storageTrie.getCache());
 

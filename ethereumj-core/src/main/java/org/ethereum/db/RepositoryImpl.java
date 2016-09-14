@@ -119,6 +119,10 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         worldState = createStateTrie();
     }
 
+    public DetailsDataStore getDetailsDataStore() {
+        return dds;
+    }
+
     private Trie createStateTrie() {
         return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
     }
@@ -630,7 +634,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
         if (pruneBlockCount >= 0) {
             stateDSPrune.storeBlockChanges(blockHeader);
-            dds.getLargeDSPrune().storeBlockChanges(blockHeader);
+            dds.getStorageDSPrune().storeBlockChanges(blockHeader);
             pruneBlocks(blockHeader);
         }
     }
@@ -643,7 +647,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                 if (pruneBlockHash != null) {
                     BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
                     stateDSPrune.prune(header);
-                    dds.getLargeDSPrune().prune(header);
+                    dds.getStorageDSPrune().prune(header);
                 }
             }
         }

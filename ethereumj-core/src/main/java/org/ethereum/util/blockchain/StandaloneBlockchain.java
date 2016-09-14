@@ -45,6 +45,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
+    private HashMapDB storageDS;
     private HashMapDB stateDS;
     private BlockSummary lastSummary;
 
@@ -357,14 +358,20 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return detailsDS;
     }
 
+    public HashMapDB getStorageDS() {
+        return storageDS;
+    }
+
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
         detailsDS = new HashMapDB();
+        storageDS = new HashMapDB();
         stateDS = new HashMapDB();
         RepositoryImpl repository = new RepositoryImpl(detailsDS, stateDS, true)
                 .withBlockStore(blockStore);
+        repository.getDetailsDataStore().setStorageDS(storageDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
