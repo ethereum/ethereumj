@@ -1,12 +1,16 @@
 package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.datasource.CachingDataSource;
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.trie.JournalPruneDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,10 +32,24 @@ public class DetailsDataStore {
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     private DatabaseImpl db = null;
+
+    private KeyValueDataSource largeDS;
+    private CachingDataSource largeDSCache;
+    private JournalPruneDataSource largeDSPrune;
+
     private Map<ByteArrayWrapper, ContractDetails> cache = new ConcurrentHashMap<>();
     private Set<ByteArrayWrapper> removes = new HashSet<>();
 
     public DetailsDataStore() {
+    }
+
+    @PostConstruct
+    void init() {
+        largeDS = commonConfig.keyValueDataSource();
+        largeDS.setName("detailsLarge");
+        largeDS.init();
+        largeDSCache = new CachingDataSource(largeDS);
+        largeDSPrune = new JournalPruneDataSource(largeDSCache);
     }
 
     public void setDB(DatabaseImpl db) {
@@ -50,7 +68,7 @@ public class DetailsDataStore {
             if (data == null) return null;
 
             ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
-            detailsImpl.setDataSource(db.getDb());
+            detailsImpl.setDataSource(largeDSPrune);
             detailsImpl.decode(data);
             details = detailsImpl;
 
@@ -120,6 +138,16 @@ public class DetailsDataStore {
         return totalSize;
     }
 
+    public void syncLargeStorage() {
+        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
+            ContractDetails details = entry.getValue();
+            details.syncStorage();
+        }
+    }
+
+    public JournalPruneDataSource getLargeDSPrune() {
+        return largeDSPrune;
+    }
 
     public Set<ByteArrayWrapper> keys() {
         Set<ByteArrayWrapper> keys = new HashSet<>();

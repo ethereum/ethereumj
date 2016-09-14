@@ -626,9 +626,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     public synchronized void commitBlock(BlockHeader blockHeader) {
         worldState.sync();
+        dds.syncLargeStorage();
 
         if (pruneBlockCount >= 0) {
             stateDSPrune.storeBlockChanges(blockHeader);
+            dds.getLargeDSPrune().storeBlockChanges(blockHeader);
             pruneBlocks(blockHeader);
         }
     }
@@ -639,7 +641,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             if (pruneBlockNumber >= 0) {
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
                 if (pruneBlockHash != null) {
-                    stateDSPrune.prune(blockStore.getBlockByHash(pruneBlockHash).getHeader());
+                    BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
+                    stateDSPrune.prune(header);
+                    dds.getLargeDSPrune().prune(header);
                 }
             }
         }
