@@ -15,14 +15,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Component
 public class SolidityCompiler {
 
+    private Solc solc;
+
+    private static SolidityCompiler INSTANCE;
+
     @Autowired
-    SystemProperties config = SystemProperties.getDefault();
-
-    private static Solc solc = null;
-
-    private static final SolidityCompiler INSTANCE = new SolidityCompiler();
-
-    public SolidityCompiler() {
+    public SolidityCompiler(SystemProperties config) {
         solc = new Solc(config);
     }
 
@@ -106,10 +104,10 @@ public class SolidityCompiler {
     }
 
     public static Result compile(byte[] source, boolean combinedJson, Options... options) throws IOException {
-        return getInstance().compile(source, false, combinedJson, options);
+        return getInstance().compileSrc(source, false, combinedJson, options);
     }
 
-    public Result compile(byte[] source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+    public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(solc.getExecutable().getCanonicalPath());
         if (optimize) {
@@ -150,6 +148,9 @@ public class SolidityCompiler {
     }
 
     public static SolidityCompiler getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new SolidityCompiler(SystemProperties.getDefault());
+        }
         return INSTANCE;
     }
 }
