@@ -2,7 +2,6 @@ package org.ethereum.datasource;
 
 import org.ethereum.config.CommonConfig;
 import org.slf4j.Logger;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PreDestroy;
@@ -11,7 +10,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Component
 public class DataSourcePool {
     private static final Logger logger = getLogger("db");
     private static DataSourcePool inst;

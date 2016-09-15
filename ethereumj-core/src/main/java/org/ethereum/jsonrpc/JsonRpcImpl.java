@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -99,9 +98,6 @@ public class JsonRpcImpl implements JsonRpc {
     public Repository repository;
 
     @Autowired
-    BlockchainImpl blockchain;
-
-    @Autowired
     Ethereum eth;
 
     @Autowired
@@ -117,9 +113,6 @@ public class JsonRpcImpl implements JsonRpc {
     ChannelManager channelManager;
 
     @Autowired
-    CompositeEthereumListener compositeEthereumListener;
-
-    @Autowired
     BlockMiner blockMiner;
 
     @Autowired
@@ -131,6 +124,11 @@ public class JsonRpcImpl implements JsonRpc {
     @Autowired
     SolidityCompiler solidityCompiler;
 
+    BlockchainImpl blockchain;
+
+    CompositeEthereumListener compositeEthereumListener;
+
+
     long initialBlockNumber;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
@@ -138,8 +136,10 @@ public class JsonRpcImpl implements JsonRpc {
     Map<Integer, Filter> installedFilters = new Hashtable<>();
     Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(0, 1024));
 
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public JsonRpcImpl(final BlockchainImpl blockchain, final CompositeEthereumListener compositeEthereumListener) {
+        this.blockchain = blockchain;
+        this.compositeEthereumListener = compositeEthereumListener;
         initialBlockNumber = blockchain.getBestBlock().getNumber();
 
         compositeEthereumListener.addListener(new EthereumListenerAdapter() {

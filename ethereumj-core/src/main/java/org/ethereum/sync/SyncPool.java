@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -51,23 +50,24 @@ public class SyncPool {
     private EthereumListener ethereumListener;
 
     @Autowired
-    private Blockchain blockchain;
-
-    @Autowired
-    private SystemProperties config;
-
-    @Autowired
     private NodeManager nodeManager;
 
-    @Autowired
     private ChannelManager channelManager;
+
+    private Blockchain blockchain;
+
+    private SystemProperties config;
+
     private ScheduledExecutorService poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
 
-    @PostConstruct
-    public void init() {
+    @Autowired
+    public SyncPool(final SystemProperties config, final Blockchain blockchain) {
+        this.config = config;
+        this.blockchain = blockchain;
+    }
 
-        if (!config.isSyncEnabled()) return;
-
+    public void init(final ChannelManager channelManager) {
+        this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
         poolLoopExecutor.scheduleWithFixedDelay(

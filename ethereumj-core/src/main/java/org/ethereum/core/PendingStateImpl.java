@@ -18,7 +18,6 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
@@ -61,9 +60,6 @@ public class PendingStateImpl implements PendingState {
     private EthereumListener listener;
 
     @Autowired
-    private Repository repository;
-
-    @Autowired
     private Blockchain blockchain;
 
     @Autowired
@@ -74,6 +70,8 @@ public class PendingStateImpl implements PendingState {
 
     @Autowired
     private ProgramInvokeFactory programInvokeFactory;
+
+    private Repository repository;
 
     private final List<PendingTransaction> pendingTransactions = new ArrayList<>();
 
@@ -86,10 +84,13 @@ public class PendingStateImpl implements PendingState {
 
     private Block best = null;
 
-    public PendingStateImpl() {
+    @Autowired
+    public PendingStateImpl(Repository repository) {
+        this.repository = repository;
+        init();
     }
 
-    public PendingStateImpl(EthereumListener listener, BlockchainImpl blockchain) {
+    public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
         this.listener = listener;
         this.blockchain = blockchain;
         this.repository = blockchain.getRepository();
@@ -98,7 +99,6 @@ public class PendingStateImpl implements PendingState {
         this.transactionStore = blockchain.getTransactionStore();
     }
 
-    @PostConstruct
     public void init() {
         this.pendingState = repository.startTracking();
     }

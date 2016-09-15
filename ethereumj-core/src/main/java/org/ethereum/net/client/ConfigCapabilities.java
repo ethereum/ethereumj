@@ -7,7 +7,6 @@ import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -21,13 +20,14 @@ import static org.ethereum.net.client.Capability.*;
  */
 @Component
 public class ConfigCapabilities {
-    @Autowired
+
     SystemProperties config;
 
     private SortedSet<Capability> AllCaps = new TreeSet<>();
 
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public ConfigCapabilities(final SystemProperties config) {
+        this.config = config;
         if (config.syncVersion() != null) {
             EthVersion eth = fromCode(config.syncVersion());
             if (eth != null) AllCaps.add(new Capability(ETH, eth.getCode()));

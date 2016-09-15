@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -29,13 +28,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 
-    @Autowired
     protected Blockchain blockchain;
 
-    @Autowired
     protected SystemProperties config;
 
-    @Autowired
     protected CompositeEthereumListener ethereumListener;
 
     protected Channel channel;
@@ -62,11 +58,15 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.version = version;
     }
 
-    @PostConstruct
-    private void init() {
+    protected EthHandler(final EthVersion version, final SystemProperties config,
+                         final Blockchain blockchain, final CompositeEthereumListener ethereumListener) {
+        this.version = version;
+        this.config = config;
+        this.ethereumListener = ethereumListener;
+        this.blockchain = blockchain;
         maxHashesAsk = config.maxHashesAsk();
         bestBlock = blockchain.getBestBlock();
-        ethereumListener.addListener(listener);
+        this.ethereumListener.addListener(listener);
         // when sync enabled we delay transactions processing until sync is complete
         processTransactions = !config.isSyncEnabled();
     }

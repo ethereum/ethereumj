@@ -1,6 +1,7 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
+import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -55,7 +56,7 @@ public class CommonConfig {
     @Bean
     @Primary
     Repository repository() {
-        return new RepositoryImpl();
+        return new RepositoryImpl(systemProperties(), keyValueDataSource(), keyValueDataSource(), this);
     }
 
     @Bean
@@ -99,7 +100,12 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public ContractDetailsImpl contractDetailsImpl() {
-        return new ContractDetailsImpl();
+        return new ContractDetailsImpl(this, systemProperties(), dataSourcePool());
+    }
+
+    @Bean
+    public DataSourcePool dataSourcePool() {
+        return DataSourcePool.getDefault();
     }
 
     @Bean

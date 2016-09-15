@@ -463,8 +463,6 @@ public class ImportLightTest {
 
         PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
 
-        pendingState.init();
-
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
 

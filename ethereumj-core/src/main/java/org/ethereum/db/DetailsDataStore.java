@@ -22,7 +22,6 @@ import static org.ethereum.util.ByteUtil.wrap;
 @Component
 public class DetailsDataStore {
 
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
     private static final Logger gLogger = LoggerFactory.getLogger("general");
@@ -32,6 +31,11 @@ public class DetailsDataStore {
     private Set<ByteArrayWrapper> removes = new HashSet<>();
 
     public DetailsDataStore() {
+    }
+
+    @Autowired
+    public DetailsDataStore(final CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
     }
 
     public void setDB(DatabaseImpl db) {
