@@ -27,6 +27,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -85,7 +86,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    List<PendingTx> submittedTxes = new ArrayList<>();
+    List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
 
     public StandaloneBlockchain() {
         withGenesis(GenesisLoader.loadGenesis(
@@ -406,11 +407,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return blockchain;
     }
 
-    class SolidityContractImpl implements SolidityContract {
+    public class SolidityContractImpl implements SolidityContract {
         byte[] address;
-        CompilationResult.ContractMetadata compiled;
-        CallTransaction.Contract contract;
-        List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
+        public CompilationResult.ContractMetadata compiled;
+        public CallTransaction.Contract contract;
+        public List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
 
         public SolidityContractImpl(String abi) {
             contract = new CallTransaction.Contract(abi);
