@@ -111,6 +111,8 @@ public class WorldManager {
     }
 
     public void initSyncing() {
+        syncManager.init(channelManager, pool);
+        pool.init(channelManager);
     }
 
     public ChannelManager getChannelManager() {
