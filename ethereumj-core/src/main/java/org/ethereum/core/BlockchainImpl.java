@@ -502,9 +502,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return block;
     }
 
-    @Autowired
-    ApplicationContext ctx;
-
     @Override
     public synchronized BlockSummary add(Block block) {
 
@@ -546,9 +543,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             //return null;
         }
 
-//        if (block.getNumber() == 1641748L) {
-//            ctx.getBean(WorldManager.class).close();
-//        }
         String logBloomHash = Hex.toHexString(block.getLogBloom());
         String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
 
