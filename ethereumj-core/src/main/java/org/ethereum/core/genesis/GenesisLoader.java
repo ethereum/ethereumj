@@ -10,7 +10,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -20,6 +19,7 @@ import java.util.Map;
 import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
 
 public class GenesisLoader {
 
@@ -66,9 +66,9 @@ public class GenesisLoader {
     }
 
 
-    private static Genesis createBlockForJson(GenesisJson genesisJson){
+    private static Genesis createBlockForJson(GenesisJson genesisJson) {
 
-        byte[] nonce       = ByteUtil.hexStringToBytes(genesisJson.nonce);
+        byte[] nonce       = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
         byte[] difficulty  = ByteUtil.hexStringToBytes(genesisJson.difficulty);
         byte[] mixHash     = ByteUtil.hexStringToBytes(genesisJson.mixhash);
         byte[] coinbase    = ByteUtil.hexStringToBytes(genesisJson.coinbase);
@@ -87,6 +87,26 @@ public class GenesisLoader {
                             mixHash, nonce);
     }
 
+    /**
+     * Prepares nonce to be correct length
+     * @param nonceUnchecked    unchecked, user-provided nonce
+     * @return  correct nonce
+     * @throws RuntimeException when nonce is too long
+     */
+    private static byte[] prepareNonce(byte[] nonceUnchecked) {
+        if (nonceUnchecked.length > 8) {
+            throw new RuntimeException(String.format("Invalid nonce, should be %s length", NONCE_LENGTH));
+        } else if (nonceUnchecked.length == 8) {
+            return nonceUnchecked;
+        }
+        byte[] nonce = new byte[NONCE_LENGTH];
+        int diff = NONCE_LENGTH - nonceUnchecked.length;
+        for (int i = diff; i < NONCE_LENGTH; ++i) {
+            nonce[i] = nonceUnchecked[i - diff];
+        }
+        return nonce;
+    }
+
 
     private static Map<ByteArrayWrapper, AccountState> generatePreMine(SystemProperties config, Map<String, AllocatedAccount> alloc){
 
@@ -97,7 +117,7 @@ public class GenesisLoader {
             AccountState acctState = new AccountState(
                     config.getBlockchainConfig().getCommonConstants().getInitialNonce(), balance);
 
-            premine.put(wrap(Hex.decode(key)), acctState);
+            premine.put(wrap(ByteUtil.hexStringToBytes(key)), acctState);
         }
 
         return premine;

@@ -16,6 +16,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
@@ -26,6 +27,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -84,7 +86,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    List<PendingTx> submittedTxes = new ArrayList<>();
+    List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
 
     public StandaloneBlockchain() {
         withGenesis(GenesisLoader.loadGenesis(
@@ -370,7 +372,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         listener = new CompositeEthereumListener();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withEthereumListener(listener);
+                .withEthereumListener(listener)
+                .withSyncManager(new SyncManager());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
@@ -404,11 +407,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return blockchain;
     }
 
-    class SolidityContractImpl implements SolidityContract {
+    public class SolidityContractImpl implements SolidityContract {
         byte[] address;
-        CompilationResult.ContractMetadata compiled;
-        CallTransaction.Contract contract;
-        List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
+        public CompilationResult.ContractMetadata compiled;
+        public CallTransaction.Contract contract;
+        public List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
 
         public SolidityContractImpl(String abi) {
             contract = new CallTransaction.Contract(abi);

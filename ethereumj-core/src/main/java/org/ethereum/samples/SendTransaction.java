@@ -106,7 +106,7 @@ public class SendTransaction extends BasicSample {
     public static void main(String[] args) throws Exception {
         sLogger.info("Starting EthereumJ!");
 
-        class Config extends BasicSample{
+        class Config {
             @Bean
             public BasicSample sampleBean() {
                 return new SendTransaction();

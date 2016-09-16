@@ -1,41 +1,38 @@
 package org.ethereum.crypto;
 
-import org.ethereum.core.Transaction;
-import org.ethereum.crypto.ECKey.ECDSASignature;
-import org.ethereum.crypto.jce.SpongyCastleProvider;
-
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.ethereum.core.Transaction;
+import org.ethereum.crypto.ECKey.ECDSASignature;
+import org.ethereum.crypto.jce.SpongyCastleProvider;
 import org.junit.Assert;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.security.KeyPairGenerator;
 import java.security.Provider;
 import java.security.SecureRandom;
 import java.security.Security;
-import java.security.Signature;
 import java.security.SignatureException;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ECKeyTest {
     private static final Logger log = LoggerFactory.getLogger(ECKeyTest.class);
@@ -53,6 +50,7 @@ public class ECKeyTest {
 
     private String exampleMessage = "This is an example of a signed message.";
     private String sigBase64 = "HNLOSI9Nop5o8iywXKwbGbdd8XChK0rRvdRTG46RFcb7dcH+UKlejM/8u1SCoeQvu91jJBMd/nXDs7f5p8ch7Ms=";
+    private String signatureHex = "d2ce488f4da29e68f22cb05cac1b19b75df170a12b4ad1bdd4531b8e9115c6fb75c1fe50a95e8ccffcbb5482a1e42fbbdd6324131dfe75c3b3b7f9a7c721eccb01";
 
     @Test
     public void testHashCode() {
@@ -166,6 +164,19 @@ public class ECKeyTest {
         String output = signature.toBase64();
         System.out.println("Signtr\t: " + output + " (Base64, length: " + output.length() + ")");
         assertEquals(sigBase64, output);
+    }
+
+    /**
+     * Verified via https://etherchain.org/verify/signature
+     */
+    @Test
+    public void testEthereumSignToHex() {
+        ECKey key = ECKey.fromPrivate(privateKey);
+        byte[] messageHash = HashUtil.sha3(exampleMessage.getBytes());
+        ECDSASignature signature = key.sign(messageHash);
+        String output = signature.toHex();
+        System.out.println("Signature\t: " + output + " (Hex, length: " + output.length() + ")");
+        assertEquals(signatureHex, output);
     }
 
     @Test
