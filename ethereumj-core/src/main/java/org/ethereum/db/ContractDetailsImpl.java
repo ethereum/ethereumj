@@ -231,6 +231,10 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         this.rlpEncoded = null;
     }
 
+    public SecureTrie getStorageTrie() {
+        return storageTrie;
+    }
+
     @Override
     public void syncStorage() {
         if (externalStorage) {
