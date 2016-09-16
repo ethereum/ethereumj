@@ -1,10 +1,10 @@
 package org.ethereum.db;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
