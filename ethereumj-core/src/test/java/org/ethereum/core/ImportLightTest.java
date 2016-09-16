@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
@@ -16,10 +15,7 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -445,8 +441,8 @@ public class ImportLightTest {
         // no StackOverflowException
     }
 
-    @Ignore
     @Test
+    @Ignore
     public void threadRacePendingTest() throws Exception {
         String contractA =
                 "contract A {" +
