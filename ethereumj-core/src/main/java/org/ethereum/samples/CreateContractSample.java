@@ -12,6 +12,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
@@ -21,6 +22,10 @@ import java.util.*;
  * Created by Anton Nashatyrev on 03.03.2016.
  */
 public class CreateContractSample extends TestNetSample {
+
+    @Autowired
+    SolidityCompiler compiler;
+
     String contract =
             "contract Sample {" +
             "  int i;" +
@@ -46,7 +51,7 @@ public class CreateContractSample extends TestNetSample {
         });
 
         logger.info("Compiling contract...");
-        SolidityCompiler.Result result = SolidityCompiler.compile(contract.getBytes(), true,
+        SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,
                 SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
         if (result.isFailed()) {
             throw new RuntimeException("Contract compilation failed:\n" + result.errors);

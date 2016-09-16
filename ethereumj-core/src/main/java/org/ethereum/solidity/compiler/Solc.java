@@ -7,24 +7,38 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Scanner;
 
+import org.ethereum.config.SystemProperties;
+
 /**
  * Created by Anton Nashatyrev on 03.03.2016.
  */
 public class Solc {
 
-    public static final Solc INSTANCE = new Solc();
-
     private File solc = null;
 
-    private Solc() {
+    Solc(SystemProperties config) {
         try {
-            init();
+            init(config);
         } catch (IOException e) {
             throw new RuntimeException("Can't init solc compiler: ", e);
         }
     }
 
-    private void init() throws IOException {
+    private void init(SystemProperties config) throws IOException {
+        if (config != null && config.customSolcPath() != null) {
+            solc = new File(config.customSolcPath());
+            if (!solc.canExecute()) {
+                throw new RuntimeException(String.format(
+                        "Solidity compiler from config solc.path: %s is not a valid executable",
+                        config.customSolcPath()
+                ));
+            }
+        } else {
+            initBundled();
+        }
+    }
+
+    private void initBundled() throws IOException {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"), "solc");
         tmpDir.mkdirs();
 
@@ -44,10 +58,9 @@ public class Solc {
             }
             targetFile.deleteOnExit();
         }
-
     }
 
-    private static String getOS() {
+    private String getOS() {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
             return "win";

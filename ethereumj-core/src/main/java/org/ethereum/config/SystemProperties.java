@@ -114,6 +114,7 @@ public class SystemProperties {
     private Boolean databaseReset = null;
     private String projectVersion = null;
     private String projectVersionModifier = null;
+    protected Integer databaseVersion = null;
 
     private String genesisInfo = null;
 
@@ -192,6 +193,7 @@ public class SystemProperties {
 
             this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
+            this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
@@ -533,6 +535,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public Integer databaseVersion() {
+        return databaseVersion;
+    }
+
+    @ValidateMe
     public String projectVersionModifier() {
         return projectVersionModifier;
     }
@@ -585,6 +592,10 @@ public class SystemProperties {
     @ValidateMe
     public String vmTraceDir() {
         return config.getString("vm.structured.dir");
+    }
+
+    public String customSolcPath() {
+        return config.hasPath("solc.path") ? config.getString("solc.path"): null;
     }
 
     @ValidateMe

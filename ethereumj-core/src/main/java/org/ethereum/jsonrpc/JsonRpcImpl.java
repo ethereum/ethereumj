@@ -128,6 +128,9 @@ public class JsonRpcImpl implements JsonRpc {
     @Autowired
     PendingStateImpl pendingState;
 
+    @Autowired
+    SolidityCompiler solidityCompiler;
+
     long initialBlockNumber;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
@@ -853,8 +856,8 @@ public class JsonRpcImpl implements JsonRpc {
     public CompilationResult eth_compileSolidity(String contract) throws Exception {
         CompilationResult s = null;
         try {
-            SolidityCompiler.Result res = SolidityCompiler.compile(
-                    contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+            SolidityCompiler.Result res = solidityCompiler.compileSrc(
+                    contract.getBytes(), true, true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
             if (!res.errors.isEmpty()) {
                 throw new RuntimeException("Compilation error: " + res.errors);
             }

@@ -36,7 +36,7 @@ or gradle:
    repositories {
        maven {url "http://dl.bintray.com/ethereum/maven"}
    }
-   compile ("org.ethereum:ethereumj-core:1.1.0-RELEASE")
+   compile ("org.ethereum:ethereumj-core:1.1.3-RELEASE")
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
