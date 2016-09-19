@@ -267,6 +267,12 @@ public class SyncManager {
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
                     if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
+
+                    // Propagate block to the net after successful import
+                    if (wrapper.isNewBlock()) {
+                        Channel receivedFrom = channelManager.getActivePeer(wrapper.getNodeId());
+                        channelManager.sendNewBlock(wrapper.getBlock(), receivedFrom);
+                    }
                 }
 
                 // In case we don't have a parent on the chain

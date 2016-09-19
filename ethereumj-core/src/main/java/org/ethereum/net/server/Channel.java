@@ -351,6 +351,10 @@ public class Channel {
         eth.sendNewBlock(block);
     }
 
+    public void sendNewBlockHashes(Block block) {
+        eth.sendNewBlockHashes(block);
+    }
+
     public EthVersion getEthVersion() {
         return eth.getVersion();
     }
