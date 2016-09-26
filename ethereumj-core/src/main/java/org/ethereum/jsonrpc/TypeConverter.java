@@ -22,7 +22,7 @@ public class TypeConverter {
     }
 
     public static BigInteger StringHexToBigInteger(String input) {
-        String hexa = input.substring(2);
+        String hexa = input.startsWith("0x") ? input.substring(2) : input;
         return new BigInteger(hexa, 16);
     }
 
@@ -43,7 +43,7 @@ public class TypeConverter {
     }
 
     public static String toJsonHex(String x) {
-        return "0x"+x;
+        return x.startsWith("0x") ? x : "0x" + x;
     }
 
     public static String toJsonHex(long n) {
