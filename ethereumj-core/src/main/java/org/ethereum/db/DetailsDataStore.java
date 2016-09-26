@@ -42,7 +42,7 @@ public class DetailsDataStore {
         this.db = db;
     }
 
-    public ContractDetails get(byte[] key) {
+    public synchronized ContractDetails get(byte[] key) {
 
         ByteArrayWrapper wrappedKey = wrap(key);
         ContractDetails details = cache.get(wrappedKey);
@@ -53,8 +53,10 @@ public class DetailsDataStore {
             byte[] data = db.get(key);
             if (data == null) return null;
 
-            details = commonConfig.contractDetailsImpl();
-            details.decode(data);
+            ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
+            detailsImpl.setDataSource(db.getDb());
+            detailsImpl.decode(data);
+            details = detailsImpl;
 
             cache.put(wrappedKey, details);
 
@@ -69,7 +71,7 @@ public class DetailsDataStore {
         return details;
     }
 
-    public void update(byte[] key, ContractDetails contractDetails) {
+    public synchronized void update(byte[] key, ContractDetails contractDetails) {
         contractDetails.setAddress(key);
 
         ByteArrayWrapper wrappedKey = wrap(key);
@@ -77,13 +79,13 @@ public class DetailsDataStore {
         removes.remove(wrappedKey);
     }
 
-    public void remove(byte[] key) {
+    public synchronized void remove(byte[] key) {
         ByteArrayWrapper wrappedKey = wrap(key);
         cache.remove(wrappedKey);
         removes.add(wrappedKey);
     }
 
-    public void flush() {
+    public synchronized void flush() {
         long keys = cache.size();
 
         long start = System.nanoTime();
@@ -123,7 +125,7 @@ public class DetailsDataStore {
     }
 
 
-    public Set<ByteArrayWrapper> keys() {
+    public synchronized Set<ByteArrayWrapper> keys() {
         Set<ByteArrayWrapper> keys = new HashSet<>();
         keys.addAll(cache.keySet());
         keys.addAll(db.dumpKeys());
@@ -142,7 +144,7 @@ public class DetailsDataStore {
     }
 
     @PreDestroy
-    public void close() {
+    public synchronized void close() {
         try {
             gLogger.info("Closing DetailsDataStore");
             db.close();
