@@ -1,5 +1,13 @@
 package org.ethereum.core;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -9,15 +17,6 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static java.lang.Math.min;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
@@ -634,8 +633,29 @@ public class CallTransaction {
          */
         public Invocation parseEvent(LogInfo eventLog) {
             CallTransaction.Function event = getBySignatureHash(eventLog.getTopics().get(0).getData());
+            int indexedArg = 1;
             if (event == null) return null;
-            Object[] args = event.decode(ByteUtil.merge(new byte[4], eventLog.getData()));
+            List<Object> indexedArgs = new ArrayList<>();
+            List<Param> unindexed = new ArrayList<>();
+            for (Param input : event.inputs) {
+                if (input.indexed) {
+                    indexedArgs.add(input.type.decode(eventLog.getTopics().get(indexedArg++).getData()));
+                    continue;
+                }
+                unindexed.add(input);
+            }
+
+            Object[] unindexedArgs = event.decode(eventLog.getData(), unindexed.toArray(new Param[unindexed.size()]));
+            Object[] args = new Object[event.inputs.length];
+            int unindexedIndex = 0;
+            int indexedIndex = 0;
+            for (int i = 0; i < args.length; i++) {
+                if (event.inputs[i].indexed) {
+                    args[i] = indexedArgs.get(indexedIndex++);
+                    continue;
+                }
+                args[i] = unindexedArgs[unindexedIndex++];
+            }
             return new Invocation(this, event, args);
         }
 

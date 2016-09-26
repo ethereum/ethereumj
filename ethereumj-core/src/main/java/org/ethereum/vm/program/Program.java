@@ -455,7 +455,6 @@ public class Program {
 
         track.commit();
         getResult().addDeleteAccounts(result.getDeleteAccounts());
-        getResult().addLogInfos(result.getLogInfoList());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));

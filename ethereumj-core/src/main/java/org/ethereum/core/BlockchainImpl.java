@@ -540,7 +540,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!receiptHash.equals(receiptListHash)) {
             logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
-            //return null;
+            return null;
         }
 
         String logBloomHash = Hex.toHexString(block.getLogBloom());
@@ -622,7 +622,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public static byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {
-        //TODO Fix Trie hash for receipts - doesnt match cpp
         Trie receiptsTrie = new TrieImpl(null);
 
         if (receipts == null || receipts.isEmpty())
@@ -691,9 +690,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             if (!trieHash.equals(trieListHash)) {
                 logger.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
-
-                //   FIXME: temporary comment out tx.trie validation
-//              return false;
+                return false;
             }
 
             if (!validateUncles(block)) return false;
