@@ -51,11 +51,9 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     public ContractDetailsImpl() {
     }
 
-    public ContractDetailsImpl(final CommonConfig commonConfig, final SystemProperties config,
-                               final DataSourcePool dataSourcePool) {
+    public ContractDetailsImpl(final CommonConfig commonConfig, final SystemProperties config) {
         this.commonConfig = commonConfig;
         this.config = config;
-        this.dataSourcePool = dataSourcePool;
     }
 
     /** Tests only **/
