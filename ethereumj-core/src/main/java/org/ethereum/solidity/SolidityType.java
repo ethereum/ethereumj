@@ -374,11 +374,7 @@ public abstract class SolidityType {
         }
 
         public static byte[] encodeInt(BigInteger bigInt) {
-            byte[] ret = new byte[32];
-            Arrays.fill(ret, bigInt.signum() < 0 ? (byte) 0xFF : 0);
-            byte[] bytes = bigInt.toByteArray();
-            System.arraycopy(bytes, 0, ret, 32 - bytes.length, bytes.length);
-            return ret;
+            return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
         }
     }
 
