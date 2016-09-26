@@ -376,6 +376,11 @@ public abstract class SolidityType {
         public static byte[] encodeInt(BigInteger bigInt) {
             byte[] ret = new byte[32];
             Arrays.fill(ret, bigInt.signum() < 0 ? (byte) 0xFF : 0);
+            if (bigInt.bitLength() > 255) {
+                // This will produce the number whose 2's complement (returned by toByteArray) is
+                // the unsigned representation of bigInt
+                bigInt = bigInt.subtract(BigInteger.ZERO.setBit(256));
+            }
             byte[] bytes = bigInt.toByteArray();
             System.arraycopy(bytes, 0, ret, 32 - bytes.length, bytes.length);
             return ret;
