@@ -5,6 +5,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.ethereum.config.SystemProperties;
 import org.junit.Ignore;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 import java.net.URL;
@@ -20,7 +21,8 @@ public class GenesisLoadTest {
 
     @Test
     public void shouldLoadGenesis_whenShortWay() {
-        loadGenesis("frontier-test.json");
+        loadGenesis(null, "frontier-test.json");
+        assertTrue(true);
     }
 
     @Test
@@ -29,21 +31,40 @@ public class GenesisLoadTest {
 
         // full path
         System.out.println("url.getPath() " + url.getPath());
-        loadGenesis(url.getPath());
+        loadGenesis(url.getPath(), null);
 
-        loadGenesis("src/main/resources/genesis/frontier-test.json");
+        loadGenesis("src/main/resources/genesis/frontier-test.json", null);
+        assertTrue(true);
+    }
+
+    @Test
+    public void shouldLoadGenesisFromFile_whenBothSpecified() {
+        URL url = GenesisLoadTest.class.getClassLoader().getResource("genesis/frontier-test.json");
+
+        // full path
+        System.out.println("url.getPath() " + url.getPath());
+        loadGenesis(url.getPath(), "NOT_EXIST");
+        assertTrue(true);
     }
 
     @Test
     @Ignore("Ignored as System.exit is used")
     public void shouldExitJava_whenWrongPath() {
-        loadGenesis("NON_EXISTEN_PATH");
+        loadGenesis("NON_EXISTED_PATH", null);
+        assertTrue(false);
     }
 
-    private void loadGenesis(String path) {
-        Config config = ConfigFactory.empty()
-                .withValue("genesis",
-                        ConfigValueFactory.fromAnyRef(path));
+    private void loadGenesis(String genesisFile, String genesisResource) {
+        Config config = ConfigFactory.empty();
+
+        if (genesisResource != null) {
+            config = config.withValue("genesis",
+                    ConfigValueFactory.fromAnyRef(genesisResource));
+        }
+        if (genesisFile != null) {
+            config = config.withValue("genesisFile",
+                    ConfigValueFactory.fromAnyRef(genesisFile));
+        }
 
         new SystemProperties(config).getGenesis();
     }
