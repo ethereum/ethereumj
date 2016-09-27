@@ -39,7 +39,7 @@ public class GetBlockHeadersMessage extends EthMessage {
     private int maxHeaders;
 
     /**
-     * The number of skipped blocks starting from initial block. <br>
+     * Blocks to skip between consecutive headers. <br>
      * Direction depends on {@code reverse} param.
      */
     private int skipBlocks;
