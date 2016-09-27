@@ -11,6 +11,7 @@ buildscript {
     }
 }
 
+
 plugins {
     id 'application'
     id 'jacoco'
@@ -111,10 +112,9 @@ dependencies {
     compile "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
     compile "com.madgag.spongycastle:prov:${scastleVersion}" // for SHA3 and SECP256K1
 
-    compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
+    compile "org.iq80.leveldb:leveldb:${leveldbVersion}"     // Java API wrapper around native components
 
-    compile "org.fusesource.leveldbjni:leveldbjni:1.8"
-    compile "org.ethereum:leveldbjni-all:1.18.2"
+    compile "org.ethereum:leveldbjni-all:1.18.3"             // native leveldb components
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
