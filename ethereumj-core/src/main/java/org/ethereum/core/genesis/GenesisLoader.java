@@ -29,40 +29,43 @@ public class GenesisLoader {
      * Load genesis from passed location or from classpath `genesis` directory
      */
     public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader) throws RuntimeException {
-        String genesisFile = config.genesisInfo();
-
-        Exception exception1;
-        Exception exception2;
+        final String genesisFile = config.getProperty("genesisFile", null);
+        final String genesisResource = config.genesisInfo();
 
         // #1 try to find genesis at passed location
-        try (InputStream is = new FileInputStream(new File(genesisFile))) {
-            return GenesisLoader.loadGenesis(config, is);
-        } catch (Exception e) {
-            // silent
-            exception1 = e;
+        if (genesisFile != null) {
+            try (InputStream is = new FileInputStream(new File(genesisFile))) {
+                return GenesisLoader.loadGenesis(config, is);
+            } catch (Exception e) {
+                showGenesisErrorAndExit("Problem loading " + genesisFile, genesisFile, genesisResource);
+            }
         }
 
         // #2 fall back to old genesis location at `src/main/resources/genesis` directory
         try {
-            InputStream is = classLoader.getResourceAsStream("genesis/" + genesisFile);
-            return loadGenesis(config, is);
+            InputStream is = classLoader.getResourceAsStream("genesis/" + genesisResource);
+            if (is != null) {
+                return loadGenesis(config, is);
+            } else {
+                showGenesisErrorAndExit("Genesis file is not found in resource directory", genesisFile, genesisResource);
+            }
         } catch (Exception e) {
-            // silent
-            exception2 = e;
+            showGenesisErrorAndExit("Problem loading genesis file from resource directory", genesisFile, genesisResource);
         }
+        return null;
+    }
 
+    private static void showGenesisErrorAndExit(String message, String genesisFile, String genesisResource) {
         System.err.println("");
         System.err.println("");
-        System.err.println("Genesis block configuration is corrupted or not found at " + genesisFile);
-        System.err.println("Exception1: " + exception1.getMessage());
-        System.err.println("Exception2: " + exception2.getMessage());
-        System.err.println("");
-        System.err.println("");
+        System.err.println("Genesis block configuration is corrupted or not found.");
+        System.err.println("Checked option 'genesisFile': " + genesisFile);
+        System.err.println("Checked option 'genesis': " + genesisResource);
+        System.err.println(message);
 
         // hope to remove this
         System.exit(-1);
 //        throw new Error("Wan't able to load genesis at " + genesisFile, exception1);
-        return null;
     }
 
     /**
@@ -97,8 +100,9 @@ public class GenesisLoader {
             genesis.setStateRoot(rootHash);
 
             return genesis;
-        } catch (Throwable e) {
-            throw new RuntimeException("Genesis block configuration is corrupted or not found.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
