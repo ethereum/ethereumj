@@ -1,8 +1,10 @@
 package org.ethereum.samples;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.facade.Ethereum;
@@ -40,8 +42,12 @@ import java.util.Vector;
  *  Created by Anton Nashatyrev on 05.02.2016.
  */
 public class BasicSample implements Runnable {
-    static final Logger sLogger = LoggerFactory.getLogger("sample");
-    private static final ConsoleAppender stdoutAppender = (ConsoleAppender) LogManager.getRootLogger().getAppender("stdout");
+
+    static {
+        System.setProperty("logback.configurationFile", "ethereumj-core/src/test/resources/logback-test.xml");
+    }
+
+    public static final Logger sLogger = LoggerFactory.getLogger("sample");
 
     private String loggerName;
     protected Logger logger;
@@ -85,18 +91,27 @@ public class BasicSample implements Runnable {
     }
 
     protected void setupLogging() {
-        // Turn off all logging to stdout except of sample logging
-        LogManager.getRootLogger().removeAppender("stdout");
-        ConsoleAppender appender = new ConsoleAppender(stdoutAppender.getLayout());
-        appender.setName("stdout");
-        appender.setThreshold(Level.ERROR);
-        LogManager.getRootLogger().addAppender(appender);
-        logger = LoggerFactory.getLogger(loggerName);
-        LogManager.getLogger(loggerName).addAppender(stdoutAppender);
+        logger = createLoggerFor(loggerName);
     }
 
-    private void removeErrorLogging() {
-        LogManager.getRootLogger().removeAppender("stdout");
+    private static Logger createLoggerFor(String loggerName) {
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        PatternLayoutEncoder ple = new PatternLayoutEncoder();
+
+        ple.setPattern("%d{HH:mm:ss.SSS} [%c{1}]  %m%n");
+        ple.setContext(lc);
+        ple.start();
+        ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
+        consoleAppender.setEncoder(ple);
+        consoleAppender.setContext(lc);
+        consoleAppender.start();
+
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
+        logger.addAppender(consoleAppender);
+        logger.setLevel(Level.DEBUG);
+        logger.setAdditive(false); /* set to true if root should log too */
+
+        return logger;
     }
 
     /**
