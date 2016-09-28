@@ -96,6 +96,9 @@ public class BasicSample implements Runnable {
 
     private static Logger createLoggerFor(String loggerName) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        // remove console appender defined in logback-test.xml
+        lc.removeObject("STDOUT");
+
         PatternLayoutEncoder ple = new PatternLayoutEncoder();
 
         ple.setPattern("%d{HH:mm:ss.SSS} [%c{1}]  %m%n");
@@ -104,6 +107,7 @@ public class BasicSample implements Runnable {
         ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
         consoleAppender.setEncoder(ple);
         consoleAppender.setContext(lc);
+        consoleAppender.setName("STDOUTSINGLE");
         consoleAppender.start();
 
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);

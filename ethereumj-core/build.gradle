@@ -152,11 +152,6 @@ javadoc {
             "http://netty.io/4.0/api/"
     )
 }
-//
-//configurations.all {
-//    exclude group: "org.slf4j", module: "slf4j-log4j12"
-//    exclude group: "log4j", module: "log4j"
-//}
 
 
 task sourcesJar(type: Jar, dependsOn: classes) {
