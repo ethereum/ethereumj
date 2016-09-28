@@ -65,6 +65,11 @@ public class SyncManager {
      */
     private BlockingQueue<BlockWrapper> blockQueue = new LinkedBlockingQueue<>();
 
+    /**
+     * Queue with new blocks from other peers
+     */
+    private BlockingQueue<BlockWrapper> newBlocks = new LinkedBlockingQueue<>();
+
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
 
@@ -94,6 +99,7 @@ public class SyncManager {
     private Thread syncQueueThread;
     private Thread getHeadersThread;
     private Thread getBodiesThread;
+    private Thread newBlocksThread;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     public SyncManager() {
@@ -144,6 +150,14 @@ public class SyncManager {
             }
         }, "NewSyncThreadBlocks");
         getBodiesThread.start();
+
+        newBlocksThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                newBlocksDistributeLoop();
+            }
+        }, "NewSyncThreadBlocks");
+        newBlocksThread.start();
 
         if (logger.isInfoEnabled()) {
             startLogWorker();
@@ -257,12 +271,8 @@ public class SyncManager {
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
                     if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
-
-                    // Propagate block to the net after successful import
-                    if (wrapper.isNewBlock()) {
-                        Channel receivedFrom = channelManager.getActivePeer(wrapper.getNodeId());
-                        channelManager.sendNewBlock(wrapper.getBlock(), receivedFrom);
-                    }
+                    // Propagate block to the net after successful import asynchronously
+                    if (wrapper.isNewBlock()) newBlocks.add(wrapper);
                 }
 
                 // In case we don't have a parent on the chain
@@ -275,10 +285,36 @@ public class SyncManager {
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
-                logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
-                logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (wrapper != null) {
+                    logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                } else {
+                    logger.error("Error processing unknown block", e);
+                }
             }
+        }
+    }
 
+    /**
+     * Processing new blocks from queue
+     */
+    private void newBlocksDistributeLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            BlockWrapper wrapper = null;
+            try {
+                wrapper = newBlocks.take();
+                Channel receivedFrom = channelManager.getActivePeer(wrapper.getNodeId());
+                channelManager.sendNewBlock(wrapper.getBlock(), receivedFrom);
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                if (wrapper != null) {
+                    logger.error("Error broadcasting new block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                } else {
+                    logger.error("Error broadcasting unknown block", e);
+                }
+            }
         }
     }
 
@@ -454,6 +490,7 @@ public class SyncManager {
             if (getHeadersThread != null) getHeadersThread.interrupt();
             if (getBodiesThread != null) getBodiesThread.interrupt();
             if (syncQueueThread != null) syncQueueThread.interrupt();
+            if (newBlocksThread != null) newBlocksThread.interrupt();
             logExecutor.shutdown();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);
