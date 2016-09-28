@@ -4,6 +4,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.util.ContextInitializer;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -23,10 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.PostConstruct;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  *  The base sample class which creates EthereumJ instance, tracks and report all the stages
@@ -91,31 +90,49 @@ public class BasicSample implements Runnable {
     }
 
     protected void setupLogging() {
-        logger = createLoggerFor(loggerName);
+        muteLoggersExcept(loggerName);
+        logger = LoggerFactory.getLogger("sample");
     }
 
-    private static Logger createLoggerFor(String loggerName) {
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        // remove console appender defined in logback-test.xml
-        lc.removeObject("STDOUT");
+    /**
+     * Allow only selected logger to print DEBUG events to STDOUT and FILE.
+     * Other loggers are allowed to print ERRORS only.
+     */
+    private static void muteLoggersExcept(String loggerName) {
+        final LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        PatternLayoutEncoder ple = new PatternLayoutEncoder();
+        // read logging config
+        loggerContext.reset();
+        try {
+            new ContextInitializer(loggerContext).configureByResource(ClassLoader.getSystemResource("logback.xml"));
+        } catch (Exception e) {
+            System.out.println("Error applying logging config " + e.getMessage());
+        }
 
-        ple.setPattern("%d{HH:mm:ss.SSS} [%c{1}]  %m%n");
-        ple.setContext(lc);
-        ple.start();
-        ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
-        consoleAppender.setEncoder(ple);
-        consoleAppender.setContext(lc);
-        consoleAppender.setName("STDOUTSINGLE");
-        consoleAppender.start();
-
-        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
-        logger.addAppender(consoleAppender);
+        // mute all loggers
+        List<ch.qos.logback.classic.Logger> loggerList = loggerContext.getLoggerList();
+        for (ch.qos.logback.classic.Logger l : loggerList) {
+            l.setLevel(Level.ERROR);
+        }
+        final ch.qos.logback.classic.Logger logger = loggerContext.getLogger(loggerName);
         logger.setLevel(Level.DEBUG);
-        logger.setAdditive(false); /* set to true if root should log too */
 
-        return logger;
+        // change pattern
+        final ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        for (Iterator<Appender<ILoggingEvent>> iter = rootLogger.iteratorForAppenders(); iter.hasNext(); ) {
+            final Appender appender = iter.next();
+            if (appender instanceof ConsoleAppender) {
+                final ConsoleAppender consoleAppender = (ConsoleAppender) appender;
+                final PatternLayoutEncoder ple = new PatternLayoutEncoder();
+
+                consoleAppender.stop();
+                ple.setPattern("%d{HH:mm:ss.SSS} [%c{1}]  %m%n");
+                ple.setContext(loggerContext);
+                consoleAppender.setEncoder(ple);
+                ple.start();
+                consoleAppender.start();
+            }
+        }
     }
 
     /**

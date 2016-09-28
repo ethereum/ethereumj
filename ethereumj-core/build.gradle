@@ -135,8 +135,6 @@ dependencies {
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
     }
-    optional "commons-logging:commons-logging:1.0"
-    optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
 }
