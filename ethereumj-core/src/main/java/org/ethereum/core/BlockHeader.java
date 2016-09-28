@@ -342,6 +342,7 @@ public class BlockHeader {
 
     private String toStringWithSuffix(final String suffix) {
         StringBuilder toStringBuff = new StringBuilder();
+        toStringBuff.append("  hash=").append(toHexString(getHash())).append(suffix);
         toStringBuff.append("  parentHash=").append(toHexString(parentHash)).append(suffix);
         toStringBuff.append("  unclesHash=").append(toHexString(unclesHash)).append(suffix);
         toStringBuff.append("  coinbase=").append(toHexString(coinbase)).append(suffix);

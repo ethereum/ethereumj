@@ -751,11 +751,7 @@ public class SystemProperties {
 
     @ValidateMe
     public String genesisInfo() {
-
-        if (genesisInfo == null)
-            return config.getString("genesis");
-        else
-            return genesisInfo;
+        return genesisInfo == null ? config.getString("genesis") : genesisInfo;
     }
 
     @ValidateMe
