@@ -8,19 +8,21 @@ import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import static org.ethereum.config.Initializer.IncompatibleDatabaseHandler.Behavior;
-import static org.ethereum.config.Initializer.IncompatibleDatabaseHandler.Behavior.*;
+
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.*;
 
 /**
  * Created by Stan Reshetnyk on 11.09.16.
  */
 public class InitializerTest {
 
-    final Initializer.IncompatibleDatabaseHandler resetHelper = new Initializer.IncompatibleDatabaseHandler();
+    final Initializer.DatabaseVersionHandler resetHelper = new Initializer.DatabaseVersionHandler();
 
     File tempFile;
     String databaseDir;
@@ -125,11 +127,33 @@ public class InitializerTest {
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
     }
 
+    @Test
+    public void helper_shouldPutVersion_afterReset() throws IOException {
+        Config config = ConfigFactory.empty()
+                .withValue("database.reset", ConfigValueFactory.fromAnyRef(true));
+
+        SPO systemProperties = new SPO(config);
+        systemProperties.setDataBaseDir(databaseDir);
+        systemProperties.setDatabaseVersion(33);
+
+        final File testFile = new File(databaseDir + "/empty.file");
+        testFile.getParentFile().mkdirs();
+        testFile.createNewFile();
+
+        assertTrue(testFile.exists());
+        resetHelper.process(systemProperties);
+        assertEquals(new Integer(33), resetHelper.getDatabaseVersion(versionFile));
+
+        assertFalse(testFile.exists()); // reset should have cleared file
+    }
+
 
     // HELPERS
 
     private SystemProperties withConfig(int databaseVersion, Behavior behavior) {
-        Config config = ConfigFactory.empty();
+        Config config = ConfigFactory.empty()
+                // reset is true for tests
+                .withValue("database.reset", ConfigValueFactory.fromAnyRef(false));
 
         if (behavior != null) {
             config = config.withValue("database.incompatibleDatabaseBehavior",
