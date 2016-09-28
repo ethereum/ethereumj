@@ -92,7 +92,6 @@ public class TestRunner {
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
-        pendingState.init();
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());

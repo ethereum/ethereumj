@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
@@ -43,13 +42,11 @@ public class BlockMiner {
     private Ethereum ethereum;
 
     @Autowired
+    protected PendingState pendingState;
+
     private CompositeEthereumListener listener;
 
-    @Autowired
     private SystemProperties config;
-
-    @Autowired
-    protected PendingState pendingState;
 
     private List<MinerListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -66,9 +63,10 @@ public class BlockMiner {
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
-
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener) {
+        this.listener = listener;
+        this.config = config;
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
         minGasPrice = config.getMineMinGasPrice();

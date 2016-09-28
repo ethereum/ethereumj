@@ -26,7 +26,6 @@ import static org.ethereum.util.ByteUtil.wrap;
 @Component
 public class DetailsDataStore {
 
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
     private static final Logger gLogger = LoggerFactory.getLogger("general");
@@ -43,8 +42,9 @@ public class DetailsDataStore {
     public DetailsDataStore() {
     }
 
-    @PostConstruct
-    void init() {
+    @Autowired
+    public DetailsDataStore(final CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
         setStorageDS(commonConfig.keyValueDataSource());
     }
 

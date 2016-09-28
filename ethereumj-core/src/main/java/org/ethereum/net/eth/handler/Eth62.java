@@ -2,8 +2,10 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
@@ -21,13 +23,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static java.lang.Math.exp;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
@@ -92,8 +91,10 @@ public class Eth62 extends EthHandler {
         super(V62);
     }
 
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public Eth62(final SystemProperties config, final Blockchain blockchain,
+                 final CompositeEthereumListener ethereumListener) {
+        super(V62, config, blockchain, ethereumListener);
         maxHashesAsk = config.maxHashesAsk();
     }
 

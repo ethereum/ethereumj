@@ -9,12 +9,6 @@ import java.util.List;
 public interface PendingState extends org.ethereum.facade.PendingState {
 
     /**
-     * Initialized pending state <br>
-     * Must be called when {@link Repository} has been initialized
-     */
-    void init();
-
-    /**
      * Adds transactions received from the net to the list of wire transactions <br>
      * Don't have an impact on pending state
      *

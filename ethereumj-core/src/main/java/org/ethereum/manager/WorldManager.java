@@ -41,19 +41,7 @@ public class WorldManager {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
-    private EthereumListener listener;
-
-    @Autowired
-    private Blockchain blockchain;
-
-    @Autowired
-    private RepositoryImpl repository;
-
-    @Autowired
     private PeerClient activePeer;
-
-    @Autowired
-    private BlockStore blockStore;
 
     @Autowired
     private ChannelManager channelManager;
@@ -80,25 +68,33 @@ public class WorldManager {
     private EventDispatchThread eventDispatchThread;
 
     @Autowired
-    SystemProperties config;
+    private ApplicationContext ctx;
+
+    private SystemProperties config;
+
+    private EthereumListener listener;
+
+    private Blockchain blockchain;
+
+    private RepositoryImpl repository;
+
+    private BlockStore blockStore;
 
     @Autowired
-    ApplicationContext ctx;
-
-    private CountDownLatch initSemaphore = new CountDownLatch(1);
-
-    @PostConstruct
-    public void init() {
+    public WorldManager(final SystemProperties config, final RepositoryImpl repository,
+                        final EthereumListener listener, final Blockchain blockchain,
+                        final BlockStore blockStore) {
+        this.listener = listener;
+        this.blockchain = blockchain;
+        this.repository = repository;
+        this.blockStore = blockStore;
+        this.config = config;
         loadBlockchain();
-        initSemaphore.countDown();
     }
 
-    public void waitForInit() {
-        try {
-            initSemaphore.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    @PostConstruct
+    private void init() {
+        syncManager.init(channelManager, pool);
     }
 
     public void addListener(EthereumListener listener) {
@@ -115,8 +111,8 @@ public class WorldManager {
     }
 
     public void initSyncing() {
-        syncManager.init();
-        pool.init();
+        syncManager.init(channelManager, pool);
+        pool.init(channelManager);
     }
 
     public ChannelManager getChannelManager() {

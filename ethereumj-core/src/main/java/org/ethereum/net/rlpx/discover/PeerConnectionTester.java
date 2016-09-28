@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
@@ -30,8 +29,7 @@ public class PeerConnectionTester {
     @Autowired
     private PeerClient peerClient;
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
+    private SystemProperties config = SystemProperties.getDefault();
 
     // NodeHandler instance should be unique per Node instance
     private Map<NodeHandler, ?> connectedCandidates = Collections.synchronizedMap(new IdentityHashMap());
@@ -82,11 +80,9 @@ public class PeerConnectionTester {
         }
     }
 
-    public PeerConnectionTester() {
-    }
-
-    @PostConstruct
-    void init() {
+    @Autowired
+    public PeerConnectionTester(final SystemProperties config) {
+        this.config = config;
         ConnectThreads = config.peerDiscoveryWorkers();
         ReconnectPeriod = config.peerDiscoveryTouchPeriod() * 1000;
         ReconnectMaxPeers = config.peerDiscoveryTouchMaxNodes();

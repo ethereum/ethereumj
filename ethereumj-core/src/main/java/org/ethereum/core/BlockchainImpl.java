@@ -11,6 +11,7 @@ import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -26,9 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -131,13 +132,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     EventDispatchThread eventDispatchThread;
 
     @Autowired
-    SystemProperties config = SystemProperties.getDefault();
-
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
     @Autowired
     SyncManager syncManager;
+
+    SystemProperties config = SystemProperties.getDefault();
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -157,11 +157,18 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private Stack<State> stateStack = new Stack<>();
 
+    /** Tests only **/
     public BlockchainImpl() {
     }
 
+    @Autowired
+    public BlockchainImpl(final SystemProperties config) {
+        this.config = config;
+        initConst(config);
+    }
+
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository) {
+    public BlockchainImpl(final BlockStore blockStore, final Repository repository) {
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = new AdminInfo();
@@ -196,11 +203,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
         this.parentHeaderValidator = parentHeaderValidator;
         return this;
-    }
-
-    @PostConstruct
-    private void init() {
-        initConst(config);
     }
 
     private void initConst(SystemProperties config) {
@@ -538,7 +540,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!receiptHash.equals(receiptListHash)) {
             logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
-            //return null;
+            return null;
         }
 
         String logBloomHash = Hex.toHexString(block.getLogBloom());
@@ -620,7 +622,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public static byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {
-        //TODO Fix Trie hash for receipts - doesnt match cpp
         Trie receiptsTrie = new TrieImpl(null);
 
         if (receipts == null || receipts.isEmpty())
@@ -689,9 +690,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             if (!trieHash.equals(trieListHash)) {
                 logger.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
-
-                //   FIXME: temporary comment out tx.trie validation
-//              return false;
+                return false;
             }
 
             if (!validateUncles(block)) return false;

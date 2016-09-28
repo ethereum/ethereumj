@@ -388,8 +388,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         pendingState = new PendingStateImpl(listener, blockchain);
 
-        pendingState.init();
-
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
 

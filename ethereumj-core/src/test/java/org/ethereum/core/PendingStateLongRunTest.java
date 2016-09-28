@@ -119,8 +119,6 @@ public class PendingStateLongRunTest {
 
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
 
-        pendingState.init();
-
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
 

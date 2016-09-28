@@ -15,8 +15,6 @@ import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.JournalPruneDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
-import javax.annotation.PostConstruct;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -53,24 +50,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     @Autowired
+    private BlockStore blockStore;
+
     CommonConfig commonConfig = new CommonConfig();
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
+    private SystemProperties config = SystemProperties.getDefault();
 
-    @Autowired
     private DetailsDataStore dds = new DetailsDataStore();
-
-    @Autowired
-    private BlockStore blockStore;
 
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
 
-    @Autowired
     private KeyValueDataSource detailsDS;
-    @Autowired
     private KeyValueDataSource stateDS;
     private CachingDataSource stateDSCache;
     private JournalPruneDataSource stateDSPrune;
@@ -85,6 +77,16 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public RepositoryImpl() {
     }
 
+    public RepositoryImpl(final SystemProperties config, final KeyValueDataSource detailsDS,
+                          final KeyValueDataSource stateDS, final CommonConfig commonConfig) {
+        this.config = config;
+        this.detailsDS = detailsDS;
+        this.stateDS = stateDS;
+        this.commonConfig = commonConfig;
+        init();
+    }
+
+    /** Tests only  **/
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
         this(detailsDS, stateDS, false);
     }
@@ -94,6 +96,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         this.stateDS = stateDS;
         this.pruneEnabled = pruneEnabled;
         init();
+        dds.setDB(detailsDB);
     }
 
     public RepositoryImpl withBlockStore(BlockStore blockStore) {
@@ -101,8 +104,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         return this;
     }
 
-    @PostConstruct
-    void init() {
+    private void init() {
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
 
@@ -112,11 +114,16 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         stateDSPrune = new JournalPruneDataSource(stateDSCache);
 
         detailsDB = new DatabaseImpl(detailsDS);
-        dds.setDB(detailsDB);
 
         pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
 
         worldState = createStateTrie();
+    }
+
+    @Autowired
+    public void setDds(DetailsDataStore dds) {
+        this.dds = dds;
+        dds.setDB(detailsDB);
     }
 
     public DetailsDataStore getDetailsDataStore() {

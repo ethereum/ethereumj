@@ -54,8 +54,8 @@ public class CommonConfig {
 
     @Bean
     @Primary
-    Repository repository() {
-        return new RepositoryImpl();
+    RepositoryImpl repository() {
+        return new RepositoryImpl(systemProperties(), keyValueDataSource(), keyValueDataSource(), this);
     }
 
     @Bean
@@ -99,7 +99,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public ContractDetailsImpl contractDetailsImpl() {
-        return new ContractDetailsImpl();
+        return new ContractDetailsImpl(this, systemProperties());
     }
 
     @Bean

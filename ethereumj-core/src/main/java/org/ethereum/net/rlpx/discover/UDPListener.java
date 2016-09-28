@@ -12,7 +12,6 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.net.BindException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +39,7 @@ public class UDPListener {
     private DiscoveryExecutor discoveryExecutor;
 
     @Autowired
-    public UDPListener(SystemProperties config, NodeManager nodeManager) {
+    public UDPListener(final SystemProperties config, final NodeManager nodeManager) {
         this.config = config;
         this.nodeManager = nodeManager;
 
