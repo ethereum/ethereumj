@@ -641,7 +641,7 @@ public class Eth62 extends EthHandler {
         return response.getBlockBodies().size() <= sentHeaders.size();
     }
 
-    private boolean isValid(BlockHeadersMessage response, GetBlockHeadersMessageWrapper requestWrapper) {
+    protected boolean isValid(BlockHeadersMessage response, GetBlockHeadersMessageWrapper requestWrapper) {
 
         GetBlockHeadersMessage request = requestWrapper.getMessage();
         List<BlockHeader> headers = response.getBlockHeaders();
@@ -685,22 +685,16 @@ public class Eth62 extends EthHandler {
         BlockHeader first = headers.get(0);
 
         if (request.getBlockHash() != null) {
+            if (!Arrays.equals(request.getBlockHash(), first.getHash())) {
 
-            if (request.getSkipBlocks() == 0) {
-                if (!Arrays.equals(request.getBlockHash(), first.getHash())) {
-
-                    if (logger.isInfoEnabled()) logger.info(
-                            "Peer {}: invalid response to {}, first header is invalid {}",
-                            channel.getPeerIdShort(), request, first
-                    );
-                    return false;
-                }
+                if (logger.isInfoEnabled()) logger.info(
+                        "Peer {}: invalid response to {}, first header is invalid {}",
+                        channel.getPeerIdShort(), request, first
+                );
+                return false;
             }
-
         } else {
-
-            long expectedNum = request.getBlockNumber() + request.getSkipBlocks();
-            if (expectedNum != first.getNumber()) {
+            if (request.getBlockNumber() != first.getNumber()) {
 
                 if (logger.isInfoEnabled()) logger.info(
                         "Peer {}: invalid response to {}, first header is invalid {}",
@@ -714,56 +708,40 @@ public class Eth62 extends EthHandler {
         if (requestWrapper.isNewHashesHandling()) return true;
 
         // numbers and ancestors
-        if (request.isReverse()) {
+        int offset = 1 + request.getSkipBlocks();
+        if (request.isReverse()) offset = -offset;
 
-            for (int i = 1; i < headers.size(); i++) {
+        for (int i = 1; i < headers.size(); i++) {
 
-                BlockHeader cur = headers.get(i);
-                BlockHeader prev = headers.get(i - 1);
+            BlockHeader cur = headers.get(i);
+            BlockHeader prev = headers.get(i - 1);
 
-                long num = cur.getNumber();
-                long expectedNum = prev.getNumber() - 1;
+            long num = cur.getNumber();
+            long expectedNum = prev.getNumber() + offset;
 
-                if (num != expectedNum) {
-                    if (logger.isInfoEnabled()) logger.info(
-                            "Peer {}: invalid response to {}, got #{}, expected #{}",
-                            channel.getPeerIdShort(), request, num, expectedNum
-                    );
-                    return false;
-                }
-
-                if (!Arrays.equals(prev.getParentHash(), cur.getHash())) {
-                    if (logger.isInfoEnabled()) logger.info(
-                            "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
-                            channel.getPeerIdShort(), request, toHexString(prev.getParentHash()),
-                            prev.getNumber(), toHexString(cur.getHash())
-                            );
-                    return false;
-                }
+            if (num != expectedNum) {
+                if (logger.isInfoEnabled()) logger.info(
+                        "Peer {}: invalid response to {}, got #{}, expected #{}",
+                        channel.getPeerIdShort(), request, num, expectedNum
+                );
+                return false;
             }
-        } else {
 
-            for (int i = 1; i < headers.size(); i++) {
-
-                BlockHeader cur = headers.get(i);
-                BlockHeader prev = headers.get(i - 1);
-
-                long num = cur.getNumber();
-                long expectedNum = prev.getNumber() + 1;
-
-                if (num != expectedNum) {
-                    if (logger.isInfoEnabled()) logger.info(
-                            "Peer {}: invalid response to {}, got #{}, expected #{}",
-                            channel.getPeerIdShort(), request, num, expectedNum
-                    );
-                    return false;
+            if (request.getSkipBlocks() == 0) {
+                BlockHeader parent;
+                BlockHeader child;
+                if (request.isReverse()) {
+                    parent = cur;
+                    child = prev;
+                } else {
+                    parent = prev;
+                    child = cur;
                 }
-
-                if (!Arrays.equals(cur.getParentHash(), prev.getHash())) {
+                if (!Arrays.equals(child.getParentHash(), parent.getHash())) {
                     if (logger.isInfoEnabled()) logger.info(
                             "Peer {}: invalid response to {}, got parent hash {} for #{}, expected {}",
-                            channel.getPeerIdShort(), request, toHexString(cur.getParentHash()),
-                            cur.getNumber(), toHexString(prev.getHash())
+                            channel.getPeerIdShort(), request, toHexString(child.getParentHash()),
+                            prev.getNumber(), toHexString(parent.getHash())
                     );
                     return false;
                 }

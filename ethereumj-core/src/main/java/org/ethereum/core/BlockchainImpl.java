@@ -11,7 +11,6 @@ import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -27,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
@@ -104,7 +102,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private Repository track;
 
     @Autowired
-    private BlockStore blockStore;
+    protected BlockStore blockStore;
 
     @Autowired
     private TransactionStore transactionStore;
@@ -1090,29 +1088,57 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return pendingState;
     }
 
+    /**
+     * Returns up to limit headers found with following search parameters
+     * @param identifier        Identifier of start block, by number of by hash
+     * @param skip              Number of blocks to skip between consecutive headers
+     * @param limit             Maximum number of headers in return
+     * @param reverse           Is search reverse or not
+     * @return  {@link BlockHeader}'s list or empty list if none found
+     */
     @Override
     public synchronized List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
-        long blockNumber = identifier.getNumber();
 
+        // Identifying block we'll move from
+        Block startBlock;
         if (identifier.getHash() != null) {
-            Block block = getBlockByHash(identifier.getHash());
-
-            if (block == null) {
-                return emptyList();
-            }
-
-            blockNumber = block.getNumber();
+            startBlock = getBlockByHash(identifier.getHash());
+        } else {
+            startBlock = getBlockByNumber(identifier.getNumber());
         }
 
-        long bestNumber = bestBlock.getNumber();
-
-        if (bestNumber < blockNumber) {
+        // If nothing found or provided hash is not on main chain, return empty array
+        if (startBlock == null) {
             return emptyList();
         }
+        if (identifier.getHash() != null) {
+            Block mainChainBlock = getBlockByNumber(startBlock.getNumber());
+            if (!startBlock.equals(mainChainBlock)) return emptyList();
+        }
 
+        List<BlockHeader> headers;
+        if (skip == 0) {
+            long bestNumber = bestBlock.getNumber();
+            headers = getContinuousHeaders(bestNumber, startBlock.getNumber(), limit, reverse);
+        } else {
+            headers = getGapedHeaders(startBlock, skip, limit, reverse);
+        }
+
+        return headers;
+    }
+
+    /**
+     * Finds up to limit blocks starting from blockNumber on main chain
+     * @param bestNumber        Number of best block
+     * @param blockNumber       Number of block to start search (included in return)
+     * @param limit             Maximum number of headers in response
+     * @param reverse           Order of search
+     * @return  headers found by query or empty list if none
+     */
+    private List<BlockHeader> getContinuousHeaders(long bestNumber, long blockNumber, int limit, boolean reverse) {
         int qty = getQty(blockNumber, bestNumber, limit, reverse);
 
-        byte[] startHash = getStartHash(blockNumber, skip, qty, reverse);
+        byte[] startHash = getStartHash(blockNumber, qty, reverse);
 
         if (startHash == null) {
             return emptyList();
@@ -1123,6 +1149,35 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // blocks come with falling numbers
         if (!reverse) {
             Collections.reverse(headers);
+        }
+
+        return headers;
+    }
+
+    /**
+     * Gets blocks from main chain with gaps between
+     * @param startBlock        Block to start from (included in return)
+     * @param skip              Number of blocks skipped between every header in return
+     * @param limit             Maximum number of headers in return
+     * @param reverse           Order of search
+     * @return  headers found by query or empty list if none
+     */
+    private List<BlockHeader> getGapedHeaders(Block startBlock, int skip, int limit, boolean reverse) {
+        List<BlockHeader> headers = new ArrayList<>();
+        headers.add(startBlock.getHeader());
+        int offset = skip + 1;
+        if (reverse) offset = -offset;
+        long currentNumber = startBlock.getNumber();
+        boolean finished = false;
+
+        while(!finished && headers.size() < limit) {
+            currentNumber += offset;
+            Block nextBlock = blockStore.getChainBlockByNumber(currentNumber);
+            if (nextBlock == null) {
+                finished = true;
+            } else {
+                headers.add(nextBlock.getHeader());
+            }
         }
 
         return headers;
@@ -1140,14 +1195,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    private byte[] getStartHash(long blockNumber, int skip, int qty, boolean reverse) {
+    private byte[] getStartHash(long blockNumber, int qty, boolean reverse) {
 
         long startNumber;
 
         if (reverse) {
-            startNumber = blockNumber - skip;
+            startNumber = blockNumber;
         } else {
-            startNumber = blockNumber + skip + qty - 1;
+            startNumber = blockNumber + qty - 1;
         }
 
         Block block = getBlockByNumber(startNumber);
