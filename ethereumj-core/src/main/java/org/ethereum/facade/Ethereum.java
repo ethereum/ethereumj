@@ -125,8 +125,6 @@ public interface Ethereum {
      */
     Repository getPendingState();
 
-
-    void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
     Repository getSnapshotTo(byte[] root);

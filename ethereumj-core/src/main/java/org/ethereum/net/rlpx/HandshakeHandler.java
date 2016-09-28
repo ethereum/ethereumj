@@ -13,7 +13,6 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -23,14 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
 import static org.ethereum.util.ByteUtil.bigEndianToShort;
-import static org.ethereum.util.ByteUtil.merge;
 
 /**
  * The Netty handler which manages initial negotiation with peer
@@ -48,9 +45,6 @@ import static org.ethereum.util.ByteUtil.merge;
 @Scope("prototype")
 public class HandshakeHandler extends ByteToMessageDecoder {
 
-    @Autowired
-    SystemProperties config;
-
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
@@ -63,11 +57,11 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     private Channel channel;
     private boolean isHandshakeDone;
 
-    public HandshakeHandler() {
-    }
+    private SystemProperties config;
 
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public HandshakeHandler(final SystemProperties config) {
+        this.config = config;
         myKey = config.getMyKey();
     }
 

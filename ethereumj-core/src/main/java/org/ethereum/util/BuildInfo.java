@@ -20,11 +20,15 @@ public class BuildInfo {
             Properties props = new Properties();
             InputStream is = BuildInfo.class.getResourceAsStream("/build-info.properties");
 
+            if (is != null) {
                 props.load(is);
 
                 buildHash = props.getProperty("build.hash");
                 buildTime = props.getProperty("build.time");
                 buildBranch = props.getProperty("build.branch");
+            } else {
+                logger.warn("File not found `build-info.properties`. Run `gradle build` to generate it");
+            }
         } catch (IOException e) {
             logger.error("Error reading /build-info.properties", e);
         }

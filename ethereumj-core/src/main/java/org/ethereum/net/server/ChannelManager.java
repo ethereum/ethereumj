@@ -22,8 +22,6 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
 
-import javax.annotation.PostConstruct;
-
 import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
 import static org.ethereum.net.message.ReasonCode.TOO_MANY_PEERS;
 
@@ -52,22 +50,23 @@ public class ChannelManager {
     Random rnd = new Random();  // Used for distributing new blocks / hashes logic
 
     @Autowired
-    SystemProperties config;
-
-    @Autowired
-    SyncManager syncManager;
-
-    @Autowired
     SyncPool syncPool;
 
     @Autowired
     private Ethereum ethereum;
 
-    @Autowired
-    PeerServer peerServer;
+    private SystemProperties config;
 
-    @PostConstruct
-    public void init() {
+    private SyncManager syncManager;
+
+    private PeerServer peerServer;
+
+    @Autowired
+    private ChannelManager(final SystemProperties config, final SyncManager syncManager,
+                           final PeerServer peerServer) {
+        this.config = config;
+        this.syncManager = syncManager;
+        this.peerServer = peerServer;
         maxActivePeers = config.maxActivePeers();
         trustedPeers = config.peerTrusted();
         mainWorker.scheduleWithFixedDelay(new Runnable() {

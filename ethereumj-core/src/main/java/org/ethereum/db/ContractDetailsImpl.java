@@ -26,14 +26,13 @@ import static org.ethereum.util.ByteUtil.*;
  * @author Roman Mandeleil
  * @since 24.06.2014
  */
-@Component @Scope("prototype")
+@Component
+@Scope("prototype")
 public class ContractDetailsImpl extends AbstractContractDetails {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
-    @Autowired
     SystemProperties config = SystemProperties.getDefault();
 
     KeyValueDataSource dataSource;
@@ -48,9 +47,16 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
 
+    /** Tests only **/
     public ContractDetailsImpl() {
     }
 
+    public ContractDetailsImpl(final CommonConfig commonConfig, final SystemProperties config) {
+        this.commonConfig = commonConfig;
+        this.config = config;
+    }
+
+    /** Tests only **/
     public ContractDetailsImpl(byte[] rlpCode) {
         decode(rlpCode);
     }

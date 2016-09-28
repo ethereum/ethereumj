@@ -31,7 +31,7 @@ public class Cache {
         this.dataSource = dataSource;
     }
 
-    public void markRemoved(byte[] key) {
+    public synchronized void markRemoved(byte[] key) {
         ByteArrayWrapper keyW = new ByteArrayWrapper(key);
         removedNodes.add(keyW);
         nodes.remove(keyW);
@@ -43,7 +43,7 @@ public class Cache {
      * @param o the Node which could be a pair-, multi-item Node or single Value
      * @return keccak hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
-    public Object put(Object o) {
+    public synchronized Object put(Object o) {
         Value value = new Value(o);
         byte[] enc = value.encode();
         if (enc.length >= 32) {
@@ -58,7 +58,7 @@ public class Cache {
         return value;
     }
 
-    public Value get(byte[] key) {
+    public synchronized Value get(byte[] key) {
         ByteArrayWrapper wrappedKey = wrap(key);
         // First check if the key is the cache
         Node node = this.nodes.get(wrappedKey);
@@ -72,7 +72,7 @@ public class Cache {
         return node.getValue();
     }
 
-    public void delete(byte[] key) {
+    public synchronized void delete(byte[] key) {
         ByteArrayWrapper wrappedKey = wrap(key);
         this.nodes.remove(wrappedKey);
 
@@ -81,7 +81,7 @@ public class Cache {
         }
     }
 
-    public void commit() {
+    public synchronized void commit() {
         // Don't try to commit if it isn't dirty
         if ((dataSource == null) || !this.isDirty) return;
 
@@ -118,7 +118,7 @@ public class Cache {
 
     }
 
-    public void undo() {
+    public synchronized void undo() {
         Iterator<Map.Entry<ByteArrayWrapper, Node>> iter = this.nodes.entrySet().iterator();
         while (iter.hasNext()) {
             if (iter.next().getValue().isDirty()) {
@@ -128,19 +128,19 @@ public class Cache {
         this.isDirty = false;
     }
 
-    public boolean isDirty() {
+    public synchronized boolean isDirty() {
         return isDirty;
     }
 
-    public void setDirty(boolean isDirty) {
+    public synchronized void setDirty(boolean isDirty) {
         this.isDirty = isDirty;
     }
 
-    public Map<ByteArrayWrapper, Node> getNodes() {
+    public synchronized Map<ByteArrayWrapper, Node> getNodes() {
         return nodes;
     }
 
-    public KeyValueDataSource getDb() {
+    public synchronized KeyValueDataSource getDb() {
         return dataSource;
     }
 
@@ -155,7 +155,7 @@ public class Cache {
         return cacheDump.toString();
     }
 
-    public void setDB(KeyValueDataSource dataSource) {
+    public synchronized void setDB(KeyValueDataSource dataSource) {
         if (this.dataSource == dataSource) return;
 
         Map<byte[], byte[]> rows = new HashMap<>();

@@ -11,6 +11,8 @@ import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -23,20 +25,65 @@ import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
 
 public class GenesisLoader {
 
-    public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader)  {
-        String genesisFile = config.genesisInfo();
+    /**
+     * Load genesis from passed location or from classpath `genesis` directory
+     */
+    public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader) throws RuntimeException {
+        final String genesisFile = config.getProperty("genesisFile", null);
+        final String genesisResource = config.genesisInfo();
 
-        InputStream is = classLoader.getResourceAsStream("genesis/" + genesisFile);
-        return loadGenesis(config, is);
-    }
+        // #1 try to find genesis at passed location
+        if (genesisFile != null) {
+            try (InputStream is = new FileInputStream(new File(genesisFile))) {
+                return GenesisLoader.loadGenesis(config, is);
+            } catch (Exception e) {
+                showGenesisErrorAndExit("Problem loading " + genesisFile, genesisFile, genesisResource);
+            }
+        }
 
-    public static Genesis loadGenesis(InputStream genesisJsonIS) {
-        return loadGenesis(SystemProperties.getDefault(), genesisJsonIS);
-    }
-    
-    public static Genesis loadGenesis(SystemProperties config, InputStream genesisJsonIS)  {
+        // #2 fall back to old genesis location at `src/main/resources/genesis` directory
         try {
+            InputStream is = classLoader.getResourceAsStream("genesis/" + genesisResource);
+            if (is != null) {
+                return loadGenesis(config, is);
+            } else {
+                showGenesisErrorAndExit("Genesis file is not found in resource directory", genesisFile, genesisResource);
+            }
+        } catch (Exception e) {
+            showGenesisErrorAndExit("Problem loading genesis file from resource directory", genesisFile, genesisResource);
+        }
+        return null;
+    }
 
+    private static void showGenesisErrorAndExit(String message, String genesisFile, String genesisResource) {
+        System.err.println("");
+        System.err.println("");
+        System.err.println("Genesis block configuration is corrupted or not found.");
+        System.err.println("Checked option 'genesisFile': " + genesisFile);
+        System.err.println("Checked option 'genesis': " + genesisResource);
+        System.err.println(message);
+
+        // hope to remove this
+        System.exit(-1);
+//        throw new Error("Wan't able to load genesis at " + genesisFile, exception1);
+    }
+
+    /**
+     * Method used much in tests.
+     */
+    public static Genesis loadGenesis(InputStream genesisJsonIS) throws RuntimeException {
+        try {
+            return loadGenesis(SystemProperties.getDefault(), genesisJsonIS);
+        } catch (Exception e) {
+            System.err.println("Genesis block configuration is corrupted or not found");
+            e.printStackTrace();
+            System.exit(-1);
+            return null;
+        }
+    }
+
+    private static Genesis loadGenesis(SystemProperties config, InputStream genesisJsonIS) throws RuntimeException {
+        try {
             String json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
             ObjectMapper mapper = new ObjectMapper();
@@ -52,17 +99,11 @@ public class GenesisLoader {
             byte[] rootHash = generateRootHash(premine);
             genesis.setStateRoot(rootHash);
 
-
             return genesis;
-        } catch (Throwable e) {
-            System.err.println("Genesis block configuration is corrupted or not found ./resources/genesis/...");
+        } catch (Exception e) {
             e.printStackTrace();
-            System.exit(-1);
+            throw new RuntimeException(e.getMessage(), e);
         }
-
-        System.err.println("Genesis block configuration is corrupted or not found ./resources/genesis/...");
-        System.exit(-1);
-        return null;
     }
 
 

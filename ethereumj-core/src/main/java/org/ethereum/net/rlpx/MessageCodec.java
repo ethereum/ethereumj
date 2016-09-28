@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,8 +56,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     @Autowired
     EthereumListener ethereumListener;
 
-    @Autowired
-    SystemProperties config;
+    private SystemProperties config;
 
     private boolean supportChunkedFrames = true;
 
@@ -66,8 +64,12 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     // LRU avoids OOM on invalid peers
     AtomicInteger contextIdCounter = new AtomicInteger(1);
 
-    @PostConstruct
-    private void init() {
+    public MessageCodec() {
+    }
+
+    @Autowired
+    private MessageCodec(final SystemProperties config) {
+        this.config = config;
         setMaxFramePayloadSize(config.rlpxMaxFrameSize());
     }
 

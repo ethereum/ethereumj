@@ -34,7 +34,6 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.FutureAdapter;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.*;
@@ -76,25 +75,21 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     PendingState pendingState;
 
     @Autowired
-    SystemProperties config;
-
-    @Autowired
-    CompositeEthereumListener compositeEthereumListener;
-
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
+
+    private SystemProperties config;
+
+    private CompositeEthereumListener compositeEthereumListener;
 
 
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
-    public EthereumImpl() {
+    @Autowired
+    public EthereumImpl(final SystemProperties config, final CompositeEthereumListener compositeEthereumListener) {
+        this.compositeEthereumListener = compositeEthereumListener;
+        this.config = config;
         System.out.println();
-    }
-
-    @PostConstruct
-    public void init() {
-        compositeEthereumListener.addListener(gasPriceTracker);
-
+        this.compositeEthereumListener.addListener(gasPriceTracker);
         gLogger.info("EthereumJ node started: enode://" + Hex.toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
     }
 
