@@ -83,6 +83,8 @@ public class Channel {
     @Autowired
     private StaticMessages staticMessages;
 
+    private ChannelManager channelManager;
+
     private Eth eth = new EthAdapter();
 
     private InetSocketAddress inetSocketAddress;
@@ -96,7 +98,8 @@ public class Channel {
 
     private PeerStatistics peerStats = new PeerStatistics();
 
-    public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
+    public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode, ChannelManager channelManager) {
+        this.channelManager = channelManager;
 
         isActive = remoteId != null && !remoteId.isEmpty();
 
@@ -361,6 +364,10 @@ public class Channel {
 
     public void dropConnection() {
         eth.dropConnection();
+    }
+
+    public ChannelManager getChannelManager() {
+        return channelManager;
     }
 
     @Override
