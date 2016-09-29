@@ -311,6 +311,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return repository;
     }
 
+    @Override
     public BlockStore getBlockStore() {
         return blockStore;
     }
