@@ -141,8 +141,7 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encodeList(List l) {
-            if (l.size() != size)
-                throw new RuntimeException("List size (" + l.size() + ") != " + size + " for type " + getName());
+            if (l.size() != size) throw new RuntimeException("List size (" + l.size() + ") != " + size + " for type " + getName());
             byte[][] elems = new byte[size][];
             for (int i = 0; i < l.size(); i++) {
                 elems[i] = elementType.encode(l.get(i));
@@ -266,7 +265,7 @@ public abstract class SolidityType {
         @Override
         public byte[] encode(Object value) {
             if (!(value instanceof String)) throw new RuntimeException("String value expected for type 'string'");
-            return super.encode(((String) value).getBytes(StandardCharsets.UTF_8));
+            return super.encode(((String)value).getBytes(StandardCharsets.UTF_8));
         }
 
         @Override
@@ -308,7 +307,7 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encode(Object value) {
-            if (value instanceof String && !((String) value).startsWith("0x")) {
+            if (value instanceof String && !((String)value).startsWith("0x")) {
                 // address is supposed to be always in hex
                 value = "0x" + value;
             }
@@ -345,7 +344,7 @@ public abstract class SolidityType {
             BigInteger bigInt;
 
             if (value instanceof String) {
-                String s = ((String) value).toLowerCase().trim();
+                String s = ((String)value).toLowerCase().trim();
                 int radix = 10;
                 if (s.startsWith("0x")) {
                     s = s.substring(2);
@@ -355,10 +354,12 @@ public abstract class SolidityType {
                     radix = 16;
                 }
                 bigInt = new BigInteger(s, radix);
-            } else if (value instanceof BigInteger) {
+            } else  if (value instanceof BigInteger) {
                 bigInt = (BigInteger) value;
-            } else if (value instanceof Number) {
+            } else  if (value instanceof Number) {
                 bigInt = new BigInteger(value.toString());
+            } else  if (value instanceof byte[]) {
+                bigInt = ByteUtil.bytesToBigInteger((byte[]) value);
             } else {
                 throw new RuntimeException("Invalid value for type '" + this + "': " + value + " (" + value.getClass() + ")");
             }
@@ -373,11 +374,9 @@ public abstract class SolidityType {
         public static BigInteger decodeInt(byte[] encoded, int offset) {
             return new BigInteger(Arrays.copyOfRange(encoded, offset, offset + 32));
         }
-
         public static byte[] encodeInt(int i) {
             return encodeInt(new BigInteger("" + i));
         }
-
         public static byte[] encodeInt(BigInteger bigInt) {
             return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
         }
