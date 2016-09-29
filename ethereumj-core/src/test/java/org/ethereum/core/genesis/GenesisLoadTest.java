@@ -8,7 +8,11 @@ import org.junit.Ignore;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 
 /**
@@ -26,14 +30,18 @@ public class GenesisLoadTest {
     }
 
     @Test
-    public void shouldLoadGenesis_whenFullPathSpecified() {
+    public void shouldLoadGenesis_whenFullPathSpecified() throws URISyntaxException {
         URL url = GenesisLoadTest.class.getClassLoader().getResource("genesis/frontier-test.json");
 
         // full path
         System.out.println("url.getPath() " + url.getPath());
         loadGenesis(url.getPath(), null);
 
-        loadGenesis("src/main/resources/genesis/frontier-test.json", null);
+        Path path = new File(url.toURI()).toPath();
+        Path curPath = new File("").getAbsoluteFile().toPath();
+        String relPath = curPath.relativize(path).toFile().getPath();
+        System.out.println("Relative path: " + relPath);
+        loadGenesis(relPath, null);
         assertTrue(true);
     }
 
