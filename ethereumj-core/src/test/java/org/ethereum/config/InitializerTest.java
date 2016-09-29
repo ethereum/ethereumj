@@ -93,9 +93,11 @@ public class InitializerTest {
         SystemProperties props1 = withConfig(1, null);
         resetHelper.process(props1);
 
+        final File testFile = createFile();
         SystemProperties props2 = withConfig(2, RESET);
         resetHelper.process(props2);
-        assertTrue(!resetHelper.isDatabaseDirectoryExists(props2));
+        assertFalse(testFile.exists());
+        assertEquals(new Integer(2), resetHelper.getDatabaseVersion(versionFile));
     }
 
     @Test(expected = Error.class)
@@ -120,25 +122,23 @@ public class InitializerTest {
     public void helper_shouldIgnore_whenDifferentVersionAndFlag() {
         final SystemProperties props1 = withConfig(1, EXIT);
         resetHelper.process(props1);
+        final File testFile = createFile();
 
         final SystemProperties props2 = withConfig(2, IGNORE);
         resetHelper.process(props2);
-        assertTrue(resetHelper.isDatabaseDirectoryExists(props2));
+        assertTrue(testFile.exists());
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
     }
 
     @Test
-    public void helper_shouldPutVersion_afterReset() throws IOException {
+    public void helper_shouldPutVersion_afterDatabaseReset() throws IOException {
         Config config = ConfigFactory.empty()
                 .withValue("database.reset", ConfigValueFactory.fromAnyRef(true));
 
         SPO systemProperties = new SPO(config);
         systemProperties.setDataBaseDir(databaseDir);
         systemProperties.setDatabaseVersion(33);
-
-        final File testFile = new File(databaseDir + "/empty.file");
-        testFile.getParentFile().mkdirs();
-        testFile.createNewFile();
+        final File testFile = createFile();
 
         assertTrue(testFile.exists());
         resetHelper.process(systemProperties);
@@ -149,6 +149,17 @@ public class InitializerTest {
 
 
     // HELPERS
+
+    private File createFile() {
+        final File testFile = new File(databaseDir + "/empty.file");
+        testFile.getParentFile().mkdirs();
+        try {
+            testFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Can't create file in database dir");
+        }
+        return testFile;
+    }
 
     private SystemProperties withConfig(int databaseVersion, Behavior behavior) {
         Config config = ConfigFactory.empty()

@@ -106,6 +106,7 @@ class Initializer implements BeanPostProcessor {
                                 "directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`");
                     } else if (behavior == Behavior.RESET) {
                         FileUtil.recursiveDelete(config.databaseDir());
+                        putDatabaseVersion(config, config.databaseVersion());
                         logger.warn("Auto reset database directory according to flag");
                     } else {
                         // IGNORE
