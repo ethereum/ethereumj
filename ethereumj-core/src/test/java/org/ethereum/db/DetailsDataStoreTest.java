@@ -19,9 +19,9 @@ public class DetailsDataStoreTest {
     @Test
     public void test1(){
 
-        DatabaseImpl db = new DatabaseImpl(new HashMapDB());
+        KeyValueDataSource db = new HashMapDB();
         DetailsDataStore dds = new DetailsDataStore();
-        dds.withDb(db.getDb(), new HashMapDB());
+        dds.withDb(db, new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -52,9 +52,9 @@ public class DetailsDataStoreTest {
     @Test
     public void test2(){
 
-        DatabaseImpl db = new DatabaseImpl(new HashMapDB());
+        KeyValueDataSource db = new HashMapDB();
         DetailsDataStore dds = new DetailsDataStore();
-        dds.withDb(db.getDb(), new HashMapDB());
+        dds.withDb(db, new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -89,9 +89,9 @@ public class DetailsDataStoreTest {
     @Test
     public void test3(){
 
-        DatabaseImpl db = new DatabaseImpl(new HashMapDB());
+        KeyValueDataSource db = new HashMapDB();
         DetailsDataStore dds = new DetailsDataStore();
-        dds.withDb(db.getDb(), new HashMapDB());
+        dds.withDb(db, new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -128,9 +128,9 @@ public class DetailsDataStoreTest {
     @Test
     public void test4() {
 
-        DatabaseImpl db = new DatabaseImpl(new HashMapDB());
+        KeyValueDataSource db = new HashMapDB();
         DetailsDataStore dds = new DetailsDataStore();
-        dds.withDb(db.getDb(), new HashMapDB());
+        dds.withDb(db, new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
 
@@ -141,9 +141,9 @@ public class DetailsDataStoreTest {
     @Ignore // Temporary ignore, need to fix according to a new 'one-db' details storage
     @Test
     public void testExternalStorage() throws InterruptedException {
-        DatabaseImpl db = new DatabaseImpl(new HashMapDB());
+        KeyValueDataSource db = new HashMapDB();
         DetailsDataStore dds = new DetailsDataStore();
-        dds.withDb(db.getDb(), new HashMapDB());
+        dds.withDb(db, new HashMapDB());
 
         byte[] addrWithExternalStorage = randomAddress();
         byte[] addrWithInternalStorage = randomAddress();

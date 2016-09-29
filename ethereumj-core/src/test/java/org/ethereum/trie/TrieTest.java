@@ -4,7 +4,6 @@ import org.ethereum.core.AccountState;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
-import org.ethereum.db.DatabaseImpl;
 import org.ethereum.util.RLP;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -830,20 +829,18 @@ public class TrieTest {
         KeyValueDataSource keyValueDataSource = new LevelDbDataSource("testState");
         keyValueDataSource.init();
 
-        DatabaseImpl db = new DatabaseImpl(keyValueDataSource);
-
         for (Object aDbDumpJSONArray : dbDumpJSONArray) {
 
             JSONObject obj = (JSONObject) aDbDumpJSONArray;
             byte[] key = Hex.decode(obj.get("key").toString());
             byte[] val = Hex.decode(obj.get("val").toString());
 
-            db.put(key, val);
+            keyValueDataSource.put(key, val);
         }
 
         // TEST: load trie out of this run up to block#33
         byte[] rootNode = Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7");
-        TrieImpl trie = new TrieImpl(db.getDb(), rootNode);
+        TrieImpl trie = new TrieImpl(keyValueDataSource, rootNode);
 
         // first key added in genesis
         byte[] val1 = trie.get(Hex.decode("51ba59315b3a95761d0863b05ccc7a7f54703d99"));
@@ -863,7 +860,7 @@ public class TrieTest {
         assertEquals(BigInteger.ZERO, accountState2.getNonce());
         assertEquals(null, accountState2.getStateRoot());
 
-        db.close();
+        keyValueDataSource.close();
     }
 
 
