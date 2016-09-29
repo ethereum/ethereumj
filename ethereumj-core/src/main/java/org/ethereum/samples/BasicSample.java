@@ -2,11 +2,10 @@ package org.ethereum.samples;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.FilterReply;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.facade.Ethereum;
@@ -42,11 +41,8 @@ import java.util.*;
  */
 public class BasicSample implements Runnable {
 
-    static {
-        System.setProperty("logback.configurationFile", "ethereumj-core/src/test/resources/logback-test.xml");
-    }
-
     public static final Logger sLogger = LoggerFactory.getLogger("sample");
+    private static CustomFilter CUSTOM_FILTER;
 
     private String loggerName;
     protected Logger logger;
@@ -90,49 +86,24 @@ public class BasicSample implements Runnable {
     }
 
     protected void setupLogging() {
-        muteLoggersExcept(loggerName);
-        logger = LoggerFactory.getLogger("sample");
+        addSampleLogger(loggerName);
+        logger = LoggerFactory.getLogger(loggerName);
     }
 
     /**
      * Allow only selected logger to print DEBUG events to STDOUT and FILE.
      * Other loggers are allowed to print ERRORS only.
      */
-    private static void muteLoggersExcept(String loggerName) {
-        final LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+    private static void addSampleLogger(final String loggerName) {
+        if (CUSTOM_FILTER == null) {
+            CUSTOM_FILTER = new CustomFilter();
+            final LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        // read logging config
-        loggerContext.reset();
-        try {
-            new ContextInitializer(loggerContext).configureByResource(ClassLoader.getSystemResource("logback.xml"));
-        } catch (Exception e) {
-            System.out.println("Error applying logging config " + e.getMessage());
+            Appender ca = loggerContext.getLogger("ROOT").getAppender("STDOUT");
+            ca.clearAllFilters();
+            ca.addFilter(CUSTOM_FILTER);
         }
-
-        // mute all loggers
-        List<ch.qos.logback.classic.Logger> loggerList = loggerContext.getLoggerList();
-        for (ch.qos.logback.classic.Logger l : loggerList) {
-            l.setLevel(Level.ERROR);
-        }
-        final ch.qos.logback.classic.Logger logger = loggerContext.getLogger(loggerName);
-        logger.setLevel(Level.DEBUG);
-
-        // change pattern
-        final ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        for (Iterator<Appender<ILoggingEvent>> iter = rootLogger.iteratorForAppenders(); iter.hasNext(); ) {
-            final Appender appender = iter.next();
-            if (appender instanceof ConsoleAppender) {
-                final ConsoleAppender consoleAppender = (ConsoleAppender) appender;
-                final PatternLayoutEncoder ple = new PatternLayoutEncoder();
-
-                consoleAppender.stop();
-                ple.setPattern("%d{HH:mm:ss.SSS} [%c{1}]  %m%n");
-                ple.setContext(loggerContext);
-                consoleAppender.setEncoder(ple);
-                ple.start();
-                consoleAppender.start();
-            }
-        }
+        CUSTOM_FILTER.addVisibleLogger(loggerName);
     }
 
     /**
@@ -393,4 +364,17 @@ public class BasicSample implements Runnable {
         public void onTransactionExecuted(TransactionExecutionSummary summary) {
         }
     };
+
+    private static class CustomFilter extends Filter<ILoggingEvent> {
+        private Set<String> visibleLoggers = new HashSet<>();
+        @Override
+        public synchronized FilterReply decide(ILoggingEvent event) {
+            return visibleLoggers.contains(event.getLoggerName()) && event.getLevel().isGreaterOrEqual(Level.INFO) ||
+                    event.getLevel().isGreaterOrEqual(Level.ERROR) ? FilterReply.NEUTRAL : FilterReply.DENY;
+        }
+
+        public synchronized void addVisibleLogger(String name) {
+            visibleLoggers.add(name);
+        }
+    }
 }
