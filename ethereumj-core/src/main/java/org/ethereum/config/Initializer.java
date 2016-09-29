@@ -44,6 +44,8 @@ class Initializer implements BeanPostProcessor {
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
+        // forcing loading genesis to fail fast in case of error
+        config.getGenesis();
     }
 
     @Override

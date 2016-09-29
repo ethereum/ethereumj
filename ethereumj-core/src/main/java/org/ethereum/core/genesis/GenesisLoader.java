@@ -10,6 +10,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,16 +57,19 @@ public class GenesisLoader {
     }
 
     private static void showGenesisErrorAndExit(String message, String genesisFile, String genesisResource) {
+        LoggerFactory.getLogger("general").error(message);
+
         System.err.println("");
         System.err.println("");
         System.err.println("Genesis block configuration is corrupted or not found.");
-        System.err.println("Checked option 'genesisFile': " + genesisFile);
-        System.err.println("Checked option 'genesis': " + genesisResource);
+        System.err.println("Config option 'genesisFile': " + genesisFile);
+        System.err.println("Config option 'genesis': " + genesisResource);
         System.err.println(message);
+        System.err.println("");
+        System.err.println("");
 
         // hope to remove this
-        System.exit(-1);
-//        throw new Error("Wan't able to load genesis at " + genesisFile, exception1);
+        throw new RuntimeException("Wasn't able to load genesis. " + message);
     }
 
     /**
@@ -77,8 +81,7 @@ public class GenesisLoader {
         } catch (Exception e) {
             System.err.println("Genesis block configuration is corrupted or not found");
             e.printStackTrace();
-            System.exit(-1);
-            return null;
+            throw new RuntimeException("Wasn't able to load genesis");
         }
     }
 
