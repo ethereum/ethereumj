@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Nonnull;
@@ -42,30 +44,25 @@ import static org.ethereum.util.ByteUtil.wrap;
  * @author Roman Mandeleil
  * @since 17.11.2014
  */
+@Component @Primary
 public class RepositoryImpl implements Repository , org.ethereum.facade.Repository{
 
-    public final static String DETAILS_DB = "details";
-    public final static String STORAGE_DB = "storage";
     public final static String STATE_DB = "state";
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
-    @Autowired
-    private BlockStore blockStore;
-
     CommonConfig commonConfig = new CommonConfig();
 
     private SystemProperties config = SystemProperties.getDefault();
 
-    private DetailsDataStore dds = new DetailsDataStore();
-
     private Trie worldState;
 
-    private DatabaseImpl detailsDB = null;
+    @Autowired
+    private BlockStore blockStore;
+    @Autowired
+    private DetailsDataStore dds;
 
-    private KeyValueDataSource detailsDS;
-    private KeyValueDataSource storageDS;
     private KeyValueDataSource stateDS;
     private CachingDataSource stateDSCache;
     private JournalPruneDataSource stateDSPrune;
@@ -80,14 +77,14 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public RepositoryImpl() {
     }
 
-    public RepositoryImpl(final SystemProperties config, final KeyValueDataSource detailsDS,
-                          final KeyValueDataSource storageDS, final KeyValueDataSource stateDS,
-                          final CommonConfig commonConfig) {
-        this.config = config;
-        this.detailsDS = detailsDS;
-        this.stateDS = stateDS;
-        this.storageDS = storageDS;
+    @Autowired
+    public RepositoryImpl(final CommonConfig commonConfig) {
+        this.config = commonConfig.systemProperties();
         this.commonConfig = commonConfig;
+        this.stateDS = commonConfig.keyValueDataSource();
+        this.stateDS.setName(STATE_DB);
+        this.stateDS.init();
+
         init();
     }
 
@@ -97,18 +94,14 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS, boolean pruneEnabled) {
-        this(detailsDS, new HashMapDB(), stateDS, pruneEnabled);
+        this(new DetailsDataStore().withDb(detailsDS, new HashMapDB()), stateDS, pruneEnabled);
     }
 
-    public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource storageDS,
-                          KeyValueDataSource stateDS, boolean pruneEnabled) {
-        this.detailsDS = detailsDS;
+    public RepositoryImpl(DetailsDataStore dds, KeyValueDataSource stateDS, boolean pruneEnabled) {
+        this.dds = dds;
         this.stateDS = stateDS;
-        this.storageDS = storageDS;
         this.pruneEnabled = pruneEnabled;
         init();
-        dds.setDB(detailsDB);
-        dds.setStorageDS(storageDS);
     }
 
     public RepositoryImpl withBlockStore(BlockStore blockStore) {
@@ -117,29 +110,12 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     private void init() {
-        detailsDS.setName(DETAILS_DB);
-        detailsDS.init();
-
-        storageDS.setName(STORAGE_DB);
-        storageDS.init();
-
-        stateDS.setName(STATE_DB);
-        stateDS.init();
-
         stateDSCache = new CachingDataSource(stateDS);
         stateDSPrune = new JournalPruneDataSource(stateDSCache);
-
-        detailsDB = new DatabaseImpl(detailsDS);
 
         pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
 
         worldState = createStateTrie();
-    }
-
-    @Autowired
-    public void setDds(DetailsDataStore dds) {
-        this.dds = dds;
-        dds.setDB(detailsDB);
     }
 
     public DetailsDataStore getDetailsDataStore() {
@@ -159,9 +135,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public void close() {
         rwLock.writeLock().lock();
         try {
-            if (detailsDB != null) {
-                detailsDB.close();
-                detailsDB = null;
+            if (dds != null) {
+                dds.close();
+                dds = null;
             }
 
 
@@ -339,7 +315,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             fw = new FileWriter(dumpFile.getAbsoluteFile());
             bw = new BufferedWriter(fw);
 
-            List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
+            List<ByteArrayWrapper> keys = new ArrayList<>(this.dds.keys());
 
             JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
             ObjectNode blockNode = jsonFactory.objectNode();
@@ -692,8 +668,6 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         repo.stateDSCache = this.stateDSCache;
         repo.stateDSPrune = this.stateDSPrune;
         repo.pruneBlockCount = this.pruneBlockCount;
-        repo.detailsDB = this.detailsDB;
-        repo.detailsDS = this.detailsDS;
         repo.dds = this.dds;
         repo.isSnapshot = true;
 

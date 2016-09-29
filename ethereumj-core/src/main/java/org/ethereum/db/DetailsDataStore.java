@@ -5,6 +5,7 @@ import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.JournalPruneDataSource;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -31,8 +32,7 @@ public class DetailsDataStore {
 
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
-    private DatabaseImpl db = null;
-
+    private KeyValueDataSource detailsDS;
     private KeyValueDataSource storageDS;
     private CachingDataSource storageDSCache;
     private JournalPruneDataSource storageDSPrune;
@@ -46,19 +46,21 @@ public class DetailsDataStore {
     @Autowired
     public DetailsDataStore(final CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
-        setStorageDS(commonConfig.keyValueDataSource());
+        KeyValueDataSource detailsDS = commonConfig.keyValueDataSource();
+        detailsDS.setName("details");
+        detailsDS.init();
+        KeyValueDataSource storageDS = commonConfig.keyValueDataSource();
+        storageDS.setName("storage");
+        storageDS.init();
+        withDb(detailsDS, storageDS);
     }
 
-    public void setDB(DatabaseImpl db) {
-        this.db = db;
-    }
-
-    public void setStorageDS(KeyValueDataSource storageDS) {
+    public DetailsDataStore withDb(KeyValueDataSource detailsDS, KeyValueDataSource storageDS) {
+        this.detailsDS = detailsDS;
         this.storageDS = storageDS;
-        this.storageDS.setName("storage");
-        this.storageDS.init();
         this.storageDSCache = new CachingDataSource(storageDS);
         this.storageDSPrune = new JournalPruneDataSource(storageDSCache);
+        return this;
     }
 
     public synchronized ContractDetails get(byte[] key) {
@@ -69,7 +71,7 @@ public class DetailsDataStore {
         if (details == null) {
 
             if (removes.contains(wrappedKey)) return null;
-            byte[] data = db.get(key);
+            byte[] data = detailsDS.get(key);
             if (data == null) return null;
 
             ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
@@ -132,11 +134,11 @@ public class DetailsDataStore {
             totalSize += value.length;
         }
 
-        db.getDb().updateBatch(batch);
+        detailsDS.updateBatch(batch);
         storageDSCache.flush();
 
         for (ByteArrayWrapper key : removes) {
-            db.delete(key.getData());
+            detailsDS.delete(key.getData());
         }
 
         cache.clear();
@@ -159,7 +161,7 @@ public class DetailsDataStore {
     public synchronized Set<ByteArrayWrapper> keys() {
         Set<ByteArrayWrapper> keys = new HashSet<>();
         keys.addAll(cache.keySet());
-        keys.addAll(db.dumpKeys());
+        keys.addAll(Utils.dumpKeys(detailsDS));
 
         return keys;
     }
@@ -178,7 +180,8 @@ public class DetailsDataStore {
     public synchronized void close() {
         try {
             gLogger.info("Closing DetailsDataStore");
-            db.close();
+            detailsDS.close();
+            storageDS.close();
         } catch (Exception e) {
             gLogger.warn("Problems closing DetailsDataStore", e);
         }

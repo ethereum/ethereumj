@@ -8,6 +8,7 @@ import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.DetailsDataStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -371,9 +372,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
         detailsDS = new HashMapDB();
         storageDS = new HashMapDB();
         stateDS = new HashMapDB();
-        RepositoryImpl repository = new RepositoryImpl(detailsDS, stateDS, true)
+        DetailsDataStore detailsDataStore = new DetailsDataStore().withDb(detailsDS, storageDS);
+        RepositoryImpl repository = new RepositoryImpl(detailsDataStore, stateDS, true)
                 .withBlockStore(blockStore);
-        repository.getDetailsDataStore().setStorageDS(storageDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();

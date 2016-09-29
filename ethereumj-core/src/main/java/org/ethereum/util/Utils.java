@@ -1,5 +1,7 @@
 package org.ethereum.util;
 
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.db.ByteArrayWrapper;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
@@ -13,9 +15,7 @@ import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.swing.*;
@@ -182,5 +182,16 @@ public class Utils {
             for (int i = 0; i < n; i++) ret.append(s);
             return ret.toString();
         }
+    }
+
+    public static List<ByteArrayWrapper> dumpKeys(KeyValueDataSource ds) {
+
+        ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
+
+        for (byte[] key : ds.keys()) {
+            keys.add(ByteUtil.wrap(key));
+        }
+        Collections.sort(keys);
+        return keys;
     }
 }

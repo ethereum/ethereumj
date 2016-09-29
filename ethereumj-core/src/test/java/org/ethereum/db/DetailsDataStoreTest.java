@@ -21,8 +21,7 @@ public class DetailsDataStoreTest {
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
-        dds.setDB(db);
-        dds.setStorageDS(new HashMapDB());
+        dds.withDb(db.getDb(), new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -55,8 +54,7 @@ public class DetailsDataStoreTest {
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
-        dds.setDB(db);
-        dds.setStorageDS(new HashMapDB());
+        dds.withDb(db.getDb(), new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -93,8 +91,7 @@ public class DetailsDataStoreTest {
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
-        dds.setDB(db);
-        dds.setStorageDS(new HashMapDB());
+        dds.withDb(db.getDb(), new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -133,7 +130,7 @@ public class DetailsDataStoreTest {
 
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
-        dds.setDB(db);
+        dds.withDb(db.getDb(), new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
 
@@ -146,7 +143,7 @@ public class DetailsDataStoreTest {
     public void testExternalStorage() throws InterruptedException {
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
-        dds.setDB(db);
+        dds.withDb(db.getDb(), new HashMapDB());
 
         byte[] addrWithExternalStorage = randomAddress();
         byte[] addrWithInternalStorage = randomAddress();
