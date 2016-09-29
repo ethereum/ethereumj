@@ -105,7 +105,10 @@ class Initializer implements BeanPostProcessor {
                         throw new Error("Incompatible database version " + actualVersion + ". Please remove database " +
                                 "directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`");
                     } else if (behavior == Behavior.RESET) {
-                        FileUtil.recursiveDelete(config.databaseDir());
+                        boolean res = FileUtil.recursiveDelete(config.databaseDir());
+                        if (!res) {
+                            throw new RuntimeException("Couldn't delete database dir: " + config.databaseDir());
+                        }
                         putDatabaseVersion(config, config.databaseVersion());
                         logger.warn("Auto reset database directory according to flag");
                     } else {
