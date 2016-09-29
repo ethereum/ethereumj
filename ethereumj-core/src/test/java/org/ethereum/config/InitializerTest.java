@@ -40,7 +40,14 @@ public class InitializerTest {
         FileUtil.recursiveDelete(tempFile.getAbsolutePath());
     }
 
-    // RESET
+    @Test
+    public void helper_shouldAllowCleanWorkspace() {
+        SystemProperties props = withConfig(2, null);
+
+        resetHelper.process(props);
+        assertEquals(new Integer(2), resetHelper.getDatabaseVersion(versionFile));
+        resetHelper.process(props);
+    }
 
     @Test
     public void helper_shouldCreateVersionFile() {
