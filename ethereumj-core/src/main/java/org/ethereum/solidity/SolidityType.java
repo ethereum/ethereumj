@@ -116,6 +116,10 @@ public abstract class SolidityType {
             }
         }
 
+        public SolidityType getElementType() {
+            return elementType;
+        }
+
         public abstract byte[] encodeList(List l);
     }
 
@@ -243,6 +247,7 @@ public abstract class SolidityType {
         @Override
         public Object decode(byte[] encoded, int offset) {
             int len = IntType.decodeInt(encoded, offset).intValue();
+            if (len == 0) return new byte[0];
             offset += 32;
             return Arrays.copyOfRange(encoded, offset, offset + len);
         }
@@ -318,8 +323,8 @@ public abstract class SolidityType {
 
         @Override
         public Object decode(byte[] encoded, int offset) {
-            BigInteger asBigInteger = (BigInteger) super.decode(encoded, offset);
-            return new DataWord(asBigInteger.toByteArray());
+            BigInteger bi = (BigInteger) super.decode(encoded, offset);
+            return ByteUtil.bigIntegerToBytes(bi, 20);
         }
     }
 
