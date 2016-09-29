@@ -47,9 +47,8 @@ public class GenesisLoadTest {
         assertTrue(true);
     }
 
-    @Test
-    @Ignore("Ignored as System.exit is used")
-    public void shouldExitJava_whenWrongPath() {
+    @Test(expected = RuntimeException.class)
+    public void shouldError_whenWrongPath() {
         loadGenesis("NON_EXISTED_PATH", null);
         assertTrue(false);
     }
