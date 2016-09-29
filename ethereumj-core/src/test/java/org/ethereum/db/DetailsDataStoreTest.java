@@ -22,6 +22,7 @@ public class DetailsDataStoreTest {
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
         dds.setDB(db);
+        dds.setStorageDS(new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -55,6 +56,7 @@ public class DetailsDataStoreTest {
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
         dds.setDB(db);
+        dds.setStorageDS(new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");
@@ -92,6 +94,7 @@ public class DetailsDataStoreTest {
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
         dds.setDB(db);
+        dds.setStorageDS(new HashMapDB());
 
         byte[] c_key = Hex.decode("1a2b");
         byte[] code = Hex.decode("60606060");

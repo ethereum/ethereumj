@@ -9,6 +9,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.CachingDataSource;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
@@ -44,6 +45,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 public class RepositoryImpl implements Repository , org.ethereum.facade.Repository{
 
     public final static String DETAILS_DB = "details";
+    public final static String STORAGE_DB = "storage";
     public final static String STATE_DB = "state";
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
@@ -63,6 +65,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private DatabaseImpl detailsDB = null;
 
     private KeyValueDataSource detailsDS;
+    private KeyValueDataSource storageDS;
     private KeyValueDataSource stateDS;
     private CachingDataSource stateDSCache;
     private JournalPruneDataSource stateDSPrune;
@@ -78,10 +81,12 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     public RepositoryImpl(final SystemProperties config, final KeyValueDataSource detailsDS,
-                          final KeyValueDataSource stateDS, final CommonConfig commonConfig) {
+                          final KeyValueDataSource storageDS, final KeyValueDataSource stateDS,
+                          final CommonConfig commonConfig) {
         this.config = config;
         this.detailsDS = detailsDS;
         this.stateDS = stateDS;
+        this.storageDS = storageDS;
         this.commonConfig = commonConfig;
         init();
     }
@@ -92,11 +97,18 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS, boolean pruneEnabled) {
+        this(detailsDS, new HashMapDB(), stateDS, pruneEnabled);
+    }
+
+    public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource storageDS,
+                          KeyValueDataSource stateDS, boolean pruneEnabled) {
         this.detailsDS = detailsDS;
         this.stateDS = stateDS;
+        this.storageDS = storageDS;
         this.pruneEnabled = pruneEnabled;
         init();
         dds.setDB(detailsDB);
+        dds.setStorageDS(storageDS);
     }
 
     public RepositoryImpl withBlockStore(BlockStore blockStore) {
@@ -108,8 +120,12 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
 
+        storageDS.setName(STORAGE_DB);
+        storageDS.init();
+
         stateDS.setName(STATE_DB);
         stateDS.init();
+
         stateDSCache = new CachingDataSource(stateDS);
         stateDSPrune = new JournalPruneDataSource(stateDSCache);
 

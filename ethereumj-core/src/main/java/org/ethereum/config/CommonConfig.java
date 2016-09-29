@@ -55,7 +55,8 @@ public class CommonConfig {
     @Bean
     @Primary
     RepositoryImpl repository() {
-        return new RepositoryImpl(systemProperties(), keyValueDataSource(), keyValueDataSource(), this);
+        return new RepositoryImpl(systemProperties(), keyValueDataSource(), keyValueDataSource(),
+                keyValueDataSource(), this);
     }
 
     @Bean

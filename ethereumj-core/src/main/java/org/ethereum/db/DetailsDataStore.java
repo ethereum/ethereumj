@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.CachingDataSource;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.JournalPruneDataSource;
 import org.slf4j.Logger;
