@@ -26,7 +26,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss32m", "-XX:-OmitStackTraceInFastThrow"]
+applicationDefaultJvmArgs = ["-server", "-Xss32m", "-Xmx2500M", "-XX:-OmitStackTraceInFastThrow"]
 
 if ( project.hasProperty('jvmArgs') ) {
     applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
