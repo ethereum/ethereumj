@@ -598,7 +598,6 @@ public class SystemProperties {
         return config.hasPath("solc.path") ? config.getString("solc.path"): null;
     }
 
-    @ValidateMe
     public String privateKey() {
         if (config.hasPath("peer.privateKey")) {
             String key = config.getString("peer.privateKey");
@@ -639,7 +638,6 @@ public class SystemProperties {
         return generatedNodePrivateKey;
     }
 
-    @ValidateMe
     public ECKey getMyKey() {
         return ECKey.fromPrivate(Hex.decode(privateKey()));
     }
@@ -647,7 +645,6 @@ public class SystemProperties {
     /**
      *  Home NodeID calculated from 'peer.privateKey' property
      */
-    @ValidateMe
     public byte[] nodeId() {
         return getMyKey().getNodeId();
     }
