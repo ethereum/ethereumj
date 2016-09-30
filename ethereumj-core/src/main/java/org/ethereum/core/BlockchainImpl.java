@@ -96,6 +96,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
     private static final int MAGIC_REWARD_OFFSET = 8;
+    private static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
     @Autowired
     private Repository repository;
@@ -455,7 +456,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
         Block block = new Block(parent.getHash(),
-                sha3(RLP.encodeList(new byte[0])), // uncleHash
+                EMPTY_LIST_HASH, // uncleHash
                 minerCoinbase,
                 new byte[0], // log bloom - from tx receipts
                 new byte[0], // difficulty computed right after block creation
