@@ -5,6 +5,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockIdentifier;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
@@ -18,6 +19,7 @@ import org.ethereum.mine.MinerListener;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.NewBlockHashesMessage;
+import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.Message;
@@ -33,6 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.PostConstruct;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +45,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -216,6 +221,7 @@ public class BlockTxForwardTest {
                 "genesis = sample-genesis.json \n" +
                 // two peers need to have separate database dirs
                 "database.dir = sampleDB-1 \n" +
+                "keyvalue.datasource = leveldb \n" +
                 // when more than 1 miner exist on the network extraData helps to identify the block creator
                 "mine.extraDataHex = cccccccccccccccccccc \n" +
                 "mine.cpuMineThreads = 2 \n" +
@@ -313,7 +319,8 @@ public class BlockTxForwardTest {
                 // all peers in the same network need to use the same genesis block
                 "genesis = sample-genesis.json \n" +
                 // two peers need to have separate database dirs
-                "database.dir = sampleDB-2 \n";
+                "database.dir = sampleDB-2 \n" +
+                "keyvalue.datasource = leveldb \n";
 
         @Bean
         public RegularNode node() {
@@ -357,7 +364,8 @@ public class BlockTxForwardTest {
                 // all peers in the same network need to use the same genesis block
                 "genesis = sample-genesis.json \n" +
                 // two peers need to have separate database dirs
-                "database.dir = sampleDB-3 \n";
+                "database.dir = sampleDB-3 \n" +
+                "keyvalue.datasource = leveldb \n";
 
         @Bean
         public GeneratorNode node() {
@@ -418,6 +426,7 @@ public class BlockTxForwardTest {
 
             for (int i = ethereum.getRepository().getNonce(senderKey.getAddress()).intValue(), j = 0; j < 20000; i++, j++) {
                 {
+                    if (stopTxGeneration.get()) break;
                     Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
                             ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
                             receiverAddr, new byte[]{77}, new byte[0]);
@@ -430,9 +439,14 @@ public class BlockTxForwardTest {
         }
     }
 
-    private final static AtomicInteger minedBlocksBalance = new AtomicInteger(0);
-    private final static AtomicInteger txsBalance = new AtomicInteger(0);
+    private final static Map<String, Boolean> blocks = Collections.synchronizedMap(new HashMap<String, Boolean>());
+    private final static Map<String, Boolean> txs =  Collections.synchronizedMap(new HashMap<String, Boolean>());
     private final static AtomicInteger fatalErrors = new AtomicInteger(0);
+    private final static AtomicBoolean stopTxGeneration = new AtomicBoolean(false);
+
+    private final static long MAX_RUN_MINUTES = 360L;
+    // Actually there will be several blocks mined after, it's a very soft shutdown
+    private final static int STOP_ON_BLOCK = 100;
 
     private static ScheduledExecutorService statTimer =
             Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -440,8 +454,32 @@ public class BlockTxForwardTest {
                     return new Thread(r, "StatTimer");
                 }
             });
+
+    private boolean logStats() {
+        testLogger.info("---------====---------");
+        int arrivedBlocks = 0;
+        for (Boolean arrived : blocks.values()) {
+            if (arrived) arrivedBlocks++;
+        }
+        testLogger.info("Arrived blocks / Total: {}/{}", arrivedBlocks, blocks.size());
+        int arrivedTxs = 0;
+        for (Boolean arrived : txs.values()) {
+            if (arrived) arrivedTxs++;
+        }
+        testLogger.info("Arrived txs / Total: {}/{}", arrivedTxs, txs.size());
+        testLogger.info("fatalErrors: {}", fatalErrors);
+        testLogger.info("---------====---------");
+
+        return fatalErrors.get() == 0 && blocks.size() == arrivedBlocks && txs.size() == arrivedTxs;
+    }
+
     /**
      *  Creating 3 EthereumJ instances with different config classes
+     *  1st - Miner node, no sync
+     *  2nd - Regular node, synced with both Miner and Generator
+     *  3rd - Generator node, sync is on, but can see only 2nd node
+     *  We want to check that blocks mined on Miner will reach Generator and
+     *  txs from Generator will reach Miner node
      */
     @Test
     public void testTest() throws Exception {
@@ -450,12 +488,8 @@ public class BlockTxForwardTest {
             @Override
             public void run() {
                 try {
-                    testLogger.info("-------====-------");
-                    testLogger.info("minedBlocksBalance: {}", minedBlocksBalance);
-                    testLogger.info("txsBalance: {}", txsBalance);
-                    testLogger.info("fatalErrors: {}", fatalErrors);
-                    testLogger.info("-------====-------");
-                    if (fatalErrors.get() > 0) {
+                    logStats();
+                    if (fatalErrors.get() > 0 || blocks.size() >= STOP_ON_BLOCK) {
                         statTimer.shutdownNow();
                     }
                 } catch (Throwable t) {
@@ -471,7 +505,7 @@ public class BlockTxForwardTest {
             @Override
             public void onBlock(BlockSummary blockSummary) {
                 if (blockSummary.getBlock().getNumber() != 0L) {
-                    minedBlocksBalance.incrementAndGet();
+                    blocks.put(Hex.toHexString(blockSummary.getBlock().getHash()), Boolean.FALSE);
                 }
             }
 
@@ -479,8 +513,25 @@ public class BlockTxForwardTest {
             public void onRecvMessage(Channel channel, Message message) {
                 super.onRecvMessage(channel, message);
                 if (!(message instanceof EthMessage)) return;
-                if (((EthMessage) message).getCommand().equals(EthMessageCodes.TRANSACTIONS)) {
-                    txsBalance.addAndGet(-((TransactionsMessage) message).getTransactions().size());
+                switch (((EthMessage) message).getCommand()) {
+                    case NEW_BLOCK_HASHES:
+                        testLogger.error("Received new block hash message at miner: {}", message.toString());
+                        fatalErrors.incrementAndGet();
+                        break;
+                    case NEW_BLOCK:
+                        testLogger.error("Received new block message at miner: {}", message.toString());
+                        fatalErrors.incrementAndGet();
+                        break;
+                    case TRANSACTIONS:
+                        TransactionsMessage msgCopy = new TransactionsMessage(message.getEncoded());
+                        for (Transaction transaction : msgCopy.getTransactions()) {
+                            if (txs.put(Hex.toHexString(transaction.getHash()), Boolean.TRUE) == null) {
+                                testLogger.error("Received strange transaction at miner: {}", transaction);
+                                fatalErrors.incrementAndGet();
+                            };
+                        }
+                    default:
+                        break;
                 }
             }
         });
@@ -497,20 +548,31 @@ public class BlockTxForwardTest {
                 if (!(message instanceof EthMessage)) return;
                 switch (((EthMessage) message).getCommand()) {
                     case NEW_BLOCK_HASHES:
-                        testLogger.info(String.format("Received new block hash message: %s", message.toString()));
-                        minedBlocksBalance.addAndGet(-((NewBlockHashesMessage) message).getBlockIdentifiers().size());
+                        testLogger.info("Received new block hash message at generator: {}", message.toString());
+                        NewBlockHashesMessage msgCopy = new NewBlockHashesMessage(message.getEncoded());
+                        for (BlockIdentifier identifier : msgCopy.getBlockIdentifiers()) {
+                            if (blocks.put(Hex.toHexString(identifier.getHash()), Boolean.TRUE) == null) {
+                                testLogger.error("Received strange block: {}", identifier);
+                                fatalErrors.incrementAndGet();
+                            };
+                        }
                         break;
                     case NEW_BLOCK:
-                        testLogger.info(String.format("Received new block message: %s", message.toString()));
-                        minedBlocksBalance.decrementAndGet();
+                        testLogger.info("Received new block message at generator: {}", message.toString());
+                        NewBlockMessage msgCopy2 = new NewBlockMessage(message.getEncoded());
+                        Block block = msgCopy2.getBlock();
+                        if (blocks.put(Hex.toHexString(block.getHash()), Boolean.TRUE) == null) {
+                            testLogger.error("Received strange block: {}", block);
+                            fatalErrors.incrementAndGet();
+                        };
                         break;
                     case BLOCK_BODIES:
-                        testLogger.info(String.format("Received block bodies message: %s", message.toString()));
+                        testLogger.info("Received block bodies message at generator: {}", message.toString());
                         break;
                     case TRANSACTIONS:
-                        testLogger.info(String.format("ERROR: Received new transaction message: %s", message.toString()));
-                        fatalErrors.incrementAndGet();
-                        throw new RuntimeException("ERROR! There shouldn't be transactions there");
+                        testLogger.warn("Received new transaction message at generator: {}, " +
+                                "allowed only after disconnect.", message.toString());
+                        break;
                     default:
                         break;
                 }
@@ -521,13 +583,26 @@ public class BlockTxForwardTest {
                 super.onSendMessage(channel, message);
                 if (!(message instanceof EthMessage)) return;
                 if (((EthMessage) message).getCommand().equals(EthMessageCodes.TRANSACTIONS)) {
-                    txsBalance.addAndGet(((TransactionsMessage) message).getTransactions().size());
+                    TransactionsMessage msgCopy = new TransactionsMessage(message.getEncoded());
+                    for (Transaction transaction : msgCopy.getTransactions()) {
+                        Transaction copyTransaction = new Transaction(transaction.getEncoded());
+                        txs.put(Hex.toHexString(copyTransaction.getHash()), Boolean.FALSE);
+                    };
                 }
             }
         });
 
-        if(statTimer.awaitTermination(2L, TimeUnit.HOURS)) {
-            assert false;
+        if(statTimer.awaitTermination(MAX_RUN_MINUTES, TimeUnit.MINUTES)) {
+            logStats();
+            // Stop generating new txs
+            stopTxGeneration.set(true);
+            Thread.sleep(60000);
+            // Stop miner
+            miner.getBlockMiner().stopMining();
+            // Wait to be sure that last mined blocks will reach Generator
+            Thread.sleep(60000);
+            // Checking stats
+            if (!logStats()) assert false;
         }
     }
 }

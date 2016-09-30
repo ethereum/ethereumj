@@ -84,7 +84,8 @@ public class GetBlockHeadersMessage extends EthMessage {
         }
     }
 
-    private void parse() {
+    private synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         byte[] blockBytes = paramsList.get(0).getRLPData();

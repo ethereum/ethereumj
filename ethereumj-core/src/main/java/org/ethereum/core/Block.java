@@ -120,7 +120,8 @@ public class Block {
         this.parsed = true;
     }
 
-    private void parseRLP() {
+    private synchronized void parseRLP() {
+        if (parsed) return;
 
         RLPList params = RLP.decode2(rlpEncoded);
         RLPList block = (RLPList) params.get(0);

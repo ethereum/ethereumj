@@ -176,6 +176,8 @@ public class ChannelManager {
             // prohibit transactions processing until main sync is done
             if (syncManager.isSyncDone()) {
                 peer.onSyncDone(true);
+                // So SyncManager could perform some tasks on recently connected peer
+                syncManager.onNewPeer(peer);
             }
             synchronized (activePeers) {
                 activePeers.put(peer.getNodeIdWrapper(), peer);

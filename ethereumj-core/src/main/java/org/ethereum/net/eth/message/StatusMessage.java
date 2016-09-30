@@ -45,7 +45,8 @@ public class StatusMessage extends EthMessage {
         this.parsed = true;
     }
 
-    protected void parse() {
+    protected synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.protocolVersion = paramsList.get(0).getRLPData()[0];
