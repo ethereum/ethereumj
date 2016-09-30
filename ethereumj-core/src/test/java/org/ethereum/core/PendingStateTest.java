@@ -13,6 +13,8 @@ import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.util.blockchain.SolidityCallResult;
+import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 
@@ -459,6 +461,37 @@ public class PendingStateTest {
         txUpd = l.pollTxUpdate(tx1);
         Assert.assertEquals(txUpd.getMiddle(), INCLUDED);
         Assert.assertArrayEquals(txUpd.getRight().getHash(), b2_.getHash());
+    }
+
+    @Test
+    public void testPrevBlock() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+
+        SolidityContract contract = bc.submitNewContract("contract A {" +
+                "  function getPrevBlockHash() returns (bytes32) {" +
+                "    return block.blockhash(block.number - 1);" +
+                "  }" +
+                "}");
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b3 = bc.createBlock();
+
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd;
+
+        contract.callFunction("getPrevBlockHash");
+        bc.generatePendingTransactions();
+        txUpd = l.onPendingTransactionUpdate.values().iterator().next().poll();
+
+        Assert.assertArrayEquals(txUpd.getLeft().getExecutionResult(), b3.getHash());
     }
 
     @Test

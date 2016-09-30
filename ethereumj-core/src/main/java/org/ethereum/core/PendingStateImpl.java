@@ -373,7 +373,7 @@ public class PendingStateImpl implements PendingState {
 
         TransactionExecutor executor = commonConfig.transactionExecutor(
                 tx, best.getCoinbase(), pendingState,
-                blockStore, programInvokeFactory, best, new EthereumListenerAdapter(), 0);
+                blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0);
 
         executor.init();
         executor.execute();
@@ -381,6 +381,28 @@ public class PendingStateImpl implements PendingState {
         executor.finalization();
 
         return executor.getReceipt();
+    }
+
+    private Block createFakePendingBlock() {
+        // creating fake lightweight calculated block with no hashes calculations
+        Block block = new Block(best.getHash(),
+                BlockchainImpl.EMPTY_LIST_HASH, // uncleHash
+                new byte[32],
+                new byte[32], // log bloom - from tx receipts
+                new byte[0], // difficulty computed right after block creation
+                best.getNumber() + 1,
+                ByteUtil.longToBytesNoLeadZeroes(Long.MAX_VALUE), // max Gas Limit
+                0,  // gas used
+                best.getTimestamp() + 1,  // block time
+                new byte[0],  // extra data
+                new byte[0],  // mixHash (to mine)
+                new byte[0],  // nonce   (to mine)
+                new byte[32],  // receiptsRoot
+                new byte[32],    // TransactionsRoot
+                new byte[32], // stateRoot
+                Collections.<Transaction>emptyList(), // tx list
+                Collections.<BlockHeader>emptyList());  // uncle list
+        return block;
     }
 
     public void setBlockchain(Blockchain blockchain) {

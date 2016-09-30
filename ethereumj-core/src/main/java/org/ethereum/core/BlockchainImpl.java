@@ -96,7 +96,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
     private static final int MAGIC_REWARD_OFFSET = 8;
-    private static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
+    public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
     @Autowired
     private Repository repository;
