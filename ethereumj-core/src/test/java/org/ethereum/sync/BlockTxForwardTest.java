@@ -1,8 +1,7 @@
 package org.ethereum.sync;
 
+import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockIdentifier;
@@ -59,7 +58,9 @@ public class BlockTxForwardTest {
     static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
 
     public BlockTxForwardTest() {
-        LogManager.getRootLogger().setLevel(Level.INFO);
+        ch.qos.logback.classic.Logger root =
+                (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
     }
 
     private static class BasicSample implements Runnable {
