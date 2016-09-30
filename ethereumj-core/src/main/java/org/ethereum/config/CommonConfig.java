@@ -1,13 +1,15 @@
 package org.ethereum.config;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetailsImpl;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
@@ -21,7 +23,8 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Arrays.asList;
 
@@ -50,12 +53,6 @@ public class CommonConfig {
     @Bean
     BeanPostProcessor initializer() {
         return new Initializer();
-    }
-
-    @Bean
-    @Primary
-    RepositoryImpl repository() {
-        return new RepositoryImpl(systemProperties(), keyValueDataSource(), keyValueDataSource(), this);
     }
 
     @Bean

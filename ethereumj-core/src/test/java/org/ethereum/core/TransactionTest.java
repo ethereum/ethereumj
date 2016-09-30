@@ -31,6 +31,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.ethereum.solidity.SolidityType.*;
 
 public class TransactionTest {
 
@@ -77,7 +78,7 @@ public class TransactionTest {
                 value.toByteArray(),
                 null);
 
-        tx.sign(senderPrivKey);
+        tx.sign(ECKey.fromPrivate(senderPrivKey));
 
         System.out.println("v\t\t\t: " + Hex.toHexString(new byte[]{tx.getSignature().v}));
         System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
@@ -119,7 +120,7 @@ public class TransactionTest {
         Transaction tx = new Transaction(nonce, gasPrice, gasLimit,
                 ecKey.getAddress(), value.toByteArray(), null);
 
-        tx.sign(senderPrivKey);
+        tx.sign(ECKey.fromPrivate(senderPrivKey));
 
         System.out.println("v\t\t\t: " + Hex.toHexString(new byte[]{tx.getSignature().v}));
         System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
@@ -180,7 +181,7 @@ public class TransactionTest {
 
         assertEquals(HASH_TX, Hex.toHexString(txUnsigned.getHash()));
         assertEquals(RLP_ENCODED_UNSIGNED_TX, Hex.toHexString(txUnsigned.getEncoded()));
-        txUnsigned.sign(Hex.decode(KEY));
+        txUnsigned.sign(ECKey.fromPrivate(Hex.decode(KEY)));
         assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txUnsigned.getEncoded()));
 
         assertEquals(BigInteger.ZERO, new BigInteger(1, txUnsigned.getNonce()));
@@ -210,7 +211,7 @@ public class TransactionTest {
         assertEquals(RLP_ENCODED_RAW_TX, Hex.toHexString(txNew.getEncodedRaw()));
         assertEquals(HASH_TX, Hex.toHexString(txNew.getHash()));
         assertEquals(RLP_ENCODED_UNSIGNED_TX, Hex.toHexString(txNew.getEncoded()));
-        txNew.sign(Hex.decode(KEY));
+        txNew.sign(ECKey.fromPrivate(Hex.decode(KEY)));
         assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txNew.getEncoded()));
 
         assertEquals(27, txNew.getSignature().v);
@@ -242,7 +243,7 @@ public class TransactionTest {
         assertEquals(HASH_TX_UNSIGNED, Hex.toHexString(tx.getHash()));
 
         // Testing signed
-        tx.sign(privKeyBytes);
+        tx.sign(ECKey.fromPrivate(privKeyBytes));
         String encodedSigned = Hex.toHexString(tx.getEncoded());
         assertEquals(RLP_TX_SIGNED, encodedSigned);
         assertEquals(HASH_TX_UNSIGNED, Hex.toHexString(tx.getHash()));
@@ -267,7 +268,7 @@ public class TransactionTest {
 
         Transaction tx1 = new Transaction(nonce, gasPrice, gas,
                 recieveAddress, endowment, init);
-        tx1.sign(senderPrivKey);
+        tx1.sign(ECKey.fromPrivate(senderPrivKey));
 
         byte[] payload = tx1.getEncoded();
 
@@ -414,7 +415,7 @@ public class TransactionTest {
 
                     Transaction txConst = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
                             "095e7baea6a6c7c4c2dfeb977efac326af552d87", 0, CallTransaction.Function.fromSignature("get"));
-                    txConst.sign(new byte[32]);
+                    txConst.sign(ECKey.fromPrivate(new byte[32]));
 
                     Block bestBlock = block;
 
@@ -430,7 +431,7 @@ public class TransactionTest {
 
                     track.rollback();
 
-                    System.out.println("Return value: " + new CallTransaction.IntType("uint").decode(executor.getResult().getHReturn()));
+                    System.out.println("Return value: " + new IntType("uint").decode(executor.getResult().getHReturn()));
                 }
 
                 // now executing the JSON test transaction

@@ -8,6 +8,7 @@ import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.DetailsDataStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -47,6 +48,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
+    private HashMapDB storageDS;
     private HashMapDB stateDS;
     private BlockSummary lastSummary;
 
@@ -359,13 +361,19 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return detailsDS;
     }
 
+    public HashMapDB getStorageDS() {
+        return storageDS;
+    }
+
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
         detailsDS = new HashMapDB();
+        storageDS = new HashMapDB();
         stateDS = new HashMapDB();
-        RepositoryImpl repository = new RepositoryImpl(detailsDS, stateDS, true)
+        DetailsDataStore detailsDataStore = new DetailsDataStore().withDb(detailsDS, storageDS);
+        RepositoryImpl repository = new RepositoryImpl(detailsDataStore, stateDS, true)
                 .withBlockStore(blockStore);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();

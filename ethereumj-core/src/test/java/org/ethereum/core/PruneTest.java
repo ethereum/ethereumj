@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.RepositoryImpl;
@@ -249,6 +250,55 @@ public class PruneTest {
 
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
     }
+
+    @Test
+    public void storagePruneTest() throws Exception {
+        final int pruneCount = 3;
+        SystemProperties.getDefault().overrideParams(
+                "details.inmemory.storage.limit", "200",
+                "database.prune.enabled", "true",
+                "database.prune.maxDepth", "" + pruneCount);
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        BlockchainImpl blockchain = (BlockchainImpl) bc.getBlockchain();
+//        RepositoryImpl repository = (RepositoryImpl) blockchain.getRepository();
+//        HashMapDB storageDS = new HashMapDB();
+//        repository.getDetailsDataStore().setStorageDS(storageDS);
+
+        SolidityContract contr = bc.submitNewContract(
+                "contract Simple {" +
+                        "  uint public n;" +
+                        "  mapping(uint => uint) largeMap;" +
+                        "  function set(uint _n) { n = _n; } " +
+                        "  function put(uint k, uint v) { largeMap[k] = v; }" +
+                        "}");
+        Block b1 = bc.createBlock();
+
+        final int inMemoryStorageLimit = SystemProperties.getDefault().detailsInMemoryStorageLimit();
+        int entriesForExtStorage = 100;
+
+        for (int i = 0; i < entriesForExtStorage; i++) {
+            contr.callFunction("put", i, i);
+            if (i % 100 == 0) bc.createBlock();
+        }
+        bc.createBlock();
+        blockchain.flush();
+        contr.callFunction("put", 1000000, 1);
+        bc.createBlock();
+        blockchain.flush();
+
+        System.out.println(bc.getStorageDS().getSize());
+
+        for (int i = 0; i < 100; i++) {
+            contr.callFunction("set", i);
+            bc.createBlock();
+            blockchain.flush();
+            System.out.println(bc.getStorageDS().getSize() + ", " + bc.getStateDS().getSize());
+        }
+
+        System.out.println("Done");
+    }
+
 
     @Ignore
     @Test

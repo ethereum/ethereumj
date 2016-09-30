@@ -21,7 +21,7 @@ class Initializer implements BeanPostProcessor {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     // Util to ensure database directory is compatible with code
-    private IncompatibleDatabaseHandler databaseVersionHandler = new IncompatibleDatabaseHandler();
+    private DatabaseVersionHandler databaseVersionHandler = new DatabaseVersionHandler();
 
     /**
      * Method to be called right after the config is instantiated.
@@ -30,11 +30,6 @@ class Initializer implements BeanPostProcessor {
     private void initConfig(SystemProperties config) {
         logger.info("Running {},  core version: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
         BuildInfo.printInfo();
-
-        if (config.databaseReset()){
-            FileUtil.recursiveDelete(config.databaseDir());
-            logger.info("Database reset done");
-        }
 
         databaseVersionHandler.process(config);
 
@@ -49,6 +44,11 @@ class Initializer implements BeanPostProcessor {
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
+        // forcing loading genesis to fail fast in case of error
+        config.getGenesis();
+
+        // forcing reading private key or generating it in database directory
+        config.nodeId();
     }
 
     @Override
@@ -70,14 +70,21 @@ class Initializer implements BeanPostProcessor {
      * Database version is stored in ${database}/version.properties
      * Logic will assume that database has version 1 if file with version is absent.
      */
-    public static class IncompatibleDatabaseHandler {
+    public static class DatabaseVersionHandler {
 
         public enum Behavior {
             EXIT, RESET, IGNORE
         }
 
         public void process(SystemProperties config) {
-            final File versionFile = new File(config.databaseDir() + "/version.properties");
+            if (config.databaseReset()){
+                FileUtil.recursiveDelete(config.databaseDir());
+                putDatabaseVersion(config, config.databaseVersion());
+                logger.info("Database reset done");
+                System.out.println("Database reset done");
+            }
+
+            final File versionFile = getDatabaseVersionFile(config);
             final Behavior behavior = Behavior.valueOf(
                     config.getProperty("database.incompatibleDatabaseBehavior", Behavior.EXIT.toString()).toUpperCase());
 
@@ -90,7 +97,7 @@ class Initializer implements BeanPostProcessor {
                 final Integer actualVersion = isVersionFileNotFound ? 1 : actualVersionRaw;
 
                 if (actualVersionRaw.equals(-1)) {
-                    putDatabaseVersion(versionFile, actualVersion);
+                    putDatabaseVersion(config, actualVersion);
                 }
 
                 if (actualVersion.equals(expectedVersion) || (isVersionFileNotFound && expectedVersion.equals(1))) {
@@ -103,7 +110,11 @@ class Initializer implements BeanPostProcessor {
                         throw new Error("Incompatible database version " + actualVersion + ". Please remove database " +
                                 "directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`");
                     } else if (behavior == Behavior.RESET) {
-                        FileUtil.recursiveDelete(config.databaseDir());
+                        boolean res = FileUtil.recursiveDelete(config.databaseDir());
+                        if (!res) {
+                            throw new RuntimeException("Couldn't delete database dir: " + config.databaseDir());
+                        }
+                        putDatabaseVersion(config, config.databaseVersion());
                         logger.warn("Auto reset database directory according to flag");
                     } else {
                         // IGNORE
@@ -111,7 +122,7 @@ class Initializer implements BeanPostProcessor {
                     }
                 }
             } else {
-                putDatabaseVersion(versionFile, config.databaseVersion());
+                putDatabaseVersion(config, config.databaseVersion());
                 logger.info("Created database version file");
             }
         }
@@ -140,15 +151,20 @@ class Initializer implements BeanPostProcessor {
             }
         }
 
-        public void putDatabaseVersion(File file, Integer version) {
-            file.getParentFile().mkdirs();
-            try (Writer writer = new FileWriter(file)) {
+        public void putDatabaseVersion(SystemProperties config, Integer version) {
+            final File versionFile = getDatabaseVersionFile(config);
+            versionFile.getParentFile().mkdirs();
+            try (Writer writer = new FileWriter(versionFile)) {
                 Properties prop = new Properties();
                 prop.setProperty("databaseVersion", version.toString());
                 prop.store(writer, "Generated database version");
             } catch (Exception e) {
                 throw new Error("Problem writing current database version ", e);
             }
+        }
+
+        private File getDatabaseVersionFile(SystemProperties config) {
+            return new File(config.databaseDir() + "/version.properties");
         }
     }
 }
