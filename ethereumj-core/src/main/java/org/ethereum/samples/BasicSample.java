@@ -1,8 +1,11 @@
 package org.ethereum.samples;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.FilterReply;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.facade.Ethereum;
@@ -21,10 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.PostConstruct;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  *  The base sample class which creates EthereumJ instance, tracks and report all the stages
@@ -40,8 +40,9 @@ import java.util.Vector;
  *  Created by Anton Nashatyrev on 05.02.2016.
  */
 public class BasicSample implements Runnable {
-    static final Logger sLogger = LoggerFactory.getLogger("sample");
-    private static final ConsoleAppender stdoutAppender = (ConsoleAppender) LogManager.getRootLogger().getAppender("stdout");
+
+    public static final Logger sLogger = LoggerFactory.getLogger("sample");
+    private static CustomFilter CUSTOM_FILTER;
 
     private String loggerName;
     protected Logger logger;
@@ -85,18 +86,24 @@ public class BasicSample implements Runnable {
     }
 
     protected void setupLogging() {
-        // Turn off all logging to stdout except of sample logging
-        LogManager.getRootLogger().removeAppender("stdout");
-        ConsoleAppender appender = new ConsoleAppender(stdoutAppender.getLayout());
-        appender.setName("stdout");
-        appender.setThreshold(Level.ERROR);
-        LogManager.getRootLogger().addAppender(appender);
+        addSampleLogger(loggerName);
         logger = LoggerFactory.getLogger(loggerName);
-        LogManager.getLogger(loggerName).addAppender(stdoutAppender);
     }
 
-    private void removeErrorLogging() {
-        LogManager.getRootLogger().removeAppender("stdout");
+    /**
+     * Allow only selected logger to print DEBUG events to STDOUT and FILE.
+     * Other loggers are allowed to print ERRORS only.
+     */
+    private static void addSampleLogger(final String loggerName) {
+        if (CUSTOM_FILTER == null) {
+            CUSTOM_FILTER = new CustomFilter();
+            final LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+            Appender ca = loggerContext.getLogger("ROOT").getAppender("STDOUT");
+            ca.clearAllFilters();
+            ca.addFilter(CUSTOM_FILTER);
+        }
+        CUSTOM_FILTER.addVisibleLogger(loggerName);
     }
 
     /**
@@ -357,4 +364,17 @@ public class BasicSample implements Runnable {
         public void onTransactionExecuted(TransactionExecutionSummary summary) {
         }
     };
+
+    private static class CustomFilter extends Filter<ILoggingEvent> {
+        private Set<String> visibleLoggers = new HashSet<>();
+        @Override
+        public synchronized FilterReply decide(ILoggingEvent event) {
+            return visibleLoggers.contains(event.getLoggerName()) && event.getLevel().isGreaterOrEqual(Level.INFO) ||
+                    event.getLevel().isGreaterOrEqual(Level.ERROR) ? FilterReply.NEUTRAL : FilterReply.DENY;
+        }
+
+        public synchronized void addVisibleLogger(String name) {
+            visibleLoggers.add(name);
+        }
+    }
 }

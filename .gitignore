@@ -29,6 +29,8 @@ target/
 database*
 logs
 test_db*
+testnetSampleDb
+sampleDB*
 
 # Mac
 .DS_Store
