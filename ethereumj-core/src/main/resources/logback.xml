@@ -35,7 +35,9 @@
         <!-- Don't discard INFO, DEBUG, TRACE events in case of queue is 80% full -->
         <discardingThreshold>0</discardingThreshold>
         <!-- Default is 256 -->
-        <queueSize>500</queueSize>
+        <!-- Logger will block incoming events (log calls) until queue will free some space -->
+        <!-- (the smaller value -> flush occurs often) -->
+        <queueSize>100</queueSize>
 
         <appender-ref ref="FILE" />
     </appender>
@@ -68,6 +70,7 @@
     <logger name="io.netty" level="ERROR"/>
     <logger name="discover" level="DEBUG"/>
     <logger name="hsqldb.db" level="ERROR"/>
+
 
 </configuration>
 
