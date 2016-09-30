@@ -65,6 +65,16 @@ public class SyncManager {
      */
     private BlockingQueue<BlockWrapper> blockQueue = new LinkedBlockingQueue<>();
 
+    /**
+     * Queue with new blocks from other peers
+     */
+    private BlockingQueue<BlockWrapper> newBlocks = new LinkedBlockingQueue<>();
+
+    /**
+     * Queue with new peers used for after channel init tasks
+     */
+    private BlockingQueue<Channel> newPeers = new LinkedBlockingQueue<>();
+
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
 
@@ -80,6 +90,9 @@ public class SyncManager {
     @Autowired
     EthereumListener ethereumListener;
 
+    @Autowired
+    private PendingState pendingState;
+
     ChannelManager channelManager;
 
     private SystemProperties config;
@@ -91,9 +104,8 @@ public class SyncManager {
     private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
     private CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
 
-    private Thread syncQueueThread;
-    private Thread getHeadersThread;
-    private Thread getBodiesThread;
+    // All workers-like thread loops to simplify shutdown
+    private List<Thread> threadLoops = new ArrayList<>();
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     public SyncManager() {
@@ -116,6 +128,19 @@ public class SyncManager {
         logger.info("Initializing SyncManager.");
         pool.init(channelManager);
 
+        loopThreadsStart();
+
+        if (logger.isInfoEnabled()) {
+            startLogWorker();
+        }
+    }
+
+    /**
+     * Starting workers-like thread loops, each in dedicated thread
+     */
+    private void loopThreadsStart() {
+
+        // Trying to import new fully prepared blocks in blockchain
         Runnable queueProducer = new Runnable(){
 
             @Override
@@ -123,31 +148,51 @@ public class SyncManager {
                 produceQueue();
             }
         };
-
-        syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
+        Thread syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
         syncQueueThread.start();
-
         syncQueue = new SyncQueueImpl(blockchain);
 
-        getHeadersThread = new Thread(new Runnable() {
+        // Retrieving new headers from network in loop
+        Thread getHeadersThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 headerRetrieveLoop();
             }
         }, "NewSyncThreadHeaders");
         getHeadersThread.start();
+        threadLoops.add(getHeadersThread);
 
-        getBodiesThread = new Thread(new Runnable() {
+        // Retrieving new blocks from network in loop
+        Thread getBodiesThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 blockRetrieveLoop();
             }
         }, "NewSyncThreadBlocks");
         getBodiesThread.start();
+        threadLoops.add(getBodiesThread);
+        // Adding it later for correct shutdown drder
+        threadLoops.add(syncQueueThread);
 
-        if (logger.isInfoEnabled()) {
-            startLogWorker();
-        }
+        // Resending new blocks to network in loop
+        Thread newBlocksThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                newBlocksDistributeLoop();
+            }
+        }, "NewSyncThreadBlocks");
+        newBlocksThread.start();
+        threadLoops.add(newBlocksThread);
+
+        // Resending pending txs to newly connected peers
+        Thread newPeersThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                newPeersLoop();
+            }
+        }, "NewPeersThread");
+        newPeersThread.start();
+        threadLoops.add(newPeersThread);
     }
 
     private void headerRetrieveLoop() {
@@ -190,7 +235,7 @@ public class SyncManager {
                         // to get more chances to receive block body promptly
                         for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
-                            if (channel != null) {
+                            if (channel != null && channel.isIdle()) {
                                 channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
                             }
                         }
@@ -257,6 +302,8 @@ public class SyncManager {
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
                     if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
+                    // Propagate block to the net after successful import asynchronously
+                    if (wrapper.isNewBlock()) newBlocks.add(wrapper);
                 }
 
                 // In case we don't have a parent on the chain
@@ -269,10 +316,61 @@ public class SyncManager {
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
-                logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
-                logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (wrapper != null) {
+                    logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                } else {
+                    logger.error("Error processing unknown block", e);
+                }
             }
+        }
+    }
 
+    /**
+     * Processing new blocks from queue
+     */
+    private void newBlocksDistributeLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            BlockWrapper wrapper = null;
+            try {
+                wrapper = newBlocks.take();
+                Channel receivedFrom = channelManager.getActivePeer(wrapper.getNodeId());
+                channelManager.sendNewBlock(wrapper.getBlock(), receivedFrom);
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                if (wrapper != null) {
+                    logger.error("Error broadcasting new block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                } else {
+                    logger.error("Error broadcasting unknown block", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles new peers, performing required tasks on them.
+     * Currently sends all pending txs to them
+     */
+    private void newPeersLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            Channel channel = null;
+            try {
+                channel = newPeers.take();
+                List<Transaction> pendingTransactions = pendingState.getPendingTransactions();
+                if (!pendingTransactions.isEmpty()) {
+                    channel.sendTransaction(pendingTransactions);
+                }
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                if (channel != null) {
+                    logger.error("Error sending transactions to peer {}: ", channel.getNode().getHexIdShort(), e);
+                } else {
+                    logger.error("Unknown error when sending transactions to new peer", e);
+                }
+            }
         }
     }
 
@@ -426,6 +524,11 @@ public class SyncManager {
         return lastKnownBlockNumber;
     }
 
+    public void onNewPeer(Channel channel) {
+        if (!syncDone) return;
+        newPeers.add(channel);
+    }
+
     private void startLogWorker() {
         logExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
@@ -445,9 +548,9 @@ public class SyncManager {
         pool.close();
         try {
             exec1.shutdown();
-            if (getHeadersThread != null) getHeadersThread.interrupt();
-            if (getBodiesThread != null) getBodiesThread.interrupt();
-            if (syncQueueThread != null) syncQueueThread.interrupt();
+            for (Thread thread: threadLoops) {
+                if (thread != null) thread.interrupt();
+            }
             logExecutor.shutdown();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);

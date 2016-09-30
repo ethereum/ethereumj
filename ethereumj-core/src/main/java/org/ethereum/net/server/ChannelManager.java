@@ -47,6 +47,8 @@ public class ChannelManager {
     private Map<InetAddress, Date> recentlyDisconnected = Collections.synchronizedMap(new LRUMap<InetAddress, Date>(500));
     private NodeFilter trustedPeers;
 
+    Random rnd = new Random();  // Used for distributing new blocks / hashes logic
+
     @Autowired
     SyncPool syncPool;
 
@@ -174,6 +176,8 @@ public class ChannelManager {
             // prohibit transactions processing until main sync is done
             if (syncManager.isSyncDone()) {
                 peer.onSyncDone(true);
+                // So SyncManager could perform some tasks on recently connected peer
+                syncManager.onNewPeer(peer);
             }
             synchronized (activePeers) {
                 activePeers.put(peer.getNodeIdWrapper(), peer);
@@ -199,17 +203,34 @@ public class ChannelManager {
     }
 
     /**
+     * Propagates the new block message across active peers
+     * Suitable only for self-mined blocks
+     * Use {@link #sendNewBlock(Block, Channel)} for sending blocks received from net
+     * @param block  new Block to be sent
+     */
+    public void sendNewBlock(Block block) {
+        synchronized (activePeers) {
+            for (Channel channel : activePeers.values()) {
+                channel.sendNewBlock(block);
+            }
+        }
+    }
+
+    /**
      * Propagates the new block message across active peers with exclusion of
      * 'receivedFrom' peer.
+     * Distributes full block to 30% of peers and only its hash to remains
      * @param block  new Block to be sent
-     * @param receivedFrom the peer which sent original message or null if
-     *                     the block has been mined by us
+     * @param receivedFrom the peer which sent original message
      */
     public void sendNewBlock(Block block, Channel receivedFrom) {
         synchronized (activePeers) {
             for (Channel channel : activePeers.values()) {
-                if (channel != receivedFrom) {
+                if (channel == receivedFrom) continue;
+                if (rnd.nextInt(10) < 3) {  // 30%
                     channel.sendNewBlock(block);
+                } else {                    // 70%
+                    channel.sendNewBlockHashes(block);
                 }
             }
         }
