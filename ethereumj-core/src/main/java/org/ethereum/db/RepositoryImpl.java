@@ -16,6 +16,8 @@ import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.JournalPruneDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -612,6 +614,23 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         ByteArrayWrapper wrappedAddress = wrap(addr);
         cacheAccounts.put(wrappedAddress, account);
         cacheDetails.put(wrappedAddress, details);
+    }
+
+    /**
+     * Returns stateRoot raw Value
+     * @param stateRoot     State root (hash)
+     * @return Value of state root
+     */
+    public synchronized Value getState(final byte[] stateRoot) {
+        rwLock.readLock().lock();
+        try {
+            Value result = null;
+            result = ((TrieImpl) worldState).getCache().get(stateRoot);
+
+            return result;
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override

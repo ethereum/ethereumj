@@ -47,8 +47,8 @@ public class Eth62 extends EthHandler {
 
     protected static final int MAX_HASHES_TO_SEND = 65536;
 
-    private final static Logger logger = LoggerFactory.getLogger("sync");
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
+    protected final static Logger logger = LoggerFactory.getLogger("sync");
+    protected final static Logger loggerNet = LoggerFactory.getLogger("net");
 
     @Autowired
     protected BlockStore blockstore;
@@ -87,14 +87,25 @@ public class Eth62 extends EthHandler {
 
     private Map<Long, byte[]> blockHashCheck;
 
+    private static final EthVersion version = V62;
+
     public Eth62() {
-        super(V62);
+        this(version);
+    }
+
+    Eth62(final EthVersion version) {
+        super(version);
     }
 
     @Autowired
     public Eth62(final SystemProperties config, final Blockchain blockchain,
                  final CompositeEthereumListener ethereumListener) {
-        super(V62, config, blockchain, ethereumListener);
+        this(version, config, blockchain, ethereumListener);
+    }
+
+    Eth62(final EthVersion version, final SystemProperties config,
+          final Blockchain blockchain, final CompositeEthereumListener ethereumListener) {
+        super(version, config, blockchain, ethereumListener);
         maxHashesAsk = config.maxHashesAsk();
     }
 
@@ -139,7 +150,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized void sendStatus() {
-        byte protocolVersion = version.getCode();
+        byte protocolVersion = getVersion().getCode();
         int networkId = config.networkId();
 
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
@@ -245,7 +256,7 @@ public class Eth62 extends EthHandler {
         try {
 
             if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())
-                    || msg.getProtocolVersion() != version.getCode()) {
+                    || msg.getProtocolVersion() != getVersion().getCode()) {
                 if (!peerDiscoveryMode) {
                     loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 }
@@ -571,11 +582,6 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public EthVersion getVersion() {
-        return version;
-    }
-
-    @Override
     public void onSyncDone(boolean done) {
         syncDone = done;
     }
@@ -769,7 +775,7 @@ public class Eth62 extends EthHandler {
 
         return String.format(
                 "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]",
-                version,
+                getVersion(),
                 channel.getPeerIdShort(),
                 syncState,
                 (int)channel.getPeerStats().getAvgLatency(),

@@ -128,4 +128,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     public void setChannel(Channel channel) {
         this.channel = channel;
     }
+
+    @Override
+    public EthVersion getVersion() {
+        return version;
+    }
 }

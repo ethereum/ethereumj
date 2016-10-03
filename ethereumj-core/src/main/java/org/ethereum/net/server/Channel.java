@@ -17,6 +17,7 @@ import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
+import org.ethereum.net.eth.message.Eth63MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.sync.SyncStatistics;
@@ -196,6 +197,7 @@ public class Channel {
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
             case V62:   return new Eth62MessageFactory();
+            case V63:   return new Eth63MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }
