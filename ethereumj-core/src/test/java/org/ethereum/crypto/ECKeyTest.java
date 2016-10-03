@@ -281,7 +281,12 @@ public class ECKeyTest {
 
     @Test
     public void testSunECRoundTrip() throws Exception {
-        testProviderRoundTrip(Security.getProvider("SunEC"));
+        Provider provider = Security.getProvider("SunEC");
+        if (provider != null) {
+            testProviderRoundTrip(provider);
+        } else {
+            System.out.println("Skip test as provider doesn't exist. Must be OpenJDK 1.7 which ships without 'SunEC'");
+        }
     }
 
     @Test
