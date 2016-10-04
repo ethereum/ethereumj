@@ -63,7 +63,7 @@ public class TransactionsMessage extends EthMessage {
 
 
     public List<Transaction> getTransactions() {
-        if (!parsed) parse();
+        parse();
         return transactions;
     }
 
@@ -78,7 +78,7 @@ public class TransactionsMessage extends EthMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
+        parse();
         final StringBuilder sb = new StringBuilder();
         if (transactions.size() < 4) {
             for (Transaction transaction : transactions)

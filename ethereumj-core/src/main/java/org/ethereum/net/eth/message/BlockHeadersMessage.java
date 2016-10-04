@@ -65,7 +65,7 @@ public class BlockHeadersMessage extends EthMessage {
     }
 
     public List<BlockHeader> getBlockHeaders() {
-        if (!parsed) parse();
+        parse();
         return blockHeaders;
     }
 
@@ -76,7 +76,7 @@ public class BlockHeadersMessage extends EthMessage {
 
     @Override
     public String toString() {
-        if (!parsed) parse();
+        parse();
 
         StringBuilder payload = new StringBuilder();
 

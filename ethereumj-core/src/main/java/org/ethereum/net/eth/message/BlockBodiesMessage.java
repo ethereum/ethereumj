@@ -57,7 +57,7 @@ public class BlockBodiesMessage extends EthMessage {
     }
 
     public List<byte[]> getBlockBodies() {
-        if (!parsed) parse();
+        parse();
         return blockBodies;
     }
 
@@ -72,7 +72,7 @@ public class BlockBodiesMessage extends EthMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
+        parse();
 
         StringBuilder payload = new StringBuilder();
 
