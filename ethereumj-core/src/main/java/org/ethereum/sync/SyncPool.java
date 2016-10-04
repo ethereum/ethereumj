@@ -258,7 +258,7 @@ public class SyncPool {
     private void heartBeat() {
         for (Channel peer : channelManager.getActivePeers()) {
             if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
-                logger.info("Peer {}: no response after %d seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
+                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
                 peer.dropConnection();
             }
         }

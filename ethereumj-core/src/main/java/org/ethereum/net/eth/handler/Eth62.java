@@ -10,6 +10,8 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.submit.TransactionExecutor;
+import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
@@ -312,7 +314,11 @@ public class Eth62 extends EthHandler {
         }
 
         List<Transaction> txSet = msg.getTransactions();
-        pendingState.addPendingTransactions(txSet);
+        List<Transaction> newPending = pendingState.addPendingTransactions(txSet);
+        if (!newPending.isEmpty()) {
+            TransactionTask transactionTask = new TransactionTask(newPending, channel.getChannelManager(), channel);
+            TransactionExecutor.instance.submitTransaction(transactionTask);
+        }
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {

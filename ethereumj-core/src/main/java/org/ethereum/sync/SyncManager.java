@@ -190,7 +190,7 @@ public class SyncManager {
                         // to get more chances to receive block body promptly
                         for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
-                            if (channel != null) {
+                            if (channel != null && channel.isIdle()) {
                                 channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
                             }
                         }
@@ -257,6 +257,8 @@ public class SyncManager {
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
                     if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
+                    // Propagate block to the net after successful import asynchronously
+                    if (wrapper.isNewBlock()) channelManager.onNewForeignBlock(wrapper);
                 }
 
                 // In case we don't have a parent on the chain
@@ -269,10 +271,13 @@ public class SyncManager {
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
-                logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
-                logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (wrapper != null) {
+                    logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                } else {
+                    logger.error("Error processing unknown block", e);
+                }
             }
-
         }
     }
 

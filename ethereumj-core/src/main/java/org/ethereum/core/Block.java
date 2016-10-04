@@ -120,7 +120,8 @@ public class Block {
         this.parsed = true;
     }
 
-    private void parseRLP() {
+    private synchronized void parseRLP() {
+        if (parsed) return;
 
         RLPList params = RLP.decode2(rlpEncoded);
         RLPList block = (RLPList) params.get(0);
@@ -145,69 +146,69 @@ public class Block {
     }
 
     public BlockHeader getHeader() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header;
     }
 
     public byte[] getHash() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getHash();
     }
 
     public byte[] getParentHash() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getParentHash();
     }
 
     public byte[] getUnclesHash() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getUnclesHash();
     }
 
     public byte[] getCoinbase() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getCoinbase();
     }
 
     public byte[] getStateRoot() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getStateRoot();
     }
 
     public void setStateRoot(byte[] stateRoot) {
-        if (!parsed) parseRLP();
+        parseRLP();
         this.header.setStateRoot(stateRoot);
     }
 
     public byte[] getTxTrieRoot() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getTxTrieRoot();
     }
 
     public byte[] getReceiptsRoot() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getReceiptsRoot();
     }
 
 
     public byte[] getLogBloom() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getLogsBloom();
     }
 
     public byte[] getDifficulty() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getDifficulty();
     }
 
     public BigInteger getDifficultyBI() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getDifficultyBI();
     }
 
 
     public BigInteger getCumulativeDifficulty() {
-        if (!parsed) parseRLP();
+        parseRLP();
         BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
         for (BlockHeader uncle : uncleList) {
             calcDifficulty = calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
@@ -216,39 +217,39 @@ public class Block {
     }
 
     public long getTimestamp() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getTimestamp();
     }
 
     public long getNumber() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getNumber();
     }
 
     public byte[] getGasLimit() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getGasLimit();
     }
 
     public long getGasUsed() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getGasUsed();
     }
 
 
     public byte[] getExtraData() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getExtraData();
     }
 
     public byte[] getMixHash() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getMixHash();
     }
 
 
     public byte[] getNonce() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getNonce();
     }
 
@@ -268,12 +269,12 @@ public class Block {
     }
 
     public List<Transaction> getTransactionsList() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return transactionsList;
     }
 
     public List<BlockHeader> getUncleList() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return uncleList;
     }
 
@@ -284,8 +285,7 @@ public class Block {
 
     @Override
     public String toString() {
-
-        if (!parsed) parseRLP();
+        parseRLP();
 
         toStringBuff.setLength(0);
         toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
@@ -319,7 +319,7 @@ public class Block {
     }
 
     public String toFlatString() {
-        if (!parsed) parseRLP();
+        parseRLP();
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
@@ -418,7 +418,7 @@ public class Block {
     }
 
     public byte[] getEncodedWithoutNonce() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return this.header.getEncodedWithoutNonce();
     }
 
@@ -429,7 +429,7 @@ public class Block {
     }
 
     private List<byte[]> getBodyElements() {
-        if (!parsed) parseRLP();
+        parseRLP();
 
         byte[] transactions = getTransactionsEncoded();
         byte[] uncles = getUnclesEncoded();
@@ -442,7 +442,7 @@ public class Block {
     }
 
     public String getShortHash() {
-        if (!parsed) parseRLP();
+        parseRLP();
         return Hex.toHexString(getHash()).substring(0, 6);
     }
 

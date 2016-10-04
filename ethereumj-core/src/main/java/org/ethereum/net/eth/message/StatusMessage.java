@@ -45,7 +45,8 @@ public class StatusMessage extends EthMessage {
         this.parsed = true;
     }
 
-    protected void parse() {
+    protected synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.protocolVersion = paramsList.get(0).getRLPData()[0];
@@ -83,17 +84,17 @@ public class StatusMessage extends EthMessage {
     }
 
     public byte getProtocolVersion() {
-        if (!parsed) parse();
+        parse();
         return protocolVersion;
     }
 
     public int getNetworkId() {
-        if (!parsed) parse();
+        parse();
         return networkId;
     }
 
     public byte[] getTotalDifficulty() {
-        if (!parsed) parse();
+        parse();
         return totalDifficulty;
     }
 
@@ -102,12 +103,12 @@ public class StatusMessage extends EthMessage {
     }
 
     public byte[] getBestHash() {
-        if (!parsed) parse();
+        parse();
         return bestHash;
     }
 
     public byte[] getGenesisHash() {
-        if (!parsed) parse();
+        parse();
         return genesisHash;
     }
 
@@ -119,7 +120,7 @@ public class StatusMessage extends EthMessage {
 
     @Override
     public String toString() {
-        if (!parsed) parse();
+        parse();
         return "[" + this.getCommand().name() +
                 " protocolVersion=" + this.protocolVersion +
                 " networkId=" + this.networkId +

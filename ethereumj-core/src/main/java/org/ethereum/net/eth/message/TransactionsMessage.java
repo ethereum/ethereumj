@@ -34,7 +34,8 @@ public class TransactionsMessage extends EthMessage {
         parsed = true;
     }
 
-    private void parse() {
+    private synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         transactions = new ArrayList<>();
@@ -62,7 +63,7 @@ public class TransactionsMessage extends EthMessage {
 
 
     public List<Transaction> getTransactions() {
-        if (!parsed) parse();
+        parse();
         return transactions;
     }
 
@@ -77,7 +78,7 @@ public class TransactionsMessage extends EthMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
+        parse();
         final StringBuilder sb = new StringBuilder();
         if (transactions.size() < 4) {
             for (Transaction transaction : transactions)
