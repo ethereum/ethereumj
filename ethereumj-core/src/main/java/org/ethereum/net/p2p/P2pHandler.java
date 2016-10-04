@@ -133,7 +133,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             case DISCONNECT:
                 msgQueue.receivedMessage(msg);
                 channel.getNodeStatistics().nodeDisconnectedRemote(((DisconnectMessage) msg).getReason());
-                processDisconnect((DisconnectMessage) msg);
+                processDisconnect(ctx, (DisconnectMessage) msg);
                 break;
             case PING:
                 msgQueue.receivedMessage(msg);
@@ -178,20 +178,21 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         killTimers();
     }
 
-    private void processDisconnect(DisconnectMessage msg) {
+    private void processDisconnect(ChannelHandlerContext ctx, DisconnectMessage msg) {
 
-        if (!logger.isInfoEnabled() || msg.getReason() != ReasonCode.USELESS_PEER) {
-            return;
+        if (logger.isInfoEnabled() && msg.getReason() == ReasonCode.USELESS_PEER) {
+
+            if (channel.getNodeStatistics().ethInbound.get() - ethInbound > 1 ||
+                    channel.getNodeStatistics().ethOutbound.get() - ethOutbound > 1) {
+
+                // it means that we've been disconnected
+                // after some incorrect action from our peer
+                // need to log this moment
+                logger.debug("From: \t{}\t [DISCONNECT reason=BAD_PEER_ACTION]", channel);
+            }
         }
-
-        if (channel.getNodeStatistics().ethInbound.get() - ethInbound > 1 ||
-            channel.getNodeStatistics().ethOutbound.get() - ethOutbound > 1) {
-
-            // it means that we've been disconnected
-            // after some incorrect action from our peer
-            // need to log this moment
-            logger.debug("From: \t{}\t [DISCONNECT reason=BAD_PEER_ACTION]", channel);
-        }
+        ctx.close();
+        killTimers();
     }
 
     private void sendGetPeers() {
