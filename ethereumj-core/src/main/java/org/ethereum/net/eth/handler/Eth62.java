@@ -788,13 +788,14 @@ public class Eth62 extends EthHandler {
     public String getSyncStats() {
 
         return String.format(
-                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]",
+                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]: %s",
                 version,
                 channel.getPeerIdShort(),
                 syncState,
                 (int)channel.getPeerStats().getAvgLatency(),
                 getTotalDifficulty(),
-                getBestKnownBlock().getNumber());
+                getBestKnownBlock().getNumber(),
+                channel.getNodeStatistics().getClientId());
     }
 
     protected enum EthState {
