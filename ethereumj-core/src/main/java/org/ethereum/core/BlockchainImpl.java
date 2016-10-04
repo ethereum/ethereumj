@@ -539,6 +539,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!receiptHash.equals(receiptListHash)) {
             logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
+            logger.warn("Calculated receipts: " + receipts);
             return null;
         }
 
