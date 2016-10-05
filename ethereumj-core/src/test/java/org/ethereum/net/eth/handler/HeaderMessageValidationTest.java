@@ -1,8 +1,6 @@
-package org.ethereum.net.handler;
+package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.BlockHeader;
-import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.handler.GetBlockHeadersMessageWrapper;
 import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.junit.Test;
