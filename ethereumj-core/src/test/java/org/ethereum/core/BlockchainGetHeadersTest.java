@@ -59,6 +59,11 @@ public class BlockchainGetHeadersTest {
 
             return headers;
         }
+
+        @Override
+        public Block getBestBlock() {
+            return dummyBlocks.get(dummyBlocks.size() - 1);
+        }
     }
 
 

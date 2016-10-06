@@ -145,7 +145,8 @@ public class Eth62 extends EthHandler {
         int networkId = config.networkId();
 
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
-        byte[] bestHash = blockchain.getBestBlockHash();
+        // Getting it from blockstore, not blocked by blockchain sync
+        byte[] bestHash = blockstore.getBestBlock().getHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
         sendMessage(msg);
