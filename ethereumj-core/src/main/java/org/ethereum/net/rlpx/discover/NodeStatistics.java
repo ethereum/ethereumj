@@ -133,9 +133,9 @@ public class NodeStatistics {
                 if (rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS) {
                     // The peer is popular, but we were unlucky
                     rlpxReput *= 0.3;
-                } else {
+                } else if (rlpxLastRemoteDisconnectReason != ReasonCode.REQUESTED) {
                     // other disconnect reasons
-                    rlpxReput *= 0.5;
+                    rlpxReput *= 0.2;
                 }
             }
         }
