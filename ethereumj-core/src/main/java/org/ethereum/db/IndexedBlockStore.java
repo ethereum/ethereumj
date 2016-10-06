@@ -78,7 +78,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
 
     @Override
-    public void flush(){
+    public synchronized void flush(){
         blocks.flush();
         index.flush();
         if (blocksDS instanceof Flushable) {
@@ -112,7 +112,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
 
-    public List<Block> getBlocksByNumber(long number){
+    public synchronized List<Block> getBlocksByNumber(long number){
 
         List<Block> result = new ArrayList<>();
 
@@ -153,18 +153,18 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public Block getBlockByHash(byte[] hash) {
+    public synchronized Block getBlockByHash(byte[] hash) {
         return blocks.get(hash);
     }
 
     @Override
-    public boolean isBlockExist(byte[] hash) {
+    public synchronized boolean isBlockExist(byte[] hash) {
         return blocks.get(hash) != null;
     }
 
 
     @Override
-    public BigInteger getTotalDifficultyForHash(byte[] hash){
+    public synchronized BigInteger getTotalDifficultyForHash(byte[] hash){
         Block block = this.getBlockByHash(hash);
         if (block == null) return ZERO;
 
@@ -215,7 +215,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public List<byte[]> getListHashesEndWith(byte[] hash, long number){
+    public synchronized List<byte[]> getListHashesEndWith(byte[] hash, long number){
 
         List<Block> blocks = getListBlocksEndWith(hash, number);
         List<byte[]> hashes = new ArrayList<>(blocks.size());
@@ -228,7 +228,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+    public synchronized List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
 
         List<Block> blocks = getListBlocksEndWith(hash, qty);
         List<BlockHeader> headers = new ArrayList<>(blocks.size());
@@ -241,7 +241,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
+    public synchronized List<Block> getListBlocksEndWith(byte[] hash, long qty) {
         return getListBlocksEndWithInner(hash, qty);
     }
 
@@ -330,7 +330,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
 
-    public List<byte[]> getListHashesStartWith(long number, long maxBlocks){
+    public synchronized List<byte[]> getListHashesStartWith(long number, long maxBlocks){
 
         List<byte[]> result = new ArrayList<>();
 
@@ -412,7 +412,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     };
 
 
-    public void printChain(){
+    public synchronized void printChain(){
 
         Long number = getMaxNumber();
 
@@ -434,11 +434,11 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     }
 
-    private List<BlockInfo> getBlockInfoForLevel(long level){
+    private synchronized List<BlockInfo> getBlockInfoForLevel(long level){
         return index.get((int) level);
     }
 
-    private void setBlockInfoForLevel(long level, List<BlockInfo> infos){
+    private synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos){
         index.set((int) level, infos);
     }
 
@@ -451,11 +451,11 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public void load() {
+    public synchronized void load() {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         logger.info("Closing IndexedBlockStore...");
         try {
             indexDS.close();
