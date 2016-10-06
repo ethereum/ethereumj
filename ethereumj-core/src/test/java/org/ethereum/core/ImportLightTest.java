@@ -435,10 +435,39 @@ public class ImportLightTest {
         Block b3_ = bc.createForkBlock(b2_);
         Object hash = a.callConstFunction(b3_, "blockHash")[0];
 
-        System.out.println(Hex.toHexString((byte[]) hash));
-        System.out.println(Hex.toHexString(b2_.getHash()));
+        Assert.assertArrayEquals((byte[]) hash, b2_.getHash());
 
         // no StackOverflowException
+    }
+
+    @Test
+    public void rollbackInternalTx() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  uint public a;" +
+                "  uint public b;" +
+                "  function f() {" +
+                "    b = 1;" +
+                "    this.call(bytes4(sha3('exception()')));" +
+                "    a = 2;" +
+                "  }" +
+
+                "  function exception() {" +
+                "    b = 2;" +
+                "    throw;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        Object av = a.callConstFunction("a")[0];
+        Object bv = a.callConstFunction("b")[0];
+
+        assert BigInteger.valueOf(2).equals(av);
+        assert BigInteger.valueOf(1).equals(bv);
     }
 
     @Test
