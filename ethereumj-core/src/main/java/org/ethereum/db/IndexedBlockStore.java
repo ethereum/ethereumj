@@ -51,7 +51,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         }).withCacheSize(256);
     }
 
-    public Block getBestBlock(){
+    public synchronized Block getBestBlock(){
 
         Long maxLevel = getMaxNumber();
         if (maxLevel < 0) return null;
@@ -71,7 +71,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         return bestBlock;
     }
 
-    public byte[] getBlockHashByNumber(long blockNumber){
+    public synchronized byte[] getBlockHashByNumber(long blockNumber){
         Block chainBlock = getChainBlockByNumber(blockNumber);
         return chainBlock == null ? null : chainBlock.getHash(); // FIXME: can be improved by accessing the hash directly in the index
     }
@@ -91,7 +91,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
 
     @Override
-    public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
+    public synchronized void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
         addInternalBlock(block, cummDifficulty, mainChain);
     }
 
@@ -133,7 +133,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public Block getChainBlockByNumber(long number){
+    public synchronized Block getChainBlockByNumber(long number){
         if (number >= index.size()){
             return null;
         }
@@ -179,8 +179,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
 
-        @Override
-    public BigInteger getTotalDifficulty(){
+    @Override
+    public synchronized BigInteger getTotalDifficulty(){
         long maxNumber = getMaxNumber();
 
         List<BlockInfo> blockInfos = index.get((int) maxNumber);
@@ -203,7 +203,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public long getMaxNumber(){
+    public synchronized long getMaxNumber(){
 
         Long bestIndex = 0L;
 
@@ -263,7 +263,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public void reBranch(Block forkBlock){
+    public synchronized void reBranch(Block forkBlock){
 
         Block bestBlock = getBestBlock();
 
