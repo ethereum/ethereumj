@@ -109,12 +109,10 @@ public class NodeStatistics {
         discoverMessageLatency = (Statter.SimpleStatter) Statter.create(getStatName() + ".discoverMessageLatency");
     }
 
-    int getSessionReputation() {
+    private int getSessionReputation() {
         return getSessionFairReputation() + (isPredefined ? REPUTATION_PREDEFINED : 0);
     }
-    int getSessionFairReputation() {
-        if (wrongFork) return 0;
-
+    private int getSessionFairReputation() {
         int discoverReput = 0;
 
         discoverReput += min(discoverInPong.get(), 10) * (discoverOutPing.get() == discoverInPong.get() ? 2 : 1);
@@ -134,7 +132,7 @@ public class NodeStatistics {
                 // the disconnect was not initiated by discover mode
                 if (rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS) {
                     // The peer is popular, but we were unlucky
-                    rlpxReput *= 0.8;
+                    rlpxReput *= 0.3;
                 } else {
                     // other disconnect reasons
                     rlpxReput *= 0.5;
@@ -146,7 +144,18 @@ public class NodeStatistics {
     }
 
     public int getReputation() {
-        return savedReputation / 2 + getSessionReputation();
+        return isReputationPenalized() ? 0 : savedReputation / 2 + getSessionReputation();
+    }
+
+    private boolean isReputationPenalized() {
+        boolean penalizeReputation = false;
+        if (wrongFork) penalizeReputation = true;
+        if (rlpxLastLocalDisconnectReason != null) {
+            if (rlpxLastLocalDisconnectReason == ReasonCode.NULL_IDENTITY) penalizeReputation = true;
+            if (rlpxLastLocalDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL) penalizeReputation = true;
+        }
+
+        return penalizeReputation;
     }
 
     public void nodeDisconnectedRemote(ReasonCode reason) {
@@ -202,7 +211,7 @@ public class NodeStatistics {
 
     Persistent getPersistent() {
         Persistent persistent = new Persistent();
-        persistent.reputation = (getSessionFairReputation() + savedReputation) / 2;
+        persistent.reputation = isReputationPenalized() ? 0 : (savedReputation + getSessionFairReputation()) / 2;
         return persistent;
     }
 
