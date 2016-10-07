@@ -135,8 +135,13 @@ public class Node implements Serializable {
     }
 
     public byte[] getRLP() {
+        String[] ipArray = host.split("\\.");
+        byte[] host = new byte[4];
+        for (int i = 0; i < ipArray.length; i++) {
+            host[i] = (byte) (Integer.parseInt(ipArray[i]) | 0x00);
+        }
 
-        byte[] rlphost = RLP.encodeElement(host.getBytes(StandardCharsets.UTF_8));
+        byte[] rlphost = RLP.encodeElement(host);
         byte[] rlpTCPPort = RLP.encodeInt(port);
         byte[] rlpUDPPort = RLP.encodeInt(port);
         byte[] rlpId = RLP.encodeElement(id);
