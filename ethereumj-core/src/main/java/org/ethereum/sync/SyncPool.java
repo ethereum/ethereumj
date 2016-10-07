@@ -163,6 +163,7 @@ public class SyncPool {
         if(lackSize <= 0) return;
 
         Set<String> nodesInUse = nodesInUse();
+        nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
         List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
         if (lackSize > 0 && newNodes.isEmpty()) {

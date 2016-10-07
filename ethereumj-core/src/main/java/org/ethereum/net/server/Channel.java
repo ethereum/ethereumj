@@ -216,9 +216,13 @@ public class Channel {
         return nodeStatistics;
     }
 
-    public void setNode(byte[] nodeId) {
-        node = new Node(nodeId, inetSocketAddress.getHostString(), inetSocketAddress.getPort());
+    public void setNode(byte[] nodeId, int remotePort) {
+        node = new Node(nodeId, inetSocketAddress.getHostString(), remotePort);
         nodeStatistics = nodeManager.getNodeStatistics(node);
+    }
+
+    public void setNode(byte[] nodeId) {
+        setNode(nodeId, inetSocketAddress.getPort());
     }
 
     public Node getNode() {
