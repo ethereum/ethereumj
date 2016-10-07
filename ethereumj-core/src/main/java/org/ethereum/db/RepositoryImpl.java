@@ -83,9 +83,10 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public RepositoryImpl(final CommonConfig commonConfig) {
         this.config = commonConfig.systemProperties();
         this.commonConfig = commonConfig;
-        this.stateDS = commonConfig.keyValueDataSource();
-        this.stateDS.setName(STATE_DB);
-        this.stateDS.init();
+        this.stateDS = commonConfig.stateDS();
+//        this.stateDS = commonConfig.keyValueDataSource();
+//        this.stateDS.setName(STATE_DB);
+//        this.stateDS.init();
 
         init();
     }
@@ -96,7 +97,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS, boolean pruneEnabled) {
-        this(new DetailsDataStore().withDb(detailsDS, new HashMapDB()), stateDS, pruneEnabled);
+        this(new DetailsDataStore()/*.withDb(detailsDS, new HashMapDB())*/, stateDS, pruneEnabled);
     }
 
     public RepositoryImpl(DetailsDataStore dds, KeyValueDataSource stateDS, boolean pruneEnabled) {
@@ -286,59 +287,59 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public synchronized void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
         dumpTrie(block);
 
-        if (!(config().dumpFull() || config().dumpBlock() == block.getNumber()))
-            return;
-
-        // todo: dump block header and the relevant tx
-
-        if (block.getNumber() == 0 && txNumber == 0)
-            if (config().dumpCleanOnRestart()) {
-                FileSystemUtils.deleteRecursively(new File(config().dumpDir()));
-            }
-
-        String dir = config().dumpDir() + "/";
-
-        String fileName = "";
-        if (txHash != null)
-            fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
-                    Hex.toHexString(txHash).substring(0, 8));
-        else {
-            fileName = String.format("%07d_c.dmp", block.getNumber());
-        }
-
-        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try {
-
-            dumpFile.getParentFile().mkdirs();
-            dumpFile.createNewFile();
-
-            fw = new FileWriter(dumpFile.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
-
-            List<ByteArrayWrapper> keys = new ArrayList<>(this.dds.keys());
-
-            JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
-            ObjectNode blockNode = jsonFactory.objectNode();
-
-            JSONHelper.dumpBlock(blockNode, block, gasUsed,
-                    this.getRoot(),
-                    keys, this);
-
-            EtherObjectMapper mapper = new EtherObjectMapper();
-            bw.write(mapper.writeValueAsString(blockNode));
-
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (bw != null) bw.close();
-                if (fw != null) fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if (!(config().dumpFull() || config().dumpBlock() == block.getNumber()))
+//            return;
+//
+//        // todo: dump block header and the relevant tx
+//
+//        if (block.getNumber() == 0 && txNumber == 0)
+//            if (config().dumpCleanOnRestart()) {
+//                FileSystemUtils.deleteRecursively(new File(config().dumpDir()));
+//            }
+//
+//        String dir = config().dumpDir() + "/";
+//
+//        String fileName = "";
+//        if (txHash != null)
+//            fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
+//                    Hex.toHexString(txHash).substring(0, 8));
+//        else {
+//            fileName = String.format("%07d_c.dmp", block.getNumber());
+//        }
+//
+//        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
+//        FileWriter fw = null;
+//        BufferedWriter bw = null;
+//        try {
+//
+//            dumpFile.getParentFile().mkdirs();
+//            dumpFile.createNewFile();
+//
+//            fw = new FileWriter(dumpFile.getAbsoluteFile());
+//            bw = new BufferedWriter(fw);
+//
+//            List<ByteArrayWrapper> keys = new ArrayList<>(this.dds.keys());
+//
+//            JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
+//            ObjectNode blockNode = jsonFactory.objectNode();
+//
+//            JSONHelper.dumpBlock(blockNode, block, gasUsed,
+//                    this.getRoot(),
+//                    keys, this);
+//
+//            EtherObjectMapper mapper = new EtherObjectMapper();
+//            bw.write(mapper.writeValueAsString(blockNode));
+//
+//        } catch (IOException e) {
+//            logger.error(e.getMessage(), e);
+//        } finally {
+//            try {
+//                if (bw != null) bw.close();
+//                if (fw != null) fw.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public synchronized String getTrieDump() {
@@ -388,19 +389,20 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public synchronized Set<byte[]> getAccountsKeys() {
-        rwLock.readLock().lock();
-        try {
-                Set<byte[]> result = new HashSet<>();
-                for (ByteArrayWrapper key : dds.keys()) {
-
-                    if (isExist(key.getData()))
-                        result.add(key.getData());
-                }
-
-                return result;
-        } finally {
-            rwLock.readLock().unlock();
-        }
+        throw new RuntimeException("Not supported");
+//        rwLock.readLock().lock();
+//        try {
+//                Set<byte[]> result = new HashSet<>();
+//                for (ByteArrayWrapper key : dds.keys()) {
+//
+//                    if (isExist(key.getData()))
+//                        result.add(key.getData());
+//                }
+//
+//                return result;
+//        } finally {
+//            rwLock.readLock().unlock();
+//        }
     }
 
     @Override
@@ -648,11 +650,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     public synchronized void commitBlock(BlockHeader blockHeader) {
         worldState.sync();
-        dds.syncLargeStorage();
+//        dds.syncLargeStorage();
 
         if (pruneBlockCount >= 0) {
             stateDSPrune.storeBlockChanges(blockHeader);
-            dds.getStorageDSPrune().storeBlockChanges(blockHeader);
+//            dds.getStorageDSPrune().storeBlockChanges(blockHeader);
             pruneBlocks(blockHeader);
         }
     }
@@ -665,7 +667,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                 if (pruneBlockHash != null) {
                     BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
                     stateDSPrune.prune(header);
-                    dds.getStorageDSPrune().prune(header);
+//                    dds.getStorageDSPrune().prune(header);
                 }
             }
         }

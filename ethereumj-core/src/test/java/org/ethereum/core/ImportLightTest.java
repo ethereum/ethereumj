@@ -232,6 +232,21 @@ public class ImportLightTest {
     }
 
     @Test
+    public void simpleDbTest() {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract parent = bc.submitNewContract("contract A {" +
+                "  uint public a;" +
+                "  function set(uint a_) { a = a_;}" +
+                "}");
+        bc.createBlock();
+        parent.callFunction("set", 123);
+        bc.createBlock();
+        Object ret = parent.callConstFunction("a")[0];
+        System.out.println("Ret = " + ret);
+    }
+
+
+    @Test
     public void createContractFork() throws Exception {
         //  #1 (Parent) --> #2 --> #3 (Child) ----------------------> #4 (call Child)
         //    \-------------------------------> #2' (forked Child)

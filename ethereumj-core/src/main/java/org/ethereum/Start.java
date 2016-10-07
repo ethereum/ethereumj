@@ -24,6 +24,8 @@ public class Start {
 
         Ethereum ethereum = EthereumFactory.createEthereum();
 
+        System.out.println(ethereum.getBlockchain().getBlockByNumber(2383991));
+
         if (!SystemProperties.getDefault().blocksLoader().equals(""))
             ethereum.getBlockLoader().loadBlocks();
     }

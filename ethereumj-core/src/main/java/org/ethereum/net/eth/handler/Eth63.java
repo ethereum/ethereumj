@@ -17,6 +17,7 @@ import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
 
 import org.ethereum.util.Value;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -84,7 +85,12 @@ public class Eth63 extends Eth62 {
         List<Value> states = new ArrayList<>();
         for (byte[] stateRoot : msg.getStateRoots()) {
             Value value = repository.getState(stateRoot);
-            if (value != null) states.add(value);
+            if (value != null) {
+                states.add(value);
+                logger.trace("Eth63: " + Hex.toHexString(stateRoot).substring(0, 8) + " -> " + value);
+            } else {
+                System.out.println("Not found: " + Hex.toHexString(stateRoot));
+            }
         }
 
         sendMessage(new NodeDataMessage(states));

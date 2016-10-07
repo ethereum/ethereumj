@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.core.AccountState;
 import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -32,10 +34,16 @@ public class DetailsDataStore {
 
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
-    private KeyValueDataSource detailsDS;
-    private KeyValueDataSource storageDS;
-    private CachingDataSource storageDSCache;
-    private JournalPruneDataSource storageDSPrune;
+    @Autowired @Qualifier("stateDS")
+    public KeyValueDataSource dataSource;
+
+    @Autowired
+    public RepositoryImpl repository;
+
+//    private KeyValueDataSource detailsDS;
+//    private KeyValueDataSource storageDS;
+//    private CachingDataSource storageDSCache;
+//    private JournalPruneDataSource storageDSPrune;
 
     private Map<ByteArrayWrapper, ContractDetails> cache = new ConcurrentHashMap<>();
     private Set<ByteArrayWrapper> removes = new HashSet<>();
@@ -46,22 +54,22 @@ public class DetailsDataStore {
     @Autowired
     public DetailsDataStore(final CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
-        KeyValueDataSource detailsDS = commonConfig.keyValueDataSource();
-        detailsDS.setName("details");
-        detailsDS.init();
-        KeyValueDataSource storageDS = commonConfig.keyValueDataSource();
-        storageDS.setName("storage");
-        storageDS.init();
-        withDb(detailsDS, storageDS);
+//        KeyValueDataSource detailsDS = commonConfig.keyValueDataSource();
+//        detailsDS.setName("details");
+//        detailsDS.init();
+//        KeyValueDataSource storageDS = commonConfig.keyValueDataSource();
+//        storageDS.setName("storage");
+//        storageDS.init();
+//        withDb(detailsDS, storageDS);
     }
 
-    public DetailsDataStore withDb(KeyValueDataSource detailsDS, KeyValueDataSource storageDS) {
-        this.detailsDS = detailsDS;
-        this.storageDS = storageDS;
-        this.storageDSCache = new CachingDataSource(storageDS);
-        this.storageDSPrune = new JournalPruneDataSource(storageDSCache);
-        return this;
-    }
+//    public DetailsDataStore withDb(KeyValueDataSource detailsDS, KeyValueDataSource storageDS) {
+//        this.detailsDS = detailsDS;
+//        this.storageDS = storageDS;
+//        this.storageDSCache = new CachingDataSource(storageDS);
+//        this.storageDSPrune = new JournalPruneDataSource(storageDSCache);
+//        return this;
+//    }
 
     public synchronized ContractDetails get(byte[] key) {
 
@@ -71,23 +79,17 @@ public class DetailsDataStore {
         if (details == null) {
 
             if (removes.contains(wrappedKey)) return null;
-            byte[] data = detailsDS.get(key);
-            if (data == null) return null;
+
+            AccountState accountState = repository.getAccountState(key);
+            if (accountState == null) return null;
 
             ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
-            detailsImpl.setDataSource(storageDSPrune);
-            detailsImpl.decode(data);
+            detailsImpl.setAccountState(accountState);
+            detailsImpl.setAddress(key);
             details = detailsImpl;
 
             cache.put(wrappedKey, details);
-
-            float out = ((float) data.length) / 1048576;
-            if (out > 10) {
-                String sizeFmt = format("%02.2f", out);
-                gLogger.debug("loaded: key: " + Hex.toHexString(key) + " size: " + sizeFmt + "MB");
-            }
         }
-
 
         return details;
     }
@@ -121,69 +123,69 @@ public class DetailsDataStore {
     private long flushInternal() {
         long totalSize = 0;
 
-        syncLargeStorage();
+//        syncLargeStorage();
 
-        Map<byte[], byte[]> batch = new HashMap<>();
-        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
-            ContractDetails details = entry.getValue();
-
-            byte[] key = entry.getKey().getData();
-            byte[] value = details.getEncoded();
-
-            batch.put(key, value);
-            totalSize += value.length;
-        }
-
-        detailsDS.updateBatch(batch);
-        storageDSCache.flush();
-
-        for (ByteArrayWrapper key : removes) {
-            detailsDS.delete(key.getData());
-        }
+//        Map<byte[], byte[]> batch = new HashMap<>();
+//        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
+//            ContractDetails details = entry.getValue();
+//
+//            byte[] key = entry.getKey().getData();
+//            byte[] value = details.getEncoded();
+//
+//            batch.put(key, value);
+//            totalSize += value.length;
+//        }
+//
+//        detailsDS.updateBatch(batch);
+//        storageDSCache.flush();
+//
+//        for (ByteArrayWrapper key : removes) {
+//            detailsDS.delete(key.getData());
+//        }
 
         cache.clear();
         removes.clear();
 
-        return totalSize;
+        return 0;
     }
 
-    public void syncLargeStorage() {
-        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
-            ContractDetails details = entry.getValue();
-            details.syncStorage();
-        }
-    }
+//    public void syncLargeStorage() {
+//        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
+//            ContractDetails details = entry.getValue();
+//            details.syncStorage();
+//        }
+//    }
+//
+//    public JournalPruneDataSource getStorageDSPrune() {
+//        return storageDSPrune;
+//    }
+//
+//    public synchronized Set<ByteArrayWrapper> keys() {
+//        Set<ByteArrayWrapper> keys = new HashSet<>();
+//        keys.addAll(cache.keySet());
+//        keys.addAll(Utils.dumpKeys(detailsDS));
+//
+//        return keys;
+//    }
+//
 
-    public JournalPruneDataSource getStorageDSPrune() {
-        return storageDSPrune;
-    }
-
-    public synchronized Set<ByteArrayWrapper> keys() {
-        Set<ByteArrayWrapper> keys = new HashSet<>();
-        keys.addAll(cache.keySet());
-        keys.addAll(Utils.dumpKeys(detailsDS));
-
-        return keys;
-    }
-
-
-    private void temporarySave(String addr, byte[] data){
-        try {
-            FileOutputStream fos = new FileOutputStream(addr);
-            fos.write(data);
-            fos.close();
-            System.out.println("drafted: " + addr);
-        } catch (IOException e) {e.printStackTrace();}
-    }
-
-    @PreDestroy
+//    private void temporarySave(String addr, byte[] data){
+//        try {
+//            FileOutputStream fos = new FileOutputStream(addr);
+//            fos.write(data);
+//            fos.close();
+//            System.out.println("drafted: " + addr);
+//        } catch (IOException e) {e.printStackTrace();}
+//    }
+//
+//    @PreDestroy
     public synchronized void close() {
-        try {
-            gLogger.info("Closing DetailsDataStore");
-            detailsDS.close();
-            storageDS.close();
-        } catch (Exception e) {
-            gLogger.warn("Problems closing DetailsDataStore", e);
-        }
+//        try {
+//            gLogger.info("Closing DetailsDataStore");
+//            detailsDS.close();
+//            storageDS.close();
+//        } catch (Exception e) {
+//            gLogger.warn("Problems closing DetailsDataStore", e);
+//        }
     }
 }

@@ -73,6 +73,14 @@ public class CommonConfig {
     }
 
     @Bean
+    public KeyValueDataSource stateDS() {
+        KeyValueDataSource ret = keyValueDataSource();
+        ret.setName("state");
+        ret.init();
+        return ret;
+    }
+
+    @Bean
     @Scope("prototype")
     public TransactionExecutor transactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                                    ProgramInvokeFactory programInvokeFactory, Block currentBlock,

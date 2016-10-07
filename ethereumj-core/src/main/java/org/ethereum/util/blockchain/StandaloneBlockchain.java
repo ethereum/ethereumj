@@ -372,9 +372,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         detailsDS = new HashMapDB();
         storageDS = new HashMapDB();
         stateDS = new HashMapDB();
-        DetailsDataStore detailsDataStore = new DetailsDataStore().withDb(detailsDS, storageDS);
+        DetailsDataStore detailsDataStore = new DetailsDataStore()/*.withDb(detailsDS, storageDS)*/;
+        detailsDataStore.dataSource = stateDS;
         RepositoryImpl repository = new RepositoryImpl(detailsDataStore, stateDS, true)
                 .withBlockStore(blockStore);
+        detailsDataStore.repository = repository;
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();

@@ -20,13 +20,32 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
-        if (origContract != null) {
-            if (origContract instanceof AbstractContractDetails) {
-                setCodes(((AbstractContractDetails) this.origContract).getCodes());
-            } else {
-                setCode(origContract.getCode());
-            }
-        }
+//        this.dataSource = ((AbstractContractDetails) origContract).dataSource;
+//        this.accountState = ((AbstractContractDetails) origContract).accountState;
+//        if (origContract != null) {
+//            if (origContract instanceof AbstractContractDetails) {
+//                setCodes(((AbstractContractDetails) this.origContract).getCodes());
+//            } else {
+//                setCode(origContract.getCode());
+//            }
+//        }
+    }
+
+    byte[] code;
+
+    @Override
+    public void setCode(byte[] code) {
+        this.code = code;
+    }
+
+    @Override
+    public byte[] getCode() {
+        return code;
+    }
+
+    @Override
+    public byte[] getCode(byte[] codeHash) {
+        return code;
     }
 
     @Override
@@ -163,11 +182,11 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             origContract.put(key, storage.get(key));
         }
 
-        if (origContract instanceof AbstractContractDetails) {
-            ((AbstractContractDetails) origContract).appendCodes(getCodes());
-        } else {
+//        if (origContract instanceof AbstractContractDetails) {
+//            ((AbstractContractDetails) origContract).appendCodes(getCodes());
+//        } else {
             origContract.setCode(getCode());
-        }
+//        }
         origContract.setDirty(this.isDirty() || origContract.isDirty());
     }
 
