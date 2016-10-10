@@ -3,6 +3,7 @@ package org.ethereum.net.rlpx;
 import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.listener.EthereumListener;
@@ -15,7 +16,6 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
-import org.ethereum.util.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -62,7 +62,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     private boolean supportChunkedFrames = true;
 
-    Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(1, 16);
+    Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(16);
     // LRU avoids OOM on invalid peers
     AtomicInteger contextIdCounter = new AtomicInteger(1);
 

@@ -1,5 +1,6 @@
 package org.ethereum.jsonrpc;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
@@ -21,7 +22,6 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.LRUMap;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -133,7 +133,7 @@ public class JsonRpcImpl implements JsonRpc {
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
     AtomicInteger filterCounter = new AtomicInteger(1);
     Map<Integer, Filter> installedFilters = new Hashtable<>();
-    Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(0, 1024));
+    Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(1024));
 
     @PostConstruct
     private void init() {
@@ -1452,5 +1452,14 @@ public class JsonRpcImpl implements JsonRpc {
         } finally {
             if (logger.isDebugEnabled()) logger.debug("personal_listAccounts(): " + Arrays.toString(ret));
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(1024));
+//        Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = new LRUMap<ByteArrayWrapper, TransactionReceipt>(0, 1024);
+        for (int i = 0; i < 100000; i++) {
+            pendingReceipts.put(new ByteArrayWrapper(ByteUtil.intToBytes(i)), new TransactionReceipt());
+        }
+        System.out.println(pendingReceipts.size());
     }
 }
