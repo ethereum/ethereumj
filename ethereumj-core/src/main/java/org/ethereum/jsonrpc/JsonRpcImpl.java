@@ -28,6 +28,7 @@ import org.ethereum.vm.LogInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -46,6 +47,7 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
  * Created by Anton Nashatyrev on 25.11.2015.
  */
 @Component
+@Lazy
 public class JsonRpcImpl implements JsonRpc {
     private static final Logger logger = LoggerFactory.getLogger("jsonrpc");
 
@@ -1452,14 +1454,5 @@ public class JsonRpcImpl implements JsonRpc {
         } finally {
             if (logger.isDebugEnabled()) logger.debug("personal_listAccounts(): " + Arrays.toString(ret));
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(1024));
-//        Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = new LRUMap<ByteArrayWrapper, TransactionReceipt>(0, 1024);
-        for (int i = 0; i < 100000; i++) {
-            pendingReceipts.put(new ByteArrayWrapper(ByteUtil.intToBytes(i)), new TransactionReceipt());
-        }
-        System.out.println(pendingReceipts.size());
     }
 }
