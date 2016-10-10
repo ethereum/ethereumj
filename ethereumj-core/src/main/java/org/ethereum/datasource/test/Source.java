@@ -11,4 +11,6 @@ public interface Source<K, V> {
 
     void delete(K key);
 
+    void flush();
+
 }

@@ -16,6 +16,33 @@ public class Test {
         byte[] address;
         AccountState accountState;
         ContractDetails contractDetails;
+        byte[] code;
+
+        public Account(byte[] address) {
+            this.address = address;
+        }
+    }
+
+    class Repo {
+        Source<byte[], Account> accounts;
+
+        Account getAccount(byte[] addr) {
+            return accounts.get(addr);
+        }
+
+        Account createAccount(byte[] addr) {
+            Account ret = new Account(addr);
+            accounts.put(addr, ret);
+            return ret;
+        }
+
+        void deleteAccount(byte[] addr) {
+            accounts.delete(addr);
+        }
+
+        void commit() {
+            accounts.flush();
+        }
     }
 
     public class ContractDetails {
@@ -40,6 +67,22 @@ public class Test {
         }
     }
 
+    public class ContractDetails1 {
+        Source<DataWord, DataWord> storage;
+
+        public ContractDetails1(Source<DataWord, DataWord> storage) {
+            this.storage = storage;
+        }
+
+        public DataWord getStorage(DataWord addr) {
+            return storage.get(addr);
+        }
+
+        public void setStorage(DataWord addr, DataWord value) {
+            storage.put(addr, value);
+        }
+    }
+
 
     class Repository {
         Repository parent;
@@ -47,7 +90,12 @@ public class Test {
         CachedSource.Simple<byte[], byte[]> snapshotCache;
         CachedSource.BytesKey<Value, byte[]> trieCache;
         Trie<byte[]> trie;
-        CachedSource.BytesKey<AccountState, byte[]> accountStateCache;
+
+        Source<byte[], AccountState> accountStateCache;
+        Source<byte[], byte[]> codeCache;
+        MultiCache<Source<DataWord, DataWord>> storageCache;
+
+//        Source<byte[], Account> accounts;
 
         public Repository(CachedSource.BytesKey<Value, byte[]> trieCache, byte[] root) {
 
@@ -62,23 +110,32 @@ public class Test {
         }
 
         byte[] getCode(byte[] codeHash) {
-            return snapshotCache.get(codeHash);
+            return codeCache.get(codeHash);
         }
 
         void putCode(byte[] code) {
-            snapshotCache.put(HashUtil.sha3(code), code);
+            codeCache.put(HashUtil.sha3(code), code);
+        }
+
+        ContractDetails1 getContractDetails(byte[] addr) {
+            return new ContractDetails1(storageCache.get(addr));
         }
 
         Account getAccount(byte[] addr) {
-            Account ret = new Account();
-            ret.address = addr;
+            Account ret = new Account(addr);
             ret.accountState = accountStateCache.get(addr);
             ret.contractDetails = new ContractDetails(ret.accountState,
                     new TrieImpl(trieCache, ret.accountState.getStateRoot()));
             return ret;
         }
 
+        private void updateAccountStates() {
+
+        }
+
         void commit() {
+            storageCache.flush();
+            codeCache.flush();
             accountStateCache.flush();
 //            contractDetails.flush();
             trieCache.flush();

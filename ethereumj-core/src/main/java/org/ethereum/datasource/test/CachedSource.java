@@ -3,6 +3,7 @@ package org.ethereum.datasource.test;
 import org.ethereum.datasource.Flushable;
 import org.ethereum.datasource.Serializer;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -21,6 +22,7 @@ public class CachedSource<K, V, KS, VS> implements Source<K, V>, Flushable {
     boolean writeThrough;
     boolean noDelete;
     boolean delayedDelete;
+    boolean flushSource;
 
     public CachedSource(Source<KS, VS> src, Serializer<K, KS> keySerializer, Serializer<V, VS> valSerializer) {
         this.src = src;
@@ -46,6 +48,10 @@ public class CachedSource<K, V, KS, VS> implements Source<K, V>, Flushable {
     @Override
     public void flush() {
 
+    }
+
+    public Collection<K> getModified() {
+        throw new RuntimeException("TODO");
     }
 
     public static class BytesKey<V, VS> extends CachedSource<byte[], V, byte[], VS> {
