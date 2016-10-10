@@ -1093,6 +1093,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     /**
      * Returns up to limit headers found with following search parameters
+     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
      * @param identifier        Identifier of start block, by number of by hash
      * @param skip              Number of blocks to skip between consecutive headers
      * @param limit             Maximum number of headers in return
@@ -1100,14 +1101,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      * @return  {@link BlockHeader}'s list or empty list if none found
      */
     @Override
-    public synchronized List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+    public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
 
         // Identifying block we'll move from
         Block startBlock;
         if (identifier.getHash() != null) {
-            startBlock = getBlockByHash(identifier.getHash());
+            startBlock = blockStore.getBlockByHash(identifier.getHash());
         } else {
-            startBlock = getBlockByNumber(identifier.getNumber());
+            startBlock = blockStore.getChainBlockByNumber(identifier.getNumber());
         }
 
         // If nothing found or provided hash is not on main chain, return empty array
@@ -1115,13 +1116,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return emptyList();
         }
         if (identifier.getHash() != null) {
-            Block mainChainBlock = getBlockByNumber(startBlock.getNumber());
+            Block mainChainBlock = blockStore.getChainBlockByNumber(startBlock.getNumber());
             if (!startBlock.equals(mainChainBlock)) return emptyList();
         }
 
         List<BlockHeader> headers;
         if (skip == 0) {
-            long bestNumber = bestBlock.getNumber();
+            long bestNumber = blockStore.getBestBlock().getNumber();
             headers = getContinuousHeaders(bestNumber, startBlock.getNumber(), limit, reverse);
         } else {
             headers = getGapedHeaders(startBlock, skip, limit, reverse);
@@ -1208,7 +1209,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             startNumber = blockNumber + qty - 1;
         }
 
-        Block block = getBlockByNumber(startNumber);
+        Block block = blockStore.getChainBlockByNumber(startNumber);
 
         if (block == null) {
             return null;
@@ -1217,8 +1218,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return block.getHash();
     }
 
+    /**
+     * Returns list of block bodies by block hashes, stopping on first not found block
+     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
+     * @param hashes List of hashes
+     * @return List of RLP encoded block bodies
+     */
     @Override
-    public synchronized List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
+    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
         List<byte[]> bodies = new ArrayList<>(hashes.size());
 
         for (byte[] hash : hashes) {
