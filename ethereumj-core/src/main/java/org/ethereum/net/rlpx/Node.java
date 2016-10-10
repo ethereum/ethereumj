@@ -9,8 +9,10 @@ import org.mapdb.Serializer;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -135,13 +137,14 @@ public class Node implements Serializable {
     }
 
     public byte[] getRLP() {
-        String[] ipArray = host.split("\\.");
-        byte[] host = new byte[4];
-        for (int i = 0; i < ipArray.length; i++) {
-            host[i] = (byte) (Integer.parseInt(ipArray[i]) | 0x00);
+        byte[] ip;
+        try {
+            ip = InetAddress.getByName(host).getAddress();
+        } catch (UnknownHostException e) {
+            ip = new byte[4];  // fall back to invalid 0.0.0.0 address
         }
 
-        byte[] rlphost = RLP.encodeElement(host);
+        byte[] rlphost = RLP.encodeElement(ip);
         byte[] rlpTCPPort = RLP.encodeInt(port);
         byte[] rlpUDPPort = RLP.encodeInt(port);
         byte[] rlpId = RLP.encodeElement(id);
