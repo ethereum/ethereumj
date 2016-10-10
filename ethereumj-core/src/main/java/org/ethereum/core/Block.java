@@ -46,6 +46,8 @@ public class Block {
 
     private Trie txsState;
 
+    private BigInteger totalDifficulty; // summed difficulty of this block and all its ancestors
+
 
     /* Constructors */
 
@@ -214,6 +216,22 @@ public class Block {
             calcDifficulty = calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
         }
         return calcDifficulty;
+    }
+
+    /**
+     * Returns the summed difficulty of this block plus all the difficulty of all of its ancestors up to and
+     * including the genesis block
+     * @return BigInteger holding the block's totalDifficulty
+     */
+    public BigInteger getTotalDifficulty() {
+        return this.totalDifficulty;
+    }
+
+    /**
+     * Set the sum of the difficulty of this block and all of its ancestors up to and including the genesis block
+     */
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty = totalDifficulty;
     }
 
     public long getTimestamp() {

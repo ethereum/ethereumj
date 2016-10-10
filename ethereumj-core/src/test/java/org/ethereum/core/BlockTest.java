@@ -175,4 +175,16 @@ public class BlockTest {
     }
 
 
+    @Test
+    public void testBlockTotalDifficulty() {
+        // create genesis block
+        SystemProperties.getDefault().setGenesisInfo("frontier.json");
+        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault(), getClass().getClassLoader());
+
+        genesis.setTotalDifficulty(BigInteger.ONE);
+        assertEquals(BigInteger.ONE, genesis.getTotalDifficulty());
+
+        genesis.setTotalDifficulty(BigInteger.valueOf(10)); // overwrite existing total difficulty
+        assertEquals(BigInteger.valueOf(10), genesis.getTotalDifficulty());
+    }
 }
