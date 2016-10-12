@@ -1,7 +1,6 @@
 package org.ethereum.trie;
 
 import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.test.Source;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
@@ -56,7 +55,7 @@ import static org.spongycastle.util.Arrays.concatenate;
  * @author Nick Savers
  * @since 20.05.2014
  */
-public class TrieImpl implements Trie<byte[]> {
+public class TrieImpl implements Trie {
 
     private static final Logger logger = LoggerFactory.getLogger("trie");
 
@@ -65,14 +64,15 @@ public class TrieImpl implements Trie<byte[]> {
 
     private Object prevRoot;
     private Object root;
-    private Source<byte[], Value> cache;
+    private Cache cache;
+    private boolean pruningEnabled;
 
     public TrieImpl(KeyValueDataSource db) {
         this(db, "");
     }
 
     public TrieImpl(KeyValueDataSource db, Object root) {
-//        this.cache = new Cache(db);
+        this.cache = new Cache(db);
         this.root = root;
         this.prevRoot = root;
     }
@@ -81,13 +81,13 @@ public class TrieImpl implements Trie<byte[]> {
         return new TrieIterator(this);
     }
 
-//    public void setCache(Cache cache) {
-//        this.cache = cache;
-//    }
+    public void setCache(Cache cache) {
+        this.cache = cache;
+    }
 
-//    public Cache getCache() {
-//        return this.cache;
-//    }
+    public Cache getCache() {
+        return this.cache;
+    }
 
     public Object getPrevRoot() {
         return prevRoot;
@@ -114,14 +114,14 @@ public class TrieImpl implements Trie<byte[]> {
         }
     }
 
-//    public boolean isPruningEnabled() {
-//        return pruningEnabled;
-//    }
-//
-//    public TrieImpl withPruningEnabled(boolean pruningEnabled) {
-//        this.pruningEnabled = pruningEnabled;
-//        return this;
-//    }
+    public boolean isPruningEnabled() {
+        return pruningEnabled;
+    }
+
+    public TrieImpl withPruningEnabled(boolean pruningEnabled) {
+        this.pruningEnabled = pruningEnabled;
+        return this;
+    }
 
     /**************************************
      * Public (query) interface functions *
@@ -161,7 +161,7 @@ public class TrieImpl implements Trie<byte[]> {
             byte[] k = binToNibbles(key);
 
             if (isEmptyNode(root)) {
-                cache.delete(getRootHash());
+                cache.markRemoved(getRootHash());
             }
             this.root = this.insertOrDelete(this.root, k, value);
             if (logger.isDebugEnabled()) {
@@ -408,7 +408,9 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     private void markRemoved(byte[] hash) {
-        cache.delete(hash);
+        if (pruningEnabled) {
+            cache.markRemoved(hash);
+        }
     }
 
     /**
@@ -435,15 +437,7 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     private Object putToCache(Object node) {
-        Value value = new Value(node);
-        byte[] enc = value.encode();
-        if (enc.length >= 32) {
-            byte[] sha = value.hash();
-            cache.put(sha, value);
-
-            return sha;
-        }
-        return value;
+        return this.cache.put(node);
     }
 
     private boolean isEmptyNode(Object node) {
@@ -471,7 +465,7 @@ public class TrieImpl implements Trie<byte[]> {
     @Override
     public void sync() {
         synchronized (cache) {
-//            this.cache.commit();
+            this.cache.commit();
             this.prevRoot = this.root;
         }
     }
@@ -479,22 +473,21 @@ public class TrieImpl implements Trie<byte[]> {
     @Override
     public void undo() {
         synchronized (cache) {
-//            this.cache.undo();
+            this.cache.undo();
             this.root = this.prevRoot;
         }
     }
 
     // Returns a copy of this trie
     public TrieImpl copy() {
-//        synchronized (cache) {
-//            TrieImpl trie = new TrieImpl(this.cache.getDb(), this.root);
-//            for (ByteArrayWrapper key : this.cache.getNodes().keySet()) {
-//                Node node = this.cache.getNodes().get(key);
-//                trie.cache.getNodes().put(key, node.copy());
-//            }
-//            return trie;
-//        }
-        return null;
+        synchronized (cache) {
+            TrieImpl trie = new TrieImpl(this.cache.getDb(), this.root);
+            for (ByteArrayWrapper key : this.cache.getNodes().keySet()) {
+                Node node = this.cache.getNodes().get(key);
+                trie.cache.getNodes().put(key, node.copy());
+            }
+            return trie;
+        }
     }
 
     /********************************
@@ -518,42 +511,42 @@ public class TrieImpl implements Trie<byte[]> {
      * cleaning process.
      */
     public void cleanCache() {
-//        synchronized (cache) {
-//
-//            CollectFullSetOfNodes collectAction = new CollectFullSetOfNodes();
-//            long startTime = System.currentTimeMillis();
-//
-//            this.scanTree(this.getRootHash(), collectAction);
-//
-//            Set<ByteArrayWrapper> hashSet = collectAction.getCollectedHashes();
-//            Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
-//            Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
-//
-//            for (ByteArrayWrapper key : nodes.keySet())
-//                if (!hashSet.contains(key.getData()))
-//                    toRemoveSet.add(key);
-//
-//            for (ByteArrayWrapper key : toRemoveSet) {
-//                this.getCache().delete(key.getData());
-//
-//                if (logger.isTraceEnabled())
-//                    logger.trace("Garbage collected node: [{}]",
-//                            Hex.toHexString(key.getData()));
-//            }
-//            logger.info("Garbage collected node list, size: [{}]", toRemoveSet.size());
-//            logger.info("Garbage collection time: [{}ms]", System.currentTimeMillis() - startTime);
-//        }
+        synchronized (cache) {
+
+            CollectFullSetOfNodes collectAction = new CollectFullSetOfNodes();
+            long startTime = System.currentTimeMillis();
+
+            this.scanTree(this.getRootHash(), collectAction);
+
+            Set<ByteArrayWrapper> hashSet = collectAction.getCollectedHashes();
+            Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
+            Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
+
+            for (ByteArrayWrapper key : nodes.keySet())
+                if (!hashSet.contains(key.getData()))
+                    toRemoveSet.add(key);
+
+            for (ByteArrayWrapper key : toRemoveSet) {
+                this.getCache().delete(key.getData());
+
+                if (logger.isTraceEnabled())
+                    logger.trace("Garbage collected node: [{}]",
+                            Hex.toHexString(key.getData()));
+            }
+            logger.info("Garbage collected node list, size: [{}]", toRemoveSet.size());
+            logger.info("Garbage collection time: [{}ms]", System.currentTimeMillis() - startTime);
+        }
     }
 
     public void printFootPrint() {
 
-//        this.getCache().getNodes();
+        this.getCache().getNodes();
     }
 
     public void scanTree(byte[] hash, ScanAction scanAction) {
         synchronized (cache) {
 
-            Value node = cache.get(hash);
+            Value node = this.getCache().get(hash);
             if (node == null) {
                 throw new RuntimeException("Not found: " + Hex.toHexString(hash));
             }
@@ -577,106 +570,105 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     public void deserialize(byte[] data){
-//        synchronized (cache) {
-//            RLPList rlpList = (RLPList) RLP.decode2(data).get(0);
-//
-//            RLPItem keysElement = (RLPItem) rlpList.get(0);
-//            RLPList valsList = (RLPList) rlpList.get(1);
-//            RLPItem root = (RLPItem) rlpList.get(2);
-//
-//            for (int i = 0; i < valsList.size(); ++i) {
-//
-//                byte[] val = valsList.get(i).getRLPData();
-//                byte[] key = new byte[32];
-//
-//                Value value = Value.fromRlpEncoded(val);
-//                System.arraycopy(keysElement.getRLPData(), i * 32, key, 0, 32);
-//                cache.getNodes().put(wrap(key), new Node(value));
-//            }
-//
-//            this.deserializeRoot(root.getRLPData());
-//        }
+        synchronized (cache) {
+            RLPList rlpList = (RLPList) RLP.decode2(data).get(0);
+
+            RLPItem keysElement = (RLPItem) rlpList.get(0);
+            RLPList valsList = (RLPList) rlpList.get(1);
+            RLPItem root = (RLPItem) rlpList.get(2);
+
+            for (int i = 0; i < valsList.size(); ++i) {
+
+                byte[] val = valsList.get(i).getRLPData();
+                byte[] key = new byte[32];
+
+                Value value = Value.fromRlpEncoded(val);
+                System.arraycopy(keysElement.getRLPData(), i * 32, key, 0, 32);
+                cache.getNodes().put(wrap(key), new Node(value));
+            }
+
+            this.deserializeRoot(root.getRLPData());
+        }
     }
 
-    public byte[] serialize() {
+    public byte[] serialize(){
 
-//        synchronized (cache) {
-//            Map<ByteArrayWrapper, Node> map = getCache().getNodes();
-//
-//            int keysTotalSize = 0;
-//            int valsTotalSize = 0;
-//
-//            Set<ByteArrayWrapper> keys = map.keySet();
-//            for (ByteArrayWrapper key : keys) {
-//                Node node = map.get(key);
-//                if (node == null) continue;
-//
-//                byte[] keyBytes = key.getData();
-//                keysTotalSize += keyBytes.length;
-//
-//                byte[] valBytes = node.getValue().getData();
-//                valsTotalSize += valBytes.length + calcElementPrefixSize(valBytes);
-//            }
-//
-//            byte[] root = null;
-//            try {
-//                ByteArrayOutputStream b = new ByteArrayOutputStream();
-//                ObjectOutputStream o = new ObjectOutputStream(b);
-//                o.writeObject(this.getRoot());
-//                root = b.toByteArray();
-//                root = RLP.encodeElement(root);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            byte[] keysHeader = RLP.encodeLongElementHeader(keysTotalSize);
-//            byte[] valsHeader = RLP.encodeListHeader(valsTotalSize);
-//            byte[] listHeader = RLP.encodeListHeader(keysTotalSize + keysHeader.length +
-//                    valsTotalSize + valsHeader.length + root.length);
-//
-//            byte[] rlpData = new byte[keysTotalSize + keysHeader.length +
-//                    valsTotalSize + valsHeader.length + listHeader.length + root.length];
-//
-//            // copy headers:
-//            //      [ rlp_list_header, rlp_keys_header, rlp_keys, rlp_vals_header, rlp_val]
-//
-//            System.arraycopy(listHeader, 0, rlpData, 0, listHeader.length);
-//            System.arraycopy(keysHeader, 0, rlpData, listHeader.length, keysHeader.length);
-//            System.arraycopy(valsHeader,
-//                    0,
-//                    rlpData,
-//                    (listHeader.length + keysHeader.length + keysTotalSize),
-//                    valsHeader.length);
-//            System.arraycopy(root,
-//                    0,
-//                    rlpData,
-//                    (listHeader.length + keysHeader.length + keysTotalSize + valsTotalSize + valsHeader.length),
-//                    root.length);
-//
-//
-//            int k_1 = 0;
-//            int k_2 = 0;
-//            for (ByteArrayWrapper key : keys) {
-//                Node node = map.get(key);
-//                if (node == null) continue;
-//
-//                System.arraycopy(key.getData(), 0, rlpData,
-//                        (listHeader.length + keysHeader.length + k_1),
-//                        key.getData().length);
-//
-//                k_1 += key.getData().length;
-//
-//                byte[] valBytes = RLP.encodeElement(node.getValue().getData());
-//
-//                System.arraycopy(valBytes, 0, rlpData,
-//                        listHeader.length + keysHeader.length + keysTotalSize + valsHeader.length + k_2,
-//                        valBytes.length);
-//                k_2 += valBytes.length;
-//            }
-//
-//            return rlpData;
-//        }
-        throw new RuntimeException("Not implemented");
+        synchronized (cache) {
+            Map<ByteArrayWrapper, Node> map = getCache().getNodes();
+
+            int keysTotalSize = 0;
+            int valsTotalSize = 0;
+
+            Set<ByteArrayWrapper> keys = map.keySet();
+            for (ByteArrayWrapper key : keys) {
+                Node node = map.get(key);
+                if (node == null) continue;
+
+                byte[] keyBytes = key.getData();
+                keysTotalSize += keyBytes.length;
+
+                byte[] valBytes = node.getValue().getData();
+                valsTotalSize += valBytes.length + calcElementPrefixSize(valBytes);
+            }
+
+            byte[] root = null;
+            try {
+                ByteArrayOutputStream b = new ByteArrayOutputStream();
+                ObjectOutputStream o = new ObjectOutputStream(b);
+                o.writeObject(this.getRoot());
+                root = b.toByteArray();
+                root = RLP.encodeElement(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            byte[] keysHeader = RLP.encodeLongElementHeader(keysTotalSize);
+            byte[] valsHeader = RLP.encodeListHeader(valsTotalSize);
+            byte[] listHeader = RLP.encodeListHeader(keysTotalSize + keysHeader.length +
+                    valsTotalSize + valsHeader.length + root.length);
+
+            byte[] rlpData = new byte[keysTotalSize + keysHeader.length +
+                    valsTotalSize + valsHeader.length + listHeader.length + root.length];
+
+            // copy headers:
+            //      [ rlp_list_header, rlp_keys_header, rlp_keys, rlp_vals_header, rlp_val]
+
+            System.arraycopy(listHeader, 0, rlpData, 0, listHeader.length);
+            System.arraycopy(keysHeader, 0, rlpData, listHeader.length, keysHeader.length);
+            System.arraycopy(valsHeader,
+                    0,
+                    rlpData,
+                    (listHeader.length + keysHeader.length + keysTotalSize),
+                    valsHeader.length);
+            System.arraycopy(root,
+                    0,
+                    rlpData,
+                    (listHeader.length + keysHeader.length + keysTotalSize + valsTotalSize + valsHeader.length),
+                    root.length);
+
+
+            int k_1 = 0;
+            int k_2 = 0;
+            for (ByteArrayWrapper key : keys) {
+                Node node = map.get(key);
+                if (node == null) continue;
+
+                System.arraycopy(key.getData(), 0, rlpData,
+                        (listHeader.length + keysHeader.length + k_1),
+                        key.getData().length);
+
+                k_1 += key.getData().length;
+
+                byte[] valBytes = RLP.encodeElement(node.getValue().getData());
+
+                System.arraycopy(valBytes, 0, rlpData,
+                        listHeader.length + keysHeader.length + keysTotalSize + valsHeader.length + k_2,
+                        valBytes.length);
+                k_2 += valBytes.length;
+            }
+
+            return rlpData;
+        }
     }
 
     public String getTrieDump() {

@@ -4,7 +4,7 @@ package org.ethereum.trie;
  * Trie interface for the main data structure in Ethereum
  * which is used to store both the account state and storage of each account.
  */
-public interface Trie<V> {
+public interface Trie {
 
     /**
      * Gets a value from the trie for a given key
@@ -12,7 +12,7 @@ public interface Trie<V> {
      * @param key - any length byte array
      * @return an rlp encoded byte array of the stored object
      */
-    V get(byte[] key);
+    byte[] get(byte[] key);
 
     /**
      * Insert or update a value in the trie for a specified key
@@ -20,7 +20,7 @@ public interface Trie<V> {
      * @param key - any length byte array
      * @param value rlp encoded byte array of the object to store
      */
-    void update(byte[] key, V value);
+    void update(byte[] key, byte[] value);
 
     /**
      * Deletes a key/value from the trie for a given key

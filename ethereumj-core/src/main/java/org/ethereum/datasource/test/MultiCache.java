@@ -1,13 +1,16 @@
 package org.ethereum.datasource.test;
 
+import org.ethereum.datasource.Flushable;
+import org.ethereum.util.ByteArrayMap;
+
 import java.util.Map;
 
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public abstract class MultiCache<V extends Source> extends CachedSource.Simple<byte[], V> {
+public abstract class MultiCache<V extends Source & Flushable> extends CachedSource.Simple<byte[], V> {
 
-    Map<byte[], V> ownCaches;
+    Map<byte[], V> ownCaches = new ByteArrayMap<>();
 
     public MultiCache(Source<byte[], V> src) {
         super(src);
@@ -26,8 +29,12 @@ public abstract class MultiCache<V extends Source> extends CachedSource.Simple<b
     @Override
     public void flush() {
         for (V ownCache : ownCaches.values()) {
-            ownCache.flush();
+            flushChild(ownCache);
         }
+    }
+
+    protected void flushChild(V childCache) {
+        childCache.flush();
     }
 
     protected abstract V create(byte[] key, V srcCache);

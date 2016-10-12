@@ -11,9 +11,9 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
@@ -22,49 +22,87 @@ public class RepositoryNew implements Repository {
 
     private Source<byte[], AccountState> accountStateCache;
     private Source<byte[], byte[]> codeCache;
-    private MultiCache<Source<DataWord, DataWord>> storageCache;
+    private MultiCache<? extends Source<DataWord, DataWord>> storageCache;
 
     public RepositoryNew(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
-                         MultiCache<Source<DataWord, DataWord>> storageCache) {
+                         MultiCache<? extends Source<DataWord, DataWord>> storageCache) {
         this.accountStateCache = accountStateCache;
         this.codeCache = codeCache;
         this.storageCache = storageCache;
     }
 
     public static RepositoryNew createFromStateDS(Source<byte[], byte[]> stateDS, byte[] root) {
-        CachedSource.Simple<byte[], byte[]> snapshotCache = new CachedSource.Simple<>(stateDS);
+        final CachedSource.Simple<byte[], byte[]> snapshotCache = new CachedSource.Simple<>(stateDS);
+
         final CachedSource.BytesKey<Value, byte[]> trieCache = new CachedSource.BytesKey<>
                 (snapshotCache, new TrieCacheSerializer());
         trieCache.cacheReads = false;
-        Trie<byte[]> trie = new TrieImpl(trieCache, root);
+        trieCache.noDelete = true;
+        final TrieImpl trie = new TrieImpl(trieCache, root);
+
         final CachedSource.BytesKey<AccountState, byte[]> accountStateCache =
                 new CachedSource.BytesKey<>(trie, new AccountStateSerializer());
         CachedSource.Simple<byte[], byte[]> codeCache = new CachedSource.Simple<>(snapshotCache);
 
-        class TrieSource extends CachedSource<DataWord, DataWord, byte[], byte[]> {
-            private Trie<byte[]> trie;
-            public TrieSource(Trie<byte[]> src, Serializer<DataWord, byte[]> keySerializer, Serializer<DataWord, byte[]> valSerializer) {
-                super(src, keySerializer, valSerializer);
+        class MultiTrieCache extends CachedSource<DataWord, DataWord, byte[], byte[]> {
+            byte[] accountAddress;
+            Trie<byte[]> trie;
+
+            public MultiTrieCache(byte[] accountAddress, Trie<byte[]> trie) {
+                super(trie, new WordSerializer(), new TrieWordSerializer());
+                this.accountAddress = accountAddress;
+                this.trie = trie;
             }
         }
 
-        MultiCache<Source<DataWord, DataWord>> storageCache = new MultiCache<Source<DataWord, DataWord>>(null) {
+        final MultiCache<MultiTrieCache> storageCache = new MultiCache<MultiTrieCache>(null) {
             @Override
-            protected Source<DataWord, DataWord> create(byte[] key, Source<DataWord, DataWord> srcCache) {
+            protected MultiTrieCache create(byte[] key, MultiTrieCache srcCache) {
                 AccountState accountState = accountStateCache.get(key);
                 if (accountState == null) return null;
                 TrieImpl storageTrie = new TrieImpl(trieCache, accountState.getStateRoot());
-                CachedSource<DataWord, DataWord, byte[], byte[]> ret =
-                        new CachedSource<>(storageTrie, new WordSerializer(), new TrieWordSerializer());
-                return ret;
+                return new MultiTrieCache(key, storageTrie);
+            }
+
+            @Override
+            protected void flushChild(MultiTrieCache childCache) {
+                super.flushChild(childCache);
+//                RepositoryNew.this.updateAccountStateRoot(childCache.accountAddress, childCache.trie.getRootHash());
+                byte[] rootHash = childCache.trie.getRootHash();
+                AccountState state = accountStateCache.get(childCache.accountAddress).clone();
+                state.setStateRoot(rootHash);
+                accountStateCache.put(childCache.accountAddress, state);
             }
         };
         return new RepositoryNew(accountStateCache, codeCache, storageCache) {
             @Override
             public void commit() {
                 super.commit();
+
+                trieCache.flush();
+                snapshotCache.flush();
+            }
+
+            @Override
+            public byte[] getRoot() {
+                return trie.getRootHash();
+            }
+
+            @Override
+            public String dumpStateTrie() {
+                return trie.getTrieDump();
             }
         };
+    }
+
+    public String dumpStateTrie() {
+        throw new RuntimeException("Not supported");
+    }
+
+    private void updateAccountStateRoot(byte[] addr, byte[] root) {
+        AccountState accountState = getAccountState(addr).clone();
+        accountState.setStateRoot(root);
+        accountStateCache.put(addr, accountState);
     }
 
     @Override
@@ -105,14 +143,12 @@ public class RepositoryNew implements Repository {
 
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
-        // TODO
-        return null;
+        return new ContractDetailsImpl(addr);
     }
 
     @Override
     public boolean hasContractDetails(byte[] addr) {
-        // TODO
-        return false;
+        return getContractDetails(addr) != null;
     }
 
     @Override
@@ -155,12 +191,12 @@ public class RepositoryNew implements Repository {
     }
 
     @Override
-    public Repository startTracking() {
+    public RepositoryNew startTracking() {
         CachedSource.Simple<byte[], AccountState> trackAccountStateCache = new CachedSource.Simple<>(accountStateCache);
         CachedSource.Simple<byte[], byte[]> trackCodeCache = new CachedSource.Simple<>(codeCache);
-        MultiCache<Source<DataWord, DataWord>> trackStorageCache = new MultiCache<Source<DataWord, DataWord>>(storageCache) {
+        MultiCache<? extends Source<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
             @Override
-            protected Source<DataWord, DataWord> create(byte[] key, Source<DataWord, DataWord> srcCache) {
+            protected Source create(byte[] key, Source srcCache) {
                 return new Simple<>(srcCache);
             }
         };
@@ -194,7 +230,7 @@ public class RepositoryNew implements Repository {
 
         @Override
         public AccountState deserialize(byte[] stream) {
-            return new AccountState(stream);
+            return stream == null || stream.length == 0 ? null : new AccountState(stream);
         }
     }
 
@@ -232,6 +268,129 @@ public class RepositoryNew implements Repository {
         @Override
         public Value deserialize(byte[] stream) {
             return Value.fromRlpEncoded(stream);
+        }
+    }
+
+    class ContractDetailsImpl implements ContractDetails {
+        private byte[] address;
+
+        public ContractDetailsImpl(byte[] address) {
+            this.address = address;
+        }
+
+        @Override
+        public void put(DataWord key, DataWord value) {
+            RepositoryNew.this.addStorageRow(address, key, value);
+        }
+
+        @Override
+        public DataWord get(DataWord key) {
+            return RepositoryNew.this.getStorageValue(address, key);
+        }
+
+        @Override
+        public byte[] getCode() {
+            return RepositoryNew.this.getCode(address);
+        }
+
+        @Override
+        public byte[] getCode(byte[] codeHash) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void setCode(byte[] code) {
+            RepositoryNew.this.saveCode(address, code);
+        }
+
+        @Override
+        public byte[] getStorageHash() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void decode(byte[] rlpCode) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void setDirty(boolean dirty) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void setDeleted(boolean deleted) {
+            RepositoryNew.this.delete(address);
+        }
+
+        @Override
+        public boolean isDirty() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public boolean isDeleted() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public byte[] getEncoded() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public int getStorageSize() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public Set<DataWord> getStorageKeys() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public Map<DataWord, DataWord> getStorage(@Nullable Collection<DataWord> keys) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public Map<DataWord, DataWord> getStorage() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void setStorage(Map<DataWord, DataWord> storage) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public byte[] getAddress() {
+            return address;
+        }
+
+        @Override
+        public void setAddress(byte[] address) {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public ContractDetails clone() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public void syncStorage() {
+            throw new RuntimeException("Not supported");
+        }
+
+        @Override
+        public ContractDetails getSnapshotTo(byte[] hash) {
+            throw new RuntimeException("Not supported");
         }
     }
 

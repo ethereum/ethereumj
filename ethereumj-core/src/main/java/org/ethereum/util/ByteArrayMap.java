@@ -60,7 +60,7 @@ public class ByteArrayMap<V> implements Map<byte[], V> {
 
     @Override
     public Set<byte[]> keySet() {
-        return new SetAdapter<>(this);
+        return new ByteArraySet(new SetAdapter<>(delegate));
     }
 
     @Override
