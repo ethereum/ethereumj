@@ -330,13 +330,15 @@ public class Program {
                     Hex.toHexString(obtainer),
                     balance);
 
-        addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
+        if (!balance.equals(ZERO)) {
+            addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
 
-        if (FastByteComparisons.compareTo(owner, 0, 20, obtainer, 0, 20) == 0) {
-            // if owner == obtainer just zeroing account according to Yellow Paper
-            getStorage().addBalance(owner, balance.negate());
-        } else {
-            transfer(getStorage(), owner, obtainer, balance);
+            if (FastByteComparisons.compareTo(owner, 0, 20, obtainer, 0, 20) == 0) {
+                // if owner == obtainer just zeroing account according to Yellow Paper
+                getStorage().addBalance(owner, balance.negate());
+            } else {
+                transfer(getStorage(), owner, obtainer, balance);
+            }
         }
 
         getResult().addDeleteAccount(this.getOwnerAddress());

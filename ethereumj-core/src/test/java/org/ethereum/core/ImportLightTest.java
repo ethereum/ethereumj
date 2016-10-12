@@ -470,6 +470,35 @@ public class ImportLightTest {
         assert BigInteger.valueOf(1).equals(bv);
     }
 
+    @Test(timeout = 10000)
+    public void selfdestructAttack() throws Exception {
+        String contractSrc = "" +
+                "contract B {" +
+                "  function suicide(address benefic) {" +
+                "    selfdestruct(benefic);" +
+                "  }" +
+                "}" +
+                "contract A {" +
+                "  uint public a;" +
+                "  function f() {" +
+                "    B b = new B();" +
+                "    for (uint i = 0; i < 3500; i++) {" +
+                "      b.suicide(address(i));" +
+                "    }" +
+                "    a = 2;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(1_000_000_000L).withDbDelay(10);
+        SolidityContract a = bc.submitNewContract(contractSrc, "A");
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        Object av = a.callConstFunction("a")[0];
+
+        assert BigInteger.valueOf(2).equals(av);
+    }
+
     @Test
     @Ignore
     public void threadRacePendingTest() throws Exception {
