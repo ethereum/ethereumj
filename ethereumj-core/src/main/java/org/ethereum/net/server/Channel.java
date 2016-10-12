@@ -112,7 +112,7 @@ public class Channel {
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
             // unexpected disconnect
-            handshakeHandler.generateTempKey();
+//            handshakeHandler.generateTempKey();
         }
 
         handshakeHandler.setRemoteId(remoteId, this);
@@ -156,20 +156,15 @@ public class Channel {
     public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId,
                                  HelloMessage inboundHelloMessage) throws IOException, InterruptedException {
 
-        // in discovery mode we are supplying fake port along with fake nodeID to not receive
-        // incoming connections with fake public key
-        HelloMessage helloMessage = discoveryMode ? staticMessages.createHelloMessage(nodeId, 9) :
-                staticMessages.createHelloMessage(nodeId);
+        final HelloMessage helloMessage = staticMessages.createHelloMessage(nodeId);
 
         if (inboundHelloMessage != null && P2pHandler.isProtocolVersionSupported(inboundHelloMessage.getP2PVersion())) {
             // the p2p version can be downgraded if requested by peer and supported by us
             helloMessage.setP2pVersion(inboundHelloMessage.getP2PVersion());
         }
 
-        byte[] payload = helloMessage.getEncoded();
-
         ByteBuf byteBufMsg = ctx.alloc().buffer();
-        frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), payload), byteBufMsg);
+        frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), helloMessage.getEncoded()), byteBufMsg);
         ctx.writeAndFlush(byteBufMsg).sync();
 
         if (logger.isDebugEnabled())
@@ -221,9 +216,13 @@ public class Channel {
         return nodeStatistics;
     }
 
-    public void setNode(byte[] nodeId) {
-        node = new Node(nodeId, inetSocketAddress.getHostString(), inetSocketAddress.getPort());
+    public void setNode(byte[] nodeId, int remotePort) {
+        node = new Node(nodeId, inetSocketAddress.getHostString(), remotePort);
         nodeStatistics = nodeManager.getNodeStatistics(node);
+    }
+
+    public void setNode(byte[] nodeId) {
+        setNode(nodeId, inetSocketAddress.getPort());
     }
 
     public Node getNode() {
