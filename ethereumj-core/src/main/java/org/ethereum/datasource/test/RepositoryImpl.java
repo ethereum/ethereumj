@@ -18,27 +18,30 @@ import java.util.*;
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public class RepositoryNew implements Repository {
+public class RepositoryImpl implements Repository {
 
     private Source<byte[], AccountState> accountStateCache;
     private Source<byte[], byte[]> codeCache;
     private MultiCache<? extends Source<DataWord, DataWord>> storageCache;
 
-    public RepositoryNew(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
-                         MultiCache<? extends Source<DataWord, DataWord>> storageCache) {
+    public RepositoryImpl(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
+                          MultiCache<? extends Source<DataWord, DataWord>> storageCache) {
         this.accountStateCache = accountStateCache;
         this.codeCache = codeCache;
         this.storageCache = storageCache;
     }
 
-    public static RepositoryNew createFromStateDS(Source<byte[], byte[]> stateDS, byte[] root) {
+    public static RepositoryImpl createNew(Source<byte[], byte[]> stateDS) {
+        return createFromStateDS(stateDS, null);
+    }
+    public static RepositoryImpl createFromStateDS(Source<byte[], byte[]> stateDS, byte[] root) {
         final CachedSource.Simple<byte[], byte[]> snapshotCache = new CachedSource.Simple<>(stateDS);
 
         final CachedSource.BytesKey<Value, byte[]> trieCache = new CachedSource.BytesKey<>
                 (snapshotCache, new TrieCacheSerializer());
         trieCache.cacheReads = false;
         trieCache.noDelete = true;
-        final TrieImpl trie = new TrieImpl(trieCache, root);
+        final TrieImpl trie = createTrie(trieCache, root);
 
         final CachedSource.BytesKey<AccountState, byte[]> accountStateCache =
                 new CachedSource.BytesKey<>(trie, new AccountStateSerializer());
@@ -59,22 +62,26 @@ public class RepositoryNew implements Repository {
             @Override
             protected MultiTrieCache create(byte[] key, MultiTrieCache srcCache) {
                 AccountState accountState = accountStateCache.get(key);
-                if (accountState == null) return null;
-                TrieImpl storageTrie = new TrieImpl(trieCache, accountState.getStateRoot());
+//                if (accountState == null) return null;
+                TrieImpl storageTrie = createTrie(trieCache, accountState == null ? null : accountState.getStateRoot());
                 return new MultiTrieCache(key, storageTrie);
             }
 
             @Override
-            protected void flushChild(MultiTrieCache childCache) {
-                super.flushChild(childCache);
+            protected boolean flushChild(MultiTrieCache childCache) {
+                if (super.flushChild(childCache)) {
 //                RepositoryNew.this.updateAccountStateRoot(childCache.accountAddress, childCache.trie.getRootHash());
-                byte[] rootHash = childCache.trie.getRootHash();
-                AccountState state = accountStateCache.get(childCache.accountAddress).clone();
-                state.setStateRoot(rootHash);
-                accountStateCache.put(childCache.accountAddress, state);
+                    byte[] rootHash = childCache.trie.getRootHash();
+                    AccountState state = accountStateCache.get(childCache.accountAddress).clone();
+                    state.setStateRoot(rootHash);
+                    accountStateCache.put(childCache.accountAddress, state);
+                    return true;
+                } else {
+                    return false;
+                }
             }
         };
-        return new RepositoryNew(accountStateCache, codeCache, storageCache) {
+        return new RepositoryImpl(accountStateCache, codeCache, storageCache) {
             @Override
             public void commit() {
                 super.commit();
@@ -85,6 +92,7 @@ public class RepositoryNew implements Repository {
 
             @Override
             public byte[] getRoot() {
+                super.commit();
                 return trie.getRootHash();
             }
 
@@ -93,6 +101,15 @@ public class RepositoryNew implements Repository {
                 return trie.getTrieDump();
             }
         };
+    }
+
+    private static TrieImpl createTrie(CachedSource.BytesKey<Value, byte[]> trieCache, byte[] root) {
+        return new SecureTrie(trieCache, root);
+//        return new TrieImpl(trieCache, root);
+    }
+
+    public String getTrieDump() {
+        return dumpStateTrie();
     }
 
     public String dumpStateTrie() {
@@ -122,6 +139,15 @@ public class RepositoryNew implements Repository {
         return accountStateCache.get(addr);
     }
 
+    private AccountState getOrCreateAccountState(byte[] addr) {
+        AccountState ret = accountStateCache.get(addr);
+        if (ret == null) {
+            ret = new AccountState(BigInteger.ZERO, BigInteger.ZERO);
+            accountStateCache.put(addr, ret);
+        }
+        return ret;
+    }
+
     @Override
     public void delete(byte[] addr) {
         accountStateCache.delete(addr);
@@ -129,7 +155,7 @@ public class RepositoryNew implements Repository {
 
     @Override
     public BigInteger increaseNonce(byte[] addr) {
-        AccountState accountState = getAccountState(addr).clone();
+        AccountState accountState = getOrCreateAccountState(addr).clone();
         accountState.incrementNonce();
         accountStateCache.put(addr, accountState);
         return accountState.getNonce();
@@ -155,7 +181,7 @@ public class RepositoryNew implements Repository {
     public void saveCode(byte[] addr, byte[] code) {
         byte[] codeHash = HashUtil.sha3(code);
         codeCache.put(codeHash, code);
-        AccountState accountState = getAccountState(addr).clone();
+        AccountState accountState = getOrCreateAccountState(addr).clone();
         accountState.setCodeHash(codeHash);
         accountStateCache.put(addr, accountState);
     }
@@ -168,12 +194,16 @@ public class RepositoryNew implements Repository {
 
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-        storageCache.get(addr).put(key, value);
+        getOrCreateAccountState(addr);
+
+        Source<DataWord, DataWord> contractStorage = storageCache.get(addr);
+        contractStorage.put(key, value);
     }
 
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
-        return storageCache.get(addr).get(key);
+        AccountState accountState = getAccountState(addr);
+        return accountState == null ? null : storageCache.get(addr).get(key);
     }
 
     @Override
@@ -184,14 +214,14 @@ public class RepositoryNew implements Repository {
 
     @Override
     public BigInteger addBalance(byte[] addr, BigInteger value) {
-        AccountState accountState = getAccountState(addr).clone();
+        AccountState accountState = getOrCreateAccountState(addr).clone();
         accountState.addToBalance(value);
         accountStateCache.put(addr, accountState);
         return accountState.getBalance();
     }
 
     @Override
-    public RepositoryNew startTracking() {
+    public RepositoryImpl startTracking() {
         CachedSource.Simple<byte[], AccountState> trackAccountStateCache = new CachedSource.Simple<>(accountStateCache);
         CachedSource.Simple<byte[], byte[]> trackCodeCache = new CachedSource.Simple<>(codeCache);
         MultiCache<? extends Source<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
@@ -201,7 +231,7 @@ public class RepositoryNew implements Repository {
             }
         };
 
-        return new RepositoryNew(trackAccountStateCache, trackCodeCache, trackStorageCache);
+        return new RepositoryImpl(trackAccountStateCache, trackCodeCache, trackStorageCache);
     }
 
     @Override
@@ -254,7 +284,7 @@ public class RepositoryNew implements Repository {
 
         @Override
         public DataWord deserialize(byte[] stream) {
-            if (stream == null || stream.length == 0) return DataWord.ZERO;
+            if (stream == null || stream.length == 0) return null;
             byte[] dataDecoded = RLP.decode2(stream).get(0).getRLPData();
             return new DataWord(dataDecoded);
         }
@@ -281,17 +311,17 @@ public class RepositoryNew implements Repository {
 
         @Override
         public void put(DataWord key, DataWord value) {
-            RepositoryNew.this.addStorageRow(address, key, value);
+            RepositoryImpl.this.addStorageRow(address, key, value);
         }
 
         @Override
         public DataWord get(DataWord key) {
-            return RepositoryNew.this.getStorageValue(address, key);
+            return RepositoryImpl.this.getStorageValue(address, key);
         }
 
         @Override
         public byte[] getCode() {
-            return RepositoryNew.this.getCode(address);
+            return RepositoryImpl.this.getCode(address);
         }
 
         @Override
@@ -301,7 +331,7 @@ public class RepositoryNew implements Repository {
 
         @Override
         public void setCode(byte[] code) {
-            RepositoryNew.this.saveCode(address, code);
+            RepositoryImpl.this.saveCode(address, code);
         }
 
         @Override
@@ -321,7 +351,7 @@ public class RepositoryNew implements Repository {
 
         @Override
         public void setDeleted(boolean deleted) {
-            RepositoryNew.this.delete(address);
+            RepositoryImpl.this.delete(address);
         }
 
         @Override
@@ -429,7 +459,6 @@ public class RepositoryNew implements Repository {
 
     @Override
     public void close() {
-        throw new RuntimeException("Not supported");
     }
 
     @Override

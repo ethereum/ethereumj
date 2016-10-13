@@ -697,7 +697,8 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     @Override
-    public void flush() {
+    public boolean flush() {
         // does nothing since Trie has no its own state
+        return true;
     }
 }

@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Created by Anton Nashatyrev on 05.10.2016.
  */
-public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<Key, Value>, Flushable {
+public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<Key, Value> {
 //    static Object NULL = new Object();
 
     Source<SourceKey, SourceValue> src;
@@ -55,9 +55,11 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
     public Value get(Key key) {
         Value ret = cache.get(key);
         if (ret == null) {
-            SourceValue sourceValue = src.get(keySerializer.serialize(key));
-            if (sourceValue != null) {
-                ret = valSerializer.deserialize(sourceValue);
+            if (cache.containsKey(key)) {
+                ret = null;
+            } else {
+                SourceValue sourceValue = src.get(keySerializer.serialize(key));
+                ret = sourceValue != null ? valSerializer.deserialize(sourceValue) : null;
                 cache.put(key, ret);
             }
         }
@@ -72,12 +74,13 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
     }
 
     @Override
-    public void flush() {
-        flushTo(src);
+    public boolean flush() {
+        boolean ret = flushTo(src);
         writes.clear();
+        return ret;
     }
 
-    public void flushTo(Source<SourceKey, SourceValue> src) {
+    public boolean flushTo(Source<SourceKey, SourceValue> src) {
         for (Key key : writes) {
             Value value = cache.get(key);
             if (value == null) {
@@ -86,6 +89,11 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
                 src.put(keySerializer.serialize(key), valSerializer.serialize(value));
             }
         }
+        return !writes.isEmpty();
+    }
+
+    public Source<SourceKey, SourceValue> getSrc() {
+        return src;
     }
 
     public Collection<Key> getModified() {

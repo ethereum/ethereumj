@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public abstract class MultiCache<V extends Source & Flushable> extends CachedSource.Simple<byte[], V> {
+public abstract class MultiCache<V extends Source> extends CachedSource.Simple<byte[], V> {
 
     Map<byte[], V> ownCaches = new ByteArrayMap<>();
 
@@ -28,14 +28,22 @@ public abstract class MultiCache<V extends Source & Flushable> extends CachedSou
     }
 
     @Override
-    public void flush() {
-        for (V ownCache : ownCaches.values()) {
-            flushChild(ownCache);
+    public boolean flush() {
+        boolean ret = false;
+        for (Map.Entry<byte[], V> vEntry : ownCaches.entrySet()) {
+
+            if (((CachedSource)vEntry.getValue()).getSrc() != null) {
+                ret |= flushChild(vEntry.getValue());
+            } else {
+                src.put(vEntry.getKey(), vEntry.getValue());
+                ret = true;
+            }
         }
+        return ret;
     }
 
-    protected void flushChild(V childCache) {
-        childCache.flush();
+    protected boolean flushChild(V childCache) {
+        return childCache.flush();
     }
 
     protected abstract V create(byte[] key, V srcCache);

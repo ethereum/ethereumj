@@ -93,9 +93,8 @@ public class Test {
 
         Source<byte[], AccountState> accountStateCache;
         Source<byte[], byte[]> codeCache;
-        MultiCache<Source<DataWord, DataWord>> storageCache;
+        MultiCache<CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
 
-//        Source<byte[], Account> accounts;
 
         public Repository(CachedSource.BytesKey<Value, byte[]> trieCache, byte[] root) {
 

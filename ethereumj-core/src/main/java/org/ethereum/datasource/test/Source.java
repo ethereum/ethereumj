@@ -5,7 +5,7 @@ import org.ethereum.datasource.Flushable;
 /**
  * Created by Anton Nashatyrev on 05.10.2016.
  */
-public interface Source<K, V> extends Flushable {
+public interface Source<K, V> {
 
     void put(K key, V val);
 
@@ -13,6 +13,6 @@ public interface Source<K, V> extends Flushable {
 
     void delete(K key);
 
-    void flush();
+    boolean flush();
 
 }

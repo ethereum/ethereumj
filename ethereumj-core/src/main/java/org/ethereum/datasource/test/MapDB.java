@@ -28,8 +28,8 @@ public class MapDB<V> implements Source<byte[], V> {
     }
 
     @Override
-    public void flush() {
-
+    public boolean flush() {
+        return true;
     }
 
     public Map<byte[], V> getStorage() {
