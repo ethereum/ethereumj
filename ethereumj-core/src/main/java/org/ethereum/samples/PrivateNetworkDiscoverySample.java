@@ -84,7 +84,7 @@ public class PrivateNetworkDiscoverySample {
                                 Thread.sleep(5000);
                                 while (true) {
                                     if (logger != null) {
-                                        Thread.sleep(5000);
+                                        Thread.sleep(15000);
                                         if (channelManager != null) {
                                             final Collection<Channel> activePeers = channelManager.getActivePeers();
                                             final ArrayList<String> ports = new ArrayList<>();

@@ -90,8 +90,9 @@ public class UDPListener {
 
         for (String boot: args) {
             // since discover IP list has no NodeIds we will generate random but persistent
-            byte[] nodeId = ECKey.fromPrivate(sha3(boot.getBytes())).getNodeId();
-            bootNodes.add(new Node("enode://" + Hex.toHexString(nodeId) + "@" + boot));
+            final ECKey generatedNodeKey = ECKey.fromPrivate(sha3(boot.getBytes()));
+            final String generatedNodeId = Node.DISCOVERY_NODE_PREFIX + Hex.toHexString(generatedNodeKey.getNodeId());
+            bootNodes.add(new Node("enode://" + generatedNodeId + "@" + boot));
         }
 
         nodeManager.setBootNodes(bootNodes);

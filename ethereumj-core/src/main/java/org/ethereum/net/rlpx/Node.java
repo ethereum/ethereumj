@@ -1,5 +1,6 @@
 package org.ethereum.net.rlpx;
 
+import com.google.common.base.Strings;
 import org.ethereum.datasource.mapdb.Serializers;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
@@ -13,13 +14,14 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
+
+    public static final String DISCOVERY_NODE_PREFIX = Strings.repeat("0", 128);
 
     public static final Serializer<Node> MapDBSerializer = new Serializer<Node>() {
         @Override
@@ -101,6 +103,14 @@ public class Node implements Serializable {
         this.host = host;
         this.port = port;
         this.id = idB;
+    }
+
+    /**
+     * @return true if this node is endpoint for discovery loaded from config
+     */
+    public boolean isDiscoveryNode() {
+        // discovery node has nodeId with doubled size
+        return id.length > 64;
     }
 
 
