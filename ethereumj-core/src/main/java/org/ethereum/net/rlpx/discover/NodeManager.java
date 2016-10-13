@@ -53,8 +53,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     NodeTable table;
     private Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
-    ECKey key;
-    Node homeNode;
+    final ECKey key;
+    final Node homeNode;
     private List<Node> bootNodes;
 
     // option to handle inbounds only from known peers (i.e. which were discovered by ourselves)
@@ -188,16 +188,27 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return (addr == null ? address.getHostString() : addr.getHostAddress()) + ":" + address.getPort();
     }
 
-    synchronized  NodeHandler getNodeHandler(Node n) {
+    public synchronized NodeHandler getNodeHandler(Node n) {
         String key = getKey(n);
         NodeHandler ret = nodeHandlerMap.get(key);
         if (ret == null) {
             trimTable();
             ret = new NodeHandler(n ,this);
             nodeHandlerMap.put(key, ret);
-            logger.debug(" +++ New node: " + ret);
-            ethereumListener.onNodeDiscovered(ret.getNode());
+            logger.debug(" +++ New node: " + ret + " " + n);
+            if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
+                ethereumListener.onNodeDiscovered(ret.getNode());
+            }
+        } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
+            // if we found discovery node with same host:port,
+            // then replace node with correct nodeId
+            ret.node = n;
+            if (!n.getHexId().equals(homeNode.getHexId())) {
+                ethereumListener.onNodeDiscovered(ret.getNode());
+            }
+            logger.debug("Found real nodeId for discovery endpoint {}", n);
         }
+
         return ret;
     }
 

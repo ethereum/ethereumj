@@ -12,6 +12,7 @@ import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
@@ -51,11 +52,14 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     @Autowired
     SystemProperties config;
 
+    @Autowired
+    NodeManager nodeManager;
+
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
     private FrameCodec frameCodec;
-    private final ECKey myKey;
+    private ECKey myKey;
     private byte[] nodeId;
     private byte[] remoteId;
     private EncryptionHandshake handshake;
@@ -258,6 +262,8 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                 final HelloMessage inboundHelloMessage = (HelloMessage) message;
                 channel.setNode(remoteId, inboundHelloMessage.getListenPort());
+                // use node into discovery
+                nodeManager.getNodeHandler(channel.getNode());
 
                 // Secret authentication finish here
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);
