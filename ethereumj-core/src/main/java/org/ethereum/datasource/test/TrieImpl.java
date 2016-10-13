@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Arrays.copyOfRange;
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
@@ -33,12 +34,15 @@ public class TrieImpl implements Trie<byte[]> {
     private static byte PAIR_SIZE = 2;
     private static byte LIST_SIZE = 17;
 
-    private Object prevRoot;
+//    private Object prevRoot;
     Source<byte[], Value> cache;
     Object  root;
 
     public TrieImpl(Source<byte[], Value> cache, byte[] root) {
         this.cache = cache;
+        if (root != null && FastByteComparisons.equal(root, EMPTY_TRIE_HASH)) {
+            root = null;
+        }
         this.root = root;
     }
 
@@ -63,9 +67,9 @@ public class TrieImpl implements Trie<byte[]> {
 //        return this.cache;
 //    }
 
-    public Object getPrevRoot() {
-        return prevRoot;
-    }
+//    public Object getPrevRoot() {
+//        return prevRoot;
+//    }
 
     public Object getRoot() {
         return root;
@@ -440,14 +444,14 @@ public class TrieImpl implements Trie<byte[]> {
     public void sync() {
         synchronized (cache) {
 //            this.cache.commit();
-            this.prevRoot = this.root;
+//            this.prevRoot = this.root;
         }
     }
 
     public void undo() {
         synchronized (cache) {
 //            this.cache.undo();
-            this.root = this.prevRoot;
+//            this.root = this.prevRoot;
         }
     }
 

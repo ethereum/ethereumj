@@ -20,8 +20,9 @@ public abstract class MultiCache<V extends Source & Flushable> extends CachedSou
     public V get(byte[] key) {
         V ownCache = ownCaches.get(key);
         if (ownCache == null) {
-            V v = super.get(key);
+            V v = src != null ? super.get(key) : null;
             ownCache = create(key, v);
+            ownCaches.put(key, ownCache);
         }
         return ownCache;
     }

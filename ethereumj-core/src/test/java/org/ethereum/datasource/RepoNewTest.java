@@ -78,5 +78,19 @@ public class RepoNewTest {
 
         byte[] root1 = repo.getRoot();
         System.out.println(repo.dumpStateTrie());
+
+        RepositoryNew repo2 = RepositoryNew.createFromStateDS(stateDb, root1);
+        DataWord val1 = repo.getStorageValue(addr1, new DataWord(1));
+        assert new DataWord(111).equals(val1);
+
+        RepositoryNew repo3 = repo2.startTracking();
+        repo3.addStorageRow(addr1, new DataWord(2), new DataWord(222));
+        repo3.addStorageRow(addr1, new DataWord(1), new DataWord(333));
+        repo3.commit();
+        repo2.commit();
+
+        RepositoryNew repo4 = RepositoryNew.createFromStateDS(stateDb, repo2.getRoot());
+        assert new DataWord(333).equals(repo4.getStorageValue(addr1, new DataWord(1)));
+        assert new DataWord(222).equals(repo4.getStorageValue(addr1, new DataWord(2)));
     }
 }

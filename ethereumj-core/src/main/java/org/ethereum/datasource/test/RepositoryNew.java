@@ -254,6 +254,7 @@ public class RepositoryNew implements Repository {
 
         @Override
         public DataWord deserialize(byte[] stream) {
+            if (stream == null || stream.length == 0) return DataWord.ZERO;
             byte[] dataDecoded = RLP.decode2(stream).get(0).getRLPData();
             return new DataWord(dataDecoded);
         }
