@@ -1,7 +1,6 @@
 package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
@@ -47,6 +46,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long gasLimit;
     boolean autoBlock;
     long dbDelay = 0;
+    long totalDbHits = 0;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
@@ -373,6 +373,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return storageDS;
     }
 
+    public long getTotalDbHits() {
+        return totalDbHits;
+    }
+
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new SlowHashMapDB(), new SlowHashMapDB());
@@ -586,6 +590,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
      class SlowHashMapDB extends HashMapDB {
         private void sleep(int cnt) {
+            totalDbHits += cnt;
             if (dbDelay == 0) return;
             try {
                 Thread.sleep(dbDelay * cnt);
