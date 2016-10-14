@@ -213,13 +213,16 @@ public class Channel {
         return nodeStatistics;
     }
 
-    public void setNode(byte[] nodeId, int remotePort) {
+    /**
+     * Set node and register it in NodeManager if it is not registered yet.
+     */
+    public void initWithNode(byte[] nodeId, int remotePort) {
         node = new Node(nodeId, inetSocketAddress.getHostString(), remotePort);
         nodeStatistics = nodeManager.getNodeStatistics(node);
     }
 
-    public void setNode(byte[] nodeId) {
-        setNode(nodeId, inetSocketAddress.getPort());
+    public void initWithNode(byte[] nodeId) {
+        initWithNode(nodeId, inetSocketAddress.getPort());
     }
 
     public Node getNode() {

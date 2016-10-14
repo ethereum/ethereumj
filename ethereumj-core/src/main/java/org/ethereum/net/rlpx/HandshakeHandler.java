@@ -79,7 +79,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
         if (remoteId.length == 64) {
-            channel.setNode(remoteId);
+            channel.initWithNode(remoteId);
             initiate(ctx);
         } else {
             handshake = new EncryptionHandshake();
@@ -261,9 +261,10 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                 }
 
                 final HelloMessage inboundHelloMessage = (HelloMessage) message;
-                channel.setNode(remoteId, inboundHelloMessage.getListenPort());
-                // use node into discovery
-                nodeManager.getNodeHandler(channel.getNode());
+
+                // now we know both remote nodeId and port
+                // let's set node, that will cause registering node in NodeManager
+                channel.initWithNode(remoteId, inboundHelloMessage.getListenPort());
 
                 // Secret authentication finish here
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);

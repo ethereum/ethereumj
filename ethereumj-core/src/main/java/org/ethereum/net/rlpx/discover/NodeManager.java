@@ -200,13 +200,13 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 ethereumListener.onNodeDiscovered(ret.getNode());
             }
         } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
-            // if we found discovery node with same host:port,
-            // then replace node with correct nodeId
+            // we found discovery node with same host:port,
+            // replace node with correct nodeId
             ret.node = n;
             if (!n.getHexId().equals(homeNode.getHexId())) {
                 ethereumListener.onNodeDiscovered(ret.getNode());
             }
-            logger.debug("Found real nodeId for discovery endpoint {}", n);
+            logger.debug(" +++ Found real nodeId for discovery endpoint {}", n);
         }
 
         return ret;
