@@ -1,6 +1,6 @@
 package org.ethereum.net.rlpx;
 
-import com.google.common.base.Strings;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.Serializers;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
@@ -16,12 +16,11 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
-
-    public static final String DISCOVERY_NODE_PREFIX = Strings.repeat("0", 128);
 
     public static final Serializer<Node> MapDBSerializer = new Serializer<Node>() {
         @Override
@@ -51,6 +50,16 @@ public class Node implements Serializable {
     byte[] id;
     String host;
     int port;
+    // discovery endpoint doesn't have real nodeId for example
+    private boolean isFakeNodeId = false;
+
+    public static Node createWithoutId(String address) {
+        final ECKey generatedNodeKey = ECKey.fromPrivate(sha3(address.getBytes()));
+        final String generatedNodeId = Hex.toHexString(generatedNodeKey.getNodeId());
+        final Node node = new Node("enode://" + generatedNodeId + "@" + address);
+        node.isFakeNodeId = true;
+        return node;
+    }
 
     public Node(String enodeURL) {
         try {
@@ -71,6 +80,7 @@ public class Node implements Serializable {
         this.host = host;
         this.port = port;
     }
+
 
     public Node(byte[] rlp) {
 
@@ -109,8 +119,7 @@ public class Node implements Serializable {
      * @return true if this node is endpoint for discovery loaded from config
      */
     public boolean isDiscoveryNode() {
-        // discovery node has nodeId with doubled size
-        return id.length > 64;
+        return isFakeNodeId;
     }
 
 
