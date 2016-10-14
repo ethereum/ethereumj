@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.Math.min;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
@@ -444,12 +443,15 @@ public class CallTransaction {
     enum FunctionType {
         constructor,
         function,
-        event
+        event,
+        fallback
     }
+
 
     public static class Function {
         public boolean anonymous;
         public boolean constant;
+        public boolean payable;
         public String name;
         public Param[] inputs;
         public Param[] outputs;
