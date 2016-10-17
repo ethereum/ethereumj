@@ -30,6 +30,7 @@ import static org.ethereum.util.blockchain.EtherUtil.convert;
  * Created by Anton Nashatyrev on 05.07.2016.
  */
 public class PruneTest {
+/*
 
     @BeforeClass
     public static void setup() {
@@ -346,4 +347,5 @@ public class PruneTest {
         }
         return ret;
     }
+*/
 }
