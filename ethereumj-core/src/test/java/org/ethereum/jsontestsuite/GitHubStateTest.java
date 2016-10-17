@@ -36,7 +36,7 @@ public class GitHubStateTest {
         SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
-            add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
+            add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
 
         }});
     }
