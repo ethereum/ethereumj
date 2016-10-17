@@ -13,6 +13,10 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.GasCost;
+import org.ethereum.vm.OpCode;
+import org.ethereum.vm.program.Program;
 
 import java.math.BigInteger;
 import java.util.Collections;
@@ -27,6 +31,8 @@ import static org.ethereum.util.BIUtil.max;
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetConfig {
+    private static final GasCost GAS_COST = new GasCost();
+
     protected Constants constants;
     protected MinerIfc miner;
 
@@ -97,5 +103,23 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public List<Pair<Long, byte[]>> blockHashConstraints() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public GasCost getGasCost() {
+        return GAS_COST;
+    }
+
+    @Override
+    public DataWord getCallGas(OpCode op, DataWord requestedGas, DataWord availableGas) throws Program.OutOfGasException {
+        if (requestedGas.compareTo(availableGas) > 0) {
+            throw Program.Exception.notEnoughOpGas(op, requestedGas, availableGas);
+        }
+        return requestedGas.clone();
+    }
+
+    @Override
+    public DataWord getCreateGas(DataWord availableGas) {
+        return availableGas;
     }
 }

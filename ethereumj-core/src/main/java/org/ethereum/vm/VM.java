@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
@@ -68,7 +69,7 @@ public class VM {
     private static BigInteger _32_ = BigInteger.valueOf(32);
     private static final String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
-    private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
+    private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE / 2);
 
 
     /* Keeps track of the number of steps performed in this VM */
@@ -91,6 +92,32 @@ public class VM {
         dumpBlock = config.dumpBlock();
     }
 
+    private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
+        long gasCost = 0;
+
+        // Avoid overflows
+        if (newMemSize.compareTo(MAX_GAS) == 1) {
+            throw Program.Exception.gasOverflow(newMemSize, MAX_GAS);
+        }
+
+        // memory gas calc
+        long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;
+        if (memoryUsage > oldMemSize) {
+            long memWords = (memoryUsage / 32);
+            long memWordsOld = (oldMemSize / 32);
+            //TODO #POC9 c_quadCoeffDiv = 512, this should be a constant, not magic number
+            long memGas = ( gasCosts.getMEMORY() * memWords + memWords * memWords / 512)
+                    - (gasCosts.getMEMORY() * memWordsOld + memWordsOld * memWordsOld / 512);
+            gasCost += memGas;
+        }
+
+        if (copySize > 0) {
+            long copyGas = gasCosts.getCOPY_GAS() * ((copySize + 31) / 32);
+            gasCost += copyGas;
+        }
+        return gasCost;
+    }
+
     public void step(Program program) {
 
         if (vmTrace) {
@@ -98,14 +125,15 @@ public class VM {
         }
 
         try {
+            BlockchainConfig blockchainConfig = program.getBlockchainConfig();
+
             OpCode op = OpCode.code(program.getCurrentOp());
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
             }
             if (op == DELEGATECALL) {
                 // opcode since Homestead release only
-                if (!config.getBlockchainConfig().getConfigForBlock(program.getNumber().longValue()).
-                        getConstants().hasDelegateCallOpcode()) {
+                if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
             }
@@ -115,8 +143,6 @@ public class VM {
             program.verifyStackOverflow(op.require(), op.ret()); //Check not exceeding stack limits
 
             long oldMemSize = program.getMemSize();
-            BigInteger newMemSize = BigInteger.ZERO;
-            long copySize = 0;
             Stack stack = program.getStack();
 
             String hint = "";
@@ -124,6 +150,8 @@ public class VM {
             long gasCost = op.getTier().asInt();
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
+            GasCost gasCosts = blockchainConfig.getGasCost();
+            DataWord adjustedCallGas = null;
 
             /*DEBUG #POC9 if( op.asInt() == 96 || op.asInt() == -128 || op.asInt() == 57 || op.asInt() == 115) {
               //byte alphaone = 0x63;
@@ -140,94 +168,107 @@ public class VM {
             // Calculate fees and spend gas
             switch (op) {
                 case STOP:
+                    gasCost = gasCosts.getSTOP();
+                    break;
                 case SUICIDE:
-                    // The ops that don't charge by step
-                    gasCost = GasCost.STOP;
+                    gasCost = gasCosts.getSUICIDE();
+                    DataWord suicideAddressWord = stack.get(stack.size() - 1);
+                    if (!program.getStorage().isExist(suicideAddressWord.getLast20Bytes()))
+                        gasCost += gasCosts.getNEW_ACCT_SUICIDE();
                     break;
                 case SSTORE:
                     DataWord newValue = stack.get(stack.size() - 2);
                     DataWord oldValue = program.storageLoad(stack.peek());
                     if (oldValue == null && !newValue.isZero())
-                        gasCost = GasCost.SET_SSTORE;
+                        gasCost = gasCosts.getSET_SSTORE();
                     else if (oldValue != null && newValue.isZero()) {
                         // todo: GASREFUND counter policy
 
                         // refund step cost policy.
-                        program.futureRefundGas(GasCost.REFUND_SSTORE);
-                        gasCost = GasCost.CLEAR_SSTORE;
+                        program.futureRefundGas(gasCosts.getREFUND_SSTORE());
+                        gasCost = gasCosts.getCLEAR_SSTORE();
                     } else
-                        gasCost = GasCost.RESET_SSTORE;
+                        gasCost = gasCosts.getRESET_SSTORE();
                     break;
                 case SLOAD:
-                    gasCost = GasCost.SLOAD;
+                    gasCost = gasCosts.getSLOAD();
                     break;
                 case BALANCE:
-                    gasCost = GasCost.BALANCE;
+                    gasCost = gasCosts.getBALANCE();
                     break;
 
                 // These all operate on memory and therefore potentially expand it:
                 case MSTORE:
-                    newMemSize = memNeeded(stack.peek(), new DataWord(32));
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
                     break;
                 case MSTORE8:
-                    newMemSize = memNeeded(stack.peek(), new DataWord(1));
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(1)), 0);
                     break;
                 case MLOAD:
-                    newMemSize = memNeeded(stack.peek(), new DataWord(32));
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
                     break;
                 case RETURN:
-                    gasCost = GasCost.STOP; //rename?
-                    newMemSize = memNeeded(stack.peek(), stack.get(stack.size() - 2));
+                    gasCost = gasCosts.getSTOP() + calcMemGas(gasCosts, oldMemSize,
+                            memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     break;
                 case SHA3:
-                    gasCost = GasCost.SHA3;
-                    newMemSize = memNeeded(stack.peek(), stack.get(stack.size() - 2));
+                    gasCost = gasCosts.getSHA3() + calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     DataWord size = stack.get(stack.size() - 2);
                     long chunkUsed = (size.longValueSafe() + 31) / 32;
-                    gasCost += chunkUsed * GasCost.SHA3_WORD;
+                    gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
-                    copySize = stack.get(stack.size() - 3).longValueSafe();
-                    newMemSize = memNeeded(stack.peek(), stack.get(stack.size() - 3));
+                    gasCost += calcMemGas(gasCosts, oldMemSize,
+                            memNeeded(stack.peek(), stack.get(stack.size() - 3)),
+                            stack.get(stack.size() - 3).longValueSafe());
                     break;
                 case CODECOPY:
-                    copySize = stack.get(stack.size() - 3).longValueSafe();
-                    newMemSize = memNeeded(stack.peek(), stack.get(stack.size() - 3));
+                    gasCost += calcMemGas(gasCosts, oldMemSize,
+                            memNeeded(stack.peek(), stack.get(stack.size() - 3)),
+                            stack.get(stack.size() - 3).longValueSafe());
+                    break;
+                case EXTCODESIZE:
+                    gasCost = gasCosts.getEXT_CODE_SIZE();
                     break;
                 case EXTCODECOPY:
-                    copySize = stack.get(stack.size() - 4).longValueSafe();
-                    newMemSize = memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 4));
+                    gasCost = gasCosts.getEXT_CODE_COPY() + calcMemGas(gasCosts, oldMemSize,
+                            memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 4)),
+                            stack.get(stack.size() - 4).longValueSafe());
                     break;
                 case CALL:
                 case CALLCODE:
                 case DELEGATECALL:
 
-                    gasCost = GasCost.CALL;
+                    gasCost = gasCosts.getCALL();
                     DataWord callGasWord = stack.get(stack.size() - 1);
-                    if (callGasWord.compareTo(program.getGas()) > 0) {
-                        throw Program.Exception.notEnoughOpGas(op, callGasWord, program.getGas());
-                    }
-
-                    gasCost += callGasWord.longValueSafe();
 
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     //check to see if account does not exist and is not a precompiled contract
                     if (op == CALL && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
-                        gasCost += GasCost.NEW_ACCT_CALL;
+                        gasCost += gasCosts.getNEW_ACCT_CALL();
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
                     if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )
-                        gasCost += GasCost.VT_CALL;
+                        gasCost += gasCosts.getVT_CALL();
 
                     int opOff = op == DELEGATECALL ? 3 : 4;
                     BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
-                    newMemSize = in.max(out);
+                    gasCost += calcMemGas(gasCosts, oldMemSize, in.max(out), 0);
+
+                    if (gasCost > program.getGas().longValueSafe()) {
+                        throw Program.Exception.notEnoughOpGas(op, callGasWord, program.getGas());
+                    }
+
+                    DataWord gasLeft = program.getGas().clone();
+                    gasLeft.sub(new DataWord(gasCost));
+                    adjustedCallGas = blockchainConfig.getCallGas(op, callGasWord, gasLeft);
+                    gasCost += adjustedCallGas.longValueSafe();
                     break;
                 case CREATE:
-                    gasCost = GasCost.CREATE;
-                    newMemSize = memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3));
+                    gasCost = gasCosts.getCREATE() + calcMemGas(gasCosts, oldMemSize,
+                            memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
                     break;
                 case LOG0:
                 case LOG1:
@@ -236,23 +277,23 @@ public class VM {
                 case LOG4:
 
                     int nTopics = op.val() - OpCode.LOG0.val();
-                    newMemSize = memNeeded(stack.peek(), stack.get(stack.size() - 2));
 
                     BigInteger dataSize = stack.get(stack.size() - 2).value();
-                    BigInteger dataCost = dataSize.multiply(BigInteger.valueOf(GasCost.LOG_DATA_GAS));
+                    BigInteger dataCost = dataSize.multiply(BigInteger.valueOf(gasCosts.getLOG_DATA_GAS()));
                     if (program.getGas().value().compareTo(dataCost) < 0) {
                         throw Program.Exception.notEnoughOpGas(op, dataCost, program.getGas().value());
                     }
 
-                    gasCost = GasCost.LOG_GAS +
-                            GasCost.LOG_TOPIC_GAS * nTopics +
-                            GasCost.LOG_DATA_GAS * stack.get(stack.size() - 2).longValue();
+                    gasCost = gasCosts.getLOG_GAS() +
+                            gasCosts.getLOG_TOPIC_GAS() * nTopics +
+                            gasCosts.getLOG_DATA_GAS() * stack.get(stack.size() - 2).longValue() +
+                            calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     break;
                 case EXP:
 
                     DataWord exp = stack.get(stack.size() - 2);
                     int bytesOccupied = exp.bytesOccupied();
-                    gasCost = GasCost.EXP_GAS + GasCost.EXP_BYTE_GAS * bytesOccupied;
+                    gasCost = gasCosts.getEXP_GAS() + gasCosts.getEXP_BYTE_GAS() * bytesOccupied;
                     break;
                 default:
                     break;
@@ -260,29 +301,6 @@ public class VM {
 
             //DEBUG System.out.println(" OP IS " + op.name() + " GASCOST IS " + gasCost + " NUM IS " + op.asInt());
             program.spendGas(gasCost, op.name());
-
-            // Avoid overflows
-            if (newMemSize.compareTo(MAX_GAS) == 1) {
-                throw Program.Exception.gasOverflow(newMemSize, MAX_GAS);
-            }
-
-            // memory gas calc
-            long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;
-            if (memoryUsage > oldMemSize) {
-                memWords = (memoryUsage / 32);
-                long memWordsOld = (oldMemSize / 32);
-                //TODO #POC9 c_quadCoeffDiv = 512, this should be a constant, not magic number
-                long memGas = ( GasCost.MEMORY * memWords + memWords * memWords / 512)
-                        - (GasCost.MEMORY * memWordsOld + memWordsOld * memWordsOld / 512);
-                program.spendGas(memGas, op.name() + " (memory usage)");
-                gasCost += memGas;
-            }
-
-            if (copySize > 0) {
-                long copyGas = GasCost.COPY_GAS * ((copySize + 31) / 32);
-                gasCost += copyGas;
-                program.spendGas(copyGas, op.name() + " (copy usage)");
-            }
 
             // Log debugging line for VM
             if (program.getNumber().intValue() == dumpBlock)
@@ -1084,13 +1102,13 @@ public class VM {
                 case CALL:
                 case CALLCODE:
                 case DELEGATECALL: {
-                    DataWord gas = program.stackPop();
+                    program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
                     DataWord value = !op.equals(DELEGATECALL) ?
                             program.stackPop() : DataWord.ZERO;
 
                     if( !value.isZero()) {
-                        gas.add(new DataWord(GasCost.STIPEND_CALL));
+                        adjustedCallGas.add(new DataWord(gasCosts.getSTIPEND_CALL()));
                     }
 
                     DataWord inDataOffs = program.stackPop();
@@ -1101,7 +1119,7 @@ public class VM {
 
                     if (logger.isInfoEnabled()) {
                         hint = "addr: " + Hex.toHexString(codeAddress.getLast20Bytes())
-                                + " gas: " + gas.shortHex()
+                                + " gas: " + adjustedCallGas.shortHex()
                                 + " inOff: " + inDataOffs.shortHex()
                                 + " inSize: " + inDataSize.shortHex();
                         logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
@@ -1114,7 +1132,7 @@ public class VM {
 
                     MessageCall msg = new MessageCall(
                             MsgType.fromOpcode(op),
-                            gas, codeAddress, value, inDataOffs, inDataSize,
+                            adjustedCallGas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
 
                     PrecompiledContracts.PrecompiledContract contract =

@@ -264,7 +264,8 @@ public class TransactionExecutor {
 
             if (tx.isContractCreation()) {
 
-                int returnDataGasValue = getLength(program.getResult().getHReturn()) * GasCost.CREATE_DATA;
+                int returnDataGasValue = getLength(program.getResult().getHReturn()) *
+                        config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
                 if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
 
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
@@ -319,7 +320,8 @@ public class TransactionExecutor {
 
         if (result != null) {
             // Accumulate refunds for suicides
-            result.addFutureRefund(result.getDeleteAccounts().size() * GasCost.SUICIDE_REFUND);
+            result.addFutureRefund(result.getDeleteAccounts().size() * config.getBlockchainConfig().
+                    getConfigForBlock(currentBlock.getNumber()).getGasCost().getSUICIDE_REFUND());
             long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             m_endGas = m_endGas.add(BigInteger.valueOf(gasRefund));

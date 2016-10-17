@@ -1,5 +1,8 @@
 package org.ethereum.util;
 
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
@@ -21,6 +24,7 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 
 public class Utils {
+    private static final DataWord DIVISOR = new DataWord(64);
 
     private static SecureRandom random = new SecureRandom();
 
@@ -182,5 +186,13 @@ public class Utils {
             for (int i = 0; i < n; i++) ret.append(s);
             return ret.toString();
         }
+    }
+
+    public static DataWord allButOne64th(DataWord dw) {
+        DataWord ret = dw.clone();
+        DataWord d = dw.clone();
+        d.div(DIVISOR);
+        ret.sub(d);
+        return ret;
     }
 }
