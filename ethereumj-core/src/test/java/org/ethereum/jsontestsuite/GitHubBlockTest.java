@@ -142,23 +142,4 @@ public class GitHubBlockTest {
     public void runBCMultiChainTest() throws ParseException, IOException {
         run("bcMultiChainTest", true, true, true);
     }
-
-
-    @Test
-    public void runDaoHardForkTest() throws Exception {
-        String json = JSONReader.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/hardfork/BlockchainTests/TestNetwork/bcTheDaoTest.json");
-
-        BlockchainNetConfig testConfig = new AbstractNetConfig() {
-            {
-                add(0, new FrontierConfig());
-                add(5, new HomesteadConfig());
-                add(8, new DaoHFConfig().withForkBlock(8));
-            }
-        };
-
-        SystemProperties.getDefault().setGenesisInfo("frontier.json");
-        SystemProperties.getDefault().setBlockchainConfig(testConfig);
-
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
-    }
 }
