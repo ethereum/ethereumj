@@ -499,7 +499,6 @@ public class ImportLightTest {
         String stateRoot = Hex.toHexString(bc.getBlockchain().getRepository().getRoot());
         Assert.assertEquals("82d5bdb6531e26011521da5601481c9dbef326aa18385f2945fd77bee288ca31", stateRoot);
         Object av = a.callConstFunction("a")[0];
-        System.out.println("bc.getTotalDbHits() = " + bc.getTotalDbHits());
         assert BigInteger.valueOf(2).equals(av);
         assert bc.getTotalDbHits() < 8300; // reduce this assertion if you make further optimizations
     }
