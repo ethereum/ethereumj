@@ -41,8 +41,21 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
         return this;
     }
 
+    private boolean checked = false;
+    private void checkByteArrKey(Key key) {
+        if (checked) return;
+
+        if (key instanceof byte[]) {
+            if (!(cache instanceof ByteArrayMap && writes instanceof ByteArraySet)) {
+                throw new RuntimeException("Wrong map/set for byte[] key");
+            }
+        }
+        checked = true;
+    }
+
     @Override
     public void put(Key key, Value val) {
+        checkByteArrKey(key);
         if (val == null) {
             delete(key);
         } else {
@@ -53,6 +66,7 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
 
     @Override
     public Value get(Key key) {
+        checkByteArrKey(key);
         Value ret = cache.get(key);
         if (ret == null) {
             if (cache.containsKey(key)) {
@@ -68,6 +82,7 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
 
     @Override
     public void delete(Key key) {
+        checkByteArrKey(key);
         if (noDelete) return;
         cache.put(key, null);
         writes.add(key);
@@ -112,6 +127,12 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
 
         public Simple(Source<K, V> src) {
             super(src, new Serializer.IdentitySerializer<K>(), new Serializer.IdentitySerializer<V>());
+        }
+    }
+
+    public static class SimpleBytesKey<V> extends BytesKey<V, V> {
+        public SimpleBytesKey(Source<byte[], V> src) {
+            super(src, new Serializer.IdentitySerializer<V>());
         }
     }
 }

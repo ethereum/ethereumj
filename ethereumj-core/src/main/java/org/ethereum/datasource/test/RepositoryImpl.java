@@ -10,6 +10,7 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -19,6 +20,8 @@ import java.util.*;
  * Created by Anton Nashatyrev on 07.10.2016.
  */
 public class RepositoryImpl implements Repository {
+
+    private RepositoryImpl parent;
 
     private Source<byte[], AccountState> accountStateCache;
     private Source<byte[], byte[]> codeCache;
@@ -34,8 +37,8 @@ public class RepositoryImpl implements Repository {
     public static RepositoryImpl createNew(Source<byte[], byte[]> stateDS) {
         return createFromStateDS(stateDS, null);
     }
-    public static RepositoryImpl createFromStateDS(Source<byte[], byte[]> stateDS, byte[] root) {
-        final CachedSource.Simple<byte[], byte[]> snapshotCache = new CachedSource.Simple<>(stateDS);
+    public static RepositoryImpl createFromStateDS(final Source<byte[], byte[]> stateDS, byte[] root) {
+        final CachedSource.SimpleBytesKey<byte[]> snapshotCache = new CachedSource.SimpleBytesKey<>(stateDS);
 
         final CachedSource.BytesKey<Value, byte[]> trieCache = new CachedSource.BytesKey<>
                 (snapshotCache, new TrieCacheSerializer());
@@ -45,7 +48,7 @@ public class RepositoryImpl implements Repository {
 
         final CachedSource.BytesKey<AccountState, byte[]> accountStateCache =
                 new CachedSource.BytesKey<>(trie, new AccountStateSerializer());
-        CachedSource.Simple<byte[], byte[]> codeCache = new CachedSource.Simple<>(snapshotCache);
+        CachedSource.SimpleBytesKey<byte[]> codeCache = new CachedSource.SimpleBytesKey<>(snapshotCache);
 
         class MultiTrieCache extends CachedSource<DataWord, DataWord, byte[], byte[]> {
             byte[] accountAddress;
@@ -97,6 +100,11 @@ public class RepositoryImpl implements Repository {
             }
 
             @Override
+            public Repository getSnapshotTo(byte[] root) {
+                return createFromStateDS(stateDS, root);
+            }
+
+            @Override
             public String dumpStateTrie() {
                 return trie.getTrieDump();
             }
@@ -114,12 +122,6 @@ public class RepositoryImpl implements Repository {
 
     public String dumpStateTrie() {
         throw new RuntimeException("Not supported");
-    }
-
-    private void updateAccountStateRoot(byte[] addr, byte[] root) {
-        AccountState accountState = getAccountState(addr).clone();
-        accountState.setStateRoot(root);
-        accountStateCache.put(addr, accountState);
     }
 
     @Override
@@ -142,8 +144,7 @@ public class RepositoryImpl implements Repository {
     private AccountState getOrCreateAccountState(byte[] addr) {
         AccountState ret = accountStateCache.get(addr);
         if (ret == null) {
-            ret = new AccountState(BigInteger.ZERO, BigInteger.ZERO);
-            accountStateCache.put(addr, ret);
+            ret = createAccount(addr);
         }
         return ret;
     }
@@ -222,8 +223,8 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public RepositoryImpl startTracking() {
-        CachedSource.Simple<byte[], AccountState> trackAccountStateCache = new CachedSource.Simple<>(accountStateCache);
-        CachedSource.Simple<byte[], byte[]> trackCodeCache = new CachedSource.Simple<>(codeCache);
+        CachedSource.SimpleBytesKey<AccountState> trackAccountStateCache = new CachedSource.SimpleBytesKey<>(accountStateCache);
+        CachedSource.SimpleBytesKey<byte[]> trackCodeCache = new CachedSource.SimpleBytesKey<>(codeCache);
         MultiCache<? extends Source<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
             @Override
             protected Source create(byte[] key, Source srcCache) {
@@ -231,7 +232,14 @@ public class RepositoryImpl implements Repository {
             }
         };
 
-        return new RepositoryImpl(trackAccountStateCache, trackCodeCache, trackStorageCache);
+        RepositoryImpl ret = new RepositoryImpl(trackAccountStateCache, trackCodeCache, trackStorageCache);
+        ret.parent = this;
+        return ret;
+    }
+
+    @Override
+    public Repository getSnapshotTo(byte[] root) {
+        return parent.getSnapshotTo(root);
     }
 
     @Override
@@ -473,11 +481,6 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
-        throw new RuntimeException("Not supported");
-    }
-
-    @Override
-    public Repository getSnapshotTo(byte[] root) {
         throw new RuntimeException("Not supported");
     }
 }

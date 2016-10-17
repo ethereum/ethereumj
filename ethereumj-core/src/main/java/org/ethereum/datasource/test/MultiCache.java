@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public abstract class MultiCache<V extends Source> extends CachedSource.Simple<byte[], V> {
+public abstract class MultiCache<V extends Source> extends CachedSource.SimpleBytesKey<V> {
 
     Map<byte[], V> ownCaches = new ByteArrayMap<>();
 
