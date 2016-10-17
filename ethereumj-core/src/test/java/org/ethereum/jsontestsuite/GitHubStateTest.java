@@ -24,7 +24,7 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "9ed33d7440f13c09ce7f038f92abd02d23b26f0d";
+    public String shacommit = "5cf11dce493b065f9b56ef261537a5344bf919eb";
 
 
     private long oldForkValue;
@@ -36,7 +36,7 @@ public class GitHubStateTest {
         SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
-            add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
+            add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
 
         }});
     }

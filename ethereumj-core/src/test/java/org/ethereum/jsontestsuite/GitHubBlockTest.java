@@ -22,7 +22,7 @@ import java.util.Collections;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "9ed33d7440f13c09ce7f038f92abd02d23b26f0d";
+    public String shacommit = "5cf11dce493b065f9b56ef261537a5344bf919eb";
 
     @Ignore // test for conveniently running a single test
     @Test
