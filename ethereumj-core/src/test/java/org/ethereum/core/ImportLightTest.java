@@ -4,12 +4,15 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.datasource.test.MapDB;
+import org.ethereum.datasource.test.RepositoryImpl;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
@@ -553,7 +556,7 @@ public class ImportLightTest {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repository = RepositoryImpl.createNew(new MapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -577,7 +580,7 @@ public class ImportLightTest {
         }
 
         track.commit();
-        repository.commitBlock(genesis.getHeader());
+        repository.commit();
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
