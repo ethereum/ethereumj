@@ -7,10 +7,11 @@ import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.test.MapDB;
+import org.ethereum.datasource.test.RepositoryImpl;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DetailsDataStore;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -49,7 +50,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
     private HashMapDB storageDS;
-    private HashMapDB stateDS;
+    private MapDB stateDS;
     private BlockSummary lastSummary;
 
     class PendingTx {
@@ -353,7 +354,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    public HashMapDB getStateDS() {
+    public MapDB getStateDS() {
         return stateDS;
     }
 
@@ -371,12 +372,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         detailsDS = new HashMapDB();
         storageDS = new HashMapDB();
-        stateDS = new HashMapDB();
-        DetailsDataStore detailsDataStore = new DetailsDataStore()/*.withDb(detailsDS, storageDS)*/;
-        detailsDataStore.dataSource = stateDS;
-        RepositoryImpl repository = new RepositoryImpl(detailsDataStore, stateDS, true)
-                .withBlockStore(blockStore);
-        detailsDataStore.repository = repository;
+        stateDS = new MapDB();
+        RepositoryImpl repository = RepositoryImpl.createNew(stateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
@@ -405,7 +402,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         track.commit();
-        repository.commitBlock(genesis.getHeader());
+        repository.commit();
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
