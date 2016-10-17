@@ -8,6 +8,10 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.GasCost;
+import org.ethereum.vm.OpCode;
+import org.ethereum.vm.program.Program;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -63,5 +67,30 @@ public interface BlockchainConfig {
      */
     void hardForkTransfers(Block block, Repository repo);
 
+    /**
+     * Hardcode the block hashes. I.e. if the block #1920000 should have the hash 0x1111
+     * the this method should return [{1920000, 0x1111}]
+     */
     List<Pair<Long, byte[]>> blockHashConstraints();
+
+    /**
+     * EVM operations costs
+     */
+    GasCost getGasCost();
+
+    /**
+     * Calculates available gas to be passed for callee
+     * Since EIP150
+     * @param op  Opcode
+     * @param requestedGas amount of gas requested by the program
+     * @param availableGas available gas
+     * @throws Program.OutOfGasException If passed args doesn't conform to limitations
+     */
+    DataWord getCallGas(OpCode op, DataWord requestedGas, DataWord availableGas) throws Program.OutOfGasException;
+
+    /**
+     * Calculates available gas to be passed for contract constructor
+     * Since EIP150
+     */
+    DataWord getCreateGas(DataWord availableGas);
 }

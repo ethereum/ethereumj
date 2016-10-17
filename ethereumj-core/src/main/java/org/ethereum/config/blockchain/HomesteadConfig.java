@@ -4,7 +4,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
-import org.ethereum.vm.GasCost;
 
 import java.math.BigInteger;
 
@@ -45,8 +44,8 @@ public class HomesteadConfig extends FrontierConfig {
         long nonZeroes = tx.nonZeroDataBytes();
         long zeroVals  = ArrayUtils.getLength(tx.getData()) - nonZeroes;
 
-        return (tx.isContractCreation() ? GasCost.TRANSACTION_CREATE_CONTRACT : GasCost.TRANSACTION)
-                + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
+        return (tx.isContractCreation() ? getGasCost().getTRANSACTION_CREATE_CONTRACT() : getGasCost().getTRANSACTION())
+                + zeroVals * getGasCost().getTX_ZERO_DATA() + nonZeroes * getGasCost().getTX_NO_ZERO_DATA();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Repository;
@@ -32,7 +33,6 @@ import java.util.*;
 import static java.lang.StrictMath.min;
 import static java.lang.String.format;
 import static java.math.BigInteger.ZERO;
-import static java.math.BigInteger.valueOf;
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -86,6 +86,8 @@ public class Program {
 
     private final SystemProperties config;
 
+    private final BlockchainConfig blockchainConfig;
+
     public Program(byte[] ops, ProgramInvoke programInvoke) {
         this(ops, programInvoke, null);
     }
@@ -106,6 +108,7 @@ public class Program {
         this.stack = setupProgramListener(new Stack());
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
+        this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
 
         precompile();
     }
@@ -368,7 +371,8 @@ public class Program {
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
         //  actual gas subtract
-        DataWord gasLimit = getGas();
+        DataWord gasLimit = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).
+                getCreateGas(getGas());
         spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
@@ -426,7 +430,7 @@ public class Program {
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code = result.getHReturn();
 
-        long storageCost = getLength(code) * GasCost.CREATE_DATA;
+        long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
             if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
@@ -701,6 +705,10 @@ public class Program {
 
     public DataWord getNumber() {
         return invoke.getNumber().clone();
+    }
+
+    public BlockchainConfig getBlockchainConfig() {
+        return blockchainConfig;
     }
 
     public DataWord getDifficulty() {
