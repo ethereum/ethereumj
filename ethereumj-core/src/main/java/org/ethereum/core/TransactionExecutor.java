@@ -237,10 +237,10 @@ public class TransactionExecutor {
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
             // TODO make via Trie.clear() without keyset
-            ContractDetails contractDetails = program.getStorage().getContractDetails(newContractAddress);
-            for (DataWord key : contractDetails.getStorageKeys()) {
-                program.storageSave(key, DataWord.ZERO);
-            }
+//            ContractDetails contractDetails = program.getStorage().getContractDetails(newContractAddress);
+//            for (DataWord key : contractDetails.getStorageKeys()) {
+//                program.storageSave(key, DataWord.ZERO);
+//            }
         }
 
         BigInteger endowment = toBI(tx.getValue());
@@ -304,7 +304,7 @@ public class TransactionExecutor {
         if (!readyToExecute) return null;
 
         String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                validateTransactionChanges(blockStore, currentBlock, tx, (RepositoryTrack) cacheTrack);
+                validateTransactionChanges(blockStore, currentBlock, tx, null);
         if (err != null) {
             execError(err);
             m_endGas = toBI(tx.getGasLimit());
@@ -342,11 +342,12 @@ public class TransactionExecutor {
 
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
-                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-
-                if (program != null) {
-                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-                }
+                // TODO
+//                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+//
+//                if (program != null) {
+//                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+//                }
             }
 
             if (result.getException() != null) {

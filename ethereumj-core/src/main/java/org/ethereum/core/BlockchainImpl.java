@@ -856,8 +856,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (stateLogger.isInfoEnabled())
                 stateLogger.info("tx[{}].receipt: [{}] ", i, Hex.toHexString(receipt.getEncoded()));
 
-            if (block.getNumber() >= config.traceStartBlock())
-                repository.dumpState(block, totalGasUsed, i++, tx.getHash());
+            // TODO
+//            if (block.getNumber() >= config.traceStartBlock())
+//                repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
             receipts.add(receipt);
             if (summary != null) {
@@ -874,8 +875,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 Hex.toHexString(repository.getRoot()));
 
 
-        if (block.getNumber() >= config.traceStartBlock())
-            repository.dumpState(block, totalGasUsed, 0, null);
+        // TODO
+//        if (block.getNumber() >= config.traceStartBlock())
+//            repository.dumpState(block, totalGasUsed, 0, null);
 
         long totalTime = System.nanoTime() - saveTime;
         adminInfo.addBlockExecTime(totalTime);
@@ -935,7 +937,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
 
-        ((RepositoryImpl) repository).commitBlock(block.getHeader());
+        // TODO (pruning)
+//        ((RepositoryImpl) repository).commitBlock(block.getHeader());
+        repository.commit();
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
