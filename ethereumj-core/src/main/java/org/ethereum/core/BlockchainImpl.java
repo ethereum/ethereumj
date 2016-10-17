@@ -330,7 +330,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private void popState() {
         State state = stateStack.pop();
-        this.repository = state.savedRepo;
+        this.repository = repository.getSnapshotTo(state.root);
         this.bestBlock = state.savedBest;
         this.totalDifficulty = state.savedTD;
     }
@@ -368,8 +368,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockStore.reBranch(block);
 
             // The main repository rebranch
-            this.repository = savedState.savedRepo;
-            this.repository.syncToRoot(block.getStateRoot());
+            this.repository = repository.getSnapshotTo(savedState.root);
+//            this.repository.syncToRoot(block.getStateRoot());
 
             // flushing
             if (!byTest) {
@@ -559,13 +559,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
             stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
 
-            track.rollback();
-            // block is bad so 'rollback' the state root to the original state
-            ((RepositoryImpl) repository).setRoot(origRoot);
+//            track.rollback();
+//            repository.rollback();
+            repository = repository.getSnapshotTo(origRoot);
 
-            track.rollback();
             // block is bad so 'rollback' the state root to the original state
-            ((RepositoryImpl) repository).setRoot(origRoot);
+//            ((RepositoryImpl) repository).setRoot(origRoot);
+
+//            track.rollback();
+            // block is bad so 'rollback' the state root to the original state
+//            ((RepositoryImpl) repository).setRoot(origRoot);
 
             if (config.exitOnBlockConflict()) {
                 adminInfo.lostConsensus();
@@ -1233,7 +1236,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     private class State {
-        Repository savedRepo = repository;
+//        Repository savedRepo = repository;
+        byte[] root = repository.getRoot();
         Block savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
     }
