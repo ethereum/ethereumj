@@ -47,6 +47,19 @@ public class ImportLightTest {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
+
+    @Test
+    public void simpleFork() {
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        Block b1 = sb.createBlock();
+        Block b2_ = sb.createBlock();
+        Block b3_ = sb.createForkBlock(b2_);
+        Block b2 = sb.createForkBlock(b1);
+        Block b3 = sb.createForkBlock(b2);
+        Block b4 = sb.createForkBlock(b3);
+        Block b5 = sb.createForkBlock(b4);
+    }
+
     @Test
     public void createFork() throws Exception {
         // importing forked chain
@@ -411,6 +424,19 @@ public class ImportLightTest {
         long spent = balance1.subtract(balance2).longValue();
         Assert.assertEquals(46634, spent);
     }
+
+    @Test
+    public void spendGasSimpleTest() throws IOException, InterruptedException {
+        // check the caller spend value for tx
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+        bc.sendEther(new byte[20], BigInteger.ZERO);
+        bc.createBlock();
+        BigInteger balance2 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+        long spent = balance1.subtract(balance2).longValue();
+        Assert.assertNotEquals(0, spent);
+    }
+
 
     @Test
     public void deepRecursionTest() throws Exception {

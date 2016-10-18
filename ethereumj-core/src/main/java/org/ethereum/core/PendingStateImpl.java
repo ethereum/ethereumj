@@ -60,7 +60,7 @@ public class PendingStateImpl implements PendingState {
     private EthereumListener listener;
 
     @Autowired
-    private Blockchain blockchain;
+    private BlockchainImpl blockchain;
 
     @Autowired
     private BlockStore blockStore;
@@ -71,7 +71,7 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     private ProgramInvokeFactory programInvokeFactory;
 
-    private Repository repository;
+//    private Repository repository;
 
     private final List<PendingTransaction> pendingTransactions = new ArrayList<>();
 
@@ -86,21 +86,25 @@ public class PendingStateImpl implements PendingState {
 
     @Autowired
     public PendingStateImpl(Repository repository) {
-        this.repository = repository;
+//        this.repository = repository;
         init();
     }
 
     public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
         this.listener = listener;
         this.blockchain = blockchain;
-        this.repository = blockchain.getRepository();
+//        this.repository = blockchain.getRepository();
         this.blockStore = blockchain.getBlockStore();
         this.programInvokeFactory = blockchain.getProgramInvokeFactory();
         this.transactionStore = blockchain.getTransactionStore();
     }
 
     public void init() {
-        this.pendingState = repository.startTracking();
+        this.pendingState = getOrigRepository().startTracking();
+    }
+
+    private Repository getOrigRepository() {
+        return blockchain.getRepository();
     }
 
     @Override
@@ -266,7 +270,7 @@ public class PendingStateImpl implements PendingState {
             }
 
             // rollback the state snapshot to the ancestor
-            pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
+            pendingState = getOrigRepository().getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
 
             // next process blocks from new fork
             Block main = newBlock;
@@ -357,7 +361,7 @@ public class PendingStateImpl implements PendingState {
 
     private void updateState(Block block) {
 
-        pendingState = repository.startTracking();
+        pendingState = getOrigRepository().startTracking();
 
         for (PendingTransaction tx : pendingTransactions) {
             TransactionReceipt receipt = executeTx(tx.getTransaction());
@@ -405,7 +409,7 @@ public class PendingStateImpl implements PendingState {
         return block;
     }
 
-    public void setBlockchain(Blockchain blockchain) {
+    public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
     }
 }
