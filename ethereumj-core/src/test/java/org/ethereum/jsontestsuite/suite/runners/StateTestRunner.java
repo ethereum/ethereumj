@@ -87,7 +87,7 @@ public class StateTestRunner {
 
         ProgramResult programResult = executeTransaction(transaction);
 
-        repository.flushNoReconnect();
+        repository.commit();
 
         List<LogInfo> origLogs = programResult.getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase.getLogs());

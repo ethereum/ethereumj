@@ -23,7 +23,7 @@ public class GitHubVMTest {
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "balance0");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "ExtCodeSizeAddressInputTooBigRightMyAddress");
     }
 
     @Test

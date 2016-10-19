@@ -45,8 +45,8 @@ public class GitHubStateTest {
     @Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "suicideSendEtherPostDeath");
+        String json = JSONReader.loadJSONFromCommit("StateTests/stBlockHashTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, "blockhash0");
     }
 
     @Test

@@ -8,11 +8,12 @@ import org.ethereum.core.ImportResult;
 import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.test.MapDB;
+import org.ethereum.datasource.test.RepositoryImpl;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.RepositoryVMTestDummy;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
@@ -169,7 +170,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(), testCase.getPre());
+        RepositoryImpl repository = loadRepository(RepositoryImpl.createNew(new MapDB<byte[]>()), testCase.getPre());
 
         try {
 
@@ -316,8 +317,7 @@ public class TestRunner {
                             continue;
                         }
 
-                        Map<DataWord, DataWord> testStorage = contractDetails.getStorage();
-                        DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
+                        DataWord actualValue = contractDetails.get(new DataWord(storageKey.getData()));
 
                         if (actualValue == null ||
                                 !Arrays.equals(expectedStValue, actualValue.getData())) {
