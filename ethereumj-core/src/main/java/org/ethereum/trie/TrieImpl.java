@@ -558,7 +558,7 @@ public class TrieImpl implements Trie {
                     if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
                         scanTree(val.asBytes(), scanAction);
                 } else {
-                    for (int j = 0; j < LIST_SIZE; ++j) {
+                    for (int j = 0; j < LIST_SIZE - 1; ++j) {
                         Value val = new Value(siblings.get(j));
                         if (val.isHashCode())
                             scanTree(val.asBytes(), scanAction);
