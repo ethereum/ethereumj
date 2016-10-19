@@ -19,13 +19,17 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Scanner;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -59,6 +63,36 @@ public class ImportLightTest {
         Block b4 = sb.createForkBlock(b3);
         Block b5 = sb.createForkBlock(b4);
     }
+
+    @Test
+    @Ignore
+    public void importBlocks() throws Exception {
+        Logger logger = LoggerFactory.getLogger("VM");
+        logger.info("#######################################");
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/frontier.json")));
+        Scanner scanner = new Scanner(new FileInputStream("D:\\ws\\ethereumj\\work\\blocks-rec.dmp"));
+        while (scanner.hasNext()) {
+            String blockHex = scanner.next();
+            Block block = new Block(Hex.decode(blockHex));
+            ImportResult result = blockchain.tryToConnect(block);
+            if (result != ImportResult.EXIST && result != ImportResult.IMPORTED_BEST) {
+                throw new RuntimeException(result + ": " + block + "");
+            }
+            System.out.println("Imported " + block.getShortDescr());
+        }
+    }
+
+    @Test
+    public void putZeroValue() {
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        SolidityContract a = sb.submitNewContract("contract A { uint public a; function set() { a = 0;}}");
+        a.callFunction("set");
+        Block block = sb.createBlock();
+        System.out.println(Hex.toHexString(block.getStateRoot()));
+        Assert.assertEquals("cad42169cafc7855c25b8889df83faf38e493fb6e95b2c9c8e155dbc340160d6", Hex.toHexString(block.getStateRoot()));
+    }
+
 
     @Test
     public void createFork() throws Exception {
@@ -464,7 +498,7 @@ public class ImportLightTest {
                 "  function a(){" +
                 "    blockHash = block.blockhash(block.number - 1);" +
                 "  }" +
-                "}";
+                        "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         SolidityContract a = bc.submitNewContract(contractA);
