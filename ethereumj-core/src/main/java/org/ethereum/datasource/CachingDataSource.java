@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.ByteArrayWrapper;
 
 import java.util.HashMap;
@@ -12,7 +13,8 @@ import java.util.Set;
 public class CachingDataSource implements KeyValueDataSource, Flushable {
     KeyValueDataSource source;
 
-    Map<ByteArrayWrapper, byte[]> cache = new HashMap<>();
+//    Map<ByteArrayWrapper, byte[]> cache = new HashMap<>();
+    Map<ByteArrayWrapper, byte[]> cache = new LRUMap<>(1_000_000);
 
     public CachingDataSource(KeyValueDataSource source) {
         this.source = source;
