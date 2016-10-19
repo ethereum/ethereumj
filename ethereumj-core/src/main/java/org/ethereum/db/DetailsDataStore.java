@@ -84,7 +84,7 @@ public class DetailsDataStore {
             if (accountState == null) return null;
 
             ContractDetailsImpl detailsImpl = commonConfig.contractDetailsImpl();
-            detailsImpl.setAccountState(accountState);
+//            detailsImpl.setAccountState(accountState);
             detailsImpl.setAddress(key);
             details = detailsImpl;
 
