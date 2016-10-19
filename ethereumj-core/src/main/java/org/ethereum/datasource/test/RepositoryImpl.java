@@ -7,6 +7,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.ContractDetailsCacheImpl;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
@@ -124,6 +125,8 @@ public class RepositoryImpl implements Repository {
         throw new RuntimeException("Not supported");
     }
 
+
+
     @Override
     public AccountState createAccount(byte[] addr) {
         AccountState state = new AccountState(BigInteger.ZERO, BigInteger.ZERO);
@@ -158,6 +161,13 @@ public class RepositoryImpl implements Repository {
     public BigInteger increaseNonce(byte[] addr) {
         AccountState accountState = getOrCreateAccountState(addr).clone();
         accountState.incrementNonce();
+        accountStateCache.put(addr, accountState);
+        return accountState.getNonce();
+    }
+
+    public BigInteger setNonce(byte[] addr, BigInteger nonce) {
+        AccountState accountState = getOrCreateAccountState(addr).clone();
+        accountState.setNonce(nonce);
         accountStateCache.put(addr, accountState);
         return accountState.getNonce();
     }
@@ -198,7 +208,7 @@ public class RepositoryImpl implements Repository {
         getOrCreateAccountState(addr);
 
         Source<DataWord, DataWord> contractStorage = storageCache.get(addr);
-        contractStorage.put(key, value);
+        contractStorage.put(key, value.isZero() ? null : value);
     }
 
     @Override
@@ -394,7 +404,15 @@ public class RepositoryImpl implements Repository {
 
         @Override
         public Map<DataWord, DataWord> getStorage() {
-            throw new RuntimeException("Not supported");
+            Source<DataWord, DataWord> storage = storageCache.get(address);
+            CachedSource<DataWord, DataWord, byte[], byte[]> st = (CachedSource<DataWord, DataWord, byte[], byte[]>) storage;
+            Map<DataWord, DataWord> ret = new HashMap<>();
+            for (Map.Entry<DataWord, DataWord> entry : st.getCache().entrySet()) {
+                if (entry.getValue() != null) {
+                    ret.put(entry.getKey(), entry.getValue());
+                }
+            }
+            return ret;
         }
 
         @Override
@@ -436,7 +454,12 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        throw new RuntimeException("Not supported");
+        CachedSource.BytesKey<AccountState, byte[]> cache = (CachedSource.BytesKey<AccountState, byte[]>) accountStateCache;
+        Set<byte[]> ret = new HashSet<>();
+        for (Map.Entry<byte[], AccountState> entry : cache.getCache().entrySet()) {
+            if (entry.getValue() != null) ret.add(entry.getKey());
+        }
+        return ret;
     }
 
     @Override
@@ -476,7 +499,19 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
-        throw new RuntimeException("Not supported");
+        for (Map.Entry<ByteArrayWrapper, AccountState> entry : accountStates.entrySet()) {
+            accountStateCache.put(entry.getKey().getData(), entry.getValue());
+        }
+        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : contractDetailes.entrySet()) {
+            ContractDetails details = getContractDetails(entry.getKey().getData());
+            for (DataWord key : entry.getValue().getStorageKeys()) {
+                details.put(key, entry.getValue().get(key));
+            }
+            byte[] code = entry.getValue().getCode();
+            if (code != null && code.length > 0) {
+                details.setCode(code);
+            }
+        }
     }
 
     @Override

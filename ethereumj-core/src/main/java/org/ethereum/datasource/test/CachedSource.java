@@ -115,6 +115,11 @@ public class CachedSource<Key, Value, SourceKey, SourceValue> implements Source<
         throw new RuntimeException("TODO");
     }
 
+
+    Map<Key, Value> getCache() {
+        return cache;
+    }
+
     public static class BytesKey<V, VS> extends CachedSource<byte[], V, byte[], VS> {
 
         public BytesKey(Source<byte[], VS> src, Serializer<V, VS> valSerializer) {
