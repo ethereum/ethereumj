@@ -684,7 +684,8 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+        return ret == null ? null : ret.clone();
     }
 
     public DataWord getPrevHash() {
