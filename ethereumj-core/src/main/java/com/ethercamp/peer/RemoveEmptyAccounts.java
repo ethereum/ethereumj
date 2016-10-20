@@ -99,13 +99,17 @@ public class RemoveEmptyAccounts extends BasicSample {
                     emptyAcctCnt++;
                 }
 
-                if (emptyAcctCnt == 10000) {
+                if (emptyAcctCnt == 10) {
                     long s = System.currentTimeMillis();
                     for (byte[] deleteKey : nodesToDelete) {
                         deleteTrie.delete(deleteKey);
                     }
                     repo.stateDSCache.flush();
-                    worldState.cleanCache();
+
+                    // cleaning cache
+                    worldState.getCache().setDirty(true);
+                    worldState.getCache().commit();
+
                     worldState.setRoot(deleteTrie.getRootHash());
                     System.out.println("Removed 10000 accounts in " + (System.currentTimeMillis() - s) + "ms");
                 }
