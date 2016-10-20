@@ -18,6 +18,11 @@ public class CollectFullSetOfNodes implements TrieImpl.ScanAction {
         nodes.add(new ByteArrayWrapper(hash));
     }
 
+    @Override
+    public void doOnValue(byte[] key, byte[] value) {
+
+    }
+
     public Set<ByteArrayWrapper> getCollectedHashes() {
         return nodes;
     }

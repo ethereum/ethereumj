@@ -14,6 +14,8 @@ import org.ethereum.samples.BasicSample;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Value;
+import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
@@ -31,6 +33,9 @@ public class RemoveEmptyAccounts extends BasicSample {
     protected final byte[] senderPrivateKey = HashUtil.sha3("cow".getBytes());
     // sender address is derived from the private key aacc23ff079d96a5502b31fefcda87a6b3fbdcfb
     protected final byte[] senderAddress = ECKey.fromPrivate(senderPrivateKey).getAddress();
+
+    @Autowired
+    private KeyValueDataSource stateDS;
 
     static AtomicInteger dbReadCnt = new AtomicInteger();
     static AtomicLong dbReadTime = new AtomicLong();
@@ -80,8 +85,13 @@ public class RemoveEmptyAccounts extends BasicSample {
             long lastStarted = System.currentTimeMillis();
 
             @Override
+            public void doOnValue(byte[] key, byte[] value) {
+
+            }
+
+            @Override
             public void doOnNode(byte[] hash, Value node) {
-//                System.out.println(Hex.toHexString(hash) + " => " + node);
+                System.out.println(Hex.toHexString(hash) + " => " + node);
                 nodeCnt++;
                 Object[] data = (Object[]) node.asObj();
                 if (data.length == 2 && ((byte[]) data[1]).length > 32) {
@@ -107,6 +117,10 @@ public class RemoveEmptyAccounts extends BasicSample {
 
         System.out.println("Done!");
         System.out.println((System.currentTimeMillis() - started) / 1000 + "s\t Nodes: " + nodeCnt + ", \tAccts: " + acctCnt + ", \tEmpty: " + emptyAcctCnt);
+
+        System.out.println(Hex.toHexString(repo.stateDSCache.get(nodesToDelete.get(0))));
+
+//        new TrieImpl()
     }
 
     public static void main(String[] args) throws Exception {

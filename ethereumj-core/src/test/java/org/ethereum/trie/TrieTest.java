@@ -6,6 +6,7 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.util.RLP;
+import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -1392,5 +1393,37 @@ public class TrieTest {
 
         assertArrayEquals(trie.get(Hex.decode("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae")),
                 Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
+    }
+
+    @Test
+    public void trieValuesIteratorTest() {
+        HashMapDB db = new HashMapDB();
+        TrieImpl trie = new TrieImpl(db);
+        Map<String, String> entries = new HashMap<>();
+        entries.put("aaaaaa", "1111000000000000000000000000000000000000000000000000000000000000");
+        entries.put("aaaa", "1111");
+        entries.put("aa", "5555000000000000000000000000000000000000000000000000000000000000");
+        entries.put("aabb", "2222");
+        entries.put("aacc", "6666000000000000000000000000000000000000000000000000000000000000");
+        entries.put("dddd", "4444");
+        entries.put("eeee", "7777000000000000000000000000000000000000000000000000000000000000");
+        for (Map.Entry<String, String> entry : entries.entrySet()) {
+            trie.update(Hex.decode(entry.getKey()), Hex.decode(entry.getValue()));
+        }
+        System.out.println(trie.getTrieDump());
+
+        final Map<String, String> entriesScanned = new HashMap<>();
+        trie.scanTree(trie.getRootHash(), new TrieImpl.ScanAction() {
+            @Override
+            public void doOnValue(byte[] key, byte[] value) {
+                entriesScanned.put(Hex.toHexString(key), Hex.toHexString(value));
+            }
+
+            @Override
+            public void doOnNode(byte[] hash, Value node) {
+            }
+        });
+
+        Assert.assertEquals(entries, entriesScanned);
     }
 }

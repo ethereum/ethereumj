@@ -234,9 +234,9 @@ public class PruneTest {
 
         SolidityContract contr = bc.submitNewContract(
                 "contract Simple {" +
-                "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
-                "}");
+                        "  uint public n;" +
+                        "  function set(uint _n) { n = _n; } " +
+                        "}");
         Block b1 = bc.createBlock();
         contr.callFunction("set", 0xaaaaaaaaaaaaL);
         Block b2 = bc.createBlock();
@@ -291,6 +291,11 @@ public class PruneTest {
                 @Override
                 public void doOnNode(byte[] hash, Value node) {
                     ret.add(new ByteArrayWrapper(hash));
+                }
+
+                @Override
+                public void doOnValue(byte[] key, byte[] value) {
+
                 }
             });
         }
