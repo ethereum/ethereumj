@@ -75,9 +75,11 @@ public class RemoveEmptyAccounts extends BasicSample {
 
     @Override
     public void run() {
-        RepositoryImpl repo = (RepositoryImpl) ethereum.getRepository();
-        TrieImpl worldState = (TrieImpl) repo.getWorldState();
+        final RepositoryImpl repo = (RepositoryImpl) ethereum.getRepository();
+        final TrieImpl worldState = (TrieImpl) repo.getWorldState();
         final List<byte[]> nodesToDelete = new ArrayList<>();
+
+        final TrieImpl deleteTrie = new TrieImpl(repo.stateDSCache, repo.getRoot());
 
         final long started = System.currentTimeMillis();
 
@@ -86,26 +88,33 @@ public class RemoveEmptyAccounts extends BasicSample {
 
             @Override
             public void doOnValue(byte[] key, byte[] value) {
+                acctCnt++;
+                AccountState accountState = new AccountState(value);
+                if (accountState.getNonce().equals(BigInteger.ZERO) &&
+                        accountState.getBalance().equals(BigInteger.ZERO) &&
+                        FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH) &&
+                        FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
 
+                    nodesToDelete.add(key);
+                    emptyAcctCnt++;
+                }
+
+                if (emptyAcctCnt == 10000) {
+                    long s = System.currentTimeMillis();
+                    for (byte[] deleteKey : nodesToDelete) {
+                        deleteTrie.delete(deleteKey);
+                    }
+                    repo.stateDSCache.flush();
+                    worldState.cleanCache();
+                    worldState.setRoot(deleteTrie.getRootHash());
+                    System.out.println("Removed 10000 accounts in " + (System.currentTimeMillis() - s) + "ms");
+                }
             }
 
             @Override
             public void doOnNode(byte[] hash, Value node) {
                 System.out.println(Hex.toHexString(hash) + " => " + node);
                 nodeCnt++;
-                Object[] data = (Object[]) node.asObj();
-                if (data.length == 2 && ((byte[]) data[1]).length > 32) {
-                    acctCnt++;
-                    AccountState accountState = new AccountState((byte[]) data[1]);
-                    if (accountState.getNonce().equals(BigInteger.ZERO) &&
-                            accountState.getBalance().equals(BigInteger.ZERO) &&
-                            FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH) &&
-                            FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-
-                        nodesToDelete.add(hash);
-                        emptyAcctCnt++;
-                    }
-                }
 
                 long l = System.currentTimeMillis();
                 if (l > lastStarted + 10000) {
@@ -113,6 +122,7 @@ public class RemoveEmptyAccounts extends BasicSample {
                     lastStarted = l;
                 }
             }
+
         });
 
         System.out.println("Done!");

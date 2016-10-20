@@ -71,9 +71,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     @Autowired
     private KeyValueDataSource detailsDS;
     @Autowired
-    private KeyValueDataSource stateDS;
-    private CachingDataSource stateDSCache;
-    private JournalPruneDataSource stateDSPrune;
+    public KeyValueDataSource stateDS;
+    public CachingDataSource stateDSCache;
+    public JournalPruneDataSource stateDSPrune;
 
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
