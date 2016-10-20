@@ -42,6 +42,7 @@ public class RemoveEmptyAccounts extends BasicSample {
     protected abstract static class MordenSampleConfig {
         private final String config =
                 "peer.discovery.enabled = false \n" +
+//                "root.hash.start = 6083ecfb20cb4edfc86db474db7a0a361ceea6fd1f1d15822a640645002720b4 \n" +
                 "sync.enabled = false \n";
         public abstract RemoveEmptyAccounts sampleBean();
 
@@ -80,7 +81,7 @@ public class RemoveEmptyAccounts extends BasicSample {
         final TrieImpl worldState = (TrieImpl) repo.getWorldState();
         final List<byte[]> nodesToDelete = new ArrayList<>();
 
-        final TrieImpl deleteTrie = new TrieImpl(repo.stateDSCache, repo.getRoot());
+        final TrieImpl deleteTrie = new TrieImpl(repo.stateDSCache, repo.getRoot()).withPruningEnabled(true);
 
         final long started = System.currentTimeMillis();
 
@@ -95,7 +96,9 @@ public class RemoveEmptyAccounts extends BasicSample {
                         accountState.getBalance().equals(BigInteger.ZERO) &&
                         FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH) &&
                         FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-
+                    if (emptyAcctCnt == 0 && emptyAcctRemoved == 0) {
+                        System.out.println("First key to remove: " + Hex.toHexString(key));
+                    }
                     nodesToDelete.add(key);
                     emptyAcctCnt++;
                 }
@@ -105,15 +108,20 @@ public class RemoveEmptyAccounts extends BasicSample {
                     for (byte[] deleteKey : nodesToDelete) {
                         deleteTrie.delete(deleteKey);
                     }
+                    long fs = System.currentTimeMillis();
+                    deleteTrie.sync();
                     repo.stateDSCache.flush();
+                    long flushTime = System.currentTimeMillis() - fs;
 
                     // cleaning cache
                     worldState.getCache().setDirty(true);
                     worldState.getCache().commit();
 
                     worldState.setRoot(deleteTrie.getRootHash());
-                    System.out.println("Removed 10000 accounts in " + (System.currentTimeMillis() - s) + "ms");
+                    System.out.println("Removed 10000 accounts in " + (System.currentTimeMillis() - s) +
+                            "ms (flush: " + flushTime + "ms). New root: " + Hex.toHexString(deleteTrie.getRootHash()));
 
+                    nodesToDelete.clear();
                     emptyAcctRemoved += emptyAcctCnt;
                     emptyAcctCnt = 0;
                 }
@@ -135,7 +143,6 @@ public class RemoveEmptyAccounts extends BasicSample {
         System.out.println("Done!");
         System.out.println((System.currentTimeMillis() - started) / 1000 + "s\tNodes: " + nodeCnt + "\tAccts: " + acctCnt + "\tEmpty: " + emptyAcctCnt + "\tRemoved: " + emptyAcctRemoved);
 
-        System.out.println(Hex.toHexString(repo.stateDSCache.get(nodesToDelete.get(0))));
 
 //        new TrieImpl()
     }
