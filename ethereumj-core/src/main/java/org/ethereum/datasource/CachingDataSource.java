@@ -13,8 +13,7 @@ import java.util.Set;
 public class CachingDataSource implements KeyValueDataSource, Flushable {
     KeyValueDataSource source;
 
-//    Map<ByteArrayWrapper, byte[]> cache = new HashMap<>();
-    Map<ByteArrayWrapper, byte[]> cache = new LRUMap<>(1_000_000);
+    Map<ByteArrayWrapper, byte[]> cache = new HashMap<>();
 
     public CachingDataSource(KeyValueDataSource source) {
         this.source = source;
@@ -31,9 +30,14 @@ public class CachingDataSource implements KeyValueDataSource, Flushable {
 
     @Override
     public synchronized byte[] get(byte[] key) {
-        byte[] bb = cache.get(new ByteArrayWrapper(key));
+        ByteArrayWrapper keyW = new ByteArrayWrapper(key);
+        byte[] bb = cache.get(keyW);
         if (bb == null) {
-            return source.get(key);
+            if (cache.containsKey(keyW)) {
+                return null;
+            } else {
+                return source.get(key);
+            }
         } else {
             return bb;
         }
