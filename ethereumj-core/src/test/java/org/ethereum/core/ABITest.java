@@ -1,12 +1,12 @@
 package org.ethereum.core;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * @author Anton Nashatyrev
@@ -214,6 +214,57 @@ public class ABITest {
         byte[] encoded = function.encodeArguments(111, strings, 222);
         Object[] objects = function.decodeResult(encoded);
 //        System.out.println(Arrays.toString(objects));
+        Assert.assertEquals(((Number) objects[0]).intValue(), 111);
+        Assert.assertArrayEquals((Object[]) objects[1], strings);
+        Assert.assertEquals(((Number) objects[2]).intValue(), 222);
+    }
+
+    @Test
+    public void decodeWithUnknownPropertiesTest() {
+        String funcJson = "{\n" +
+                "   'constant':false, \n" +
+                "   'inputs':[{'name':'i','type':'int'}, \n" +
+                "               {'name':'s','type':'string[]'}, \n" +
+                "               {'name':'j','type':'int'}], \n" +
+                "    'name':'f4', \n" +
+                "   'outputs':[{'name':'i','type':'int'}, \n" +
+                "               {'name':'s','type':'string[]'}, \n" +
+                "               {'name':'j','type':'int'}], \n" +
+                "    'type':'function', \n" +
+                "    'test':'test' \n" +
+                "}\n";
+        funcJson = funcJson.replaceAll("'", "\"");
+
+        CallTransaction.Function function = CallTransaction.Function.fromJsonInterface(funcJson);
+        String[] strings = new String[] {"aaa", "long string: 123456789012345678901234567890", "ccc"};
+        byte[] encoded = function.encodeArguments(111, strings, 222);
+        Object[] objects = function.decodeResult(encoded);
+        Assert.assertEquals(((Number) objects[0]).intValue(), 111);
+        Assert.assertArrayEquals((Object[]) objects[1], strings);
+        Assert.assertEquals(((Number) objects[2]).intValue(), 222);
+    }
+
+    @Test
+    public void decodeWithPayablePropertyTest() {
+        String funcJson = "{\n" +
+                "   'constant':false, \n" +
+                "   'inputs':[{'name':'i','type':'int'}, \n" +
+                "               {'name':'s','type':'string[]'}, \n" +
+                "               {'name':'j','type':'int'}], \n" +
+                "    'name':'f4', \n" +
+                "   'outputs':[{'name':'i','type':'int'}, \n" +
+                "               {'name':'s','type':'string[]'}, \n" +
+                "               {'name':'j','type':'int'}], \n" +
+                "    'type':'function', \n" +
+                "    'payable':true \n" +
+                "}\n";
+        funcJson = funcJson.replaceAll("'", "\"");
+
+        CallTransaction.Function function = CallTransaction.Function.fromJsonInterface(funcJson);
+        Assert.assertTrue(function.payable);
+        String[] strings = new String[] {"aaa", "long string: 123456789012345678901234567890", "ccc"};
+        byte[] encoded = function.encodeArguments(111, strings, 222);
+        Object[] objects = function.decodeResult(encoded);
         Assert.assertEquals(((Number) objects[0]).intValue(), 111);
         Assert.assertArrayEquals((Object[]) objects[1], strings);
         Assert.assertEquals(((Number) objects[2]).intValue(), 222);
