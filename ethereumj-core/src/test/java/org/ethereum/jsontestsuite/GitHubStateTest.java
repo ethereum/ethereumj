@@ -22,7 +22,7 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "f28ac81493281feec0b17290565cf74042893677";
+    public String shacommit = "97066e40ccd061f727deb5cd860e4d9135aa2551";
 
 
     private long oldForkValue;
@@ -45,8 +45,8 @@ public class GitHubStateTest {
     @Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/stBlockHashTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "blockhash0");
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stTransactionTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, "TransactionSendingToZero");
     }
 
     @Test
@@ -108,7 +108,10 @@ public class GitHubStateTest {
     public void stDelegatecallTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("StateTests/stDelegatecallTest.json", shacommit);
+//        String json = JSONReader.loadJSONFromCommit("StateTests/stDelegatecallTest.json", shacommit);
+//        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stDelegatecallTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
@@ -140,6 +143,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
+    @Ignore
     @Test
     public void stMemoryStressTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
