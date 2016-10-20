@@ -282,6 +282,13 @@ public class TransactionExecutor {
                 }
             }
 
+            String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                    validateTransactionChanges(blockStore, currentBlock, tx, null);
+            if (err != null) {
+                program.setRuntimeFailure(new RuntimeException("Transaction changes validation failed: " + err));
+            }
+
+
             if (result.getException() != null) {
                 result.getDeleteAccounts().clear();
                 result.getLogInfoList().clear();
@@ -289,6 +296,8 @@ public class TransactionExecutor {
 
                 throw result.getException();
             }
+
+            cacheTrack.commit();
 
         } catch (Throwable e) {
 
@@ -302,17 +311,6 @@ public class TransactionExecutor {
 
     public TransactionExecutionSummary finalization() {
         if (!readyToExecute) return null;
-
-        String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                validateTransactionChanges(blockStore, currentBlock, tx, null);
-        if (err != null) {
-            execError(err);
-            m_endGas = toBI(tx.getGasLimit());
-            cacheTrack.rollback();
-            return null;
-        }
-
-        cacheTrack.commit();
 
         // Should include only LogInfo's that was added during not rejected transactions
         List<LogInfo> notRejectedLogInfos = new ArrayList<>();
