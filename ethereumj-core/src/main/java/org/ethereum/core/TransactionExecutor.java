@@ -250,51 +250,51 @@ public class TransactionExecutor {
     public void go() {
         if (!readyToExecute) return;
 
-        // TODO: transaction call for pre-compiled  contracts
-        if (vm == null) return;
-
         try {
 
-            // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
+            if (vm != null) {
 
-            if (config.playVM())
-                vm.play(program);
+                // Charge basic cost of the transaction
+                program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
 
-            result = program.getResult();
-            m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed()));
+                if (config.playVM())
+                    vm.play(program);
 
-            if (tx.isContractCreation()) {
+                result = program.getResult();
+                m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed()));
 
-                int returnDataGasValue = getLength(program.getResult().getHReturn()) * GasCost.CREATE_DATA;
-                if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
+                if (tx.isContractCreation()) {
 
-                    m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
-                    cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
-                } else {
-                    if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                            getConstants().createEmptyContractOnOOG()) {
-                        program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                                returnDataGasValue, program));
-                        result = program.getResult();
+                    int returnDataGasValue = getLength(program.getResult().getHReturn()) * GasCost.CREATE_DATA;
+                    if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
+
+                        m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
+                        cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
+                    } else {
+                        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                                getConstants().createEmptyContractOnOOG()) {
+                            program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                                    returnDataGasValue, program));
+                            result = program.getResult();
+                        }
+                        result.setHReturn(EMPTY_BYTE_ARRAY);
                     }
-                    result.setHReturn(EMPTY_BYTE_ARRAY);
                 }
-            }
 
-            String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                    validateTransactionChanges(blockStore, currentBlock, tx, null);
-            if (err != null) {
-                program.setRuntimeFailure(new RuntimeException("Transaction changes validation failed: " + err));
-            }
+                String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
+                        validateTransactionChanges(blockStore, currentBlock, tx, null);
+                if (err != null) {
+                    program.setRuntimeFailure(new RuntimeException("Transaction changes validation failed: " + err));
+                }
 
 
-            if (result.getException() != null) {
-                result.getDeleteAccounts().clear();
-                result.getLogInfoList().clear();
-                result.resetFutureRefund();
+                if (result.getException() != null) {
+                    result.getDeleteAccounts().clear();
+                    result.getLogInfoList().clear();
+                    result.resetFutureRefund();
 
-                throw result.getException();
+                    throw result.getException();
+                }
             }
 
             cacheTrack.commit();
