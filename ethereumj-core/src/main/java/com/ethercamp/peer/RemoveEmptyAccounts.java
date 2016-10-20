@@ -72,6 +72,7 @@ public class RemoveEmptyAccounts extends BasicSample {
     int nodeCnt = 0;
     int acctCnt = 0;
     int emptyAcctCnt = 0;
+    int emptyAcctRemoved = 0;
 
     @Override
     public void run() {
@@ -99,7 +100,7 @@ public class RemoveEmptyAccounts extends BasicSample {
                     emptyAcctCnt++;
                 }
 
-                if (emptyAcctCnt == 10) {
+                if (emptyAcctCnt == 10000) {
                     long s = System.currentTimeMillis();
                     for (byte[] deleteKey : nodesToDelete) {
                         deleteTrie.delete(deleteKey);
@@ -112,6 +113,9 @@ public class RemoveEmptyAccounts extends BasicSample {
 
                     worldState.setRoot(deleteTrie.getRootHash());
                     System.out.println("Removed 10000 accounts in " + (System.currentTimeMillis() - s) + "ms");
+
+                    emptyAcctRemoved += emptyAcctCnt;
+                    emptyAcctCnt = 0;
                 }
             }
 
@@ -121,7 +125,7 @@ public class RemoveEmptyAccounts extends BasicSample {
 
                 long l = System.currentTimeMillis();
                 if (l > lastStarted + 10000) {
-                    System.out.println((l - started) / 1000 + "s\t Nodes: " + nodeCnt + ", \tAccts: " + acctCnt + ", \tEmpty: " + emptyAcctCnt);
+                    System.out.println((l - started) / 1000 + "s\t Nodes: " + nodeCnt + "\tAccts: " + acctCnt + "\tEmpty: " + emptyAcctCnt + "\tRemoved: " + emptyAcctRemoved);
                     lastStarted = l;
                 }
             }
@@ -129,7 +133,7 @@ public class RemoveEmptyAccounts extends BasicSample {
         });
 
         System.out.println("Done!");
-        System.out.println((System.currentTimeMillis() - started) / 1000 + "s\t Nodes: " + nodeCnt + ", \tAccts: " + acctCnt + ", \tEmpty: " + emptyAcctCnt);
+        System.out.println((System.currentTimeMillis() - started) / 1000 + "s\tNodes: " + nodeCnt + "\tAccts: " + acctCnt + "\tEmpty: " + emptyAcctCnt + "\tRemoved: " + emptyAcctRemoved);
 
         System.out.println(Hex.toHexString(repo.stateDSCache.get(nodesToDelete.get(0))));
 
