@@ -31,7 +31,9 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class CallTransaction {
 
-    private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 
     public static Transaction createRawTransaction(long nonce, long gasPrice, long gasLimit, String toAddress,
                                                     long value, byte[] data) {
@@ -69,7 +71,8 @@ public class CallTransaction {
     enum FunctionType {
         constructor,
         function,
-        event
+        event,
+        fallback
     }
 
     public static class Function {
