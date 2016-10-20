@@ -74,13 +74,20 @@ public class RepositoryImpl implements Repository {
             @Override
             protected boolean flushChild(MultiTrieCache childCache) {
                 if (super.flushChild(childCache)) {
-//                RepositoryNew.this.updateAccountStateRoot(childCache.accountAddress, childCache.trie.getRootHash());
-                    byte[] rootHash = childCache.trie.getRootHash();
-                    AccountState state = accountStateCache.get(childCache.accountAddress).clone();
-                    state.setStateRoot(rootHash);
-                    accountStateCache.put(childCache.accountAddress, state);
-                    return true;
+                    AccountState storageOwnerAcct = accountStateCache.get(childCache.accountAddress);
+                    if (storageOwnerAcct != null) {
+                        // need to update account storage root
+                        byte[] rootHash = childCache.trie.getRootHash();
+                        AccountState state = storageOwnerAcct.clone();
+                        state.setStateRoot(rootHash);
+                        accountStateCache.put(childCache.accountAddress, state);
+                        return true;
+                    } else {
+                        // account was deleted
+                        return false;
+                    }
                 } else {
+                    // no storage changes
                     return false;
                 }
             }
