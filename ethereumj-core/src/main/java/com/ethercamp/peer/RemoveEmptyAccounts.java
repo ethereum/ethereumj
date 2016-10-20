@@ -113,7 +113,6 @@ public class RemoveEmptyAccounts extends BasicSample {
 
             @Override
             public void doOnNode(byte[] hash, Value node) {
-                System.out.println(Hex.toHexString(hash) + " => " + node);
                 nodeCnt++;
 
                 long l = System.currentTimeMillis();
