@@ -8,6 +8,8 @@ import org.ethereum.datasource.Serializer;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.ContractDetailsCacheImpl;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
@@ -207,7 +209,13 @@ public class RepositoryImpl implements Repository {
     @Override
     public byte[] getCode(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? new byte[0] : codeCache.get(accountState.getCodeHash());
+        if (accountState != null) {
+            byte[] codeHash = accountState.getCodeHash();
+            return FastByteComparisons.equal(codeHash, HashUtil.EMPTY_DATA_HASH) ?
+                    ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeHash);
+        } else {
+            return ByteUtil.EMPTY_BYTE_ARRAY;
+        }
     }
 
     @Override
