@@ -283,6 +283,7 @@ public class Transaction {
                 ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
                 ", gas=" + ByteUtil.toHexString(gasLimit) +
                 ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
+                ", sendAddress=" + ByteUtil.toHexString(getSender()) +
                 ", value=" + ByteUtil.toHexString(value) +
                 ", data=" + dataS +
                 ", signatureV=" + (signature == null ? "" : signature.v) +
