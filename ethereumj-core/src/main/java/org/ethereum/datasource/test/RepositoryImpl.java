@@ -7,13 +7,11 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.ContractDetailsCacheImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -41,19 +39,20 @@ public class RepositoryImpl implements Repository {
         return createFromStateDS(stateDS, null);
     }
     public static RepositoryImpl createFromStateDS(final Source<byte[], byte[]> stateDS, byte[] root) {
-        final CachedSource.SimpleBytesKey<byte[]> snapshotCache = new CachedSource.SimpleBytesKey<>(stateDS);
+        final CachedSource.SimpleBytesKey<byte[]> snapshotCache = new CachedSourceImpl.SimpleBytesKey<>(stateDS);
 
-        final CachedSource.BytesKey<Value, byte[]> trieCache = new CachedSource.BytesKey<>
-                (snapshotCache, new TrieCacheSerializer());
-        trieCache.cacheReads = false;
-        trieCache.noDelete = true;
+        final CachedSource.BytesKey<Value, byte[]> trieCache = new CachedSourceImpl.BytesKey<Value, byte[]>
+                (snapshotCache, new TrieCacheSerializer()) {{
+                withCacheReads(false);
+                withNoDelete(true);
+            }};
         final TrieImpl trie = createTrie(trieCache, root);
 
         final CachedSource.BytesKey<AccountState, byte[]> accountStateCache =
-                new CachedSource.BytesKey<>(trie, new AccountStateSerializer());
-        CachedSource.SimpleBytesKey<byte[]> codeCache = new CachedSource.SimpleBytesKey<>(snapshotCache);
+                new CachedSourceImpl.BytesKey<>(trie, new AccountStateSerializer());
+        CachedSource.SimpleBytesKey<byte[]> codeCache = new CachedSourceImpl.SimpleBytesKey<>(snapshotCache);
 
-        class MultiTrieCache extends CachedSource<DataWord, DataWord, byte[], byte[]> {
+        class MultiTrieCache extends CachedSourceImpl<DataWord, DataWord, byte[], byte[]> {
             byte[] accountAddress;
             Trie<byte[]> trie;
 
@@ -248,8 +247,8 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public RepositoryImpl startTracking() {
-        CachedSource.SimpleBytesKey<AccountState> trackAccountStateCache = new CachedSource.SimpleBytesKey<>(accountStateCache);
-        CachedSource.SimpleBytesKey<byte[]> trackCodeCache = new CachedSource.SimpleBytesKey<>(codeCache);
+        CachedSourceImpl.SimpleBytesKey<AccountState> trackAccountStateCache = new CachedSourceImpl.SimpleBytesKey<>(accountStateCache);
+        CachedSourceImpl.SimpleBytesKey<byte[]> trackCodeCache = new CachedSourceImpl.SimpleBytesKey<>(codeCache);
         MultiCache<? extends Source<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
             @Override
             protected Source create(byte[] key, Source srcCache) {
@@ -420,7 +419,7 @@ public class RepositoryImpl implements Repository {
         @Override
         public Map<DataWord, DataWord> getStorage() {
             Source<DataWord, DataWord> storage = storageCache.get(address);
-            CachedSource<DataWord, DataWord, byte[], byte[]> st = (CachedSource<DataWord, DataWord, byte[], byte[]>) storage;
+            CachedSourceImpl<DataWord, DataWord, byte[], byte[]> st = (CachedSourceImpl<DataWord, DataWord, byte[], byte[]>) storage;
             Map<DataWord, DataWord> ret = new HashMap<>();
             for (Map.Entry<DataWord, DataWord> entry : st.getCache().entrySet()) {
                 if (entry.getValue() != null) {
@@ -469,7 +468,7 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        CachedSource.BytesKey<AccountState, byte[]> cache = (CachedSource.BytesKey<AccountState, byte[]>) accountStateCache;
+        CachedSourceImpl.BytesKey<AccountState, byte[]> cache = (CachedSourceImpl.BytesKey<AccountState, byte[]>) accountStateCache;
         Set<byte[]> ret = new HashSet<>();
         for (Map.Entry<byte[], AccountState> entry : cache.getCache().entrySet()) {
             if (entry.getValue() != null) ret.add(entry.getKey());

@@ -1,6 +1,5 @@
 package org.ethereum.datasource.test;
 
-import org.ethereum.datasource.Flushable;
 import org.ethereum.util.ByteArrayMap;
 
 import java.util.Map;
@@ -8,7 +7,7 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public abstract class MultiCache<V extends Source> extends CachedSource.SimpleBytesKey<V> {
+public abstract class MultiCache<V extends Source> extends CachedSourceImpl.SimpleBytesKey<V> {
 
     Map<byte[], V> ownCaches = new ByteArrayMap<>();
 
@@ -32,7 +31,7 @@ public abstract class MultiCache<V extends Source> extends CachedSource.SimpleBy
         boolean ret = false;
         for (Map.Entry<byte[], V> vEntry : ownCaches.entrySet()) {
 
-            if (((CachedSource)vEntry.getValue()).getSrc() != null) {
+            if (((CachedSourceImpl)vEntry.getValue()).getSrc() != null) {
                 ret |= flushChild(vEntry.getValue());
             } else {
                 src.put(vEntry.getKey(), vEntry.getValue());

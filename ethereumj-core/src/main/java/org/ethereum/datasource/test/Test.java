@@ -50,12 +50,12 @@ public class Test {
         AccountState accountState;
 
         Trie<byte[]> storageTrie;
-        CachedSource<DataWord, DataWord, byte[], byte[]> storageCache;
+        CachedSourceImpl<DataWord, DataWord, byte[], byte[]> storageCache;
 
         public ContractDetails(AccountState accountState, Trie<byte[]> storageTrie) {
             this.accountState = accountState;
             this.storageTrie = storageTrie;
-            storageCache = new CachedSource<>(storageTrie, new WordSerializer(), new TrieWordSerializer());
+            storageCache = new CachedSourceImpl<>(storageTrie, new WordSerializer(), new TrieWordSerializer());
         }
 
         public DataWord getStorage(DataWord addr) {
@@ -87,25 +87,25 @@ public class Test {
     class Repository {
         Repository parent;
 
-        CachedSource.Simple<byte[], byte[]> snapshotCache;
-        CachedSource.BytesKey<Value, byte[]> trieCache;
+        CachedSourceImpl.Simple<byte[], byte[]> snapshotCache;
+        CachedSourceImpl.BytesKey<Value, byte[]> trieCache;
         Trie<byte[]> trie;
 
         Source<byte[], AccountState> accountStateCache;
         Source<byte[], byte[]> codeCache;
-        MultiCache<CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
+        MultiCache<CachedSourceImpl<DataWord, DataWord, byte[], byte[]>> storageCache;
 
 
-        public Repository(CachedSource.BytesKey<Value, byte[]> trieCache, byte[] root) {
+        public Repository(CachedSourceImpl.BytesKey<Value, byte[]> trieCache, byte[] root) {
 
         }
         public Repository(Source<byte[], byte[]> db, byte[] root) {
-            snapshotCache = new CachedSource.Simple<>(db);
+            snapshotCache = new CachedSourceImpl.Simple<>(db);
             snapshotCache.cacheReads = false;
             snapshotCache.cacheWrites = true;
-            trieCache = new CachedSource.BytesKey<>(snapshotCache, new TrieCacheSerializer());
+            trieCache = new CachedSourceImpl.BytesKey<>(snapshotCache, new TrieCacheSerializer());
             trie = new TrieImpl(trieCache, root);
-            accountStateCache = new CachedSource.BytesKey<>(trie,new AccountStateSerializer());
+            accountStateCache = new CachedSourceImpl.BytesKey<>(trie,new AccountStateSerializer());
         }
 
         byte[] getCode(byte[] codeHash) {
