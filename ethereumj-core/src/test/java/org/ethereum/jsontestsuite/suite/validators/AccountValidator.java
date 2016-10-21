@@ -54,8 +54,14 @@ public class AccountValidator {
 
 
         // compare storage
-        Set<DataWord> currentKeys = currentDetails.getStorage().keySet();
         Set<DataWord> expectedKeys = expectedDetails.getStorage().keySet();
+
+        for (DataWord key : expectedKeys) {
+            // force to load known keys to cache to enumerate them
+            currentDetails.get(key);
+        }
+
+        Set<DataWord> currentKeys = currentDetails.getStorage().keySet();
         Set<DataWord> checked = new HashSet<>();
 
         for (DataWord key : currentKeys) {

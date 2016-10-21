@@ -140,6 +140,8 @@ public class TestRunner {
                     block.getCumulativeDifficulty(), importResult.toString());
         }
 
+        repository = blockchain.getRepository();
+
         //Check state root matches last valid block
         List<String> results = new ArrayList<>();
         String currRoot = Hex.toHexString(repository.getRoot());
