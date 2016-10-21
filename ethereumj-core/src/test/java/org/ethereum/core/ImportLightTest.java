@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.test.MapDB;
 import org.ethereum.datasource.test.RepositoryImpl;
 import org.ethereum.db.ByteArrayWrapper;
@@ -90,7 +91,40 @@ public class ImportLightTest {
         a.callFunction("set");
         Block block = sb.createBlock();
         System.out.println(Hex.toHexString(block.getStateRoot()));
-        Assert.assertEquals("cad42169cafc7855c25b8889df83faf38e493fb6e95b2c9c8e155dbc340160d6", Hex.toHexString(block.getStateRoot()));
+        Assert.assertEquals("1a15aa4725a388aa82df8eaedd86ab66cde37365d6f1323a9cb678b124c58223", Hex.toHexString(block.getStateRoot()));
+    }
+
+    @Test
+    public void simpleRebranch() {
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        Block b0 = sb.getBlockchain().getBestBlock();
+
+        ECKey addr1 = ECKey.fromPrivate(HashUtil.sha3("1".getBytes()));
+        BigInteger bal2 = sb.getBlockchain().getRepository().getBalance(sb.getSender().getAddress());
+
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(100));
+        Block b1 = sb.createBlock();
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(100));
+        Block b2 = sb.createBlock();
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(100));
+        Block b3 = sb.createBlock();
+
+        BigInteger bal1 = sb.getBlockchain().getRepository().getBalance(addr1.getAddress());
+        Assert.assertEquals(BigInteger.valueOf(300), bal1);
+
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b1_ = sb.createForkBlock(b0);
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b2_ = sb.createForkBlock(b1_);
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b3_ = sb.createForkBlock(b2_);
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b4_ = sb.createForkBlock(b3_);
+
+        BigInteger bal1_ = sb.getBlockchain().getRepository().getBalance(addr1.getAddress());
+        Assert.assertEquals(BigInteger.valueOf(800), bal1_);
+//        BigInteger bal2_ = sb.getBlockchain().getRepository().getBalance(sb.getSender().getAddress());
+//        Assert.assertEquals(bal2, bal2_);
     }
 
 
