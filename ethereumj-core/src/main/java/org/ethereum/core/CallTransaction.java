@@ -1,25 +1,27 @@
 package org.ethereum.core;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
+import static org.apache.commons.lang3.StringUtils.stripEnd;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.solidity.SolidityType.IntType;
+import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
+
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.solidity.SolidityType;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.encoders.Hex;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.ArrayUtils.subarray;
-import static org.apache.commons.lang3.StringUtils.stripEnd;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
-import static org.ethereum.solidity.SolidityType.*;
 
 /**
  * Creates a contract function call transaction.
@@ -28,6 +30,10 @@ import static org.ethereum.solidity.SolidityType.*;
  * Created by Anton Nashatyrev on 25.08.2015.
  */
 public class CallTransaction {
+
+    private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 
     public static Transaction createRawTransaction(long nonce, long gasPrice, long gasLimit, String toAddress,
                                                     long value, byte[] data) {
@@ -65,12 +71,14 @@ public class CallTransaction {
     enum FunctionType {
         constructor,
         function,
-        event
+        event,
+        fallback
     }
 
     public static class Function {
         public boolean anonymous;
         public boolean constant;
+        public boolean payable;
         public String name;
         public Param[] inputs;
         public Param[] outputs;
@@ -162,7 +170,7 @@ public class CallTransaction {
 
         public static Function fromJsonInterface(String json) {
             try {
-                return new ObjectMapper().readValue(json, Function.class);
+                return DEFAULT_MAPPER.readValue(json, Function.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
