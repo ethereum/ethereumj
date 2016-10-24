@@ -26,10 +26,10 @@ public class RepositoryImpl implements Repository {
 
     private Source<byte[], AccountState> accountStateCache;
     private Source<byte[], byte[]> codeCache;
-    private MultiCache<? extends Source<DataWord, DataWord>> storageCache;
+    private MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
 
     public RepositoryImpl(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
-                          MultiCache<? extends Source<DataWord, DataWord>> storageCache) {
+                          MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache) {
         this.accountStateCache = accountStateCache;
         this.codeCache = codeCache;
         this.storageCache = storageCache;
@@ -249,9 +249,9 @@ public class RepositoryImpl implements Repository {
     public RepositoryImpl startTracking() {
         CachedSourceImpl.SimpleBytesKey<AccountState> trackAccountStateCache = new CachedSourceImpl.SimpleBytesKey<>(accountStateCache);
         CachedSourceImpl.SimpleBytesKey<byte[]> trackCodeCache = new CachedSourceImpl.SimpleBytesKey<>(codeCache);
-        MultiCache<? extends Source<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
+        MultiCache<CachedSource<DataWord, DataWord, byte[], byte[]>> trackStorageCache = new MultiCache(storageCache) {
             @Override
-            protected Source create(byte[] key, Source srcCache) {
+            protected CachedSource create(byte[] key, CachedSource srcCache) {
                 return new Simple<>(srcCache);
             }
         };
