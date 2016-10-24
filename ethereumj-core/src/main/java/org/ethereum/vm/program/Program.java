@@ -618,13 +618,7 @@ public class Program {
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
-        storageSave(word1.getData(), word2.getData());
-    }
-
-    public void storageSave(byte[] key, byte[] val) {
-        DataWord keyWord = new DataWord(key);
-        DataWord valWord = new DataWord(val);
-        getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), keyWord, valWord);
+        getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), word1.clone(), word2.clone());
     }
 
     public byte[] getCode() {
@@ -684,7 +678,7 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key.clone());
         return ret == null ? null : ret.clone();
     }
 
