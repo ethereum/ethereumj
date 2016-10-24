@@ -85,11 +85,6 @@ public class PendingStateImpl implements PendingState {
     private Block best = null;
 
     @Autowired
-    public PendingStateImpl(Repository repository) {
-//        this.repository = repository;
-        init();
-    }
-
     public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
         this.listener = listener;
         this.blockchain = blockchain;

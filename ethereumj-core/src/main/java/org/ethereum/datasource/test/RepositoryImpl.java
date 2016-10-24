@@ -1,5 +1,7 @@
 package org.ethereum.datasource.test;
 
+import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -12,6 +14,7 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -27,6 +30,22 @@ public class RepositoryImpl implements Repository {
     private Source<byte[], AccountState> accountStateCache;
     private Source<byte[], byte[]> codeCache;
     private MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
+
+//    CommonConfig commonConfig = new CommonConfig();
+//    private SystemProperties config = SystemProperties.getDefault();
+//
+//
+//    @Autowired
+//    public RepositoryImpl(final CommonConfig commonConfig) {
+//        this.config = commonConfig.systemProperties();
+//        this.commonConfig = commonConfig;
+//        this.stateDS = commonConfig.stateDS();
+////        this.stateDS = commonConfig.keyValueDataSource();
+////        this.stateDS.setName(STATE_DB);
+////        this.stateDS.init();
+//
+//        init();
+//    }
 
     public RepositoryImpl(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
                           MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache) {
@@ -109,6 +128,11 @@ public class RepositoryImpl implements Repository {
             }
 
             @Override
+            public void flush() {
+                commit();
+            }
+
+            @Override
             public Repository getSnapshotTo(byte[] root) {
                 return createFromStateDS(stateDS, root);
             }
@@ -116,6 +140,16 @@ public class RepositoryImpl implements Repository {
             @Override
             public String dumpStateTrie() {
                 return trie.getTrieDump();
+            }
+
+            @Override
+            public void syncToRoot(byte[] root) {
+                trie.setRoot(root);
+            }
+
+            @Override
+            public Value getState(byte[] stateRoot) {
+                return trieCache.get(stateRoot);
             }
         };
     }
@@ -282,6 +316,10 @@ public class RepositoryImpl implements Repository {
     public byte[] getRoot() {
         // TODO
         throw new RuntimeException("TODO");
+    }
+
+    public Value getState(byte[] stateRoot) {
+        throw new RuntimeException("Not implemented");
     }
 
     static class AccountStateSerializer implements Serializer<AccountState, byte[]> {

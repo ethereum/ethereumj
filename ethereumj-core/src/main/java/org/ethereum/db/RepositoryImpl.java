@@ -46,7 +46,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  * @author Roman Mandeleil
  * @since 17.11.2014
  */
-@Component @Primary
+//@Component @Primary
 public class RepositoryImpl implements Repository , org.ethereum.facade.Repository{
 
     public final static String STATE_DB = "state";

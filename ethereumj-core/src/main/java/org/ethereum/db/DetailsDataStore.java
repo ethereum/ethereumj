@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.wrap;
 
-@Component
+//@Component
 public class DetailsDataStore {
 
     CommonConfig commonConfig = CommonConfig.getDefault();
