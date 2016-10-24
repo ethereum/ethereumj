@@ -603,6 +603,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         blockStore.flush();
         transactionStore.flush();
 
+        repository = repository.getSnapshotTo(repository.getRoot());
+
         if (isMemoryBoundFlush()) {
             System.gc();
         }
