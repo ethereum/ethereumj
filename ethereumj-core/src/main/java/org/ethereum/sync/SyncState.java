@@ -10,6 +10,8 @@ public enum SyncState {
     IDLE,
     HASH_RETRIEVING,
     BLOCK_RETRIEVING,
+    NODE_RETRIEVING,
+    RECEIPT_RETRIEVING,
 
     // Peer
     DONE_HASH_RETRIEVING
