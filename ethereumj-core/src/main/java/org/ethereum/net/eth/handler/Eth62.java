@@ -203,8 +203,9 @@ public class Eth62 extends EthHandler {
         return messageWrapper.getFutureHeaders();
     }
 
-    protected synchronized void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
-        sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, false);
+    @Override
+    public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+        return sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, false);
     }
 
     protected synchronized void sendGetNewBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {

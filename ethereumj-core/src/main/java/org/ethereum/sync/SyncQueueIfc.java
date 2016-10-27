@@ -18,6 +18,8 @@ public interface SyncQueueIfc {
 
         long getStart();
 
+        byte[] getHash();
+
         int getCount();
 
         boolean isReverse();

@@ -44,11 +44,20 @@ public abstract class BlockDownloader {
     private Thread getHeadersThread;
     private Thread getBodiesThread;
 
+    private boolean headersDownloadComplete;
+    private boolean downloadComplete;
+
     public BlockDownloader(BlockHeaderValidator headerValidator) {
         this.headerValidator = headerValidator;
     }
 
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
+
+    protected void downloadComplete() {}
+
+    public boolean isDownloadComplete() {
+        return downloadComplete;
+    }
 
     public void init(SyncQueueIfc syncQueue, final SyncPool pool) {
         this.syncQueue = syncQueue;
@@ -90,9 +99,15 @@ public abstract class BlockDownloader {
 
                     if (any != null) {
                         SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
+                        if (hReq.getCount() == 0) {
+                            logger.info("Headers download complete.");
+                            headersDownloadComplete = true;
+                            return;
+                        }
                         logger.debug("headerRetrieveLoop: request headers (" + hReq.getStart() + ") from " + any.getNode());
-                        ListenableFuture<List<BlockHeader>> futureHeaders =
-                                any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                        ListenableFuture<List<BlockHeader>> futureHeaders = hReq.getHash() == null ?
+                                any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse())
+                                : any.getEthHandler().sendGetBlockHeaders(hReq.getHash(), hReq.getCount(), 0, hReq.isReverse());
                         Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
                             @Override
                             public void onSuccess(List<BlockHeader> result) {
@@ -149,6 +164,13 @@ public abstract class BlockDownloader {
 
                 if (blockQueue.size() < blockQueueLimit) {
                     SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(1000);
+
+                    if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
+                        logger.info("Block download complete.");
+                        downloadComplete = true;
+                        downloadComplete();
+                        return;
+                    }
 
                     if (bReq.getBlockHeaders().size() <= 3) {
                         // new blocks are better to request from the header senders first

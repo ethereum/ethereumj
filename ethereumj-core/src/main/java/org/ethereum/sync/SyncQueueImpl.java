@@ -42,6 +42,11 @@ public class SyncQueueImpl implements SyncQueueIfc {
         }
 
         @Override
+        public byte[] getHash() {
+            return null;
+        }
+
+        @Override
         public int getCount() {
             return count;
         }

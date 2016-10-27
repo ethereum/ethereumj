@@ -82,6 +82,11 @@ public class EthAdapter implements Eth {
     }
 
     @Override
+    public ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+        return null;
+    }
+
+    @Override
     public ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
         return null;
     }

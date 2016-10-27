@@ -86,6 +86,8 @@ public interface Eth {
      */
     ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
 
+    ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse);
+
     /**
      *  Send GET_BLOCK_BODIES message to the peer
      */
