@@ -266,7 +266,7 @@ public class SyncManager extends BlockDownloader {
                     logger.error("Exception in log worker", t);
                 }
             }
-        }, 0, 30, TimeUnit.SECONDS);
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     public void close() {

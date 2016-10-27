@@ -68,6 +68,7 @@ public class SyncPool {
     }
 
     public void init(final ChannelManager channelManager) {
+        if (this.channelManager != null) return; // inited already
         this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
