@@ -63,7 +63,7 @@ public abstract class BlockDownloader {
         this.syncQueue = syncQueue;
         this.pool = pool;
 
-        logger.info("Initializing SyncManager.");
+        logger.info("Initializing BlockDownloader.");
 
         getHeadersThread = new Thread(new Runnable() {
             @Override

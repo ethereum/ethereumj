@@ -5,10 +5,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Flushable;
 import org.ethereum.datasource.HashMapDB;
@@ -27,13 +24,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 import static org.ethereum.util.CompactEncoder.hasTerminator;
 
@@ -41,6 +37,7 @@ import static org.ethereum.util.CompactEncoder.hasTerminator;
  * Created by Anton Nashatyrev on 24.10.2016.
  */
 @Component
+@Lazy
 public class FastSyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
@@ -68,6 +65,9 @@ public class FastSyncManager {
     //    Source<byte[], byte[]> stateDS;
     @Autowired @Qualifier("stateDS")
     KeyValueDataSource stateDS = new HashMapDB();
+
+    @Autowired
+    FastSyncDownloader downloader;
 
     int nodesInserted = 0;
 
@@ -112,9 +112,6 @@ public class FastSyncManager {
                     if (!FastByteComparisons.equal(HashUtil.EMPTY_TRIE_HASH, state.getStateRoot())) {
                         ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot()));
                     }
-//                    if (FastByteComparisons.equal(Hex.decode("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"), state.getStateRoot())) {
-//                        System.out.println("TrieNodeRequest.createChildRequests");
-//                    }
                     return ret;
                 }
             }
@@ -127,9 +124,6 @@ public class FastSyncManager {
         }
 
         public void reqSent() {
-//            if (reqCount > 5) {
-//                logger.warn("Node couldn't be fetched for " + reqCount + " times: " + this);
-//            }
             timestamp = System.currentTimeMillis();
             reqCount++;
         }
@@ -271,44 +265,99 @@ public class FastSyncManager {
 
     public void main() {
 
-        Block pivot = getPivotBlock();
+        BlockHeader pivot = getPivotBlock();
 
         byte[] pivotStateRoot = pivot.getStateRoot();
-//        byte[] pivotStateRoot = Hex.decode("209230089ff328b2d87b721c48dbede5fd163c3fae29920188a7118275ab2013");
         TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
         nodesQueue.add(request);
-        logger.info("Starting FastSync from state root: " + Hex.toHexString(pivotStateRoot));
+        logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
         retrieveLoop();
-        logger.info("FastSync complete!");
+        logger.info("FastSync: state trie download complete!");
         last = 0; logStat();
-//        ((Flushable) stateDS).flush();
 
-        downloadPrevious256Blocks();
-        blockStore.saveBlock(pivot, pivot.getCumulativeDifficulty(), true);
-        blockchain.setBestBlock(pivot);
+        if (stateDS instanceof Flushable) {
+            ((Flushable) stateDS).flush();
+        }
+
+        logger.info("FastSync: starting downloading ancestors of the pivot block: " + pivot.getShortDescr());
+        downloader.startImporting(pivot.getHash());
+        while (downloader.getDownloadedBlocksCount() < 1000) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        logger.info("FastSync: downloaded more than 256 ancestor blocks, proceeding with live sync");
+//        blockStore.saveBlock(pivot, pivot.getCumulativeDifficulty(), true);
+        blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
         config.setSyncEnabled(true);
         syncManager.init(channelManager, pool);
 
-        downloadPreviousBlocks();
-        downloadPreviousReceipts();
+//        downloadPreviousBlocks();
+//        downloadPreviousReceipts();
 
         // set indicator that we can send [STATUS] with the latest block
         // before we should report best block #0
     }
 
-    private void downloadPreviousReceipts() {
+    private BlockHeader getPivotBlock() {
+        logger.info("FastSync: looking for best block number...");
+        BlockIdentifier bestKnownBlock;
 
-    }
+        long s = System.currentTimeMillis();
+        while (true) {
+            Channel bestIdle = pool.getBestIdle();
+            if (bestIdle != null) {
+                bestKnownBlock = bestIdle.getEthHandler().getBestKnownBlock();
+                if (bestKnownBlock.getNumber() > 1000) {
+                    logger.info("FastSync: best block " + bestKnownBlock + " found with peer " + bestIdle);
+                    break;
+                }
+            }
 
-    private void downloadPrevious256Blocks() {
-    }
+            long t = System.currentTimeMillis();
+            if (t - s > 5000) {
+                logger.info("FastSync: waiting for a peer to sync with...");
+                s = t;
+            }
 
-    private void downloadPreviousBlocks() {
-        
-    }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-    private Block getPivotBlock() {
-        return new Block(Hex.decode("f9020cf90207a016c03af532a08350b051cb60a206087ec15b8f940f645de1633f2d0bf4db4e1ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794c0ea08a2d404d3172d2add29a45be56da40e2949a005c244b80f171e9d8f87531790d8dfebd236ef9db390e38d89abe30b507fdd64a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008660ba79d57cc383265424831e848080845810c6198a7777772e62772e636f6da06c01fad0847a92caf96b99435ea259b84ef8d2a4e20e365ad93407f9738c237f881231c74804ceb692c0c0"));
+        long pivotBlockNumber = bestKnownBlock.getNumber() - 1000;
+        logger.info("FastSync: fetching pivot block #" + pivotBlockNumber);
+
+        try {
+            while (true) {
+                Channel bestIdle = pool.getBestIdle();
+                if (bestIdle != null) {
+                    ListenableFuture<List<BlockHeader>> future = bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false);
+                    List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
+                    if (!blockHeaders.isEmpty()) {
+                        BlockHeader ret = blockHeaders.get(0);
+                        logger.info("Pivot header fetched: " + ret.getShortDescr());
+                        return ret;
+                    }
+                }
+
+                long t = System.currentTimeMillis();
+                if (t - s > 5000) {
+                    logger.info("FastSync: waiting for a peer to fetch pivot block...");
+                    s = t;
+                }
+
+                Thread.sleep(500);
+            }
+        } catch (Exception e) {
+            logger.error("Unexpected", e);
+            throw new RuntimeException(e);
+        }
     }
 
 }
