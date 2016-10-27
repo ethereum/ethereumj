@@ -33,7 +33,7 @@ public class ByteArraySet implements Set<byte[]> {
 
     @Override
     public boolean contains(Object o) {
-        return delegate.contains(o);
+        return delegate.contains(new ByteArrayWrapper((byte[]) o));
     }
 
     @Override
