@@ -8,6 +8,7 @@ import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -365,4 +366,8 @@ public class BlockHeader {
         return toStringWithSuffix("");
     }
 
+    public String getShortDescr() {
+        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
+                + Hex.toHexString(getParentHash()).substring(0,6) + ")";
+    }
 }

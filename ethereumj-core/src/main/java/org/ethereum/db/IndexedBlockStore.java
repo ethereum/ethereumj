@@ -97,8 +97,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     private void addInternalBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
 
-        List<BlockInfo> blockInfos = block.getNumber() >= index.size() ?  new ArrayList<BlockInfo>() :
-                index.get((int) block.getNumber());
+        List<BlockInfo> blockInfos = block.getNumber() >= index.size() ?  null : index.get((int) block.getNumber());
+        blockInfos = blockInfos == null ? new ArrayList<BlockInfo>() : blockInfos;
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
@@ -122,6 +122,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
         List<BlockInfo> blockInfos = index.get((int) number);
 
+        if (blockInfos == null) {
+            return result;
+        }
+
         for (BlockInfo blockInfo : blockInfos){
 
             byte[] hash = blockInfo.getHash();
@@ -139,6 +143,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
         }
 
         List<BlockInfo> blockInfos = index.get((int) number);
+
+        if (blockInfos == null) {
+            return null;
+        }
 
         for (BlockInfo blockInfo : blockInfos){
 
@@ -200,6 +208,22 @@ public class IndexedBlockStore extends AbstractBlockstore{
                 }
             }
         }
+    }
+
+    public synchronized void updateAllTotDifficulties() {
+        for (int i = 1; i <= getMaxNumber() ; i++) {
+            List<BlockInfo> level = getBlockInfoForLevel(i);
+            for (BlockInfo blockInfo : level) {
+                Block block = getBlockByHash(blockInfo.getHash());
+                List<BlockInfo> parentInfos = getBlockInfoForLevel(i - 1);
+                BlockInfo parentInfo = getBlockInfoForHash(parentInfos, block.getParentHash());
+                blockInfo.setCummDifficulty(parentInfo.getCummDifficulty().add(block.getDifficultyBI()));
+            }
+            if (i % 1000 == 0) {
+                flush();
+            }
+        }
+        flush();
     }
 
     @Override
