@@ -702,7 +702,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 return false;
             }
 
-            if (!validateUncles(block)) return false;
+//            if (!validateUncles(block)) return false;
 
             List<Transaction> txs = block.getTransactionsList();
             if (!txs.isEmpty()) {
@@ -986,6 +986,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public void setBestBlock(Block block) {
         bestBlock = block;
+        repository = repository.getSnapshotTo(block.getStateRoot());
     }
 
     @Override

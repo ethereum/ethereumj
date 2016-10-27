@@ -333,6 +333,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
                     return false;
                 }
+                if (handler.getNodeStatistics().getClientId().contains("Parity") ||
+                        handler.getNodeStatistics().getClientId().contains("parity")) {
+                    return false;
+                }
                 return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
             }
         }, limit);

@@ -326,6 +326,8 @@ public class SyncManager {
      */
     public boolean validateAndAddNewBlock(Block block, byte[] nodeId) {
 
+        if (syncQueue == null) return true;
+
         // run basic checks
         if (!isValid(block.getHeader())) {
             return false;

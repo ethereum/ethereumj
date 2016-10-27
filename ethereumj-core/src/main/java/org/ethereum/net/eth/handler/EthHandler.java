@@ -68,7 +68,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         bestBlock = blockchain.getBestBlock();
         this.ethereumListener.addListener(listener);
         // when sync enabled we delay transactions processing until sync is complete
-        processTransactions = !config.isSyncEnabled();
+//        processTransactions = !config.isSyncEnabled();
     }
 
     @Override

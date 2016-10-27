@@ -123,7 +123,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     public SyncQueueImpl(Blockchain bc) {
         Block bestBlock = bc.getBestBlock();
-        long start = bestBlock.getNumber() - MAX_CHAIN_LEN;
+        long start = bestBlock.getNumber() - 0;
         start = start < 0 ? 0 : start;
         List<Block> initBlocks = new ArrayList<>();
         for (long i = start; i <= bestBlock.getNumber(); i++) {
@@ -133,9 +133,9 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     private void init(List<Block> initBlocks) {
-        if (initBlocks.size() < MAX_CHAIN_LEN && initBlocks.get(0).getNumber() != 0) {
-            throw new RuntimeException("Queue should be initialized with a chain of at least " + MAX_CHAIN_LEN + " size or with the first genesis block");
-        }
+//        if (initBlocks.size() < MAX_CHAIN_LEN && initBlocks.get(0).getNumber() != 0) {
+//            throw new RuntimeException("Queue should be initialized with a chain of at least " + MAX_CHAIN_LEN + " size or with the first genesis block");
+//        }
         for (Block block : initBlocks) {
             addHeaderPriv(new BlockHeaderWrapper(block.getHeader(), null));
             addBlock(block).exported = true;
