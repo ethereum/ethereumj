@@ -1,5 +1,7 @@
 package org.ethereum.net.eth.handler;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
@@ -82,6 +84,7 @@ public class Eth62 extends EthHandler {
      * or in case when peer is disconnected
      */
     protected final List<BlockHeaderWrapper> sentHeaders = Collections.synchronizedList(new ArrayList<BlockHeaderWrapper>());
+    protected SettableFuture<List<Block>> futureBlocks;
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
@@ -182,7 +185,7 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public synchronized void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
@@ -192,9 +195,12 @@ public class Eth62 extends EthHandler {
         );
 
         GetBlockHeadersMessage headersRequest = new GetBlockHeadersMessage(blockNumber, null, maxBlocksAsk, 0, reverse);
-        headerRequests.add(new GetBlockHeadersMessageWrapper(headersRequest));
+        GetBlockHeadersMessageWrapper messageWrapper = new GetBlockHeadersMessageWrapper(headersRequest);
+        headerRequests.add(messageWrapper);
 
         sendNextHeaderRequest();
+
+        return messageWrapper.getFutureHeaders();
     }
 
     protected synchronized void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
@@ -205,7 +211,7 @@ public class Eth62 extends EthHandler {
         sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, true);
     }
 
-    protected synchronized void sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
+    protected synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
@@ -215,13 +221,16 @@ public class Eth62 extends EthHandler {
         );
 
         GetBlockHeadersMessage headersRequest = new GetBlockHeadersMessage(0, blockHash, maxBlocksAsk, skip, reverse);
-        headerRequests.add(new GetBlockHeadersMessageWrapper(headersRequest, newHashes));
+        GetBlockHeadersMessageWrapper messageWrapper = new GetBlockHeadersMessageWrapper(headersRequest, newHashes);
+        headerRequests.add(messageWrapper);
 
         sendNextHeaderRequest();
+
+        return messageWrapper.getFutureHeaders();
     }
 
     @Override
-    public synchronized void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+    public synchronized ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
         syncState = BLOCK_RETRIEVING;
         sentHeaders.clear();
         sentHeaders.addAll(headers);
@@ -240,6 +249,9 @@ public class Eth62 extends EthHandler {
         GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
 
         sendMessage(msg);
+
+        futureBlocks = SettableFuture.create();
+        return futureBlocks;
     }
 
     @Override
@@ -380,14 +392,7 @@ public class Eth62 extends EthHandler {
             processInitHeaders(received);
         else {
             syncStats.addHeaders(received.size());
-
-            logger.debug("Adding " + received.size() + " headers to the queue.");
-
-            if (!syncManager.validateAndAddHeaders(received, channel.getNodeId())) {
-
-                dropConnection();
-                return;
-            }
+            request.getFutureHeaders().set(received);
         }
 
         syncState = IDLE;
@@ -425,7 +430,8 @@ public class Eth62 extends EthHandler {
             return;
         }
 
-        syncManager.addList(blocks, channel.getNodeId());
+        futureBlocks.set(blocks);
+        futureBlocks = null;
 
         syncState = IDLE;
     }

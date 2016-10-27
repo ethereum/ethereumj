@@ -1,9 +1,9 @@
 package org.ethereum.net.eth.handler;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
@@ -84,12 +84,12 @@ public interface Eth {
     /**
      *  Send GET_BLOCK_HEADERS message to the peer
      */
-    void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
+    ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
 
     /**
      *  Send GET_BLOCK_BODIES message to the peer
      */
-    void sendGetBlockBodies(List<BlockHeaderWrapper> headers);
+    ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers);
 
     /**
      * Sends new block to the wire

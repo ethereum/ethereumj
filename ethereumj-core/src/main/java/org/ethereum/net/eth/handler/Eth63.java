@@ -10,7 +10,7 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.datasource.test.RepositoryImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -98,7 +98,6 @@ public class Eth63 extends Eth62 {
                 states.add(value);
                 logger.trace("Eth63: " + Hex.toHexString(stateRoot).substring(0, 8) + " -> " + value);
             } else {
-                System.out.println("Not found: " + Hex.toHexString(stateRoot));
             }
         }
 

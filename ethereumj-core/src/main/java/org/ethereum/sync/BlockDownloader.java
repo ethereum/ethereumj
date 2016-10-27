@@ -1,15 +1,16 @@
 package org.ethereum.sync;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.server.Channel;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -23,7 +24,6 @@ public abstract class BlockDownloader {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-
     private int blockQueueLimit = 2000;
     private int headerQueueLimit = 10000;
 
@@ -32,10 +32,6 @@ public abstract class BlockDownloader {
      */
     private BlockingQueue<BlockWrapper> blockQueue = new LinkedBlockingQueue<>();
 
-    private long lastKnownBlockNumber = 0;
-    private boolean syncDone = false;
-
-    @Autowired
     private BlockHeaderValidator headerValidator;
 
     private SyncPool pool;
@@ -65,7 +61,7 @@ public abstract class BlockDownloader {
             public void run() {
                 headerRetrieveLoop();
             }
-        }, "NewSyncThreadHeaders");
+        }, "SyncThreadHeaders");
         getHeadersThread.start();
 
         getBodiesThread = new Thread(new Runnable() {
@@ -73,7 +69,7 @@ public abstract class BlockDownloader {
             public void run() {
                 blockRetrieveLoop();
             }
-        }, "NewSyncThreadBlocks");
+        }, "SyncThreadBlocks");
         getBodiesThread.start();
     }
 
@@ -90,12 +86,27 @@ public abstract class BlockDownloader {
             try {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
-                    Channel any = pool.getAnyIdle();
+                    final Channel any = pool.getAnyIdle();
 
                     if (any != null) {
                         SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
                         logger.debug("headerRetrieveLoop: request headers (" + hReq.getStart() + ") from " + any.getNode());
-                        any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                        ListenableFuture<List<BlockHeader>> futureHeaders =
+                                any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse());
+                        Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
+                            @Override
+                            public void onSuccess(List<BlockHeader> result) {
+                                if (!validateAndAddHeaders(result, any.getNodeId())) {
+                                    onFailure(new RuntimeException("Received headers validation failed"));
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                logger.debug("Error receiving headers. Dropping the peer.", t);
+                                any.getEthHandler().dropConnection();
+                            }
+                        });
                     } else {
                         logger.debug("headerRetrieveLoop: No IDLE peers found");
                     }
@@ -114,6 +125,25 @@ public abstract class BlockDownloader {
     }
 
     private void blockRetrieveLoop() {
+        class BlocksCallback implements FutureCallback<List<Block>> {
+            private Channel peer;
+
+            public BlocksCallback(Channel peer) {
+                this.peer = peer;
+            }
+
+            @Override
+            public void onSuccess(List<Block> result) {
+                addBlocks(result, peer.getNodeId());
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                logger.debug("Error receiving Blocks. Dropping the peer.", t);
+                peer.getEthHandler().dropConnection();
+            }
+        }
+
         while(!Thread.currentThread().isInterrupted()) {
             try {
 
@@ -126,7 +156,9 @@ public abstract class BlockDownloader {
                         for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
                             if (channel != null) {
-                                channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
+                                ListenableFuture<List<Block>> futureBlocks =
+                                        channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
+                                Futures.addCallback(futureBlocks, new BlocksCallback(channel));
                             }
                         }
                     }
@@ -139,7 +171,9 @@ public abstract class BlockDownloader {
                             break;
                         } else {
                             logger.debug("blockRetrieveLoop: Requesting " + blocksRequest.getBlockHeaders().size() + " blocks from " + any.getNode());
-                            any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                            ListenableFuture<List<Block>> futureBlocks =
+                                    any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                            Futures.addCallback(futureBlocks, new BlocksCallback(any));
                             reqBlocksCounter++;
                         }
                     }
@@ -164,7 +198,7 @@ public abstract class BlockDownloader {
      * @param blocks block list received from remote peer and be added to the queue
      * @param nodeId nodeId of remote peer which these blocks are received from
      */
-    public void addList(List<Block> blocks, byte[] nodeId) {
+    private void addBlocks(List<Block> blocks, byte[] nodeId) {
 
         if (blocks.isEmpty()) {
             return;
@@ -198,52 +232,6 @@ public abstract class BlockDownloader {
     }
 
     /**
-     * Adds NEW block to the queue
-     *
-     * @param block new block
-     * @param nodeId nodeId of the remote peer which this block is received from
-     *
-     * @return true if block passed validations and was added to the queue,
-     *         otherwise it returns false
-     */
-    public boolean validateAndAddNewBlock(Block block, byte[] nodeId) {
-
-        if (syncQueue == null) return true;
-
-        // run basic checks
-        if (!isValid(block.getHeader())) {
-            return false;
-        }
-
-        lastKnownBlockNumber = block.getNumber();
-
-        logger.debug("Adding new block to sync queue: " + block.getShortDescr());
-        syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
-
-        synchronized (this) {
-            List<Block> newBlocks = syncQueue.addBlocks(singletonList(block));
-
-            List<BlockWrapper> wrappers = new ArrayList<>();
-            for (Block b : newBlocks) {
-                boolean newBlock = Arrays.equals(block.getHash(), b.getHash());
-                BlockWrapper wrapper = new BlockWrapper(b, newBlock, nodeId);
-                wrapper.setReceivedAt(System.currentTimeMillis());
-                wrappers.add(wrapper);
-            }
-
-            logger.debug("Pushing " + wrappers.size() + " new blocks to import queue: " + (wrappers.isEmpty() ? "" :
-                    wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
-            pushBlocks(wrappers);
-        }
-
-        logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
-                blockQueue.size(),
-                block.getNumber());
-
-        return true;
-    }
-
-    /**
      * Adds list of headers received from remote host <br>
      * Runs header validation before addition <br>
      * It also won't add headers of those blocks which are already presented in the queue
@@ -254,7 +242,7 @@ public abstract class BlockDownloader {
      * @return true if blocks passed validation and were added to the queue,
      *          otherwise it returns false
      */
-    public boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
+    private boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
 
         if (headers.isEmpty()) return true;
 
@@ -291,7 +279,7 @@ public abstract class BlockDownloader {
      * @param header block header
      * @return true if block is valid, false otherwise
      */
-    private boolean isValid(BlockHeader header) {
+    protected boolean isValid(BlockHeader header) {
 
         if (!headerValidator.validate(header)) {
 
@@ -303,11 +291,7 @@ public abstract class BlockDownloader {
     }
 
     public boolean isSyncDone() {
-        return syncDone;
-    }
-
-    public long getLastKnownBlockNumber() {
-        return lastKnownBlockNumber;
+        return false;
     }
 
     public void close() {

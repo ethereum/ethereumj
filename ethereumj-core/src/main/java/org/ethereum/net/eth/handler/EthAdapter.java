@@ -1,8 +1,8 @@
 package org.ethereum.net.eth.handler;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.sync.SyncState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
@@ -77,11 +77,13 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public void sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    public ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+        return null;
     }
 
     @Override
-    public void sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+    public ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+        return null;
     }
 
     @Override
