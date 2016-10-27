@@ -267,10 +267,6 @@ public class TransactionExecutor {
                     int returnDataGasValue = getLength(program.getResult().getHReturn()) *
                             config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
                     if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
-
-                    int returnDataGasValue = getLength(program.getResult().getHReturn()) * GasCost.CREATE_DATA;
-                    if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
-
                         m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
                         cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                     } else {

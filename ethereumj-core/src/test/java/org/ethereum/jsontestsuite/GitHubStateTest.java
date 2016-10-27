@@ -173,7 +173,6 @@ public class GitHubStateTest {
 
     @Ignore
     @Test
-    @Ignore
     public void stMemoryStressTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
