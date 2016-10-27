@@ -15,9 +15,13 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.*;
 
 import static java.lang.Math.max;
@@ -190,7 +194,7 @@ public class SyncManager {
                         // to get more chances to receive block body promptly
                         for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
-                            if (channel != null) {
+                            if (channel != null && channel.isIdle()) {
                                 channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
                             }
                         }
@@ -228,6 +232,9 @@ public class SyncManager {
      */
     private void produceQueue() {
 
+        DecimalFormat timeFormat = new DecimalFormat("0.000");
+        timeFormat.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
+
         while (!Thread.currentThread().isInterrupted()) {
 
             BlockWrapper wrapper = null;
@@ -236,12 +243,24 @@ public class SyncManager {
                 wrapper = blockQueue.take();
 
                 logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueue.getHeadersCount());
-                ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
+
+                long s = System.nanoTime();
+                long sl;
+                ImportResult importResult;
+                synchronized (blockchain) {
+                    sl = System.nanoTime();
+                    importResult = blockchain.tryToConnect(wrapper.getBlock());
+                }
+                long f = System.nanoTime();
+                long t = (f - s) / 1_000_000;
+                String ts = timeFormat.format(t / 1000d) + "s";
+                t = (sl - s) / 1_000_000;
+                ts += t < 10 ? "" : " (lock: " + timeFormat.format(t / 1000d) + "s)";
 
                 if (importResult == IMPORTED_BEST) {
-                    logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {} ",
+                    logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {}, time: {}",
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),
-                            wrapper.getBlock().getTransactionsList().size());
+                            wrapper.getBlock().getTransactionsList().size(), ts);
 
                     if (wrapper.isNewBlock() && !syncDone) {
                         syncDone = true;
@@ -251,12 +270,14 @@ public class SyncManager {
                 }
 
                 if (importResult == IMPORTED_NOT_BEST)
-                    logger.info("Success importing NOT_BEST: block.number: {}, block.hash: {}, tx.size: {} ",
+                    logger.info("Success importing NOT_BEST: block.number: {}, block.hash: {}, tx.size: {}, time: {}",
                             wrapper.getNumber(), wrapper.getBlock().getShortHash(),
-                            wrapper.getBlock().getTransactionsList().size());
+                            wrapper.getBlock().getTransactionsList().size(), ts);
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
                     if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
+                    // Propagate block to the net after successful import asynchronously
+                    if (wrapper.isNewBlock()) channelManager.onNewForeignBlock(wrapper);
                 }
 
                 // In case we don't have a parent on the chain
@@ -269,10 +290,13 @@ public class SyncManager {
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
-                logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
-                logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                if (wrapper != null) {
+                    logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                } else {
+                    logger.error("Error processing unknown block", e);
+                }
             }
-
         }
     }
 

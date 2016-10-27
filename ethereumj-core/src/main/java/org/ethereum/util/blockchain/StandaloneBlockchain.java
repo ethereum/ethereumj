@@ -24,6 +24,7 @@ import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.iq80.leveldb.DBException;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long gasPrice;
     long gasLimit;
     boolean autoBlock;
+    long dbDelay = 0;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
@@ -99,12 +101,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
         setSender(ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")));
 //        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
-        addEthereumListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                lastSummary = blockSummary;
-            }
-        });
     }
 
     public StandaloneBlockchain withGenesis(Genesis genesis) {
@@ -153,6 +149,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
      */
     public StandaloneBlockchain withBlockGasIncrease(int blockGasIncreasePercent) {
         this.blockGasIncreasePercent = blockGasIncreasePercent;
+        return this;
+    }
+
+    public StandaloneBlockchain withDbDelay(long dbDelay) {
+        this.dbDelay = dbDelay;
         return this;
     }
 
@@ -252,12 +253,12 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public void setSender(ECKey senderPrivateKey) {
         txSender = senderPrivateKey;
-        if (!getBlockchain().getRepository().isExist(senderPrivateKey.getAddress())) {
-            Repository repository = getBlockchain().getRepository();
-            Repository track = repository.startTracking();
-            track.createAccount(senderPrivateKey.getAddress());
-            track.commit();
-        }
+//        if (!getBlockchain().getRepository().isExist(senderPrivateKey.getAddress())) {
+//            Repository repository = getBlockchain().getRepository();
+//            Repository track = repository.startTracking();
+//            track.createAccount(senderPrivateKey.getAddress());
+//            track.commit();
+//        }
     }
 
     public ECKey getSender() {
@@ -339,11 +340,18 @@ public class StandaloneBlockchain implements LocalBlockchain {
         if (blockchain == null) {
             blockchain = createBlockchain(genesis);
             blockchain.setMinerCoinbase(coinbase);
+            addEthereumListener(new EthereumListenerAdapter() {
+                @Override
+                public void onBlock(BlockSummary blockSummary) {
+                    lastSummary = blockSummary;
+                }
+            });
         }
         return blockchain;
     }
 
     public void addEthereumListener(EthereumListener listener) {
+        getBlockchain();
         this.listener.addListener(listener);
     }
 
@@ -368,10 +376,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new SlowHashMapDB(), new SlowHashMapDB());
 
-        detailsDS = new HashMapDB();
-        storageDS = new HashMapDB();
+        detailsDS = new SlowHashMapDB();
+        storageDS = new SlowHashMapDB();
         stateDS = new MapDB();
         RepositoryImpl repository = RepositoryImpl.createNew(stateDS);
 
@@ -572,6 +580,41 @@ public class StandaloneBlockchain implements LocalBlockchain {
         public byte[] getStorageSlot(byte[] slot) {
             DataWord ret = getBlockchain().getRepository().getContractDetails(contractAddr).get(new DataWord(slot));
             return ret.getData();
+        }
+    }
+
+     class SlowHashMapDB extends HashMapDB {
+        private void sleep(int cnt) {
+            if (dbDelay == 0) return;
+            try {
+                Thread.sleep(dbDelay * cnt);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public synchronized void delete(byte[] arg0) throws DBException {
+            super.delete(arg0);
+            sleep(1);
+        }
+
+        @Override
+        public synchronized byte[] get(byte[] arg0) throws DBException {
+            sleep(1);
+            return super.get(arg0);
+        }
+
+        @Override
+        public synchronized byte[] put(byte[] key, byte[] value) throws DBException {
+            sleep(1);
+            return super.put(key, value);
+        }
+
+        @Override
+        public synchronized void updateBatch(Map<byte[], byte[]> rows) {
+            sleep(rows.size() / 2);
+            super.updateBatch(rows);
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.ethereum.jsonrpc;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
@@ -21,13 +22,13 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.LRUMap;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -45,6 +46,7 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
  * Created by Anton Nashatyrev on 25.11.2015.
  */
 @Component
+@Lazy
 public class JsonRpcImpl implements JsonRpc {
     private static final Logger logger = LoggerFactory.getLogger("jsonrpc");
 
@@ -134,7 +136,7 @@ public class JsonRpcImpl implements JsonRpc {
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
     AtomicInteger filterCounter = new AtomicInteger(1);
     Map<Integer, Filter> installedFilters = new Hashtable<>();
-    Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(0, 1024));
+    Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(1024));
 
     @Autowired
     public JsonRpcImpl(final BlockchainImpl blockchain, final CompositeEthereumListener compositeEthereumListener) {

@@ -2,6 +2,7 @@ package org.ethereum.facade;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -30,6 +31,13 @@ public interface Blockchain {
      * @return - total difficulty
      */
     BigInteger getTotalDifficulty();
+
+    /**
+     * Get the underlying BlockStore
+     * @return
+     */
+    BlockStore getBlockStore();
+
 
     /**
      * @return - last added block from blockchain

@@ -10,11 +10,12 @@ public interface PendingState extends org.ethereum.facade.PendingState {
 
     /**
      * Adds transactions received from the net to the list of wire transactions <br>
-     * Don't have an impact on pending state
+     * Triggers an update of pending state
      *
      * @param transactions txs received from the net
+     * @return sublist of transactions with NEW_PENDING status
      */
-    void addPendingTransactions(List<Transaction> transactions);
+    List<Transaction> addPendingTransactions(List<Transaction> transactions);
 
     /**
      * Adds transaction to the list of pending state txs  <br>

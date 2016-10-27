@@ -3,6 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
@@ -141,10 +142,18 @@ public class SyncPool {
             StringBuilder sb = new StringBuilder("Peer stats:\n");
             sb.append("Active peers\n");
             sb.append("============\n");
-            for (Channel peer : new ArrayList<>(activePeers)) sb.append(peer.logSyncStats()).append('\n');
-            sb.append("Connected peers\n");
+            Set<Node> activeSet = new HashSet<>();
+            for (Channel peer : new ArrayList<>(activePeers)) {
+                sb.append(peer.logSyncStats()).append('\n');
+                activeSet.add(peer.getNode());
+            }
+            sb.append("Other connected peers\n");
             sb.append("============\n");
-            for (Channel peer : new ArrayList<>(channelManager.getActivePeers())) sb.append(peer.logSyncStats()).append('\n');
+            for (Channel peer : new ArrayList<>(channelManager.getActivePeers())) {
+                if (!activeSet.contains(peer.getNode())) {
+                    sb.append(peer.logSyncStats()).append('\n');
+                }
+            }
             logger.info(sb.toString());
         }
     }
@@ -154,6 +163,7 @@ public class SyncPool {
         if(lackSize <= 0) return;
 
         Set<String> nodesInUse = nodesInUse();
+        nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
         List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
         if (lackSize > 0 && newNodes.isEmpty()) {
@@ -249,7 +259,7 @@ public class SyncPool {
     private void heartBeat() {
         for (Channel peer : channelManager.getActivePeers()) {
             if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
-                logger.info("Peer {}: no response after %d seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
+                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
                 peer.dropConnection();
             }
         }

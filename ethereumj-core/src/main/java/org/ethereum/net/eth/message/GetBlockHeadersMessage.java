@@ -84,7 +84,8 @@ public class GetBlockHeadersMessage extends EthMessage {
         }
     }
 
-    private void parse() {
+    private synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         byte[] blockBytes = paramsList.get(0).getRLPData();
@@ -111,32 +112,32 @@ public class GetBlockHeadersMessage extends EthMessage {
     }
 
     public long getBlockNumber() {
-        if (!parsed) parse();
+        parse();
         return blockNumber;
     }
 
     public byte[] getBlockHash() {
-        if (!parsed) parse();
+        parse();
         return blockHash;
     }
 
     public BlockIdentifier getBlockIdentifier() {
-        if (!parsed) parse();
+        parse();
         return new BlockIdentifier(blockHash, blockNumber);
     }
 
     public int getMaxHeaders() {
-        if (!parsed) parse();
+        parse();
         return maxHeaders;
     }
 
     public int getSkipBlocks() {
-        if (!parsed) parse();
+        parse();
         return skipBlocks;
     }
 
     public boolean isReverse() {
-        if (!parsed) parse();
+        parse();
         return reverse;
     }
 
@@ -158,7 +159,7 @@ public class GetBlockHeadersMessage extends EthMessage {
 
     @Override
     public String toString() {
-        if (!parsed) parse();
+        parse();
         return "[" + this.getCommand().name() +
                 " blockNumber=" + String.valueOf(blockNumber) +
                 " blockHash=" + ByteUtil.toHexString(blockHash) +

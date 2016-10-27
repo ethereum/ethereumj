@@ -171,6 +171,12 @@ public class WorldManager {
             logger.info("Genesis block loaded");
         } else {
 
+            if (!config.databaseReset() &&
+                    !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
+                logger.error("*** DB is incorrect, 0 block in DB doesn't match genesis");
+                throw new RuntimeException("DB doesn't match genesis");
+            }
+
             blockchain.setBestBlock(bestBlock);
 
             BigInteger totalDifficulty = blockStore.getTotalDifficulty();

@@ -77,7 +77,7 @@ public class PendingStateImpl implements PendingState {
 
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
-    private final Map<ByteArrayWrapper, Object> redceivedTxs = new LRUMap<>(100000);
+    private final Map<ByteArrayWrapper, Object> receivedTxs = new LRUMap<>(100000);
     private final Object dummyObject = new Object();
 
     private Repository pendingState;
@@ -127,7 +127,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private boolean addNewTxIfNotExist(Transaction tx) {
-        return redceivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
+        return receivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
     }
 
     @Override
@@ -136,7 +136,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
-    public synchronized void addPendingTransactions(List<Transaction> transactions) {
+    public synchronized List<Transaction> addPendingTransactions(List<Transaction> transactions) {
         int unknownTx = 0;
         List<Transaction> newPending = new ArrayList<>();
         for (Transaction tx : transactions) {
@@ -149,12 +149,14 @@ public class PendingStateImpl implements PendingState {
         }
 
         logger.debug("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
-                transactions.size(), unknownTx, newPending, redceivedTxs.size());
+                transactions.size(), unknownTx, newPending, receivedTxs.size());
 
         if (!newPending.isEmpty()) {
             listener.onPendingTransactionsReceived(newPending);
             listener.onPendingStateChanged(PendingStateImpl.this);
         }
+
+        return newPending;
     }
 
     public synchronized void trackTransaction(Transaction tx) {
@@ -184,6 +186,12 @@ public class PendingStateImpl implements PendingState {
         listener.onPendingTransactionUpdate(txReceipt, state, block);
     }
 
+    /**
+     * Executes pending tx on the latest best block
+     * Fires pending state update
+     * @param tx    Transaction
+     * @return True if transaction gets NEW_PENDING state, False if DROPPED
+     */
     private boolean addPendingTransactionImpl(final Transaction tx) {
         TransactionReceipt newReceipt = new TransactionReceipt();
         newReceipt.setTransaction(tx);
