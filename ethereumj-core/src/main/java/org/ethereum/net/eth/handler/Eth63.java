@@ -1,6 +1,9 @@
 package org.ethereum.net.eth.handler;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
@@ -16,6 +19,8 @@ import org.ethereum.net.eth.message.GetReceiptsMessage;
 import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
 
+import org.ethereum.sync.SyncState;
+import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
@@ -35,10 +41,13 @@ import static org.ethereum.net.eth.EthVersion.V63;
 @Scope("prototype")
 public class Eth63 extends Eth62 {
 
+    private static final EthVersion version = V63;
+
     @Autowired
     private RepositoryImpl repository;
 
-    private static final EthVersion version = V63;
+    private Set<byte[]> requestedNodes;
+    private SettableFuture<List<Pair<byte[], byte[]>>> requestNodesFuture;
 
     public Eth63() {
         super(version);
@@ -61,7 +70,7 @@ public class Eth63 extends Eth62 {
                 processGetNodeData((GetNodeDataMessage) msg);
                 break;
             case NODE_DATA:
-                // TODO: Implement
+                processNodeData((NodeDataMessage) msg);
                 break;
             case GET_RECEIPTS:
                 processGetReceipts((GetReceiptsMessage) msg);
@@ -115,8 +124,43 @@ public class Eth63 extends Eth62 {
                 blockReceipts.add(transactionInfo.getReceipt());
             }
             receipts.add(blockReceipts);
-        };
+        }
 
         sendMessage(new ReceiptsMessage(receipts));
+    }
+
+    public synchronized ListenableFuture<List<Pair<byte[], byte[]>>> requestTrieNodes(List<byte[]> hashes) {
+        GetNodeDataMessage msg = new GetNodeDataMessage(hashes);
+        requestedNodes = new ByteArraySet();
+        requestedNodes.addAll(hashes);
+        requestNodesFuture = SettableFuture.create();
+        syncState = SyncState.NODE_RETRIEVING;
+        sendMessage(msg);
+        return requestNodesFuture;
+    }
+
+    protected synchronized void processNodeData(NodeDataMessage msg) {
+        if (requestedNodes == null) {
+            logger.debug("Received NodeDataMessage when requestedNodes == null. Dropping peer");
+            dropConnection();
+        }
+
+        List<Pair<byte[], byte[]>> ret = new ArrayList<>();
+        for (Value nodeVal : msg.getDataList()) {
+            byte[] hash = nodeVal.hash();
+            if (!requestedNodes.contains(hash)) {
+                String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer";
+                logger.debug(err);
+                requestNodesFuture.setException(new RuntimeException(err));
+                dropConnection();
+                return;
+            }
+            ret.add(Pair.of(hash, nodeVal.encode()));
+        }
+        requestNodesFuture.set(ret);
+
+        requestedNodes = null;
+        requestNodesFuture = null;
+        syncState = SyncState.IDLE;
     }
 }
