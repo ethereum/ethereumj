@@ -15,7 +15,7 @@ public class CompilerTest {
     @Test
     public void simpleTest() throws IOException {
         String contract =
-            "pragma solidity ^0.4.2;\n" +
+            "pragma solidity ^0.4.3;\n" +
                     "\n" +
                     "contract a {\n" +
                     "\n" +
