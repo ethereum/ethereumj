@@ -533,6 +533,7 @@ public class TransactionTest {
     @Test
     public void multiSuicideTest() throws IOException, InterruptedException {
         String contract =
+                "pragma solidity ^0.4.2;" +
                 "contract PsychoKiller {" +
                 "    function homicide() {" +
                 "        suicide(msg.sender);" +

@@ -316,17 +316,20 @@ public class ImportLightTest {
     public void createValueTest() throws IOException, InterruptedException {
         // checks that correct msg.value is passed when contract internally created with value
         String contract =
-                "contract B {" +
-                "  uint public valReceived;" +
-                "  function B() {" +
-                "    valReceived = msg.value;" +
-                "  }" +
-                "}" +
-                "contract A {" +
-                "    address public child;" +
-                "    function create() {" +
-                "        child = (new B).value(20)();" +
-                "    }" +
+                "pragma solidity ^0.4.0;\n" +
+                "\n" +
+                "contract B {\n" +
+                "      uint public valReceived;\n" +
+                "      \n" +
+                "      function B() payable {\n" +
+                "        valReceived = msg.value;\n" +
+                "      }\n" +
+                "}\n" +
+                "contract A {\n" +
+                "    address public child;\n" +
+                "    function create() payable {\n" +
+                "        child = (new B).value(20)();\n" +
+                "    }\n" +
                 "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
@@ -373,6 +376,7 @@ public class ImportLightTest {
         // and the subsequent call to that non-existent address costs 25K gas
         byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
         String contractA =
+                "pragma solidity ^0.4.2;" +
                 "contract B { function dummy() {}}" +
                 "contract A {" +
                 "  function call() returns (uint) {" +
@@ -473,6 +477,7 @@ public class ImportLightTest {
     @Test()
     public void selfdestructAttack() throws Exception {
         String contractSrc = "" +
+                "pragma solidity ^0.4.2;" +
                 "contract B {" +
                 "  function suicide(address benefic) {" +
                 "    selfdestruct(benefic);" +
