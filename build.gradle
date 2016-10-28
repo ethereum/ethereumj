@@ -36,7 +36,7 @@ subprojects {
     compileTestJava.options.encoding = 'UTF-8'
 
     repositories {
-        mavenLocal()
         jcenter()
+        maven { url "https://dl.bintray.com/ethereum/maven/" }
     }
 }
