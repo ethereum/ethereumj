@@ -316,8 +316,7 @@ public class ImportLightTest {
     public void createValueTest() throws IOException, InterruptedException {
         // checks that correct msg.value is passed when contract internally created with value
         String contract =
-                "pragma solidity ^0.4.0;\n" +
-                "\n" +
+                "pragma solidity ^0.4.3;\n" +
                 "contract B {\n" +
                 "      uint public valReceived;\n" +
                 "      \n" +
@@ -326,6 +325,7 @@ public class ImportLightTest {
                 "      }\n" +
                 "}\n" +
                 "contract A {\n" +
+                "    function () payable { }\n" +
                 "    address public child;\n" +
                 "    function create() payable {\n" +
                 "        child = (new B).value(20)();\n" +
@@ -333,7 +333,7 @@ public class ImportLightTest {
                 "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
-        bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
+        bc.sendEther(a.getAddress(), BigInteger.valueOf(10_000));
         a.callFunction(10, "create");
         byte[] childAddress = (byte[]) a.callConstFunction("child")[0];
         SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
@@ -376,7 +376,7 @@ public class ImportLightTest {
         // and the subsequent call to that non-existent address costs 25K gas
         byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
         String contractA =
-                "pragma solidity ^0.4.2;" +
+                "pragma solidity ^0.3.2;" +
                 "contract B { function dummy() {}}" +
                 "contract A {" +
                 "  function call() returns (uint) {" +
