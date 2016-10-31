@@ -533,7 +533,9 @@ public class TransactionTest {
     @Test
     public void multiSuicideTest() throws IOException, InterruptedException {
         String contract =
+                "pragma solidity ^0.4.3;" +
                 "contract PsychoKiller {" +
+                "    function () payable {}" +
                 "    function homicide() {" +
                 "        suicide(msg.sender);" +
                 "    }" +
@@ -556,8 +558,9 @@ public class TransactionTest {
         ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")).compress();
         System.out.println("address: " + Hex.toHexString(sender.getAddress()));
 
-        if(cres.contracts.get("PsychoKiller") != null) {
-            Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("PsychoKiller").bin), 1000000000L);
+        if (cres.contracts.get("PsychoKiller") != null) {
+            Transaction tx = createTx(blockchain, sender, new byte[0],
+                    Hex.decode(cres.contracts.get("PsychoKiller").bin));
             executeTransaction(blockchain, tx);
 
             byte[] contractAddress = tx.getContractAddress();
@@ -565,11 +568,11 @@ public class TransactionTest {
             CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
             byte[] callData = contract1.getByName("multipleHomocide").encode();
 
-            Transaction tx1 = createTx(blockchain, sender, contractAddress, callData);
+            Transaction tx1 = createTx(blockchain, sender, contractAddress, callData, 0l);
             ProgramResult programResult = executeTransaction(blockchain, tx1).getResult();
 
             // suicide of a single account should be counted only once
-            Assert.assertEquals(programResult.getFutureRefund(), 24000);
+            Assert.assertEquals(24000, programResult.getFutureRefund());
         } else {
             Assert.fail();
         }

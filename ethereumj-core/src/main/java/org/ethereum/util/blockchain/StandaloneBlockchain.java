@@ -294,7 +294,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private SolidityContractImpl createContract(String soliditySrc, String contractName) {
         try {
             SolidityCompiler.Result compileRes = SolidityCompiler.compile(soliditySrc.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-            if (!compileRes.errors.isEmpty()) throw new RuntimeException("Compile error: " + compileRes.errors);
+            if (compileRes.isFailed()) throw new RuntimeException("Compile result: " + compileRes.errors);
             CompilationResult result = CompilationResult.parse(compileRes.output);
             if (contractName == null) {
                 if (result.contracts.size() > 1) {
