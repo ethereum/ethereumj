@@ -31,6 +31,10 @@ public class RepositoryImpl implements Repository {
     private Source<byte[], byte[]> codeCache;
     private MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
 
+    @Autowired
+    private SystemProperties config = SystemProperties.getDefault();
+
+
 //    CommonConfig commonConfig = new CommonConfig();
 //    private SystemProperties config = SystemProperties.getDefault();
 //
@@ -171,7 +175,8 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public AccountState createAccount(byte[] addr) {
-        AccountState state = new AccountState(BigInteger.ZERO, BigInteger.ZERO);
+        AccountState state = new AccountState(config.getBlockchainConfig().getCommonConstants().getInitialNonce(),
+                BigInteger.ZERO);
         accountStateCache.put(addr, state);
         return state;
     }
@@ -217,7 +222,8 @@ public class RepositoryImpl implements Repository {
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        return accountState == null ? BigInteger.ZERO : accountState.getNonce();
+        return accountState == null ? config.getBlockchainConfig().getCommonConstants().getInitialNonce() :
+                accountState.getNonce();
     }
 
     @Override
