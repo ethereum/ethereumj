@@ -43,6 +43,8 @@ public class FastSyncDownloader extends BlockDownloader {
 
     @Override
     protected void pushBlocks(List<BlockWrapper> blockWrappers) {
+        if (blockWrappers.isEmpty()) return;
+
         for (BlockWrapper blockWrapper : blockWrappers) {
             blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
         }

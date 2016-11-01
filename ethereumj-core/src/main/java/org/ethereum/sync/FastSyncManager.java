@@ -10,7 +10,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Flushable;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.test.Source;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.server.Channel;
@@ -41,8 +40,9 @@ import static org.ethereum.util.CompactEncoder.hasTerminator;
 public class FastSyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private final static long REQUEST_TIMEOUT = 3 * 1000;
-    private final static int REQUEST_MAX_NODES = 100;
+    private final static long REQUEST_TIMEOUT = 5 * 1000;
+    private final static int REQUEST_MAX_NODES = 512;
+    private final static int NODE_QUEUE_BEST_SIZE = 100_000;
 
     @Autowired
     private SystemProperties config;
@@ -70,10 +70,26 @@ public class FastSyncManager {
     FastSyncDownloader downloader;
 
     int nodesInserted = 0;
+    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
+
+    private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
 
     @PostConstruct
     void init() {
         pool.init(channelManager);
+        new Thread("FastSyncDBWriter") {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        TrieNodeRequest request = dbWriteQueue.take();
+                        stateDS.put(request.nodeHash, request.response);
+                    }
+                } catch (Exception e) {
+                    logger.error("Fatal FastSync error while writing data", e);
+                }
+            }
+        }.start();
     }
 
     enum TrieNodeType {
@@ -168,18 +184,24 @@ public class FastSyncManager {
     }
 
     synchronized void processResponse(TrieNodeRequest req) {
-        stateDS.put(req.nodeHash, req.response);
+        dbWriteQueue.add(req);
         knownHashes.remove(req.nodeHash);
         nodesInserted++;
         for (TrieNodeRequest childRequest : req.createChildRequests()) {
             if (!knownHashes.contains(childRequest.nodeHash) && stateDS.get(childRequest.nodeHash) == null) {
-                nodesQueue.addFirst(childRequest);
+                if (nodesQueue.size() > NODE_QUEUE_BEST_SIZE) {
+                    // reducing queue by traversing tree depth-first
+                    nodesQueue.addFirst(childRequest);
+                } else {
+                    // enlarging queue by traversing tree breadth-first
+                    nodesQueue.add(childRequest);
+                }
                 knownHashes.add(childRequest.nodeHash);
             }
         }
     }
 
-    void requestNextNodes(int cnt) {
+    boolean requestNextNodes(int cnt) {
         final Channel idle = pool.getAnyIdle();
 
         if (idle != null) {
@@ -195,6 +217,7 @@ public class FastSyncManager {
             if (hashes.size() > 0) {
                 logger.trace("Requesting " + hashes.size() + " nodes from peer: " + idle);
                 ListenableFuture<List<Pair<byte[], byte[]>>> nodes = ((Eth63) idle.getEthHandler()).requestTrieNodes(hashes);
+                final long reqTime = System.currentTimeMillis();
                 Futures.addCallback(nodes, new FutureCallback<List<Pair<byte[], byte[]>>>() {
                     @Override
                     public void onSuccess(List<Pair<byte[], byte[]>> result) {
@@ -212,6 +235,10 @@ public class FastSyncManager {
                                 }
 
                                 FastSyncManager.this.notifyAll();
+
+                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+                                idle.getNodeStatistics().eth63NodesReceived.add(result.size());
+                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                             }
                         } catch (Exception e) {
                             logger.error("Unexpected error processing nodes", e);
@@ -229,7 +256,12 @@ public class FastSyncManager {
                         }
                     }
                 });
+                return true;
+            } else {
+                return false;
             }
+        } else {
+            return false;
         }
     }
 
@@ -238,9 +270,11 @@ public class FastSyncManager {
             while(!nodesQueue.isEmpty() || !pendingNodes.isEmpty()) {
                 try {
                     processTimeouts();
-                    requestNextNodes(REQUEST_MAX_NODES);
+
+                    while(requestNextNodes(REQUEST_MAX_NODES));
+
                     synchronized (this) {
-                        wait(200);
+                        wait(10);
                     }
                     logStat();
                 } catch (InterruptedException e) {
@@ -255,15 +289,20 @@ public class FastSyncManager {
     }
 
     long last = 0;
+    long lastNodeCount = 0;
     private void logStat() {
         long cur = System.currentTimeMillis();
         if (cur - last > 5000) {
-            logger.info("FastSync: received: " + nodesInserted + ", known: " + nodesQueue.size() + ", pending: " + pendingNodes.size());
+            logger.info("FastSync: received: " + nodesInserted + ", known: " + nodesQueue.size() + ", pending: " + pendingNodes.size()
+                    + String.format(", nodes/sec: %1$.2f", 1000d * (nodesInserted - lastNodeCount) / (cur - last)));
             last = cur;
+            lastNodeCount = nodesInserted;
         }
     }
 
     public void main() {
+
+        startLogWorker();
 
         BlockHeader pivot = getPivotBlock();
 
@@ -330,19 +369,23 @@ public class FastSyncManager {
             }
         }
 
-        long pivotBlockNumber = bestKnownBlock.getNumber() - 1000;
+        long pivotBlockNumber = bestKnownBlock.getNumber() - 100;
         logger.info("FastSync: fetching pivot block #" + pivotBlockNumber);
 
         try {
             while (true) {
                 Channel bestIdle = pool.getBestIdle();
                 if (bestIdle != null) {
-                    ListenableFuture<List<BlockHeader>> future = bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false);
-                    List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
-                    if (!blockHeaders.isEmpty()) {
-                        BlockHeader ret = blockHeaders.get(0);
-                        logger.info("Pivot header fetched: " + ret.getShortDescr());
-                        return ret;
+                    try {
+                        ListenableFuture<List<BlockHeader>> future = bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false);
+                        List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
+                        if (!blockHeaders.isEmpty()) {
+                            BlockHeader ret = blockHeaders.get(0);
+                            logger.info("Pivot header fetched: " + ret.getShortDescr());
+                            return ret;
+                        }
+                    } catch (TimeoutException e) {
+                        logger.debug("Timeout waiting for answer", e);
                     }
                 }
 
@@ -358,6 +401,21 @@ public class FastSyncManager {
             logger.error("Unexpected", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private void startLogWorker() {
+        logExecutor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    pool.logActivePeers();
+                    logger.info("\n");
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    logger.error("Exception in log worker", t);
+                }
+            }
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
 }
