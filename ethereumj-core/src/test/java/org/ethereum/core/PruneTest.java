@@ -9,7 +9,6 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.Value;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.SolidityContract;

@@ -2,10 +2,9 @@ package org.ethereum.core;
 
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
+import org.ethereum.db.ByteArrayWrapper;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class StateTest {
         // 3) minner gets the gas + coinbase ==> 6260000000000000 + 1500000000000000000
         // 4) calc the root
 
-        Trie trie = generateGenesisState();
+        Trie<byte[]> trie = generateGenesisState();
         String expected = "c12b4d771fbcc0d56ec106f8d465d24b9d4c36d60275bbafa7d69694d6708660";
 
         // Get and update sender in world state
@@ -55,14 +54,14 @@ public class StateTest {
         AccountState account_1 = new AccountState(rlpEncodedState);
         account_1.addToBalance(new BigInteger("-6260000000001000"));
         account_1.incrementNonce();
-        trie.update(cowAddress, account_1.getEncoded());
+        trie.put(cowAddress, account_1.getEncoded());
 
         // Add contract to world state
         byte[] codeData = Hex.decode("61778e600054");
         AccountState account_2 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(1000));
         account_2.setCodeHash(HashUtil.sha3(codeData));
         byte[] contractAddress = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051"); // generated based on sender + nonce
-        trie.update(contractAddress, account_2.getEncoded());
+        trie.put(contractAddress, account_2.getEncoded());
 
 //        this is saved in the db
 //        trie.update(HashUtil.keccak(codeData), codeData);
@@ -70,7 +69,7 @@ public class StateTest {
         // Update miner in world state
         byte[] minerAddress = Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600");
         AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("1506260000000000000"));
-        trie.update(minerAddress, account_3.getEncoded());
+        trie.put(minerAddress, account_3.getEncoded());
 
         assertEquals(expected, Hex.toHexString(trie.getRootHash()));
 
@@ -114,10 +113,10 @@ public class StateTest {
 
     private Trie generateGenesisState() {
 
-        Trie trie = new TrieImpl(new HashMapDB());
+        Trie<byte[]> trie = new TrieImpl();
         Genesis genesis = (Genesis)Genesis.getInstance();
         for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            trie.update(key.getData(), genesis.getPremine().get(key).getEncoded());
+            trie.put(key.getData(), genesis.getPremine().get(key).getEncoded());
         }
 
         return trie;

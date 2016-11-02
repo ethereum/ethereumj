@@ -44,7 +44,7 @@ public class Block {
     private byte[] rlpEncoded;
     private boolean parsed = false;
 
-    private Trie txsState;
+    private Trie<byte[]> txsState;
 
 
     /* Constructors */
@@ -337,11 +337,11 @@ public class Block {
 
     private void parseTxs(RLPList txTransactions) {
 
-        this.txsState = new TrieImpl(null);
+        this.txsState = new TrieImpl();
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
             this.transactionsList.add(new Transaction(transactionRaw.getRLPData()));
-            this.txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
+            this.txsState.put(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
     }
 

@@ -169,10 +169,10 @@ public class GenesisLoader {
 
     private static byte[] generateRootHash(Map<ByteArrayWrapper, AccountState> premine){
 
-        Trie state = new SecureTrie(null);
+        Trie<byte[]> state = new SecureTrie((byte[]) null);
 
         for (ByteArrayWrapper key : premine.keySet()) {
-            state.update(key.getData(), premine.get(key).getEncoded());
+            state.put(key.getData(), premine.get(key).getEncoded());
         }
 
         return state.getRootHash();

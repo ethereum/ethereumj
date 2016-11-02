@@ -57,13 +57,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     @Override
     public byte[] getStorageHash() { // todo: unsupported
 
-        SecureTrie storageTrie = new SecureTrie(null);
+        SecureTrie storageTrie = new SecureTrie((byte[]) null);
 
         for (DataWord key : storage.keySet()) {
 
             DataWord value = storage.get(key);
 
-            storageTrie.update(key.getData(),
+            storageTrie.put(key.getData(),
                     RLP.encodeElement(value.getNoLeadZeroesData()));
         }
 

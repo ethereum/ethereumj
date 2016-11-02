@@ -246,7 +246,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         }
     }
 
-    static class TrieCacheSerializer implements Serializer<Value, byte[]> {
+    public static class TrieCacheSerializer implements Serializer<Value, byte[]> {
         @Override
         public byte[] serialize(Value object) {
             return object.encode();

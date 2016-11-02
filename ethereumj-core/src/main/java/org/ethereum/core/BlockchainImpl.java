@@ -4,6 +4,8 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
@@ -11,8 +13,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -33,7 +33,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -302,7 +301,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return HashUtil.EMPTY_TRIE_HASH;
 
         for (int i = 0; i < transactions.size(); i++) {
-            txsState.update(RLP.encodeInt(i), transactions.get(i).getEncoded());
+            txsState.put(RLP.encodeInt(i), transactions.get(i).getEncoded());
         }
         return txsState.getRootHash();
     }
@@ -639,7 +638,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return HashUtil.EMPTY_TRIE_HASH;
 
         for (int i = 0; i < receipts.size(); i++) {
-            receiptsTrie.update(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
+            receiptsTrie.put(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
         }
         return receiptsTrie.getRootHash();
     }

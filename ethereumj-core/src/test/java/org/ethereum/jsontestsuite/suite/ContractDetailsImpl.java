@@ -3,14 +3,12 @@ package org.ethereum.jsontestsuite.suite;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.Source;
 import org.ethereum.datasource.XorDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.trie.SecureTrie;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
+import org.ethereum.util.*;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +41,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private byte[] address = EMPTY_BYTE_ARRAY;
 
     private Set<ByteArrayWrapper> keys = new HashSet<>();
-    private SecureTrie storageTrie = new SecureTrie(null);
+    private SecureTrie storageTrie = new SecureTrie((byte[]) null);
 
     boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
@@ -82,7 +80,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
             storageTrie.delete(key.getData());
             removeKey(key.getData());
         } else {
-            storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
+            storageTrie.put(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
             addKey(key.getData());
         }
 
@@ -110,62 +108,12 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     @Override
     public void decode(byte[] rlpCode) {
-        RLPList data = RLP.decode2(rlpCode);
-        RLPList rlpList = (RLPList) data.get(0);
-
-        RLPItem address = (RLPItem) rlpList.get(0);
-        RLPItem isExternalStorage = (RLPItem) rlpList.get(1);
-        RLPItem storage = (RLPItem) rlpList.get(2);
-        RLPElement code = rlpList.get(3);
-        RLPList keys = (RLPList) rlpList.get(4);
-        RLPItem storageRoot = (RLPItem) rlpList.get(5);
-
-        this.address = address.getRLPData();
-        this.externalStorage = (isExternalStorage.getRLPData() != null);
-        this.storageTrie.deserialize(storage.getRLPData());
-        if (code instanceof RLPList) {
-            for (RLPElement e : ((RLPList) code)) {
-                setCode(e.getRLPData());
-            }
-        } else {
-            setCode(code.getRLPData());
-        }
-        for (RLPElement key : keys) {
-            addKey(key.getRLPData());
-        }
-
-        if (externalStorage) {
-            storageTrie.withPruningEnabled(config.databasePruneDepth() >= 0);
-            storageTrie.setRoot(storageRoot.getRLPData());
-            storageTrie.getCache().setDB(getExternalStorageDataSource());
-        }
-
-        externalStorage = (storage.getRLPData().length > config.detailsInMemoryStorageLimit())
-                || externalStorage;
-
-        this.rlpEncoded = rlpCode;
+        throw new RuntimeException("Not supported");
     }
 
     @Override
     public byte[] getEncoded() {
-        if (rlpEncoded == null) {
-
-            byte[] rlpAddress = RLP.encodeElement(address);
-            byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-            byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-            byte[] rlpStorage = RLP.encodeElement(storageTrie.serialize());
-            byte[][] codes = new byte[getCodes().size()][];
-            int i = 0;
-            for (byte[] bytes : this.getCodes().values()) {
-                codes[i++] = RLP.encodeElement(bytes);
-            }
-            byte[] rlpCode = RLP.encodeList(codes);
-            byte[] rlpKeys = RLP.encodeSet(keys);
-
-            this.rlpEncoded = RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorage, rlpCode, rlpKeys, rlpStorageRoot);
-        }
-
-        return rlpEncoded;
+        throw new RuntimeException("Not supported");
     }
 
     @Override
@@ -245,11 +193,6 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     @Override
     public void syncStorage() {
-        if (externalStorage) {
-            storageTrie.withPruningEnabled(config.databasePruneDepth() >= 0);
-            storageTrie.getCache().setDB(getExternalStorageDataSource());
-            storageTrie.sync();
-        }
     }
 
     public void setDataSource(KeyValueDataSource dataSource) {
@@ -282,14 +225,11 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Override
     public ContractDetails getSnapshotTo(byte[] hash){
 
-        KeyValueDataSource keyValueDataSource = this.storageTrie.getCache().getDb();
+        Source<byte[], Value> cache = this.storageTrie.getCache();
 
         SecureTrie snapStorage = wrap(hash).equals(wrap(EMPTY_TRIE_HASH)) ?
-            new SecureTrie(keyValueDataSource, "".getBytes()):
-            new SecureTrie(keyValueDataSource, hash);
-        snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-        snapStorage.setCache(this.storageTrie.getCache());
+            new SecureTrie(cache, "".getBytes()):
+            new SecureTrie(cache, hash);
 
         ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, getCodes());
         details.externalStorage = this.externalStorage;

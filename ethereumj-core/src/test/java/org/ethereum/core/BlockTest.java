@@ -138,7 +138,7 @@ public class BlockTest {
 
         Set keys = genesisMap.keySet();
 
-        Trie state = new SecureTrie(null);
+        Trie state = new SecureTrie((byte[]) null);
 
         for (Object key : keys) {
 
@@ -149,7 +149,7 @@ public class BlockTest {
             BigInteger wei = Denomination.valueOf(denom.toUpperCase()).value().multiply(new BigInteger(value));
 
             AccountState acctState = new AccountState(BigInteger.ZERO, wei);
-            state.update(Hex.decode(key.toString()), acctState.getEncoded());
+            state.put(Hex.decode(key.toString()), acctState.getEncoded());
         }
 
         logger.info("root: " + Hex.toHexString(state.getRootHash()));
