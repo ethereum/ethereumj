@@ -167,9 +167,9 @@ public class SyncPool {
         nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
         List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
-        if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
-        }
+//        if (lackSize > 0 && newNodes.isEmpty()) {
+//            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, 1);
+//        }
 
         if (logger.isTraceEnabled()) {
             logDiscoveredNodes(newNodes);
@@ -258,11 +258,11 @@ public class SyncPool {
     }
 
     private void heartBeat() {
-        for (Channel peer : channelManager.getActivePeers()) {
-            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
-                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
-                peer.dropConnection();
-            }
-        }
+//        for (Channel peer : channelManager.getActivePeers()) {
+//            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
+//                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
+//                peer.dropConnection();
+//            }
+//        }
     }
 }

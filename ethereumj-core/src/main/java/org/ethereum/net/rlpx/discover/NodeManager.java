@@ -330,13 +330,16 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
                 if (handler.getNodeStatistics().isPredefined()) return true;
 
-                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
                 if (handler.getNodeStatistics().getClientId().contains("Parity") ||
                         handler.getNodeStatistics().getClientId().contains("parity")) {
                     return false;
                 }
+                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                    return false;
+                }
+
+                if (handler.getNodeStatistics().getReputation() < 100) return false;
+
                 return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
             }
         }, limit);
@@ -409,7 +412,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 sb.append(nodeHandler).append("\t").append(nodeHandler.getNodeStatistics()).append("\n");
             } else {
                 zeroReputCount++;
-            }
+        }
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
