@@ -4,7 +4,7 @@ import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.test.MapDB;
+import org.ethereum.datasource.MapDB;
 import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
@@ -18,8 +18,6 @@ import java.math.BigInteger;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.*;
-
-import org.ethereum.datasource.test.RepositoryRoot;
 
 /**
  * @author Roman Mandeleil

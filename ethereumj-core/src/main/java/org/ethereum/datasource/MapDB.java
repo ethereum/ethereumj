@@ -1,8 +1,7 @@
-package org.ethereum.datasource.test;
+package org.ethereum.datasource;
 
 import org.ethereum.util.ByteArrayMap;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**

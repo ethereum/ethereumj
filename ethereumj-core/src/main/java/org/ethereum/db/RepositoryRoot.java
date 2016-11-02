@@ -1,8 +1,15 @@
-package org.ethereum.datasource.test;
+package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.CachedSource;
+import org.ethereum.datasource.CachedSourceImpl;
+import org.ethereum.datasource.MultiCache;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.test.SecureTrie;
+import org.ethereum.datasource.test.Trie;
+import org.ethereum.datasource.test.TrieImpl;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 import org.springframework.beans.factory.annotation.Autowired;

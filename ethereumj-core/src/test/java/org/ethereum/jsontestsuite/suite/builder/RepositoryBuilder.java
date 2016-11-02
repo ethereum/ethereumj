@@ -2,8 +2,8 @@ package org.ethereum.jsontestsuite.suite.builder;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.test.MapDB;
-import org.ethereum.datasource.test.RepositoryRoot;
+import org.ethereum.datasource.MapDB;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.jsontestsuite.suite.ContractDetailsCacheImpl;

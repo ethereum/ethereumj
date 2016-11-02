@@ -1,6 +1,5 @@
-package org.ethereum.datasource.test;
+package org.ethereum.datasource;
 
-import org.ethereum.datasource.Serializer;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.ByteArraySet;
 

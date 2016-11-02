@@ -1,7 +1,4 @@
-package org.ethereum.datasource.test;
-
-import org.ethereum.datasource.Flushable;
-import org.ethereum.datasource.KeyValueDataSource;
+package org.ethereum.datasource;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.

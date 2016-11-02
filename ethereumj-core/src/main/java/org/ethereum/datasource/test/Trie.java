@@ -1,5 +1,7 @@
 package org.ethereum.datasource.test;
 
+import org.ethereum.datasource.Source;
+
 /**
  * Created by Anton Nashatyrev on 05.10.2016.
  */

@@ -1,4 +1,4 @@
-package org.ethereum.datasource.test;
+package org.ethereum.datasource;
 
 import java.util.Collection;
 import java.util.Map;

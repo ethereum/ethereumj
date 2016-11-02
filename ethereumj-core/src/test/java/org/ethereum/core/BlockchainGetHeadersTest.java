@@ -1,7 +1,7 @@
 package org.ethereum.core;
 
-import org.ethereum.datasource.test.MapDB;
-import org.ethereum.datasource.test.RepositoryRoot;
+import org.ethereum.datasource.MapDB;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStoreDummy;
 import org.junit.Test;
 

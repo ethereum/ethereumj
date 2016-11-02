@@ -1,5 +1,6 @@
 package org.ethereum.datasource.test;
 
+import org.ethereum.datasource.Source;
 import org.ethereum.util.Value;
 
 import static org.ethereum.crypto.HashUtil.sha3;

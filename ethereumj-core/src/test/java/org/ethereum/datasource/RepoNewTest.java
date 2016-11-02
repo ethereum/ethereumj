@@ -2,8 +2,7 @@ package org.ethereum.datasource;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.test.MapDB;
-import org.ethereum.datasource.test.RepositoryRoot;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.vm.DataWord;
 import org.junit.Assert;
 import org.junit.Test;
