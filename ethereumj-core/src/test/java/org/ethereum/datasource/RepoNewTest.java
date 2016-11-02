@@ -1,8 +1,9 @@
 package org.ethereum.datasource;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.core.Repository;
 import org.ethereum.datasource.test.MapDB;
-import org.ethereum.datasource.test.RepositoryImpl;
+import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.vm.DataWord;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,7 +24,7 @@ public class RepoNewTest {
     public void test1() throws Exception {
 
         MapDB<byte[]> stateDb = new MapDB<>();
-        RepositoryImpl repo = RepositoryImpl.createFromStateDS(stateDb, null);
+        RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         byte[] addr2 = decode("bbbb");
         repo.createAccount(addr1);
@@ -37,7 +38,7 @@ public class RepoNewTest {
         System.out.println("Root: " + toHexString(root1));
         System.out.println("Storage size: " + stateDb.getStorage().size());
 
-        RepositoryImpl repo1 = RepositoryImpl.createFromStateDS(stateDb, root1);
+        RepositoryRoot repo1 = new RepositoryRoot(stateDb, root1);
         Assert.assertEquals(repo1.getBalance(addr1), valueOf(1));
         Assert.assertEquals(repo1.getBalance(addr2), valueOf(10));
 
@@ -48,15 +49,15 @@ public class RepoNewTest {
         System.out.println("Root: " + toHexString(root2));
         System.out.println("Storage size: " + stateDb.getStorage().size());
 
-        RepositoryImpl repo2 = RepositoryImpl.createFromStateDS(stateDb, root1);
+        RepositoryRoot repo2 = new RepositoryRoot(stateDb, root1);
         Assert.assertEquals(repo2.getBalance(addr1), valueOf(1));
         Assert.assertEquals(repo2.getBalance(addr2), valueOf(10));
 
-        repo2 = RepositoryImpl.createFromStateDS(stateDb, root2);
+        repo2 = new RepositoryRoot(stateDb, root2);
         Assert.assertEquals(repo2.getBalance(addr1), valueOf(1));
         Assert.assertEquals(repo2.getBalance(addr2), valueOf(30));
 
-        RepositoryImpl repo2_1 = repo2.startTracking();
+        Repository repo2_1 = repo2.startTracking();
         repo2_1.addBalance(addr2, valueOf(3));
         byte[] addr3 = decode("cccc");
         repo2_1.createAccount(addr3);
@@ -79,7 +80,7 @@ public class RepoNewTest {
         Assert.assertEquals(repo2.getBalance(addr2), valueOf(33));
         Assert.assertEquals(repo2.getBalance(addr3), valueOf(333));
 
-        RepositoryImpl repo3 = RepositoryImpl.createFromStateDS(stateDb, root22);
+        RepositoryRoot repo3 = new RepositoryRoot(stateDb, root22);
         System.out.println(repo3.getBalance(addr1));
         System.out.println(repo3.getBalance(addr2));
         System.out.println(repo3.getBalance(addr3));
@@ -87,10 +88,10 @@ public class RepoNewTest {
         Assert.assertEquals(repo3.getBalance(addr2), valueOf(33));
         Assert.assertEquals(repo3.getBalance(addr3), valueOf(333));
 
-        RepositoryImpl repo3_1 = repo3.startTracking();
+        Repository repo3_1 = repo3.startTracking();
         repo3_1.addBalance(addr1, valueOf(10));
 
-        RepositoryImpl repo3_1_1 = repo3_1.startTracking();
+        Repository repo3_1_1 = repo3_1.startTracking();
         repo3_1_1.addBalance(addr1, valueOf(20));
         repo3_1_1.addBalance(addr2, valueOf(10));
         Assert.assertEquals(repo3.getBalance(addr1), valueOf(0));
@@ -117,13 +118,13 @@ public class RepoNewTest {
         Assert.assertEquals(repo3.getBalance(addr3), valueOf(333));
 
         byte[] addr4 = decode("dddd");
-        RepositoryImpl repo3_2 = repo3.startTracking();
+        Repository repo3_2 = repo3.startTracking();
         repo3_2.addBalance(addr4, ONE);
         repo3_2.rollback();
         AccountState state = repo3.getAccountState(addr4);
         Assert.assertNull(state);
 
-        RepositoryImpl repo3_3 = repo3.startTracking();
+        Repository repo3_3 = repo3.startTracking();
         repo3_3.addBalance(addr4, ONE);
         repo3_3.commit();
         state = repo3.getAccountState(addr4);
@@ -133,7 +134,7 @@ public class RepoNewTest {
     @Test
     public void testStorage1() throws Exception {
         MapDB<byte[]> stateDb = new MapDB<>();
-        RepositoryImpl repo = RepositoryImpl.createFromStateDS(stateDb, null);
+        RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         repo.createAccount(addr1);
         repo.addStorageRow(addr1, new DataWord(1), new DataWord(111));
@@ -142,11 +143,11 @@ public class RepoNewTest {
         byte[] root1 = repo.getRoot();
         System.out.println(repo.dumpStateTrie());
 
-        RepositoryImpl repo2 = RepositoryImpl.createFromStateDS(stateDb, root1);
+        RepositoryRoot repo2 = new RepositoryRoot(stateDb, root1);
         DataWord val1 = repo.getStorageValue(addr1, new DataWord(1));
         assert new DataWord(111).equals(val1);
 
-        RepositoryImpl repo3 = repo2.startTracking();
+        Repository repo3 = repo2.startTracking();
         repo3.addStorageRow(addr1, new DataWord(2), new DataWord(222));
         repo3.addStorageRow(addr1, new DataWord(1), new DataWord(333));
         assert new DataWord(333).equals(repo3.getStorageValue(addr1, new DataWord(1)));
@@ -158,25 +159,18 @@ public class RepoNewTest {
         assert new DataWord(222).equals(repo2.getStorageValue(addr1, new DataWord(2)));
         repo2.commit();
 
-        RepositoryImpl repo4 = RepositoryImpl.createFromStateDS(stateDb, repo2.getRoot());
+        RepositoryRoot repo4 = new RepositoryRoot(stateDb, repo2.getRoot());
         assert new DataWord(333).equals(repo4.getStorageValue(addr1, new DataWord(1)));
         assert new DataWord(222).equals(repo4.getStorageValue(addr1, new DataWord(2)));
     }
 
     @Test
     public void testStorage2() throws Exception {
-//        MapDB<byte[]> stateDb = new MapDB<>();
-//        RepositoryImpl repo = RepositoryImpl.createFromStateDS(stateDb, null);
-        RepositoryImpl repo = RepositoryImpl.createNew(new MapDB<byte[]>());
-//        byte[] addr1 = decode("aaaa");
-//        repo.addStorageRow(addr1, new DataWord(1), new DataWord(111));
-//        repo.commit();
+        RepositoryRoot repo = new RepositoryRoot(new MapDB<byte[]>());
 
-        RepositoryImpl repo1 = repo.startTracking();
+        Repository repo1 = repo.startTracking();
         byte[] addr2 = decode("bbbb");
-//        byte[] addr3 = decode("cccc");
         repo1.addStorageRow(addr2, new DataWord(1), new DataWord(111));
-//        repo1.addStorageRow(addr3, new DataWord(1), new DataWord(111));
         repo1.commit();
 
         Assert.assertEquals(new DataWord(111), repo.getStorageValue(addr2, new DataWord(1)));

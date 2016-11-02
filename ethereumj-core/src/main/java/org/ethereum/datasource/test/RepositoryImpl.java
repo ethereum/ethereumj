@@ -1,6 +1,5 @@
 package org.ethereum.datasource.test;
 
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -23,155 +22,31 @@ import java.util.*;
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public class RepositoryImpl implements Repository {
+public class RepositoryImpl implements Repository, org.ethereum.facade.Repository {
 
-    private RepositoryImpl parent;
+    protected RepositoryImpl parent;
 
-    private Source<byte[], AccountState> accountStateCache;
-    private Source<byte[], byte[]> codeCache;
-    private MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
+    protected Source<byte[], AccountState> accountStateCache;
+    protected Source<byte[], byte[]> codeCache;
+    protected MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
 
     @Autowired
-    private SystemProperties config = SystemProperties.getDefault();
+    protected SystemProperties config = SystemProperties.getDefault();
 
-
-//    CommonConfig commonConfig = new CommonConfig();
-//    private SystemProperties config = SystemProperties.getDefault();
-//
-//
-//    @Autowired
-//    public RepositoryImpl(final CommonConfig commonConfig) {
-//        this.config = commonConfig.systemProperties();
-//        this.commonConfig = commonConfig;
-//        this.stateDS = commonConfig.stateDS();
-////        this.stateDS = commonConfig.keyValueDataSource();
-////        this.stateDS.setName(STATE_DB);
-////        this.stateDS.init();
-//
-//        init();
-//    }
+    protected RepositoryImpl() {
+    }
 
     public RepositoryImpl(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
                           MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache) {
+        init(accountStateCache, codeCache, storageCache);
+    }
+
+    protected void init(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
+                        MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache) {
         this.accountStateCache = accountStateCache;
         this.codeCache = codeCache;
         this.storageCache = storageCache;
     }
-
-    public static RepositoryImpl createNew(Source<byte[], byte[]> stateDS) {
-        return createFromStateDS(stateDS, null);
-    }
-    public static RepositoryImpl createFromStateDS(final Source<byte[], byte[]> stateDS, byte[] root) {
-        final CachedSource.SimpleBytesKey<byte[]> snapshotCache = new CachedSourceImpl.SimpleBytesKey<>(stateDS);
-
-        final CachedSource.BytesKey<Value, byte[]> trieCache = new CachedSourceImpl.BytesKey<Value, byte[]>
-                (snapshotCache, new TrieCacheSerializer()) {{
-                withCacheReads(false);
-                withNoDelete(true);
-            }};
-        final TrieImpl trie = createTrie(trieCache, root);
-
-        final CachedSource.BytesKey<AccountState, byte[]> accountStateCache =
-                new CachedSourceImpl.BytesKey<>(trie, new AccountStateSerializer());
-        CachedSource.SimpleBytesKey<byte[]> codeCache = new CachedSourceImpl.SimpleBytesKey<>(snapshotCache);
-
-        class MultiTrieCache extends CachedSourceImpl<DataWord, DataWord, byte[], byte[]> {
-            byte[] accountAddress;
-            Trie<byte[]> trie;
-
-            public MultiTrieCache(byte[] accountAddress, Trie<byte[]> trie) {
-                super(trie, new WordSerializer(), new TrieWordSerializer());
-                this.accountAddress = accountAddress;
-                this.trie = trie;
-            }
-        }
-
-        final MultiCache<MultiTrieCache> storageCache = new MultiCache<MultiTrieCache>(null) {
-            @Override
-            protected MultiTrieCache create(byte[] key, MultiTrieCache srcCache) {
-                AccountState accountState = accountStateCache.get(key);
-//                if (accountState == null) return null;
-                TrieImpl storageTrie = createTrie(trieCache, accountState == null ? null : accountState.getStateRoot());
-                return new MultiTrieCache(key, storageTrie);
-            }
-
-            @Override
-            protected boolean flushChild(MultiTrieCache childCache) {
-                if (super.flushChild(childCache)) {
-                    AccountState storageOwnerAcct = accountStateCache.get(childCache.accountAddress);
-                    if (storageOwnerAcct != null) {
-                        // need to update account storage root
-                        byte[] rootHash = childCache.trie.getRootHash();
-                        AccountState state = storageOwnerAcct.clone();
-                        state.setStateRoot(rootHash);
-                        accountStateCache.put(childCache.accountAddress, state);
-                        return true;
-                    } else {
-                        // account was deleted
-                        return false;
-                    }
-                } else {
-                    // no storage changes
-                    return false;
-                }
-            }
-        };
-        return new RepositoryImpl(accountStateCache, codeCache, storageCache) {
-            @Override
-            public void commit() {
-                super.commit();
-
-                trieCache.flush();
-                snapshotCache.flush();
-            }
-
-            @Override
-            public byte[] getRoot() {
-                super.commit();
-                return trie.getRootHash();
-            }
-
-            @Override
-            public void flush() {
-                commit();
-            }
-
-            @Override
-            public Repository getSnapshotTo(byte[] root) {
-                return createFromStateDS(stateDS, root);
-            }
-
-            @Override
-            public String dumpStateTrie() {
-                return trie.getTrieDump();
-            }
-
-            @Override
-            public void syncToRoot(byte[] root) {
-                trie.setRoot(root);
-            }
-
-            @Override
-            public Value getState(byte[] stateRoot) {
-                return trieCache.get(stateRoot);
-            }
-        };
-    }
-
-    private static TrieImpl createTrie(CachedSource.BytesKey<Value, byte[]> trieCache, byte[] root) {
-        return new SecureTrie(trieCache, root);
-//        return new TrieImpl(trieCache, root);
-    }
-
-    public String getTrieDump() {
-        return dumpStateTrie();
-    }
-
-    public String dumpStateTrie() {
-        throw new RuntimeException("Not supported");
-    }
-
-
 
     @Override
     public AccountState createAccount(byte[] addr) {
@@ -320,12 +195,19 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public byte[] getRoot() {
-        // TODO
-        throw new RuntimeException("TODO");
+        throw new RuntimeException("Not supported");
+    }
+
+    public String getTrieDump() {
+        return dumpStateTrie();
+    }
+
+    public String dumpStateTrie() {
+        throw new RuntimeException("Not supported");
     }
 
     public Value getState(byte[] stateRoot) {
-        throw new RuntimeException("Not implemented");
+        throw new RuntimeException("Not supported");
     }
 
     static class AccountStateSerializer implements Serializer<AccountState, byte[]> {
@@ -552,6 +434,21 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void reset() {
+        throw new RuntimeException("Not supported");
+    }
+
+    @Override
+    public int getStorageSize(byte[] addr) {
+        throw new RuntimeException("Not supported");
+    }
+
+    @Override
+    public Set<DataWord> getStorageKeys(byte[] addr) {
+        throw new RuntimeException("Not supported");
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
         throw new RuntimeException("Not supported");
     }
 

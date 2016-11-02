@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import org.ethereum.datasource.test.MapDB;
+import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.BlockStoreDummy;
 import org.junit.Test;
 
@@ -71,6 +73,7 @@ public class BlockchainGetHeadersTest {
 
         public BlockchainImplTester() {
             blockStore = new BlockStoreMock();
+            setRepository(new RepositoryRoot(new MapDB<byte[]>()));
             setBestBlock(blockStore.getChainBlockByNumber(9));
         }
     }

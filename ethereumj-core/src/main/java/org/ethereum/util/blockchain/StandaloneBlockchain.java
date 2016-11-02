@@ -1,16 +1,14 @@
 package org.ethereum.util.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.test.MapDB;
-import org.ethereum.datasource.test.RepositoryImpl;
+import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.DetailsDataStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
@@ -381,7 +379,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         detailsDS = new SlowHashMapDB();
         storageDS = new SlowHashMapDB();
         stateDS = new MapDB();
-        RepositoryImpl repository = RepositoryImpl.createNew(stateDS);
+        RepositoryRoot repository = new RepositoryRoot(stateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();

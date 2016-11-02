@@ -6,7 +6,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.test.MapDB;
-import org.ethereum.datasource.test.RepositoryImpl;
+import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.util.blockchain.SolidityContract;
@@ -679,7 +679,7 @@ public class ImportLightTest {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
 
-        RepositoryImpl repository = RepositoryImpl.createNew(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new MapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();

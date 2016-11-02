@@ -9,7 +9,7 @@ import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.datasource.test.LegacySourceAdapter;
-import org.ethereum.datasource.test.RepositoryImpl;
+import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.db.RepositoryTrack;
@@ -60,7 +60,12 @@ public class CommonConfig {
 
     @Bean @Primary
     public Repository repository() {
-        return RepositoryImpl.createNew(new LegacySourceAdapter(stateDS()));
+        return new RepositoryRoot(new LegacySourceAdapter(stateDS()));
+    }
+
+    @Bean @Scope("prototype")
+    public Repository repository(byte[] stateRoot) {
+        return new RepositoryRoot(new LegacySourceAdapter(stateDS()), stateRoot);
     }
 
     @Bean
