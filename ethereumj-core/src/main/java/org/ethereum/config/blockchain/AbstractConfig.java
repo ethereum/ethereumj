@@ -10,7 +10,6 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.vm.DataWord;
@@ -93,7 +92,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
-                                               RepositoryTrack repositoryTrack) {
+                                               Repository repository) {
         return null;
     }
 

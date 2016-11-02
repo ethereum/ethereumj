@@ -6,7 +6,7 @@ import org.ethereum.datasource.test.MapDB;
 import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.ContractDetailsCacheImpl;
+import org.ethereum.jsontestsuite.suite.ContractDetailsCacheImpl;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 
 import java.util.HashMap;

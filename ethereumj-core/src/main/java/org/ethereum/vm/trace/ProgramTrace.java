@@ -1,9 +1,6 @@
 package org.ethereum.vm.trace;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Repository;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.invoke.ProgramInvoke;

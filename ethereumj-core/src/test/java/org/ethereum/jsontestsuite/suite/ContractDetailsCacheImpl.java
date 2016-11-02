@@ -1,5 +1,6 @@
-package org.ethereum.db;
+package org.ethereum.jsontestsuite.suite;
 
+import org.ethereum.db.ContractDetails;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;

@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite.suite.builder;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
-import org.ethereum.db.ContractDetailsImpl;
+import org.ethereum.jsontestsuite.suite.ContractDetailsImpl;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.vm.DataWord;
 

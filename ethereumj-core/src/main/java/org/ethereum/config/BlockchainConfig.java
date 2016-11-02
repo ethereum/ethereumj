@@ -6,7 +6,6 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
@@ -56,7 +55,7 @@ public interface BlockchainConfig {
      * @return null if all is fine or String validation error
      */
     String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
-                                      RepositoryTrack repositoryTrack);
+                                      Repository repositoryTrack);
 
 
     /**

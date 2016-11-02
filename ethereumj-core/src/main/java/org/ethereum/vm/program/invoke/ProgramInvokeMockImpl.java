@@ -3,12 +3,11 @@ package org.ethereum.vm.program.invoke;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.test.MapDB;
+import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.vm.DataWord;
-import org.ethereum.db.RepositoryDummy;
-import org.ethereum.db.RepositoryImpl;
 
 import org.spongycastle.util.encoders.Hex;
 
@@ -35,7 +34,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
 
 
-        this.repository = new RepositoryDummy();
+        this.repository = new RepositoryRoot(new MapDB<byte[]>());
         this.repository.createAccount(ownerAddress);
 
         this.repository.createAccount(contractAddress);

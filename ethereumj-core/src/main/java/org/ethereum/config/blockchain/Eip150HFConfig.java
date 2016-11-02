@@ -11,7 +11,6 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
@@ -80,8 +79,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx, RepositoryTrack repositoryTrack) {
-        return parent.validateTransactionChanges(blockStore, curBlock, tx, repositoryTrack);
+    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx, Repository repository) {
+        return parent.validateTransactionChanges(blockStore, curBlock, tx, repository);
     }
 
     @Override

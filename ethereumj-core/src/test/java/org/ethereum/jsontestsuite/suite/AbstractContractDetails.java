@@ -1,5 +1,7 @@
-package org.ethereum.db;
+package org.ethereum.jsontestsuite.suite;
 
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.HashMap;

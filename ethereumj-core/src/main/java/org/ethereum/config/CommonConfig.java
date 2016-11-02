@@ -11,8 +11,6 @@ import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.datasource.test.LegacySourceAdapter;
 import org.ethereum.datasource.test.RepositoryRoot;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ContractDetailsImpl;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
@@ -112,18 +110,6 @@ public class CommonConfig {
     @Scope("prototype")
     public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
         return new Program(ops, programInvoke, transaction, systemProperties());
-    }
-
-    @Bean
-    @Scope("prototype")
-    public ContractDetailsImpl contractDetailsImpl() {
-        return new ContractDetailsImpl(this, systemProperties());
-    }
-
-    @Bean
-    @Scope("prototype")
-    public RepositoryTrack repositoryTrack(Repository parent) {
-        return new RepositoryTrack(parent);
     }
 
     @Bean
