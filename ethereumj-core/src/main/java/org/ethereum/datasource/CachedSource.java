@@ -6,17 +6,13 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 21.10.2016.
  */
-public interface CachedSource<Key, Value, SourceKey, SourceValue> extends Source<Key, Value> {
+public interface CachedSource<Key, Value> extends Source<Key, Value> {
 
-    Source<SourceKey, SourceValue> getSrc();
+    Source<Key, Value> getSrc();
 
     Collection<Key> getModified();
 
     Map<Key, Value> getCache();
 
-    interface BytesKey<Value, SourceValue> extends CachedSource<byte[], Value, byte[], SourceValue> {}
-
-    interface Identity<Key, Value> extends CachedSource<Key, Value, Key, Value> {}
-
-    interface SimpleBytesKey<Value> extends BytesKey<Value, Value>, Identity<byte[], Value> {}
+    interface BytesKey<Value> extends CachedSource<byte[], Value> {}
 }

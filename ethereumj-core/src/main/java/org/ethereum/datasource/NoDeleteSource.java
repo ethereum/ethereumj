@@ -12,4 +12,9 @@ public class NoDeleteSource<Key, Value> extends SourceDelegateAdapter<Key, Value
     @Override
     public void delete(Key key) {
     }
+
+    @Override
+    public void put(Key key, Value val) {
+        if (val != null) super.put(key, val);
+    }
 }

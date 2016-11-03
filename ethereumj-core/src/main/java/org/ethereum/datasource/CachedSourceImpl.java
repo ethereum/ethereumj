@@ -8,13 +8,10 @@ import java.util.*;
 /**
  * Created by Anton Nashatyrev on 05.10.2016.
  */
-public class CachedSourceImpl<Key, Value, SourceKey, SourceValue> implements
-        CachedSource<Key, Value, SourceKey, SourceValue> {
+public class CachedSourceImpl<Key, Value> implements
+        CachedSource<Key, Value> {
 
-    Source<SourceKey, SourceValue> src;
-
-    Serializer<Key, SourceKey> keySerializer;
-    Serializer<Value, SourceValue> valSerializer;
+    Source<Key, Value> src;
 
     Map<Key, Value> cache = new HashMap<>();
     Set<Key> writes = new HashSet<>();
@@ -27,13 +24,11 @@ public class CachedSourceImpl<Key, Value, SourceKey, SourceValue> implements
     boolean flushSource;    // on flush() flush source DS as well
     boolean countWrites;    // if e.g. put(k, v) was called twice then src.put(k, v) also called twice on flush
 
-    public CachedSourceImpl(Source<SourceKey, SourceValue> src, Serializer<Key, SourceKey> keySerializer, Serializer<Value, SourceValue> valSerializer) {
+    public CachedSourceImpl(Source<Key, Value> src) {
         this.src = src;
-        this.keySerializer = keySerializer;
-        this.valSerializer = valSerializer;
     }
 
-    public CachedSourceImpl<Key, Value, SourceKey, SourceValue> withCache(Map<Key, Value> cache, Set<Key> writes) {
+    public CachedSourceImpl<Key, Value> withCache(Map<Key, Value> cache, Set<Key> writes) {
         this.cache = cache;
         this.writes = writes;
         return this;
@@ -70,8 +65,7 @@ public class CachedSourceImpl<Key, Value, SourceKey, SourceValue> implements
             if (cache.containsKey(key)) {
                 ret = null;
             } else {
-                SourceValue sourceValue = src.get(keySerializer.serialize(key));
-                ret = sourceValue != null ? valSerializer.deserialize(sourceValue) : null;
+                ret = src.get(key);
                 cache.put(key, ret);
             }
         }
@@ -93,19 +87,19 @@ public class CachedSourceImpl<Key, Value, SourceKey, SourceValue> implements
         return ret;
     }
 
-    public boolean flushTo(Source<SourceKey, SourceValue> src) {
+    public boolean flushTo(Source<Key, Value> src) {
         for (Key key : writes) {
             Value value = cache.get(key);
             if (value == null) {
-                src.delete(keySerializer.serialize(key));
+                src.delete(key);
             } else {
-                src.put(keySerializer.serialize(key), valSerializer.serialize(value));
+                src.put(key, value);
             }
         }
         return !writes.isEmpty();
     }
 
-    public Source<SourceKey, SourceValue> getSrc() {
+    public Source<Key, Value> getSrc() {
         return src;
     }
 
@@ -117,34 +111,21 @@ public class CachedSourceImpl<Key, Value, SourceKey, SourceValue> implements
         return cache;
     }
 
-    public CachedSourceImpl<Key, Value, SourceKey, SourceValue>  withCacheReads(boolean cacheReads) {
+    public CachedSourceImpl<Key, Value>  withCacheReads(boolean cacheReads) {
         this.cacheReads = cacheReads;
         return this;
     }
 
-    public CachedSourceImpl<Key, Value, SourceKey, SourceValue>  withNoDelete(boolean noDelete) {
+    public CachedSourceImpl<Key, Value>  withNoDelete(boolean noDelete) {
         this.noDelete = noDelete;
         return this;
     }
 
-    public static class BytesKey<V, VS> extends CachedSourceImpl<byte[], V, byte[], VS> implements CachedSource.BytesKey<V, VS> {
+    public static class BytesKey<V> extends CachedSourceImpl<byte[], V> implements CachedSource.BytesKey<V> {
 
-        public BytesKey(Source<byte[], VS> src, Serializer<V, VS> valSerializer) {
-            super(src, new Serializer.IdentitySerializer<byte[]>(), valSerializer);
+        public BytesKey(Source<byte[], V> src) {
+            super(src);
             withCache(new ByteArrayMap<V>(), new ByteArraySet());
-        }
-    }
-
-    public static class Simple<K, V> extends CachedSourceImpl<K, V, K, V> implements CachedSource.Identity<K, V> {
-
-        public Simple(Source<K, V> src) {
-            super(src, new Serializer.IdentitySerializer<K>(), new Serializer.IdentitySerializer<V>());
-        }
-    }
-
-    public static class SimpleBytesKey<V> extends BytesKey<V, V> implements CachedSource.SimpleBytesKey<V>  {
-        public SimpleBytesKey(Source<byte[], V> src) {
-            super(src, new Serializer.IdentitySerializer<V>());
         }
     }
 }

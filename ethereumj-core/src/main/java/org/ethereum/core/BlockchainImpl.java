@@ -295,7 +295,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public static byte[] calcTxTrie(List<Transaction> transactions) {
 
-        Trie txsState = new TrieImpl(null);
+        Trie txsState = new TrieImpl();
 
         if (transactions == null || transactions.isEmpty())
             return HashUtil.EMPTY_TRIE_HASH;
@@ -632,7 +632,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public static byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {
-        Trie receiptsTrie = new TrieImpl(null);
+        Trie receiptsTrie = new TrieImpl();
 
         if (receipts == null || receipts.isEmpty())
             return HashUtil.EMPTY_TRIE_HASH;

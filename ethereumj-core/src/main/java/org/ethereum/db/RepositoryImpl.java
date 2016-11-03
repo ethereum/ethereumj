@@ -26,7 +26,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     protected Source<byte[], AccountState> accountStateCache;
     protected Source<byte[], byte[]> codeCache;
-    protected MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache;
+    protected MultiCache<? extends CachedSource<DataWord, DataWord>> storageCache;
 
     @Autowired
     protected SystemProperties config = SystemProperties.getDefault();
@@ -35,12 +35,12 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     public RepositoryImpl(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
-                          MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache) {
+                          MultiCache<? extends CachedSource<DataWord, DataWord>> storageCache) {
         init(accountStateCache, codeCache, storageCache);
     }
 
     protected void init(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,
-                        MultiCache<? extends CachedSource<DataWord, DataWord, byte[], byte[]>> storageCache) {
+                        MultiCache<? extends CachedSource<DataWord, DataWord>> storageCache) {
         this.accountStateCache = accountStateCache;
         this.codeCache = codeCache;
         this.storageCache = storageCache;
@@ -160,12 +160,12 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public RepositoryImpl startTracking() {
-        CachedSourceImpl.SimpleBytesKey<AccountState> trackAccountStateCache = new CachedSourceImpl.SimpleBytesKey<>(accountStateCache);
-        CachedSourceImpl.SimpleBytesKey<byte[]> trackCodeCache = new CachedSourceImpl.SimpleBytesKey<>(codeCache);
-        MultiCache<CachedSource<DataWord, DataWord, byte[], byte[]>> trackStorageCache = new MultiCache(storageCache) {
+        CachedSourceImpl.BytesKey<AccountState> trackAccountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCache);
+        CachedSourceImpl.BytesKey<byte[]> trackCodeCache = new CachedSourceImpl.BytesKey<>(codeCache);
+        MultiCache<CachedSource<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
             @Override
             protected CachedSource create(byte[] key, CachedSource srcCache) {
-                return new Simple<>(srcCache);
+                return new CachedSourceImpl<>(srcCache);
             }
         };
 
@@ -343,7 +343,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         @Override
         public Map<DataWord, DataWord> getStorage() {
             Source<DataWord, DataWord> storage = storageCache.get(address);
-            CachedSourceImpl<DataWord, DataWord, byte[], byte[]> st = (CachedSourceImpl<DataWord, DataWord, byte[], byte[]>) storage;
+            CachedSourceImpl<DataWord, DataWord> st = (CachedSourceImpl<DataWord, DataWord>) storage;
             Map<DataWord, DataWord> ret = new HashMap<>();
             for (Map.Entry<DataWord, DataWord> entry : st.getCache().entrySet()) {
                 if (entry.getValue() != null) {
@@ -392,7 +392,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        CachedSourceImpl.BytesKey<AccountState, byte[]> cache = (CachedSourceImpl.BytesKey<AccountState, byte[]>) accountStateCache;
+        CachedSourceImpl.BytesKey<AccountState> cache = (CachedSourceImpl.BytesKey<AccountState>) accountStateCache;
         Set<byte[]> ret = new HashSet<>();
         for (Map.Entry<byte[], AccountState> entry : cache.getCache().entrySet()) {
             if (entry.getValue() != null) ret.add(entry.getKey());

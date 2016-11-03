@@ -1,30 +1,25 @@
 package org.ethereum.db;
 
-import org.ethereum.config.CommonConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.CachedSource;
-import org.ethereum.datasource.CachedSourceImpl;
-import org.ethereum.datasource.MultiCache;
-import org.ethereum.datasource.Source;
+import org.ethereum.datasource.*;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
 public class RepositoryRoot extends RepositoryImpl {
 
-    private static class StorageCache extends CachedSourceImpl<DataWord, DataWord, byte[], byte[]> {
+    private static class StorageCache extends CachedSourceImpl<DataWord, DataWord> {
         byte[] accountAddress;
         Trie<byte[]> trie;
 
         public StorageCache(byte[] accountAddress, Trie<byte[]> trie) {
-            super(trie, new WordSerializer(), new TrieWordSerializer());
+            super(new SourceCodec<>(trie, new WordSerializer(), new TrieWordSerializer()));
             this.accountAddress = accountAddress;
             this.trie = trie;
         }
@@ -64,12 +59,9 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     private Source<byte[], byte[]> stateDS;
-    private CachedSource.SimpleBytesKey<byte[]> snapshotCache;
-    private CachedSource.BytesKey<Value, byte[]> trieCache;
-    private TrieImpl trie;
-
-    @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
+    private CachedSource.BytesKey<byte[]> snapshotCache;
+    private CachedSource.BytesKey<Value> trieCache;
+    private TrieImpl stateTrie;
 
     public RepositoryRoot(Source<byte[], byte[]> stateDS) {
         this(stateDS, null);
@@ -77,18 +69,18 @@ public class RepositoryRoot extends RepositoryImpl {
 
     public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root) {
         this.stateDS = stateDS;
-        snapshotCache = new CachedSourceImpl.SimpleBytesKey<>(stateDS);
+        snapshotCache = new CachedSourceImpl.BytesKey<>(stateDS);
 
-        trieCache = new CachedSourceImpl.BytesKey<Value, byte[]>
-                (snapshotCache, new TrieCacheSerializer()) {{
+        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(snapshotCache, new TrieCacheSerializer());
+        trieCache = new CachedSourceImpl.BytesKey<Value>(trieCacheCodec) {{
                 withCacheReads(false);
                 withNoDelete(true);
             }};
-        trie = createTrie(trieCache, root);
+        stateTrie = createTrie(trieCache, root);
 
-        final CachedSource.BytesKey<AccountState, byte[]> accountStateCache =
-                new CachedSourceImpl.BytesKey<>(trie, new AccountStateSerializer());
-        CachedSource.SimpleBytesKey<byte[]> codeCache = new CachedSourceImpl.SimpleBytesKey<>(snapshotCache);
+        SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, new AccountStateSerializer());
+        final CachedSource.BytesKey<AccountState> accountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCodec);
+        CachedSource.BytesKey<byte[]> codeCache = new CachedSourceImpl.BytesKey<>(snapshotCache);
 
         final MultiCache<StorageCache> storageCache = new MultiStorageCache();
 
@@ -106,7 +98,7 @@ public class RepositoryRoot extends RepositoryImpl {
     @Override
     public byte[] getRoot() {
         super.commit();
-        return trie.getRootHash();
+        return stateTrie.getRootHash();
     }
 
     @Override
@@ -121,12 +113,12 @@ public class RepositoryRoot extends RepositoryImpl {
 
     @Override
     public String dumpStateTrie() {
-        return trie.getTrieDump();
+        return stateTrie.getTrieDump();
     }
 
     @Override
     public void syncToRoot(byte[] root) {
-        trie.setRoot(root);
+        stateTrie.setRoot(root);
     }
 
     @Override
@@ -134,7 +126,7 @@ public class RepositoryRoot extends RepositoryImpl {
         return trieCache.get(stateRoot);
     }
 
-    protected TrieImpl createTrie(CachedSource.BytesKey<Value, byte[]> trieCache, byte[] root) {
+    protected TrieImpl createTrie(CachedSource.BytesKey<Value> trieCache, byte[] root) {
         return new SecureTrie(trieCache, root);
     }
 }

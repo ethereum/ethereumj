@@ -34,4 +34,16 @@ public class SourceCodec<Key, Value, SourceKey, SourceValue> implements Source<K
     public boolean flush() {
         return src.flush();
     }
+
+    public static class ValueOnly<Key, Value, SourceValue> extends SourceCodec<Key, Value, Key, SourceValue> {
+        public ValueOnly(Source<Key, SourceValue> src, Serializer<Value, SourceValue> valSerializer) {
+            super(src, new Serializer.IdentitySerializer<Key>(), valSerializer);
+        }
+    }
+
+    public static class BytesKey<Value, SourceValue> extends ValueOnly<byte[], Value, SourceValue> {
+        public BytesKey(Source<byte[], SourceValue> src, Serializer<Value, SourceValue> valSerializer) {
+            super(src, valSerializer);
+        }
+    }
 }
