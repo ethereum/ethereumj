@@ -9,11 +9,7 @@ import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.MapDB;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.*;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
@@ -171,7 +167,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryRoot repository = loadRepository(new RepositoryRoot(new MapDB<byte[]>()), testCase.getPre());
+        Repository repository = loadRepository(new EnvTestRepository(new RepositoryRoot(new MapDB<byte[]>())), testCase.getPre());
 
         try {
 
@@ -541,7 +537,7 @@ public class TestRunner {
         return transaction;
     }
 
-    public RepositoryRoot loadRepository(RepositoryRoot track, Map<ByteArrayWrapper, AccountState> pre) {
+    public Repository loadRepository(RepositoryImpl track, Map<ByteArrayWrapper, AccountState> pre) {
 
 
             /* 1. Store pre-exist accounts - Pre */
