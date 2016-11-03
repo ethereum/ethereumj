@@ -43,19 +43,25 @@ public class FastSyncDownloader extends BlockDownloader {
 
     @Override
     protected void pushBlocks(List<BlockWrapper> blockWrappers) {
-        if (blockWrappers.isEmpty()) return;
+        if (!blockWrappers.isEmpty()) {
 
-        for (BlockWrapper blockWrapper : blockWrappers) {
-            blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
-        }
-        counter += blockWrappers.size();
+            for (BlockWrapper blockWrapper : blockWrappers) {
+                blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
+            }
+            counter += blockWrappers.size();
 
-        long c = System.currentTimeMillis();
-        if (c - t > 5000) {
-            t = c;
-            logger.info("FastSync: downloaded " + counter + " blocks so far. Last: " + blockWrappers.get(0).getBlock().getShortDescr());
-            blockStore.flush();
+            long c = System.currentTimeMillis();
+            if (c - t > 5000) {
+                t = c;
+                logger.info("FastSync: downloaded " + counter + " blocks so far. Last: " + blockWrappers.get(0).getBlock().getShortDescr());
+                blockStore.flush();
+            }
         }
+    }
+
+    @Override
+    protected int getBlockQueueSize() {
+        return 0;
     }
 
     // TODO: receipts loading here

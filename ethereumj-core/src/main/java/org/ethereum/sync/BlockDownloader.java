@@ -27,11 +27,6 @@ public abstract class BlockDownloader {
     private int blockQueueLimit = 2000;
     private int headerQueueLimit = 10000;
 
-    /**
-     * Queue with validated blocks to be added to the blockchain
-     */
-    private BlockingQueue<BlockWrapper> blockQueue = new LinkedBlockingQueue<>();
-
     private BlockHeaderValidator headerValidator;
 
     private SyncPool pool;
@@ -52,6 +47,7 @@ public abstract class BlockDownloader {
     }
 
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
+    protected abstract int getBlockQueueSize();
 
     protected void downloadComplete() {}
 
@@ -162,7 +158,7 @@ public abstract class BlockDownloader {
         while(!Thread.currentThread().isInterrupted()) {
             try {
 
-                if (blockQueue.size() < blockQueueLimit) {
+                if (getBlockQueueSize() < blockQueueLimit) {
                     SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(1000);
 
                     if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
@@ -248,7 +244,7 @@ public abstract class BlockDownloader {
 
         if (logger.isDebugEnabled()) logger.debug(
                 "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
-                blockQueue.size(),
+                getBlockQueueSize(),
                 blocks.get(blocks.size() - 1).getNumber()
         );
     }

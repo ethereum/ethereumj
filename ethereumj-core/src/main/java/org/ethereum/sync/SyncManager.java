@@ -127,6 +127,11 @@ public class SyncManager extends BlockDownloader {
         exec1.pushAll(blockWrappers);
     }
 
+    @Override
+    protected int getBlockQueueSize() {
+        return blockQueue.size();
+    }
+
     /**
      * Processing the queue adding blocks to the chain.
      */
