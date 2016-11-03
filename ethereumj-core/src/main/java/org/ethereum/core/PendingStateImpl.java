@@ -104,6 +104,9 @@ public class PendingStateImpl implements PendingState {
 
     @Override
     public synchronized Repository getRepository() {
+        if (pendingState == null) {
+            init();
+        }
         return pendingState;
     }
 
@@ -379,7 +382,7 @@ public class PendingStateImpl implements PendingState {
         Block best = getBestBlock();
 
         TransactionExecutor executor = commonConfig.transactionExecutor(
-                tx, best.getCoinbase(), pendingState,
+                tx, best.getCoinbase(), getRepository(),
                 blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0);
 
         executor.init();
