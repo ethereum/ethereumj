@@ -1,6 +1,5 @@
 package org.ethereum.config.blockchain;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;

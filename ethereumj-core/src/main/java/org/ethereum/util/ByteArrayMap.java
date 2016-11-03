@@ -1,6 +1,5 @@
 package org.ethereum.util;
 
-import com.sun.istack.internal.NotNull;
 import org.ethereum.db.ByteArrayWrapper;
 
 import java.util.*;
