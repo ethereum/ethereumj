@@ -43,9 +43,7 @@ public class RepositoryRoot extends RepositoryImpl {
                 if (storageOwnerAcct != null) {
                     // need to update account storage root
                     byte[] rootHash = childCache.trie.getRootHash();
-                    AccountState state = storageOwnerAcct.clone();
-                    state.setStateRoot(rootHash);
-                    accountStateCache.put(childCache.accountAddress, state);
+                    accountStateCache.put(childCache.accountAddress, storageOwnerAcct.withStateRoot(rootHash));
                     return true;
                 } else {
                     // account was deleted

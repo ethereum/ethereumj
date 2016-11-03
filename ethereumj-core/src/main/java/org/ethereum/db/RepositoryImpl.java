@@ -64,7 +64,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         return accountStateCache.get(addr);
     }
 
-    private AccountState getOrCreateAccountState(byte[] addr) {
+    AccountState getOrCreateAccountState(byte[] addr) {
         AccountState ret = accountStateCache.get(addr);
         if (ret == null) {
             ret = createAccount(addr);
@@ -79,16 +79,14 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public BigInteger increaseNonce(byte[] addr) {
-        AccountState accountState = getOrCreateAccountState(addr).clone();
-        accountState.incrementNonce();
-        accountStateCache.put(addr, accountState);
+        AccountState accountState = getOrCreateAccountState(addr);
+        accountStateCache.put(addr, accountState.withIncrementedNonce());
         return accountState.getNonce();
     }
 
     public BigInteger setNonce(byte[] addr, BigInteger nonce) {
-        AccountState accountState = getOrCreateAccountState(addr).clone();
-        accountState.setNonce(nonce);
-        accountStateCache.put(addr, accountState);
+        AccountState accountState = getOrCreateAccountState(addr);
+        accountStateCache.put(addr, accountState.withNonce(nonce));
         return accountState.getNonce();
     }
 
@@ -113,9 +111,8 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     public void saveCode(byte[] addr, byte[] code) {
         byte[] codeHash = HashUtil.sha3(code);
         codeCache.put(codeHash, code);
-        AccountState accountState = getOrCreateAccountState(addr).clone();
-        accountState.setCodeHash(codeHash);
-        accountStateCache.put(addr, accountState);
+        AccountState accountState = getOrCreateAccountState(addr);
+        accountStateCache.put(addr, accountState.withCodeHash(codeHash));
     }
 
     @Override
@@ -152,9 +149,8 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public BigInteger addBalance(byte[] addr, BigInteger value) {
-        AccountState accountState = getOrCreateAccountState(addr).clone();
-        accountState.addToBalance(value);
-        accountStateCache.put(addr, accountState);
+        AccountState accountState = getOrCreateAccountState(addr);
+        accountStateCache.put(addr, accountState.withBalanceIncrement(value));
         return accountState.getBalance();
     }
 

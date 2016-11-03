@@ -17,10 +17,10 @@ public class AccountState {
     /* A value equal to the number of transactions sent
      * from this address, or, in the case of contract accounts,
      * the number of contract-creations made by this account */
-    private BigInteger nonce;
+    private final BigInteger nonce;
 
     /* A scalar value equal to the number of Wei owned by this address */
-    private BigInteger balance;
+    private final BigInteger balance;
 
     /* A 256-bit hash of the root node of a trie structure
      * that encodes the storage contents of the contract,
@@ -32,7 +32,7 @@ public class AccountState {
      * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s .
      * It shall be understood that σ[a] s is not a ‘physical’ member
      * of the account and does not contribute to its later serialisation */
-    private byte[] stateRoot = EMPTY_TRIE_HASH;
+    private final byte[] stateRoot;
 
     /* The hash of the EVM code of this contract—this is the code
      * that gets executed should this address receive a message call;
@@ -40,18 +40,21 @@ public class AccountState {
      * after construction. All such code fragments are contained in
      * the state database under their corresponding hashes for later
      * retrieval */
-    private byte[] codeHash = EMPTY_DATA_HASH;
-
-    private boolean dirty = false;
-    private boolean deleted = false;
+    private final byte[] codeHash;
 
     public AccountState(SystemProperties config) {
         this(config.getBlockchainConfig().getCommonConstants().getInitialNonce(), BigInteger.ZERO);
     }
 
     public AccountState(BigInteger nonce, BigInteger balance) {
+        this(nonce, balance, EMPTY_TRIE_HASH, EMPTY_DATA_HASH);
+    }
+
+    public AccountState(BigInteger nonce, BigInteger balance, byte[] stateRoot, byte[] codeHash) {
         this.nonce = nonce;
         this.balance = balance;
+        this.stateRoot = stateRoot;
+        this.codeHash = codeHash;
     }
 
     public AccountState(byte[] rlpData) {
@@ -70,51 +73,36 @@ public class AccountState {
         return nonce;
     }
 
-    public void setNonce(BigInteger nonce) {
-        rlpEncoded = null;
-        this.nonce = nonce;
+    public AccountState withNonce(BigInteger nonce) {
+        return new AccountState(nonce, balance, stateRoot, codeHash);
     }
 
     public byte[] getStateRoot() {
         return stateRoot;
     }
 
-    public void setStateRoot(byte[] stateRoot) {
-        rlpEncoded = null;
-        this.stateRoot = stateRoot;
-        setDirty(true);
+    public AccountState withStateRoot(byte[] stateRoot) {
+        return new AccountState(nonce, balance, stateRoot, codeHash);
     }
 
-    public void incrementNonce() {
-        rlpEncoded = null;
-        this.nonce = nonce.add(BigInteger.ONE);
-        setDirty(true);
+    public AccountState withIncrementedNonce() {
+        return new AccountState(nonce.add(BigInteger.ONE), balance, stateRoot, codeHash);
     }
 
     public byte[] getCodeHash() {
         return codeHash;
     }
 
-    public void setCodeHash(byte[] codeHash) {
-        rlpEncoded = null;
-        this.codeHash = codeHash;
+    public AccountState withCodeHash(byte[] codeHash) {
+        return new AccountState(nonce, balance, stateRoot, codeHash);
     }
 
     public BigInteger getBalance() {
         return balance;
     }
 
-    public BigInteger addToBalance(BigInteger value) {
-        if (value.signum() != 0) rlpEncoded = null;
-        this.balance = balance.add(value);
-        setDirty(true);
-        return this.balance;
-    }
-
-    public void subFromBalance(BigInteger value) {
-        if (value.signum() != 0) rlpEncoded = null;
-        this.balance = balance.subtract(value);
-        setDirty(true);
+    public AccountState withBalanceIncrement(BigInteger value) {
+        return new AccountState(nonce, balance.add(value), stateRoot, codeHash);
     }
 
     public byte[] getEncoded() {
@@ -126,32 +114,6 @@ public class AccountState {
             this.rlpEncoded = RLP.encodeList(nonce, balance, stateRoot, codeHash);
         }
         return rlpEncoded;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public AccountState clone() {
-        AccountState accountState = new AccountState(this.getNonce(), this.getBalance());
-
-        accountState.setCodeHash(this.getCodeHash());
-        accountState.setStateRoot(this.getStateRoot());
-        accountState.setDirty(false);
-
-        return accountState;
     }
 
     public String toString() {

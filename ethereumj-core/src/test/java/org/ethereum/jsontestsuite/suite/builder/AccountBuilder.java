@@ -21,12 +21,11 @@ public class AccountBuilder {
         details.setCode(parseData(account.getCode()));
         details.setStorage(convertStorage(account.getStorage()));
 
-        AccountState state = new AccountState(SystemProperties.getDefault());
-
-        state.addToBalance(unifiedNumericToBigInteger(account.getBalance()));
-        state.setNonce(unifiedNumericToBigInteger(account.getNonce()));
-        state.setStateRoot(details.getStorageHash());
-        state.setCodeHash(sha3(details.getCode()));
+        AccountState state = new AccountState(SystemProperties.getDefault())
+                .withBalanceIncrement(unifiedNumericToBigInteger(account.getBalance()))
+                .withNonce(unifiedNumericToBigInteger(account.getNonce()))
+                .withStateRoot(details.getStorageHash())
+                .withCodeHash(sha3(details.getCode()));
 
         return new StateWrap(state, details);
     }

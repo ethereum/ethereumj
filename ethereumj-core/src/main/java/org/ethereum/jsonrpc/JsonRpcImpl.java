@@ -549,7 +549,7 @@ public class JsonRpcImpl implements JsonRpc {
             Account account = getAccount(from);
             if (account == null) throw new RuntimeException("No account " + from);
 
-            tx.sign(account.getEcKey().getPrivKeyBytes());
+            tx.sign(account.getEcKey());
 
             eth.submitTransaction(tx);
 
