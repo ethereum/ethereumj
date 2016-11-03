@@ -47,7 +47,7 @@ public class CachedSourceImpl<Key, Value> implements
     }
 
     @Override
-    public void put(Key key, Value val) {
+    public synchronized void put(Key key, Value val) {
         checkByteArrKey(key);
         if (val == null) {
             delete(key);
@@ -58,7 +58,7 @@ public class CachedSourceImpl<Key, Value> implements
     }
 
     @Override
-    public Value get(Key key) {
+    public synchronized Value get(Key key) {
         checkByteArrKey(key);
         Value ret = cache.get(key);
         if (ret == null) {
@@ -73,7 +73,7 @@ public class CachedSourceImpl<Key, Value> implements
     }
 
     @Override
-    public void delete(Key key) {
+    public synchronized void delete(Key key) {
         checkByteArrKey(key);
         if (noDelete) return;
         cache.put(key, null);
@@ -81,13 +81,13 @@ public class CachedSourceImpl<Key, Value> implements
     }
 
     @Override
-    public boolean flush() {
+    public synchronized boolean flush() {
         boolean ret = flushTo(src);
         writes.clear();
         return ret;
     }
 
-    public boolean flushTo(Source<Key, Value> src) {
+    public synchronized boolean flushTo(Source<Key, Value> src) {
         for (Key key : writes) {
             Value value = cache.get(key);
             if (value == null) {
