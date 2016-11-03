@@ -91,7 +91,7 @@ public class ImportLightTest {
         a.callFunction("set");
         Block block = sb.createBlock();
         System.out.println(Hex.toHexString(block.getStateRoot()));
-        Assert.assertEquals("1a15aa4725a388aa82df8eaedd86ab66cde37365d6f1323a9cb678b124c58223", Hex.toHexString(block.getStateRoot()));
+        Assert.assertEquals("cad42169cafc7855c25b8889df83faf38e493fb6e95b2c9c8e155dbc340160d6", Hex.toHexString(block.getStateRoot()));
     }
 
     @Test
