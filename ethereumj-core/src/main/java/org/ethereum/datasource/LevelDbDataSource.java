@@ -1,6 +1,7 @@
 package org.ethereum.datasource;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.util.FileUtil;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
             try {
                 logger.debug("Opening database");
-                final Path dbPath = Paths.get(config.databaseDir(), name);
+                final Path dbPath = getPath();
                 if (!Files.isSymbolicLink(dbPath.getParent())) Files.createDirectories(dbPath.getParent());
 
                 logger.debug("Initializing new or existing database: '{}'", name);
@@ -97,6 +98,16 @@ public class LevelDbDataSource implements KeyValueDataSource {
         } finally {
             resetDbLock.writeLock().unlock();
         }
+    }
+
+    private Path getPath() {
+        return Paths.get(config.databaseDir(), name);
+    }
+
+    public void reset() {
+        close();
+        FileUtil.recursiveDelete(getPath().toString());
+        init();
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
@@ -326,7 +327,13 @@ public class FastSyncManager {
         TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
         nodesQueue.add(request);
         logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
+
+        stateDS.put(CommonConfig.FASTSYNC_DB_KEY, new byte[]{1});
+
         retrieveLoop();
+
+        stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
+
         logger.info("FastSync: state trie download complete!");
         last = 0; logStat();
 

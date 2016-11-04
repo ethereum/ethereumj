@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -35,6 +36,8 @@ import static java.util.Arrays.asList;
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
+
+    public static final byte[] FASTSYNC_DB_KEY = HashUtil.sha3("Key in state DB indicating fastsync in progress".getBytes());
 
     private static CommonConfig defaultInstance;
 
@@ -88,6 +91,12 @@ public class CommonConfig {
         KeyValueDataSource ret = keyValueDataSource();
         ret.setName("state");
         ret.init();
+
+        if (ret.get(FASTSYNC_DB_KEY) != null) {
+            logger.warn("Last fastsync was interrupted. Removing state db...");
+            ((LevelDbDataSource)ret).reset();
+        }
+
         return ret;
     }
 
