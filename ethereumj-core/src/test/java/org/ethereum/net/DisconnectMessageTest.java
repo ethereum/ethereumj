@@ -58,7 +58,7 @@ public class DisconnectMessageTest {
         DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
         logger.trace("{}" + disconnectMessage);
 
-        assertEquals(disconnectMessage.getReason(), ReasonCode.REQUESTED); //high numbers are zeroed
+        assertEquals(disconnectMessage.getReason(), ReasonCode.UNKNOWN); //high numbers are zeroed
     }
 
     @Test //handling boundary-low minus 1 (error)
