@@ -115,6 +115,8 @@ dependencies {
 
     compile "org.ethereum:leveldbjni-all:1.18.3"             // native leveldb components
 
+    compile "org.ethereum:solcJ-all:0.4.3"                   // Solidity Compiler win/mac/linux binaries
+
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"

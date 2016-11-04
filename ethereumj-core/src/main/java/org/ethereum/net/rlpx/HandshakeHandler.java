@@ -12,6 +12,7 @@ import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,11 +58,14 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     private Channel channel;
     private boolean isHandshakeDone;
 
-    private SystemProperties config;
+    private final SystemProperties config;
+    private final NodeManager nodeManager;
 
     @Autowired
-    public HandshakeHandler(final SystemProperties config) {
+    public HandshakeHandler(final SystemProperties config, final NodeManager nodeManager) {
         this.config = config;
+        this.nodeManager = nodeManager;
+
         myKey = config.getMyKey();
     }
 
@@ -69,7 +73,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
         if (remoteId.length == 64) {
-            channel.setNode(remoteId);
+            channel.initWithNode(remoteId);
             initiate(ctx);
         } else {
             handshake = new EncryptionHandshake();
@@ -251,7 +255,10 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                 }
 
                 final HelloMessage inboundHelloMessage = (HelloMessage) message;
-                channel.setNode(remoteId, inboundHelloMessage.getListenPort());
+
+                // now we know both remote nodeId and port
+                // let's set node, that will cause registering node in NodeManager
+                channel.initWithNode(remoteId, inboundHelloMessage.getListenPort());
 
                 // Secret authentication finish here
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);

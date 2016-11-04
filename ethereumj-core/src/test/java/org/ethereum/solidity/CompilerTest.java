@@ -15,12 +15,17 @@ public class CompilerTest {
     @Test
     public void simpleTest() throws IOException {
         String contract =
-            "contract a {" +
-                    "  int i1;" +
-                    "  function i() returns (int) {" +
-                    "    return i1;" +
-                    "  }" +
+            "pragma solidity ^0.4.3;\n" +
+                    "\n" +
+                    "contract a {\n" +
+                    "\n" +
+                    "        mapping(address => string) private mailbox;\n" +
+                    "\n" +
+                    "        event Mailed(address from, string message);\n" +
+                    "        event Read(address from, string message);\n" +
+                    "\n" +
                     "}";
+
         SolidityCompiler.Result res = SolidityCompiler.compile(
                 contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN, SolidityCompiler.Options.INTERFACE);
         System.out.println("Out: '" + res.output + "'");

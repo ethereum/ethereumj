@@ -49,14 +49,16 @@ public class SolidityCompiler {
     public static class Result {
         public String errors;
         public String output;
+        private boolean success = false;
 
-        public Result(String errors, String output) {
+        public Result(String errors, String output, boolean success) {
             this.errors = errors;
             this.output = output;
+            this.success = success;
         }
 
         public boolean isFailed() {
-            return isNotBlank(errors);
+            return !success;
         }
     }
 
@@ -143,8 +145,9 @@ public class SolidityCompiler {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        boolean success = process.exitValue() == 0;
 
-        return new Result(error.getContent(), output.getContent());
+        return new Result(error.getContent(), output.getContent(), success);
     }
 
     public static SolidityCompiler getInstance() {

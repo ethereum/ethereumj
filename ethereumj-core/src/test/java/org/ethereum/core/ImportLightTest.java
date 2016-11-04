@@ -415,21 +415,24 @@ public class ImportLightTest {
     public void createValueTest() throws IOException, InterruptedException {
         // checks that correct msg.value is passed when contract internally created with value
         String contract =
-                "contract B {" +
-                "  uint public valReceived;" +
-                "  function B() {" +
-                "    valReceived = msg.value;" +
-                "  }" +
-                "}" +
-                "contract A {" +
-                "    address public child;" +
-                "    function create() {" +
-                "        child = (new B).value(20)();" +
-                "    }" +
+                "pragma solidity ^0.4.3;\n" +
+                "contract B {\n" +
+                "      uint public valReceived;\n" +
+                "      \n" +
+                "      function B() payable {\n" +
+                "        valReceived = msg.value;\n" +
+                "      }\n" +
+                "}\n" +
+                "contract A {\n" +
+                "    function () payable { }\n" +
+                "    address public child;\n" +
+                "    function create() payable {\n" +
+                "        child = (new B).value(20)();\n" +
+                "    }\n" +
                 "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
-        bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
+        bc.sendEther(a.getAddress(), BigInteger.valueOf(10_000));
         a.callFunction(10, "create");
         byte[] childAddress = (byte[]) a.callConstFunction("child")[0];
         SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
@@ -467,30 +470,59 @@ public class ImportLightTest {
     }
 
     @Test
-    public void getBalanceTest() throws IOException, InterruptedException {
+    public void operateNotExistingContractTest() throws IOException, InterruptedException {
         // checking that addr.balance doesn't cause the account to be created
         // and the subsequent call to that non-existent address costs 25K gas
         byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
         String contractA =
+                "pragma solidity ^0.4.3;" +
                 "contract B { function dummy() {}}" +
                 "contract A {" +
-                "  function call() returns (uint) {" +
+                "  function callBalance() returns (uint) {" +
                 "    address addr = 0x" + Hex.toHexString(addr) + ";" +
                 "    uint bal = addr.balance;" +
+                "  }" +
+                "  function callMethod() returns (uint) {" +
+                "    address addr = 0x" + Hex.toHexString(addr) + ";" +
                 "    B b = B(addr);" +
                 "    b.dummy();" +
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        StandaloneBlockchain bc = new StandaloneBlockchain()
+                .withGasPrice(1)
+                .withGasLimit(5_000_000L);
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
-        BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
-        a.callFunction("call");
-        bc.createBlock();
-        BigInteger balance2 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
-        long spent = balance1.subtract(balance2).longValue();
-        Assert.assertEquals(46634, spent);
+
+        {
+            BigInteger balance1 = getSenderBalance(bc);
+            a.callFunction("callBalance");
+            bc.createBlock();
+            BigInteger balance2 = getSenderBalance(bc);
+            long spent = balance1.subtract(balance2).longValue();
+
+            // checking balance of not existed address should take
+            // less that gas limit
+            Assert.assertEquals(21512, spent);
+        }
+
+        {
+            BigInteger balance1 = getSenderBalance(bc);
+            a.callFunction("callMethod");
+            bc.createBlock();
+            BigInteger balance2 = getSenderBalance(bc);
+            long spent = balance1.subtract(balance2).longValue();
+
+            // invalid jump error occurred
+            // all gas wasted
+            // (for history: it is worked fine in ^0.3.1)
+            Assert.assertEquals(5_000_000L, spent);
+        }
+    }
+
+    private BigInteger getSenderBalance(StandaloneBlockchain bc) {
+        return bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
     }
 
     @Test
@@ -580,6 +612,40 @@ public class ImportLightTest {
 
         assert BigInteger.valueOf(2).equals(av);
         assert BigInteger.valueOf(1).equals(bv);
+    }
+
+    @Test()
+    public void selfdestructAttack() throws Exception {
+        String contractSrc = "" +
+                "pragma solidity ^0.4.3;" +
+                "contract B {" +
+                "  function suicide(address benefic) {" +
+                "    selfdestruct(benefic);" +
+                "  }" +
+                "}" +
+                "contract A {" +
+                "  uint public a;" +
+                "  function f() {" +
+                "    B b = new B();" +
+                "    for (uint i = 0; i < 3500; i++) {" +
+                "      b.suicide(address(i));" +
+                "    }" +
+                "    a = 2;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain()
+                .withGasLimit(1_000_000_000L)
+                .withDbDelay(0);
+        SolidityContract a = bc.submitNewContract(contractSrc, "A");
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        String stateRoot = Hex.toHexString(bc.getBlockchain().getRepository().getRoot());
+//        Assert.assertEquals("82d5bdb6531e26011521da5601481c9dbef326aa18385f2945fd77bee288ca31", stateRoot);
+        Object av = a.callConstFunction("a")[0];
+        assert BigInteger.valueOf(2).equals(av);
+        assert bc.getTotalDbHits() < 8300; // reduce this assertion if you make further optimizations
     }
 
     @Test

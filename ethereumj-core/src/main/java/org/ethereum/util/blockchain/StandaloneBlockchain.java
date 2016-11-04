@@ -46,6 +46,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long gasLimit;
     boolean autoBlock;
     long dbDelay = 0;
+    long totalDbHits = 0;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
@@ -293,7 +294,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private SolidityContractImpl createContract(String soliditySrc, String contractName) {
         try {
             SolidityCompiler.Result compileRes = SolidityCompiler.compile(soliditySrc.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-            if (!compileRes.errors.isEmpty()) throw new RuntimeException("Compile error: " + compileRes.errors);
+            if (compileRes.isFailed()) throw new RuntimeException("Compile result: " + compileRes.errors);
             CompilationResult result = CompilationResult.parse(compileRes.output);
             if (contractName == null) {
                 if (result.contracts.size() > 1) {
@@ -370,6 +371,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     public HashMapDB getStorageDS() {
         return storageDS;
+    }
+
+    public long getTotalDbHits() {
+        return totalDbHits;
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
@@ -583,6 +588,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
      class SlowHashMapDB extends HashMapDB {
         private void sleep(int cnt) {
+            totalDbHits += cnt;
             if (dbDelay == 0) return;
             try {
                 Thread.sleep(dbDelay * cnt);
