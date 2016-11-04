@@ -301,51 +301,6 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     /**
-     * Returns list of unused Eth nodes with highest total difficulty<br>
-     *     Search criteria:
-     *     <ul>
-     *         <li>not presented in {@code usedIds} collection</li>
-     *         <li>eth status processing succeeded</li>
-     *         <li>difficulty is higher than {@code lowerDifficulty}</li>
-     *     </ul>
-     *
-     *
-     * @param usedIds collections of ids which are excluded from results
-     * @param lowerDifficulty nodes having TD lower than this value are sorted out
-     * @param limit max size of returning list
-     *
-     * @return list of nodes with highest difficulty, ordered by TD in desc order
-     */
-    public List<NodeHandler> getBestEthNodes(
-            final Set<String> usedIds,
-            final BigInteger lowerDifficulty,
-            int limit
-    ) {
-        return getNodes(new Functional.Predicate<NodeHandler>() {
-            @Override
-            public boolean test(NodeHandler handler) {
-                if (usedIds.contains(handler.getNode().getHexId())) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().isPredefined()) return true;
-
-                if (handler.getNodeStatistics().getClientId().contains("Parity") ||
-                        handler.getNodeStatistics().getClientId().contains("parity")) {
-                    return false;
-                }
-                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().getReputation() < 100) return false;
-
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
-            }
-        }, limit);
-    }
-
-    /**
      * Returns limited list of nodes matching {@code predicate} criteria<br>
      * The nodes are sorted then by their totalDifficulties
      *
@@ -354,7 +309,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      *
      * @return list of nodes matching criteria
      */
-    private List<NodeHandler> getNodes(
+    public List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
             int limit    ) {
         ArrayList<NodeHandler> filtered = new ArrayList<>();

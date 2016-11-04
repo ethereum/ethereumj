@@ -13,12 +13,10 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.ByteArrayMap;
-import org.ethereum.util.ByteArraySet;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
+import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -311,6 +309,15 @@ public class FastSyncManager {
 
     public void main() {
 
+        // Temporary avoid Parity due to bug https://github.com/ethcore/parity/issues/2887
+        pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
+            @Override
+            public boolean test(NodeHandler handler) {
+                return !(handler.getNodeStatistics().getClientId().contains("Parity") ||
+                        handler.getNodeStatistics().getClientId().contains("parity"));
+            }
+        });
+
         startLogWorker();
 
         BlockHeader pivot = getPivotBlock();
@@ -326,6 +333,8 @@ public class FastSyncManager {
         if (stateDS instanceof Flushable) {
             ((Flushable) stateDS).flush();
         }
+
+        pool.setNodesSelector(null);
 
         logger.info("FastSync: starting downloading ancestors of the pivot block: " + pivot.getShortDescr());
         downloader.startImporting(pivot.getHash());
