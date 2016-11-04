@@ -34,7 +34,7 @@ import static org.ethereum.net.eth.EthVersion.V63;
 /**
  * Fast synchronization (PV63) Handler
  */
-@Component
+@Component("Eth63")
 @Scope("prototype")
 public class Eth63 extends Eth62 {
 

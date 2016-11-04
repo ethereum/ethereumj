@@ -45,7 +45,7 @@ import static org.spongycastle.util.encoders.Hex.toHexString;
  * @author Mikhail Kalinin
  * @since 04.09.2015
  */
-@Component
+@Component("Eth62")
 @Scope("prototype")
 public class Eth62 extends EthHandler {
 
