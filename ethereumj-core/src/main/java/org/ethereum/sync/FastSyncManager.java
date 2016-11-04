@@ -12,6 +12,7 @@ import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.eth.handler.Eth63;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.ByteArrayMap;
@@ -62,7 +63,6 @@ public class FastSyncManager {
     @Autowired
     private ChannelManager channelManager;
 
-    //    Source<byte[], byte[]> stateDS;
     @Autowired @Qualifier("stateDS")
     KeyValueDataSource stateDS = new HashMapDB();
 
@@ -98,7 +98,7 @@ public class FastSyncManager {
         CODE
     }
 
-    class TrieNodeRequest {
+    private class TrieNodeRequest {
         TrieNodeType type;
         byte[] nodeHash;
         byte[] response;
@@ -320,7 +320,8 @@ public class FastSyncManager {
 
         logger.info("FastSync: starting downloading ancestors of the pivot block: " + pivot.getShortDescr());
         downloader.startImporting(pivot.getHash());
-        while (downloader.getDownloadedBlocksCount() < 1000) {
+        while (downloader.getDownloadedBlocksCount() < 256) {
+            // we need 256 previous blocks to correctly execute BLOCKHASH EVM instruction
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -329,58 +330,75 @@ public class FastSyncManager {
         }
 
         logger.info("FastSync: downloaded more than 256 ancestor blocks, proceeding with live sync");
-//        blockStore.saveBlock(pivot, pivot.getCumulativeDifficulty(), true);
+
         blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
         config.setSyncEnabled(true);
         syncManager.init(channelManager, pool);
-
-//        downloadPreviousBlocks();
-//        downloadPreviousReceipts();
 
         // set indicator that we can send [STATUS] with the latest block
         // before we should report best block #0
     }
 
     private BlockHeader getPivotBlock() {
-        logger.info("FastSync: looking for best block number...");
-        BlockIdentifier bestKnownBlock;
+        byte[] pivotBlockHash = null;
+        long pivotBlockNumber = 0;
 
         long s = System.currentTimeMillis();
-        while (true) {
-            Channel bestIdle = pool.getBestIdle();
-            if (bestIdle != null) {
-                bestKnownBlock = bestIdle.getEthHandler().getBestKnownBlock();
-                if (bestKnownBlock.getNumber() > 1000) {
-                    logger.info("FastSync: best block " + bestKnownBlock + " found with peer " + bestIdle);
-                    break;
+
+        if (config.getConfig().hasPath("sync.fast.pivotBlockHash")) {
+            pivotBlockHash = Hex.decode(config.getConfig().getString("sync.fast.pivotBlockHash"));
+
+            logger.info("FastSync: fetching trusted pivot block with hash " + Hex.toHexString(pivotBlockHash));
+        } else {
+            logger.info("FastSync: looking for best block number...");
+            BlockIdentifier bestKnownBlock;
+
+            while (true) {
+                Channel bestIdle = pool.getBestIdle();
+                if (bestIdle != null) {
+                    bestKnownBlock = bestIdle.getEthHandler().getBestKnownBlock();
+                    if (bestKnownBlock.getNumber() > 1000) {
+                        logger.info("FastSync: best block " + bestKnownBlock + " found with peer " + bestIdle);
+                        break;
+                    }
+                }
+
+                long t = System.currentTimeMillis();
+                if (t - s > 5000) {
+                    logger.info("FastSync: waiting for a peer to sync with...");
+                    s = t;
+                }
+
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
 
-            long t = System.currentTimeMillis();
-            if (t - s > 5000) {
-                logger.info("FastSync: waiting for a peer to sync with...");
-                s = t;
-            }
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            pivotBlockNumber = bestKnownBlock.getNumber() - 100;
+            logger.info("FastSync: fetching pivot block #" + pivotBlockNumber);
         }
-
-        long pivotBlockNumber = bestKnownBlock.getNumber() - 100;
-        logger.info("FastSync: fetching pivot block #" + pivotBlockNumber);
 
         try {
             while (true) {
                 Channel bestIdle = pool.getBestIdle();
                 if (bestIdle != null) {
                     try {
-                        ListenableFuture<List<BlockHeader>> future = bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false);
+                        ListenableFuture<List<BlockHeader>> future = pivotBlockHash == null ?
+                                bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false) :
+                                bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockHash, 1, 0, false);
                         List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
                         if (!blockHeaders.isEmpty()) {
                             BlockHeader ret = blockHeaders.get(0);
+
+                            if (pivotBlockHash != null && !FastByteComparisons.equal(pivotBlockHash, ret.getHash())) {
+                                logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
+                                        Hex.toHexString(ret.getHash()) + " Dropping the peer.");
+                                bestIdle.disconnect(ReasonCode.USELESS_PEER);
+                                continue;
+                            }
+
                             logger.info("Pivot header fetched: " + ret.getShortDescr());
                             return ret;
                         }
