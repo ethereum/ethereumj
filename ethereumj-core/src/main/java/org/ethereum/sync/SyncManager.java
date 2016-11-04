@@ -71,6 +71,9 @@ public class SyncManager extends BlockDownloader {
     @Autowired
     private CompositeEthereumListener compositeEthereumListener;
 
+    @Autowired
+    private FastSyncManager fastSyncManager;
+
     ChannelManager channelManager;
 
     private SystemProperties config;
@@ -102,6 +105,16 @@ public class SyncManager extends BlockDownloader {
 
         logger.info("Initializing SyncManager.");
         pool.init(channelManager);
+
+        if (config.isFastSyncEnabled()) {
+            fastSyncManager.init();
+        } else {
+            initRegularSync();
+        }
+    }
+
+    public void initRegularSync() {
+        logger.info("Initializing SyncManager regular sync.");
 
         syncQueue = new SyncQueueImpl(blockchain);
         super.init(syncQueue, pool);

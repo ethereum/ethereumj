@@ -60,9 +60,6 @@ public class FastSyncManager {
     @Autowired
     private SyncManager syncManager;
 
-    @Autowired
-    private ChannelManager channelManager;
-
     @Autowired @Qualifier("stateDS")
     KeyValueDataSource stateDS = new HashMapDB();
 
@@ -74,9 +71,7 @@ public class FastSyncManager {
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
 
-    @PostConstruct
     void init() {
-        pool.init(channelManager);
         new Thread("FastSyncDBWriter") {
             @Override
             public void run() {
@@ -87,6 +82,17 @@ public class FastSyncManager {
                     }
                 } catch (Exception e) {
                     logger.error("Fatal FastSync error while writing data", e);
+                }
+            }
+        }.start();
+
+        new Thread("FastSyncLoop") {
+            @Override
+            public void run() {
+                try {
+                    main();
+                } catch (Exception e) {
+                    logger.error("Fatal FastSync loop error", e);
                 }
             }
         }.start();
@@ -206,11 +212,13 @@ public class FastSyncManager {
 
         if (idle != null) {
             final List<byte[]> hashes = new ArrayList<>();
+            final List<TrieNodeRequest> requestsSent = new ArrayList<>();
             synchronized(this) {
                 for (int i = 0; i < cnt && !nodesQueue.isEmpty(); i++) {
                     TrieNodeRequest req = nodesQueue.poll();
                     req.reqSent();
                     hashes.add(req.nodeHash);
+                    requestsSent.add(req);
                     pendingNodes.put(req.nodeHash, req);
                 }
             }
@@ -227,7 +235,8 @@ public class FastSyncManager {
                                 for (Pair<byte[], byte[]> pair : result) {
                                     TrieNodeRequest request = pendingNodes.remove(pair.getKey());
                                     if (request == null) {
-                                        logger.error("Received node which was not requested: " + Hex.toHexString(pair.getKey()));
+                                        long t = System.currentTimeMillis();
+                                        logger.debug("Received node which was not requested: " + Hex.toHexString(pair.getKey()) + " from " + idle);
                                         return;
                                     }
                                     request.response = pair.getValue();
@@ -323,7 +332,7 @@ public class FastSyncManager {
         while (downloader.getDownloadedBlocksCount() < 256) {
             // we need 256 previous blocks to correctly execute BLOCKHASH EVM instruction
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -332,22 +341,19 @@ public class FastSyncManager {
         logger.info("FastSync: downloaded more than 256 ancestor blocks, proceeding with live sync");
 
         blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
-        config.setSyncEnabled(true);
-        syncManager.init(channelManager, pool);
+        syncManager.initRegularSync();
 
         // set indicator that we can send [STATUS] with the latest block
         // before we should report best block #0
     }
 
     private BlockHeader getPivotBlock() {
-        byte[] pivotBlockHash = null;
+        byte[] pivotBlockHash = config.getFastSyncPivotBlockHash();
         long pivotBlockNumber = 0;
 
         long s = System.currentTimeMillis();
 
-        if (config.getConfig().hasPath("sync.fast.pivotBlockHash")) {
-            pivotBlockHash = Hex.decode(config.getConfig().getString("sync.fast.pivotBlockHash"));
-
+        if (pivotBlockHash != null) {
             logger.info("FastSync: fetching trusted pivot block with hash " + Hex.toHexString(pivotBlockHash));
         } else {
             logger.info("FastSync: looking for best block number...");

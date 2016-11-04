@@ -5,11 +5,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionInfo;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
@@ -44,7 +41,7 @@ public class Eth63 extends Eth62 {
     private static final EthVersion version = V63;
 
     @Autowired
-    private RepositoryRoot repository;
+    private Repository repository;
 
     private Set<byte[]> requestedNodes;
     private SettableFuture<List<Pair<byte[], byte[]>>> requestNodesFuture;
@@ -97,7 +94,7 @@ public class Eth63 extends Eth62 {
 
         List<Value> states = new ArrayList<>();
         for (byte[] stateRoot : msg.getStateRoots()) {
-            Value value = repository.getState(stateRoot);
+            Value value = ((RepositoryImpl) repository).getState(stateRoot);
             if (value != null) {
                 states.add(value);
                 logger.trace("Eth63: " + Hex.toHexString(stateRoot).substring(0, 8) + " -> " + value);

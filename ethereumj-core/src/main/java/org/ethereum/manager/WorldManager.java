@@ -8,6 +8,7 @@ import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
+import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
@@ -53,6 +54,9 @@ public class WorldManager {
 
     @Autowired
     private SyncManager syncManager;
+
+    @Autowired
+    private FastSyncManager fastSyncManager;
 
     @Autowired
     private SyncPool pool;

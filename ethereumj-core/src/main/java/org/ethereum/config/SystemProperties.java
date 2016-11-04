@@ -744,6 +744,19 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean isFastSyncEnabled() {
+        return this.syncEnabled == null ? config.getBoolean("sync.fast.enabled") : syncEnabled;
+    }
+
+    @ValidateMe
+    public byte[] getFastSyncPivotBlockHash() {
+        if (!config.hasPath("sync.fast.pivotBlockHash")) return null;
+        byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
+        if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
+        return ret;
+    }
+
+    @ValidateMe
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
 
     @ValidateMe
