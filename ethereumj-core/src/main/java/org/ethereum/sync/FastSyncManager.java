@@ -36,7 +36,6 @@ import static org.ethereum.util.CompactEncoder.hasTerminator;
  * Created by Anton Nashatyrev on 24.10.2016.
  */
 @Component
-@Lazy
 public class FastSyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
