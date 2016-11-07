@@ -422,7 +422,7 @@ public class FastSyncManager {
 
         try {
             while (true) {
-                Channel bestIdle = pool.getBestIdle();
+                Channel bestIdle = pool.getAnyIdle();
                 if (bestIdle != null) {
                     try {
                         ListenableFuture<List<BlockHeader>> future = pivotBlockHash == null ?
