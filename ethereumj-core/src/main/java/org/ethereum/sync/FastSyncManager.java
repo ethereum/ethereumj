@@ -43,6 +43,7 @@ public class FastSyncManager {
     private final static long REQUEST_TIMEOUT = 5 * 1000;
     private final static int REQUEST_MAX_NODES = 512;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
+    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
 
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
 
@@ -385,18 +386,26 @@ public class FastSyncManager {
             BlockIdentifier bestKnownBlock;
 
             while (true) {
-                Channel bestIdle = pool.getBestIdle();
-                if (bestIdle != null) {
-                    bestKnownBlock = bestIdle.getEthHandler().getBestKnownBlock();
+                List<Channel> allIdle = pool.getAllIdle();
+
+                if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION) {
+                    Channel bestPeer = allIdle.get(0);
+                    for (Channel channel : allIdle) {
+                        if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
+                            bestPeer = channel;
+                        }
+                    }
+                    bestKnownBlock = bestPeer.getEthHandler().getBestKnownBlock();
                     if (bestKnownBlock.getNumber() > 1000) {
-                        logger.info("FastSync: best block " + bestKnownBlock + " found with peer " + bestIdle);
+                        logger.info("FastSync: best block " + bestKnownBlock + " found with peer " + bestPeer);
                         break;
                     }
                 }
 
                 long t = System.currentTimeMillis();
                 if (t - s > 5000) {
-                    logger.info("FastSync: waiting for a peer to sync with...");
+                    logger.info("FastSync: waiting for at least " + MIN_PEERS_FOR_PIVOT_SELECTION + " peers to select pivot block... ("
+                            + allIdle.size() + " peers so far)");
                     s = t;
                 }
 
@@ -407,7 +416,7 @@ public class FastSyncManager {
                 }
             }
 
-            pivotBlockNumber = bestKnownBlock.getNumber() - 100;
+            pivotBlockNumber = bestKnownBlock.getNumber() - 500;
             logger.info("FastSync: fetching pivot block #" + pivotBlockNumber);
         }
 

@@ -126,6 +126,15 @@ public class SyncPool {
         return null;
     }
 
+    public synchronized List<Channel> getAllIdle() {
+        List<Channel> ret = new ArrayList<>();
+        for (Channel peer : activePeers) {
+            if (peer.isIdle())
+                ret.add(peer);
+        }
+        return ret;
+    }
+
     @Nullable
     public synchronized Channel getByNodeId(byte[] nodeId) {
         return channelManager.getActivePeer(nodeId);
