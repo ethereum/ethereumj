@@ -15,6 +15,8 @@ import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.*;
@@ -919,80 +921,80 @@ public class RepositoryTest {
     }
 
 
-//    @Test // testing for snapshot
-//    public void testMultiThread() throws InterruptedException {
-//        RepositoryImpl repository = RepositoryImpl.createNew(new MapDB());
-//
-//        final byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
-//
-//        final DataWord cowKey1 = new DataWord("c1");
-//        final DataWord cowKey2 = new DataWord("c2");
-//        final DataWord cowVal0 = new DataWord("c0a0");
-//
-//        Repository track2 = repository.startTracking(); //track
-//        track2.addStorageRow(cow, cowKey2, cowVal0);
-//        track2.commit();
-//        repository.flush();
-//
-//        ContractDetails cowDetails = repository.getContractDetails(cow);
-//        assertEquals(cowVal0, cowDetails.get(cowKey2));
-//
-//        final CountDownLatch failSema = new CountDownLatch(1);
-//
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    int cnt = 1;
-//                    while(true) {
-//                        RepositoryTrack snap = (RepositoryTrack) repository.getSnapshotTo(repository.getRoot()).startTracking();
-////                        snap.addBalance(cow, BigInteger.TEN);
-//                        snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
-//                        snap.rollback();
-//                        cnt++;
-//                    }
-//                } catch (Throwable e) {
-//                    e.printStackTrace();
-//                    failSema.countDown();
-//                }
-//            }
-//        }).start();
-//
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                int cnt = 1;
-//                try {
-//                    while(true) {
-//                        Repository track2 = repository.startTracking(); //track
-//                        DataWord cVal = new DataWord(cnt);
-//                        track2.addStorageRow(cow, cowKey1, cVal);
-////                        track2.addBalance(cow, BigInteger.ONE);
-//                        track2.commit();
-//
-//                        repository.flush();
-//
-////                        assertEquals(BigInteger.valueOf(cnt), repository.getBalance(cow));
-//                        assertEquals(cVal, repository.getStorageValue(cow, cowKey1));
-//                        assertEquals(cowVal0, repository.getStorageValue(cow, cowKey2));
-//                        cnt++;
-//                    }
-//                } catch (Throwable e) {
-//                    e.printStackTrace();
-//                    try {
-//                        repository.addStorageRow(cow, cowKey1, new DataWord(123));
-//                    } catch (Exception e1) {
-//                        e1.printStackTrace();
-//                    }
-//                    failSema.countDown();
-//                }
-//            }
-//        }).start();
-//
-//        failSema.await(5, TimeUnit.SECONDS);
-//
-//        if (failSema.getCount() == 0) {
-//            throw new RuntimeException("Test failed.");
-//        }
-//    }
+    @Test // testing for snapshot
+    public void testMultiThread() throws InterruptedException {
+        final RepositoryImpl repository = new RepositoryRoot(new MapDB());
+
+        final byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+
+        final DataWord cowKey1 = new DataWord("c1");
+        final DataWord cowKey2 = new DataWord("c2");
+        final DataWord cowVal0 = new DataWord("c0a0");
+
+        Repository track2 = repository.startTracking(); //track
+        track2.addStorageRow(cow, cowKey2, cowVal0);
+        track2.commit();
+        repository.flush();
+
+        ContractDetails cowDetails = repository.getContractDetails(cow);
+        assertEquals(cowVal0, cowDetails.get(cowKey2));
+
+        final CountDownLatch failSema = new CountDownLatch(1);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int cnt = 1;
+                    while(true) {
+                        Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
+                        snap.addBalance(cow, BigInteger.TEN);
+                        snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
+                        snap.rollback();
+                        cnt++;
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    failSema.countDown();
+                }
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int cnt = 1;
+                try {
+                    while(true) {
+                        Repository track2 = repository.startTracking(); //track
+                        DataWord cVal = new DataWord(cnt);
+                        track2.addStorageRow(cow, cowKey1, cVal);
+                        track2.addBalance(cow, BigInteger.ONE);
+                        track2.commit();
+
+                        repository.flush();
+
+                        assertEquals(BigInteger.valueOf(cnt), repository.getBalance(cow));
+                        assertEquals(cVal, repository.getStorageValue(cow, cowKey1));
+                        assertEquals(cowVal0, repository.getStorageValue(cow, cowKey2));
+                        cnt++;
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    try {
+                        repository.addStorageRow(cow, cowKey1, new DataWord(123));
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    failSema.countDown();
+                }
+            }
+        }).start();
+
+        failSema.await(5, TimeUnit.SECONDS);
+
+        if (failSema.getCount() == 0) {
+            throw new RuntimeException("Test failed.");
+        }
+    }
 }
