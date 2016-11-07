@@ -12,6 +12,7 @@ import org.ethereum.datasource.Flushable;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -43,6 +44,8 @@ public class FastSyncManager {
     private final static int REQUEST_MAX_NODES = 512;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
 
+    private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
+
     @Autowired
     private SystemProperties config;
 
@@ -58,7 +61,8 @@ public class FastSyncManager {
     @Autowired
     private SyncManager syncManager;
 
-    @Autowired @Qualifier("stateDS")
+    @Autowired
+    @Qualifier("stateDS")
     KeyValueDataSource stateDS = new HashMapDB();
 
     @Autowired
@@ -211,7 +215,7 @@ public class FastSyncManager {
         if (idle != null) {
             final List<byte[]> hashes = new ArrayList<>();
             final List<TrieNodeRequest> requestsSent = new ArrayList<>();
-            synchronized(this) {
+            synchronized (this) {
                 for (int i = 0; i < cnt && !nodesQueue.isEmpty(); i++) {
                     TrieNodeRequest req = nodesQueue.poll();
                     req.reqSent();
@@ -274,11 +278,11 @@ public class FastSyncManager {
 
     void retrieveLoop() {
         try {
-            while(!nodesQueue.isEmpty() || !pendingNodes.isEmpty()) {
+            while (!nodesQueue.isEmpty() || !pendingNodes.isEmpty()) {
                 try {
                     processTimeouts();
 
-                    while(requestNextNodes(REQUEST_MAX_NODES));
+                    while (requestNextNodes(REQUEST_MAX_NODES)) ;
 
                     synchronized (this) {
                         wait(10);
@@ -297,6 +301,7 @@ public class FastSyncManager {
 
     long last = 0;
     long lastNodeCount = 0;
+
     private void logStat() {
         long cur = System.currentTimeMillis();
         if (cur - last > 5000) {
@@ -313,8 +318,12 @@ public class FastSyncManager {
         pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
             @Override
             public boolean test(NodeHandler handler) {
-                return !(handler.getNodeStatistics().getClientId().contains("Parity") ||
-                        handler.getNodeStatistics().getClientId().contains("parity"));
+                if ((handler.getNodeStatistics().getClientId().contains("Parity") ||
+                        handler.getNodeStatistics().getClientId().contains("parity")))
+                    return false;
+                if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
+                    return false;
+                return true;
             }
         });
 
@@ -334,7 +343,8 @@ public class FastSyncManager {
         stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
 
         logger.info("FastSync: state trie download complete!");
-        last = 0; logStat();
+        last = 0;
+        logStat();
 
         if (stateDS instanceof Flushable) {
             ((Flushable) stateDS).flush();

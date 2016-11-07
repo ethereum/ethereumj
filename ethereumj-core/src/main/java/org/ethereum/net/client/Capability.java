@@ -52,6 +52,13 @@ public class Capability implements Comparable<Capability> {
         }
     }
 
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + (int) version;
+        return result;
+    }
+
     public String toString() {
         return name + ":" + version;
     }
