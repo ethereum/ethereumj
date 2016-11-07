@@ -44,6 +44,7 @@ public class FastSyncManager {
     private final static int REQUEST_MAX_NODES = 512;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
     private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
+    private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
 
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
 
@@ -316,6 +317,10 @@ public class FastSyncManager {
     public void main() {
 
         if (blockchain.getBestBlock().getNumber() == 0) {
+            startLogWorker();
+
+            BlockHeader pivot = getPivotBlock();
+
             // Temporary avoid Parity due to bug https://github.com/ethcore/parity/issues/2887
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
@@ -328,10 +333,6 @@ public class FastSyncManager {
                     return true;
                 }
             });
-
-            startLogWorker();
-
-            BlockHeader pivot = getPivotBlock();
 
             byte[] pivotStateRoot = pivot.getStateRoot();
             TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
@@ -383,7 +384,8 @@ public class FastSyncManager {
         byte[] pivotBlockHash = config.getFastSyncPivotBlockHash();
         long pivotBlockNumber = 0;
 
-        long s = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
+        long s = start;
 
         if (pivotBlockHash != null) {
             logger.info("FastSync: fetching trusted pivot block with hash " + Hex.toHexString(pivotBlockHash));
@@ -394,7 +396,8 @@ public class FastSyncManager {
             while (true) {
                 List<Channel> allIdle = pool.getAllIdle();
 
-                if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION) {
+                if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION
+                        || (System.currentTimeMillis() - start > FORCE_SYNC_TIMEOUT)) {
                     Channel bestPeer = allIdle.get(0);
                     for (Channel channel : allIdle) {
                         if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
