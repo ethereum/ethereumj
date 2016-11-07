@@ -16,7 +16,7 @@ public abstract class MultiCache<V extends CachedSource> extends CachedSourceImp
     }
 
     @Override
-    public V get(byte[] key) {
+    public synchronized V get(byte[] key) {
         V ownCache = ownCaches.get(key);
         if (ownCache == null) {
             V v = src != null ? super.get(key) : null;
@@ -27,7 +27,7 @@ public abstract class MultiCache<V extends CachedSource> extends CachedSourceImp
     }
 
     @Override
-    public boolean flush() {
+    public synchronized boolean flush() {
         boolean ret = false;
         for (Map.Entry<byte[], V> vEntry : ownCaches.entrySet()) {
 
