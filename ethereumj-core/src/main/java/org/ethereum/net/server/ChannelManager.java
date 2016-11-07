@@ -8,7 +8,6 @@ import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-
 import org.ethereum.facade.Ethereum;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
@@ -16,7 +15,6 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +40,7 @@ public class ChannelManager {
     private static final int inboundConnectionBanTimeout = 10 * 1000;
 
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
-    private final Map<ByteArrayWrapper, Channel> activePeers = Collections.synchronizedMap(new HashMap<ByteArrayWrapper, Channel>());
+    private final Map<ByteArrayWrapper, Channel> activePeers = new ConcurrentHashMap<>();
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
     private int maxActivePeers;
@@ -215,9 +213,7 @@ public class ChannelManager {
                 // So we could perform some tasks on recently connected peer
                 newActivePeers.add(peer);
             }
-            synchronized (activePeers) {
-                activePeers.put(peer.getNodeIdWrapper(), peer);
-            }
+            activePeers.put(peer.getNodeIdWrapper(), peer);
         }
     }
 
@@ -229,11 +225,9 @@ public class ChannelManager {
      *                     the transactions were originated by this peer
      */
     public void sendTransaction(List<Transaction> tx, Channel receivedFrom) {
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values()) {
-                if (channel != receivedFrom) {
-                    channel.sendTransaction(tx);
-                }
+        for (Channel channel : activePeers.values()) {
+            if (channel != receivedFrom) {
+                channel.sendTransaction(tx);
             }
         }
     }
@@ -245,10 +239,8 @@ public class ChannelManager {
      * @param block  new Block to be sent
      */
     public void sendNewBlock(Block block) {
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values()) {
-                channel.sendNewBlock(block);
-            }
+        for (Channel channel : activePeers.values()) {
+            channel.sendNewBlock(block);
         }
     }
 
@@ -315,14 +307,12 @@ public class ChannelManager {
      * @param receivedFrom the peer which sent original message
      */
     private void sendNewBlock(Block block, Channel receivedFrom) {
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values()) {
-                if (channel == receivedFrom) continue;
-                if (rnd.nextInt(10) < 3) {  // 30%
-                    channel.sendNewBlock(block);
-                } else {                    // 70%
-                    channel.sendNewBlockHashes(block);
-                }
+        for (Channel channel : activePeers.values()) {
+            if (channel == receivedFrom) continue;
+            if (rnd.nextInt(10) < 3) {  // 30%
+                channel.sendNewBlock(block);
+            } else {                    // 70%
+                channel.sendNewBlockHashes(block);
             }
         }
     }
@@ -340,17 +330,12 @@ public class ChannelManager {
     }
 
     public void onSyncDone(boolean done) {
-
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values())
-                channel.onSyncDone(done);
-        }
+        for (Channel channel : activePeers.values())
+            channel.onSyncDone(done);
     }
 
     public Collection<Channel> getActivePeers() {
-        synchronized (activePeers) {
-            return new ArrayList<>(activePeers.values());
-        }
+        return new ArrayList<>(activePeers.values());
     }
 
     public Channel getActivePeer(byte[] nodeId) {
@@ -371,16 +356,14 @@ public class ChannelManager {
         }
         peerServer.close();
 
-        synchronized (activePeers) {
-            ArrayList<Channel> allPeers = new ArrayList<>(activePeers.values());
-            allPeers.addAll(newPeers);
+        ArrayList<Channel> allPeers = new ArrayList<>(activePeers.values());
+        allPeers.addAll(newPeers);
 
-            for (Channel channel : allPeers) {
-                try {
-                    channel.dropConnection();
-                } catch (Exception e) {
-                    logger.warn("Problems disconnecting channel " + channel, e);
-                }
+        for (Channel channel : allPeers) {
+            try {
+                channel.dropConnection();
+            } catch (Exception e) {
+                logger.warn("Problems disconnecting channel " + channel, e);
             }
         }
     }
