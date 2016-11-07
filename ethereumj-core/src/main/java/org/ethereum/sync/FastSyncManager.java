@@ -287,7 +287,7 @@ public class FastSyncManager {
                 } catch (InterruptedException e) {
                     throw e;
                 } catch (Throwable t) {
-                    logger.error("Error, t");
+                    logger.error("Error", t);
                 }
             }
         } catch (InterruptedException e) {
