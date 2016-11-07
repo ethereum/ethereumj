@@ -315,58 +315,64 @@ public class FastSyncManager {
 
     public void main() {
 
-        // Temporary avoid Parity due to bug https://github.com/ethcore/parity/issues/2887
-        pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
-            @Override
-            public boolean test(NodeHandler handler) {
-                if ((handler.getNodeStatistics().getClientId().contains("Parity") ||
-                        handler.getNodeStatistics().getClientId().contains("parity")))
-                    return false;
-                if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
-                    return false;
-                return true;
+        if (blockchain.getBestBlock().getNumber() == 0) {
+            // Temporary avoid Parity due to bug https://github.com/ethcore/parity/issues/2887
+            pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
+                @Override
+                public boolean test(NodeHandler handler) {
+                    if ((handler.getNodeStatistics().getClientId().contains("Parity") ||
+                            handler.getNodeStatistics().getClientId().contains("parity")))
+                        return false;
+                    if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
+                        return false;
+                    return true;
+                }
+            });
+
+            startLogWorker();
+
+            BlockHeader pivot = getPivotBlock();
+
+            byte[] pivotStateRoot = pivot.getStateRoot();
+            TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
+            nodesQueue.add(request);
+            logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
+
+            stateDS.put(CommonConfig.FASTSYNC_DB_KEY, new byte[]{1});
+
+            retrieveLoop();
+
+            stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
+
+            logger.info("FastSync: state trie download complete!");
+            last = 0;
+            logStat();
+
+            if (stateDS instanceof Flushable) {
+                ((Flushable) stateDS).flush();
             }
-        });
 
-        startLogWorker();
+            pool.setNodesSelector(null);
 
-        BlockHeader pivot = getPivotBlock();
+            logger.info("FastSync: starting downloading ancestors of the pivot block: " + pivot.getShortDescr());
+            downloader.startImporting(pivot.getHash());
+            while (downloader.getDownloadedBlocksCount() < 256) {
+                // we need 256 previous blocks to correctly execute BLOCKHASH EVM instruction
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
-        byte[] pivotStateRoot = pivot.getStateRoot();
-        TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
-        nodesQueue.add(request);
-        logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
+            logger.info("FastSync: downloaded more than 256 ancestor blocks, proceeding with live sync");
 
-        stateDS.put(CommonConfig.FASTSYNC_DB_KEY, new byte[]{1});
-
-        retrieveLoop();
-
-        stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
-
-        logger.info("FastSync: state trie download complete!");
-        last = 0;
-        logStat();
-
-        if (stateDS instanceof Flushable) {
-            ((Flushable) stateDS).flush();
+            blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
+        } else {
+            logger.info("FastSync: current best block is > 0 (" + blockchain.getBestBlock().getShortDescr() + "). " +
+                    "Continue with regular sync...");
         }
 
-        pool.setNodesSelector(null);
-
-        logger.info("FastSync: starting downloading ancestors of the pivot block: " + pivot.getShortDescr());
-        downloader.startImporting(pivot.getHash());
-        while (downloader.getDownloadedBlocksCount() < 256) {
-            // we need 256 previous blocks to correctly execute BLOCKHASH EVM instruction
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        logger.info("FastSync: downloaded more than 256 ancestor blocks, proceeding with live sync");
-
-        blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
         syncManager.initRegularSync();
 
         // set indicator that we can send [STATUS] with the latest block
