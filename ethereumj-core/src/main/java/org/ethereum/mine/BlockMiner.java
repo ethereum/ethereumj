@@ -24,6 +24,8 @@ import java.util.concurrent.*;
 import static java.lang.Math.max;
 
 /**
+ * Manages embedded CPU mining and allows to use external miners.
+ *
  * Created by Anton Nashatyrev on 10.12.2015.
  */
 @Component
@@ -55,9 +57,10 @@ public class BlockMiner {
     private int cpuThreads;
     private boolean fullMining = true;
 
-    private boolean isMining;
-
+    private volatile boolean isLocalMining;
     private Block miningBlock;
+    private volatile MinerIfc externalMiner;
+
     private ListenableFuture<Long> ethashTask;
     private long lastBlockMinedTime;
     private int UNCLE_LIST_LIMIT;
@@ -106,15 +109,20 @@ public class BlockMiner {
         this.minGasPrice = minGasPrice;
     }
 
+    public void setExternalMiner(MinerIfc miner) {
+        externalMiner = miner;
+        restartMining();
+    }
+
     public void startMining() {
-        isMining = true;
+        isLocalMining = true;
         fireMinerStarted();
         logger.info("Miner started");
         restartMining();
     }
 
     public void stopMining() {
-        isMining = false;
+        isLocalMining = false;
         cancelCurrentBlock();
         fireMinerStopped();
         logger.info("Miner stopped");
@@ -135,7 +143,7 @@ public class BlockMiner {
     }
 
     private void onPendingStateChanged() {
-        if (!isMining) return;
+        if (!isLocalMining && externalMiner == null) return;
 
         logger.debug("onPendingStateChanged()");
         if (miningBlock == null) {
@@ -206,11 +214,11 @@ public class BlockMiner {
         return ret;
     }
 
-    public Block getNewBlockForMining() {
+    protected Block getNewBlockForMining() {
         Block bestBlockchain = blockchain.getBestBlock();
         Block bestPendingState = ((PendingStateImpl) pendingState).getBestBlock();
 
-        logger.debug("Best blocks: PendingState: " + bestPendingState.getShortDescr() +
+        logger.debug("getNewBlockForMining best blocks: PendingState: " + bestPendingState.getShortDescr() +
                 ", Blockchain: " + bestBlockchain.getShortDescr());
 
         Block newMiningBlock = blockchain.createNewBlock(bestPendingState, getAllPendingTransactions(),
@@ -224,6 +232,9 @@ public class BlockMiner {
         synchronized(this) {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
+            if (externalMiner != null) {
+                externalMiner.mine(miningBlock);
+            }
             ethashTask = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
                     getMineAlgorithm(config).mine(miningBlock);
             ethashTask.addListener(new Runnable() {
@@ -280,7 +291,7 @@ public class BlockMiner {
     }
 
     public boolean isMining() {
-        return isMining;
+        return isLocalMining || externalMiner != null;
     }
 
     /*****  Listener boilerplate  ******/
