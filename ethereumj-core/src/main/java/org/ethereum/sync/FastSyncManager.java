@@ -397,7 +397,7 @@ public class FastSyncManager {
                 List<Channel> allIdle = pool.getAllIdle();
 
                 if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION
-                        || (System.currentTimeMillis() - start > FORCE_SYNC_TIMEOUT)) {
+                        || (System.currentTimeMillis() - start > FORCE_SYNC_TIMEOUT && !allIdle.isEmpty())) {
                     Channel bestPeer = allIdle.get(0);
                     for (Channel channel : allIdle) {
                         if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
