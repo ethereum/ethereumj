@@ -206,7 +206,7 @@ public class BlockMiner {
         return ret;
     }
 
-    protected void restartMining() {
+    public Block getNewBlockForMining() {
         Block bestBlockchain = blockchain.getBestBlock();
         Block bestPendingState = ((PendingStateImpl) pendingState).getBestBlock();
 
@@ -215,6 +215,11 @@ public class BlockMiner {
 
         Block newMiningBlock = blockchain.createNewBlock(bestPendingState, getAllPendingTransactions(),
                 getUncles(bestPendingState));
+        return newMiningBlock;
+    }
+
+    protected void restartMining() {
+        Block newMiningBlock = getNewBlockForMining();
 
         synchronized(this) {
             cancelCurrentBlock();
@@ -259,9 +264,19 @@ public class BlockMiner {
         miningBlock = null;
 
         // broadcast the block
-        logger.debug("Importing newly mined block " + newBlock.getShortHash() + " ...");
+        logger.debug("Importing newly mined block {} {} ...", newBlock.getShortHash(), newBlock.getNumber());
         ImportResult importResult = ((EthereumImpl) ethereum).addNewMinedBlock(newBlock);
-        logger.debug("Mined block import result is " + importResult + " : " + newBlock.getShortHash());
+        logger.debug("Mined block import result is " + importResult);
+    }
+
+    public void addMinedBlock(Block newBlock) {
+        logger.info("External miner found solution: {}", newBlock.toString());
+        fireBlockMined(newBlock);
+
+        // broadcast the block
+        logger.debug("Importing newly mined block {} {} ...", newBlock.getShortHash(), newBlock.getNumber());
+        ImportResult importResult = ((EthereumImpl) ethereum).addNewMinedBlock(newBlock);
+        logger.debug("External mined block import result is " + importResult);
     }
 
     public boolean isMining() {
