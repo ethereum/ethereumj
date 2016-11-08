@@ -12,6 +12,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.mine.MinerIfc.MiningResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static java.lang.Math.max;
+import static org.ethereum.util.ByteUtil.longToBytes;
 
 /**
  * Manages embedded CPU mining and allows to use external miners.
@@ -61,7 +63,7 @@ public class BlockMiner {
     private Block miningBlock;
     private volatile MinerIfc externalMiner;
 
-    private ListenableFuture<Long> ethashTask;
+    private final Queue<ListenableFuture<MiningResult>> currentMiningTasks = new ConcurrentLinkedQueue<>();
     private long lastBlockMinedTime;
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
@@ -170,11 +172,16 @@ public class BlockMiner {
     }
 
     protected synchronized void cancelCurrentBlock() {
-        if (ethashTask != null && !ethashTask.isCancelled()) {
-            ethashTask.cancel(true);
+        for (ListenableFuture<MiningResult> task : currentMiningTasks) {
+            if (task != null && !task.isCancelled()) {
+                task.cancel(true);
+            }
+        }
+        currentMiningTasks.clear();
+
+        if (miningBlock != null) {
             fireBlockCancelled(miningBlock);
             logger.debug("Tainted block mining cancelled: {}", miningBlock.getShortDescr());
-            ethashTask = null;
             miningBlock = null;
         }
     }
@@ -232,33 +239,41 @@ public class BlockMiner {
         synchronized(this) {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
+
             if (externalMiner != null) {
-                externalMiner.mine(miningBlock);
+                currentMiningTasks.add(externalMiner.mine(miningBlock));
             }
-            ethashTask = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
-                    getMineAlgorithm(config).mine(miningBlock);
-            ethashTask.addListener(new Runnable() {
-                //            private final Future<Long> task = ethashTask;
-                @Override
-                public void run() {
-                    try {
-                        ethashTask.get();
-                        // wow, block mined!
-                        blockMined(miningBlock);
-                    } catch (InterruptedException | CancellationException e) {
-                        // OK, we've been cancelled, just exit
-                    } catch (Exception e) {
-                        logger.warn("Exception during mining: ", e);
+            if (isLocalMining) {
+                MinerIfc localMiner = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
+                        getMineAlgorithm(config);
+                currentMiningTasks.add(localMiner.mine(miningBlock));
+            }
+
+            for (final ListenableFuture<MiningResult> task : currentMiningTasks) {
+                task.addListener(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            MiningResult result = task.get();
+
+                            miningBlock.setNonce(longToBytes(result.nonce));
+                            miningBlock.setMixHash(result.digest);
+                            // wow, block mined!
+                            blockMined(miningBlock);
+                        } catch (InterruptedException | CancellationException e) {
+                            // OK, we've been cancelled, just exit
+                        } catch (Exception e) {
+                            logger.warn("Exception during mining: ", e);
+                        }
                     }
-                }
-            }, MoreExecutors.sameThreadExecutor());
+                }, MoreExecutors.sameThreadExecutor());
+            }
         }
         fireBlockStarted(newMiningBlock);
         logger.debug("New block mining started: {}", newMiningBlock.getShortHash());
     }
 
     protected void blockMined(Block newBlock) throws InterruptedException {
-
         long t = System.currentTimeMillis();
         if (t - lastBlockMinedTime < minBlockTimeout) {
             long sleepTime = minBlockTimeout - (t - lastBlockMinedTime);
@@ -271,23 +286,14 @@ public class BlockMiner {
         logger.info("Wow, block mined !!!: {}", newBlock.toString());
 
         lastBlockMinedTime = t;
-        ethashTask = null;
         miningBlock = null;
+        // cancel all tasks
+        cancelCurrentBlock();
 
         // broadcast the block
         logger.debug("Importing newly mined block {} {} ...", newBlock.getShortHash(), newBlock.getNumber());
         ImportResult importResult = ((EthereumImpl) ethereum).addNewMinedBlock(newBlock);
         logger.debug("Mined block import result is " + importResult);
-    }
-
-    public void addMinedBlock(Block newBlock) {
-        logger.info("External miner found solution: {}", newBlock.toString());
-        fireBlockMined(newBlock);
-
-        // broadcast the block
-        logger.debug("Importing newly mined block {} {} ...", newBlock.getShortHash(), newBlock.getNumber());
-        ImportResult importResult = ((EthereumImpl) ethereum).addNewMinedBlock(newBlock);
-        logger.debug("External mined block import result is " + importResult);
     }
 
     public boolean isMining() {
