@@ -19,7 +19,7 @@ public class RepositoryRoot extends RepositoryImpl {
         Trie<byte[]> trie;
 
         public StorageCache(byte[] accountAddress, Trie<byte[]> trie) {
-            super(new SourceCodec<>(trie, new WordSerializer(), new TrieWordSerializer()));
+            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer));
             this.accountAddress = accountAddress;
             this.trie = trie;
         }
@@ -69,14 +69,14 @@ public class RepositoryRoot extends RepositoryImpl {
         this.stateDS = stateDS;
         snapshotCache = new CachedSourceImpl.BytesKey<>(stateDS);
 
-        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(snapshotCache, new TrieCacheSerializer());
+        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(snapshotCache, Serializers.TrieCacheSerializer);
         trieCache = new CachedSourceImpl.BytesKey<Value>(trieCacheCodec) {{
                 withCacheReads(false);
                 withNoDelete(true);
             }};
         stateTrie = createTrie(trieCache, root);
 
-        SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, new AccountStateSerializer());
+        SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, Serializers.AccountStateSerializer);
         final CachedSource.BytesKey<AccountState> accountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCodec);
         CachedSource.BytesKey<byte[]> codeCache = new CachedSourceImpl.BytesKey<>(snapshotCache);
 

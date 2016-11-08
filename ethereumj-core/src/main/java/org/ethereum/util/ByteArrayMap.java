@@ -85,4 +85,9 @@ public class ByteArrayMap<V> implements Map<byte[], V> {
     public int hashCode() {
         return delegate.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
 }

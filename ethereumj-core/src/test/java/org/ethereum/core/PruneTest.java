@@ -4,11 +4,10 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.*;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.Value;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.SolidityContract;
@@ -17,19 +16,87 @@ import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import static org.ethereum.util.blockchain.EtherUtil.Unit.*;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.intsToBytes;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Anton Nashatyrev on 05.07.2016.
  */
 public class PruneTest {
-/*
+
+
+    @Test
+    public void testJournal1() throws Exception {
+        MapDB<byte[]> db = new MapDB<>();
+        CountingBytesSource countDB = new CountingBytesSource(db);
+        JournalBytesSource journalDB = new JournalBytesSource(countDB);
+
+        put(journalDB, "11");
+        put(journalDB, "22");
+        put(journalDB, "33");
+        journalDB.commitUpdates(intToBytes(1));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        put(journalDB, "22");
+        delete(journalDB, "33");
+        put(journalDB, "44");
+        journalDB.commitUpdates(intToBytes(2));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.persistUpdate(intToBytes(1));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.revertUpdate(intToBytes(2));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        put(journalDB, "22");
+        delete(journalDB, "33");
+        put(journalDB, "44");
+        journalDB.commitUpdates(intToBytes(3));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        delete(journalDB, "22");
+        put(journalDB, "33");
+        delete(journalDB, "44");
+        journalDB.commitUpdates(intToBytes(4));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.persistUpdate(intToBytes(3));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.persistUpdate(intToBytes(4));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        delete(journalDB, "22");
+        journalDB.commitUpdates(intToBytes(5));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        journalDB.persistUpdate(intToBytes(5));
+        checkKeys(db.getStorage(), "11", "33");
+
+    }
+
+    private static void put(Source<byte[], byte[]> db, String key) {
+        db.put(Hex.decode(key), Hex.decode(key));
+    }
+    private static void delete(Source<byte[], byte[]> db, String key) {
+        db.delete(Hex.decode(key));
+    }
+
+    private static void checkKeys(Map<byte[], byte[]> map, String ... keys) {
+        Assert.assertEquals(keys.length, map.size());
+        for (String key : keys) {
+            assertTrue(map.containsKey(Hex.decode(key)));
+        }
+    }
+
+
 
     @BeforeClass
     public static void setup() {
@@ -112,7 +179,7 @@ public class PruneTest {
         }
         bc.getBlockchain().flush();
 
-        System.out.println("Pruned storage size: " + bc.getStateDS().keys().size());
+        System.out.println("Pruned storage size: " + bc.getStateDS().getStorage().size());
 
         Set<ByteArrayWrapper> allRefs = new HashSet<>();
         for (int i = 0; i < pruneCount + 1; i++) {
@@ -127,8 +194,9 @@ public class PruneTest {
         }
 
         System.out.println("Trie nodes closure size: " + allRefs.size());
-        Assert.assertEquals(allRefs.size(), bc.getStateDS().keys().size());
-        for (byte[] key : bc.getStateDS().keys()) {
+        Assert.assertEquals(allRefs.size(), bc.getStateDS().getStorage().size());
+        Map storage = bc.getStateDS().getStorage();
+        for (byte[] key : bc.getStateDS().getStorage().keySet()) {
             Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
         }
 
@@ -293,7 +361,7 @@ public class PruneTest {
             contr.callFunction("set", i);
             bc.createBlock();
             blockchain.flush();
-            System.out.println(bc.getStorageDS().getSize() + ", " + bc.getStateDS().getSize());
+            System.out.println(bc.getStorageDS().getSize() + ", " + bc.getStateDS().getStorage().size());
         }
 
         System.out.println("Done");
@@ -333,18 +401,17 @@ public class PruneTest {
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
     }
 
-    public Set<ByteArrayWrapper> getReferencedTrieNodes(KeyValueDataSource stateDS, byte[] ... roots) {
+    public Set<ByteArrayWrapper> getReferencedTrieNodes(Source<byte[], byte[]> stateDS, byte[] ... roots) {
         final Set<ByteArrayWrapper> ret = new HashSet<>();
-        SecureTrie trie = new SecureTrie(stateDS);
-        for (byte[] root : roots) {
-            trie.scanTree(root, new TrieImpl.ScanAction() {
-                @Override
-                public void doOnNode(byte[] hash, Value node) {
-                    ret.add(new ByteArrayWrapper(hash));
-                }
-            });
-        }
+//        SecureTrie trie = new SecureTrie(stateDS);
+//        for (byte[] root : roots) {
+//            trie.scanTree(root, new TrieImpl.ScanAction() {
+//                @Override
+//                public void doOnNode(byte[] hash, Value node) {
+//                    ret.add(new ByteArrayWrapper(hash));
+//                }
+//            });
+//        }
         return ret;
     }
-*/
 }

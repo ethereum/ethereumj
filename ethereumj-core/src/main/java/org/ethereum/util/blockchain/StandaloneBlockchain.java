@@ -51,7 +51,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     int blockGasIncreasePercent = 0;
     private HashMapDB detailsDS;
     private HashMapDB storageDS;
-    private MapDB stateDS;
+    private MapDB<byte[]> stateDS;
     private BlockSummary lastSummary;
 
     class PendingTx {
@@ -361,7 +361,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    public MapDB getStateDS() {
+    public MapDB<byte[]> getStateDS() {
         return stateDS;
     }
 
@@ -383,7 +383,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         detailsDS = new SlowHashMapDB();
         storageDS = new SlowHashMapDB();
-        stateDS = new MapDB();
+        stateDS = new MapDB<>();
         RepositoryRoot repository = new RepositoryRoot(stateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
