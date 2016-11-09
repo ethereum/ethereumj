@@ -403,15 +403,15 @@ public class PruneTest {
 
     public Set<ByteArrayWrapper> getReferencedTrieNodes(Source<byte[], byte[]> stateDS, byte[] ... roots) {
         final Set<ByteArrayWrapper> ret = new HashSet<>();
-//        SecureTrie trie = new SecureTrie(stateDS);
-//        for (byte[] root : roots) {
-//            trie.scanTree(root, new TrieImpl.ScanAction() {
-//                @Override
-//                public void doOnNode(byte[] hash, Value node) {
-//                    ret.add(new ByteArrayWrapper(hash));
-//                }
-//            });
-//        }
+        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer));
+        for (byte[] root : roots) {
+            trie.scanTree(root, new TrieImpl.ScanAction() {
+                @Override
+                public void doOnNode(byte[] hash, Value node) {
+                    ret.add(new ByteArrayWrapper(hash));
+                }
+            });
+        }
         return ret;
     }
 }
