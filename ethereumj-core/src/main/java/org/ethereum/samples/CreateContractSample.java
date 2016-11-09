@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -87,8 +88,9 @@ public class CreateContractSample extends TestNetSample {
                 ByteUtil.longToBytesNoLeadZeroes(3_000_000),
                 receiveAddress,
                 ByteUtil.longToBytesNoLeadZeroes(1),
-                data);
-        tx.sign(senderPrivateKey);
+                data,
+                ethereum.getChainIdForNextBlock());
+        tx.sign(ECKey.fromPrivate(senderPrivateKey));
         logger.info("<=== Sending transaction: " + tx);
         ethereum.submitTransaction(tx);
 

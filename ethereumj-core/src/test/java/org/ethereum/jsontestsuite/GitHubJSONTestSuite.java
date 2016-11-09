@@ -95,7 +95,12 @@ public class GitHubJSONTestSuite {
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
-            Assert.assertTrue(result.isEmpty());
+            try {
+                Assert.assertTrue(result.isEmpty());
+            } catch (AssertionError e) {
+                System.out.println(String.format("Error on running testcase %s : %s", testCase.getName(), result.get(0)));
+                throw e;
+            }
         }
     }
 

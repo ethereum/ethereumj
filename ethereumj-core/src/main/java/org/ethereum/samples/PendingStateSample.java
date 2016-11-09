@@ -9,7 +9,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -93,8 +92,9 @@ public class PendingStateSample extends TestNetSample {
                         ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
                         ByteUtil.longToBytesNoLeadZeroes(1_000_000),
                         receiverAddress,
-                        ByteUtil.longToBytesNoLeadZeroes(weisToSend), new byte[0]);
-                tx.sign(senderPrivateKey);
+                        ByteUtil.longToBytesNoLeadZeroes(weisToSend), new byte[0],
+                        ethereum.getChainIdForNextBlock());
+                tx.sign(ECKey.fromPrivate(receiverAddress));
                 logger.info("<=== Sending transaction: " + tx);
                 ethereum.submitTransaction(tx);
 
