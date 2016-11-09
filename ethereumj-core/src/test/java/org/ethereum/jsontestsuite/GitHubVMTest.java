@@ -1,12 +1,17 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
+import org.junit.After;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +24,11 @@ public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
     public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
+
+    @After
+    public void recover() {
+        SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
+    }
 
     @Test
     public void runSingle() throws ParseException {
@@ -146,6 +156,30 @@ public class GitHubVMTest {
             if (excludedFiles.contains(fileName)) continue;
             System.out.println("Running: " + fileName);
             String json = JSONReader.loadJSON("VMTests//RandomTests/" + fileName);
+            GitHubJSONTestSuite.runGitHubJsonVMTest(json);
+        }
+
+    }
+
+    @Test // Testing EIP-158 changes (EIP 155, EIP 160, EIP 161 instead of EIP 158)
+    public void testEIP158GitHub() throws ParseException {
+
+        String shacommit = "853333e7da312775fb8f32f2c2771b8578cd0d79";
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+
+        List<String> fileNames = getFileNamesForTreeSha(shacommit);
+        List<String> includedFiles =
+                Arrays.asList(
+                        "VMTests/vmEnvironmentalInfoTest.json",
+                        "VMTests/vmIOandFlowOperationsTest.json",
+                        "VMTests/vmPushDupSwapTest.json",
+                        "VMTests/vmSystemOperationsTest.json"
+                );
+
+        for (String fileName : fileNames) {
+            if (!includedFiles.contains(fileName)) continue;
+            System.out.println("Running: " + fileName);
+            String json = JSONReader.loadJSONFromCommit(fileName, shacommit);
             GitHubJSONTestSuite.runGitHubJsonVMTest(json);
         }
 

@@ -37,6 +37,7 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
         public int getSUICIDE()             {     return 5000;    }
         public int getNEW_ACCT_SUICIDE()    {     return 25000;   }
     }
+
     private static final GasCost NEW_GAS_COST = new GasCostEip150HF();
 
     public Eip150HFConfig(BlockchainConfig parent) {
@@ -114,4 +115,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
         return getConstants();
     }
 
+    @Override
+    public Integer getChainId() {
+        return null;
+    }
 }

@@ -95,4 +95,9 @@ public interface BlockchainConfig {
      * EIP161: https://github.com/ethereum/EIPs/issues/161
      */
     boolean eip161();
+
+    /**
+     * EIP155: https://github.com/ethereum/EIPs/issues/155
+     */
+    Integer getChainId();
 }

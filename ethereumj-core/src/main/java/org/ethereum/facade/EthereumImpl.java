@@ -1,6 +1,7 @@
 package org.ethereum.facade;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -184,7 +185,7 @@ public class EthereumImpl implements Ethereum {
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
         return new Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                receiveAddress, valueBytes, data);
+                receiveAddress, valueBytes, data, getChainIdForNextBlock());
     }
 
 
@@ -340,6 +341,17 @@ public class EthereumImpl implements Ethereum {
     @Override
     public long getGasPrice() {
         return gasPriceTracker.getGasPrice();
+    }
+
+    @Override
+    public Byte getChainIdForNextBlock() {
+        Byte chainId = null;
+        BlockchainConfig nextBlockConfig = config.getBlockchainConfig().getConfigForBlock(getBlockchain()
+                .getBestBlock().getNumber() + 1);
+        Integer intChainId = nextBlockConfig.getChainId();
+        if (intChainId != null) chainId = intChainId.byteValue();
+
+        return chainId;
     }
 
     @Override

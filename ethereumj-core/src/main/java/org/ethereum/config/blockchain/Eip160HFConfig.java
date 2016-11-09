@@ -1,10 +1,14 @@
 package org.ethereum.config.blockchain;
 
 import org.ethereum.config.BlockchainConfig;
+import org.ethereum.core.Transaction;
 import org.ethereum.vm.GasCost;
 
 /**
- * Created by Anton Nashatyrev on 14.10.2016.
+ * Hard fork includes following EIPs:
+ * EIP 155 - Simple replay attack protection
+ * EIP 160 - EXP cost increase
+ * EIP 161 - State trie clearing (invariant-preserving alternative)
  */
 public class Eip160HFConfig extends Eip150HFConfig {
 
@@ -26,5 +30,16 @@ public class Eip160HFConfig extends Eip150HFConfig {
     @Override
     public boolean eip161() {
         return true;
+    }
+
+    @Override
+    public Integer getChainId() {
+        return 1;
+    }
+
+    @Override
+    public boolean acceptTransactionSignature(Transaction tx) {
+        if (!super.acceptTransactionSignature(tx)) return false;
+        return getChainId().equals(tx.getChainId());
     }
 }

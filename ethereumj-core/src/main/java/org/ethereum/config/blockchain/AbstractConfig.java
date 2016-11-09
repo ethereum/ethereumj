@@ -124,4 +124,9 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     public boolean eip161() {
         return false;
     }
+
+    @Override
+    public Integer getChainId() {
+        return null;
+    }
 }
