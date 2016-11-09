@@ -5,10 +5,7 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.EthashMiner;
@@ -121,5 +118,10 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public DataWord getCreateGas(DataWord availableGas) {
         return availableGas;
+    }
+
+    @Override
+    public boolean noEmptyAccounts() {
+        return false;
     }
 }

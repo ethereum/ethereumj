@@ -1,10 +1,7 @@
 package org.ethereum.config;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.mine.MinerIfc;
@@ -93,4 +90,9 @@ public interface BlockchainConfig {
      * Since EIP150
      */
     DataWord getCreateGas(DataWord availableGas);
+
+    /**
+     * EIP161: https://github.com/ethereum/EIPs/issues/161
+     */
+    boolean noEmptyAccounts();
 }

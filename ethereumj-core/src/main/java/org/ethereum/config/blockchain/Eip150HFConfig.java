@@ -25,7 +25,7 @@ import java.util.List;
  * Created by Anton Nashatyrev on 14.10.2016.
  */
 public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
-    private BlockchainConfig parent;
+    protected BlockchainConfig parent;
 
 
     private static final GasCost NEW_GAS_COST = new GasCost() {
@@ -94,6 +94,11 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
+    public boolean noEmptyAccounts() {
+        return parent.noEmptyAccounts();
+    }
+
+    @Override
     public GasCost getGasCost() {
         return NEW_GAS_COST;
     }
@@ -107,4 +112,5 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     public Constants getCommonConstants() {
         return getConstants();
     }
+
 }
