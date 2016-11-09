@@ -115,7 +115,7 @@ public class JSONReader {
 
     public static List<String> getFileNamesForTreeSha(String sha){
 
-        String result = getFromUrl("https://api.github.com/repos/ethereum/tests/git/trees/" + sha);
+        String result = getFromUrl("https://api.github.com/repos/ethereum/tests/git/trees/" + sha + "?recursive=1");
 
         JSONParser parser = new JSONParser();
         JSONObject testSuiteObj = null;
