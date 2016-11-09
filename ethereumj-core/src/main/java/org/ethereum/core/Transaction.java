@@ -108,14 +108,6 @@ public class Transaction {
         this.signature = ECDSASignature.fromComponents(r, s, v);
     }
 
-    public long transactionCost(BlockchainNetConfig config, Block block){
-
-        if (!parsed) rlpParse();
-
-        return config.getConfigForBlock(block.getNumber()).
-                getTransactionCost(this);
-    }
-
     public void rlpParse() {
 
         RLPList decodedTxList = RLP.decode2(rlpEncoded);

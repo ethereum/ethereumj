@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -138,6 +139,12 @@ public class AccountState {
 
     public boolean isDirty() {
         return dirty;
+    }
+
+    public boolean isEmpty() {
+        return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) &&
+                BigInteger.ZERO.equals(balance) &&
+                BigInteger.ZERO.equals(nonce);
     }
 
     public boolean isDeleted() {

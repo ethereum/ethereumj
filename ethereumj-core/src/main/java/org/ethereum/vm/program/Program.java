@@ -395,12 +395,12 @@ public class Program {
         Repository track = getStorage().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        if (track.isExist(newAddress)) {
-            BigInteger oldBalance = track.getBalance(newAddress);
-            track.createAccount(newAddress);
-            track.addBalance(newAddress, oldBalance);
-        } else
-            track.createAccount(newAddress);
+        BigInteger oldBalance = track.getBalance(newAddress);
+        track.createAccount(newAddress);
+        if (blockchainConfig.eip161()) {
+            track.increaseNonce(newAddress);
+        }
+        track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
         track.addBalance(senderAddress, endowment.negate());
@@ -457,7 +457,7 @@ public class Program {
             return;
         }
 
-        track.commit();
+        track.commit(getNumber().longValue());
         getResult().addDeleteAccounts(result.getDeleteAccounts());
         getResult().addLogInfos(result.getLogInfoList());
 
@@ -575,7 +575,7 @@ public class Program {
         }
 
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        track.commit();
+        track.commit(getNumber().longValue());
         stackPushOne();
 
         // 5. REFUND THE REMAIN GAS
@@ -1098,7 +1098,7 @@ public class Program {
 
             this.memorySave(msg.getOutDataOffs().intValue(), out);
             this.stackPushOne();
-            track.commit();
+            track.commit(getNumber().longValue());
         }
     }
 

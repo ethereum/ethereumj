@@ -118,6 +118,10 @@ public class VM {
         return gasCost;
     }
 
+    private boolean isDeadAccount(Program program, byte[] addr) {
+        return !program.getStorage().isExist(addr) || program.getStorage().getAccountState(addr).isEmpty();
+    }
+
     public void step(Program program) {
 
         if (vmTrace) {
@@ -173,8 +177,16 @@ public class VM {
                 case SUICIDE:
                     gasCost = gasCosts.getSUICIDE();
                     DataWord suicideAddressWord = stack.get(stack.size() - 1);
-                    if (!program.getStorage().isExist(suicideAddressWord.getLast20Bytes()))
-                        gasCost += gasCosts.getNEW_ACCT_SUICIDE();
+                    if (blockchainConfig.eip161()) {
+                        if (isDeadAccount(program, suicideAddressWord.getLast20Bytes()) &&
+                                !program.getBalance(program.getOwnerAddress()).isZero()) {
+                            gasCost += gasCosts.getNEW_ACCT_SUICIDE();
+                        }
+                    } else {
+                        if (!program.getStorage().isExist(suicideAddressWord.getLast20Bytes())) {
+                            gasCost += gasCosts.getNEW_ACCT_SUICIDE();
+                        }
+                    }
                     break;
                 case SSTORE:
                     DataWord newValue = stack.get(stack.size() - 2);
@@ -245,8 +257,19 @@ public class VM {
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     //check to see if account does not exist and is not a precompiled contract
-                    if (op == CALL && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
-                        gasCost += gasCosts.getNEW_ACCT_CALL();
+
+                    if (op == CALL) {
+                        DataWord value = stack.get(stack.size() - 3);
+                        if (blockchainConfig.eip161()) {
+                            if (isDeadAccount(program, callAddressWord.getLast20Bytes()) && !value.isZero()) {
+                                gasCost += gasCosts.getNEW_ACCT_CALL();
+                            }
+                        } else {
+                            if (!program.getStorage().isExist(callAddressWord.getLast20Bytes())) {
+                                gasCost += gasCosts.getNEW_ACCT_CALL();
+                            }
+                        }
+                    }
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
                     if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )

@@ -139,6 +139,11 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
+    public void commit(long blockNumber) {
+        repository.commit(blockNumber);
+    }
+
+    @Override
     public void rollback() {
         repository.rollback();
     }

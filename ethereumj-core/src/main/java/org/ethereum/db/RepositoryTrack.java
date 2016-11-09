@@ -332,6 +332,11 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
 
     @Override
     public void commit() {
+        commit(0);
+    }
+
+    @Override
+    public void commit(long blockNumber) {
 
         synchronized (repository) {
             for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cacheDetails.entrySet()) {
@@ -347,7 +352,18 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
                 }
             }
 
-            repository.updateBatch(cacheAccounts, cacheDetails);
+            HashMap<ByteArrayWrapper, AccountState> cleanedCacheAccounts = new HashMap<>();
+            for (Map.Entry<ByteArrayWrapper, AccountState> entry : cacheAccounts.entrySet()) {
+                if (entry.getValue() != null && entry.getValue().isDirty() && entry.getValue().isEmpty() &&
+                        config.getBlockchainConfig().getConfigForBlock(blockNumber).eip161()) {
+                    cleanedCacheAccounts.put(entry.getKey(), null);
+                } else {
+                    cleanedCacheAccounts.put(entry.getKey(), entry.getValue());
+                }
+            }
+
+
+            repository.updateBatch(cleanedCacheAccounts, cacheDetails);
             cacheAccounts.clear();
             cacheDetails.clear();
             logger.trace("committed changes: {}", this);

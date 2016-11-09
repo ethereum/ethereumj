@@ -28,7 +28,7 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     protected BlockchainConfig parent;
 
 
-    private static final GasCost NEW_GAS_COST = new GasCost() {
+    static class GasCostEip150HF extends GasCost {
         public int getBALANCE()             {     return 400;     }
         public int getEXT_CODE_SIZE()       {     return 700;     }
         public int getEXT_CODE_COPY()       {     return 700;     }
@@ -36,7 +36,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
         public int getCALL()                {     return 700;     }
         public int getSUICIDE()             {     return 5000;    }
         public int getNEW_ACCT_SUICIDE()    {     return 25000;   }
-    };
+    }
+    private static final GasCost NEW_GAS_COST = new GasCostEip150HF();
 
     public Eip150HFConfig(BlockchainConfig parent) {
         this.parent = parent;
@@ -94,8 +95,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public boolean noEmptyAccounts() {
-        return parent.noEmptyAccounts();
+    public boolean eip161() {
+        return parent.eip161();
     }
 
     @Override

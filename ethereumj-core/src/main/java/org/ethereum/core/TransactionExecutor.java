@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
@@ -37,11 +38,9 @@ public class TransactionExecutor {
     private static final Logger logger = LoggerFactory.getLogger("execute");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
-
-    @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
+    SystemProperties config;
+    CommonConfig commonConfig;
+    BlockchainConfig blockchainConfig;
 
     private Transaction tx;
     private Repository track;
@@ -91,8 +90,15 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
+        setCommonConfig(CommonConfig.getDefault());
     }
 
+    @Autowired
+    private void setCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+        this.config = commonConfig.systemProperties();
+        this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber());
+    }
 
     private void execError(String err) {
         logger.warn(err);
@@ -105,7 +111,7 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
-        basicTxCost = tx.transactionCost(config.getBlockchainConfig(), currentBlock);
+        basicTxCost = blockchainConfig.getTransactionCost(tx);
 
         if (localCall) {
             readyToExecute = true;
@@ -149,8 +155,7 @@ public class TransactionExecutor {
             return;
         }
 
-        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                acceptTransactionSignature(tx)) {
+        if (!blockchainConfig.acceptTransactionSignature(tx)) {
             execError("Transaction signature not accepted: " + tx.getSignature());
             return;
         }
@@ -224,9 +229,17 @@ public class TransactionExecutor {
 
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
+
+        //In case of hashing collisions (for TCK tests only), check for any balance before createAccount()
+        BigInteger oldBalance = track.getBalance(newContractAddress);
+        cacheTrack.createAccount(tx.getContractAddress());
+        cacheTrack.addBalance(newContractAddress, oldBalance);
+        if (blockchainConfig.eip161()) {
+            cacheTrack.increaseNonce(newContractAddress);
+        }
+
         if (isEmpty(tx.getData())) {
             m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
-            cacheTrack.createAccount(tx.getContractAddress());
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
@@ -254,7 +267,7 @@ public class TransactionExecutor {
         try {
 
             // Charge basic cost of the transaction
-            program.spendGas(tx.transactionCost(config.getBlockchainConfig(), currentBlock), "TRANSACTION COST");
+            program.spendGas(blockchainConfig.getTransactionCost(tx), "TRANSACTION COST");
 
             if (config.playVM())
                 vm.play(program);
@@ -265,14 +278,13 @@ public class TransactionExecutor {
             if (tx.isContractCreation()) {
 
                 int returnDataGasValue = getLength(program.getResult().getHReturn()) *
-                        config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
+                        blockchainConfig.getGasCost().getCREATE_DATA();
                 if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
 
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
                     cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                            getConstants().createEmptyContractOnOOG()) {
+                    if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
                         program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                 returnDataGasValue, program));
                         result = program.getResult();
@@ -302,8 +314,7 @@ public class TransactionExecutor {
     public TransactionExecutionSummary finalization() {
         if (!readyToExecute) return null;
 
-        String err = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                validateTransactionChanges(blockStore, currentBlock, tx, (RepositoryTrack) cacheTrack);
+        String err = blockchainConfig.validateTransactionChanges(blockStore, currentBlock, tx, (RepositoryTrack) cacheTrack);
         if (err != null) {
             execError(err);
             m_endGas = toBI(tx.getGasLimit());
@@ -311,7 +322,7 @@ public class TransactionExecutor {
             return null;
         }
 
-        cacheTrack.commit();
+        cacheTrack.commit(currentBlock.getNumber());
 
         TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
                 .gasLeftover(m_endGas)
@@ -320,8 +331,7 @@ public class TransactionExecutor {
 
         if (result != null) {
             // Accumulate refunds for suicides
-            result.addFutureRefund(result.getDeleteAccounts().size() * config.getBlockchainConfig().
-                    getConfigForBlock(currentBlock.getNumber()).getGasCost().getSUICIDE_REFUND());
+            result.addFutureRefund(result.getDeleteAccounts().size() * blockchainConfig.getGasCost().getSUICIDE_REFUND());
             long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             m_endGas = m_endGas.add(BigInteger.valueOf(gasRefund));

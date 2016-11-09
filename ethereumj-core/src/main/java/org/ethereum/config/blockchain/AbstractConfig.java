@@ -121,7 +121,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
-    public boolean noEmptyAccounts() {
+    public boolean eip161() {
         return false;
     }
 }
