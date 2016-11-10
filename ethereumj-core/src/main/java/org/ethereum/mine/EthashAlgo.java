@@ -189,9 +189,13 @@ public class EthashAlgo {
     }
 
     public long mine(long fullSize, int[] dataset, byte[] blockHeaderTruncHash, long difficulty) {
+        return mine(fullSize, dataset, blockHeaderTruncHash, difficulty, new Random().nextLong());
+    }
+
+    public long mine(long fullSize, int[] dataset, byte[] blockHeaderTruncHash, long difficulty, long startNonce) {
+        long nonce = startNonce;
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
-        long nonce = new Random().nextLong();
-        while(!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoFull(fullSize, dataset, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
@@ -205,8 +209,12 @@ public class EthashAlgo {
      * regular {@link #mine} method
      */
     public long mineLight(long fullSize, final int[] cache, byte[] blockHeaderTruncHash, long difficulty) {
+        return mineLight(fullSize, cache, blockHeaderTruncHash, difficulty, new Random().nextLong());
+    }
+
+    public long mineLight(long fullSize, final int[] cache, byte[] blockHeaderTruncHash, long difficulty, long startNonce) {
+        long nonce = startNonce;
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
-        long nonce = new Random().nextLong();
         while(!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, longToBytes(nonce));

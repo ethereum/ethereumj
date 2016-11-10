@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Random;
 import java.util.concurrent.*;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -53,10 +54,14 @@ public class Ethash {
     private int[] cacheLight = null;
     private int[] fullData = null;
     private SystemProperties config;
+    private long startNonce = -1;
 
     public Ethash(SystemProperties config, long blockNumber) {
         this.config = config;
         this.blockNumber = blockNumber;
+        if (config.getConfig().hasPath("mine.startNonce")) {
+            startNonce = config.getConfig().getLong("mine.startNonce");
+        }
     }
 
     public synchronized int[] getCacheLight() {
@@ -186,7 +191,8 @@ public class Ethash {
             public Long call() throws Exception {
                 return getEthashAlgo().mine(getFullSize(), getFullDataset(),
                         sha3(block.getHeader().getEncodedWithoutNonce()),
-                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()));
+                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()),
+                        startNonce >= 0 ? startNonce : new Random().nextLong());
             }
         }).submit();
     }
@@ -212,7 +218,8 @@ public class Ethash {
             public Long call() throws Exception {
                 return getEthashAlgo().mineLight(getFullSize(), getCacheLight(),
                         sha3(block.getHeader().getEncodedWithoutNonce()),
-                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()));
+                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()),
+                        startNonce >= 0 ? startNonce : new Random().nextLong());
             }
         }).submit();
     }
