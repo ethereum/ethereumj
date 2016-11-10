@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -35,6 +34,9 @@ public class Transaction {
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
     private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("21000");
+
+    public static final int HASH_LENGTH = 32;
+    public static final int ADDRESS_LENGTH = 20;
 
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
@@ -135,7 +137,11 @@ public class Transaction {
         this.gasPrice = gasPrice;
         this.gasLimit = gasLimit;
         this.receiveAddress = receiveAddress;
-        this.value = value;
+        if (ByteUtil.isSingleZero(value)) {
+            this.value = EMPTY_BYTE_ARRAY;
+        } else {
+            this.value = value;
+        }
         this.data = data;
 
         if (receiveAddress == null) {
@@ -165,28 +171,55 @@ public class Transaction {
     }
 
     public void rlpParse() {
+        try {
+            RLPList decodedTxList = RLP.decode2(rlpEncoded);
+            RLPList transaction = (RLPList) decodedTxList.get(0);
+            if (transaction.size() > 9 ) throw new RuntimeException("Too many RLP elements");
 
-        RLPList decodedTxList = RLP.decode2(rlpEncoded);
-        RLPList transaction = (RLPList) decodedTxList.get(0);
-
-        this.nonce = transaction.get(0).getRLPData();
-        this.gasPrice = transaction.get(1).getRLPData();
-        this.gasLimit = transaction.get(2).getRLPData();
-        this.receiveAddress = transaction.get(3).getRLPData();
-        this.value = transaction.get(4).getRLPData();
-        this.data = transaction.get(5).getRLPData();
-        // only parse signature in case tx is signed
-        if (transaction.get(6).getRLPData() != null) {
-            byte v = transaction.get(6).getRLPData()[0];
-            this.chainId = extractChainIdFromV(v);
-            byte[] r = transaction.get(7).getRLPData();
-            byte[] s = transaction.get(8).getRLPData();
-            this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
-        } else {
-            logger.debug("RLP encoded tx is not signed!");
+            this.nonce = transaction.get(0).getRLPData();
+            this.gasPrice = transaction.get(1).getRLPData();
+            this.gasLimit = transaction.get(2).getRLPData();
+            this.receiveAddress = transaction.get(3).getRLPData();
+            this.value = transaction.get(4).getRLPData();
+            this.data = transaction.get(5).getRLPData();
+            // only parse signature in case tx is signed
+            if (transaction.get(6).getRLPData() != null) {
+                byte[] vData =  transaction.get(6).getRLPData();
+                if (vData.length != 1 ) throw new RuntimeException("Signature V is invalid");
+                byte v = vData[0];
+                this.chainId = extractChainIdFromV(v);
+                byte[] r = transaction.get(7).getRLPData();
+                byte[] s = transaction.get(8).getRLPData();
+                this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
+            } else {
+                logger.debug("RLP encoded tx is not signed!");
+            }
+            this.parsed = true;
+            this.hash = getHash();
+        } catch (Exception e) {
+            throw new RuntimeException("Error on parsing RLP", e);
         }
-        this.parsed = true;
-        this.hash = getHash();
+        validate();
+    }
+
+    private void validate() {
+        if (getNonce().length > HASH_LENGTH) throw new RuntimeException("Nonce is not valid");
+        if (receiveAddress != null && receiveAddress.length != ADDRESS_LENGTH)
+            throw new RuntimeException("Receive address is not valid");
+        if (gasLimit.length > HASH_LENGTH)
+            throw new RuntimeException("Gas Limit is not valid");
+        if (gasPrice.length > HASH_LENGTH)
+            throw new RuntimeException("Gas Price is not valid");
+        if (value != null  && value.length > HASH_LENGTH)
+            throw new RuntimeException("Value is not valid");
+        if (getSignature() != null) {
+            if (BigIntegers.asUnsignedByteArray(signature.r).length > HASH_LENGTH)
+                throw new RuntimeException("Signature R is not valid");
+            if (BigIntegers.asUnsignedByteArray(signature.s).length > HASH_LENGTH)
+                throw new RuntimeException("Signature S is not valid");
+            if (getSender() != null && getSender().length != ADDRESS_LENGTH)
+                throw new RuntimeException("Sender is not valid");
+        }
     }
 
     public boolean isParsed() {

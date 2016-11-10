@@ -51,6 +51,6 @@ public class HomesteadConfig extends FrontierConfig {
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         if (!super.acceptTransactionSignature(tx)) return false;
-        return tx.getSignature().s.compareTo(SECP256K1N_HALF) < 0;
+        return tx.getSignature().s.compareTo(SECP256K1N_HALF) <= 0;
     }
 }
