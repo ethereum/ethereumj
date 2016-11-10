@@ -23,7 +23,7 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha
 public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
+    public String shacommit = "853333e7da312775fb8f32f2c2771b8578cd0d79";
 
     @After
     public void recover() {
@@ -33,7 +33,7 @@ public class GitHubVMTest {
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "balance0");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "env1");
     }
 
     @Test
@@ -158,30 +158,5 @@ public class GitHubVMTest {
             String json = JSONReader.loadJSON("VMTests//RandomTests/" + fileName);
             GitHubJSONTestSuite.runGitHubJsonVMTest(json);
         }
-
-    }
-
-    @Test // Testing EIP-158 changes (EIP 155, EIP 160, EIP 161 instead of EIP 158)
-    public void testEIP158GitHub() throws ParseException {
-
-        String shacommit = "853333e7da312775fb8f32f2c2771b8578cd0d79";
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
-
-        List<String> fileNames = getFileNamesForTreeSha(shacommit);
-        List<String> includedFiles =
-                Arrays.asList(
-                        "VMTests/vmEnvironmentalInfoTest.json",
-                        "VMTests/vmIOandFlowOperationsTest.json",
-                        "VMTests/vmPushDupSwapTest.json",
-                        "VMTests/vmSystemOperationsTest.json"
-                );
-
-        for (String fileName : fileNames) {
-            if (!includedFiles.contains(fileName)) continue;
-            System.out.println("Running: " + fileName);
-            String json = JSONReader.loadJSONFromCommit(fileName, shacommit);
-            GitHubJSONTestSuite.runGitHubJsonVMTest(json);
-        }
-
     }
 }
