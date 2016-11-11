@@ -34,7 +34,7 @@ public class GitHubStateTest {
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
             add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_675_000, new Eip160HFConfig(new DaoHFConfig()));
+            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()));
 
         }});
     }
@@ -47,8 +47,8 @@ public class GitHubStateTest {
     @Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stTransactionTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "TransactionSendingToEmpty");
+        String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stSystemOperationsTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, "CreateHashCollision");
     }
 
     @Test
@@ -364,13 +364,13 @@ public class GitHubStateTest {
     public void stBoundsTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
 
-//        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stBoundsTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
-//
-//        json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stBoundsTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        String json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stBoundsTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
 
-        String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stBoundsTest.json", shacommit);
+        json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stBoundsTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
+
+        json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stBoundsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
