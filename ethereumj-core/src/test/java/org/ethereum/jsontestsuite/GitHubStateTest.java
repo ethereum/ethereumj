@@ -35,7 +35,12 @@ public class GitHubStateTest {
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
             add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()));
+            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()){
+                @Override
+                public Integer getChainId() {
+                    return null;
+                }
+            });
 
         }});
     }

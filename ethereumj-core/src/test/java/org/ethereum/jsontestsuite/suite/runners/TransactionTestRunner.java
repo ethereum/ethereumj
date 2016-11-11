@@ -46,10 +46,18 @@ public class TransactionTestRunner {
         } catch (Exception e) {
             transaction = null;
         }
-        logger.info("Transaction: {}", transaction);
+        if (transaction == null || transaction.getEncoded().length < 10000) {
+            logger.info("Transaction: {}", transaction);
+        } else {
+            logger.info("Transaction data skipped because it's too big", transaction);
+        }
 
         expectedTransaction = transactionTestCase.getTransaction() == null ? null : TransactionBuilder.build(transactionTestCase.getTransaction());
-        logger.info("Expected transaction: {}", expectedTransaction);
+        if (expectedTransaction == null || expectedTransaction.getEncoded().length < 10000) {
+            logger.info("Expected transaction: {}", expectedTransaction);
+        } else {
+            logger.info("Expected transaction data skipped because it's too big", transaction);
+        }
 
         // Not enough GAS
         if (transaction != null) {
