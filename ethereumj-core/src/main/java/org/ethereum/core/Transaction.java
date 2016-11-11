@@ -208,7 +208,7 @@ public class Transaction {
             throw new RuntimeException("Receive address is not valid");
         if (gasLimit.length > HASH_LENGTH)
             throw new RuntimeException("Gas Limit is not valid");
-        if (gasPrice.length > HASH_LENGTH)
+        if (gasPrice != null && gasPrice.length > HASH_LENGTH)
             throw new RuntimeException("Gas Price is not valid");
         if (value != null  && value.length > HASH_LENGTH)
             throw new RuntimeException("Value is not valid");
