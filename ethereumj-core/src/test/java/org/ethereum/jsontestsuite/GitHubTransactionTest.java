@@ -30,7 +30,8 @@ public class GitHubTransactionTest {
     public String shacommit = "9028c4801fd39fbb71a9796979182549a24e81c8";
 
     public GitHubTransactionTest() {
-        LogManager.getLogger("TCK-Test").setLevel(Level.INFO);
+        // Enable for debugging
+        // LogManager.getLogger("TCK-Test").setLevel(Level.INFO);
     }
 
     @Before
