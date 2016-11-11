@@ -27,7 +27,10 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
 
     @Override
     public void put(byte[] key, byte[] val) {
-        if (val == null) delete(key);
+        if (val == null) {
+            delete(key);
+            return;
+        }
 
         currentUpdate.insertedKeys.add(key);
         super.put(key, val);
@@ -42,6 +45,10 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
         currentUpdate.updateHash = updateHash;
         journal.put(updateHash, currentUpdate);
         currentUpdate = new Update();
+    }
+
+    public boolean hasUpdate(byte[] updateHash) {
+        return journal.get(updateHash) != null;
     }
 
     public void persistUpdate(byte[] updateHash) {

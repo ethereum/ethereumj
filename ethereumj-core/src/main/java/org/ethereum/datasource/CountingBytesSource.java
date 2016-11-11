@@ -16,7 +16,10 @@ public class CountingBytesSource extends SourceDelegateAdapter<byte[], byte[]>
 
     @Override
     public void put(byte[] key, byte[] val) {
-        if (val == null) delete(key);
+        if (val == null) {
+            delete(key);
+            return;
+        }
 
         byte[] srcVal = super.get(key);
         int srcCount = decodeCount(srcVal);
@@ -40,7 +43,7 @@ public class CountingBytesSource extends SourceDelegateAdapter<byte[], byte[]>
     }
 
     protected byte[] decodeValue(byte[] srcVal) {
-        return Arrays.copyOfRange(srcVal, 4, srcVal.length);
+        return srcVal == null  ? null : Arrays.copyOfRange(srcVal, 4, srcVal.length);
     }
 
     protected int decodeCount(byte[] srcVal) {
