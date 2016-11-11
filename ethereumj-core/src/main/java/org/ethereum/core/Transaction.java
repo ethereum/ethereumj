@@ -6,6 +6,8 @@ import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import org.slf4j.Logger;
@@ -166,7 +168,13 @@ public class Transaction {
         try {
             RLPList decodedTxList = RLP.decode2(rlpEncoded);
             RLPList transaction = (RLPList) decodedTxList.get(0);
+
+            // Basic verification
             if (transaction.size() > 9 ) throw new RuntimeException("Too many RLP elements");
+            for (RLPElement rlpElement : transaction) {
+                if (!(rlpElement instanceof RLPItem))
+                    throw new RuntimeException("Transaction RLP elements shouldn't be lists");
+            }
 
             this.nonce = transaction.get(0).getRLPData();
             this.gasPrice = transaction.get(1).getRLPData();

@@ -308,7 +308,6 @@ public class GitHubJSONTestSuite {
             logger.info(line);
 
             logger.info("==> Running test case: {}", testName);
-            logger.error("==> Running test case: {}", testName);
             List<String> result = TransactionTestRunner.run(testCases.get(testName));
             if (!result.isEmpty())
                 summary.put(testName, false);
@@ -329,7 +328,6 @@ public class GitHubJSONTestSuite {
             logger.info(sumTest);
         }
 
-        logger.error(" - Total: Pass: {}, Failed: {} - ", pass, fails);
         logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
 
         Assert.assertTrue(fails == 0);

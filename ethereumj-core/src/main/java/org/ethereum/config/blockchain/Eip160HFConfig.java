@@ -4,6 +4,10 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.GasCost;
 
+import java.util.Objects;
+
+import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
+
 /**
  * Hard fork includes following EIPs:
  * EIP 155 - Simple replay attack protection
@@ -39,7 +43,9 @@ public class Eip160HFConfig extends Eip150HFConfig {
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        if (!super.acceptTransactionSignature(tx)) return false;
-        return tx.getChainId() == null || getChainId().equals(tx.getChainId());
+        // Restoring old logic. Making this through inheritance stinks too much
+        if (!tx.getSignature().validateComponents() ||
+                tx.getSignature().s.compareTo(SECP256K1N_HALF) > 0) return false;
+        return Objects.equals(getChainId(), tx.getChainId());
     }
 }

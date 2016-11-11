@@ -35,12 +35,12 @@ public class TransactionTestRunner {
 
     public List<String> runImpl() {
 
-        blockNumber = Utils.parseLong(transactionTestCase.getBlocknumber());
+        blockNumber = transactionTestCase.getBlocknumber() == null ? 0 : Utils.parseLong(transactionTestCase.getBlocknumber());
         logger.info("Block number: {}", blockNumber);
         this.blockchainConfig = SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(blockNumber);
 
-        byte[] rlp = Utils.parseData(transactionTestCase.getRlp());
         try {
+            byte[] rlp = Utils.parseData(transactionTestCase.getRlp());
             transaction = new Transaction(rlp);
             transaction.rlpParse();
         } catch (Exception e) {
@@ -74,7 +74,9 @@ public class TransactionTestRunner {
             if (!Hex.toHexString(transaction.getSender()).equals(transactionTestCase.getSender()))
                 wrongSender = "Sender is incorrect in parsed transaction";
             // Verifying hash
-            if (!Hex.toHexString(transaction.getHash()).equals(transactionTestCase.getHash()))
+            // NOTE: "hash" is not required field in test case
+            if (transactionTestCase.getHash() != null &&
+                    !Hex.toHexString(transaction.getHash()).equals(transactionTestCase.getHash()))
                 wrongHash = "Hash is incorrect in parsed transaction";
         }
 
