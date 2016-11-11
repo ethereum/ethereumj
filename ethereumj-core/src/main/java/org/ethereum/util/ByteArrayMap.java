@@ -8,7 +8,15 @@ import java.util.*;
  * Created by Anton Nashatyrev on 06.10.2016.
  */
 public class ByteArrayMap<V> implements Map<byte[], V> {
-    Map<ByteArrayWrapper, V> delegate = new HashMap<>();
+    private final Map<ByteArrayWrapper, V> delegate;
+
+    public ByteArrayMap() {
+        this(new HashMap<ByteArrayWrapper, V>());
+    }
+
+    public ByteArrayMap(Map<ByteArrayWrapper, V> delegate) {
+        this.delegate = delegate;
+    }
 
     @Override
     public int size() {
