@@ -27,7 +27,7 @@ import java.util.Set;
 public class GitHubTransactionTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "9028c4801fd39fbb71a9796979182549a24e81c8";
+    public String shacommit = "acbb2873c5151e8c575bd5765a2db9e3162f7c11";
 
     public GitHubTransactionTest() {
         // Enable for debugging
@@ -96,7 +96,7 @@ public class GitHubTransactionTest {
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json2, excluded);
     }
 
-    @Ignore // RLPWrongByteEncoding and RLPLength preceding 0s errors left
+    @Ignore // Few tests fails, RLPWrongByteEncoding and RLPLength preceding 0s errors left
     @Test
     public void testWrongRLPTestsFromGitHub() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -105,40 +105,16 @@ public class GitHubTransactionTest {
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
     }
 
-    @Ignore // Wrong sender, wrong hash
     @Test
     public void testEip155VitaliksTestFromGitHub() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
-            add(0, new FrontierConfig());
-            add(1_150_000, new HomesteadConfig());
-            add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()){
-                @Override
-                public Integer getChainId() {
-                    return 18;
-                }
-            });
-        }});
         String json = JSONReader.loadJSONFromCommit("TransactionTests/EIP155/ttTransactionTestEip155VitaliksTests.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
     }
 
-    @Ignore // Wrong sender, wrong hash
     @Test
     public void testEip155VRuleTestFromGitHub() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
-            add(0, new FrontierConfig());
-            add(1_150_000, new HomesteadConfig());
-            add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()){
-                @Override
-                public Integer getChainId() {
-                    return 18;
-                }
-            });
-        }});
         String json = JSONReader.loadJSONFromCommit("TransactionTests/EIP155/ttTransactionTestVRule.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
     }
