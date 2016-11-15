@@ -1,6 +1,8 @@
 package org.ethereum.config.blockchain;
 
 import org.ethereum.config.BlockchainConfig;
+import org.ethereum.config.Constants;
+import org.ethereum.config.ConstantsAdapter;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.GasCost;
 
@@ -18,8 +20,16 @@ public class Eip160HFConfig extends Eip150HFConfig {
 
     private static final GasCost NEW_GAS_COST = new GasCostEip160HF();
 
+    private final Constants constants;
+
     public Eip160HFConfig(BlockchainConfig parent) {
         super(parent);
+        constants = new ConstantsAdapter(parent.getConstants()) {
+            @Override
+            public int getMAX_CONTRACT_SZIE() {
+                return 0x6000;
+            }
+        };
     }
 
     @Override
@@ -35,6 +45,11 @@ public class Eip160HFConfig extends Eip150HFConfig {
     @Override
     public Integer getChainId() {
         return 1;
+    }
+
+    @Override
+    public Constants getConstants() {
+        return constants;
     }
 
     @Override

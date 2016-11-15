@@ -441,6 +441,9 @@ public class Program {
             } else {
                 track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
             }
+        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                    storageCost, this));
         } else {
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
