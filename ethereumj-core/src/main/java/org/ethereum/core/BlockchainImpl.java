@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.db.PruneManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.db.BlockStore;
@@ -132,6 +133,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     SyncManager syncManager;
+
+    @Autowired
+    PruneManager pruneManager;
 
     SystemProperties config = SystemProperties.getDefault();
 
@@ -951,9 +955,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
 
-        // TODO (pruning)
-//        ((RepositoryImpl) repository).commitBlock(block.getHeader());
-//        repository.commit();
+        pruneManager.blockCommitted(block.getHeader());
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);

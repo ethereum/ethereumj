@@ -42,8 +42,18 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    private Source<byte[], Value> mockDb = new MapDB();
-    private Source<byte[], Value> mockDb_2 = new MapDB();
+    class NoDoubleDeleteMapDB extends MapDB<Value> {
+        @Override
+        public synchronized void delete(byte[] key) {
+            if (storage.get(key) == null) {
+                throw new RuntimeException("Trying delete non-existing entry: " + Hex.toHexString(key));
+            }
+            super.delete(key);
+        }
+    };
+
+    private Source<byte[], Value> mockDb = new NoDoubleDeleteMapDB();
+    private Source<byte[], Value> mockDb_2 = new NoDoubleDeleteMapDB();
 
 //      ROOT: [ '\x16', A ]
 //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]

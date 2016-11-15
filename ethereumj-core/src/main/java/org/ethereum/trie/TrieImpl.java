@@ -213,6 +213,12 @@ public class TrieImpl implements Trie<byte[]> {
                     deleteNode(currentNode.hash());
                 }
                 return ret;
+//                if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+//                    deleteNode(currentNode.hash());
+//                    return this.putToCache(newNode);
+//                } else {
+//                    return currentNode.hash();
+//                }
             }
 
             Object newHash;
@@ -258,8 +264,13 @@ public class TrieImpl implements Trie<byte[]> {
             if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
                 deleteNode(currentNode.hash());
             }
-
             return this.putToCache(newNode);
+//            if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+//                deleteNode(currentNode.hash());
+//                return this.putToCache(newNode);
+//            } else {
+//                return currentNode.hash();
+//            }
         }
     }
 

@@ -154,27 +154,14 @@ public class PruneTest {
             bc.createBlock();
         }
 
-        System.out.println("Pruned storage size: " + bc.getStateDS().getStorage().size());
-
-        Set<ByteArrayWrapper> allRefs = new HashSet<>();
+        byte[][] roots = new byte[pruneCount + 1][];
         for (int i = 0; i < pruneCount + 1; i++) {
             long bNum = bc.getBlockchain().getBestBlock().getNumber() - i;
             Block b = bc.getBlockchain().getBlockByNumber(bNum);
-            Set<ByteArrayWrapper> bRefs = getReferencedTrieNodes(bc.getPruningStateDS(), true, b.getStateRoot());
-            System.out.println("#" + bNum + " refs: ");
-            for (ByteArrayWrapper bRef : bRefs) {
-                System.out.println("    " + bRef.toString().substring(0, 8));
-            }
-            allRefs.addAll(bRefs);
+            roots[i] = b.getStateRoot();
         }
 
-        System.out.println("Trie nodes closure size: " + allRefs.size());
-        System.out.printf("Best block: " + bc.getBlockchain().getBestBlock().getShortDescr());
-        Assert.assertEquals(allRefs.size(), bc.getStateDS().getStorage().size());
-
-        for (byte[] key : bc.getStateDS().getStorage().keySet()) {
-            Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
-        }
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(), roots);
 
         long bestBlockNum = bc.getBlockchain().getBestBlock().getNumber();
 
@@ -271,6 +258,111 @@ public class PruneTest {
 
             }
         }
+
+        byte[][] roots = new byte[pruneCount + 1][];
+        for (int i = 0; i < pruneCount + 1; i++) {
+            long bNum = bc.getBlockchain().getBestBlock().getNumber() - i;
+            Block b = bc.getBlockchain().getBlockByNumber(bNum);
+            roots[i] = b.getStateRoot();
+        }
+
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(), roots);
+    }
+
+    @Test
+    public void twoContractsTest() throws Exception {
+        final int pruneCount = 3;
+        SystemProperties.getDefault().overrideParams(
+                "database.prune.enabled", "true",
+                "database.prune.maxDepth", "" + pruneCount);
+
+        String src =
+                "contract Simple {" +
+                "  uint public n;" +
+                "  function set(uint _n) { n = _n; } " +
+                "  function inc() { n++; } " +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+
+        Block b0 = bc.getBlockchain().getBestBlock();
+
+        SolidityContract contr1 = bc.submitNewContract(src);
+        SolidityContract contr2 = bc.submitNewContract(src);
+        Block b1 = bc.createBlock();
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b1.getStateRoot(), b0.getStateRoot());
+
+        // add/remove/add in the same block
+        contr1.callFunction("set", 0xaaaaaaaaaaaaL);
+        contr2.callFunction("set", 0xaaaaaaaaaaaaL);
+        Block b2 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
+
+        contr2.callFunction("set", 0xbbbbbbbbbbbbL);
+        Block b3 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b3.getStateRoot(), b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
+
+        // force prune
+        Block b4 = bc.createBlock();
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b4.getStateRoot(), b3.getStateRoot(), b2.getStateRoot(), b1.getStateRoot());
+        Block b5 = bc.createBlock();
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b5.getStateRoot(), b4.getStateRoot(), b3.getStateRoot(), b2.getStateRoot());
+        Block b6 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b6.getStateRoot(), b5.getStateRoot(), b4.getStateRoot(), b3.getStateRoot());
+
+        contr1.callFunction("set", 0xaaaaaaaaaaaaL);
+        contr2.callFunction("set", 0xaaaaaaaaaaaaL);
+        Block b7 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot(), b4.getStateRoot());
+
+        contr1.callFunction("set", 0xbbbbbbbbbbbbL);
+        Block b8 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b8.getStateRoot(), b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot());
+
+        contr2.callFunction("set", 0xbbbbbbbbbbbbL);
+        Block b8_ = bc.createForkBlock(b7);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot());
+        Block b9_ = bc.createForkBlock(b8_);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot());
+
+        Block b9 = bc.createForkBlock(b8);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b9.getStateRoot(), b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot());
+        Block b10 = bc.createForkBlock(b9);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b10.getStateRoot(), b9.getStateRoot(), b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot());
+
+
+        Block b11 = bc.createForkBlock(b10);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b11.getStateRoot(), b10.getStateRoot(), b9.getStateRoot(), /*b9_.getStateRoot(),*/ b8.getStateRoot());
     }
 
     @Test
@@ -380,6 +472,35 @@ public class PruneTest {
         Block b3 = bc.createBlock();
 
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
+    }
+
+    public void checkPruning(final MapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS, byte[] ... roots) {
+        System.out.println("Pruned storage size: " + stateDS.getStorage().size());
+
+        Set<ByteArrayWrapper> allRefs = new HashSet<>();
+        for (byte[] root : roots) {
+
+            Set<ByteArrayWrapper> bRefs = getReferencedTrieNodes(stateJournalDS, true, root);
+            System.out.println("#" + Hex.toHexString(root).substring(0,8) + " refs: ");
+            for (ByteArrayWrapper bRef : bRefs) {
+                System.out.println("    " + bRef.toString().substring(0, 8));
+            }
+            allRefs.addAll(bRefs);
+        }
+
+        System.out.println("Trie nodes closure size: " + allRefs.size());
+        if (allRefs.size() != stateDS.getStorage().size()) {
+            for (byte[] hash : stateDS.getStorage().keySet()) {
+                if (!allRefs.contains(new ByteArrayWrapper(hash))) {
+                    System.out.println("Extra node: " + Hex.toHexString(hash));
+                }
+            }
+//            Assert.assertEquals(allRefs.size(), stateDS.getStorage().size());
+        }
+
+        for (byte[] key : stateDS.getStorage().keySet()) {
+//            Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
+        }
     }
 
     public Set<ByteArrayWrapper> getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,

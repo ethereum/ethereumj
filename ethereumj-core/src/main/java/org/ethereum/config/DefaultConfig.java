@@ -1,9 +1,9 @@
 package org.ethereum.config;
 
-import org.ethereum.datasource.CachingDataSource;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.PruneManager;
 import org.ethereum.db.TransactionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,5 +62,15 @@ public class DefaultConfig {
         ds.init();
         CachingDataSource cachingDataSource = new CachingDataSource(ds);
         return new TransactionStore(cachingDataSource);
+    }
+
+    @Bean
+    public PruneManager pruneManager() {
+        if (config.databasePruneDepth() >= 0) {
+            return new PruneManager((IndexedBlockStore) blockStore(), (JournalBytesSource) commonConfig.pruneStateDS(),
+                    config.databasePruneDepth());
+        } else {
+            return new PruneManager(null, null, -1); // dummy
+        }
     }
 }
