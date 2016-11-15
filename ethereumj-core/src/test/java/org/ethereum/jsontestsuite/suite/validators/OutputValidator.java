@@ -13,12 +13,19 @@ public class OutputValidator {
 
         List<String> results = new ArrayList<>();
 
-        String postOutputFormated = Hex.toHexString(parseData(postOutput));
+        if (postOutput.startsWith("#")) {
+            int postLen = Integer.parseInt(postOutput.substring(1));
+            if (postLen != origOutput.length() / 2) {
+                results.add("Expected output length: " + postLen + ", actual: " + origOutput.length() / 2);
+            }
+        } else {
+            String postOutputFormated = Hex.toHexString(parseData(postOutput));
 
-        if (!origOutput.equals(postOutputFormated)){
-            String formattedString = String.format("HReturn: wrong expected: %s, current: %s",
-                    postOutputFormated, origOutput);
-            results.add(formattedString);
+            if (!origOutput.equals(postOutputFormated)) {
+                String formattedString = String.format("HReturn: wrong expected: %s, current: %s",
+                        postOutputFormated, origOutput);
+                results.add(formattedString);
+            }
         }
 
         return results;

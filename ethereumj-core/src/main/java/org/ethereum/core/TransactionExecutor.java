@@ -279,17 +279,24 @@ public class TransactionExecutor {
 
                 int returnDataGasValue = getLength(program.getResult().getHReturn()) *
                         blockchainConfig.getGasCost().getCREATE_DATA();
-                if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
-
-                    m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
-                    cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
-                } else {
+                if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) < 0) {
+                    // Not enough gas to return contract code
                     if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
                         program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                 returnDataGasValue, program));
                         result = program.getResult();
                     }
                     result.setHReturn(EMPTY_BYTE_ARRAY);
+                } else if (getLength(result.getHReturn()) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+                    // Contract size too large
+                    program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                            returnDataGasValue, program));
+                    result = program.getResult();
+                    result.setHReturn(EMPTY_BYTE_ARRAY);
+                } else {
+                    // Contract successfully created
+                    m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
+                    cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 }
             }
 
