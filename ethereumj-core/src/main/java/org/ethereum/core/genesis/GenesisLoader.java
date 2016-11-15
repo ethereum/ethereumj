@@ -10,6 +10,8 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
@@ -25,6 +27,8 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class GenesisLoader {
 
+    private static Logger logger = LoggerFactory.getLogger("general");
+
     /**
      * Load genesis from passed location or from classpath `genesis` directory
      */
@@ -34,6 +38,7 @@ public class GenesisLoader {
 
         // #1 try to find genesis at passed location
         if (genesisFile != null) {
+            logger.info("genesisFile option used, overrides config genesis with file from path: {}", genesisFile);
             try (InputStream is = new FileInputStream(new File(genesisFile))) {
                 return GenesisLoader.loadGenesis(config, is);
             } catch (Exception e) {
