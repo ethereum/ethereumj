@@ -13,6 +13,6 @@ public class MainNetConfig extends AbstractNetConfig {
         add(1_150_000, new HomesteadConfig());
         add(1_920_000, new DaoHFConfig());
         add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
-        add(2_900_000, new Eip160HFConfig(new DaoHFConfig())); // TODO adjust after announcement
+        add(2_675_000, new Eip160HFConfig(new DaoHFConfig()));
     }
 }
