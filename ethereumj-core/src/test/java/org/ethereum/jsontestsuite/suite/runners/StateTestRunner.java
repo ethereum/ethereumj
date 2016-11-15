@@ -83,7 +83,6 @@ public class StateTestRunner {
 
         blockchain.setBestBlock(block);
         blockchain.setProgramInvokeFactory(invokeFactory);
-        blockchain.startTracking();
 
         ProgramResult programResult = executeTransaction(transaction);
 

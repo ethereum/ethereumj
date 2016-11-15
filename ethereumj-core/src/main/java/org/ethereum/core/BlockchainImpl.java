@@ -98,7 +98,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     private Repository repository;
-    private Repository track;
 
     @Autowired
     protected BlockStore blockStore;
@@ -1066,14 +1065,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public void setProgramInvokeFactory(ProgramInvokeFactory factory) {
         this.programInvokeFactory = factory;
-    }
-
-    public void startTracking() {
-        track = repository.startTracking();
-    }
-
-    public void commitTracking() {
-        track.commit();
     }
 
     public void setExitOn(long exitOn) {
