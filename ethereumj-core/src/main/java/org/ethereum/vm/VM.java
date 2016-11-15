@@ -1228,7 +1228,7 @@ public class VM {
                 vmHook.startPlay(program);
             }
 
-//            if (program.byTestingSuite()) return;
+            if (program.byTestingSuite()) return;
 
             while (!program.isStopped()) {
                 this.step(program);

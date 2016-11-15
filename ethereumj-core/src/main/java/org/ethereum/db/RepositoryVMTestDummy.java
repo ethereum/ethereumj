@@ -262,7 +262,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
         AccountState accountState = new AccountState(config());
         worldState.put(wrap(addr), accountState);
 
-        ContractDetails contractDetails = new ContractDetailsImpl();
+        ContractDetails contractDetails = new ContractDetailsCacheImpl();
         detailsDB.put(wrap(addr), contractDetails);
 
         return accountState;
@@ -291,7 +291,7 @@ public class RepositoryVMTestDummy extends RepositoryImpl{
             account = account.clone();
 
         if (details == null)
-            details = new ContractDetailsImpl();
+            details = new ContractDetailsCacheImpl();
         else
             details = details.clone();
 
