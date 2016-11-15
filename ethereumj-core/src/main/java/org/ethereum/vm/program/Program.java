@@ -597,7 +597,7 @@ public class Program {
     public void spendGas(long gasValue, String cause) {
         logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
 
-        if (getGas().longValue() < gasValue) {
+        if (getGasLong() < gasValue) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -661,8 +661,12 @@ public class Program {
         return invoke.getMinGasPrice().clone();
     }
 
+    public long getGasLong() {
+        return invoke.getGasLong() - getResult().getGasUsed();
+    }
+
     public DataWord getGas() {
-        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
+        return new DataWord(getGasLong());
     }
 
     public DataWord getCallValue() {

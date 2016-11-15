@@ -147,7 +147,7 @@ public class VM {
             String hint = "";
             long callGas = 0, memWords = 0; // parameters for logging
             long gasCost = op.getTier().asInt();
-            long gasBefore = program.getGas().longValue();
+            long gasBefore = program.getGasLong();
             int stepBefore = program.getPC();
             GasCost gasCosts = blockchainConfig.getGasCost();
             DataWord adjustedCallGas = null;
