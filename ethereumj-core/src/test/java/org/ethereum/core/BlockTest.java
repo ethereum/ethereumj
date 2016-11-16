@@ -131,5 +131,20 @@ public class BlockTest {
         SystemProperties.getDefault().setGenesisInfo(prev);
     }
 
+    @Test
+    public void testZeroPrecedingDifficultyGenesis(){
 
+        String prev = SystemProperties.getDefault().genesisInfo();
+        SystemProperties.getDefault().setGenesisInfo("genesis-low-difficulty.json");
+
+        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault(), getClass().getClassLoader());
+
+        String hash = Hex.toHexString(genesis.getHash());
+        String root = Hex.toHexString(genesis.getStateRoot());
+
+        assertEquals("8028c28b55eab8be08883e921f20d1b6cc9f2aa02cc6cd90cfaa9b0462ff6d3e", root);
+        assertEquals("05b2dc41ade973d26db921052bcdaf54e2e01b308c9e90723b514823a0923592", hash);
+
+        SystemProperties.getDefault().setGenesisInfo(prev);
+    }
 }
