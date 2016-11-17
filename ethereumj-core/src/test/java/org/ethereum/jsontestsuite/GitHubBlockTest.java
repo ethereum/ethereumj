@@ -22,7 +22,7 @@ import java.util.Collections;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "5cf11dce493b065f9b56ef261537a5344bf919eb";
+    public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
 
     @Ignore // test for conveniently running a single test
     @Test
@@ -30,8 +30,8 @@ public class GitHubBlockTest {
         SystemProperties.getDefault().setGenesisInfo("frontier.json");
         SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
 
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcMultiChainTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "ChainAtoChainB_BlockHash");
+        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
     }
 
     private void runFrontier(String name) throws IOException, ParseException {
@@ -141,5 +141,24 @@ public class GitHubBlockTest {
     @Test
     public void runBCMultiChainTest() throws ParseException, IOException {
         run("bcMultiChainTest", true, true, true);
+    }
+
+
+    @Test
+    public void runDaoHardForkTest() throws Exception {
+        String json = JSONReader.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/hardfork/BlockchainTests/TestNetwork/bcTheDaoTest.json");
+
+        BlockchainNetConfig testConfig = new AbstractNetConfig() {
+            {
+                add(0, new FrontierConfig());
+                add(5, new HomesteadConfig());
+                add(8, new DaoHFConfig().withForkBlock(8));
+            }
+        };
+
+        SystemProperties.getDefault().setGenesisInfo("frontier.json");
+        SystemProperties.getDefault().setBlockchainConfig(testConfig);
+
+        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
     }
 }

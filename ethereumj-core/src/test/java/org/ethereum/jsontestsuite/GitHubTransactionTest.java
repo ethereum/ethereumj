@@ -25,7 +25,7 @@ import java.util.Set;
 public class GitHubTransactionTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "acbb2873c5151e8c575bd5765a2db9e3162f7c11";
+    public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
 
     @Before
     public void setup() {
