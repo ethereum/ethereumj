@@ -1,9 +1,10 @@
 package org.ethereum.mine;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+
+import static org.ethereum.util.ByteUtil.longToBytes;
 
 /**
  * Mine algorithm interface
@@ -26,13 +27,19 @@ public interface MinerIfc {
 
     final class MiningResult {
 
-        public final Long nonce;
+        public final long nonce;
 
         public final byte[] digest;
 
-        public MiningResult(Long nonce, byte[] digest) {
+        /**
+         * Mined block
+         */
+        public final Block block;
+
+        public MiningResult(long nonce, byte[] digest, Block block) {
             this.nonce = nonce;
             this.digest = digest;
+            this.block = block;
         }
     }
 }

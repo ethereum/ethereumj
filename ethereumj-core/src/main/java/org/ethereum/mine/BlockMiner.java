@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -241,12 +242,12 @@ public class BlockMiner {
             miningBlock = newMiningBlock;
 
             if (externalMiner != null) {
-                currentMiningTasks.add(externalMiner.mine(miningBlock));
+                currentMiningTasks.add(externalMiner.mine(cloneBlock(miningBlock)));
             }
             if (isLocalMining) {
                 MinerIfc localMiner = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
                         getMineAlgorithm(config);
-                currentMiningTasks.add(localMiner.mine(miningBlock));
+                currentMiningTasks.add(localMiner.mine(cloneBlock(miningBlock)));
             }
 
             for (final ListenableFuture<MiningResult> task : currentMiningTasks) {
@@ -254,12 +255,8 @@ public class BlockMiner {
                     @Override
                     public void run() {
                         try {
-                            MiningResult result = task.get();
-
-                            miningBlock.setNonce(longToBytes(result.nonce));
-                            miningBlock.setMixHash(result.digest);
                             // wow, block mined!
-                            blockMined(miningBlock);
+                            blockMined(task.get().block);
                         } catch (InterruptedException | CancellationException e) {
                             // OK, we've been cancelled, just exit
                         } catch (Exception e) {
@@ -271,6 +268,20 @@ public class BlockMiner {
         }
         fireBlockStarted(newMiningBlock);
         logger.debug("New block mining started: {}", newMiningBlock.getShortHash());
+    }
+
+    /**
+     * Block cloning is required before passing block to concurrent miner env.
+     * In success result miner will modify this block instance.
+     */
+    private Block cloneBlock(Block block) {
+        BlockHeader header = new BlockHeader(
+                block.getParentHash(), block.getUnclesHash(), block.getCoinbase(),
+                block.getLogBloom(), block.getDifficulty(), block.getNumber(),
+                block.getGasLimit(), block.getGasUsed(), block.getTimestamp(),
+                block.getExtraData(), block.getMixHash(), block.getNonce());
+        header.setTransactionsRoot(HashUtil.EMPTY_TRIE_HASH);
+        return new Block(header, block.getTransactionsList(), block.getUncleList());
     }
 
     protected void blockMined(Block newBlock) throws InterruptedException {
