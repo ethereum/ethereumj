@@ -23,7 +23,7 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha
 public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "853333e7da312775fb8f32f2c2771b8578cd0d79";
+    public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
 
     @After
     public void recover() {
