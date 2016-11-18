@@ -163,7 +163,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             AccountState accountState = stateCache.get(hash);
             ContractDetails contractDetails = detailsCache.get(hash);
 
-            if (accountState == null || accountState.isDeleted()) {
+            if (/*accountState == null || */accountState.isDeleted()) {
                 delete(hash.getData());
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
@@ -514,8 +514,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     private synchronized void updateAccountState(final byte[] addr, final AccountState accountState) {
         rwLock.readLock().lock();
         try {
-
-            worldState.update(addr, accountState.getEncoded());
+                worldState.update(addr, accountState.getEncoded());
         } finally {
             rwLock.readLock().unlock();
         }

@@ -352,18 +352,19 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
                 }
             }
 
-            HashMap<ByteArrayWrapper, AccountState> cleanedCacheAccounts = new HashMap<>();
-            for (Map.Entry<ByteArrayWrapper, AccountState> entry : cacheAccounts.entrySet()) {
-                if (entry.getValue() != null && entry.getValue().isDirty() && entry.getValue().isEmpty() &&
-                        config.getBlockchainConfig().getConfigForBlock(blockNumber).eip161()) {
-                    cleanedCacheAccounts.put(entry.getKey(), null);
-                } else {
-                    cleanedCacheAccounts.put(entry.getKey(), entry.getValue());
-                }
-            }
+//            HashMap<ByteArrayWrapper, AccountState> cleanedCacheAccounts = new HashMap<>();
+//            for (Map.Entry<ByteArrayWrapper, AccountState> entry : cacheAccounts.entrySet()) {
+//                if (entry.getValue() != null && entry.getValue().isDirty() && entry.getValue().isEmpty() &&
+//                        config.getBlockchainConfig().getConfigForBlock(blockNumber).eip161()) {
+//                    cleanedCacheAccounts.put(entry.getKey(), null);
+//                } else {
+//                    cleanedCacheAccounts.put(entry.getKey(), entry.getValue());
+//                }
+//            }
 
 
-            repository.updateBatch(cleanedCacheAccounts, cacheDetails);
+//            repository.updateBatch(cleanedCacheAccounts, cacheDetails);
+            repository.updateBatch(cacheAccounts, cacheDetails);
             cacheAccounts.clear();
             cacheDetails.clear();
             logger.trace("committed changes: {}", this);

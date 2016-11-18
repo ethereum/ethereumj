@@ -259,8 +259,8 @@ public class VM {
                     //check to see if account does not exist and is not a precompiled contract
 
                     if (op == CALL) {
-                        DataWord value = stack.get(stack.size() - 3);
                         if (blockchainConfig.eip161()) {
+                            DataWord value = stack.get(stack.size() - 3);
                             if (isDeadAccount(program, callAddressWord.getLast20Bytes()) && !value.isZero()) {
                                 gasCost += gasCosts.getNEW_ACCT_CALL();
                             }

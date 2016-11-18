@@ -293,10 +293,6 @@ public class PruneTest {
                     ret.add(new ByteArrayWrapper(hash));
                 }
 
-                @Override
-                public void doOnValue(byte[] key, byte[] value) {
-
-                }
             });
         }
         return ret;

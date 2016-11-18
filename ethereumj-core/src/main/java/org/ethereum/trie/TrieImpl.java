@@ -544,11 +544,7 @@ public class TrieImpl implements Trie {
     }
 
     public void scanTree(byte[] hash, ScanAction scanAction) {
-        scanTree(hash, new byte[]{}, scanAction);
-    }
-
-    public void scanTree(byte[] hash, byte[] unpackedKeyLeft, ScanAction scanAction) {
-            synchronized (cache) {
+        synchronized (cache) {
 
             Value node = this.getCache().get(hash);
             if (node == null) {
@@ -559,40 +555,18 @@ public class TrieImpl implements Trie {
                 List<Object> siblings = node.asList();
                 if (siblings.size() == PAIR_SIZE) {
                     Value val = new Value(siblings.get(1));
-                    byte[] packedKey = (byte[]) siblings.get(0);
-                    byte[] unpackedKeyRight = unpackToNibbles(packedKey);
-                    byte[] mergedKey = ByteUtil.merge(unpackedKeyLeft, unpackedKeyRight);
-                    if (val.isHashCode() && !hasTerminator(packedKey)) {
-                        scanTree(val.asBytes(), mergedKey, scanAction);
-                    } else {
-                        scanAction.doOnValue(packKey(mergedKey), val.asBytes());
-                    }
+                    if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
+                        scanTree(val.asBytes(), scanAction);
                 } else {
-                    if (!new Value(siblings.get(16)).isEmpty()) {
-                        scanAction.doOnValue(packKey(unpackedKeyLeft), (byte[]) siblings.get(16));
-                    }
-                    for (int j = 0; j < LIST_SIZE - 1; ++j) {
+                    for (int j = 0; j < LIST_SIZE; ++j) {
                         Value val = new Value(siblings.get(j));
-                        if (val.isHashCode()) {
-                            scanTree(val.asBytes(), ByteUtil.merge(unpackedKeyLeft, new byte[]{(byte) j}), scanAction);
-                        } else if (val.isList()) {
-                            List<Object> siblings1 = val.asList();
-                            byte[] packedKey = (byte[]) siblings1.get(0);
-                            byte[] unpackedKeyRight = unpackToNibbles(packedKey);
-                            byte[] mergedKey = ByteUtil.merge(unpackedKeyLeft, new byte[]{(byte) j}, unpackedKeyRight);
-                            Value val1 = new Value(siblings1.get(1));
-                            scanAction.doOnValue(packKey(mergedKey), val1.asBytes());
-                        }
+                        if (val.isHashCode())
+                            scanTree(val.asBytes(), scanAction);
                     }
                 }
                 scanAction.doOnNode(hash, node);
             }
         }
-    }
-
-    private static byte[] packKey(byte[] unpackedKey) {
-        byte[] bytes = packNibbles(unpackedKey);
-        return Arrays.copyOfRange(bytes, 1, bytes.length);
     }
 
     public void deserialize(byte[] data){
@@ -719,10 +693,7 @@ public class TrieImpl implements Trie {
     }
 
     public interface ScanAction {
-
         void doOnNode(byte[] hash, Value node);
-
-        void doOnValue(byte[] key, byte[] value);
     }
 
     public boolean validate() {
@@ -734,11 +705,6 @@ public class TrieImpl implements Trie {
                     @Override
                     public void doOnNode(byte[] hash, Value node) {
                         cnt[0]++;
-                    }
-
-                    @Override
-                    public void doOnValue(byte[] key, byte[] value) {
-
                     }
                 });
             } catch (Exception e) {

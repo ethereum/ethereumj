@@ -15,11 +15,6 @@ public class CountAllNodes implements TrieImpl.ScanAction {
         ++counted;
     }
 
-    @Override
-    public void doOnValue(byte[] key, byte[] value) {
-
-    }
-
     public int getCounted() {
         return counted;
     }
