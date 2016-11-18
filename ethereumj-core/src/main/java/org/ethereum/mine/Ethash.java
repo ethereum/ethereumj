@@ -189,7 +189,7 @@ public class Ethash {
                         sha3(block.getHeader().getEncodedWithoutNonce()),
                         ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()));
                 final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
-                return updateBlock(nonce, pair.getLeft(), block);
+                return new MiningResult(nonce, pair.getLeft(), block);
             }
         }).submit();
     }
@@ -217,7 +217,7 @@ public class Ethash {
                         sha3(block.getHeader().getEncodedWithoutNonce()),
                         ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()));
                 final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
-                return updateBlock(nonce, pair.getLeft(), block);
+                return new MiningResult(nonce, pair.getLeft(), block);
             }
         }).submit();
     }
@@ -231,14 +231,6 @@ public class Ethash {
 
         return FastByteComparisons.compareTo(hash, 0, 32, boundary, 0, 32) < 0;
     }
-
-    private MiningResult updateBlock(long nonce, byte[] digest, Block block) {
-        block.setNonce(longToBytes(nonce));
-        block.setMixHash(digest);
-        return new MiningResult(nonce, digest, block);
-    }
-
-
 
     class MineTask extends AnyFuture<MiningResult> {
         Block block;
@@ -257,6 +249,13 @@ public class Ethash {
                 add(f);
             }
             return this;
+        }
+
+        @Override
+        protected void postProcess(MiningResult result) {
+            Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), result.nonce);
+            block.setNonce(longToBytes(result.nonce));
+            block.setMixHash(pair.getLeft());
         }
     }
 }

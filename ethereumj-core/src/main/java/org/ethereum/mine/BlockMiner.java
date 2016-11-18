@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static java.lang.Math.max;
-import static org.ethereum.util.ByteUtil.longToBytes;
 
 /**
  * Manages embedded CPU mining and allows to use external miners.
@@ -38,16 +37,16 @@ public class BlockMiner {
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Autowired
-    private Blockchain blockchain;
+    public Blockchain blockchain;
 
     @Autowired
-    private BlockStore blockStore;
+    public BlockStore blockStore;
 
     @Autowired
-    private Ethereum ethereum;
+    public Ethereum ethereum;
 
     @Autowired
-    protected PendingState pendingState;
+    public PendingState pendingState;
 
     private CompositeEthereumListener listener;
 
@@ -245,8 +244,9 @@ public class BlockMiner {
                 currentMiningTasks.add(externalMiner.mine(cloneBlock(miningBlock)));
             }
             if (isLocalMining) {
-                MinerIfc localMiner = config.getBlockchainConfig().getConfigForBlock(miningBlock.getNumber()).
-                        getMineAlgorithm(config);
+                MinerIfc localMiner = config.getBlockchainConfig()
+                        .getConfigForBlock(miningBlock.getNumber())
+                        .getMineAlgorithm(config);
                 currentMiningTasks.add(localMiner.mine(cloneBlock(miningBlock)));
             }
 
@@ -256,7 +256,8 @@ public class BlockMiner {
                     public void run() {
                         try {
                             // wow, block mined!
-                            blockMined(task.get().block);
+                            final Block minedBlock = task.get().block;
+                            blockMined(minedBlock);
                         } catch (InterruptedException | CancellationException e) {
                             // OK, we've been cancelled, just exit
                         } catch (Exception e) {
@@ -281,7 +282,9 @@ public class BlockMiner {
                 block.getGasLimit(), block.getGasUsed(), block.getTimestamp(),
                 block.getExtraData(), block.getMixHash(), block.getNonce());
         header.setTransactionsRoot(HashUtil.EMPTY_TRIE_HASH);
-        return new Block(header, block.getTransactionsList(), block.getUncleList());
+        header.setLogsBloom(block.getLogBloom());
+
+        return new Block(block.getEncoded());
     }
 
     protected void blockMined(Block newBlock) throws InterruptedException {
