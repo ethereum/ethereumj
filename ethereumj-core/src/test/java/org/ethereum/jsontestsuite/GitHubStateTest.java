@@ -78,7 +78,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stCallCodes.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -92,7 +92,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stCallDelegateCodes.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stCallDelegateCodesCallCode.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -120,7 +120,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stHomeSteadSpecific.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -138,7 +138,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stCallCreateCallCodeTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -155,7 +155,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stDelegatecallTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -168,7 +168,7 @@ public class GitHubStateTest {
         json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stInitCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stInitCodeTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -181,7 +181,7 @@ public class GitHubStateTest {
         json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stLogTests.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stLogTests.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -195,7 +195,7 @@ public class GitHubStateTest {
         json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stPreCompiledContracts.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -225,7 +225,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stMemoryTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -243,7 +243,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stQuadraticComplexityTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -263,7 +263,7 @@ public class GitHubStateTest {
         json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stRecursiveCreate.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stRecursiveCreate.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -277,7 +277,7 @@ public class GitHubStateTest {
         json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stRefundTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stRefundTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -291,7 +291,7 @@ public class GitHubStateTest {
         json = JSONReader.loadJSONFromCommit("StateTests/EIP150/Homestead/stSpecialTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stSpecialTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -314,7 +314,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stSystemOperationsTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -331,7 +331,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stTransactionTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -356,7 +356,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stWalletTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -370,7 +370,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
 
         json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stBoundsTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -410,7 +410,7 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/stCreateTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -418,7 +418,7 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/stEIP158SpecificTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -426,7 +426,7 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/stNonZeroCallsTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -434,7 +434,7 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/stZeroCallsTest.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test
@@ -442,7 +442,7 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
 
         String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/stCodeSizeLimit.json", shacommit);
-//        GitHubJSONTestSuite.runStateTest(json, excluded);
+        GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
     @Test // testing full suite

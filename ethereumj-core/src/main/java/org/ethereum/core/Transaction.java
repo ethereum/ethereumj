@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -153,6 +154,15 @@ public class Transaction {
         this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
         parsed = true;
     }
+
+    public long transactionCost(BlockchainNetConfig config, Block block){
+
+        if (!parsed) rlpParse();
+
+        return config.getConfigForBlock(block.getNumber()).
+                getTransactionCost(this);
+    }
+
 
     private Byte extractChainIdFromV(byte v) {
         if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;

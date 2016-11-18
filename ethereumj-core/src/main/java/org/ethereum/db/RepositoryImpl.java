@@ -163,7 +163,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             AccountState accountState = stateCache.get(hash);
             ContractDetails contractDetails = detailsCache.get(hash);
 
-            if (/*accountState == null || */accountState.isDeleted()) {
+            if (accountState == null || accountState.isDeleted()) {
                 delete(hash.getData());
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
