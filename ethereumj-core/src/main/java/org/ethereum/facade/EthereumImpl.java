@@ -185,7 +185,7 @@ public class EthereumImpl implements Ethereum {
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
         return new Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                receiveAddress, valueBytes, data, getChainIdForNextBlock());
+                receiveAddress, valueBytes, data);
     }
 
 

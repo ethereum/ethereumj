@@ -520,8 +520,7 @@ public class JsonRpcImpl implements JsonRpc {
                     args.gas != null ? StringHexToByteArray(args.gas) : ByteUtil.longToBytes(90_000),
                     args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
                     args.value != null ? StringHexToByteArray(args.value) : EMPTY_BYTE_ARRAY,
-                    args.data != null ? StringHexToByteArray(args.data) : EMPTY_BYTE_ARRAY,
-                    eth.getChainIdForNextBlock());
+                    args.data != null ? StringHexToByteArray(args.data) : EMPTY_BYTE_ARRAY);
             tx.sign(account.getEcKey().getPrivKeyBytes());
 
             eth.submitTransaction(tx);
@@ -542,8 +541,7 @@ public class JsonRpcImpl implements JsonRpc {
                     TypeConverter.StringHexToByteArray(gas),
                     TypeConverter.StringHexToByteArray(to), /*receiveAddress*/
                     TypeConverter.StringHexToByteArray(value),
-                    TypeConverter.StringHexToByteArray(data),
-                    eth.getChainIdForNextBlock());
+                    TypeConverter.StringHexToByteArray(data));
 
             Account account = getAccount(from);
             if (account == null) throw new RuntimeException("No account " + from);

@@ -197,7 +197,7 @@ public class PrivateMinerSample {
                 {
                     Transaction tx = new Transaction(ByteUtil.intToBytesNoLeadZeroes(i),
                             ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L), ByteUtil.longToBytesNoLeadZeroes(0xfffff),
-                            receiverAddr, new byte[]{77}, new byte[0], ethereum.getChainIdForNextBlock());
+                            receiverAddr, new byte[]{77}, new byte[0]);
                     tx.sign(senderKey);
                     logger.info("<== Submitting tx: " + tx);
                     ethereum.submitTransaction(tx);

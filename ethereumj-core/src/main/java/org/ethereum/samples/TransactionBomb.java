@@ -69,8 +69,7 @@ public class TransactionBomb extends EthereumListenerAdapter {
                 gasLimit,
                 toAddress,
                 value,
-                null,
-                ethereum.getChainIdForNextBlock());
+                null);
 
         byte[] privKey = sha3("cow".getBytes());
         tx.sign(privKey);

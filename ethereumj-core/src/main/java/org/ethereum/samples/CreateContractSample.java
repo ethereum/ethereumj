@@ -88,8 +88,7 @@ public class CreateContractSample extends TestNetSample {
                 ByteUtil.longToBytesNoLeadZeroes(3_000_000),
                 receiveAddress,
                 ByteUtil.longToBytesNoLeadZeroes(1),
-                data,
-                ethereum.getChainIdForNextBlock());
+                data);
         tx.sign(ECKey.fromPrivate(senderPrivateKey));
         logger.info("<=== Sending transaction: " + tx);
         ethereum.submitTransaction(tx);

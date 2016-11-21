@@ -67,8 +67,7 @@ public class SendTransaction extends BasicSample {
                 ByteUtil.longToBytesNoLeadZeroes(200000),
                 receiveAddress,
                 ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1)),  // 1_000_000_000 gwei, 1_000_000_000_000L szabo, 1_000_000_000_000_000L finney, 1_000_000_000_000_000_000L ether
-                data,
-                ethereum.getChainIdForNextBlock());
+                data);
 
         tx.sign(ECKey.fromPrivate(senderPrivateKey));
         logger.info("<=== Sending transaction: " + tx);
