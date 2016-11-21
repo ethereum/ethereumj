@@ -86,7 +86,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        return true;
+        return tx.getChainId() == null;
     }
 
     @Override

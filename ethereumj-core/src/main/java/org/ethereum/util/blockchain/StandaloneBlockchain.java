@@ -236,7 +236,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 ByteUtil.longToBytesNoLeadZeroes(gasPrice),
                 ByteUtil.longToBytesNoLeadZeroes(gasLimit),
                 toAddress, ByteUtil.bigIntegerToBytes(value),
-                data);
+                data,
+                null);
         transaction.sign(sender);
         return transaction;
     }
