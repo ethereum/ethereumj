@@ -276,14 +276,6 @@ public class BlockMiner {
      * In success result miner will modify this block instance.
      */
     private Block cloneBlock(Block block) {
-        BlockHeader header = new BlockHeader(
-                block.getParentHash(), block.getUnclesHash(), block.getCoinbase(),
-                block.getLogBloom(), block.getDifficulty(), block.getNumber(),
-                block.getGasLimit(), block.getGasUsed(), block.getTimestamp(),
-                block.getExtraData(), block.getMixHash(), block.getNonce());
-        header.setTransactionsRoot(HashUtil.EMPTY_TRIE_HASH);
-        header.setLogsBloom(block.getLogBloom());
-
         return new Block(block.getEncoded());
     }
 
