@@ -50,6 +50,12 @@ task runMorden (type: JavaExec) {
     jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
 }
 
+task runRopsten (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=ropsten.conf'
+}
+
 task runTest (type: JavaExec) {
     main = mainClassName
     classpath = sourceSets.main.runtimeClasspath
