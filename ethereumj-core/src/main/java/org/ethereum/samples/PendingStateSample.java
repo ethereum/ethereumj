@@ -92,7 +92,8 @@ public class PendingStateSample extends TestNetSample {
                         ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
                         ByteUtil.longToBytesNoLeadZeroes(1_000_000),
                         receiverAddress,
-                        ByteUtil.longToBytesNoLeadZeroes(weisToSend), new byte[0]);
+                        ByteUtil.longToBytesNoLeadZeroes(weisToSend), new byte[0],
+                        ethereum.getChainIdForNextBlock());
                 tx.sign(ECKey.fromPrivate(receiverAddress));
                 logger.info("<=== Sending transaction: " + tx);
                 ethereum.submitTransaction(tx);

@@ -16,9 +16,6 @@ public class MordenNetConfig extends AbstractNetConfig {
     private static final long EIP150_HF_BLOCK = 1_783_000;
     private static final byte[] EIP150_HF_BLOCK_HASH =
             Hex.decode("f376243aeff1f256d970714c3de9fd78fa4e63cf63e32a51fe1169e375d98145");
-    private static final long EIP160_HF_BLOCK = 1_885_000;
-    private static final byte[] EIP160_HF_BLOCK_HASH =
-            Hex.decode("f376243aeff1f256d970714c3de9fd78fa4e63cf63e32a51fe1169e375d98145");
 
     public MordenNetConfig() {
         add(0, new MordenConfig.Frontier());

@@ -697,7 +697,8 @@ public class TransactionTest {
                 new BigInteger("1000000000000000000"),
                 new BigInteger("9"),
                 new BigInteger("20000000000"),
-                new BigInteger("21000")
+                new BigInteger("21000"),
+                chainId
         );
 
         // Checking RLP of unsigned transaction and its hash
@@ -716,6 +717,6 @@ public class TransactionTest {
 
         // Check that we could correctly extract tx from new RLP
         Transaction txSigned = new Transaction(Hex.decode(signedTxRlp));
-//        assert txSigned.getChainId() == chainId;
+        assert txSigned.getChainId() == chainId;
     }
 }

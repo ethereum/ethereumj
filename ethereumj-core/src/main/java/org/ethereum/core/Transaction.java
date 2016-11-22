@@ -7,6 +7,8 @@ import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import org.slf4j.Logger;
@@ -36,6 +38,9 @@ public class Transaction {
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
     private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("21000");
 
+    public static final int HASH_LENGTH = 32;
+    public static final int ADDRESS_LENGTH = 20;
+
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
 
@@ -64,7 +69,12 @@ public class Transaction {
      * Initialization code for a new contract */
     protected byte[] data;
 
+    /**
+     * Since EIP-155, we could encode chainId in V
+     */
+    private static final int CHAIN_ID_INC = 35;
     private static final int LOWER_REAL_V = 27;
+    private Byte chainId = null;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
@@ -84,7 +94,9 @@ public class Transaction {
         parsed = false;
     }
 
-    /* creation contract tx
+    /**
+     * @deprecated Use {@link Transaction#Transaction(byte[], byte[], byte[], byte[], byte[], byte[], Byte)} instead
+     * creation contract tx
      * [ nonce, gasPrice, gasLimit, "", endowment, init, signature(v, r, s) ]
      * or simple send tx
      * [ nonce, gasPrice, gasLimit, receiveAddress, value, data, signature(v, r, s) ]
@@ -104,17 +116,57 @@ public class Transaction {
         parsed = true;
     }
 
-    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data, byte[] r, byte[] s, byte v) {
-        this(nonce, gasPrice, gasLimit, receiveAddress, value, data);
-        this.signature = ECDSASignature.fromComponents(r, s, v);
+    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
+                       Byte chainId) {
+        this.nonce = nonce;
+        this.gasPrice = gasPrice;
+        this.gasLimit = gasLimit;
+        this.receiveAddress = receiveAddress;
+        this.value = value;
+        this.data = data;
+        this.chainId = chainId;
+
+        if (receiveAddress == null) {
+            this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
         }
 
-    public long transactionCost(BlockchainNetConfig config, Block block){
+        parsed = true;
+    }
+
+    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
+                       byte[] r, byte[] s, byte v) {
+        this.chainId = extractChainIdFromV(v);
+        this.nonce = nonce;
+        this.gasPrice = gasPrice;
+        this.gasLimit = gasLimit;
+        this.receiveAddress = receiveAddress;
+        if (ByteUtil.isSingleZero(value)) {
+            this.value = EMPTY_BYTE_ARRAY;
+        } else {
+            this.value = value;
+        }
+        this.data = data;
+
+        if (receiveAddress == null) {
+            this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
+        }
+
+        this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
+        parsed = true;
+    }
+
+    public synchronized long transactionCost(BlockchainNetConfig config, Block block){
 
         if (!parsed) rlpParse();
 
         return config.getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
+    }
+
+
+    private Byte extractChainIdFromV(byte v) {
+        if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;
+        return (byte) ((v - CHAIN_ID_INC) / 2);
     }
 
     private byte getRealV(byte v) {
@@ -125,11 +177,17 @@ public class Transaction {
         return (byte) (realV + inc);
     }
 
-
-    public void rlpParse() {
-
+    public synchronized void rlpParse() {
+        try {
             RLPList decodedTxList = RLP.decode2(rlpEncoded);
             RLPList transaction = (RLPList) decodedTxList.get(0);
+
+            // Basic verification
+//            if (transaction.size() > 9 ) throw new RuntimeException("Too many RLP elements");
+//            for (RLPElement rlpElement : transaction) {
+//                if (!(rlpElement instanceof RLPItem))
+//                    throw new RuntimeException("Transaction RLP elements shouldn't be lists");
+//            }
 
             this.nonce = transaction.get(0).getRLPData();
             this.gasPrice = transaction.get(1).getRLPData();
@@ -139,7 +197,10 @@ public class Transaction {
             this.data = transaction.get(5).getRLPData();
             // only parse signature in case tx is signed
             if (transaction.get(6).getRLPData() != null) {
-            byte v = transaction.get(6).getRLPData()[0];
+                byte[] vData =  transaction.get(6).getRLPData();
+//                if (vData.length != 1 ) throw new RuntimeException("Signature V is invalid");
+                byte v = vData[0];
+                this.chainId = extractChainIdFromV(v);
                 byte[] r = transaction.get(7).getRLPData();
                 byte[] s = transaction.get(8).getRLPData();
                 this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
@@ -147,14 +208,38 @@ public class Transaction {
                 logger.debug("RLP encoded tx is not signed!");
             }
             this.parsed = true;
-        this.hash = getHash();
+            this.hash = getHash();
+        } catch (Exception e) {
+            throw new RuntimeException("Error on parsing RLP", e);
         }
+//        validate();
+    }
 
-    public boolean isParsed() {
+    private void validate() {
+        if (getNonce().length > HASH_LENGTH) throw new RuntimeException("Nonce is not valid");
+        if (receiveAddress != null && receiveAddress.length != ADDRESS_LENGTH)
+            throw new RuntimeException("Receive address is not valid");
+        if (gasLimit.length > HASH_LENGTH)
+            throw new RuntimeException("Gas Limit is not valid");
+        if (gasPrice != null && gasPrice.length > HASH_LENGTH)
+            throw new RuntimeException("Gas Price is not valid");
+        if (value != null  && value.length > HASH_LENGTH)
+            throw new RuntimeException("Value is not valid");
+        if (getSignature() != null) {
+            if (BigIntegers.asUnsignedByteArray(signature.r).length > HASH_LENGTH)
+                throw new RuntimeException("Signature R is not valid");
+            if (BigIntegers.asUnsignedByteArray(signature.s).length > HASH_LENGTH)
+                throw new RuntimeException("Signature S is not valid");
+            if (getSender() != null && getSender().length != ADDRESS_LENGTH)
+                throw new RuntimeException("Sender is not valid");
+        }
+    }
+
+    public synchronized boolean isParsed() {
         return parsed;
     }
 
-    public byte[] getHash() {
+    public synchronized byte[] getHash() {
         if (!isEmpty(hash)) return hash;
 
         if (!parsed) rlpParse();
@@ -162,45 +247,45 @@ public class Transaction {
         return HashUtil.sha3(plainMsg);
     }
 
-    public byte[] getRawHash() {
+    public synchronized byte[] getRawHash() {
         if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
     }
 
 
-    public byte[] getNonce() {
+    public synchronized byte[] getNonce() {
         if (!parsed) rlpParse();
 
         return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
 
-    public boolean isValueTx() {
+    public synchronized boolean isValueTx() {
         if (!parsed) rlpParse();
         return value != null;
     }
 
-    public byte[] getValue() {
+    public synchronized byte[] getValue() {
         if (!parsed) rlpParse();
         return value == null ? ZERO_BYTE_ARRAY : value;
     }
 
-    public byte[] getReceiveAddress() {
+    public synchronized byte[] getReceiveAddress() {
         if (!parsed) rlpParse();
         return receiveAddress;
     }
 
-    public byte[] getGasPrice() {
+    public synchronized byte[] getGasPrice() {
         if (!parsed) rlpParse();
         return gasPrice == null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
-    public byte[] getGasLimit() {
+    public synchronized byte[] getGasLimit() {
         if (!parsed) rlpParse();
         return gasLimit;
     }
 
-    public long nonZeroDataBytes() {
+    public synchronized long nonZeroDataBytes() {
         if (data == null) return 0;
         int counter = 0;
         for (final byte aData : data) {
@@ -209,7 +294,7 @@ public class Transaction {
         return counter;
     }
 
-    public long zeroDataBytes() {
+    public synchronized long zeroDataBytes() {
         if (data == null) return 0;
         int counter = 0;
         for (final byte aData : data) {
@@ -219,22 +304,22 @@ public class Transaction {
     }
 
 
-    public byte[] getData() {
+    public synchronized byte[] getData() {
         if (!parsed) rlpParse();
         return data;
     }
 
-    public ECDSASignature getSignature() {
+    public synchronized ECDSASignature getSignature() {
         if (!parsed) rlpParse();
         return signature;
     }
 
-    public byte[] getContractAddress() {
+    public synchronized byte[] getContractAddress() {
         if (!isContractCreation()) return null;
         return HashUtil.calcNewAddr(this.getSender(), this.getNonce());
     }
 
-    public boolean isContractCreation() {
+    public synchronized boolean isContractCreation() {
         if (!parsed) rlpParse();
         return this.receiveAddress == null || Arrays.equals(this.receiveAddress,ByteUtil.EMPTY_BYTE_ARRAY);
     }
@@ -243,7 +328,7 @@ public class Transaction {
      * Crypto
      */
 
-    public ECKey getKey() {
+    public synchronized ECKey getKey() {
         byte[] hash = getRawHash();
         return ECKey.recoverFromSignature(signature.v, signature, hash);
     }
@@ -260,24 +345,29 @@ public class Transaction {
         return null;
     }
 
+    public synchronized Integer getChainId() {
+        if (!parsed) rlpParse();
+        return chainId == null ? null : (int) chainId;
+    }
+
     /**
      * @deprecated should prefer #sign(ECKey) over this method
      */
-    public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
+    public synchronized void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
         sign(ECKey.fromPrivate(privKeyBytes));
     }
 
-    public void sign(ECKey key) throws MissingPrivateKeyException {
+    public synchronized void sign(ECKey key) throws MissingPrivateKeyException {
         this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return toString(Integer.MAX_VALUE);
     }
 
-    public String toString(int maxDataSize) {
+    public synchronized String toString(int maxDataSize) {
         if (!parsed) rlpParse();
         String dataS;
         if (data == null) {
@@ -305,7 +395,7 @@ public class Transaction {
      * For signatures you have to keep also
      * RLP of the transaction without any signature data
      */
-    public byte[] getEncodedRaw() {
+    public synchronized byte[] getEncodedRaw() {
 
         if (!parsed) rlpParse();
         if (rlpRaw != null) return rlpRaw;
@@ -323,12 +413,22 @@ public class Transaction {
         byte[] value = RLP.encodeElement(this.value);
         byte[] data = RLP.encodeElement(this.data);
 
+        // Since EIP-155 use chainId for v
+        if (chainId == null) {
             rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
                     value, data);
+        } else {
+            byte[] v, r, s;
+            v = RLP.encodeByte(chainId);
+            r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
+                    value, data, v, r, s);
+        }
         return rlpRaw;
     }
 
-    public byte[] getEncoded() {
+    public synchronized byte[] getEncoded() {
 
         if (rlpEncoded != null) return rlpEncoded;
 
@@ -348,11 +448,19 @@ public class Transaction {
         byte[] v, r, s;
 
         if (signature != null) {
-            v = RLP.encodeByte(signature.v);
+            int encodeV;
+            if (chainId == null) {
+                encodeV = signature.v;
+            } else {
+                encodeV = signature.v - LOWER_REAL_V;
+                encodeV += chainId * 2 + CHAIN_ID_INC;
+            }
+            v = RLP.encodeByte((byte) encodeV);
             r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
             s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
         } else {
-            v = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            // Since EIP-155 use chainId for v
+            v = chainId == null ? RLP.encodeElement(EMPTY_BYTE_ARRAY) : RLP.encodeByte(chainId);
             r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
             s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
         }
@@ -366,7 +474,7 @@ public class Transaction {
     }
 
     @Override
-    public int hashCode() {
+    public synchronized int hashCode() {
 
         byte[] hash = this.getHash();
         int hashCode = 0;
@@ -379,7 +487,7 @@ public class Transaction {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public synchronized boolean equals(Object obj) {
 
         if (!(obj instanceof Transaction)) return false;
         Transaction tx = (Transaction) obj;
@@ -387,10 +495,20 @@ public class Transaction {
         return tx.hashCode() == this.hashCode();
     }
 
+    /**
+     * @deprecated Use {@link Transaction#createDefault(String, BigInteger, BigInteger, Integer)} instead
+     */
     public static Transaction createDefault(String to, BigInteger amount, BigInteger nonce){
         return create(to, amount, nonce, DEFAULT_GAS_PRICE, DEFAULT_BALANCE_GAS);
     }
 
+    public static Transaction createDefault(String to, BigInteger amount, BigInteger nonce, Integer chainId){
+        return create(to, amount, nonce, DEFAULT_GAS_PRICE, DEFAULT_BALANCE_GAS, chainId);
+    }
+
+    /**
+     * @deprecated use {@link Transaction#create(String, BigInteger, BigInteger, BigInteger, BigInteger, Integer)} instead
+     */
     public static Transaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit){
         return new Transaction(BigIntegers.asUnsignedByteArray(nonce),
                 BigIntegers.asUnsignedByteArray(gasPrice),
@@ -398,5 +516,17 @@ public class Transaction {
                 Hex.decode(to),
                 BigIntegers.asUnsignedByteArray(amount),
                 null);
+    }
+
+    public static Transaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
+                                     BigInteger gasLimit, Integer chainId){
+        Byte byteChainId = chainId != null ? chainId.byteValue() : null;
+        return new Transaction(BigIntegers.asUnsignedByteArray(nonce),
+                BigIntegers.asUnsignedByteArray(gasPrice),
+                BigIntegers.asUnsignedByteArray(gasLimit),
+                Hex.decode(to),
+                BigIntegers.asUnsignedByteArray(amount),
+                null,
+                byteChainId);
     }
 }
