@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.config.net.MordenNetConfig;
+import org.ethereum.config.net.RopstenNetConfig;
 import org.ethereum.config.net.TestNetConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisLoader;
@@ -278,6 +279,9 @@ public class SystemProperties {
                         break;
                     case "morden":
                         blockchainConfig = new MordenNetConfig();
+                        break;
+                    case "ropsten":
+                        blockchainConfig = new RopstenNetConfig();
                         break;
                     case "testnet":
                         blockchainConfig = new TestNetConfig();
