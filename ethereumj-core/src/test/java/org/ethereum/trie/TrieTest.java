@@ -1,6 +1,13 @@
 package org.ethereum.trie;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.db.DatabaseImpl;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
 import org.ethereum.datasource.*;
 import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
@@ -398,6 +405,24 @@ public class TrieTest {
         trie.delete(cat);
         assertEquals("", new String(trie.get(cat)));
         assertEquals(ROOT_HASH_AFTER2, Hex.toHexString(trie.getRootHash()));
+    }
+
+    @Test
+    public void testMassiveDelete() {
+        TrieImpl trie = new TrieImpl(mockDb);
+        byte[] rootHash1 = null;
+        for (int i = 0; i < 11000; i++) {
+            trie.update(HashUtil.sha3(ByteUtil.intToBytes(i)), HashUtil.sha3(ByteUtil.intToBytes(i + 1000000)));
+            if (i == 10000) {
+                rootHash1 = trie.getRootHash();
+            }
+        }
+        for (int i = 10001; i < 11000; i++) {
+            trie.delete(HashUtil.sha3(ByteUtil.intToBytes(i)));
+        }
+
+        byte[] rootHash2 = trie.getRootHash();
+        assertArrayEquals(rootHash1, rootHash2);
     }
 
     @Test
