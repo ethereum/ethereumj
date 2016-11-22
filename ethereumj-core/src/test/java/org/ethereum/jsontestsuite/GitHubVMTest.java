@@ -30,6 +30,7 @@ public class GitHubVMTest {
         SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
     }
 
+    @Ignore
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
@@ -59,6 +60,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -125,6 +127,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testvmSystemOperationsTestGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();

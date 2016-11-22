@@ -364,6 +364,7 @@ public class RepositoryTrack implements Repository, org.ethereum.facade.Reposito
 
 
             repository.updateBatch(cleanedCacheAccounts, cacheDetails);
+//            repository.updateBatch(cacheAccounts, cacheDetails);
             cacheAccounts.clear();
             cacheDetails.clear();
             logger.trace("committed changes: {}", this);

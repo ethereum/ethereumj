@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
@@ -154,6 +155,15 @@ public class Transaction {
         parsed = true;
     }
 
+    public synchronized long transactionCost(BlockchainNetConfig config, Block block){
+
+        if (!parsed) rlpParse();
+
+        return config.getConfigForBlock(block.getNumber()).
+                getTransactionCost(this);
+    }
+
+
     private Byte extractChainIdFromV(byte v) {
         if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;
         return (byte) ((v - CHAIN_ID_INC) / 2);
@@ -167,17 +177,17 @@ public class Transaction {
         return (byte) (realV + inc);
     }
 
-    public void rlpParse() {
+    public synchronized void rlpParse() {
         try {
             RLPList decodedTxList = RLP.decode2(rlpEncoded);
             RLPList transaction = (RLPList) decodedTxList.get(0);
 
             // Basic verification
-            if (transaction.size() > 9 ) throw new RuntimeException("Too many RLP elements");
-            for (RLPElement rlpElement : transaction) {
-                if (!(rlpElement instanceof RLPItem))
-                    throw new RuntimeException("Transaction RLP elements shouldn't be lists");
-            }
+//            if (transaction.size() > 9 ) throw new RuntimeException("Too many RLP elements");
+//            for (RLPElement rlpElement : transaction) {
+//                if (!(rlpElement instanceof RLPItem))
+//                    throw new RuntimeException("Transaction RLP elements shouldn't be lists");
+//            }
 
             this.nonce = transaction.get(0).getRLPData();
             this.gasPrice = transaction.get(1).getRLPData();
@@ -188,7 +198,7 @@ public class Transaction {
             // only parse signature in case tx is signed
             if (transaction.get(6).getRLPData() != null) {
                 byte[] vData =  transaction.get(6).getRLPData();
-                if (vData.length != 1 ) throw new RuntimeException("Signature V is invalid");
+//                if (vData.length != 1 ) throw new RuntimeException("Signature V is invalid");
                 byte v = vData[0];
                 this.chainId = extractChainIdFromV(v);
                 byte[] r = transaction.get(7).getRLPData();
@@ -202,7 +212,7 @@ public class Transaction {
         } catch (Exception e) {
             throw new RuntimeException("Error on parsing RLP", e);
         }
-        validate();
+//        validate();
     }
 
     private void validate() {
@@ -225,11 +235,11 @@ public class Transaction {
         }
     }
 
-    public boolean isParsed() {
+    public synchronized boolean isParsed() {
         return parsed;
     }
 
-    public byte[] getHash() {
+    public synchronized byte[] getHash() {
         if (!isEmpty(hash)) return hash;
 
         if (!parsed) rlpParse();
@@ -237,45 +247,45 @@ public class Transaction {
         return HashUtil.sha3(plainMsg);
     }
 
-    public byte[] getRawHash() {
+    public synchronized byte[] getRawHash() {
         if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
     }
 
 
-    public byte[] getNonce() {
+    public synchronized byte[] getNonce() {
         if (!parsed) rlpParse();
 
         return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
 
-    public boolean isValueTx() {
+    public synchronized boolean isValueTx() {
         if (!parsed) rlpParse();
         return value != null;
     }
 
-    public byte[] getValue() {
+    public synchronized byte[] getValue() {
         if (!parsed) rlpParse();
         return value == null ? ZERO_BYTE_ARRAY : value;
     }
 
-    public byte[] getReceiveAddress() {
+    public synchronized byte[] getReceiveAddress() {
         if (!parsed) rlpParse();
         return receiveAddress;
     }
 
-    public byte[] getGasPrice() {
+    public synchronized byte[] getGasPrice() {
         if (!parsed) rlpParse();
         return gasPrice == null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
-    public byte[] getGasLimit() {
+    public synchronized byte[] getGasLimit() {
         if (!parsed) rlpParse();
         return gasLimit;
     }
 
-    public long nonZeroDataBytes() {
+    public synchronized long nonZeroDataBytes() {
         if (data == null) return 0;
         int counter = 0;
         for (final byte aData : data) {
@@ -284,7 +294,7 @@ public class Transaction {
         return counter;
     }
 
-    public long zeroDataBytes() {
+    public synchronized long zeroDataBytes() {
         if (data == null) return 0;
         int counter = 0;
         for (final byte aData : data) {
@@ -294,22 +304,22 @@ public class Transaction {
     }
 
 
-    public byte[] getData() {
+    public synchronized byte[] getData() {
         if (!parsed) rlpParse();
         return data;
     }
 
-    public ECDSASignature getSignature() {
+    public synchronized ECDSASignature getSignature() {
         if (!parsed) rlpParse();
         return signature;
     }
 
-    public byte[] getContractAddress() {
+    public synchronized byte[] getContractAddress() {
         if (!isContractCreation()) return null;
         return HashUtil.calcNewAddr(this.getSender(), this.getNonce());
     }
 
-    public boolean isContractCreation() {
+    public synchronized boolean isContractCreation() {
         if (!parsed) rlpParse();
         return this.receiveAddress == null || Arrays.equals(this.receiveAddress,ByteUtil.EMPTY_BYTE_ARRAY);
     }
@@ -318,7 +328,7 @@ public class Transaction {
      * Crypto
      */
 
-    public ECKey getKey() {
+    public synchronized ECKey getKey() {
         byte[] hash = getRawHash();
         return ECKey.recoverFromSignature(signature.v, signature, hash);
     }
@@ -335,7 +345,7 @@ public class Transaction {
         return null;
     }
 
-    public Integer getChainId() {
+    public synchronized Integer getChainId() {
         if (!parsed) rlpParse();
         return chainId == null ? null : (int) chainId;
     }
@@ -343,21 +353,21 @@ public class Transaction {
     /**
      * @deprecated should prefer #sign(ECKey) over this method
      */
-    public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
+    public synchronized void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
         sign(ECKey.fromPrivate(privKeyBytes));
     }
 
-    public void sign(ECKey key) throws MissingPrivateKeyException {
+    public synchronized void sign(ECKey key) throws MissingPrivateKeyException {
         this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return toString(Integer.MAX_VALUE);
     }
 
-    public String toString(int maxDataSize) {
+    public synchronized String toString(int maxDataSize) {
         if (!parsed) rlpParse();
         String dataS;
         if (data == null) {
@@ -385,7 +395,7 @@ public class Transaction {
      * For signatures you have to keep also
      * RLP of the transaction without any signature data
      */
-    public byte[] getEncodedRaw() {
+    public synchronized byte[] getEncodedRaw() {
 
         if (!parsed) rlpParse();
         if (rlpRaw != null) return rlpRaw;
@@ -418,7 +428,7 @@ public class Transaction {
         return rlpRaw;
     }
 
-    public byte[] getEncoded() {
+    public synchronized byte[] getEncoded() {
 
         if (rlpEncoded != null) return rlpEncoded;
 
@@ -464,7 +474,7 @@ public class Transaction {
     }
 
     @Override
-    public int hashCode() {
+    public synchronized int hashCode() {
 
         byte[] hash = this.getHash();
         int hashCode = 0;
@@ -477,7 +487,7 @@ public class Transaction {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public synchronized boolean equals(Object obj) {
 
         if (!(obj instanceof Transaction)) return false;
         Transaction tx = (Transaction) obj;

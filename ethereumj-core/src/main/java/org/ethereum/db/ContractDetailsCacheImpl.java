@@ -18,10 +18,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     ContractDetails origContract;
 
-    public ContractDetailsCacheImpl() {
-        this(new ContractDetailsImpl());
-    }
-
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {

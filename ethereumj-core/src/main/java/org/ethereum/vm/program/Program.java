@@ -395,12 +395,16 @@ public class Program {
         Repository track = getStorage().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        BigInteger oldBalance = track.getBalance(newAddress);
-        track.createAccount(newAddress);
+        if (track.isExist(newAddress)) {
+            BigInteger oldBalance = track.getBalance(newAddress);
+            track.createAccount(newAddress);
+            track.addBalance(newAddress, oldBalance);
+        } else
+            track.createAccount(newAddress);
+
         if (blockchainConfig.eip161()) {
             track.increaseNonce(newAddress);
         }
-        track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
         BigInteger newBalance = ZERO;

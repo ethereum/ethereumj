@@ -50,6 +50,12 @@ task runMorden (type: JavaExec) {
     jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
 }
 
+task runRopsten (type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=ropsten.conf'
+}
+
 task runTest (type: JavaExec) {
     main = mainClassName
     classpath = sourceSets.main.runtimeClasspath
@@ -228,8 +234,8 @@ bintray {
 
 bintrayUpload.onlyIf {
     // comment 'false' and uncomment the next line to publish next release
-    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
-//     false
+//    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+     false
 }
 
 install {

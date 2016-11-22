@@ -57,7 +57,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     private ContractDetailsImpl(byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
-        if (storageTrie != null) this.storageTrie = storageTrie;
+        this.storageTrie = storageTrie;
         setCodes(codes);
     }
 

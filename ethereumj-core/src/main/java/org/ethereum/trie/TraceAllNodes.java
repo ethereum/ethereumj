@@ -18,11 +18,6 @@ public class TraceAllNodes implements TrieImpl.ScanAction {
         output.append(Hex.toHexString(hash)).append(" ==> ").append(node.toString()).append("\n");
     }
 
-    @Override
-    public void doOnValue(byte[] key, byte[] value) {
-
-    }
-
     public String getOutput() {
         return output.toString();
     }
