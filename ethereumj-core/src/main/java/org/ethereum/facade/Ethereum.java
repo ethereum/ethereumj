@@ -166,12 +166,5 @@ public interface Ethereum {
      */
     long getGasPrice();
 
-    /**
-     * Chain id for next block.
-     * Introduced in EIP-155
-     * @return chain id or null
-     */
-    Byte getChainIdForNextBlock();
-
     void exitOn(long number);
 }

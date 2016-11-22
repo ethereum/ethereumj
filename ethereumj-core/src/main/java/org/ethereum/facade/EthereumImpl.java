@@ -185,7 +185,7 @@ public class EthereumImpl implements Ethereum {
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
         return new Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                receiveAddress, valueBytes, data, getChainIdForNextBlock());
+                receiveAddress, valueBytes, data);
     }
 
 
@@ -341,17 +341,6 @@ public class EthereumImpl implements Ethereum {
     @Override
     public long getGasPrice() {
         return gasPriceTracker.getGasPrice();
-    }
-
-    @Override
-    public Byte getChainIdForNextBlock() {
-        Byte chainId = null;
-        BlockchainConfig nextBlockConfig = config.getBlockchainConfig().getConfigForBlock(getBlockchain()
-                .getBestBlock().getNumber() + 1);
-        Integer intChainId = nextBlockConfig.getChainId();
-        if (intChainId != null) chainId = intChainId.byteValue();
-
-        return chainId;
     }
 
     @Override

@@ -38,8 +38,7 @@ public class CallTransaction {
                 longToBytesNoLeadZeroes(gasLimit),
                 toAddress == null ? null : Hex.decode(toAddress),
                 longToBytesNoLeadZeroes(value),
-                data,
-                null);
+                data);
         return tx;
     }
 
