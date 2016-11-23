@@ -1101,6 +1101,15 @@ public class Program {
             this.refundGas(0, "call pre-compiled"); //matches cpp logic
             this.stackPushZero();
             track.rollback();
+
+            // corner case for EIP 161 and a single execution of the tx
+            // cf416c536ec1a19ed1fb89e4ec7ffb3cf73aa413b3aa9b77d60e4fd81a4296ba
+            // in the block #2675119
+            // Even on OOG the contract should still be marked dirty
+            // To be cleared if it is 'empty'
+            track = getStorage().startTracking();
+            track.getAccountState(contextAddress).setDirty(true);
+            track.commit(getNumber().longValue());
         } else {
 
             this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
