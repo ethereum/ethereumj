@@ -1,9 +1,8 @@
-package org.ethereum.miner;
+package org.ethereum.mine;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import org.ethereum.mine.AnyFuture;
 import org.junit.Test;
 
 import java.util.concurrent.*;

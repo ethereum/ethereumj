@@ -1,4 +1,4 @@
-package org.ethereum.miner;
+package org.ethereum.mine;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
@@ -6,14 +6,23 @@ import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.mine.Ethash;
+import org.ethereum.datasource.CountingBytesSource;
+import org.ethereum.datasource.JournalBytesSource;
+import org.ethereum.datasource.MapDB;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.PruneManager;
 import org.ethereum.util.ByteUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.spongycastle.util.encoders.Hex;
 
+import javax.annotation.Resource;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +32,14 @@ import java.util.List;
  * Created by Anton Nashatyrev on 10.12.2015.
  */
 public class MineBlock {
+
+    @Mock
+    PruneManager pruneManager;
+
+    @InjectMocks
+    @Resource
+    BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+            getClass().getResourceAsStream("/genesis/genesis-light.json")));
 
     @BeforeClass
     public static void setup() {
@@ -39,11 +56,16 @@ public class MineBlock {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
+    @Before
+    public void setUp() throws Exception {
+        // Initialize mocks created above
+        MockitoAnnotations.initMocks(this);
+    }
+
 
     @Test
     public void mine1() throws Exception {
-        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
-                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+
         blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
         Block parent = blockchain.getBestBlock();
 
