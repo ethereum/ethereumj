@@ -8,6 +8,7 @@ import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.mine.Ethash;
 import org.ethereum.mine.EthashAlgo;
+import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.junit.*;
@@ -195,7 +196,7 @@ public class EthashTest {
 
         System.out.println(b);
 
-        long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
+        long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get().nonce;
         b.setNonce(longToBytes(nonce));
 
         Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
@@ -209,7 +210,7 @@ public class EthashTest {
         for (Block b : blocks) {
             b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
             b.setNonce(new byte[0]);
-            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
+            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get().nonce;
             b.setNonce(longToBytes(nonce));
 
             Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
@@ -224,7 +225,7 @@ public class EthashTest {
         for (Block b : blocks) {
             b.getHeader().setDifficulty(ByteUtil.intToBytes(100));
             b.setNonce(new byte[0]);
-            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mine(b).get();
+            long nonce = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mine(b).get().nonce;
             b.setNonce(longToBytes(nonce));
 
             Assert.assertTrue(Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).validate(b.getHeader()));
@@ -242,10 +243,10 @@ public class EthashTest {
 
         // first warming up for the cache to be created
         System.out.println("Warming...");
-        long res = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
+        long res = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get().nonce;
 
         System.out.println("Submitting...");
-        Future<Long> light = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(difficultBlock, 8);
+        Future<MinerIfc.MiningResult> light = Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(difficultBlock, 8);
 
         Thread.sleep(200);
 
