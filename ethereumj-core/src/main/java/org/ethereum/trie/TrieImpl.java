@@ -3,7 +3,7 @@ package org.ethereum.trie;
 import org.ethereum.datasource.MapDB;
 import org.ethereum.datasource.Source;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
+import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -97,9 +97,6 @@ public class TrieImpl implements Trie<byte[]> {
         synchronized (cache) {
             byte[] k = binToNibbles(key);
 
-            if (isEmptyNode(root)) {
-                cache.delete(getRootHash());
-            }
             this.root = this.insertOrDelete(this.root, k, value);
             if (logger.isDebugEnabled()) {
                 logger.debug("Added key {} and value {}", Hex.toHexString(key), Hex.toHexString(value));
@@ -211,7 +208,17 @@ public class TrieImpl implements Trie<byte[]> {
             // Matching key pair (ie. there's already an object with this key)
             if (Arrays.equals(k, key)) {
                 Object[] newNode = new Object[]{packNibbles(key), value};
-                return this.putToCache(newNode);
+                Object ret = this.putToCache(newNode);
+                if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+                    deleteNode(currentNode.hash());
+                }
+                return ret;
+//                if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+//                    deleteNode(currentNode.hash());
+//                    return this.putToCache(newNode);
+//                } else {
+//                    return currentNode.hash();
+//                }
             }
 
             Object newHash;
@@ -237,7 +244,7 @@ public class TrieImpl implements Trie<byte[]> {
                 newHash = this.putToCache(scaledSlice);
             }
 
-            markRemoved(currentNode.hash());
+            deleteNode(currentNode.hash());
 
             if (matchingLength == 0) {
                 // End of the chain, return
@@ -255,13 +262,15 @@ public class TrieImpl implements Trie<byte[]> {
             newNode[key[0]] = this.insert(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length), value);
 
             if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
-                markRemoved(currentNode.hash());
-                if (!isEmptyNode(currentNode.get(key[0]))) {
-                    markRemoved(currentNode.get(key[0]).asBytes());
-                }
+                deleteNode(currentNode.hash());
             }
-
             return this.putToCache(newNode);
+//            if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
+//                deleteNode(currentNode.hash());
+//                return this.putToCache(newNode);
+//            } else {
+//                return currentNode.hash();
+//            }
         }
     }
 
@@ -297,7 +306,7 @@ public class TrieImpl implements Trie<byte[]> {
                 } else {
                     newNode = new Object[]{currentNode.get(0), hash};
                 }
-                markRemoved(currentNode.hash());
+                deleteNode(currentNode.hash());
                 return this.putToCache(newNode);
             } else {
                 return node;
@@ -337,14 +346,14 @@ public class TrieImpl implements Trie<byte[]> {
 
 
             if (!FastByteComparisons.equal(getNode(newNode).hash(), currentNode.hash())) {
-                markRemoved(currentNode.hash());
+                deleteNode(currentNode.hash());
             }
 
             return this.putToCache(newNode);
         }
     }
 
-    private void markRemoved(byte[] hash) {
+    private void deleteNode(byte[] hash) {
         cache.delete(hash);
     }
 
@@ -419,6 +428,10 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     public void scanTree(byte[] hash, ScanAction scanAction) {
+        scanTree(hash, new byte[]{}, scanAction);
+    }
+
+    public void scanTree(byte[] hash, byte[] unpackedKeyLeft, ScanAction scanAction) {
         synchronized (cache) {
 
             Value node = cache.get(hash);
@@ -430,19 +443,42 @@ public class TrieImpl implements Trie<byte[]> {
                 List<Object> siblings = node.asList();
                 if (siblings.size() == PAIR_SIZE) {
                     Value val = new Value(siblings.get(1));
-                    if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
-                        scanTree(val.asBytes(), scanAction);
+                    byte[] packedKey = (byte[]) siblings.get(0);
+                    byte[] unpackedKeyRight = unpackToNibbles(packedKey);
+                    byte[] mergedKey = ByteUtil.merge(unpackedKeyLeft, unpackedKeyRight);
+                    if (val.isHashCode() && !hasTerminator(packedKey)) {
+                        scanTree(val.asBytes(), mergedKey, scanAction);
+                    } else {
+                        scanAction.doOnValue(hash, node, packKey(mergedKey), val.asBytes());
+                    }
                 } else {
-                    for (int j = 0; j < LIST_SIZE; ++j) {
+                    if (!new Value(siblings.get(16)).isEmpty()) {
+                        scanAction.doOnValue(hash, node, packKey(unpackedKeyLeft), (byte[]) siblings.get(16));
+                    }
+                    for (int j = 0; j < LIST_SIZE - 1; ++j) {
                         Value val = new Value(siblings.get(j));
-                        if (val.isHashCode())
-                            scanTree(val.asBytes(), scanAction);
+                        if (val.isHashCode()) {
+                            scanTree(val.asBytes(), ByteUtil.merge(unpackedKeyLeft, new byte[]{(byte) j}), scanAction);
+                        } else if (val.isList()) {
+                            List<Object> siblings1 = val.asList();
+                            byte[] packedKey = (byte[]) siblings1.get(0);
+                            byte[] unpackedKeyRight = unpackToNibbles(packedKey);
+                            byte[] mergedKey = ByteUtil.merge(unpackedKeyLeft, new byte[]{(byte) j}, unpackedKeyRight);
+                            Value val1 = new Value(siblings1.get(1));
+                            scanAction.doOnValue(hash, node, packKey(mergedKey), val1.asBytes());
+                        }
                     }
                 }
                 scanAction.doOnNode(hash, node);
             }
         }
     }
+
+    private static byte[] packKey(byte[] unpackedKey) {
+        byte[] bytes = packNibbles(unpackedKey);
+        return Arrays.copyOfRange(bytes, 1, bytes.length);
+    }
+
 
     public String getTrieDump() {
 
@@ -465,6 +501,13 @@ public class TrieImpl implements Trie<byte[]> {
         }
     }
 
+    public interface ScanAction {
+
+        void doOnNode(byte[] hash, Value node);
+
+        void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value);
+    }
+
     public boolean validate() {
         synchronized (cache) {
             logger.info("Validating state trie...");
@@ -474,6 +517,10 @@ public class TrieImpl implements Trie<byte[]> {
                     @Override
                     public void doOnNode(byte[] hash, Value node) {
                         cnt[0]++;
+                    }
+
+                    @Override
+                    public void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value) {
                     }
                 });
             } catch (Exception e) {
@@ -498,9 +545,5 @@ public class TrieImpl implements Trie<byte[]> {
     public boolean flush() {
         // does nothing since Trie has no its own state
         return true;
-    }
-
-    public interface ScanAction {
-        void doOnNode(byte[] hash, Value node);
     }
 }

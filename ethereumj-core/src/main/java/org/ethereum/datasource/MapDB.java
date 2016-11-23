@@ -9,11 +9,23 @@ import java.util.Map;
  */
 public class MapDB<V> implements Source<byte[], V> {
 
-    Map<byte[], V> storage = new ByteArrayMap<>();
+    protected final Map<byte[], V> storage;
+
+    public MapDB() {
+        this(new ByteArrayMap<V>());
+    }
+
+    public MapDB(ByteArrayMap<V> storage) {
+        this.storage = storage;
+    }
 
     @Override
     public synchronized void put(byte[] key, V val) {
-        storage.put(key, val);
+        if (val == null) {
+            delete(key);
+        } else {
+            storage.put(key, val);
+        }
     }
 
     @Override

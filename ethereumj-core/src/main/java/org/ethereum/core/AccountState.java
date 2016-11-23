@@ -1,6 +1,8 @@
 package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -9,6 +11,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 import static org.ethereum.crypto.HashUtil.*;
+import static org.ethereum.util.FastByteComparisons.equal;
 
 public class AccountState {
 
@@ -53,8 +56,8 @@ public class AccountState {
     public AccountState(BigInteger nonce, BigInteger balance, byte[] stateRoot, byte[] codeHash) {
         this.nonce = nonce;
         this.balance = balance;
-        this.stateRoot = stateRoot;
-        this.codeHash = codeHash;
+        this.stateRoot = stateRoot == EMPTY_TRIE_HASH || equal(stateRoot, EMPTY_TRIE_HASH) ? EMPTY_TRIE_HASH : stateRoot;
+        this.codeHash = codeHash == EMPTY_DATA_HASH || equal(codeHash, EMPTY_DATA_HASH) ? EMPTY_DATA_HASH : codeHash;
     }
 
     public AccountState(byte[] rlpData) {

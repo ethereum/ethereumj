@@ -5,11 +5,9 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
-import org.ethereum.datasource.LegacySourceAdapter;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
@@ -61,12 +59,24 @@ public class CommonConfig {
 
     @Bean @Primary
     public Repository repository() {
-        return new RepositoryRoot(new LegacySourceAdapter(stateDS()));
+        return new RepositoryRoot(pruneStateDS());
     }
 
     @Bean @Scope("prototype")
     public Repository repository(byte[] stateRoot) {
-        return new RepositoryRoot(new LegacySourceAdapter(stateDS()), stateRoot);
+        return new RepositoryRoot(pruneStateDS(), stateRoot);
+    }
+
+
+    @Bean
+    public HashedKeySource<byte[], byte[]> pruneStateDS() {
+        LegacySourceAdapter adapter = new LegacySourceAdapter(stateDS());
+        CountingBytesSource countingBytesSource = new CountingBytesSource(adapter);
+        if (systemProperties().databasePruneDepth() >= 0) {
+            return new JournalBytesSource(countingBytesSource);
+        } else {
+            return countingBytesSource;
+        }
     }
 
     @Bean

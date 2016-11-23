@@ -4,32 +4,100 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.*;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Value;
-import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import static org.ethereum.util.blockchain.EtherUtil.Unit.*;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.intsToBytes;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Anton Nashatyrev on 05.07.2016.
  */
 public class PruneTest {
-/*
+
+
+    @Test
+    public void testJournal1() throws Exception {
+        MapDB<byte[]> db = new MapDB<>();
+        CountingBytesSource countDB = new CountingBytesSource(db);
+        JournalBytesSource journalDB = new JournalBytesSource(countDB);
+
+        put(journalDB, "11");
+        put(journalDB, "22");
+        put(journalDB, "33");
+        journalDB.commitUpdates(intToBytes(1));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        put(journalDB, "22");
+        delete(journalDB, "33");
+        put(journalDB, "44");
+        journalDB.commitUpdates(intToBytes(2));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.persistUpdate(intToBytes(1));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.revertUpdate(intToBytes(2));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        put(journalDB, "22");
+        delete(journalDB, "33");
+        put(journalDB, "44");
+        journalDB.commitUpdates(intToBytes(3));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        delete(journalDB, "22");
+        put(journalDB, "33");
+        delete(journalDB, "44");
+        journalDB.commitUpdates(intToBytes(4));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.persistUpdate(intToBytes(3));
+        checkKeys(db.getStorage(), "11", "22", "33", "44");
+
+        journalDB.persistUpdate(intToBytes(4));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        delete(journalDB, "22");
+        journalDB.commitUpdates(intToBytes(5));
+        checkKeys(db.getStorage(), "11", "22", "33");
+
+        journalDB.persistUpdate(intToBytes(5));
+        checkKeys(db.getStorage(), "11", "33");
+
+    }
+
+    private static void put(Source<byte[], byte[]> db, String key) {
+        db.put(Hex.decode(key), Hex.decode(key));
+    }
+    private static void delete(Source<byte[], byte[]> db, String key) {
+        db.delete(Hex.decode(key));
+    }
+
+    private static void checkKeys(Map<byte[], byte[]> map, String ... keys) {
+        Assert.assertEquals(keys.length, map.size());
+        for (String key : keys) {
+            assertTrue(map.containsKey(Hex.decode(key)));
+        }
+    }
+
+
 
     @BeforeClass
     public static void setup() {
@@ -46,93 +114,55 @@ public class PruneTest {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
-    static class RecBlockchain extends StandaloneBlockchain {
-        List<Block> blocks = new ArrayList<>();
-
-        @Override
-        public Block createBlock() {
-            return rec(super.createBlock());
-        }
-
-        @Override
-        public Block createForkBlock(Block parent) {
-            return rec(super.createForkBlock(parent));
-        }
-
-        private Block rec(Block b) {
-            blocks.add(b);
-            return b;
-        }
-    }
-
     @Test
     public void simpleTest() throws Exception {
         final int pruneCount = 3;
         SystemProperties.getDefault().overrideParams(
                 "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
+                "database.prune.maxDepth", "" + pruneCount,
+                "mine.startNonce", "0");
 
-        RecBlockchain rbc = new RecBlockchain();
+        StandaloneBlockchain bc = new StandaloneBlockchain();
 
         ECKey alice = ECKey.fromPrivate(BigInteger.ZERO);
         ECKey bob = ECKey.fromPrivate(BigInteger.ONE);
 
 //        System.out.println("Gen root: " + Hex.toHexString(bc.getBlockchain().getBestBlock().getStateRoot()));
-        rbc.createBlock();
-        Block b0 = rbc.getBlockchain().getBestBlock();
-        rbc.sendEther(alice.getAddress(), convert(3, ETHER));
-        Block b1_1 = rbc.createBlock();
+        bc.createBlock();
+        Block b0 = bc.getBlockchain().getBestBlock();
+        bc.sendEther(alice.getAddress(), convert(3, ETHER));
+        Block b1_1 = bc.createBlock();
 
-        rbc.sendEther(alice.getAddress(), convert(3, ETHER));
-        Block b1_2 = rbc.createForkBlock(b0);
+        bc.sendEther(alice.getAddress(), convert(3, ETHER));
+        Block b1_2 = bc.createForkBlock(b0);
 
-        rbc.sendEther(alice.getAddress(), convert(3, ETHER));
-        Block b1_3 = rbc.createForkBlock(b0);
+        bc.sendEther(alice.getAddress(), convert(3, ETHER));
+        Block b1_3 = bc.createForkBlock(b0);
 
-        rbc.sendEther(alice.getAddress(), convert(3, ETHER));
-        Block b1_4 = rbc.createForkBlock(b0);
+        bc.sendEther(alice.getAddress(), convert(3, ETHER));
+        Block b1_4 = bc.createForkBlock(b0);
 
-        rbc.sendEther(bob.getAddress(), convert(5, ETHER));
-        rbc.createBlock();
+        bc.sendEther(bob.getAddress(), convert(5, ETHER));
+        bc.createBlock();
 
-        rbc.sendEther(alice.getAddress(), convert(3, ETHER));
-        rbc.createForkBlock(b1_2);
+        bc.sendEther(alice.getAddress(), convert(3, ETHER));
+        bc.createForkBlock(b1_2);
 
         for (int i = 0; i < 9; i++) {
-            rbc.sendEther(alice.getAddress(), convert(3, ETHER));
-            rbc.sendEther(bob.getAddress(), convert(5, ETHER));
-            rbc.createBlock();
-//            System.out.println("#" + (i + 1) + ": " + Hex.toHexString(bc.getBlockchain().getBestBlock().getStateRoot()));
-//            System.out.println("Miner: " + bc.getBlockchain().getRepository().getBalance(bc.getBlockchain().getMinerCoinbase()));
+            bc.sendEther(alice.getAddress(), convert(3, ETHER));
+            bc.sendEther(bob.getAddress(), convert(5, ETHER));
+            bc.createBlock();
         }
 
-        StandaloneBlockchain bc = new StandaloneBlockchain();
-        for (Block block : rbc.blocks) {
-            bc.getBlockchain().tryToConnect(block);
-        }
-        bc.getBlockchain().flush();
-
-        System.out.println("Pruned storage size: " + bc.getStateDS().keys().size());
-
-        Set<ByteArrayWrapper> allRefs = new HashSet<>();
+        byte[][] roots = new byte[pruneCount + 1][];
         for (int i = 0; i < pruneCount + 1; i++) {
             long bNum = bc.getBlockchain().getBestBlock().getNumber() - i;
             Block b = bc.getBlockchain().getBlockByNumber(bNum);
-            Set<ByteArrayWrapper> bRefs = getReferencedTrieNodes(bc.getStateDS(), b.getStateRoot());
-            System.out.println("#" + bNum + " refs: ");
-            for (ByteArrayWrapper bRef : bRefs) {
-                System.out.println("    " + bRef.toString().substring(0, 8));
-            }
-            allRefs.addAll(bRefs);
+            roots[i] = b.getStateRoot();
         }
 
-        System.out.println("Trie nodes closure size: " + allRefs.size());
-        Assert.assertEquals(allRefs.size(), bc.getStateDS().keys().size());
-        for (byte[] key : bc.getStateDS().keys()) {
-            Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
-        }
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(), roots);
 
-        System.out.printf("Best block: " + bc.getBlockchain().getBestBlock().getShortDescr());
         long bestBlockNum = bc.getBlockchain().getBestBlock().getNumber();
 
         Assert.assertEquals(convert(30, ETHER), bc.getBlockchain().getRepository().getBalance(alice.getAddress()));
@@ -166,6 +196,12 @@ public class PruneTest {
             Assert.assertEquals(BigInteger.ZERO, r1.getBalance(alice.getAddress()));
             Assert.assertEquals(BigInteger.ZERO, r1.getBalance(bob.getAddress()));
         }
+    }
+
+    static MapDB<byte[]> stateDS;
+    static String getCount(String hash) {
+        byte[] bytes = stateDS.get(Hex.decode(hash));
+        return bytes == null ? "0" : "" + bytes[3];
     }
 
     @Test
@@ -222,6 +258,111 @@ public class PruneTest {
 
             }
         }
+
+        byte[][] roots = new byte[pruneCount + 1][];
+        for (int i = 0; i < pruneCount + 1; i++) {
+            long bNum = bc.getBlockchain().getBestBlock().getNumber() - i;
+            Block b = bc.getBlockchain().getBlockByNumber(bNum);
+            roots[i] = b.getStateRoot();
+        }
+
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(), roots);
+    }
+
+    @Test
+    public void twoContractsTest() throws Exception {
+        final int pruneCount = 3;
+        SystemProperties.getDefault().overrideParams(
+                "database.prune.enabled", "true",
+                "database.prune.maxDepth", "" + pruneCount);
+
+        String src =
+                "contract Simple {" +
+                "  uint public n;" +
+                "  function set(uint _n) { n = _n; } " +
+                "  function inc() { n++; } " +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+
+        Block b0 = bc.getBlockchain().getBestBlock();
+
+        SolidityContract contr1 = bc.submitNewContract(src);
+        SolidityContract contr2 = bc.submitNewContract(src);
+        Block b1 = bc.createBlock();
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b1.getStateRoot(), b0.getStateRoot());
+
+        // add/remove/add in the same block
+        contr1.callFunction("set", 0xaaaaaaaaaaaaL);
+        contr2.callFunction("set", 0xaaaaaaaaaaaaL);
+        Block b2 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
+
+        contr2.callFunction("set", 0xbbbbbbbbbbbbL);
+        Block b3 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b3.getStateRoot(), b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
+
+        // force prune
+        Block b4 = bc.createBlock();
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b4.getStateRoot(), b3.getStateRoot(), b2.getStateRoot(), b1.getStateRoot());
+        Block b5 = bc.createBlock();
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b5.getStateRoot(), b4.getStateRoot(), b3.getStateRoot(), b2.getStateRoot());
+        Block b6 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b6.getStateRoot(), b5.getStateRoot(), b4.getStateRoot(), b3.getStateRoot());
+
+        contr1.callFunction("set", 0xaaaaaaaaaaaaL);
+        contr2.callFunction("set", 0xaaaaaaaaaaaaL);
+        Block b7 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot(), b4.getStateRoot());
+
+        contr1.callFunction("set", 0xbbbbbbbbbbbbL);
+        Block b8 = bc.createBlock();
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b8.getStateRoot(), b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot());
+
+        contr2.callFunction("set", 0xbbbbbbbbbbbbL);
+        Block b8_ = bc.createForkBlock(b7);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot());
+        Block b9_ = bc.createForkBlock(b8_);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot());
+
+        Block b9 = bc.createForkBlock(b8);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b9.getStateRoot(), b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot());
+        Block b10 = bc.createForkBlock(b9);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b10.getStateRoot(), b9.getStateRoot(), b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot());
+
+
+        Block b11 = bc.createForkBlock(b10);
+        Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
+        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
+
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
+                b11.getStateRoot(), b10.getStateRoot(), b9.getStateRoot(), /*b9_.getStateRoot(),*/ b8.getStateRoot());
     }
 
     @Test
@@ -293,7 +434,7 @@ public class PruneTest {
             contr.callFunction("set", i);
             bc.createBlock();
             blockchain.flush();
-            System.out.println(bc.getStorageDS().getSize() + ", " + bc.getStateDS().getSize());
+            System.out.println(bc.getStorageDS().getSize() + ", " + bc.getStateDS().getStorage().size());
         }
 
         System.out.println("Done");
@@ -333,18 +474,88 @@ public class PruneTest {
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
     }
 
-    public Set<ByteArrayWrapper> getReferencedTrieNodes(KeyValueDataSource stateDS, byte[] ... roots) {
+    public void checkPruning(final MapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS, byte[] ... roots) {
+        System.out.println("Pruned storage size: " + stateDS.getStorage().size());
+
+        Set<ByteArrayWrapper> allRefs = new HashSet<>();
+        for (byte[] root : roots) {
+
+            Set<ByteArrayWrapper> bRefs = getReferencedTrieNodes(stateJournalDS, true, root);
+            System.out.println("#" + Hex.toHexString(root).substring(0,8) + " refs: ");
+            for (ByteArrayWrapper bRef : bRefs) {
+                System.out.println("    " + bRef.toString().substring(0, 8));
+            }
+            allRefs.addAll(bRefs);
+        }
+
+        System.out.println("Trie nodes closure size: " + allRefs.size());
+        if (allRefs.size() != stateDS.getStorage().size()) {
+            for (byte[] hash : stateDS.getStorage().keySet()) {
+                if (!allRefs.contains(new ByteArrayWrapper(hash))) {
+                    System.out.println("Extra node: " + Hex.toHexString(hash));
+                }
+            }
+//            Assert.assertEquals(allRefs.size(), stateDS.getStorage().size());
+        }
+
+        for (byte[] key : stateDS.getStorage().keySet()) {
+//            Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
+        }
+    }
+
+    public Set<ByteArrayWrapper> getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
+                                                        byte[] ... roots) {
         final Set<ByteArrayWrapper> ret = new HashSet<>();
-        SecureTrie trie = new SecureTrie(stateDS);
+        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer));
         for (byte[] root : roots) {
             trie.scanTree(root, new TrieImpl.ScanAction() {
                 @Override
                 public void doOnNode(byte[] hash, Value node) {
                     ret.add(new ByteArrayWrapper(hash));
                 }
+
+                @Override
+                public void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value) {
+                    if (includeAccounts) {
+                        AccountState accountState = new AccountState(value);
+                        if (!FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH)) {
+                            ret.add(new ByteArrayWrapper(accountState.getCodeHash()));
+                        }
+                        if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
+                            ret.addAll(getReferencedTrieNodes(stateDS, false, accountState.getStateRoot()));
+                        }
+                    }
+                }
             });
         }
         return ret;
     }
-*/
+
+    public String dumpState(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
+                                                        byte[] root) {
+        final StringBuilder ret = new StringBuilder();
+        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer));
+        trie.scanTree(root, new TrieImpl.ScanAction() {
+            @Override
+            public void doOnNode(byte[] hash, Value node) {
+            }
+
+            @Override
+            public void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value) {
+                if (includeAccounts) {
+                    AccountState accountState = new AccountState(value);
+                    ret.append(Hex.toHexString(nodeHash) + ": Account: " + Hex.toHexString(key) + ", Nonce: " + accountState.getNonce() + ", Balance: " + accountState.getBalance() + "\n");
+                    if (!FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH)) {
+                        ret.append("    CodeHash: " + Hex.toHexString(accountState.getCodeHash()) + "\n");
+                    }
+                    if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
+                        ret.append(dumpState(stateDS, false, accountState.getStateRoot()));
+                    }
+                } else {
+                    ret.append("    " + Hex.toHexString(nodeHash) + ": " + Hex.toHexString(key) + " = " + Hex.toHexString(value) + "\n");
+                }
+            }
+        });
+        return ret.toString();
+    }
 }

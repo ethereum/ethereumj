@@ -5,8 +5,8 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.*;
+import org.ethereum.db.PruneManager;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -49,9 +49,16 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long totalDbHits = 0;
     List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
+
+    long time = 0;
+    long timeIncrement = 13;
+
     private HashMapDB detailsDS;
     private HashMapDB storageDS;
-    private MapDB stateDS;
+    private MapDB<byte[]> stateDS;
+    JournalBytesSource pruningStateDS;
+    PruneManager pruneManager;
+
     private BlockSummary lastSummary;
 
     class PendingTx {
@@ -205,7 +212,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         try {
             Map<PendingTx, Transaction> txes = createTransactions(parent);
 
-            Block b = getBlockchain().createNewBlock(parent, new ArrayList<>(txes.values()), Collections.EMPTY_LIST);
+            time += timeIncrement;
+            Block b = getBlockchain().createNewBlock(parent, new ArrayList<>(txes.values()), Collections.EMPTY_LIST, time);
 
             int GAS_LIMIT_BOUND_DIVISOR = SystemProperties.getDefault().getBlockchainConfig().
                     getCommonConstants().getGAS_LIMIT_BOUND_DIVISOR();
@@ -219,6 +227,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);
             }
+            pruneManager.blockCommitted(b.getHeader());
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
             for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
@@ -361,8 +370,12 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    public MapDB getStateDS() {
+    public MapDB<byte[]> getStateDS() {
         return stateDS;
+    }
+
+    public Source<byte[], byte[]> getPruningStateDS() {
+        return pruningStateDS;
     }
 
     public HashMapDB getDetailsDS() {
@@ -383,8 +396,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         detailsDS = new SlowHashMapDB();
         storageDS = new SlowHashMapDB();
-        stateDS = new MapDB();
-        RepositoryRoot repository = new RepositoryRoot(stateDS);
+        stateDS = new MapDB<>();
+        pruningStateDS = new JournalBytesSource(new CountingBytesSource(stateDS));
+        pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
+
+        RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
@@ -419,6 +435,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+
+        pruneManager.blockCommitted(genesis.getHeader());
 
         return blockchain;
     }

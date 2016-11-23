@@ -204,56 +204,6 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         throw new RuntimeException("Not supported");
     }
 
-    static class AccountStateSerializer implements Serializer<AccountState, byte[]> {
-        @Override
-        public byte[] serialize(AccountState object) {
-            return object.getEncoded();
-        }
-
-        @Override
-        public AccountState deserialize(byte[] stream) {
-            return stream == null || stream.length == 0 ? null : new AccountState(stream);
-        }
-    }
-
-    static class WordSerializer implements Serializer<DataWord, byte[]> {
-        @Override
-        public byte[] serialize(DataWord object) {
-            return object.getData();
-        }
-
-        @Override
-        public DataWord deserialize(byte[] stream) {
-            return new DataWord(stream);
-        }
-    }
-
-    static class TrieWordSerializer implements Serializer<DataWord, byte[]> {
-        @Override
-        public byte[] serialize(DataWord object) {
-            return RLP.encodeElement(object.getNoLeadZeroesData());
-        }
-
-        @Override
-        public DataWord deserialize(byte[] stream) {
-            if (stream == null || stream.length == 0) return null;
-            byte[] dataDecoded = RLP.decode2(stream).get(0).getRLPData();
-            return new DataWord(dataDecoded);
-        }
-    }
-
-    public static class TrieCacheSerializer implements Serializer<Value, byte[]> {
-        @Override
-        public byte[] serialize(Value object) {
-            return object.encode();
-        }
-
-        @Override
-        public Value deserialize(byte[] stream) {
-            return Value.fromRlpEncoded(stream);
-        }
-    }
-
     class ContractDetailsImpl implements ContractDetails {
         private byte[] address;
 

@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.db.PruneManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.db.BlockStore;
@@ -98,7 +99,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     private Repository repository;
-    private Repository track;
 
     @Autowired
     protected BlockStore blockStore;
@@ -133,6 +133,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     SyncManager syncManager;
+
+    @Autowired
+    PruneManager pruneManager;
 
     SystemProperties config = SystemProperties.getDefault();
 
@@ -453,11 +456,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
-
-        // adjust time to parent block this may happen due to system clocks difference
         long time = System.currentTimeMillis() / 1000 + 10;
+        // adjust time to parent block this may happen due to system clocks difference
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
+        return createNewBlock(parent, txs, uncles, time);
+    }
+
+    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
         Block block = new Block(parent.getHash(),
                 EMPTY_LIST_HASH, // uncleHash
                 minerCoinbase,
@@ -949,9 +955,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
 
-        // TODO (pruning)
-//        ((RepositoryImpl) repository).commitBlock(block.getHeader());
-//        repository.commit();
+        pruneManager.blockCommitted(block.getHeader());
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
@@ -1063,14 +1067,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public void setProgramInvokeFactory(ProgramInvokeFactory factory) {
         this.programInvokeFactory = factory;
-    }
-
-    public void startTracking() {
-        track = repository.startTracking();
-    }
-
-    public void commitTracking() {
-        track.commit();
     }
 
     public void setExitOn(long exitOn) {

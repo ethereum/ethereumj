@@ -2,7 +2,6 @@ package org.ethereum.trie;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.*;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -43,8 +42,18 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    private Source<byte[], Value> mockDb = new MapDB();
-    private Source<byte[], Value> mockDb_2 = new MapDB();
+    class NoDoubleDeleteMapDB extends MapDB<Value> {
+        @Override
+        public synchronized void delete(byte[] key) {
+            if (storage.get(key) == null) {
+                throw new RuntimeException("Trying delete non-existing entry: " + Hex.toHexString(key));
+            }
+            super.delete(key);
+        }
+    };
+
+    private Source<byte[], Value> mockDb = new NoDoubleDeleteMapDB();
+    private Source<byte[], Value> mockDb_2 = new NoDoubleDeleteMapDB();
 
 //      ROOT: [ '\x16', A ]
 //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
@@ -794,7 +803,7 @@ public class TrieTest {
         // TEST: load trie out of this run up to block#33
         byte[] rootNode = Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7");
         TrieImpl trie = new TrieImpl(
-                new SourceCodec<>(dataSource, new Serializer.IdentitySerializer<byte[]>(), new RepositoryImpl.TrieCacheSerializer()), rootNode);
+                new SourceCodec<>(dataSource, new Serializer.IdentitySerializer<byte[]>(), Serializers.TrieCacheSerializer), rootNode);
 
         // first key added in genesis
         byte[] val1 = trie.get(Hex.decode("51ba59315b3a95761d0863b05ccc7a7f54703d99"));

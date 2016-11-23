@@ -19,7 +19,7 @@ public class RepositoryRoot extends RepositoryImpl {
         Trie<byte[]> trie;
 
         public StorageCache(byte[] accountAddress, Trie<byte[]> trie) {
-            super(new SourceCodec<>(trie, new WordSerializer(), new TrieWordSerializer()));
+            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer));
             this.accountAddress = accountAddress;
             this.trie = trie;
         }
@@ -57,7 +57,6 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     private Source<byte[], byte[]> stateDS;
-    private CachedSource.BytesKey<byte[]> snapshotCache;
     private CachedSource.BytesKey<Value> trieCache;
     private TrieImpl stateTrie;
 
@@ -65,22 +64,32 @@ public class RepositoryRoot extends RepositoryImpl {
         this(stateDS, null);
     }
 
+    /**
+     * Building the following structure for snapshot Repository:
+     *
+     * stateDS --> trieCache --> stateTrie --> accountStateCodec --> accountStateCache
+     *  \               \
+     *   \               \-->>>  contractStorageTrie --> storageCodec --> StorageCache
+     *    \--> codeCache
+     *
+     *
+     * @param stateDS
+     * @param root
+     */
     public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root) {
         this.stateDS = stateDS;
-        snapshotCache = new CachedSourceImpl.BytesKey<>(stateDS);
 
-        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(snapshotCache, new TrieCacheSerializer());
-        trieCache = new CachedSourceImpl.BytesKey<Value>(trieCacheCodec) {{
-                withCacheReads(false);
-                withNoDelete(true);
-            }};
+        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer);
+        trieCache = new CountingCachedSource<>(trieCacheCodec);
         stateTrie = createTrie(trieCache, root);
 
-        SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, new AccountStateSerializer());
+        SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, Serializers.AccountStateSerializer);
         final CachedSource.BytesKey<AccountState> accountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCodec);
-        CachedSource.BytesKey<byte[]> codeCache = new CachedSourceImpl.BytesKey<>(snapshotCache);
 
         final MultiCache<StorageCache> storageCache = new MultiStorageCache();
+
+        // counting as there can be 2 contracts with the same code, 1 can suicide
+        Source<byte[], byte[]> codeCache = new CountingCachedSource<>(stateDS);
 
         init(accountStateCache, codeCache, storageCache);
     }
@@ -90,12 +99,13 @@ public class RepositoryRoot extends RepositoryImpl {
         super.commit();
 
         trieCache.flush();
-        snapshotCache.flush();
     }
 
     @Override
     public byte[] getRoot() {
-        super.commit();
+        storageCache.flush();
+        accountStateCache.flush();
+
         return stateTrie.getRootHash();
     }
 
