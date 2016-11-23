@@ -68,7 +68,7 @@ public class CallTransaction {
         }
     }
 
-    enum FunctionType {
+    public enum FunctionType {
         constructor,
         function,
         event,

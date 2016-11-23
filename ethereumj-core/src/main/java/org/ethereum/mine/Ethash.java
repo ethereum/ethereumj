@@ -17,6 +17,7 @@ import java.util.concurrent.*;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.mine.MinerIfc.MiningResult;
 
 /**
  * More high level validator/miner class which keeps a cache for the last requested block epoch
@@ -165,7 +166,7 @@ public class Ethash {
                 longToBytes(nonce));
     }
 
-    public ListenableFuture<Long> mine(final Block block) {
+    public ListenableFuture<MiningResult> mine(final Block block) {
         return mine(block, 1);
     }
 
@@ -180,18 +181,20 @@ public class Ethash {
      *  @param nThreads CPU threads to mine on
      *  @return the task which may be cancelled. On success returns nonce
      */
-    public ListenableFuture<Long> mine(final Block block, int nThreads) {
-        return new MineTask(block, nThreads,  new Callable<Long>() {
+    public ListenableFuture<MiningResult> mine(final Block block, int nThreads) {
+        return new MineTask(block, nThreads,  new Callable<MiningResult>() {
             @Override
-            public Long call() throws Exception {
-                return getEthashAlgo().mine(getFullSize(), getFullDataset(),
+            public MiningResult call() throws Exception {
+                long nonce = getEthashAlgo().mine(getFullSize(), getFullDataset(),
                         sha3(block.getHeader().getEncodedWithoutNonce()),
                         ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()));
+                final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
+                return new MiningResult(nonce, pair.getLeft(), block);
             }
         }).submit();
     }
 
-    public ListenableFuture<Long> mineLight(final Block block) {
+    public ListenableFuture<MiningResult> mineLight(final Block block) {
         return mineLight(block, 1);
     }
 
@@ -206,13 +209,15 @@ public class Ethash {
      *  @param nThreads CPU threads to mine on
      *  @return the task which may be cancelled. On success returns nonce
      */
-    public ListenableFuture<Long> mineLight(final Block block, int nThreads) {
-        return new MineTask(block, nThreads,  new Callable<Long>() {
+    public ListenableFuture<MiningResult> mineLight(final Block block, int nThreads) {
+        return new MineTask(block, nThreads,  new Callable<MiningResult>() {
             @Override
-            public Long call() throws Exception {
-                return getEthashAlgo().mineLight(getFullSize(), getCacheLight(),
+            public MiningResult call() throws Exception {
+                final long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(),
                         sha3(block.getHeader().getEncodedWithoutNonce()),
                         ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()));
+                final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
+                return new MiningResult(nonce, pair.getLeft(), block);
             }
         }).submit();
     }
@@ -227,12 +232,12 @@ public class Ethash {
         return FastByteComparisons.compareTo(hash, 0, 32, boundary, 0, 32) < 0;
     }
 
-    class MineTask extends AnyFuture<Long> {
+    class MineTask extends AnyFuture<MiningResult> {
         Block block;
         int nThreads;
-        Callable<Long> miner;
+        Callable<MiningResult> miner;
 
-        public MineTask(Block block, int nThreads, Callable<Long> miner) {
+        public MineTask(Block block, int nThreads, Callable<MiningResult> miner) {
             this.block = block;
             this.nThreads = nThreads;
             this.miner = miner;
@@ -240,16 +245,16 @@ public class Ethash {
 
         public MineTask submit() {
             for (int i = 0; i < nThreads; i++) {
-                ListenableFuture<Long> f = executor.submit(miner);
+                ListenableFuture<MiningResult> f = executor.submit(miner);
                 add(f);
             }
             return this;
         }
 
         @Override
-        protected void postProcess(Long nonce) {
-            Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
-            block.setNonce(longToBytes(nonce));
+        protected void postProcess(MiningResult result) {
+            Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), result.nonce);
+            block.setNonce(longToBytes(result.nonce));
             block.setMixHash(pair.getLeft());
         }
     }
