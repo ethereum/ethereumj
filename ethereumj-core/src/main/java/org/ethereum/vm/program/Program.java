@@ -563,6 +563,8 @@ public class Program {
 
                 internalTx.reject();
                 result.rejectInternalTransactions();
+                // In this case we should reject LogInfo's too
+                result.rejectLogInfos();
 
                 track.rollback();
                 stackPushZero();
