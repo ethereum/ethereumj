@@ -405,9 +405,9 @@ public class Program {
         track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
-        track.addBalance(senderAddress, endowment.negate());
         BigInteger newBalance = ZERO;
         if (!byTestingSuite()) {
+            track.addBalance(senderAddress, endowment.negate());
             newBalance = track.addBalance(newAddress, endowment);
         }
 
@@ -462,7 +462,8 @@ public class Program {
             return;
         }
 
-        track.commit();
+        if (!byTestingSuite())
+            track.commit();
         getResult().addDeleteAccounts(result.getDeleteAccounts());
         getResult().addLogInfos(result.getLogInfoList());
 
@@ -523,7 +524,6 @@ public class Program {
         // FETCH THE CODE
         byte[] programCode = getStorage().isExist(codeAddress) ? getStorage().getCode(codeAddress) : EMPTY_BYTE_ARRAY;
 
-        track.addBalance(senderAddress, endowment.negate());
 
         BigInteger contextBalance = ZERO;
         if (byTestingSuite()) {
@@ -532,6 +532,7 @@ public class Program {
                     msg.getGas().getNoLeadZeroesData(),
                     msg.getEndowment().getNoLeadZeroesData());
         } else {
+            track.addBalance(senderAddress, endowment.negate());
             contextBalance = track.addBalance(contextAddress, endowment);
         }
 
@@ -566,6 +567,8 @@ public class Program {
                 track.rollback();
                 stackPushZero();
                 return;
+            } else if (byTestingSuite()) {
+                logger.info("Testing run, skipping storage diff listener");
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
