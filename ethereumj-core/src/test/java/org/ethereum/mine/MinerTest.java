@@ -1,4 +1,4 @@
-package org.ethereum.miner;
+package org.ethereum.mine;
 
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.tuple.Pair;
@@ -10,9 +10,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.mine.BlockMiner;
-import org.ethereum.mine.Ethash;
-import org.ethereum.mine.MinerListener;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.util.ByteUtil;

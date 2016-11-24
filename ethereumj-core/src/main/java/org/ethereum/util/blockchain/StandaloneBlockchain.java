@@ -412,6 +412,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 .withSyncManager(new SyncManager(null, null));
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
+        blockchain.setPruneManager(pruneManager);
 
         blockchain.byTest = true;
 

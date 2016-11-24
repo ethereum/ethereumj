@@ -36,17 +36,14 @@ public class BlockMiner {
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    @Autowired
-    public Blockchain blockchain;
+    private Blockchain blockchain;
+
+    private BlockStore blockStore;
 
     @Autowired
-    public BlockStore blockStore;
+    private Ethereum ethereum;
 
-    @Autowired
-    public Ethereum ethereum;
-
-    @Autowired
-    public PendingState pendingState;
+    protected PendingState pendingState;
 
     private CompositeEthereumListener listener;
 
@@ -69,9 +66,14 @@ public class BlockMiner {
     private int UNCLE_GENERATION_LIMIT;
 
     @Autowired
-    public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener) {
+    public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
+                      final Blockchain blockchain, final BlockStore blockStore,
+                      final PendingState pendingState) {
         this.listener = listener;
         this.config = config;
+        this.blockchain = blockchain;
+        this.blockStore = blockStore;
+        this.pendingState = pendingState;
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
         minGasPrice = config.getMineMinGasPrice();

@@ -1253,4 +1253,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         Block savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
     }
+
+    public void setPruneManager(PruneManager pruneManager) {
+        this.pruneManager = pruneManager;
+    }
 }

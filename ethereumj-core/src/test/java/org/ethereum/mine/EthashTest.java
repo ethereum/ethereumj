@@ -1,4 +1,4 @@
-package org.ethereum.miner;
+package org.ethereum.mine;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.TestUtils;
@@ -6,9 +6,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
-import org.ethereum.mine.Ethash;
-import org.ethereum.mine.EthashAlgo;
-import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.junit.*;
