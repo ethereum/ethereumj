@@ -160,28 +160,4 @@ public class GitHubVMTest {
         }
 
     }
-
-    @Test // Testing EIP-158 changes (EIP 155, EIP 160, EIP 161 instead of EIP 158)
-    public void testEIP158GitHub() throws ParseException {
-
-        String shacommit = "853333e7da312775fb8f32f2c2771b8578cd0d79";
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
-
-        List<String> fileNames = getFileNamesForTreeSha(shacommit);
-        List<String> includedFiles =
-                Arrays.asList(
-                        "VMTests/vmEnvironmentalInfoTest.json",
-                        "VMTests/vmIOandFlowOperationsTest.json",
-                        "VMTests/vmPushDupSwapTest.json",
-                        "VMTests/vmSystemOperationsTest.json"
-                );
-
-        for (String fileName : fileNames) {
-            if (!includedFiles.contains(fileName)) continue;
-            System.out.println("Running: " + fileName);
-            String json = JSONReader.loadJSONFromCommit(fileName, shacommit);
-            GitHubJSONTestSuite.runGitHubJsonVMTest(json);
-        }
-
-    }
 }

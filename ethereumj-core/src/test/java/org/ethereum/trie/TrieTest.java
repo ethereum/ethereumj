@@ -327,9 +327,9 @@ public class TrieTest {
     public void testDeleteCompletellyDiferentItems() {
         TrieImpl trie = new TrieImpl(mockDb);
 
-        String val_1 = "2a";
-        String val_2 = "09";
-        String val_3 = "a9";
+        String val_1 = "1000000000000000000000000000000000000000000000000000000000000000";
+        String val_2 = "2000000000000000000000000000000000000000000000000000000000000000";
+        String val_3 = "3000000000000000000000000000000000000000000000000000000000000000";
 
         trie.put(Hex.decode(val_1), Hex.decode(val_1));
         trie.put(Hex.decode(val_2), Hex.decode(val_2));
