@@ -325,9 +325,6 @@ public class FastSyncManager {
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
                 public boolean test(NodeHandler handler) {
-                    if ((handler.getNodeStatistics().getClientId().contains("Parity") ||
-                            handler.getNodeStatistics().getClientId().contains("parity")))
-                        return false;
                     if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
                         return false;
                     return true;
