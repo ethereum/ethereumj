@@ -2,13 +2,8 @@ package org.ethereum.trie;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.LevelDbDataSource;
-import org.ethereum.db.DatabaseImpl;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
 import org.ethereum.datasource.*;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -412,7 +407,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDb);
         byte[] rootHash1 = null;
         for (int i = 0; i < 11000; i++) {
-            trie.update(HashUtil.sha3(ByteUtil.intToBytes(i)), HashUtil.sha3(ByteUtil.intToBytes(i + 1000000)));
+            trie.put(HashUtil.sha3(ByteUtil.intToBytes(i)), HashUtil.sha3(ByteUtil.intToBytes(i + 1000000)));
             if (i == 10000) {
                 rootHash1 = trie.getRootHash();
             }
