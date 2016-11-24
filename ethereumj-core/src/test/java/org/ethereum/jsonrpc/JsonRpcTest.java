@@ -184,6 +184,13 @@ public class JsonRpcTest {
 
             String txHash3 = jsonRpc.eth_sendRawTransaction(TypeConverter.toJsonHex(rawTx.getEncoded()));
 
+            JsonRpc.CallArguments callArgs2= new JsonRpc.CallArguments();
+            callArgs2.to = receipt2.contractAddress;
+            callArgs2.data = TypeConverter.toJsonHex(CallTransaction.Function.fromSignature("num").encode());
+
+            String ret3 = jsonRpc.eth_call(callArgs2, "pending");
+            String ret4 = jsonRpc.eth_call(callArgs2, "latest");
+
             String hash3 = mineBlock();
 
             JsonRpc.BlockResult blockResult3 = jsonRpc.eth_getBlockByHash(hash3, true);
@@ -199,13 +206,13 @@ public class JsonRpcTest {
                     ((JsonRpc.LogFilterElement)logs[0]).data);
             assertEquals(0, jsonRpc.eth_getFilterLogs(filterId).length);
 
-            JsonRpc.CallArguments callArgs2= new JsonRpc.CallArguments();
-            callArgs2.to = receipt2.contractAddress;
-            callArgs2.data = TypeConverter.toJsonHex(CallTransaction.Function.fromSignature("num").encode());
             String ret1 = jsonRpc.eth_call(callArgs2, blockResult2.number);
             String ret2 = jsonRpc.eth_call(callArgs2, "latest");
+
             assertEquals("0x0000000000000000000000000000000000000000000000000000000000000000", ret1);
             assertEquals("0x0000000000000000000000000000000000000000000000000000000000000777", ret2);
+            assertEquals("0x0000000000000000000000000000000000000000000000000000000000000777", ret3);
+            assertEquals("0x0000000000000000000000000000000000000000000000000000000000000000", ret4);
         }
 
         String mineBlock() throws InterruptedException {
