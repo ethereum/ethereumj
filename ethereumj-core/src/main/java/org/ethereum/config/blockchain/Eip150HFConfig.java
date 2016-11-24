@@ -95,8 +95,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public boolean noEmptyAccounts() {
-        return parent.noEmptyAccounts();
+    public boolean eip161() {
+        return parent.eip161();
     }
 
     @Override

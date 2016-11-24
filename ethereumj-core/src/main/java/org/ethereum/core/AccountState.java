@@ -119,6 +119,13 @@ public class AccountState {
         return rlpEncoded;
     }
 
+    public boolean isEmpty() {
+        return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) &&
+                BigInteger.ZERO.equals(balance) &&
+                BigInteger.ZERO.equals(nonce);
+    }
+
+
     public String toString() {
         String ret = "  Nonce: " + this.getNonce().toString() + "\n" +
                 "  Balance: " + getBalance() + "\n" +

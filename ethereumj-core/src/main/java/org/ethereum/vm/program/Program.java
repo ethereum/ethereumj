@@ -7,6 +7,7 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
@@ -78,6 +79,7 @@ public class Program {
     private byte lastOp;
     private byte previouslyExecutedOp;
     private boolean stopped;
+    private ByteArraySet touchedAccounts = new ByteArraySet();
 
     private Set<Integer> jumpdest = new HashSet<>();
 
@@ -395,12 +397,12 @@ public class Program {
         Repository track = getStorage().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        if (track.isExist(newAddress)) {
-            BigInteger oldBalance = track.getBalance(newAddress);
-            track.createAccount(newAddress);
-            track.addBalance(newAddress, oldBalance);
-        } else
-            track.createAccount(newAddress);
+        BigInteger oldBalance = track.getBalance(newAddress);
+        track.createAccount(newAddress);
+        if (blockchainConfig.eip161()) {
+            track.increaseNonce(newAddress);
+        }
+        track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
         track.addBalance(senderAddress, endowment.negate());
@@ -459,6 +461,7 @@ public class Program {
 
         track.commit();
         getResult().addDeleteAccounts(result.getDeleteAccounts());
+        getResult().addLogInfos(result.getLogInfoList());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
@@ -547,6 +550,7 @@ public class Program {
 
             getTrace().merge(program.getTrace());
             getResult().merge(result);
+            touchedAccounts.addAll(program.getTouchedAccounts());
 
             if (result.getException() != null) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
@@ -555,8 +559,6 @@ public class Program {
 
                 internalTx.reject();
                 result.rejectInternalTransactions();
-                // In this case we should reject LogInfo's too
-                result.rejectLogInfos();
 
                 track.rollback();
                 stackPushZero();
@@ -622,7 +624,13 @@ public class Program {
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
-        getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), word1.clone(), word2.clone());
+        storageSave(word1.getData(), word2.getData());
+    }
+
+    public void storageSave(byte[] key, byte[] val) {
+        DataWord keyWord = new DataWord(key);
+        DataWord valWord = new DataWord(val);
+        getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), keyWord, valWord);
     }
 
     public byte[] getCode() {
@@ -666,7 +674,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(getGasLong());
+        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {
@@ -852,6 +860,14 @@ public class Program {
                 i += op.asInt() - OpCode.PUSH1.asInt() + 1;
             }
         }
+    }
+
+    public void touchAccount(byte[] addr) {
+        touchedAccounts.add(addr);
+    }
+
+    public Set<byte[]> getTouchedAccounts() {
+        return touchedAccounts;
     }
 
     static String formatBinData(byte[] binData, int startPC) {

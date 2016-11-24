@@ -28,7 +28,7 @@ public class Eip160HFConfig extends Eip150HFConfig {
     }
 
     @Override
-    public boolean noEmptyAccounts() {
+    public boolean eip161() {
         return true;
     }
 
@@ -40,6 +40,6 @@ public class Eip160HFConfig extends Eip150HFConfig {
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         if (!super.acceptTransactionSignature(tx)) return false;
-        return getChainId().equals(tx.getChainId());
+        return tx.getChainId() == null || getChainId().equals(tx.getChainId());
     }
 }
