@@ -227,7 +227,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);
             }
-            pruneManager.blockCommitted(b.getHeader());
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
             for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
