@@ -743,6 +743,45 @@ public class ImportLightTest {
 
 
 
+    @Test
+    public void suicideInFailedCall() throws Exception {
+        // check that if a contract is suicide in call which is failed (thus suicide is reverted)
+        // the refund for this suicide is not added
+        String contractA =
+                        "contract B {" +
+                        "  function f(){" +
+                        "    suicide(msg.sender);" +
+                        "  }" +
+                        "}" +
+                        "contract A {" +
+                        "  function f(){" +
+                        "    this.call(bytes4(sha3('bad()')));" +
+                        "  }" +
+                        "  function bad() {" +
+                        "    B b = new B();" +
+                        "    b.call(bytes4(sha3('f()')));" +
+                        "    throw;" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        final BigInteger[] refund = new BigInteger[1];
+        bc.addEthereumListener(new EthereumListenerAdapter() {
+            @Override
+            public void onTransactionExecuted(TransactionExecutionSummary summary) {
+                refund[0] = summary.getGasRefund();
+            }
+        });
+        a.callFunction("f");
+        bc.createBlock();
+
+        Assert.assertEquals(BigInteger.ZERO, refund[0]);
+
+        // no StackOverflowException
+    }
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB(), new HashMapDB());
