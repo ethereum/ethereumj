@@ -12,6 +12,7 @@ import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
@@ -51,6 +52,9 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     @Autowired
     SystemProperties config;
 
+    @Autowired
+    NodeManager nodeManager;
+
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
@@ -75,7 +79,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
         if (remoteId.length == 64) {
-            channel.setNode(remoteId);
+            channel.initWithNode(remoteId);
             initiate(ctx);
         } else {
             handshake = new EncryptionHandshake();
@@ -233,7 +237,6 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                 this.remoteId = new byte[compressed.length - 1];
                 System.arraycopy(compressed, 1, this.remoteId, 0, this.remoteId.length);
-                channel.setNode(remoteId);
 
                 final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
                 byteBufMsg.writeBytes(responsePacket);
@@ -257,15 +260,19 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                     throw new RuntimeException("The message type is not HELLO or DISCONNECT: " + message);
                 }
 
-                HelloMessage inboundHelloMessage = (HelloMessage) message;
+                final HelloMessage inboundHelloMessage = (HelloMessage) message;
+
+                // now we know both remote nodeId and port
+                // let's set node, that will cause registering node in NodeManager
+                channel.initWithNode(remoteId, inboundHelloMessage.getListenPort());
 
                 // Secret authentication finish here
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);
                 isHandshakeDone = true;
                 this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, inboundHelloMessage);
+                channel.getNodeStatistics().rlpxInHello.add();
             }
         }
-        channel.getNodeStatistics().rlpxInHello.add();
     }
 
     private byte[] readEIP8Packet(ByteBuf buffer, byte[] plainPacket) {
@@ -292,14 +299,6 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
-    }
-
-    /**
-     * Generate random Key (and thus NodeID) per channel for 'anonymous'
-     * connection (e.g. for peer discovery)
-     */
-    public void generateTempKey() {
-        myKey = new ECKey();
     }
 
     public byte[] getRemoteId() {

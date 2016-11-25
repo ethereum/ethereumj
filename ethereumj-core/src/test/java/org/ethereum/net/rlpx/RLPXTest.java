@@ -132,7 +132,6 @@ public class RLPXTest {
     }
 
 
-    @Ignore
     @Test
     public void test6() {
 

@@ -160,7 +160,7 @@ public class BasicSample implements Runnable {
     protected void waitForDiscovery() throws Exception {
         logger.info("Waiting for nodes discovery...");
 
-        int bootNodes = config.peerDiscoveryIPList().size() + 1; // +1: home node
+        int bootNodes = config.peerDiscoveryIPList().size();
         int cnt = 0;
         while(true) {
             Thread.sleep(cnt < 30 ? 300 : 5000);

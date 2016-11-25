@@ -145,38 +145,41 @@ public class NodeHandler {
             // will wait for Pong to assume this alive
             sendPing();
         }
-        if (newState == State.Alive) {
-            Node evictCandidate = nodeManager.table.addNode(this.node);
-            if (evictCandidate == null) {
-                newState = State.Active;
-            } else {
-                NodeHandler evictHandler = nodeManager.getNodeHandler(evictCandidate);
-                if (evictHandler.state != State.EvictCandidate) {
-                    evictHandler.challengeWith(this);
+        if (!node.isDiscoveryNode()) {
+            if (newState == State.Alive) {
+                Node evictCandidate = nodeManager.table.addNode(this.node);
+                if (evictCandidate == null) {
+                    newState = State.Active;
+                } else {
+                    NodeHandler evictHandler = nodeManager.getNodeHandler(evictCandidate);
+                    if (evictHandler.state != State.EvictCandidate) {
+                        evictHandler.challengeWith(this);
+                    }
                 }
             }
-        }
-        if (newState == State.Active) {
-            if (oldState == State.Alive) {
-                // new node won the challenge
-                nodeManager.table.addNode(node);
-            } else if (oldState == State.EvictCandidate) {
-                // nothing to do here the node is already in the table
-            } else {
-                // wrong state transition
+            if (newState == State.Active) {
+                if (oldState == State.Alive) {
+                    // new node won the challenge
+                    nodeManager.table.addNode(node);
+                } else if (oldState == State.EvictCandidate) {
+                    // nothing to do here the node is already in the table
+                } else {
+                    // wrong state transition
+                }
             }
-        }
-        if (newState == State.NonActive) {
-            if (oldState == State.EvictCandidate) {
-                // lost the challenge
-                // Removing ourselves from the table
-                nodeManager.table.dropNode(node);
-                // Congratulate the winner
-                replaceCandidate.changeState(State.Active);
-            } else if (oldState == State.Alive) {
-                // ok the old node was better, nothing to do here
-            } else {
-                // wrong state transition
+
+            if (newState == State.NonActive) {
+                if (oldState == State.EvictCandidate) {
+                    // lost the challenge
+                    // Removing ourselves from the table
+                    nodeManager.table.dropNode(node);
+                    // Congratulate the winner
+                    replaceCandidate.changeState(State.Active);
+                } else if (oldState == State.Alive) {
+                    // ok the old node was better, nothing to do here
+                } else {
+                    // wrong state transition
+                }
             }
         }
 
@@ -228,6 +231,8 @@ public class NodeHandler {
 //        logMessage(" ===> [FIND_NODE] " + this);
         getNodeStatistics().discoverInFind.add();
         List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
+        closest.add(nodeManager.homeNode);
+
         sendNeighbours(closest);
     }
 
