@@ -1,4 +1,4 @@
-package org.ethereum.miner;
+package org.ethereum.mine;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -6,22 +6,32 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
+import org.ethereum.db.PruneManager;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.mine.BlockMiner;
-import org.ethereum.mine.Ethash;
-import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.blockchain.LocalBlockchain;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.Resource;
 import java.math.BigInteger;
 
 import static java.util.Collections.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 
 /**
@@ -29,13 +39,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class ExternalMinerTest {
 
+    private StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(false);
+
+    private CompositeEthereumListener listener = new CompositeEthereumListener();
+
+    @Mock
+    private EthereumImpl ethereum;
+
+    @InjectMocks
+    @Resource
+    private BlockMiner blockMiner = new BlockMiner(SystemProperties.getDefault(), listener, bc.getBlockchain(),
+            bc.getBlockchain().getBlockStore(), bc.getPendingState());;
+
     @Before
     public void setup() {
-
-    }
-
-    @Test
-    public void externalMiner_shouldWork() throws Exception {
         SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
@@ -43,18 +60,20 @@ public class ExternalMinerTest {
             }
         }));
 
-        final StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(false);
+        // Initialize mocks created above
+        MockitoAnnotations.initMocks(this);
 
-        final CompositeEthereumListener listener = new CompositeEthereumListener();
-        final BlockMiner blockMiner = new BlockMiner(SystemProperties.getDefault(), listener);
-        blockMiner.blockchain = bc.getBlockchain();
-        blockMiner.blockStore = bc.getBlockchain().getBlockStore();
-        blockMiner.pendingState = bc.getPendingState();
-        blockMiner.ethereum = new EthereumImpl(SystemProperties.getDefault(), listener) {
-            public ImportResult addNewMinedBlock(Block block) {
+        when(ethereum.addNewMinedBlock(any(Block.class))).thenAnswer(new Answer<ImportResult>() {
+            @Override
+            public ImportResult answer(InvocationOnMock invocation) throws Throwable {
+                Block block = (Block) invocation.getArguments()[0];
                 return bc.getBlockchain().tryToConnect(block);
             }
-        };
+        });
+    }
+
+    @Test
+    public void externalMiner_shouldWork() throws Exception {
 
         final Block startBestBlock = bc.getBlockchain().getBestBlock();
 

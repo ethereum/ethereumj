@@ -218,7 +218,7 @@ public class TestRunner {
             String content = program.getTrace().asJsonString(true);
             saveProgramTraceFile(SystemProperties.getDefault(), testCase.getName(), content);
 
-            if (testCase.getPost().size() == 0) {
+            if (testCase.getPost() == null) {
                 if (!vmDidThrowAnEception) {
                     String output =
                             "VM was expected to throw an exception";
@@ -240,161 +240,164 @@ public class TestRunner {
                 logger.info("--------- POST --------");
 
                 /* 5. Assert Post values */
-                for (ByteArrayWrapper key : testCase.getPost().keySet()) {
+                if (testCase.getPost() != null) {
+                    for (ByteArrayWrapper key : testCase.getPost().keySet()) {
 
-                    AccountState accountState = testCase.getPost().get(key);
+                        AccountState accountState = testCase.getPost().get(key);
 
-                    long expectedNonce = accountState.getNonceLong();
-                    BigInteger expectedBalance = accountState.getBigIntegerBalance();
-                    byte[] expectedCode = accountState.getCode();
+                        long expectedNonce = accountState.getNonceLong();
+                        BigInteger expectedBalance = accountState.getBigIntegerBalance();
+                        byte[] expectedCode = accountState.getCode();
 
-                    boolean accountExist = (null != repository.getAccountState(key.getData()));
-                    if (!accountExist) {
-
-                        String output =
-                                String.format("The expected account does not exist. key: [ %s ]",
-                                        Hex.toHexString(key.getData()));
-                        logger.info(output);
-                        results.add(output);
-                        continue;
-                    }
-
-                    long actualNonce = repository.getNonce(key.getData()).longValue();
-                    BigInteger actualBalance = repository.getBalance(key.getData());
-                    byte[] actualCode = repository.getCode(key.getData());
-                    if (actualCode == null) actualCode = "".getBytes();
-
-                    if (expectedNonce != actualNonce) {
-
-                        String output =
-                                String.format("The nonce result is different. key: [ %s ],  expectedNonce: [ %d ] is actualNonce: [ %d ] ",
-                                        Hex.toHexString(key.getData()), expectedNonce, actualNonce);
-                        logger.info(output);
-                        results.add(output);
-                    }
-
-                    if (!expectedBalance.equals(actualBalance)) {
-
-                        String output =
-                                String.format("The balance result is different. key: [ %s ],  expectedBalance: [ %s ] is actualBalance: [ %s ] ",
-                                        Hex.toHexString(key.getData()), expectedBalance.toString(), actualBalance.toString());
-                        logger.info(output);
-                        results.add(output);
-                    }
-
-                    if (!Arrays.equals(expectedCode, actualCode)) {
-
-                        String output =
-                                String.format("The code result is different. account: [ %s ],  expectedCode: [ %s ] is actualCode: [ %s ] ",
-                                        Hex.toHexString(key.getData()),
-                                        Hex.toHexString(expectedCode),
-                                        Hex.toHexString(actualCode));
-                        logger.info(output);
-                        results.add(output);
-                    }
-
-                    // assert storage
-                    Map<DataWord, DataWord> storage = accountState.getStorage();
-                    for (DataWord storageKey : storage.keySet()) {
-
-                        byte[] expectedStValue = storage.get(storageKey).getData();
-
-                        ContractDetails contractDetails =
-                                program.getStorage().getContractDetails(accountState.getAddress());
-
-                        if (contractDetails == null) {
+                        boolean accountExist = (null != repository.getAccountState(key.getData()));
+                        if (!accountExist) {
 
                             String output =
-                                    String.format("Storage raw doesn't exist: key [ %s ], expectedValue: [ %s ]",
-                                            Hex.toHexString(storageKey.getData()),
-                                            Hex.toHexString(expectedStValue)
-                                    );
+                                    String.format("The expected account does not exist. key: [ %s ]",
+                                            Hex.toHexString(key.getData()));
                             logger.info(output);
                             results.add(output);
                             continue;
                         }
 
-                        DataWord actualValue = contractDetails.get(new DataWord(storageKey.getData()));
+                        long actualNonce = repository.getNonce(key.getData()).longValue();
+                        BigInteger actualBalance = repository.getBalance(key.getData());
+                        byte[] actualCode = repository.getCode(key.getData());
+                        if (actualCode == null) actualCode = "".getBytes();
 
-                        if (actualValue == null ||
-                                !Arrays.equals(expectedStValue, actualValue.getData())) {
+                        if (expectedNonce != actualNonce) {
 
                             String output =
-                                    String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
-                                            Hex.toHexString(storageKey.getData()),
-                                            Hex.toHexString(expectedStValue),
-                                            actualValue == null ? "" : Hex.toHexString(actualValue.getNoLeadZeroesData()));
+                                    String.format("The nonce result is different. key: [ %s ],  expectedNonce: [ %d ] is actualNonce: [ %d ] ",
+                                            Hex.toHexString(key.getData()), expectedNonce, actualNonce);
                             logger.info(output);
                             results.add(output);
                         }
-                    }
 
-                    /* asset logs */
-                    List<LogInfo> logResult = program.getResult().getLogInfoList();
+                        if (!expectedBalance.equals(actualBalance)) {
 
-                    Iterator<LogInfo> postLogs = logs.getIterator();
-                    int i = 0;
-                    while (postLogs.hasNext()) {
-
-                        LogInfo expectedLogInfo = postLogs.next();
-
-                        LogInfo foundLogInfo = null;
-                        if (logResult.size() > i)
-                            foundLogInfo = logResult.get(i);
-
-                        if (foundLogInfo == null) {
                             String output =
-                                    String.format("Expected log [ %s ]", expectedLogInfo.toString());
+                                    String.format("The balance result is different. key: [ %s ],  expectedBalance: [ %s ] is actualBalance: [ %s ] ",
+                                            Hex.toHexString(key.getData()), expectedBalance.toString(), actualBalance.toString());
                             logger.info(output);
                             results.add(output);
-                        } else {
-                            if (!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
+                        }
+
+                        if (!Arrays.equals(expectedCode, actualCode)) {
+
+                            String output =
+                                    String.format("The code result is different. account: [ %s ],  expectedCode: [ %s ] is actualCode: [ %s ] ",
+                                            Hex.toHexString(key.getData()),
+                                            Hex.toHexString(expectedCode),
+                                            Hex.toHexString(actualCode));
+                            logger.info(output);
+                            results.add(output);
+                        }
+
+                        // assert storage
+                        Map<DataWord, DataWord> storage = accountState.getStorage();
+                        for (DataWord storageKey : storage.keySet()) {
+
+                            byte[] expectedStValue = storage.get(storageKey).getData();
+
+                            ContractDetails contractDetails =
+                                    program.getStorage().getContractDetails(accountState.getAddress());
+
+                            if (contractDetails == null) {
+
                                 String output =
-                                        String.format("Expected address [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getAddress()), Hex.toHexString(foundLogInfo.getAddress()));
+                                        String.format("Storage raw doesn't exist: key [ %s ], expectedValue: [ %s ]",
+                                                Hex.toHexString(storageKey.getData()),
+                                                Hex.toHexString(expectedStValue)
+                                        );
+                                logger.info(output);
+                                results.add(output);
+                                continue;
+                            }
+
+                            Map<DataWord, DataWord> testStorage = contractDetails.getStorage();
+                            DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
+
+                            if (actualValue == null ||
+                                    !Arrays.equals(expectedStValue, actualValue.getData())) {
+
+                                String output =
+                                        String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
+                                                Hex.toHexString(storageKey.getData()),
+                                                Hex.toHexString(expectedStValue),
+                                                actualValue == null ? "" : Hex.toHexString(actualValue.getNoLeadZeroesData()));
                                 logger.info(output);
                                 results.add(output);
                             }
+                        }
 
-                            if (!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
-                                String output =
-                                        String.format("Expected data [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getData()), Hex.toHexString(foundLogInfo.getData()));
-                                logger.info(output);
-                                results.add(output);
-                            }
+                    /* asset logs */
+                        List<LogInfo> logResult = program.getResult().getLogInfoList();
 
-                            if (!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
-                                String output =
-                                        String.format("Expected bloom [ %s ], found [ %s ]",
-                                                Hex.toHexString(expectedLogInfo.getBloom().getData()),
-                                                Hex.toHexString(foundLogInfo.getBloom().getData()));
-                                logger.info(output);
-                                results.add(output);
-                            }
+                        Iterator<LogInfo> postLogs = logs.getIterator();
+                        int i = 0;
+                        while (postLogs.hasNext()) {
 
-                            if (expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
+                            LogInfo expectedLogInfo = postLogs.next();
+
+                            LogInfo foundLogInfo = null;
+                            if (logResult.size() > i)
+                                foundLogInfo = logResult.get(i);
+
+                            if (foundLogInfo == null) {
                                 String output =
-                                        String.format("Expected number of topics [ %d ], found [ %d ]",
-                                                expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
+                                        String.format("Expected log [ %s ]", expectedLogInfo.toString());
                                 logger.info(output);
                                 results.add(output);
                             } else {
-                                int j = 0;
-                                for (DataWord topic : expectedLogInfo.getTopics()) {
-                                    byte[] foundTopic = foundLogInfo.getTopics().get(j).getData();
+                                if (!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
+                                    String output =
+                                            String.format("Expected address [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getAddress()), Hex.toHexString(foundLogInfo.getAddress()));
+                                    logger.info(output);
+                                    results.add(output);
+                                }
 
-                                    if (!Arrays.equals(topic.getData(), foundTopic)) {
-                                        String output =
-                                                String.format("Expected topic [ %s ], found [ %s ]", Hex.toHexString(topic.getData()), Hex.toHexString(foundTopic));
-                                        logger.info(output);
-                                        results.add(output);
+                                if (!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
+                                    String output =
+                                            String.format("Expected data [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getData()), Hex.toHexString(foundLogInfo.getData()));
+                                    logger.info(output);
+                                    results.add(output);
+                                }
+
+                                if (!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
+                                    String output =
+                                            String.format("Expected bloom [ %s ], found [ %s ]",
+                                                    Hex.toHexString(expectedLogInfo.getBloom().getData()),
+                                                    Hex.toHexString(foundLogInfo.getBloom().getData()));
+                                    logger.info(output);
+                                    results.add(output);
+                                }
+
+                                if (expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
+                                    String output =
+                                            String.format("Expected number of topics [ %d ], found [ %d ]",
+                                                    expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
+                                    logger.info(output);
+                                    results.add(output);
+                                } else {
+                                    int j = 0;
+                                    for (DataWord topic : expectedLogInfo.getTopics()) {
+                                        byte[] foundTopic = foundLogInfo.getTopics().get(j).getData();
+
+                                        if (!Arrays.equals(topic.getData(), foundTopic)) {
+                                            String output =
+                                                    String.format("Expected topic [ %s ], found [ %s ]", Hex.toHexString(topic.getData()), Hex.toHexString(foundTopic));
+                                            logger.info(output);
+                                            results.add(output);
+                                        }
+
+                                        ++j;
                                     }
-
-                                    ++j;
                                 }
                             }
-                        }
 
-                        ++i;
+                            ++i;
+                        }
                     }
                 }
 

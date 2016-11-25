@@ -1,9 +1,6 @@
 package org.ethereum.config.net;
 
-import org.ethereum.config.blockchain.DaoHFConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.blockchain.*;
 
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
@@ -16,5 +13,6 @@ public class MainNetConfig extends AbstractNetConfig {
         add(1_150_000, new HomesteadConfig());
         add(1_920_000, new DaoHFConfig());
         add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
+        add(2_900_000, new Eip160HFConfig(new DaoHFConfig())); // TODO adjust after announcement
     }
 }

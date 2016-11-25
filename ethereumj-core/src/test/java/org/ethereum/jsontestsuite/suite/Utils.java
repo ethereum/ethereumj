@@ -33,6 +33,7 @@ public class Utils {
     public static byte[] parseData(String data) {
         if (data == null) return EMPTY_BYTE_ARRAY;
         if (data.startsWith("0x")) data = data.substring(2);
+        if (data.length() % 2 != 0) data = "0" + data;
         return Hex.decode(data);
     }
 

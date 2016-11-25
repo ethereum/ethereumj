@@ -24,10 +24,10 @@ import java.util.List;
  * Created by Anton Nashatyrev on 14.10.2016.
  */
 public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
-    private BlockchainConfig parent;
+    protected BlockchainConfig parent;
 
 
-    private static final GasCost NEW_GAS_COST = new GasCost() {
+    static class GasCostEip150HF extends GasCost {
         public int getBALANCE()             {     return 400;     }
         public int getEXT_CODE_SIZE()       {     return 700;     }
         public int getEXT_CODE_COPY()       {     return 700;     }
@@ -36,6 +36,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
         public int getSUICIDE()             {     return 5000;    }
         public int getNEW_ACCT_SUICIDE()    {     return 25000;   }
     };
+
+    private static final GasCost NEW_GAS_COST = new GasCostEip150HF();
 
     public Eip150HFConfig(BlockchainConfig parent) {
         this.parent = parent;
@@ -74,7 +76,7 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        return parent.acceptTransactionSignature(tx);
+        return parent.acceptTransactionSignature(tx) && tx.getChainId() == null;
     }
 
     @Override
@@ -93,6 +95,11 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
+    public boolean eip161() {
+        return parent.eip161();
+    }
+
+    @Override
     public GasCost getGasCost() {
         return NEW_GAS_COST;
     }
@@ -105,5 +112,10 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     @Override
     public Constants getCommonConstants() {
         return getConstants();
+    }
+
+    @Override
+    public Integer getChainId() {
+        return null;
     }
 }

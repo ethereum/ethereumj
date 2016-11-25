@@ -227,7 +227,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
             if (importResult != ImportResult.IMPORTED_BEST && importResult != ImportResult.IMPORTED_NOT_BEST) {
                 throw new RuntimeException("Invalid block import result " + importResult + " for block " + b);
             }
-            pruneManager.blockCommitted(b.getHeader());
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
             for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
@@ -249,7 +248,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
         Transaction transaction = new Transaction(ByteUtil.longToBytesNoLeadZeroes(nonce),
                 ByteUtil.longToBytesNoLeadZeroes(gasPrice),
                 ByteUtil.longToBytesNoLeadZeroes(gasLimit),
-                toAddress, ByteUtil.bigIntegerToBytes(value), data);
+                toAddress, ByteUtil.bigIntegerToBytes(value),
+                data,
+                null);
         transaction.sign(sender);
         return transaction;
     }
@@ -410,6 +411,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 .withSyncManager(new SyncManager(null, null));
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
+        blockchain.setPruneManager(pruneManager);
 
         blockchain.byTest = true;
 

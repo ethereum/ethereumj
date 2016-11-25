@@ -7,6 +7,7 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
@@ -78,6 +79,7 @@ public class Program {
     private byte lastOp;
     private byte previouslyExecutedOp;
     private boolean stopped;
+    private ByteArraySet touchedAccounts = new ByteArraySet();
 
     private Set<Integer> jumpdest = new HashSet<>();
 
@@ -395,17 +397,17 @@ public class Program {
         Repository track = getStorage().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        if (track.isExist(newAddress)) {
-            BigInteger oldBalance = track.getBalance(newAddress);
-            track.createAccount(newAddress);
-            track.addBalance(newAddress, oldBalance);
-        } else
-            track.createAccount(newAddress);
+        BigInteger oldBalance = track.getBalance(newAddress);
+        track.createAccount(newAddress);
+        if (blockchainConfig.eip161()) {
+            track.increaseNonce(newAddress);
+        }
+        track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
-        track.addBalance(senderAddress, endowment.negate());
         BigInteger newBalance = ZERO;
         if (!byTestingSuite()) {
+            track.addBalance(senderAddress, endowment.negate());
             newBalance = track.addBalance(newAddress, endowment);
         }
 
@@ -439,6 +441,9 @@ public class Program {
             } else {
                 track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
             }
+        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                    storageCost, this));
         } else {
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
@@ -457,8 +462,10 @@ public class Program {
             return;
         }
 
-        track.commit();
+        if (!byTestingSuite())
+            track.commit();
         getResult().addDeleteAccounts(result.getDeleteAccounts());
+        getResult().addLogInfos(result.getLogInfoList());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
@@ -517,7 +524,6 @@ public class Program {
         // FETCH THE CODE
         byte[] programCode = getStorage().isExist(codeAddress) ? getStorage().getCode(codeAddress) : EMPTY_BYTE_ARRAY;
 
-        track.addBalance(senderAddress, endowment.negate());
 
         BigInteger contextBalance = ZERO;
         if (byTestingSuite()) {
@@ -526,6 +532,7 @@ public class Program {
                     msg.getGas().getNoLeadZeroesData(),
                     msg.getEndowment().getNoLeadZeroesData());
         } else {
+            track.addBalance(senderAddress, endowment.negate());
             contextBalance = track.addBalance(contextAddress, endowment);
         }
 
@@ -547,6 +554,7 @@ public class Program {
 
             getTrace().merge(program.getTrace());
             getResult().merge(result);
+            touchedAccounts.addAll(program.getTouchedAccounts());
 
             if (result.getException() != null) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
@@ -561,6 +569,8 @@ public class Program {
                 track.rollback();
                 stackPushZero();
                 return;
+            } else if (byTestingSuite()) {
+                logger.info("Testing run, skipping storage diff listener");
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
@@ -622,7 +632,13 @@ public class Program {
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
-        getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), word1.clone(), word2.clone());
+        storageSave(word1.getData(), word2.getData());
+    }
+
+    public void storageSave(byte[] key, byte[] val) {
+        DataWord keyWord = new DataWord(key);
+        DataWord valWord = new DataWord(val);
+        getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), keyWord, valWord);
     }
 
     public byte[] getCode() {
@@ -666,7 +682,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(getGasLong());
+        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {
@@ -852,6 +868,14 @@ public class Program {
                 i += op.asInt() - OpCode.PUSH1.asInt() + 1;
             }
         }
+    }
+
+    public void touchAccount(byte[] addr) {
+        touchedAccounts.add(addr);
+    }
+
+    public Set<byte[]> getTouchedAccounts() {
+        return touchedAccounts;
     }
 
     static String formatBinData(byte[] binData, int startPC) {

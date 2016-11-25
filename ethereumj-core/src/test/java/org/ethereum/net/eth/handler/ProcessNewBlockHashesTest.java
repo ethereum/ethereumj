@@ -2,6 +2,7 @@ package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.net.eth.message.NewBlockHashesMessage;
+import org.ethereum.net.server.Channel;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ public class ProcessNewBlockHashesTest {
 
         Eth62Tester() {
             this.syncDone = true;
+            this.channel = new Channel();
         }
 
         void setGetNewBlockHeadersParams(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {

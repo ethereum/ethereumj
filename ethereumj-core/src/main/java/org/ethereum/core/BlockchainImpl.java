@@ -590,7 +590,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
         }
 
-//        track.commit();
         repo.commit();
         updateTotalDifficulty(block);
         summary.setTotalDifficulty(getTotalDifficulty());
@@ -827,9 +826,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BlockSummary processBlock(Repository track, Block block) {
 
         if (!block.isGenesis() && !config.blockChainOnly()) {
-            // wallet.addTransactions(block.getTransactionsList());
             return applyBlock(track, block);
-            // wallet.processBlock(block);
         }
         else {
             return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
@@ -955,7 +952,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
         }
 
-        pruneManager.blockCommitted(block.getHeader());
+        if (pruneManager != null) {
+            pruneManager.blockCommitted(block.getHeader());
+        }
 
         logger.debug("Block saved: number: {}, hash: {}, TD: {}",
                 block.getNumber(), block.getShortHash(), totalDifficulty);
@@ -1253,5 +1252,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         byte[] root = repository.getRoot();
         Block savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
+    }
+
+    public void setPruneManager(PruneManager pruneManager) {
+        this.pruneManager = pruneManager;
     }
 }

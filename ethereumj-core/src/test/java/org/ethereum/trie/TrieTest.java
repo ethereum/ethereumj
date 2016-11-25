@@ -1,7 +1,9 @@
 package org.ethereum.trie;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -325,9 +327,9 @@ public class TrieTest {
     public void testDeleteCompletellyDiferentItems() {
         TrieImpl trie = new TrieImpl(mockDb);
 
-        String val_1 = "2a";
-        String val_2 = "09";
-        String val_3 = "a9";
+        String val_1 = "1000000000000000000000000000000000000000000000000000000000000000";
+        String val_2 = "2000000000000000000000000000000000000000000000000000000000000000";
+        String val_3 = "3000000000000000000000000000000000000000000000000000000000000000";
 
         trie.put(Hex.decode(val_1), Hex.decode(val_1));
         trie.put(Hex.decode(val_2), Hex.decode(val_2));
@@ -398,6 +400,24 @@ public class TrieTest {
         trie.delete(cat);
         assertEquals("", new String(trie.get(cat)));
         assertEquals(ROOT_HASH_AFTER2, Hex.toHexString(trie.getRootHash()));
+    }
+
+    @Test
+    public void testMassiveDelete() {
+        TrieImpl trie = new TrieImpl(mockDb);
+        byte[] rootHash1 = null;
+        for (int i = 0; i < 11000; i++) {
+            trie.put(HashUtil.sha3(ByteUtil.intToBytes(i)), HashUtil.sha3(ByteUtil.intToBytes(i + 1000000)));
+            if (i == 10000) {
+                rootHash1 = trie.getRootHash();
+            }
+        }
+        for (int i = 10001; i < 11000; i++) {
+            trie.delete(HashUtil.sha3(ByteUtil.intToBytes(i)));
+        }
+
+        byte[] rootHash2 = trie.getRootHash();
+        assertArrayEquals(rootHash1, rootHash2);
     }
 
     @Test

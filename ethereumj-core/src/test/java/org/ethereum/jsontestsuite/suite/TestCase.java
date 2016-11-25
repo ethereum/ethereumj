@@ -44,7 +44,7 @@ public class TestCase {
     private Map<ByteArrayWrapper, AccountState> pre = new HashMap<>();
 
     //            "post": { ... },
-    private Map<ByteArrayWrapper, AccountState> post = new HashMap<>();
+    private Map<ByteArrayWrapper, AccountState> post = null;
 
     //            "callcreates": { ... }
     private List<CallCreate> callCreateList = new ArrayList<>();
@@ -63,9 +63,13 @@ public class TestCase {
             JSONObject execJSON = (JSONObject) testCaseJSONObj.get("exec");
             JSONObject preJSON = (JSONObject) testCaseJSONObj.get("pre");
             JSONObject postJSON = new JSONObject();
-            if (testCaseJSONObj.containsKey("post")) // in cases where there is no post dictionary (when testing for
+            if (testCaseJSONObj.containsKey("post")) {
+                // in cases where there is no post dictionary (when testing for
                 // exceptions for example)
+                // there are cases with empty post state, they shouldn't be mixed up with no "post" entry
+                post = new HashMap<>();
                 postJSON = (JSONObject) testCaseJSONObj.get("post");
+            }
             JSONArray callCreates = new JSONArray();
             if (testCaseJSONObj.containsKey("callcreates"))
                 callCreates = (JSONArray) testCaseJSONObj.get("callcreates");

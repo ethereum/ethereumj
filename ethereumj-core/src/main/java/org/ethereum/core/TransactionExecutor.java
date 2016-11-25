@@ -1,11 +1,13 @@
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.*;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.ProgramResult;
@@ -37,11 +39,9 @@ public class TransactionExecutor {
     private static final Logger logger = LoggerFactory.getLogger("execute");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
-
-    @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
+    SystemProperties config;
+    CommonConfig commonConfig;
+    BlockchainConfig blockchainConfig;
 
     private Transaction tx;
     private Repository track;
@@ -69,6 +69,8 @@ public class TransactionExecutor {
     long basicTxCost = 0;
     List<LogInfo> logs = null;
 
+    private ByteArraySet touchedAccounts = new ByteArraySet();
+
     boolean localCall = false;
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
@@ -91,8 +93,15 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
+        setCommonConfig(CommonConfig.getDefault());
     }
 
+    @Autowired
+    private void setCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+        this.config = commonConfig.systemProperties();
+        this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber());
+    }
 
     private void execError(String err) {
         logger.warn(err);
@@ -149,8 +158,7 @@ public class TransactionExecutor {
             return;
         }
 
-        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                acceptTransactionSignature(tx)) {
+        if (!blockchainConfig.acceptTransactionSignature(tx)) {
             execError("Transaction signature not accepted: " + tx.getSignature());
             return;
         }
@@ -220,13 +228,23 @@ public class TransactionExecutor {
 
         BigInteger endowment = toBI(tx.getValue());
         transfer(cacheTrack, tx.getSender(), targetAddress, endowment);
+
+        touchedAccounts.add(targetAddress);
     }
 
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
+
+        //In case of hashing collisions (for TCK tests only), check for any balance before createAccount()
+        BigInteger oldBalance = track.getBalance(newContractAddress);
+        cacheTrack.createAccount(tx.getContractAddress());
+        cacheTrack.addBalance(newContractAddress, oldBalance);
+        if (blockchainConfig.eip161()) {
+            cacheTrack.increaseNonce(newContractAddress);
+        }
+
         if (isEmpty(tx.getData())) {
             m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
-            cacheTrack.createAccount(tx.getContractAddress());
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
@@ -244,6 +262,8 @@ public class TransactionExecutor {
 
         BigInteger endowment = toBI(tx.getValue());
         transfer(cacheTrack, tx.getSender(), newContractAddress, endowment);
+
+        touchedAccounts.add(newContractAddress);
     }
 
     public void go() {
@@ -264,18 +284,25 @@ public class TransactionExecutor {
 
                 if (tx.isContractCreation()) {
                     int returnDataGasValue = getLength(program.getResult().getHReturn()) *
-                            config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).getGasCost().getCREATE_DATA();
-                    if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
-                        m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
-                        cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
-                    } else {
-                        if (!config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber()).
-                                getConstants().createEmptyContractOnOOG()) {
+                            blockchainConfig.getGasCost().getCREATE_DATA();
+                    if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) < 0) {
+                        // Not enough gas to return contract code
+                        if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
                             program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                                     returnDataGasValue, program));
                             result = program.getResult();
                         }
                         result.setHReturn(EMPTY_BYTE_ARRAY);
+                    } else if (getLength(result.getHReturn()) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+                        // Contract size too large
+                        program.setRuntimeFailure(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                                returnDataGasValue, program));
+                        result = program.getResult();
+                        result.setHReturn(EMPTY_BYTE_ARRAY);
+                    } else {
+                        // Contract successfully created
+                        m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
+                        cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                     }
                 }
 
@@ -293,6 +320,8 @@ public class TransactionExecutor {
 
                     throw result.getException();
                 }
+
+                touchedAccounts.addAll(program.getTouchedAccounts());
             }
 
             cacheTrack.commit();
@@ -360,6 +389,7 @@ public class TransactionExecutor {
 
         // Transfer fees to miner
         track.addBalance(coinbase, summary.getFee());
+        touchedAccounts.add(coinbase);
         logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), summary.getFee());
 
         if (result != null) {
@@ -367,6 +397,15 @@ public class TransactionExecutor {
             // Traverse list of suicides
             for (DataWord address : result.getDeleteAccounts()) {
                 track.delete(address.getLast20Bytes());
+            }
+        }
+
+        if (blockchainConfig.eip161()) {
+            for (byte[] acctAddr : touchedAccounts) {
+                AccountState state = track.getAccountState(acctAddr);
+                if (state != null && state.isEmpty()) {
+                    track.delete(acctAddr);
+                }
             }
         }
 
