@@ -200,7 +200,7 @@ public class SyncManager {
                         // to get more chances to receive block body promptly
                         for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
-                            if (channel != null) {
+                            if (channel != null && channel.isIdle()) {
                                 channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
                             }
                         }
