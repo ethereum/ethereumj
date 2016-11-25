@@ -321,7 +321,6 @@ public class FastSyncManager {
 
             BlockHeader pivot = getPivotBlock();
 
-            // Temporary avoid Parity due to bug https://github.com/ethcore/parity/issues/2887
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
                 public boolean test(NodeHandler handler) {
