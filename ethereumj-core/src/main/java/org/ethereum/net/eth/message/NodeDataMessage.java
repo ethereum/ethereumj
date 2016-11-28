@@ -19,6 +19,7 @@ public class NodeDataMessage extends EthMessage {
 
     public NodeDataMessage(byte[] encoded) {
         super(encoded);
+        parse();
     }
 
     public NodeDataMessage(List<Value> dataList) {
@@ -55,7 +56,6 @@ public class NodeDataMessage extends EthMessage {
     }
 
     public List<Value> getDataList() {
-        if (!parsed) parse();
         return dataList;
     }
 
@@ -70,7 +70,6 @@ public class NodeDataMessage extends EthMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
 
         StringBuilder payload = new StringBuilder();
 

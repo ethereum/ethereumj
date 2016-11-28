@@ -31,7 +31,8 @@ public class ReceiptsMessage extends EthMessage {
         parsed = true;
     }
 
-    private void parse() {
+    private synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.receipts = new ArrayList<>();
@@ -79,7 +80,7 @@ public class ReceiptsMessage extends EthMessage {
 
 
     public List<List<TransactionReceipt>> getReceipts() {
-        if (!parsed) parse();
+        parse();
         return receipts;
     }
 
@@ -94,7 +95,7 @@ public class ReceiptsMessage extends EthMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
+        parse();
         final StringBuilder sb = new StringBuilder();
         if (receipts.size() < 4) {
             for (List<TransactionReceipt> blockReceipts : receipts)
