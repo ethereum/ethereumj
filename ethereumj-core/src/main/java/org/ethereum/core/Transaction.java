@@ -94,48 +94,8 @@ public class Transaction {
         parsed = false;
     }
 
-    /**
-     * @deprecated Use {@link Transaction#Transaction(byte[], byte[], byte[], byte[], byte[], byte[], Byte)} instead
-     * creation contract tx
-     * [ nonce, gasPrice, gasLimit, "", endowment, init, signature(v, r, s) ]
-     * or simple send tx
-     * [ nonce, gasPrice, gasLimit, receiveAddress, value, data, signature(v, r, s) ]
-     */
-    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data) {
-        this.nonce = nonce;
-        this.gasPrice = gasPrice;
-        this.gasLimit = gasLimit;
-        this.receiveAddress = receiveAddress;
-        this.value = value;
-        this.data = data;
-
-        if (receiveAddress == null) {
-            this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
-        }
-
-        parsed = true;
-    }
-
     public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
                        Byte chainId) {
-        this.nonce = nonce;
-        this.gasPrice = gasPrice;
-        this.gasLimit = gasLimit;
-        this.receiveAddress = receiveAddress;
-        this.value = value;
-        this.data = data;
-        this.chainId = chainId;
-
-        if (receiveAddress == null) {
-            this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
-        }
-
-        parsed = true;
-    }
-
-    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
-                       byte[] r, byte[] s, byte v) {
-        this.chainId = extractChainIdFromV(v);
         this.nonce = nonce;
         this.gasPrice = gasPrice;
         this.gasLimit = gasLimit;
@@ -146,14 +106,40 @@ public class Transaction {
             this.value = value;
         }
         this.data = data;
+        this.chainId = chainId;
 
         if (receiveAddress == null) {
             this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
         }
 
-        this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
         parsed = true;
     }
+
+    /**
+     * Warning: this transaction would not be protected by replay-attack protection mechanism
+     * Use {@link Transaction#Transaction(byte[], byte[], byte[], byte[], byte[], byte[], Byte)} constructor instead
+     * and specify the desired chainID
+     */
+    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data) {
+        this(nonce, gasPrice, gasLimit, receiveAddress, value, data, null);
+    }
+
+    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
+                       byte[] r, byte[] s, byte v, Byte chainId) {
+        this(nonce, gasPrice, gasLimit, receiveAddress, value, data, chainId);
+        this.signature = ECDSASignature.fromComponents(r, s, v);
+    }
+
+    /**
+     * Warning: this transaction would not be protected by replay-attack protection mechanism
+     * Use {@link Transaction#Transaction(byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte[], byte, Byte)}
+     * constructor instead and specify the desired chainID
+     */
+    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
+                       byte[] r, byte[] s, byte v) {
+        this(nonce, gasPrice, gasLimit, receiveAddress, value, data, r, s, v, null);
+    }
+
 
     private Byte extractChainIdFromV(byte v) {
         if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;
