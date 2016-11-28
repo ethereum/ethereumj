@@ -103,6 +103,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @PostConstruct
     void init() {
+        pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
+
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
 
@@ -110,11 +112,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         stateDS.init();
         stateDSCache = new CachingDataSource(stateDS);
         stateDSPrune = new JournalPruneDataSource(stateDSCache);
+        stateDSPrune.setPruneEnabled(pruneBlockCount >= 0);
 
         detailsDB = new DatabaseImpl(detailsDS);
         dds.setDB(detailsDB);
 
-        pruneBlockCount = pruneEnabled ? config.databasePruneDepth() : -1;
 
         worldState = createStateTrie();
     }

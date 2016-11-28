@@ -43,9 +43,14 @@ public class JournalPruneDataSource implements KeyValueDataSource {
     // block hash => updates
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
+    private boolean enabled = true;
 
     public JournalPruneDataSource(KeyValueDataSource src) {
         this.src = src;
+    }
+
+    public void setPruneEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     /*******  updates  *******/
@@ -53,17 +58,23 @@ public class JournalPruneDataSource implements KeyValueDataSource {
     public synchronized byte[] put(byte[] key, byte[] value) {
         ByteArrayWrapper keyW = new ByteArrayWrapper(key);
         if (value != null) {
-            currentUpdates.insertedKeys.add(keyW);
-            incRef(keyW);
+            if (enabled) {
+                currentUpdates.insertedKeys.add(keyW);
+                incRef(keyW);
+            }
             return src.put(key, value);
         } else {
-            currentUpdates.deletedKeys.add(keyW);
+            if (enabled) {
+                currentUpdates.deletedKeys.add(keyW);
+            }
             return value;
         }
     }
 
     public synchronized void delete(byte[] key) {
-        currentUpdates.deletedKeys.add(new ByteArrayWrapper(key));
+        if (enabled) {
+            currentUpdates.deletedKeys.add(new ByteArrayWrapper(key));
+        }
         // delete is delayed
     }
 
@@ -72,11 +83,15 @@ public class JournalPruneDataSource implements KeyValueDataSource {
         for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
             ByteArrayWrapper keyW = new ByteArrayWrapper(entry.getKey());
             if (entry.getValue() != null) {
-                currentUpdates.insertedKeys.add(keyW);
-                incRef(keyW);
+                if (enabled) {
+                    currentUpdates.insertedKeys.add(keyW);
+                    incRef(keyW);
+                }
                 insertsOnly.put(entry.getKey(), entry.getValue());
             } else {
-                currentUpdates.deletedKeys.add(keyW);
+                if (enabled) {
+                    currentUpdates.deletedKeys.add(keyW);
+                }
             }
         }
 
@@ -102,12 +117,14 @@ public class JournalPruneDataSource implements KeyValueDataSource {
     }
 
     public synchronized void storeBlockChanges(BlockHeader header) {
+        if (!enabled) return;
         currentUpdates.blockHeader = header;
         blockUpdates.put(new ByteArrayWrapper(header.getHash()), currentUpdates);
         currentUpdates = new Updates();
     }
 
     public synchronized void prune(BlockHeader header) {
+        if (!enabled) return;
         ByteArrayWrapper blockHashW = new ByteArrayWrapper(header.getHash());
         Updates updates = blockUpdates.remove(blockHashW);
         if (updates != null) {
