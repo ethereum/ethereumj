@@ -321,13 +321,9 @@ public class FastSyncManager {
 
             BlockHeader pivot = getPivotBlock();
 
-            // Temporary avoid Parity due to bug https://github.com/ethcore/parity/issues/2887
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
                 public boolean test(NodeHandler handler) {
-                    if ((handler.getNodeStatistics().getClientId().contains("Parity") ||
-                            handler.getNodeStatistics().getClientId().contains("parity")))
-                        return false;
                     if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
                         return false;
                     return true;

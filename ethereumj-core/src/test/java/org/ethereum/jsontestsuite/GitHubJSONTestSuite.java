@@ -7,7 +7,10 @@ import org.ethereum.jsontestsuite.suite.StateTestSuite;
 import org.ethereum.jsontestsuite.suite.TestCase;
 import org.ethereum.jsontestsuite.suite.TestRunner;
 import org.ethereum.jsontestsuite.suite.TestSuite;
+import org.ethereum.jsontestsuite.suite.TransactionTestCase;
+import org.ethereum.jsontestsuite.suite.TransactionTestSuite;
 import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
+import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -255,6 +258,57 @@ public class GitHubJSONTestSuite {
             logger.info(line);
 
             List<String> result = StateTestRunner.run(testCases.get(testName));
+            if (!result.isEmpty())
+                summary.put(testName, false);
+            else
+                summary.put(testName, true);
+        }
+
+        logger.info("Summary: ");
+        logger.info("=========");
+
+        int fails = 0; int pass = 0;
+        for (String key : summary.keySet()){
+
+            if (summary.get(key)) ++pass; else ++fails;
+            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
+                    replace(' ', '.').
+                    replace("^", " ");
+            logger.info(sumTest);
+        }
+
+        logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
+
+        Assert.assertTrue(fails == 0);
+    }
+
+    public static void runGitHubJsonTransactionTest(String json, Set<String> excluded) throws IOException, ParseException {
+
+        TransactionTestSuite transactionTestSuite = new TransactionTestSuite(json);
+        Map<String, TransactionTestCase> testCases = transactionTestSuite.getTestCases();
+        Map<String, Boolean> summary = new HashMap<>();
+
+
+        for (String testCase : testCases.keySet()) {
+            if ( excluded.contains(testCase))
+                logger.info(" [X] " + testCase);
+            else
+                logger.info("     " + testCase);
+        }
+
+        Set<String> testNames = transactionTestSuite.getTestCases().keySet();
+        for (String testName : testNames){
+
+            if (excluded.contains(testName)) continue;
+            String output = String.format("*  running: %s  *", testName);
+            String line = output.replaceAll(".", "*");
+
+            logger.info(line);
+            logger.info(output);
+            logger.info(line);
+
+            logger.info("==> Running test case: {}", testName);
+            List<String> result = TransactionTestRunner.run(testCases.get(testName));
             if (!result.isEmpty())
                 summary.put(testName, false);
             else

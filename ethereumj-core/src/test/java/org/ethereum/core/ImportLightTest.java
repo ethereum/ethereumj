@@ -19,6 +19,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -28,10 +29,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -742,6 +740,78 @@ public class ImportLightTest {
 
 
 
+
+    @Test
+    public void suicideInFailedCall() throws Exception {
+        // check that if a contract is suicide in call which is failed (thus suicide is reverted)
+        // the refund for this suicide is not added
+        String contractA =
+                        "contract B {" +
+                        "  function f(){" +
+                        "    suicide(msg.sender);" +
+                        "  }" +
+                        "}" +
+                        "contract A {" +
+                        "  function f(){" +
+                        "    this.call(bytes4(sha3('bad()')));" +
+                        "  }" +
+                        "  function bad() {" +
+                        "    B b = new B();" +
+                        "    b.call(bytes4(sha3('f()')));" +
+                        "    throw;" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        final BigInteger[] refund = new BigInteger[1];
+        bc.addEthereumListener(new EthereumListenerAdapter() {
+            @Override
+            public void onTransactionExecuted(TransactionExecutionSummary summary) {
+                refund[0] = summary.getGasRefund();
+            }
+        });
+        a.callFunction("f");
+        bc.createBlock();
+
+        Assert.assertEquals(BigInteger.ZERO, refund[0]);
+
+        // no StackOverflowException
+    }
+
+    @Test
+    public void logInFailedCall() throws Exception {
+        // check that if a contract is suicide in call which is failed (thus suicide is reverted)
+        // the refund for this suicide is not added
+        String contractA =
+                        "contract A {" +
+                        "  function f(){" +
+                        "    this.call(bytes4(sha3('bad()')));" +
+                        "  }" +
+                        "  function bad() {" +
+                        "    log0(1234);" +
+                        "    throw;" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        final List<LogInfo> logs = new ArrayList<>();
+        bc.addEthereumListener(new EthereumListenerAdapter() {
+            @Override
+            public void onTransactionExecuted(TransactionExecutionSummary summary) {
+                logs.addAll(summary.getLogs());
+            }
+        });
+        a.callFunction("f");
+        bc.createBlock();
+
+        Assert.assertEquals(0, logs.size());
+
+        // no StackOverflowException
+    }
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();

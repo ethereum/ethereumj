@@ -133,12 +133,6 @@ public class ProgramResult {
         }
     }
 
-    public void rejectLogInfos() {
-        for (LogInfo logInfo : getLogInfoList()) {
-            logInfo.reject();
-        }
-    }
-
     public void addFutureRefund(long gasValue) {
         futureRefund += gasValue;
     }
@@ -153,9 +147,11 @@ public class ProgramResult {
 
     public void merge(ProgramResult another) {
         addInternalTransactions(another.getInternalTransactions());
-        addDeleteAccounts(another.getDeleteAccounts());
-        addLogInfos(another.getLogInfoList());
-        addFutureRefund(another.getFutureRefund());
+        if (another.getException() == null) {
+            addDeleteAccounts(another.getDeleteAccounts());
+            addLogInfos(another.getLogInfoList());
+            addFutureRefund(another.getFutureRefund());
+        }
     }
     
     public static ProgramResult empty() {

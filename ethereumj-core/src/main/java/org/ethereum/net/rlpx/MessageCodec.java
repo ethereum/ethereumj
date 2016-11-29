@@ -12,6 +12,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
@@ -87,6 +88,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 //                    loggerNet.warn("No initial frame received for context-id: " + frame.contextId + ". Discarding this frame as invalid.");
                     // TODO: refactor this logic (Cpp sends non-chunked frames with context-id)
                     Message message = decodeMessage(ctx, Collections.singletonList(frame));
+                    if (message == null) return;
                     out.add(message);
                     return;
                 } else {
@@ -135,7 +137,14 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Recv: Encoded: {} [{}]", frameType, Hex.toHexString(payload));
 
-        Message msg = createMessage((byte) frameType, payload);
+        Message msg;
+        try {
+            msg = createMessage((byte) frameType, payload);
+        } catch (Exception ex) {
+            loggerNet.debug("Incorrectly encoded message from: \t{}, dropping peer", channel);
+            channel.disconnect(ReasonCode.BAD_PROTOCOL);
+            return null;
+        }
 
         if (loggerNet.isDebugEnabled())
             loggerNet.debug("From: \t{} \tRecv: \t{}", channel, msg.toString());

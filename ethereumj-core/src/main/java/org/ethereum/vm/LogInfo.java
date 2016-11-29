@@ -21,7 +21,6 @@ public class LogInfo {
     byte[] address = new byte[]{};
     List<DataWord> topics = new ArrayList<>();
     byte[] data = new byte[]{};
-    private boolean rejected = false;
 
     /* Log info in encoded form */
     private byte[] rlpEncoded;
@@ -82,14 +81,6 @@ public class LogInfo {
 
         byte[] dataEncoded = RLP.encodeElement(data);
         return RLP.encodeList(addressEncoded, RLP.encodeList(topicsEncoded), dataEncoded);
-    }
-
-    public boolean isRejected() {
-        return rejected;
-    }
-
-    public void reject() {
-        this.rejected = true;
     }
 
     public Bloom getBloom() {

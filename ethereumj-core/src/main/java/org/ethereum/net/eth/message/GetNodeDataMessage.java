@@ -33,7 +33,8 @@ public class GetNodeDataMessage extends EthMessage {
         this.parsed = true;
     }
 
-    private void parse() {
+    private synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.stateRoots = new ArrayList<>();
@@ -66,7 +67,7 @@ public class GetNodeDataMessage extends EthMessage {
     }
 
     public List<byte[]> getStateRoots() {
-        if (!parsed) parse();
+        parse();
         return stateRoots;
     }
 
@@ -76,7 +77,7 @@ public class GetNodeDataMessage extends EthMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
+        parse();
 
         StringBuilder payload = new StringBuilder();
 

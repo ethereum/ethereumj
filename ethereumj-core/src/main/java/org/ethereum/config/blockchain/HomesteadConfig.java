@@ -12,7 +12,7 @@ import java.math.BigInteger;
  */
 public class HomesteadConfig extends FrontierConfig {
 
-    private static final BigInteger SECP256K1N_HALF = Constants.getSECP256K1N().divide(BigInteger.valueOf(2));
+    static final BigInteger SECP256K1N_HALF = Constants.getSECP256K1N().divide(BigInteger.valueOf(2));
 
     public static class HomesteadConstants extends FrontierConstants {
         @Override
@@ -51,6 +51,6 @@ public class HomesteadConfig extends FrontierConfig {
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         if (!super.acceptTransactionSignature(tx)) return false;
-        return tx.getSignature().s.compareTo(SECP256K1N_HALF) < 0;
+        return tx.getSignature().s.compareTo(SECP256K1N_HALF) <= 0;
     }
 }

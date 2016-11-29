@@ -17,6 +17,7 @@ import org.ethereum.vm.program.Program;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static org.ethereum.util.BIUtil.max;
 
@@ -84,7 +85,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        return true;
+        return Objects.equals(tx.getChainId(), getChainId());
     }
 
     @Override
