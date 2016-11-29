@@ -137,4 +137,9 @@ public class RepositoryRoot extends RepositoryImpl {
     protected TrieImpl createTrie(CachedSource.BytesKey<Value> trieCache, byte[] root) {
         return new SecureTrie(trieCache, root);
     }
+
+    @Override
+    public void addRawNode(byte[] key, byte[] value) {
+        trieCache.put(key, Value.fromRlpEncoded(value));
+    }
 }

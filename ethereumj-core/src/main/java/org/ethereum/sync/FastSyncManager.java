@@ -41,7 +41,7 @@ public class FastSyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private final static long REQUEST_TIMEOUT = 5 * 1000;
-    private final static int REQUEST_MAX_NODES = 512;
+    private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
     private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
@@ -68,6 +68,9 @@ public class FastSyncManager {
     KeyValueDataSource stateDS = new HashMapDB();
 
     @Autowired
+    private Repository repository;
+
+    @Autowired
     FastSyncDownloader downloader;
 
     int nodesInserted = 0;
@@ -82,7 +85,7 @@ public class FastSyncManager {
                 try {
                     while (true) {
                         TrieNodeRequest request = dbWriteQueue.take();
-                        stateDS.put(request.nodeHash, request.response);
+                        repository.addRawNode(request.nodeHash, request.response);
                     }
                 } catch (Exception e) {
                     logger.error("Fatal FastSync error while writing data", e);
@@ -212,7 +215,7 @@ public class FastSyncManager {
     }
 
     boolean requestNextNodes(int cnt) {
-        final Channel idle = pool.getAnyIdle();
+        final Channel idle = pool.getAnyIdleAndLock(SyncState.NODE_RETRIEVING);
 
         if (idle != null) {
             final List<byte[]> hashes = new ArrayList<>();
@@ -271,6 +274,7 @@ public class FastSyncManager {
                 });
                 return true;
             } else {
+                idle.getEthHandler().setStatus(SyncState.IDLE);
                 return false;
             }
         } else {
@@ -330,6 +334,8 @@ public class FastSyncManager {
                 }
             });
 
+            downloader.startImporting(blockchain.getBestBlock().getHash(), pivot.getHash(), pivot.getDifficulty());
+
             byte[] pivotStateRoot = pivot.getStateRoot();
             TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
             nodesQueue.add(request);
@@ -345,16 +351,13 @@ public class FastSyncManager {
             last = 0;
             logStat();
 
+            repository.flush();
             if (stateDS instanceof Flushable) {
                 ((Flushable) stateDS).flush();
             }
-
             pool.setNodesSelector(null);
 
-            logger.info("FastSync: starting downloading ancestors of the pivot block: " + pivot.getShortDescr());
-            downloader.startImporting(pivot.getHash());
-            while (downloader.getDownloadedBlocksCount() < 256) {
-                // we need 256 previous blocks to correctly execute BLOCKHASH EVM instruction
+            while (!downloader.isDownloadComplete()) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -362,7 +365,7 @@ public class FastSyncManager {
                 }
             }
 
-            logger.info("FastSync: downloaded more than 256 ancestor blocks, proceeding with live sync");
+            logger.info("FastSync: downloaded all blocks, proceeding to regular sync");
 
             blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
         } else {
@@ -446,6 +449,10 @@ public class FastSyncManager {
 
                             logger.info("Pivot header fetched: " + ret.getShortDescr());
                             return ret;
+                        } else {
+                            logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");
+                            bestIdle.disconnect(ReasonCode.USELESS_PEER);
+                            continue;
                         }
                     } catch (TimeoutException e) {
                         logger.debug("Timeout waiting for answer", e);

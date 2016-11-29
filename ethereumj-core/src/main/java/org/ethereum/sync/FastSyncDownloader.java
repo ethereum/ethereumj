@@ -1,12 +1,11 @@
 package org.ethereum.sync;
 
 import org.ethereum.core.BlockWrapper;
-import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -28,6 +27,10 @@ public class FastSyncDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
+    private SyncQueueIfc syncQueueIfc;
+
+    private BigInteger cummDiff = BigInteger.ZERO;
+
     int counter;
     long t;
 
@@ -36,9 +39,11 @@ public class FastSyncDownloader extends BlockDownloader {
         super(headerValidator);
     }
 
-    public void startImporting(byte[] fromHash) {
-        SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
-        init(syncQueueReverse, syncPool);
+    public void startImporting(byte[] fromHash, byte[] endHash, byte[] baseDiff) {
+        cummDiff = cummDiff.add(ByteUtil.bytesToBigInteger(baseDiff));
+        SyncQueueForwardImpl syncQueueForward = new SyncQueueForwardImpl(fromHash, endHash);
+        syncQueueIfc = syncQueueForward;
+        init(syncQueueForward, syncPool);
     }
 
     @Override
@@ -46,7 +51,8 @@ public class FastSyncDownloader extends BlockDownloader {
         if (!blockWrappers.isEmpty()) {
 
             for (BlockWrapper blockWrapper : blockWrappers) {
-                blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
+                cummDiff = cummDiff.add(ByteUtil.bytesToBigInteger(blockWrapper.getBlock().getDifficulty()));
+                blockStore.saveBlock(blockWrapper.getBlock(), cummDiff, true);
             }
             counter += blockWrappers.size();
 
@@ -71,8 +77,7 @@ public class FastSyncDownloader extends BlockDownloader {
     }
 
     @Override
-    protected void downloadComplete() {
+    protected void finishDownload() {
         blockStore.flush();
-        blockStore.updateAllTotDifficulties();
     }
 }

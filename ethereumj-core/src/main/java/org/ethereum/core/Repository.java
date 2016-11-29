@@ -203,5 +203,8 @@ public interface Repository {
     Repository getSnapshotTo(byte[] root);
 
 
-
+    /**
+     * Adds raw Node data in state DS
+     */
+    void addRawNode(byte[] key, byte[] value);
 }

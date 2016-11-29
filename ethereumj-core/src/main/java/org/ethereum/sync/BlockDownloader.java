@@ -49,7 +49,7 @@ public abstract class BlockDownloader {
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
     protected abstract int getBlockQueueSize();
 
-    protected void downloadComplete() {}
+    protected void finishDownload() {}
 
     public boolean isDownloadComplete() {
         return downloadComplete;
@@ -163,8 +163,8 @@ public abstract class BlockDownloader {
 
                     if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
                         logger.info("Block download complete.");
+                        finishDownload();
                         downloadComplete = true;
-                        downloadComplete();
                         return;
                     }
 
