@@ -177,7 +177,7 @@ public class Eth63 extends Eth62 {
 
     @Override
     public synchronized boolean setStatus(SyncState syncState) {
-        if(!requestedNodes.isEmpty()) return false;
+        if(requestedNodes != null && !requestedNodes.isEmpty()) return false;
         return super.setStatus(syncState);
     }
 
