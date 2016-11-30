@@ -201,16 +201,14 @@ public class FastSyncManager {
         knownHashes.remove(req.nodeHash);
         nodesInserted++;
         for (TrieNodeRequest childRequest : req.createChildRequests()) {
-            if (!knownHashes.contains(childRequest.nodeHash) && stateDS.get(childRequest.nodeHash) == null) {
-                if (nodesQueue.size() > NODE_QUEUE_BEST_SIZE) {
-                    // reducing queue by traversing tree depth-first
-                    nodesQueue.addFirst(childRequest);
-                } else {
-                    // enlarging queue by traversing tree breadth-first
-                    nodesQueue.add(childRequest);
-                }
-                knownHashes.add(childRequest.nodeHash);
+            if (nodesQueue.size() > NODE_QUEUE_BEST_SIZE) {
+                // reducing queue by traversing tree depth-first
+                nodesQueue.addFirst(childRequest);
+            } else {
+                // enlarging queue by traversing tree breadth-first
+                nodesQueue.add(childRequest);
             }
+            knownHashes.add(childRequest.nodeHash);
         }
     }
 
@@ -451,6 +449,7 @@ public class FastSyncManager {
                             return ret;
                         } else {
                             logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");
+                            bestIdle.getNodeStatistics().wrongFork = true;
                             bestIdle.disconnect(ReasonCode.USELESS_PEER);
                             continue;
                         }
