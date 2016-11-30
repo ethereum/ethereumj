@@ -14,12 +14,15 @@ import org.ethereum.vm.DataWord;
  */
 public class RepositoryRoot extends RepositoryImpl {
 
-    private static class StorageCache extends CachedSourceImpl<DataWord, DataWord> {
+//    private static class StorageCache extends ReadWriteCache<DataWord, DataWord> {
+    private static class StorageCache extends ReadWriteCache<DataWord, DataWord> {
         byte[] accountAddress;
         Trie<byte[]> trie;
 
         public StorageCache(byte[] accountAddress, Trie<byte[]> trie) {
-            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer));
+//            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer),
+//                    WriteCache.CacheType.SIMPLE);
+            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer), WriteCache.CacheType.SIMPLE);
             this.accountAddress = accountAddress;
             this.trie = trie;
         }
@@ -67,9 +70,9 @@ public class RepositoryRoot extends RepositoryImpl {
     /**
      * Building the following structure for snapshot Repository:
      *
-     * stateDS --> trieCache --> stateTrie --> accountStateCodec --> accountStateCache
-     *  \               \
-     *   \               \-->>>  contractStorageTrie --> storageCodec --> StorageCache
+     * stateDS --> trieCacheCodec --> trieCache --> stateTrie --> accountStateCodec --> accountStateCache
+     *  \                               \
+     *   \                               \-->>>  contractStorageTrie --> storageCodec --> StorageCache
      *    \--> codeCache
      *
      *
@@ -80,16 +83,17 @@ public class RepositoryRoot extends RepositoryImpl {
         this.stateDS = stateDS;
 
         SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer);
-        trieCache = new CountingCachedSource<>(trieCacheCodec);
+        trieCache = new WriteCache.BytesKey<>(trieCacheCodec, WriteCache.CacheType.COUNTING);
         stateTrie = createTrie(trieCache, root);
 
         SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, Serializers.AccountStateSerializer);
-        final CachedSource.BytesKey<AccountState> accountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCodec);
+//        final CachedSource.BytesKey<AccountState> accountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCodec);
+        final ReadWriteCache.BytesKey<AccountState> accountStateCache = new ReadWriteCache.BytesKey<>(accountStateCodec, WriteCache.CacheType.SIMPLE);
 
         final MultiCache<StorageCache> storageCache = new MultiStorageCache();
 
         // counting as there can be 2 contracts with the same code, 1 can suicide
-        Source<byte[], byte[]> codeCache = new CountingCachedSource<>(stateDS);
+        Source<byte[], byte[]> codeCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
 
         init(accountStateCache, codeCache, storageCache);
     }

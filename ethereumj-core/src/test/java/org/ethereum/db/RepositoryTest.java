@@ -5,6 +5,8 @@ import org.ethereum.crypto.HashUtil;
 
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.Source;
 import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
@@ -861,7 +863,8 @@ public class RepositoryTest {
     @Test // testing for snapshot
     public void test20() {
 
-        MapDB stateDB = new MapDB();
+//        MapDB stateDB = new MapDB();
+        Source<byte[], byte[]> stateDB = new NoDeleteSource<>(new MapDB<byte[]>());
         RepositoryRoot repository = new RepositoryRoot(stateDB);
         byte[] root = repository.getRoot();
 
@@ -991,7 +994,7 @@ public class RepositoryTest {
             }
         }).start();
 
-        failSema.await(5, TimeUnit.SECONDS);
+        failSema.await(50, TimeUnit.SECONDS);
 
         if (failSema.getCount() == 0) {
             throw new RuntimeException("Test failed.");

@@ -22,7 +22,7 @@ public class RepoNewTest {
     @Test
     public void test1() throws Exception {
 
-        MapDB<byte[]> stateDb = new MapDB<>();
+        Source<byte[], byte[]> stateDb = new NoDeleteSource<>(new MapDB<byte[]>());
         RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         byte[] addr2 = decode("bbbb");
@@ -35,7 +35,7 @@ public class RepoNewTest {
         System.out.println(repo.dumpStateTrie());
 
         System.out.println("Root: " + toHexString(root1));
-        System.out.println("Storage size: " + stateDb.getStorage().size());
+//        System.out.println("Storage size: " + stateDb.getStorage().size());
 
         RepositoryRoot repo1 = new RepositoryRoot(stateDb, root1);
         Assert.assertEquals(repo1.getBalance(addr1), valueOf(1));
@@ -46,9 +46,10 @@ public class RepoNewTest {
         byte[] root2 = repo.getRoot();
 
         System.out.println("Root: " + toHexString(root2));
-        System.out.println("Storage size: " + stateDb.getStorage().size());
+//        System.out.println("Storage size: " + stateDb.getStorage().size());
 
         RepositoryRoot repo2 = new RepositoryRoot(stateDb, root1);
+        System.out.println(repo2.dumpStateTrie());
         Assert.assertEquals(repo2.getBalance(addr1), valueOf(1));
         Assert.assertEquals(repo2.getBalance(addr2), valueOf(10));
 

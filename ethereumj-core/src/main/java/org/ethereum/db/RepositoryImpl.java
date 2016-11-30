@@ -156,12 +156,13 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public RepositoryImpl startTracking() {
-        CachedSourceImpl.BytesKey<AccountState> trackAccountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCache);
-        CachedSourceImpl.BytesKey<byte[]> trackCodeCache = new CachedSourceImpl.BytesKey<>(codeCache);
+        Source<byte[], AccountState> trackAccountStateCache = new WriteCache.BytesKey<>(accountStateCache,
+                WriteCache.CacheType.SIMPLE);
+        Source<byte[], byte[]> trackCodeCache = new WriteCache.BytesKey<>(codeCache, WriteCache.CacheType.SIMPLE);
         MultiCache<CachedSource<DataWord, DataWord>> trackStorageCache = new MultiCache(storageCache) {
             @Override
             protected CachedSource create(byte[] key, CachedSource srcCache) {
-                return new CachedSourceImpl<>(srcCache);
+                return new WriteCache<>(srcCache, WriteCache.CacheType.SIMPLE);
             }
         };
 
@@ -288,15 +289,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
         @Override
         public Map<DataWord, DataWord> getStorage() {
-            Source<DataWord, DataWord> storage = storageCache.get(address);
-            CachedSourceImpl<DataWord, DataWord> st = (CachedSourceImpl<DataWord, DataWord>) storage;
-            Map<DataWord, DataWord> ret = new HashMap<>();
-            for (Map.Entry<DataWord, DataWord> entry : st.getCache().entrySet()) {
-                if (entry.getValue() != null) {
-                    ret.put(entry.getKey(), entry.getValue());
-                }
-            }
-            return ret;
+            throw new RuntimeException("Not supported");
         }
 
         @Override
@@ -338,12 +331,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        CachedSourceImpl.BytesKey<AccountState> cache = (CachedSourceImpl.BytesKey<AccountState>) accountStateCache;
-        Set<byte[]> ret = new HashSet<>();
-        for (Map.Entry<byte[], AccountState> entry : cache.getCache().entrySet()) {
-            if (entry.getValue() != null) ret.add(entry.getKey());
-        }
-        return ret;
+        throw new RuntimeException("Not supported");
     }
 
     @Override

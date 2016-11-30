@@ -11,6 +11,9 @@ public class SourceDelegateAdapter<Key, Value> implements Source<Key, Value> {
         this.src = src;
     }
 
+    protected SourceDelegateAdapter() {
+    }
+
     @Override
     public void put(Key key, Value val) {
         src.put(key, val);

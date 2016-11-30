@@ -7,21 +7,19 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
-public abstract class MultiCache<V extends CachedSource> extends CachedSourceImpl.BytesKey<V> {
-
-    Map<byte[], V> ownCaches = new ByteArrayMap<>();
+public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.BytesKey<V> {
 
     public MultiCache(Source<byte[], V> src) {
-        super(src);
+        super(src, WriteCache.CacheType.SIMPLE);
     }
 
     @Override
     public synchronized V get(byte[] key) {
-        V ownCache = ownCaches.get(key);
+        V ownCache = getCached(key);
         if (ownCache == null) {
             V v = src != null ? super.get(key) : null;
             ownCache = create(key, v);
-            ownCaches.put(key, ownCache);
+            put(key, ownCache);
         }
         return ownCache;
     }
@@ -29,12 +27,12 @@ public abstract class MultiCache<V extends CachedSource> extends CachedSourceImp
     @Override
     public synchronized boolean flush() {
         boolean ret = false;
-        for (Map.Entry<byte[], V> vEntry : ownCaches.entrySet()) {
-
-            if (vEntry.getValue().getSrc() != null) {
-                ret |= flushChild(vEntry.getValue());
+        for (byte[] key: writeCache.getModified()) {
+            V value = super.get(key);
+            if (value.getSrc() != null) {
+                ret |= flushChild(value);
             } else {
-                src.put(vEntry.getKey(), vEntry.getValue());
+                src.put(key, value);
                 ret = true;
             }
         }

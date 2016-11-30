@@ -1,9 +1,11 @@
 package org.ethereum.datasource;
 
+import java.util.Map;
+
 /**
  * Created by Anton Nashatyrev on 24.10.2016.
  */
-public class LegacySourceAdapter implements Source<byte[], byte[]> {
+public class LegacySourceAdapter implements BatchSource<byte[], byte[]> {
     KeyValueDataSource src;
 
     public LegacySourceAdapter(KeyValueDataSource src) {
@@ -23,6 +25,11 @@ public class LegacySourceAdapter implements Source<byte[], byte[]> {
     @Override
     public void delete(byte[] key) {
         src.delete(key);
+    }
+
+    @Override
+    public void updateBatch(Map<byte[], byte[]> rows) {
+        src.updateBatch(rows);
     }
 
     @Override
