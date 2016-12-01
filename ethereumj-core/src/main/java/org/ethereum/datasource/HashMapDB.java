@@ -25,8 +25,8 @@ public class HashMapDB implements KeyValueDataSource {
 
 
     @Override
-    public synchronized byte[] put(byte[] key, byte[] value) throws DBException {
-        return storage.put(wrap(key), value);
+    public synchronized void put(byte[] key, byte[] value) throws DBException {
+        storage.put(wrap(key), value);
     }
 
     /**
@@ -92,5 +92,10 @@ public class HashMapDB implements KeyValueDataSource {
         if (clearOnClose) {
             this.storage.clear();
         }
+    }
+
+    @Override
+    public boolean flush() {
+        return false;
     }
 }

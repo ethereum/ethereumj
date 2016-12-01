@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.IndexedBlockStore;
 
 import java.util.List;
@@ -14,12 +15,9 @@ import java.util.List;
 public class CheckFork {
     public static void main(String[] args) throws Exception {
         SystemProperties.getDefault().overrideParams("database.dir", "");
-        KeyValueDataSource index = CommonConfig.getDefault().keyValueDataSource();
-        index.setName("index");
-        index.init();
-        KeyValueDataSource blockDS = CommonConfig.getDefault().keyValueDataSource();
-        blockDS.setName("block");
-        blockDS.init();
+        Source<byte[], byte[]> index = CommonConfig.getDefault().cachedDbSource("index");
+        Source<byte[], byte[]> blockDS = CommonConfig.getDefault().cachedDbSource("block");
+
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
         indexedBlockStore.init(index, blockDS);
 

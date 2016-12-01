@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 11.11.2016.
  */
-public class WriteCache<Key, Value> implements CachedSource<Key, Value> {
+public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     public enum CacheType {
         SIMPLE,
@@ -117,7 +117,11 @@ public class WriteCache<Key, Value> implements CachedSource<Key, Value> {
         CacheEntry<Value> curVal = cache.get(key);
         if (curVal == null) {
             curVal = createCacheEntry(val);
-            cache.put(key, curVal);
+            CacheEntry<Value> oldVal = cache.put(key, curVal);
+            if (oldVal != null) {
+                cacheRemoved(key, oldVal.value);
+            }
+            cacheAdded(key, curVal.value);
         }
         // assigning for non-counting cache only
         // for counting cache the value should be immutable (see HashedKeySource)
@@ -142,7 +146,11 @@ public class WriteCache<Key, Value> implements CachedSource<Key, Value> {
         CacheEntry<Value> curVal = cache.get(key);
         if (curVal == null) {
             curVal = createCacheEntry(src == null ? null : src.get(key));
-            cache.put(key, curVal);
+            CacheEntry<Value> oldVal = cache.put(key, curVal);
+            if (oldVal != null) {
+                cacheRemoved(key, oldVal.value);
+            }
+            cacheAdded(key, curVal.value);
         }
         curVal.deleted();
     }
@@ -164,6 +172,7 @@ public class WriteCache<Key, Value> implements CachedSource<Key, Value> {
             }
         }
         cache.clear();
+        cacheCleared();
         return ret;
     }
 

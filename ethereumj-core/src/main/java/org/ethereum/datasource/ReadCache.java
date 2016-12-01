@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.apache.commons.collections4.map.AbstractLinkedMap;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
@@ -9,7 +10,7 @@ import java.util.*;
 /**
  * Created by Anton Nashatyrev on 05.10.2016.
  */
-public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
+public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     private Source<Key, Value> src;
 
@@ -25,7 +26,13 @@ public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
     }
 
     public ReadCache<Key, Value> withMaxCapacity(int maxCapacity) {
-        return withCache(new LRUMap<Key, Value>(maxCapacity));
+        return withCache(new LRUMap<Key, Value>(maxCapacity) {
+            @Override
+            protected boolean removeLRU(LinkEntry<Key, Value> entry) {
+                cacheRemoved(entry.getKey(), entry.getValue());
+                return super.removeLRU(entry);
+            }
+        });
     }
 
     private boolean checked = false;
@@ -47,6 +54,7 @@ public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
             delete(key);
         } else {
             cache.put(key, val);
+            cacheAdded(key, val);
             src.put(key, val);
         }
     }
@@ -61,6 +69,7 @@ public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
             } else {
                 ret = src.get(key);
                 cache.put(key, ret);
+                cacheAdded(key, ret);
             }
         }
         return ret;
@@ -69,7 +78,8 @@ public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
     @Override
     public synchronized void delete(Key key) {
         checkByteArrKey(key);
-        cache.remove(key);
+        Value value = cache.remove(key);
+        cacheRemoved(key, value);
         src.delete(key);
     }
 
@@ -98,7 +108,13 @@ public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
         }
 
         public ReadCache.BytesKey<V> withMaxCapacity(int maxCapacity) {
-            withCache(new ByteArrayMap<V>(new LRUMap<ByteArrayWrapper, V>(maxCapacity)));
+            withCache(new ByteArrayMap<V>(new LRUMap<ByteArrayWrapper, V>(maxCapacity) {
+                @Override
+                protected boolean removeLRU(LinkEntry<ByteArrayWrapper, V> entry) {
+                    cacheRemoved(entry.getKey().getData(), entry.getValue());
+                    return super.removeLRU(entry);
+                }
+            }));
             return this;
         }
     }

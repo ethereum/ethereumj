@@ -105,27 +105,24 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         return null;
     }
 
-    public TransactionStore(KeyValueDataSource src) {
+    public TransactionStore(Source<byte[], byte[]> src) {
         super(src, serializer);
         withCacheSize(256);
         withCacheOnWrite(true);
     }
 
     @Override
-    public void flush() {
-        if (getSrc() instanceof Flushable) {
-            ((Flushable) getSrc()).flush();
-        }
+    public boolean flush() {
+        return getSrc().flush();
     }
 
-    @Override
     @PreDestroy
     public void close() {
-        try {
-            logger.info("Closing TransactionStore...");
-            super.close();
-        } catch (Exception e) {
-            logger.warn("Problems closing TransactionStore", e);
-        }
+//        try {
+//            logger.info("Closing TransactionStore...");
+//            super.close();
+//        } catch (Exception e) {
+//            logger.warn("Problems closing TransactionStore", e);
+//        }
     }
 }

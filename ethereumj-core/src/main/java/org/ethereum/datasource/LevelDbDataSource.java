@@ -25,7 +25,7 @@ import static org.fusesource.leveldbjni.JniDBFactory.factory;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public class LevelDbDataSource implements KeyValueDataSource {
+public class LevelDbDataSource implements KeyValueDataSource, BatchSource<byte[], byte[]> {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
@@ -161,13 +161,12 @@ public class LevelDbDataSource implements KeyValueDataSource {
     }
 
     @Override
-    public byte[] put(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         resetDbLock.readLock().lock();
         try {
             if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (value == null ? "null" : value.length));
             db.put(key, value);
             if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (value == null ? "null" : value.length));
-            return value;
         } finally {
             resetDbLock.readLock().unlock();
         }
@@ -241,6 +240,11 @@ public class LevelDbDataSource implements KeyValueDataSource {
         } finally {
             resetDbLock.readLock().unlock();
         }
+    }
+
+    @Override
+    public boolean flush() {
+        return false;
     }
 
     @Override

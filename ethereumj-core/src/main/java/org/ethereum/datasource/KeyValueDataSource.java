@@ -7,11 +7,11 @@ import java.util.Set;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public interface KeyValueDataSource extends DataSource {
+public interface KeyValueDataSource extends DataSource, BatchSource<byte[], byte[]> {
 
     byte[] get(byte[] key);
 
-    byte[] put(byte[] key, byte[] value);
+    void put(byte[] key, byte[] value);
 
     void delete(byte[] key);
 

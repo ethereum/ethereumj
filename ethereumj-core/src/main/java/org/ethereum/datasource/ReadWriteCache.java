@@ -42,6 +42,11 @@ public class ReadWriteCache<Key, Value> extends SourceDelegateAdapter<Key, Value
         return writeCache.flush();
     }
 
+    @Override
+    public long estimateCashSize() {
+        return readCache.estimateCashSize() + writeCache.estimateCashSize();
+    }
+
     public static class BytesKey<V> extends ReadWriteCache<byte[], V> {
         public BytesKey(Source<byte[], V> src, WriteCache.CacheType cacheType) {
             this.writeCache = new WriteCache.BytesKey<>(src, cacheType);

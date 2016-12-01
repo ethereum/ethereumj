@@ -8,6 +8,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.StateSource;
@@ -72,7 +73,23 @@ public class CommonConfig {
     @Bean
     public StateSource stateSource() {
         LegacySourceAdapter stateDSAdapter = new LegacySourceAdapter(stateDS());
-        return new StateSource(stateDSAdapter, systemProperties().databasePruneDepth() >= 0);
+        StateSource stateSource = new StateSource(stateDSAdapter, systemProperties().databasePruneDepth() >= 0);
+
+        dbFlushManager().addCache(stateSource.getWriteCache());
+
+        return stateSource;
+    }
+
+    @Bean
+    @Scope("prototype")
+    public Source<byte[], byte[]> cachedDbSource(String name) {
+        KeyValueDataSource dataSource = keyValueDataSource();
+        dataSource.setName(name);
+        dataSource.init();
+        LegacySourceAdapter stateDSAdapter = new LegacySourceAdapter(dataSource);
+        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(stateDSAdapter, WriteCache.CacheType.SIMPLE);
+        dbFlushManager().addCache(writeCache);
+        return writeCache;
     }
 
     @Bean
@@ -104,6 +121,11 @@ public class CommonConfig {
         }
 
         return ret;
+    }
+
+    @Bean
+    public DbFlushManager dbFlushManager() {
+        return new DbFlushManager(systemProperties());
     }
 
     @Bean

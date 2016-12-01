@@ -43,25 +43,15 @@ public class DefaultConfig {
 
     @Bean
     public BlockStore blockStore(){
-        KeyValueDataSource index = commonConfig.keyValueDataSource();
-        index.setName("index");
-        index.init();
-        KeyValueDataSource blocks = commonConfig.keyValueDataSource();
-        blocks.setName("block");
-        blocks.init();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(new CachingDataSource(index), new CachingDataSource(blocks));
+        indexedBlockStore.init(commonConfig.cachedDbSource("index"), commonConfig.cachedDbSource("block"));
 
         return indexedBlockStore;
     }
 
     @Bean
     public TransactionStore transactionStore() {
-        KeyValueDataSource ds = commonConfig.keyValueDataSource();
-        ds.setName("transactions");
-        ds.init();
-        CachingDataSource cachingDataSource = new CachingDataSource(ds);
-        return new TransactionStore(cachingDataSource);
+        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
     }
 
     @Bean

@@ -50,15 +50,14 @@ public class JournalPruneDataSource implements KeyValueDataSource {
 
     /*******  updates  *******/
 
-    public synchronized byte[] put(byte[] key, byte[] value) {
+    public synchronized void put(byte[] key, byte[] value) {
         ByteArrayWrapper keyW = new ByteArrayWrapper(key);
         if (value != null) {
             currentUpdates.insertedKeys.add(keyW);
             incRef(keyW);
-            return src.put(key, value);
+            src.put(key, value);
         } else {
             currentUpdates.deletedKeys.add(keyW);
-            return value;
         }
     }
 
@@ -179,6 +178,11 @@ public class JournalPruneDataSource implements KeyValueDataSource {
 
     public Set<byte[]> keys() {
         return src.keys();
+    }
+
+    @Override
+    public boolean flush() {
+        return false;
     }
 
     public void close() {

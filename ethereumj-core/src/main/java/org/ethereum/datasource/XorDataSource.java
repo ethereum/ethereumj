@@ -29,8 +29,8 @@ public class XorDataSource implements KeyValueDataSource {
     }
 
     @Override
-    public byte[] put(byte[] key, byte[] value) {
-        return source.put(convertKey(key), value);
+    public void put(byte[] key, byte[] value) {
+        source.put(convertKey(key), value);
     }
 
     @Override
@@ -80,5 +80,10 @@ public class XorDataSource implements KeyValueDataSource {
     @Override
     public void close() {
         source.close();
+    }
+
+    @Override
+    public boolean flush() {
+        return false;
     }
 }

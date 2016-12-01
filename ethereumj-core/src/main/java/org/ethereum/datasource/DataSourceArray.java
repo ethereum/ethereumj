@@ -18,8 +18,8 @@ public class DataSourceArray<V> extends AbstractList<V> implements Flushable {
     }
 
     @Override
-    public void flush() {
-        src.flush();
+    public boolean flush() {
+        return src.flush();
     }
 
     @Override

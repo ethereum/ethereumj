@@ -21,19 +21,15 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-    KeyValueDataSource indexDS;
+    Source<byte[], byte[]> indexDS;
     DataSourceArray<List<BlockInfo>> index;
-    KeyValueDataSource blocksDS;
+    Source<byte[], byte[]> blocksDS;
     ObjectDataSource<Block> blocks;
 
     public IndexedBlockStore(){
     }
 
-//    public void init(Map<Long, List<BlockInfo>> longListHashMap, KeyValueDataSource hashMapDB, Object o, Object o1) {
-//        throw new RuntimeException("To remove");
-//    }
-
-    public void init(KeyValueDataSource index, KeyValueDataSource blocks) {
+    public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks) {
         indexDS = index;
         this.index = new DataSourceArray<>(
                 new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER).withCacheSize(256));
@@ -480,16 +476,16 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
     @Override
     public synchronized void close() {
-        logger.info("Closing IndexedBlockStore...");
-        try {
-            indexDS.close();
-        } catch (Exception e) {
-            logger.warn("Problems closing indexDS", e);
-        }
-        try {
-            blocksDS.close();
-        } catch (Exception e) {
-            logger.warn("Problems closing blocksDS", e);
-        }
+//        logger.info("Closing IndexedBlockStore...");
+//        try {
+//            indexDS.close();
+//        } catch (Exception e) {
+//            logger.warn("Problems closing indexDS", e);
+//        }
+//        try {
+//            blocksDS.close();
+//        } catch (Exception e) {
+//            logger.warn("Problems closing blocksDS", e);
+//        }
     }
 }

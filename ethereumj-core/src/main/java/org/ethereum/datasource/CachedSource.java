@@ -12,5 +12,7 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
 
     Collection<Key> getModified();
 
+    long estimateCashSize();
+
     interface BytesKey<Value> extends CachedSource<byte[], Value> {}
 }

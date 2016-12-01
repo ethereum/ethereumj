@@ -428,13 +428,11 @@ public class PruneTest {
         bc.createBlock();
         blockchain.flush();
 
-        System.out.println(bc.getStorageDS().getSize());
-
         for (int i = 0; i < 100; i++) {
             contr.callFunction("set", i);
             bc.createBlock();
             blockchain.flush();
-            System.out.println(bc.getStorageDS().getSize() + ", " + bc.getStateDS().getStorage().size());
+            System.out.println(bc.getStateDS().getStorage().size() + ", " + bc.getStateDS().getStorage().size());
         }
 
         System.out.println("Done");

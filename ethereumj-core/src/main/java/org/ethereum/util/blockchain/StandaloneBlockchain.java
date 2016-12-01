@@ -379,24 +379,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return pruningStateDS;
     }
 
-    public HashMapDB getDetailsDS() {
-        return detailsDS;
-    }
-
-    public HashMapDB getStorageDS() {
-        return storageDS;
-    }
-
     public long getTotalDbHits() {
         return totalDbHits;
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new SlowHashMapDB(), new SlowHashMapDB());
+        blockStore.init(new MapDB<byte[]>(), new MapDB<byte[]>());
 
-        detailsDS = new SlowHashMapDB();
-        storageDS = new SlowHashMapDB();
         stateDS = new MapDB<>();
         pruningStateDS = new JournalBytesSource(new CountingBytesSource(stateDS));
         pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
@@ -630,9 +620,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         @Override
-        public synchronized byte[] put(byte[] key, byte[] value) throws DBException {
+        public synchronized void put(byte[] key, byte[] value) throws DBException {
             sleep(1);
-            return super.put(key, value);
+            super.put(key, value);
         }
 
         @Override

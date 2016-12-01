@@ -18,8 +18,8 @@ public class JournalPruneTest {
             super(src);
         }
 
-        public synchronized byte[] put(String key) {
-            return super.put(key.getBytes(), key.getBytes());
+        public synchronized void put(String key) {
+            super.put(key.getBytes(), key.getBytes());
         }
 
         public synchronized void delete(String key) {

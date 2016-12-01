@@ -10,12 +10,12 @@ import java.util.Map;
  * Created by Anton Nashatyrev on 17.03.2016.
  */
 public class ObjectDataSource<V> implements Flushable{
-    private KeyValueDataSource src;
+    private Source<byte[], byte[]> src;
     private Map<ByteArrayWrapper, V> cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(256));
     Serializer<V, byte[]> serializer;
     boolean cacheOnWrite = true;
 
-    public ObjectDataSource(KeyValueDataSource src, Serializer<V, byte[]> serializer) {
+    public ObjectDataSource(Source<byte[], byte[]> src, Serializer<V, byte[]> serializer) {
         this.src = src;
         this.serializer = serializer;
     }
@@ -37,7 +37,8 @@ public class ObjectDataSource<V> implements Flushable{
         return this;
     }
 
-    public void flush() {
+    public boolean flush() {
+        return false;
         // for write-back type cache only
     }
 
@@ -61,11 +62,7 @@ public class ObjectDataSource<V> implements Flushable{
         return ret;
     }
 
-    protected KeyValueDataSource getSrc() {
+    protected Source<byte[], byte[]>  getSrc() {
         return src;
-    }
-
-    public void close() {
-        src.close();
     }
 }

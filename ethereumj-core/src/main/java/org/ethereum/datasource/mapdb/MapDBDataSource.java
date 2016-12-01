@@ -1,13 +1,12 @@
 package org.ethereum.datasource.mapdb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.BatchSource;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.Map;
@@ -15,7 +14,7 @@ import java.util.Set;
 
 import static java.lang.System.getProperty;
 
-public class MapDBDataSource implements KeyValueDataSource {
+public class MapDBDataSource implements KeyValueDataSource, BatchSource<byte[], byte[]> {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
 
@@ -67,9 +66,9 @@ public class MapDBDataSource implements KeyValueDataSource {
     }
 
     @Override
-    public byte[] put(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         try {
-            return map.put(key, value);
+            map.put(key, value);
         } finally {
             db.commit();
         }
@@ -106,6 +105,11 @@ public class MapDBDataSource implements KeyValueDataSource {
         } finally {
             db.commit();
         }
+    }
+
+    @Override
+    public boolean flush() {
+        return false;
     }
 
     @Override

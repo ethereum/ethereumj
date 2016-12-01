@@ -4,6 +4,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.MapDB;
 import org.ethereum.db.*;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -137,6 +138,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     StateSource stateDataSource;
 
+    @Autowired
+    DbFlushManager dbFlushManager;
+
     SystemProperties config = SystemProperties.getDefault();
 
     private List<Chain> altChains = new ArrayList<>();
@@ -174,7 +178,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.adminInfo = new AdminInfo();
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
-        this.transactionStore = new TransactionStore(new HashMapDB());
+        this.transactionStore = new TransactionStore(new MapDB());
         this.eventDispatchThread = EventDispatchThread.getDefault();
         this.programInvokeFactory = new ProgramInvokeFactoryImpl();
         initConst(SystemProperties.getDefault());
@@ -376,11 +380,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             this.repository = repo;
 //            this.repository.syncToRoot(block.getStateRoot());
 
-            // flushing
-            if (!byTest) {
-                flush();
-            }
-
             dropState();
         } else {
             // Stay on previous branch
@@ -515,7 +514,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
-            flush();
+            dbFlushManager.flush();
             System.exit(-1);
         }
 
@@ -596,8 +595,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         storeBlock(block, receipts);
 
-        if (!byTest && needFlush(block)) {
-            flush();
+        if (!byTest) {
+            repository.commit();
+            dbFlushManager.commit();
         }
 
         return summary;
@@ -605,16 +605,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public void flush() {
-        repository.flush();
-        stateDataSource.flush();
-        blockStore.flush();
-        transactionStore.flush();
-
-        repository = repository.getSnapshotTo(repository.getRoot());
-
-        if (isMemoryBoundFlush()) {
-            System.gc();
-        }
+//        repository.flush();
+//        stateDataSource.flush();
+//        blockStore.flush();
+//        transactionStore.flush();
+//
+//        repository = repository.getSnapshotTo(repository.getRoot());
+//
+//        if (isMemoryBoundFlush()) {
+//            System.gc();
+//        }
     }
 
     private boolean isMemoryBoundFlush() {

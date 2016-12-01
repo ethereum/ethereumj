@@ -18,13 +18,14 @@ public class CachingDataSource implements KeyValueDataSource, Flushable {
         this.source = source;
     }
 
-    public void flush() {
+    public boolean flush() {
         Map<byte[], byte[]> records = new HashMap<>();
         for (Map.Entry<ByteArrayWrapper, byte[]> entry : cache.entrySet()) {
             records.put(entry.getKey().getData(), entry.getValue());
         }
         source.updateBatch(records);
         cache.clear();
+        return !records.isEmpty();
     }
 
     @Override
@@ -38,8 +39,8 @@ public class CachingDataSource implements KeyValueDataSource, Flushable {
     }
 
     @Override
-    public synchronized byte[] put(byte[] key, byte[] value) {
-        return cache.put(new ByteArrayWrapper(key), value);
+    public synchronized void put(byte[] key, byte[] value) {
+        cache.put(new ByteArrayWrapper(key), value);
     }
 
     @Override

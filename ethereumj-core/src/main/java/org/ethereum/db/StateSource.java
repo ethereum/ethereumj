@@ -36,4 +36,8 @@ public class StateSource extends SourceDelegateAdapter<byte[], byte[]>
     public JournalBytesSource getJournalSource() {
         return journalSource;
     }
+
+    public WriteCache<byte[], byte[]> getWriteCache() {
+        return writeCache;
+    }
 }
