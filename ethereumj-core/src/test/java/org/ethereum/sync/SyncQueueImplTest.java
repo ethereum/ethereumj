@@ -41,6 +41,26 @@ public class SyncQueueImplTest {
 
     }
 
+    @Test
+    public void testHeadersSplit() {
+        // 1, 2, 3, 4, 5
+        SyncQueueImpl.HeadersRequestImpl headersRequest = new SyncQueueImpl.HeadersRequestImpl(1, 5, false);
+        List<SyncQueueIfc.HeadersRequest> requests = headersRequest.split(2);
+        assert requests.size() == 3;
+
+        // 1, 2
+        assert requests.get(0).getStart() == 1;
+        assert requests.get(0).getCount() == 2;
+
+        // 3, 4
+        assert requests.get(1).getStart() == 3;
+        assert requests.get(1).getCount() == 2;
+
+        // 5
+        assert requests.get(2).getStart() == 5;
+        assert requests.get(2).getCount() == 1;
+    }
+
     public void test2Impl(List<Block> mainChain, List<Block> initChain, Peer[] peers) {
         List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 1024);
         final Block[] maxExportedBlock = new Block[] {randomChain.get(31)};

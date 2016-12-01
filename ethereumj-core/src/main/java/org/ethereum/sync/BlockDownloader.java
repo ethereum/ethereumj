@@ -27,6 +27,10 @@ public abstract class BlockDownloader {
     private int blockQueueLimit = 2000;
     private int headerQueueLimit = 10000;
 
+    // Max number of Blocks / Headers in one request
+    private static int MAX_IN_REQUEST = 192;
+    private static int REQUESTS = 5;
+
     private BlockHeaderValidator headerValidator;
 
     private SyncPool pool;
@@ -91,40 +95,45 @@ public abstract class BlockDownloader {
             try {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
-                    final Channel any = pool.getAnyIdle();
-
-                    if (any != null) {
-                        SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders();
-                        if (hReq.getCount() == 0) {
-                            logger.info("Headers download complete.");
-                            headersDownloadComplete = true;
-                            return;
-                        }
-                        logger.debug("headerRetrieveLoop: request headers (" + hReq.getStart() + ") from " + any.getNode());
-                        ListenableFuture<List<BlockHeader>> futureHeaders = hReq.getHash() == null ?
-                                any.getEthHandler().sendGetBlockHeaders(hReq.getStart(), hReq.getCount(), hReq.isReverse())
-                                : any.getEthHandler().sendGetBlockHeaders(hReq.getHash(), hReq.getCount(), 0, hReq.isReverse());
-                        Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
-                            @Override
-                            public void onSuccess(List<BlockHeader> result) {
-                                if (!validateAndAddHeaders(result, any.getNodeId())) {
-                                    onFailure(new RuntimeException("Received headers validation failed"));
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Throwable t) {
-                                logger.debug("Error receiving headers. Dropping the peer.", t);
-                                any.getEthHandler().dropConnection();
-                            }
-                        });
-                    } else {
-                        logger.debug("headerRetrieveLoop: No IDLE peers found");
+                    SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders(MAX_IN_REQUEST * REQUESTS);
+                    if (hReq.getCount() == 0) {
+                        logger.info("Headers download complete.");
+                        headersDownloadComplete = true;
+                        return;
                     }
-                } else {
+                    int reqHeadersCounter = 0;
+                    for (SyncQueueIfc.HeadersRequest headersRequest : hReq.split(MAX_IN_REQUEST)) {
+                        final Channel any = pool.getAnyIdle();
+                        if (any == null) {
+                            logger.debug("headerRetrieveLoop: No IDLE peers found");
+                            break;
+                        } else {
+                            logger.debug("headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode());
+                            ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
+                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse())
+                                    : any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), 0, headersRequest.isReverse());
+                            Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
+                                @Override
+                                public void onSuccess(List<BlockHeader> result) {
+                                    if (!validateAndAddHeaders(result, any.getNodeId())) {
+                                        onFailure(new RuntimeException("Received headers validation failed"));
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Throwable t) {
+                                    logger.debug("Error receiving headers. Dropping the peer.", t);
+                                    any.getEthHandler().dropConnection();
+                                }
+                            });
+                            reqHeadersCounter++;
+                        }
+                    }
+                    receivedHeadersLatch = new CountDownLatch(max(reqHeadersCounter, 1));
+                    }  else {
+                    receivedHeadersLatch = new CountDownLatch(1);
                     logger.debug("headerRetrieveLoop: HeaderQueue is full");
                 }
-                receivedHeadersLatch = new CountDownLatch(1);
                 receivedHeadersLatch.await(isSyncDone() ? 10000 : 2000, TimeUnit.MILLISECONDS);
 
             } catch (InterruptedException e) {
@@ -159,7 +168,7 @@ public abstract class BlockDownloader {
             try {
 
                 if (getBlockQueueSize() < blockQueueLimit) {
-                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(1000);
+                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(MAX_IN_REQUEST * REQUESTS);
 
                     if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
                         logger.info("Block download complete.");
@@ -182,7 +191,7 @@ public abstract class BlockDownloader {
                     }
 
                     int reqBlocksCounter = 0;
-                    for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(100)) {
+                    for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
                         Channel any = pool.getAnyIdle();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
@@ -200,7 +209,6 @@ public abstract class BlockDownloader {
                     logger.debug("blockRetrieveLoop: BlockQueue is full");
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
-
                 receivedBlocksLatch.await(2000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 break;

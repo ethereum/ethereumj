@@ -1,6 +1,7 @@
 package org.ethereum.sync;
 
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.Blockchain;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -27,8 +28,6 @@ public class FastSyncDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    private SyncQueueIfc syncQueueIfc;
-
     private BigInteger cummDiff = BigInteger.ZERO;
 
     int counter;
@@ -39,11 +38,10 @@ public class FastSyncDownloader extends BlockDownloader {
         super(headerValidator);
     }
 
-    public void startImporting(byte[] fromHash, byte[] endHash, byte[] baseDiff) {
+    public void startImporting(Blockchain blockchain, long endNumber, byte[] baseDiff) {
         cummDiff = cummDiff.add(ByteUtil.bytesToBigInteger(baseDiff));
-        SyncQueueForwardImpl syncQueueForward = new SyncQueueForwardImpl(fromHash, endHash);
-        syncQueueIfc = syncQueueForward;
-        init(syncQueueForward, syncPool);
+        SyncQueueImpl syncQueue = new SyncQueueImpl(blockchain, endNumber);
+        init(syncQueue, syncPool);
     }
 
     @Override

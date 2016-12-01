@@ -23,6 +23,8 @@ public interface SyncQueueIfc {
         int getCount();
 
         boolean isReverse();
+
+        List<HeadersRequest> split(int maxCount);
     }
 
     /**
@@ -38,6 +40,11 @@ public interface SyncQueueIfc {
      * Returns wanted headers request
      */
     HeadersRequest requestHeaders();
+
+    /**
+     * Returns wanted headers request with defined size
+     */
+    HeadersRequest requestHeaders(int maxSize);
 
     /**
      * Adds received headers.

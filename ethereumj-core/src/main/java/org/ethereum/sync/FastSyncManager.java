@@ -387,7 +387,7 @@ public class FastSyncManager {
                 }
             });
 
-            downloader.startImporting(blockchain.getBestBlock().getHash(), pivot.getHash(), pivot.getDifficulty());
+            downloader.startImporting(blockchain, pivot.getNumber(), blockchain.getBestBlock().getDifficulty());
 
             byte[] pivotStateRoot = pivot.getStateRoot();
             TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
