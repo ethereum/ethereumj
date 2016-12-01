@@ -17,17 +17,14 @@ import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -85,6 +82,7 @@ public class FastSyncManager {
                 try {
                     while (true) {
                         TrieNodeRequest request = dbWriteQueue.take();
+                        nodesInserted++;
                         repository.addRawNode(request.nodeHash, request.response);
                     }
                 } catch (Exception e) {
@@ -115,8 +113,7 @@ public class FastSyncManager {
         TrieNodeType type;
         byte[] nodeHash;
         byte[] response;
-        long timestamp;
-        int reqCount;
+        Map<Long, Long> requestSent = Collections.synchronizedMap(new HashMap<Long, Long>());
 
         TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
             this.type = type;
@@ -152,9 +149,9 @@ public class FastSyncManager {
             return ret;
         }
 
-        public void reqSent() {
-            timestamp = System.currentTimeMillis();
-            reqCount++;
+        public synchronized void reqSent(Long requestId) {
+            Long timestamp = System.currentTimeMillis();
+            requestSent.put(requestId, timestamp);
         }
 
         @Override
@@ -163,6 +160,17 @@ public class FastSyncManager {
                     "type=" + type +
                     ", nodeHash=" + Hex.toHexString(nodeHash) +
                     '}';
+        }
+    }
+
+    private class TrieNodeRequests {
+        public Set<TrieNodeRequest> requests = Collections.synchronizedSet(new HashSet<TrieNodeRequest>());
+
+        public TrieNodeRequests() {
+        }
+
+        public TrieNodeRequests(TrieNodeRequest request) {
+            requests.add(request);
         }
     }
 
@@ -183,23 +191,43 @@ public class FastSyncManager {
     }
 
     Deque<TrieNodeRequest> nodesQueue = new LinkedBlockingDeque<>();
-    ByteArrayMap<TrieNodeRequest> pendingNodes = new ByteArrayMap<>();
-    ByteArraySet knownHashes = new ByteArraySet();
+    ByteArrayMap<TrieNodeRequests> pendingNodes = new ByteArrayMap<>();
+    ByteArrayMap<Long> knownHashes = new ByteArrayMap<>();
+    Long requestId = 0L;
+
+    private synchronized void purgePending(byte[] hash) {
+        boolean needToRemove = true;
+        TrieNodeRequests requests = pendingNodes.get(hash);
+        if (requests == null) return;
+        for (TrieNodeRequest request: requests.requests) {
+            if (!request.requestSent.isEmpty()) {
+                needToRemove = false;
+                break;
+            }
+        }
+        if (needToRemove) pendingNodes.remove(hash);
+    }
 
     synchronized void processTimeouts() {
         long cur = System.currentTimeMillis();
-        for (TrieNodeRequest request : new ArrayList<>(pendingNodes.values())) {
-            if (cur - request.timestamp > REQUEST_TIMEOUT) {
-                pendingNodes.remove(request.nodeHash);
-                nodesQueue.addFirst(request);
+        for (TrieNodeRequests nodeRequests : new ArrayList<>(pendingNodes.values())) {
+            for (TrieNodeRequest request: nodeRequests.requests) {
+                for (Map.Entry<Long, Long> requestEntry : request.requestSent.entrySet()) {
+                    if (cur - requestEntry.getValue() > REQUEST_TIMEOUT) {
+                        request.requestSent.remove(requestEntry.getKey());
+                        purgePending(request.nodeHash);
+                        nodesQueue.addFirst(request);
+                    }
+                }
             }
         }
     }
 
     synchronized void processResponse(TrieNodeRequest req) {
         dbWriteQueue.add(req);
-        knownHashes.remove(req.nodeHash);
-        nodesInserted++;
+        Long curValue = knownHashes.get(req.nodeHash);
+        if (curValue != null && curValue == 1L) knownHashes.remove(req.nodeHash);
+        else if (curValue != null) knownHashes.put(req.nodeHash, curValue - 1);
         for (TrieNodeRequest childRequest : req.createChildRequests()) {
             if (nodesQueue.size() > NODE_QUEUE_BEST_SIZE) {
                 // reducing queue by traversing tree depth-first
@@ -208,7 +236,8 @@ public class FastSyncManager {
                 // enlarging queue by traversing tree breadth-first
                 nodesQueue.add(childRequest);
             }
-            knownHashes.add(childRequest.nodeHash);
+            if (knownHashes.get(childRequest.nodeHash) == null) knownHashes.put(childRequest.nodeHash, 1L);
+            else knownHashes.put(childRequest.nodeHash, knownHashes.get(childRequest.nodeHash) + 1);
         }
     }
 
@@ -218,13 +247,18 @@ public class FastSyncManager {
         if (idle != null) {
             final List<byte[]> hashes = new ArrayList<>();
             final List<TrieNodeRequest> requestsSent = new ArrayList<>();
+            final Set<Long> sentRequestIds = new HashSet<>();
             synchronized (this) {
                 for (int i = 0; i < cnt && !nodesQueue.isEmpty(); i++) {
                     TrieNodeRequest req = nodesQueue.poll();
-                    req.reqSent();
+                    sentRequestIds.add(requestId);
+                    req.reqSent(requestId);
+                    requestId++;
                     hashes.add(req.nodeHash);
                     requestsSent.add(req);
-                    pendingNodes.put(req.nodeHash, req);
+                    TrieNodeRequests nodeRequests = pendingNodes.get(req.nodeHash);
+                    if (nodeRequests == null) pendingNodes.put(req.nodeHash, new TrieNodeRequests(req));
+                    else nodeRequests.requests.add(req);
                 }
             }
             if (hashes.size() > 0) {
@@ -238,14 +272,24 @@ public class FastSyncManager {
                             synchronized (FastSyncManager.this) {
                                 logger.trace("Received " + result.size() + " nodes (of " + hashes.size() + ") from peer: " + idle);
                                 for (Pair<byte[], byte[]> pair : result) {
-                                    TrieNodeRequest request = pendingNodes.remove(pair.getKey());
-                                    if (request == null) {
+                                    TrieNodeRequests nodeRequests = pendingNodes.get(pair.getKey());
+                                    if (nodeRequests == null) {
                                         long t = System.currentTimeMillis();
                                         logger.debug("Received node which was not requested: " + Hex.toHexString(pair.getKey()) + " from " + idle);
                                         return;
                                     }
-                                    request.response = pair.getValue();
-                                    processResponse(request);
+                                    for (TrieNodeRequest request: nodeRequests.requests) {
+                                        Set<Long> intersection = new HashSet<Long>(request.requestSent.keySet());
+                                        intersection.retainAll(sentRequestIds);
+                                        if (!intersection.isEmpty()) {
+                                            Long inter = intersection.iterator().next();
+                                            request.requestSent.remove(inter);
+                                            purgePending(pair.getKey());
+                                            request.response = pair.getValue();
+                                            processResponse(request);
+                                            break;
+                                        }
+                                    }
                                 }
 
                                 FastSyncManager.this.notifyAll();
@@ -264,7 +308,18 @@ public class FastSyncManager {
                         logger.warn("Error with Trie Node request: " + t);
                         synchronized (FastSyncManager.this) {
                             for (byte[] hash : hashes) {
-                                nodesQueue.addFirst(pendingNodes.get(hash));
+                                TrieNodeRequests nodeRequests = pendingNodes.get(hash);
+                                for (TrieNodeRequest request: nodeRequests.requests) {
+                                    Set<Long> intersection = new HashSet<Long>(request.requestSent.keySet());
+                                    intersection.retainAll(sentRequestIds);
+                                    if (!intersection.isEmpty()) {
+                                        Long inter = intersection.iterator().next();
+                                        request.requestSent.remove(inter);
+                                        nodesQueue.addFirst(request);
+                                        purgePending(hash);
+                                        break;
+                                    }
+                                }
                             }
                             FastSyncManager.this.notifyAll();
                         }
