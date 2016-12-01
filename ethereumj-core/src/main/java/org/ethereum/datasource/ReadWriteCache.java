@@ -1,7 +1,6 @@
 package org.ethereum.datasource;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Created by Anton Nashatyrev on 29.11.2016.
@@ -27,11 +26,6 @@ public class ReadWriteCache<Key, Value> extends SourceDelegateAdapter<Key, Value
     @Override
     public Collection<Key> getModified() {
         return writeCache.getModified();
-    }
-
-    @Override
-    public Map<Key, Value> getCache() {
-        return readCache.getCache();
     }
 
     protected Value getCached(Key key) {

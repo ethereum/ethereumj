@@ -12,10 +12,8 @@ import java.util.List;
 /**
  * Created by Anton Nashatyrev on 10.11.2016.
  */
-@Component
 public class PruneManager {
 
-    @Autowired
     private JournalBytesSource journal;
 
     @Autowired
@@ -32,6 +30,11 @@ public class PruneManager {
         this.blockStore = blockStore;
         this.journal = journal;
         this.pruneBlocksCnt = pruneBlocksCnt;
+    }
+
+    @Autowired
+    public void setStateSource(StateSource stateSource) {
+        journal = stateSource.getJournalSource();
     }
 
     public void blockCommitted(BlockHeader block) {

@@ -99,11 +99,6 @@ public class WriteCache<Key, Value> implements CachedSource<Key, Value> {
         return cache.keySet();
     }
 
-    @Override
-    public synchronized Map<Key, Value> getCache() {
-        throw new RuntimeException("Not implemented");
-    }
-
     private CacheEntry<Value> createCacheEntry(Value val) {
         if (isCounting) {
             return new CountCacheEntry<>(val);

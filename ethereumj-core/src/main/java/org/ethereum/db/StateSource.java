@@ -14,21 +14,26 @@ public class StateSource extends SourceDelegateAdapter<byte[], byte[]>
     WriteCache<byte[], byte[]> writeCache;
     BatchSourceWriter<byte[], byte[]> batchDBWriter;
 
-    public StateSource(BatchSource<byte[], byte[]> src) {
+    public StateSource(BatchSource<byte[], byte[]> src, boolean pruningEnabled) {
         batchDBWriter = new BatchSourceWriter<>(src);
         writeCache = new WriteCache.BytesKey<>(batchDBWriter, WriteCache.CacheType.SIMPLE);
         readCache = new ReadCache.BytesKey<>(writeCache).withMaxCapacity(512 * 1024 * 1024 / 512); // 512 - approx size of a node
         countingSource = new CountingBytesSource(readCache);
-        journalSource = new JournalBytesSource(countingSource);
-        this.src = journalSource;
+        if (!pruningEnabled) {
+            this.src = countingSource;
+        } else {
+            journalSource = new JournalBytesSource(countingSource);
+            this.src = journalSource;
+        }
     }
 
     @Override
     public boolean flush() {
-        journalSource.flush();
-        countingSource.flush();
-        readCache.flush();
         writeCache.flush();
         return batchDBWriter.flush();
+    }
+
+    public JournalBytesSource getJournalSource() {
+        return journalSource;
     }
 }

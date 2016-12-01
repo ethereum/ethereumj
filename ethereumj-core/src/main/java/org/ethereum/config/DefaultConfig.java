@@ -67,7 +67,7 @@ public class DefaultConfig {
     @Bean
     public PruneManager pruneManager() {
         if (config.databasePruneDepth() >= 0) {
-            return new PruneManager((IndexedBlockStore) blockStore(), (JournalBytesSource) commonConfig.pruneStateDS(),
+            return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
                     config.databasePruneDepth());
         } else {
             return new PruneManager(null, null, -1); // dummy

@@ -10,6 +10,7 @@ import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.StateSource;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
@@ -59,24 +60,19 @@ public class CommonConfig {
 
     @Bean @Primary
     public Repository repository() {
-        return new RepositoryRoot(pruneStateDS());
+        return new RepositoryRoot(stateSource());
     }
 
     @Bean @Scope("prototype")
     public Repository repository(byte[] stateRoot) {
-        return new RepositoryRoot(pruneStateDS(), stateRoot);
+        return new RepositoryRoot(stateSource(), stateRoot);
     }
 
 
     @Bean
-    public HashedKeySource<byte[], byte[]> pruneStateDS() {
-        LegacySourceAdapter adapter = new LegacySourceAdapter(stateDS());
-        CountingBytesSource countingBytesSource = new CountingBytesSource(adapter);
-        if (systemProperties().databasePruneDepth() >= 0) {
-            return new JournalBytesSource(countingBytesSource);
-        } else {
-            return countingBytesSource;
-        }
+    public StateSource stateSource() {
+        LegacySourceAdapter stateDSAdapter = new LegacySourceAdapter(stateDS());
+        return new StateSource(stateDSAdapter, systemProperties().databasePruneDepth() >= 0);
     }
 
     @Bean

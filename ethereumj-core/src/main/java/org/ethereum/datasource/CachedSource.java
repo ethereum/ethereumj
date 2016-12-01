@@ -12,7 +12,5 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
 
     Collection<Key> getModified();
 
-    Map<Key, Value> getCache();
-
     interface BytesKey<Value> extends CachedSource<byte[], Value> {}
 }

@@ -3,7 +3,6 @@ package org.ethereum.datasource;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
-import org.ethereum.util.ByteArraySet;
 
 import java.util.*;
 
@@ -85,10 +84,6 @@ public class ReadCache<Key, Value> implements CachedSource<Key, Value> {
 
     public synchronized Collection<Key> getModified() {
         return Collections.emptyList();
-    }
-
-    public synchronized Map<Key, Value> getCache() {
-        return cache;
     }
 
     public synchronized Value getCached(Key key) {

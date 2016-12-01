@@ -4,12 +4,9 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.PruneManager;
+import org.ethereum.db.*;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
@@ -136,6 +133,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     PruneManager pruneManager;
+
+    @Autowired
+    StateSource stateDataSource;
 
     SystemProperties config = SystemProperties.getDefault();
 
@@ -606,6 +606,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public void flush() {
         repository.flush();
+        stateDataSource.flush();
         blockStore.flush();
         transactionStore.flush();
 
