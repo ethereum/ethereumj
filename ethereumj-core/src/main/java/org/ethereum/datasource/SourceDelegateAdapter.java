@@ -5,10 +5,10 @@ package org.ethereum.datasource;
  */
 public class SourceDelegateAdapter<Key, Value> implements Source<Key, Value> {
 
-    protected Source<Key, Value> src;
+    protected Source<Key, Value> delegate;
 
-    public SourceDelegateAdapter(Source<Key, Value> src) {
-        this.src = src;
+    public SourceDelegateAdapter(Source<Key, Value> delegate) {
+        this.delegate = delegate;
     }
 
     protected SourceDelegateAdapter() {
@@ -16,21 +16,21 @@ public class SourceDelegateAdapter<Key, Value> implements Source<Key, Value> {
 
     @Override
     public void put(Key key, Value val) {
-        src.put(key, val);
+        delegate.put(key, val);
     }
 
     @Override
     public Value get(Key key) {
-        return src.get(key);
+        return delegate.get(key);
     }
 
     @Override
     public void delete(Key key) {
-        src.delete(key);
+        delegate.delete(key);
     }
 
     @Override
     public boolean flush() {
-        return src.flush();
+        return delegate.flush();
     }
 }

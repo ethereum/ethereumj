@@ -7,6 +7,7 @@ public abstract class AbstractCachedSource <Key, Value> implements CachedSource<
     private MemSizeEstimator<Key> keySizeEstimator;
     private MemSizeEstimator<Value> valueSizeEstimator;
     private int size = 0;
+    protected boolean flushSource;
 
     protected void cacheAdded(Key key, Value value) {
         if (keySizeEstimator != null) {
@@ -34,6 +35,22 @@ public abstract class AbstractCachedSource <Key, Value> implements CachedSource<
         this.keySizeEstimator = keySizeEstimator;
         this.valueSizeEstimator = valueSizeEstimator;
         return this;
+    }
+
+    public void setFlushSource(boolean flushSource) {
+        this.flushSource = flushSource;
+    }
+
+    @Override
+    public synchronized boolean flush() {
+        flushSourceIfNeeded();
+        return false;
+    }
+
+    protected void flushSourceIfNeeded() {
+        if (flushSource) {
+            getSrc().flush();
+        }
     }
 
     @Override

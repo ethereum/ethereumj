@@ -173,6 +173,8 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         }
         cache.clear();
         cacheCleared();
+
+        flushSourceIfNeeded();
         return ret;
     }
 

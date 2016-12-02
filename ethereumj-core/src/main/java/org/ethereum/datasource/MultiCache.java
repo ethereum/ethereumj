@@ -1,9 +1,5 @@
 package org.ethereum.datasource;
 
-import org.ethereum.util.ByteArrayMap;
-
-import java.util.Map;
-
 /**
  * Created by Anton Nashatyrev on 07.10.2016.
  */
@@ -17,7 +13,7 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
     public synchronized V get(byte[] key) {
         V ownCache = getCached(key);
         if (ownCache == null) {
-            V v = src != null ? super.get(key) : null;
+            V v = delegate != null ? super.get(key) : null;
             ownCache = create(key, v);
             put(key, ownCache);
         }
@@ -32,7 +28,7 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
             if (value.getSrc() != null) {
                 ret |= flushChild(value);
             } else {
-                src.put(key, value);
+                delegate.put(key, value);
                 ret = true;
             }
         }

@@ -85,7 +85,10 @@ public class CommonConfig {
         KeyValueDataSource dataSource = keyValueDataSource();
         dataSource.setName(name);
         dataSource.init();
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(dataSource, WriteCache.CacheType.SIMPLE);
+        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
+        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
+        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+        writeCache.setFlushSource(true);
         dbFlushManager().addCache(writeCache);
         return writeCache;
     }

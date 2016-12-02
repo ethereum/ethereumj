@@ -15,7 +15,7 @@ public class BatchSourceWriter<Key, Value> extends SourceDelegateAdapter<Key, Va
     }
 
     private BatchSource<Key, Value> getBatchSource() {
-        return (BatchSource<Key, Value>) src;
+        return (BatchSource<Key, Value>) delegate;
     }
 
     @Override

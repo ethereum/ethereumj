@@ -20,13 +20,14 @@ public class StateSource extends SourceDelegateAdapter<byte[], byte[]>
         batchDBWriter = new BatchSourceWriter<>(src);
         writeCache = new WriteCache.BytesKey<>(batchDBWriter, WriteCache.CacheType.SIMPLE);
         writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+        writeCache.setFlushSource(true);
         readCache = new ReadCache.BytesKey<>(writeCache).withMaxCapacity(16 * 1024 * 1024 / 512); // 512 - approx size of a node
         countingSource = new CountingBytesSource(readCache);
         if (!pruningEnabled) {
-            this.src = countingSource;
+            this.delegate = countingSource;
         } else {
             journalSource = new JournalBytesSource(countingSource);
-            this.src = journalSource;
+            this.delegate = journalSource;
         }
     }
 
@@ -38,8 +39,7 @@ public class StateSource extends SourceDelegateAdapter<byte[], byte[]>
 
     @Override
     public boolean flush() {
-        writeCache.flush();
-        return batchDBWriter.flush();
+        return writeCache.flush();
     }
 
     public JournalBytesSource getJournalSource() {

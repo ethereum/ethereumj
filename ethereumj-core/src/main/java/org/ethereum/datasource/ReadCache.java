@@ -83,11 +83,6 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         src.delete(key);
     }
 
-    @Override
-    public synchronized boolean flush() {
-        return false;
-    }
-
     public synchronized Source<Key, Value> getSrc() {
         return src;
     }
