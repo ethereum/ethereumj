@@ -38,12 +38,12 @@ public class SyncQueueImpl implements SyncQueueIfc {
         public List<HeadersRequest> split(int maxCount) {
             if (this.hash != null) return Collections.<HeadersRequest>singletonList(this);
             List<HeadersRequest> ret = new ArrayList<>();
-            while(count > 0) {
-                int reqSize = Math.min(maxCount, count);
+            int remaining = count;
+            while(remaining > 0) {
+                int reqSize = Math.min(maxCount, remaining);
                 ret.add(new HeadersRequestImpl(start, reqSize, reverse));
-                count -= reqSize;
-                if (reverse) start -= reqSize;
-                else start += reqSize;
+                remaining -= reqSize;
+                start = reverse ? start - reqSize : start + reqSize;
             }
             return ret;
         }
@@ -270,29 +270,28 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized HeadersRequest requestHeaders() {
-        return requestHeadersImpl(MAX_CHAIN_LEN);
-    }
-
-    @Override
     public synchronized HeadersRequest requestHeaders(int count) {
         return requestHeadersImpl(count);
     }
 
     private HeadersRequest requestHeadersImpl(int count) {
         long startNumber;
+        int headersCount;
         boolean reverse = false;
+
         if (!hasGaps()) {
             startNumber = maxNum + 1;
+            if (endBlockNumber != null) {
+                headersCount = (int) Math.min(count, endBlockNumber - startNumber + 1);
+            } else {
+                headersCount = count;
+            }
         } else {
             List<HeaderElement> longestChain = getLongestChain();
             startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
-            if (!rnd.nextBoolean()) reverse =  true;
+            headersCount = MAX_CHAIN_LEN;
+            if (!rnd.nextBoolean()) reverse = true;
         }
-
-        int headersCount;
-        if (endBlockNumber != null) headersCount = (int) Math.min(count, endBlockNumber - startNumber + 1);
-        else headersCount = count;
 
         return new HeadersRequestImpl(startNumber, headersCount, reverse);
     }
