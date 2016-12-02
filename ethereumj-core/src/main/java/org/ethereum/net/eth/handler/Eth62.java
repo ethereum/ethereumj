@@ -792,6 +792,13 @@ public class Eth62 extends EthHandler {
         disconnect(USELESS_PEER);
     }
 
+    @Override
+    public synchronized boolean setStatus(SyncState syncState) {
+        if (!sentHeaders.isEmpty() && !headerRequests.isEmpty()) return false;
+        this.syncState = syncState;
+        return true;
+    }
+
     /*************************
      *       Logging         *
      *************************/

@@ -405,4 +405,9 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         throw new RuntimeException("Not supported");
     }
+
+    @Override
+    public void addRawNode(byte[] key, byte[] value) {
+        throw new RuntimeException("Not supported");
+    }
 }

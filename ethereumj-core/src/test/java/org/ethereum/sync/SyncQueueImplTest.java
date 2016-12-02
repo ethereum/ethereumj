@@ -14,6 +14,7 @@ import java.util.*;
  */
 public class SyncQueueImplTest {
     byte[] peer0 = new byte[32];
+    private static final int DEFAULT_REQUEST_LEN = 192;
 
     @Test
     public void test1() {
@@ -21,7 +22,7 @@ public class SyncQueueImplTest {
 
         SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain.subList(0, 32));
 
-        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders();
+        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN);
         System.out.println(headersRequest);
 
         syncQueue.addHeaders(createHeadersFromBlocks(TestUtils.getRandomChain(randomChain.get(16).getHash(), 17, 64), peer0));
@@ -39,6 +40,26 @@ public class SyncQueueImplTest {
             peers[i] = new Peer(TestUtils.getRandomChain(TestUtils.randomBytes(32), 1, 1024));
         }
 
+    }
+
+    @Test
+    public void testHeadersSplit() {
+        // 1, 2, 3, 4, 5
+        SyncQueueImpl.HeadersRequestImpl headersRequest = new SyncQueueImpl.HeadersRequestImpl(1, 5, false);
+        List<SyncQueueIfc.HeadersRequest> requests = headersRequest.split(2);
+        assert requests.size() == 3;
+
+        // 1, 2
+        assert requests.get(0).getStart() == 1;
+        assert requests.get(0).getCount() == 2;
+
+        // 3, 4
+        assert requests.get(1).getStart() == 3;
+        assert requests.get(1).getCount() == 2;
+
+        // 5
+        assert requests.get(2).getStart() == 5;
+        assert requests.get(2).getCount() == 1;
     }
 
     public void test2Impl(List<Block> mainChain, List<Block> initChain, Peer[] peers) {
@@ -67,7 +88,7 @@ public class SyncQueueImplTest {
 
         int i = 0;
         for (; i < 1000; i++) {
-            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders();
+            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN);
             List<BlockHeader> headers = peers[rnd.nextInt(peers.length)].getHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse());
             syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
             SyncQueueIfc.BlocksRequest blocksRequest = syncQueue.requestBlocks(rnd.nextInt(128 + 1));

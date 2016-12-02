@@ -195,4 +195,8 @@ public class Storage implements Repository, ProgramListenerAware {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void addRawNode(byte[] key, byte[] value) {
+        throw new RuntimeException("Not supported");
+    }
 }
