@@ -617,22 +617,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //        }
     }
 
-    private boolean isMemoryBoundFlush() {
-        return !syncManager.isSyncDone() && config.cacheFlushMemory() > 0 || config.cacheFlushBlocks() == 0;
-    }
-
-    private boolean needFlush(Block block) {
-        if (syncManager.isSyncDone()) {
-            return true;
-        } else if (config.cacheFlushMemory() > 0) {
-            return needFlushByMemory(config.cacheFlushMemory());
-        } else if (config.cacheFlushBlocks() > 0) {
-            return block.getNumber() % config.cacheFlushBlocks() == 0;
-        } else {
-            return needFlushByMemory(.7);
-        }
-    }
-
     private boolean needFlushByMemory(double maxMemoryPercents) {
         return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
     }

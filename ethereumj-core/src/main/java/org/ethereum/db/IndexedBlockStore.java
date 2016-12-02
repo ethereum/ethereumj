@@ -78,10 +78,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
         blocks.flush();
         index.flush();
         if (blocksDS instanceof Flushable) {
-            ((Flushable)blocksDS).flush();
+            blocksDS.flush();
         }
         if (indexDS instanceof Flushable) {
-            ((Flushable)indexDS).flush();
+            indexDS.flush();
         }
     }
 

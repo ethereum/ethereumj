@@ -584,11 +584,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public double cacheFlushMemory() {
-        return config.getDouble("cache.flush.memory");
-    }
-
-    @ValidateMe
     public int cacheFlushBlocks() {
         return config.getInt("cache.flush.blocks");
     }

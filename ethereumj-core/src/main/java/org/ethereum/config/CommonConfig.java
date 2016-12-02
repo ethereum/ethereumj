@@ -72,8 +72,7 @@ public class CommonConfig {
 
     @Bean
     public StateSource stateSource() {
-        LegacySourceAdapter stateDSAdapter = new LegacySourceAdapter(stateDS());
-        StateSource stateSource = new StateSource(stateDSAdapter, systemProperties().databasePruneDepth() >= 0);
+        StateSource stateSource = new StateSource(stateDS(), systemProperties().databasePruneDepth() >= 0);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
 
@@ -86,8 +85,7 @@ public class CommonConfig {
         KeyValueDataSource dataSource = keyValueDataSource();
         dataSource.setName(name);
         dataSource.init();
-        LegacySourceAdapter stateDSAdapter = new LegacySourceAdapter(dataSource);
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(stateDSAdapter, WriteCache.CacheType.SIMPLE);
+        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(dataSource, WriteCache.CacheType.SIMPLE);
         dbFlushManager().addCache(writeCache);
         return writeCache;
     }
