@@ -18,14 +18,16 @@ import java.util.*;
  */
 public class IterableTestRepository implements Repository {
     Repository src;
-    IterableTestRepository parent;
 
     Set<byte[]> accounts = new ByteArraySet();
     Map<byte[], Set<DataWord>> storageKeys = new ByteArrayMap<>();
 
     private IterableTestRepository(Repository src, IterableTestRepository parent) {
         this.src = src;
-        this.parent = parent;
+        if (parent != null) {
+            this.accounts = parent.accounts;
+            this.storageKeys = parent.storageKeys;
+        }
     }
 
     public IterableTestRepository(Repository src) {
@@ -33,25 +35,17 @@ public class IterableTestRepository implements Repository {
     }
 
     private void addAccount(byte[] addr) {
-        if (parent != null) {
-            parent.addAccount(addr);
-        } else {
-            accounts.add(addr);
-        }
+        accounts.add(addr);
     }
 
     private void addStorageKey(byte[] acct, DataWord key) {
-        if (parent != null) {
-            parent.addStorageKey(acct, key);
-        } else {
-            addAccount(acct);
-            Set<DataWord> keys = storageKeys.get(acct);
-            if (keys == null) {
-                keys = new HashSet<>();
-                storageKeys.put(acct, keys);
-            }
-            keys.add(key);
+        addAccount(acct);
+        Set<DataWord> keys = storageKeys.get(acct);
+        if (keys == null) {
+            keys = new HashSet<>();
+            storageKeys.put(acct, keys);
         }
+        keys.add(key);
     }
 
     @Override
@@ -142,7 +136,6 @@ public class IterableTestRepository implements Repository {
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        if (parent != null) return parent.getAccountsKeys();
         Set<byte[]> ret = new ByteArraySet();
         for (byte[] account : accounts) {
             if (isExist(account)) {
