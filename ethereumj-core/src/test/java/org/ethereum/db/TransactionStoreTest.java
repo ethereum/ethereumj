@@ -49,7 +49,7 @@ public class TransactionStoreTest {
         HashMapDB txDb = new HashMapDB();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
-        bc.getBlockchain().withTransactionStore(new TransactionStore(new CachingDataSource(txDb)));
+        bc.getBlockchain().withTransactionStore(new TransactionStore(txDb));
         SolidityContract contract = bc.submitNewContract(contractSrc);
         bc.createBlock();
         contract.callFunction("add", 555, 222);
