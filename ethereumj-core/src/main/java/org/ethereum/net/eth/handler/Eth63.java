@@ -134,7 +134,6 @@ public class Eth63 extends Eth62 {
         requestedNodes = new ByteArraySet();
         requestedNodes.addAll(hashes);
         requestNodesFuture = SettableFuture.create();
-        syncState = SyncState.NODE_RETRIEVING;
         sendMessage(msg);
         lastReqSentTime = System.currentTimeMillis();
         return requestNodesFuture;
@@ -147,13 +146,17 @@ public class Eth63 extends Eth62 {
         }
 
         List<Pair<byte[], byte[]>> ret = new ArrayList<>();
+        if(msg.getDataList().isEmpty()) {
+            String err = "Received NodeDataMessage contains empty node data. Dropping peer";
+            dropUselessPeer(err);
+            return;
+        }
+
         for (Value nodeVal : msg.getDataList()) {
             byte[] hash = nodeVal.hash();
             if (!requestedNodes.contains(hash)) {
                 String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer";
-                logger.debug(err);
-                requestNodesFuture.setException(new RuntimeException(err));
-                dropConnection();
+                dropUselessPeer(err);
                 return;
             }
             ret.add(Pair.of(hash, nodeVal.encode()));
@@ -164,6 +167,18 @@ public class Eth63 extends Eth62 {
         requestNodesFuture = null;
         processingTime += (System.currentTimeMillis() - lastReqSentTime);
         syncState = SyncState.IDLE;
+    }
+
+    private void dropUselessPeer(String err) {
+        logger.debug(err);
+        requestNodesFuture.setException(new RuntimeException(err));
+        dropConnection();
+    }
+
+    @Override
+    public synchronized boolean setStatus(SyncState syncState) {
+        if(requestedNodes != null && !requestedNodes.isEmpty()) return false;
+        return super.setStatus(syncState);
     }
 
     @Override

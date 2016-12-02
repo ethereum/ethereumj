@@ -35,6 +35,20 @@ public class SyncQueueImpl implements SyncQueueIfc {
         private boolean reverse;
 
         @Override
+        public List<HeadersRequest> split(int maxCount) {
+            if (this.hash != null) return Collections.<HeadersRequest>singletonList(this);
+            List<HeadersRequest> ret = new ArrayList<>();
+            int remaining = count;
+            while(remaining > 0) {
+                int reqSize = Math.min(maxCount, remaining);
+                ret.add(new HeadersRequestImpl(start, reqSize, reverse));
+                remaining -= reqSize;
+                start = reverse ? start - reqSize : start + reqSize;
+            }
+            return ret;
+        }
+
+        @Override
         public String toString() {
             return "HeadersRequest{" +
                     "start=" + getStart() +
@@ -126,6 +140,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
     long minNum = Integer.MAX_VALUE;
     long maxNum = 0;
     long darkZoneNum = 0;
+    Long endBlockNumber = null;
 
     Random rnd = new Random(); // ;)
 
@@ -143,6 +158,18 @@ public class SyncQueueImpl implements SyncQueueIfc {
         }
         init(initBlocks);
     }
+
+    /**
+     * Init with blockchain and download until endBlockNumber (included)
+     * @param bc                Blockchain
+     * @param endBlockNumber    last block to download
+     */
+    public SyncQueueImpl(Blockchain bc, Long endBlockNumber) {
+        this(bc);
+        this.endBlockNumber = endBlockNumber;
+    }
+
+
 
     private void init(List<Block> initBlocks) {
         if (initBlocks.size() < MAX_CHAIN_LEN && initBlocks.get(0).getNumber() != 0) {
@@ -243,17 +270,30 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized HeadersRequest requestHeaders() {
+    public synchronized HeadersRequest requestHeaders(int count) {
+        return requestHeadersImpl(count);
+    }
+
+    private HeadersRequest requestHeadersImpl(int count) {
+        long startNumber;
+        int headersCount;
+        boolean reverse = false;
+
         if (!hasGaps()) {
-            return new HeadersRequestImpl(maxNum + 1, MAX_CHAIN_LEN, false);
+            startNumber = maxNum + 1;
+            if (endBlockNumber != null) {
+                headersCount = (int) Math.min(count, endBlockNumber - startNumber + 1);
+            } else {
+                headersCount = count;
+            }
         } else {
             List<HeaderElement> longestChain = getLongestChain();
-            if (rnd.nextBoolean()) {
-                return new HeadersRequestImpl(longestChain.get(longestChain.size() - 1).header.getNumber(), MAX_CHAIN_LEN, false);
-            } else {
-                return new HeadersRequestImpl(longestChain.get(longestChain.size() - 1).header.getNumber(), MAX_CHAIN_LEN, true);
-            }
+            startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
+            headersCount = MAX_CHAIN_LEN;
+            if (!rnd.nextBoolean()) reverse = true;
         }
+
+        return new HeadersRequestImpl(startNumber, headersCount, reverse);
     }
 
     @Override

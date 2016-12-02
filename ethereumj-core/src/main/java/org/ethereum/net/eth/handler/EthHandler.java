@@ -12,6 +12,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.sync.SyncState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,5 +133,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public EthVersion getVersion() {
         return version;
+    }
+
+    @Override
+    public synchronized boolean setStatus(SyncState syncState) {
+        return false;
     }
 }
