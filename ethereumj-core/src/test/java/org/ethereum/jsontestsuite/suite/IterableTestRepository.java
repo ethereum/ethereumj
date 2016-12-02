@@ -214,6 +214,11 @@ public class IterableTestRepository implements Repository {
         src.loadAccount(addr, cacheAccounts, cacheDetails);
     }
 
+    @Override
+    public void addRawNode(byte[] key, byte[] value) {
+        src.addRawNode(key, value);
+    }
+
     private class IterableContractDetails implements ContractDetails {
         ContractDetails src;
 
