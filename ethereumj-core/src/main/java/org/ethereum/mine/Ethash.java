@@ -3,6 +3,7 @@ package org.ethereum.mine;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -31,9 +32,10 @@ public class Ethash {
 
     private static Ethash cachedInstance = null;
     private static long cachedBlockEpoch = 0;
-//    private static ExecutorService executor = Executors.newSingleThreadExecutor();
+    //    private static ExecutorService executor = Executors.newSingleThreadExecutor();
     private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-        new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
+            new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+            new ThreadFactoryBuilder().setNameFormat("ethash-pool-%d").build()));
 
     public static boolean fileCacheEnabled = true;
 
