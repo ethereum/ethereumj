@@ -108,14 +108,7 @@ public abstract class BlockDownloader {
                         // If queue is at least half-full, use not best peers
                         final Channel any;
                         if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
-                            List<Channel> peers = pool.getAllIdle();
-                            List<Channel> worstHalf = peers.subList((int) Math.floor(peers.size()), peers.size());
-                            if (!worstHalf.isEmpty()) {
-                                Collections.shuffle(worstHalf);
-                                any = worstHalf.get(0);
-                            } else {
-                                any = null;
-                            }
+                            any = pool.getMediocreIdle();
                         } else {
                             any = pool.getAnyIdle();
                         }
