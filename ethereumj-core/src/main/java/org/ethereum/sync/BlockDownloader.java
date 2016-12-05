@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -103,7 +104,22 @@ public abstract class BlockDownloader {
                     }
                     int reqHeadersCounter = 0;
                     for (SyncQueueIfc.HeadersRequest headersRequest : hReq.split(MAX_IN_REQUEST)) {
-                        final Channel any = pool.getAnyIdle();
+
+                        // If queue is at least half-full, use not best peers
+                        final Channel any;
+                        if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
+                            List<Channel> peers = pool.getAllIdle();
+                            List<Channel> worstHalf = peers.subList((int) Math.floor(peers.size()), peers.size());
+                            if (!worstHalf.isEmpty()) {
+                                Collections.shuffle(worstHalf);
+                                any = worstHalf.get(0);
+                            } else {
+                                any = null;
+                            }
+                        } else {
+                            any = pool.getAnyIdle();
+                        }
+
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
                             break;
@@ -192,7 +208,7 @@ public abstract class BlockDownloader {
 
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
-                        Channel any = pool.getAnyIdle();
+                        Channel any = pool.getBestIdle();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
                             break;
