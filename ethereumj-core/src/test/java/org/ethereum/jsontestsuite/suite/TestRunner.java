@@ -9,6 +9,7 @@ import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.NoDeleteSource;
 import org.ethereum.db.*;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
@@ -167,7 +168,8 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        Repository repository = loadRepository(new EnvTestRepository(new RepositoryRoot(new MapDB<byte[]>())), testCase.getPre());
+        EnvTestRepository repositoryDummy = new EnvTestRepository(new RepositoryRoot(new NoDeleteSource<>(new MapDB<byte[]>())));
+        Repository repository = loadRepository(repositoryDummy, testCase.getPre());
 
         try {
 
@@ -540,7 +542,7 @@ public class TestRunner {
         return transaction;
     }
 
-    public Repository loadRepository(RepositoryImpl track, Map<ByteArrayWrapper, AccountState> pre) {
+    public Repository loadRepository(EnvTestRepository track, Map<ByteArrayWrapper, AccountState> pre) {
 
 
             /* 1. Store pre-exist accounts - Pre */

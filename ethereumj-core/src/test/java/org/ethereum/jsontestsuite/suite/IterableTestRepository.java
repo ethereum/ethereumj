@@ -34,7 +34,7 @@ public class IterableTestRepository implements Repository {
         this(src, null);
     }
 
-    private void addAccount(byte[] addr) {
+    void addAccount(byte[] addr) {
         accounts.add(addr);
     }
 
