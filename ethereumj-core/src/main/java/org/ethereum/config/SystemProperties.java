@@ -86,6 +86,10 @@ public class SystemProperties {
         return CONFIG;
     }
 
+    public static void resetToDefault() {
+        CONFIG = null;
+    }
+
     /**
      * Used mostly for testing purposes to ensure the application
      * refers only to the config passed as a Spring bean.
