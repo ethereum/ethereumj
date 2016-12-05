@@ -167,7 +167,9 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        Repository repository = loadRepository(new EnvTestRepository(new RepositoryRoot(new MapDB<byte[]>())), testCase.getPre());
+        IterableTestRepository testRepository = new IterableTestRepository(new RepositoryRoot(new MapDB<byte[]>()));
+        testRepository.environmental = true;
+        Repository repository = loadRepository(testRepository, testCase.getPre());
 
         try {
 
@@ -540,7 +542,7 @@ public class TestRunner {
         return transaction;
     }
 
-    public Repository loadRepository(RepositoryImpl track, Map<ByteArrayWrapper, AccountState> pre) {
+    public Repository loadRepository(Repository track, Map<ByteArrayWrapper, AccountState> pre) {
 
 
             /* 1. Store pre-exist accounts - Pre */
