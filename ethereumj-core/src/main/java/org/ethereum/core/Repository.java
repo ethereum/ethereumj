@@ -55,6 +55,15 @@ public interface Repository {
     BigInteger increaseNonce(byte[] addr);
 
     /**
+     * Sets the account nonce of the given account
+     *
+     * @param addr of the account
+     * @param nonce new nonce
+     * @return new value of the nonce
+     */
+    BigInteger setNonce(byte[] addr, BigInteger nonce);
+
+    /**
      * Get current nonce of a given account
      *
      * @param addr of the account

@@ -21,12 +21,14 @@ public class IterableTestRepository implements Repository {
 
     Set<byte[]> accounts = new ByteArraySet();
     Map<byte[], Set<DataWord>> storageKeys = new ByteArrayMap<>();
+    boolean environmental;
 
     private IterableTestRepository(Repository src, IterableTestRepository parent) {
         this.src = src;
         if (parent != null) {
             this.accounts = parent.accounts;
             this.storageKeys = parent.storageKeys;
+            this.environmental = parent.environmental;
         }
     }
 
@@ -34,7 +36,7 @@ public class IterableTestRepository implements Repository {
         this(src, null);
     }
 
-    private void addAccount(byte[] addr) {
+    void addAccount(byte[] addr) {
         accounts.add(addr);
     }
 
@@ -87,6 +89,11 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
+    public BigInteger setNonce(byte[] addr, BigInteger nonce) {
+        return src.setNonce(addr, nonce);
+    }
+
+    @Override
     public BigInteger getNonce(byte[] addr) {
         return src.getNonce(addr);
     }
@@ -109,6 +116,11 @@ public class IterableTestRepository implements Repository {
 
     @Override
     public byte[] getCode(byte[] addr) {
+        if (environmental) {
+            if (!src.isExist(addr)) {
+                createAccount(addr);
+            }
+        }
         return src.getCode(addr);
     }
 
@@ -125,6 +137,11 @@ public class IterableTestRepository implements Repository {
 
     @Override
     public BigInteger getBalance(byte[] addr) {
+        if (environmental) {
+            if (!src.isExist(addr)) {
+                createAccount(addr);
+            }
+        }
         return src.getBalance(addr);
     }
 
@@ -191,6 +208,11 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
+    public void addRawNode(byte[] key, byte[] value) {
+        src.addRawNode(key, value);
+    }
+
+    @Override
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
         src.updateBatch(accountStates, contractDetailes);
         for (ByteArrayWrapper wrapper : accountStates.keySet()) {
@@ -212,11 +234,6 @@ public class IterableTestRepository implements Repository {
     @Override
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         src.loadAccount(addr, cacheAccounts, cacheDetails);
-    }
-
-    @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        src.addRawNode(key, value);
     }
 
     private class IterableContractDetails implements ContractDetails {

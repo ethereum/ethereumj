@@ -58,6 +58,11 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
+    public BigInteger setNonce(byte[] addr, BigInteger nonce) {
+        return repository.setNonce(addr, nonce);
+    }
+
+    @Override
     public BigInteger getNonce(byte[] addr) {
         return repository.getNonce(addr);
     }

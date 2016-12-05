@@ -84,6 +84,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         return accountState.getNonce();
     }
 
+    @Override
     public BigInteger setNonce(byte[] addr, BigInteger nonce) {
         AccountState accountState = getOrCreateAccountState(addr);
         accountStateCache.put(addr, accountState.withNonce(nonce));

@@ -994,7 +994,7 @@ public class RepositoryTest {
             }
         }).start();
 
-        failSema.await(50, TimeUnit.SECONDS);
+        failSema.await(10, TimeUnit.SECONDS);
 
         if (failSema.getCount() == 0) {
             throw new RuntimeException("Test failed.");
