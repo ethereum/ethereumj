@@ -34,7 +34,7 @@ public interface Blockchain {
 
     /**
      * Get the underlying BlockStore
-     * @return
+     * @return Blockstore
      */
     BlockStore getBlockStore();
 
