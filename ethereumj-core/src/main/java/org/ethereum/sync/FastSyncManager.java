@@ -11,6 +11,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Flushable;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
@@ -66,6 +67,9 @@ public class FastSyncManager {
 
     @Autowired
     private Repository repository;
+
+    @Autowired
+    DbFlushManager dbFlushManager;
 
     @Autowired
     FastSyncDownloader downloader;
@@ -326,7 +330,7 @@ public class FastSyncManager {
                     synchronized (this) {
                         wait(10);
                     }
-                    logStat();
+                    regularTask();
                 } catch (InterruptedException e) {
                     throw e;
                 } catch (Throwable t) {
@@ -341,14 +345,20 @@ public class FastSyncManager {
     long last = 0;
     long lastNodeCount = 0;
 
-    private void logStat() {
+    private void regularTask() {
         long cur = System.currentTimeMillis();
         if (cur - last > 5000) {
             logger.info("FastSync: received: " + nodesInserted + ", known: " + nodesQueue.size() + ", pending: " + pendingNodes.size()
                     + String.format(", nodes/sec: %1$.2f", 1000d * (nodesInserted - lastNodeCount) / (cur - last)));
             last = cur;
             lastNodeCount = nodesInserted;
+            commitNodes();
         }
+    }
+
+    private synchronized void commitNodes() {
+        repository.commit();
+        dbFlushManager.commit();
     }
 
     public void main() {
@@ -382,7 +392,7 @@ public class FastSyncManager {
 
             logger.info("FastSync: state trie download complete!");
             last = 0;
-            logStat();
+            regularTask();
 
             repository.flush();
             if (stateDS instanceof Flushable) {
