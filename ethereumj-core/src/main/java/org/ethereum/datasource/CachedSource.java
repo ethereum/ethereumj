@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public interface CachedSource<Key, Value> extends Source<Key, Value> {
 
-    Source<Key, Value> getSrc();
+    Source<Key, Value> getSource();
 
     Collection<Key> getModified();
 

@@ -84,16 +84,16 @@ public class TrieTest {
             super(new TrieImpl(new NoDeleteSource<>(src), root), SERIALIZER, SERIALIZER);
         }
         public byte[] getRootHash() {
-            return ((TrieImpl) src).getRootHash();
+            return ((TrieImpl) getSource()).getRootHash();
         }
 
         public String getTrieDump() {
-            return ((TrieImpl) src).getTrieDump();
+            return ((TrieImpl) getSource()).getTrieDump();
         }
 
         @Override
         public boolean equals(Object obj) {
-            return src.equals(((StringTrie)obj).src);
+            return getSource().equals(((StringTrie) obj).getSource());
         }
     }
 

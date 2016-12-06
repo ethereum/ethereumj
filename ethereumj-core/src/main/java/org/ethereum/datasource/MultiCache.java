@@ -13,7 +13,7 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
     public synchronized V get(byte[] key) {
         V ownCache = getCached(key);
         if (ownCache == null) {
-            V v = delegate != null ? super.get(key) : null;
+            V v = getSource() != null ? super.get(key) : null;
             ownCache = create(key, v);
             put(key, ownCache);
         }
@@ -21,14 +21,14 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
     }
 
     @Override
-    public synchronized boolean flush() {
+    public synchronized boolean flushImpl() {
         boolean ret = false;
         for (byte[] key: writeCache.getModified()) {
             V value = super.get(key);
-            if (value.getSrc() != null) {
+            if (value.getSource() != null) {
                 ret |= flushChild(value);
             } else {
-                delegate.put(key, value);
+                getSource().put(key, value);
                 ret = true;
             }
         }

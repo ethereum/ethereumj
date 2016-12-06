@@ -15,12 +15,7 @@ public class ReadWriteCache<Key, Value> extends SourceDelegateAdapter<Key, Value
     public ReadWriteCache(Source<Key, Value> src, WriteCache.CacheType cacheType) {
         writeCache = new WriteCache<>(src, cacheType);
         readCache = new ReadCache<>(writeCache);
-        this.delegate = readCache;
-    }
-
-    @Override
-    public Source<Key, Value> getSrc() {
-        return delegate;
+        setSource(readCache);
     }
 
     @Override
@@ -37,7 +32,7 @@ public class ReadWriteCache<Key, Value> extends SourceDelegateAdapter<Key, Value
     }
 
     @Override
-    public boolean flush() {
+    public boolean flushImpl() {
         readCache.flush();
         return writeCache.flush();
     }
@@ -51,7 +46,7 @@ public class ReadWriteCache<Key, Value> extends SourceDelegateAdapter<Key, Value
         public BytesKey(Source<byte[], V> src, WriteCache.CacheType cacheType) {
             this.writeCache = new WriteCache.BytesKey<>(src, cacheType);
             this.readCache = new ReadCache.BytesKey<>(writeCache);
-            this.delegate = readCache;
+            setSource(readCache);
         }
     }
 }

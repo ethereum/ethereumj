@@ -71,8 +71,8 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
     }
 
     @Override
-    public boolean flush() {
+    public boolean flushImpl() {
         journal.flush();
-        return super.flush();
+        return super.flushImpl();
     }
 }

@@ -15,7 +15,7 @@ public class BatchSourceWriter<Key, Value> extends SourceDelegateAdapter<Key, Va
     }
 
     private BatchSource<Key, Value> getBatchSource() {
-        return (BatchSource<Key, Value>) delegate;
+        return (BatchSource<Key, Value>) getSource();
     }
 
     @Override
@@ -29,7 +29,7 @@ public class BatchSourceWriter<Key, Value> extends SourceDelegateAdapter<Key, Va
     }
 
     @Override
-    public synchronized boolean flush() {
+    public synchronized boolean flushImpl() {
         if (!buf.isEmpty()) {
             getBatchSource().updateBatch(buf);
             buf.clear();

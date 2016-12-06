@@ -12,12 +12,10 @@ import java.util.*;
  */
 public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
-    private Source<Key, Value> src;
-
     private Map<Key, Value> cache = new HashMap<>();
 
     public ReadCache(Source<Key, Value> src) {
-        this.src = src;
+        super(src);
     }
 
     public ReadCache<Key, Value> withCache(Map<Key, Value> cache) {
@@ -55,7 +53,7 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         } else {
             cache.put(key, val);
             cacheAdded(key, val);
-            src.put(key, val);
+            getSource().put(key, val);
         }
     }
 
@@ -67,7 +65,7 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
             if (cache.containsKey(key)) {
                 ret = null;
             } else {
-                ret = src.get(key);
+                ret = getSource().get(key);
                 cache.put(key, ret);
                 cacheAdded(key, ret);
             }
@@ -80,11 +78,12 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         checkByteArrKey(key);
         Value value = cache.remove(key);
         cacheRemoved(key, value);
-        src.delete(key);
+        getSource().delete(key);
     }
 
-    public synchronized Source<Key, Value> getSrc() {
-        return src;
+    @Override
+    protected boolean flushImpl() {
+        return false;
     }
 
     public synchronized Collection<Key> getModified() {
