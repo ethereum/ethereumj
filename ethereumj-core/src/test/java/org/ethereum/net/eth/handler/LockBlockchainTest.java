@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Testing whether Eth handler {@link Eth62} is blocking {@link BlockchainImpl}
  */
-@Ignore
 public class LockBlockchainTest {
 
     private final AtomicBoolean result = new AtomicBoolean();
