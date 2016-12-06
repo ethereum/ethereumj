@@ -24,10 +24,10 @@ public class StateSource extends SourceDelegateAdapter<byte[], byte[]>
         readCache = new ReadCache.BytesKey<>(writeCache).withMaxCapacity(16 * 1024 * 1024 / 512); // 512 - approx size of a node
         countingSource = new CountingBytesSource(readCache);
         if (!pruningEnabled) {
-            this.delegate = countingSource;
+            setSource(countingSource);
         } else {
             journalSource = new JournalBytesSource(countingSource);
-            this.delegate = journalSource;
+            setSource(journalSource);
         }
     }
 
@@ -38,7 +38,7 @@ public class StateSource extends SourceDelegateAdapter<byte[], byte[]>
     }
 
     @Override
-    public boolean flush() {
+    public boolean flushImpl() {
         return writeCache.flush();
     }
 

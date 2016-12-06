@@ -7,8 +7,7 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
@@ -78,7 +77,7 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
@@ -167,7 +166,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        IterableTestRepository testRepository = new IterableTestRepository(new RepositoryRoot(new MapDB<byte[]>()));
+        IterableTestRepository testRepository = new IterableTestRepository(new RepositoryRoot(new HashMapDB<byte[]>()));
         testRepository.environmental = true;
         Repository repository = loadRepository(testRepository, testCase.getPre());
 

@@ -8,9 +8,8 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.Flushable;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.client.Capability;
@@ -63,7 +62,7 @@ public class FastSyncManager {
 
     @Autowired
     @Qualifier("stateDS")
-    KeyValueDataSource stateDS = new HashMapDB();
+    DbSource<byte[]> stateDS = new HashMapDB<>();
 
     @Autowired
     private Repository repository;
@@ -395,9 +394,8 @@ public class FastSyncManager {
             regularTask();
 
             repository.flush();
-            if (stateDS instanceof Flushable) {
-                ((Flushable) stateDS).flush();
-            }
+            stateDS.flush();
+
             pool.setNodesSelector(null);
 
             while (!downloader.isDownloadComplete()) {

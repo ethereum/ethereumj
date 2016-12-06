@@ -3,7 +3,6 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.*;
-import org.ethereum.datasource.Flushable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,12 +76,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
     public synchronized void flush(){
         blocks.flush();
         index.flush();
-        if (blocksDS instanceof Flushable) {
-            blocksDS.flush();
-        }
-        if (indexDS instanceof Flushable) {
-            indexDS.flush();
-        }
+        blocksDS.flush();
+        indexDS.flush();
     }
 
 

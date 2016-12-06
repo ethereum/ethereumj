@@ -104,13 +104,14 @@ public class Eth62 extends EthHandler {
 
     @Autowired
     public Eth62(final SystemProperties config, final Blockchain blockchain,
-                 final CompositeEthereumListener ethereumListener) {
-        this(version, config, blockchain, ethereumListener);
+                 final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
+        this(version, config, blockchain, blockStore, ethereumListener);
     }
 
     Eth62(final EthVersion version, final SystemProperties config,
-          final Blockchain blockchain, final CompositeEthereumListener ethereumListener) {
-        super(version, config, blockchain, ethereumListener);
+          final Blockchain blockchain, final BlockStore blockStore,
+          final CompositeEthereumListener ethereumListener) {
+        super(version, config, blockchain, blockStore, ethereumListener);
         maxHashesAsk = config.maxHashesAsk();
     }
 

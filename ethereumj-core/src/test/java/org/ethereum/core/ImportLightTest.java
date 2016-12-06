@@ -3,21 +3,19 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.MapDB;
-import org.ethereum.datasource.NoDeleteSource;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.util.blockchain.SolidityContract;
-import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.HashMapDB;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.blockchain.SolidityContract;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
@@ -815,9 +813,9 @@ public class ImportLightTest {
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
-        RepositoryRoot repository = new RepositoryRoot(new NoDeleteSource<>(new MapDB<byte[]>()));
+        RepositoryRoot repository = new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<byte[]>()));
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();

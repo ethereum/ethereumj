@@ -72,7 +72,6 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         }
     }
 
-    protected final Source<Key, Value> src;
     private final boolean isCounting;
 
     protected Map<Key, CacheEntry<Value>> cache = new HashMap<>();
@@ -80,18 +79,13 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     private boolean checked = false;
 
     public WriteCache(Source<Key, Value> src, CacheType cacheType) {
-        this.src = src;
+        super(src);
         this.isCounting = cacheType == CacheType.COUNTING;
     }
 
     public WriteCache<Key, Value> withCache(Map<Key, CacheEntry<Value>> cache) {
         this.cache = cache;
         return this;
-    }
-
-    @Override
-    public synchronized Source<Key, Value> getSrc() {
-        return src;
     }
 
     @Override
@@ -134,7 +128,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         checkByteArrKey(key);
         CacheEntry<Value> curVal = cache.get(key);
         if (curVal == null) {
-            return src == null ? null : src.get(key);
+            return getSource() == null ? null : getSource().get(key);
         } else {
             return curVal.getValue();
         }
@@ -145,7 +139,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         checkByteArrKey(key);
         CacheEntry<Value> curVal = cache.get(key);
         if (curVal == null) {
-            curVal = createCacheEntry(src == null ? null : src.get(key));
+            curVal = createCacheEntry(getSource() == null ? null : getSource().get(key));
             CacheEntry<Value> oldVal = cache.put(key, curVal);
             if (oldVal != null) {
                 cacheRemoved(key, oldVal.value);
@@ -156,17 +150,17 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized boolean flush() {
+    public synchronized boolean flushImpl() {
         boolean ret = false;
         for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
             if (entry.getValue().counter > 0) {
                 for (int i = 0; i < entry.getValue().counter; i++) {
-                    src.put(entry.getKey(), entry.getValue().value);
+                    getSource().put(entry.getKey(), entry.getValue().value);
                 }
                 ret = true;
             } else if (entry.getValue().counter < 0) {
                 for (int i = 0; i > entry.getValue().counter; i--) {
-                    src.delete(entry.getKey());
+                    getSource().delete(entry.getKey());
                 }
                 ret = true;
             }
@@ -174,7 +168,6 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         cache.clear();
         cacheCleared();
 
-        flushSourceIfNeeded();
         return ret;
     }
 

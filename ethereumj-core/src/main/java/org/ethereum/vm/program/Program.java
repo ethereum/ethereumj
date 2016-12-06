@@ -602,7 +602,9 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        if (logger.isDebugEnabled()) {
+            logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        }
 
         if (getGasLong() < gasValue) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);

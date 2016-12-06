@@ -5,8 +5,8 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.EthereumImpl;
@@ -74,9 +74,9 @@ public class JsonRpcTest {
 
         @Bean
         @Scope("prototype")
-        public KeyValueDataSource keyValueDataSource() {
+        public DbSource keyValueDataSource() {
             System.out.println("Sample DB created");
-            return new HashMapDB();
+            return new HashMapDB<byte[]>();
         }
     }
 

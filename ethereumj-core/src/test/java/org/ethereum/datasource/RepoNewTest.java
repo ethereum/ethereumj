@@ -2,6 +2,7 @@ package org.ethereum.datasource;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.vm.DataWord;
 import org.junit.Assert;
@@ -22,7 +23,7 @@ public class RepoNewTest {
     @Test
     public void test1() throws Exception {
 
-        Source<byte[], byte[]> stateDb = new NoDeleteSource<>(new MapDB<byte[]>());
+        Source<byte[], byte[]> stateDb = new NoDeleteSource<>(new HashMapDB<byte[]>());
         RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         byte[] addr2 = decode("bbbb");
@@ -133,7 +134,7 @@ public class RepoNewTest {
 
     @Test
     public void testStorage1() throws Exception {
-        MapDB<byte[]> stateDb = new MapDB<>();
+        HashMapDB<byte[]> stateDb = new HashMapDB<>();
         RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         repo.createAccount(addr1);
@@ -166,7 +167,7 @@ public class RepoNewTest {
 
     @Test
     public void testStorage2() throws Exception {
-        RepositoryRoot repo = new RepositoryRoot(new MapDB<byte[]>());
+        RepositoryRoot repo = new RepositoryRoot(new HashMapDB<byte[]>());
 
         Repository repo1 = repo.startTracking();
         byte[] addr2 = decode("bbbb");

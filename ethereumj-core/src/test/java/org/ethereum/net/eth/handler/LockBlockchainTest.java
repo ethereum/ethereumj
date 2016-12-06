@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Testing whether Eth handler {@link Eth62} is blocking {@link BlockchainImpl}
  */
-@Ignore
 public class LockBlockchainTest {
 
     private final AtomicBoolean result = new AtomicBoolean();
@@ -77,7 +76,8 @@ public class LockBlockchainTest {
             }
         };
 
-        SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, new CompositeEthereumListener()) {
+        SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, blockStoreDummy,
+                new CompositeEthereumListener()) {
             @Override
             public synchronized void sendStatus() {
                 this.blockstore = blockStoreDummy;

@@ -4,7 +4,7 @@ import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.NoDeleteSource;
 import org.ethereum.datasource.Source;
 import org.ethereum.vm.DataWord;
@@ -34,7 +34,7 @@ public class RepositoryTest {
     @Test
     public void test1() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -58,7 +58,7 @@ public class RepositoryTest {
     @Test
     public void test2() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -76,7 +76,7 @@ public class RepositoryTest {
     @Test
     public void test3() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -96,7 +96,7 @@ public class RepositoryTest {
     @Test
     public void test4() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -122,7 +122,7 @@ public class RepositoryTest {
     @Test
     public void test5() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         Repository track = repository.startTracking();
 
@@ -153,7 +153,7 @@ public class RepositoryTest {
     @Test
     public void test6() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -186,7 +186,7 @@ public class RepositoryTest {
     @Test
     public void test7() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -210,7 +210,7 @@ public class RepositoryTest {
     @Test
     public void test8() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -233,7 +233,7 @@ public class RepositoryTest {
     @Test
     public void test7_1() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track1 = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -267,7 +267,7 @@ public class RepositoryTest {
     @Test
     public void test7_2() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track1 = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -302,7 +302,7 @@ public class RepositoryTest {
     @Test
     public void test9() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -331,7 +331,7 @@ public class RepositoryTest {
     @Test
     public void test10() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -361,7 +361,7 @@ public class RepositoryTest {
     @Test
     public void test11() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -388,7 +388,7 @@ public class RepositoryTest {
     @Test
     public void test12() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -414,7 +414,7 @@ public class RepositoryTest {
     @Test  // Let's upload genesis pre-mine just like in the real world
     public void test13() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         Genesis genesis = (Genesis)Genesis.getInstance();
@@ -434,7 +434,7 @@ public class RepositoryTest {
     @Test
     public void test14() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -471,7 +471,7 @@ public class RepositoryTest {
     @Test
     public void test15() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -506,7 +506,7 @@ public class RepositoryTest {
     @Test
     public void test16() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -566,7 +566,7 @@ public class RepositoryTest {
     @Test
     public void test16_2() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -621,7 +621,7 @@ public class RepositoryTest {
     @Test
     public void test16_3() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -676,7 +676,7 @@ public class RepositoryTest {
     @Test
     public void test16_4() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -721,7 +721,7 @@ public class RepositoryTest {
     @Test
     public void test16_5() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -765,7 +765,7 @@ public class RepositoryTest {
     @Test
     public void test17() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
 
@@ -792,7 +792,7 @@ public class RepositoryTest {
     @Test
     public void test18() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository repoTrack2 = repository.startTracking(); //track
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -817,7 +817,7 @@ public class RepositoryTest {
     @Test
     public void test19() {
 
-        RepositoryRoot repository = new RepositoryRoot(new MapDB());
+        RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -864,7 +864,7 @@ public class RepositoryTest {
     public void test20() {
 
 //        MapDB stateDB = new MapDB();
-        Source<byte[], byte[]> stateDB = new NoDeleteSource<>(new MapDB<byte[]>());
+        Source<byte[], byte[]> stateDB = new NoDeleteSource<>(new HashMapDB<byte[]>());
         RepositoryRoot repository = new RepositoryRoot(stateDB);
         byte[] root = repository.getRoot();
 
@@ -926,7 +926,7 @@ public class RepositoryTest {
 
     @Test // testing for snapshot
     public void testMultiThread() throws InterruptedException {
-        final RepositoryImpl repository = new RepositoryRoot(new MapDB());
+        final RepositoryImpl repository = new RepositoryRoot(new HashMapDB());
 
         final byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
 

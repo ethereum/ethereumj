@@ -3,6 +3,7 @@ package org.ethereum.trie;
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
@@ -44,7 +45,7 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    class NoDoubleDeleteMapDB extends MapDB<Value> {
+    class NoDoubleDeleteMapDB extends HashMapDB<Value> {
         @Override
         public synchronized void delete(byte[] key) {
             if (storage.get(key) == null) {
@@ -83,16 +84,16 @@ public class TrieTest {
             super(new TrieImpl(new NoDeleteSource<>(src), root), SERIALIZER, SERIALIZER);
         }
         public byte[] getRootHash() {
-            return ((TrieImpl) src).getRootHash();
+            return ((TrieImpl) getSource()).getRootHash();
         }
 
         public String getTrieDump() {
-            return ((TrieImpl) src).getTrieDump();
+            return ((TrieImpl) getSource()).getTrieDump();
         }
 
         @Override
         public boolean equals(Object obj) {
-            return src.equals(((StringTrie)obj).src);
+            return getSource().equals(((StringTrie) obj).getSource());
         }
     }
 
@@ -809,7 +810,7 @@ public class TrieTest {
 //        KeyValueDataSource keyValueDataSource = new LevelDbDataSource("testState");
 //        keyValueDataSource.init();
 
-        MapDB<byte[]> dataSource = new MapDB<>();
+        HashMapDB<byte[]> dataSource = new HashMapDB<>();
 
         for (Object aDbDumpJSONArray : dbDumpJSONArray) {
 

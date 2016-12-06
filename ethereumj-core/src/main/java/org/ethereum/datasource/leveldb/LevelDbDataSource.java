@@ -1,6 +1,7 @@
-package org.ethereum.datasource;
+package org.ethereum.datasource.leveldb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.util.FileUtil;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ import static org.fusesource.leveldbjni.JniDBFactory.factory;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public class LevelDbDataSource implements KeyValueDataSource, BatchSource<byte[], byte[]> {
+public class LevelDbDataSource implements DbSource<byte[]> {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 

@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite.suite.builder;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.NoDeleteSource;
 import org.ethereum.jsontestsuite.suite.IterableTestRepository;
 import org.ethereum.db.RepositoryRoot;
@@ -39,7 +39,7 @@ public class RepositoryBuilder {
             detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
-        Repository repositoryDummy = new IterableTestRepository(new RepositoryRoot(new NoDeleteSource<>(new MapDB<byte[]>())));
+        Repository repositoryDummy = new IterableTestRepository(new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<byte[]>())));
         Repository track = repositoryDummy.startTracking();
 
         track.updateBatch(stateBatch, detailsBatch);

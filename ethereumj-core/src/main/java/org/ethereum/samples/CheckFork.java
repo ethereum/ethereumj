@@ -3,7 +3,6 @@ package org.ethereum.samples;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.IndexedBlockStore;
 

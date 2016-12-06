@@ -2,10 +2,10 @@ package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
@@ -34,7 +34,7 @@ public class PruneTest {
 
     @Test
     public void testJournal1() throws Exception {
-        MapDB<byte[]> db = new MapDB<>();
+        HashMapDB<byte[]> db = new HashMapDB<>();
         CountingBytesSource countDB = new CountingBytesSource(db);
         JournalBytesSource journalDB = new JournalBytesSource(countDB);
 
@@ -198,7 +198,7 @@ public class PruneTest {
         }
     }
 
-    static MapDB<byte[]> stateDS;
+    static HashMapDB<byte[]> stateDS;
     static String getCount(String hash) {
         byte[] bytes = stateDS.get(Hex.decode(hash));
         return bytes == null ? "0" : "" + bytes[3];
@@ -472,7 +472,7 @@ public class PruneTest {
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
     }
 
-    public void checkPruning(final MapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS, byte[] ... roots) {
+    public void checkPruning(final HashMapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS, byte[] ... roots) {
         System.out.println("Pruned storage size: " + stateDS.getStorage().size());
 
         Set<ByteArrayWrapper> allRefs = new HashSet<>();

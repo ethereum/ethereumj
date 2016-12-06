@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -55,9 +56,9 @@ public class Eth63 extends Eth62 {
     }
 
     @Autowired
-    public Eth63(final SystemProperties config, final Blockchain blockchain,
+    public Eth63(final SystemProperties config, final Blockchain blockchain, BlockStore blockStore,
                  final CompositeEthereumListener ethereumListener) {
-        super(version, config, blockchain, ethereumListener);
+        super(version, config, blockchain, blockStore, ethereumListener);
     }
 
     @Override

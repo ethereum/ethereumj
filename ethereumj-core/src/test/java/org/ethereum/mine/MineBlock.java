@@ -2,14 +2,9 @@ package org.ethereum.mine;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.CountingBytesSource;
-import org.ethereum.datasource.JournalBytesSource;
-import org.ethereum.datasource.MapDB;
-import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;
 import org.ethereum.util.ByteUtil;
 import org.junit.AfterClass;

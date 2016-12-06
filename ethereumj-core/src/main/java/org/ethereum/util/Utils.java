@@ -1,6 +1,6 @@
 package org.ethereum.util;
 
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.DecoderException;
@@ -186,7 +186,7 @@ public class Utils {
         }
     }
 
-    public static List<ByteArrayWrapper> dumpKeys(KeyValueDataSource ds) {
+    public static List<ByteArrayWrapper> dumpKeys(DbSource<byte[]> ds) {
 
         ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
 

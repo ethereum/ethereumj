@@ -3,11 +3,17 @@ package org.ethereum.datasource;
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
  */
-public abstract class AbstractCachedSource <Key, Value> implements CachedSource<Key, Value> {
+public abstract class AbstractCachedSource <Key, Value>
+        extends AbstractChainedSource<Key, Value, Key, Value>
+        implements CachedSource<Key, Value> {
+
     private MemSizeEstimator<Key> keySizeEstimator;
     private MemSizeEstimator<Value> valueSizeEstimator;
     private int size = 0;
-    protected boolean flushSource;
+
+    public AbstractCachedSource(Source<Key, Value> source) {
+        super(source);
+    }
 
     protected void cacheAdded(Key key, Value value) {
         if (keySizeEstimator != null) {
@@ -35,22 +41,6 @@ public abstract class AbstractCachedSource <Key, Value> implements CachedSource<
         this.keySizeEstimator = keySizeEstimator;
         this.valueSizeEstimator = valueSizeEstimator;
         return this;
-    }
-
-    public void setFlushSource(boolean flushSource) {
-        this.flushSource = flushSource;
-    }
-
-    @Override
-    public synchronized boolean flush() {
-        flushSourceIfNeeded();
-        return false;
-    }
-
-    protected void flushSourceIfNeeded() {
-        if (flushSource) {
-            getSrc().flush();
-        }
     }
 
     @Override
