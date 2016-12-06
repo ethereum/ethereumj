@@ -3,7 +3,7 @@ package org.ethereum.core;
 
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.manager.WorldManager;
@@ -48,7 +48,7 @@ public class ImportTest {
         public BlockStore blockStore(){
 
             IndexedBlockStore blockStore = new IndexedBlockStore();
-            blockStore.init(new MapDB<byte[]>(), new MapDB<byte[]>());
+            blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
             return blockStore;
         }

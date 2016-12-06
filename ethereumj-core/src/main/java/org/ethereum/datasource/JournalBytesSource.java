@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
 
     private Update currentUpdate = new Update();
 
-    Source<byte[], Update> journal = new MapDB<>();
+    Source<byte[], Update> journal = new HashMapDB<>();
 
     public JournalBytesSource(Source<byte[], byte[]> src) {
         super(src);

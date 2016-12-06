@@ -1,6 +1,7 @@
-package org.ethereum.datasource;
+package org.ethereum.datasource.leveldb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.util.FileUtil;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;

@@ -1,6 +1,6 @@
 package org.ethereum.trie;
 
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.Source;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.*;
@@ -37,7 +37,7 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     public TrieImpl(byte[] root) {
-        this(new MapDB<Value>(), root);
+        this(new HashMapDB<Value>(), root);
     }
 
     public TrieImpl(Source<byte[], Value> cache) {

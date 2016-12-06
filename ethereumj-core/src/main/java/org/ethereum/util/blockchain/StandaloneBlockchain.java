@@ -6,6 +6,7 @@ import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.*;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.PruneManager;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
@@ -53,7 +54,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long time = 0;
     long timeIncrement = 13;
 
-    private MapDB<byte[]> stateDS;
+    private HashMapDB<byte[]> stateDS;
     JournalBytesSource pruningStateDS;
     PruneManager pruneManager;
 
@@ -369,7 +370,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-    public MapDB<byte[]> getStateDS() {
+    public HashMapDB<byte[]> getStateDS() {
         return stateDS;
     }
 
@@ -383,9 +384,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new MapDB<byte[]>(), new MapDB<byte[]>());
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
-        stateDS = new MapDB<>();
+        stateDS = new HashMapDB<>();
         pruningStateDS = new JournalBytesSource(new CountingBytesSource(stateDS));
         pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
 
@@ -594,7 +595,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-     class SlowHashMapDB extends MapDB<byte[]> {
+     class SlowHashMapDB extends HashMapDB<byte[]> {
         private void sleep(int cnt) {
             totalDbHits += cnt;
             if (dbDelay == 0) return;

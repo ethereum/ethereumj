@@ -3,7 +3,7 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -177,7 +177,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.adminInfo = new AdminInfo();
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
-        this.transactionStore = new TransactionStore(new MapDB());
+        this.transactionStore = new TransactionStore(new HashMapDB());
         this.eventDispatchThread = EventDispatchThread.getDefault();
         this.programInvokeFactory = new ProgramInvokeFactoryImpl();
         initConst(SystemProperties.getDefault());

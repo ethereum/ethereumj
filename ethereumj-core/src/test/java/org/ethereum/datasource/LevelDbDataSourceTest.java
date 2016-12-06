@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.junit.Ignore;
 import org.junit.Test;
 

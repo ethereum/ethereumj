@@ -1,6 +1,7 @@
 package org.ethereum.datasource;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
 
@@ -13,18 +14,18 @@ import static org.junit.Assert.assertTrue;
 public class JournalPruneTest {
 
     class StringJDS extends JournalBytesSource {
-        final MapDB<byte[]> mapDB;
+        final HashMapDB<byte[]> mapDB;
         final Source<byte[], byte[]> db;
 
         public StringJDS() {
-            this(new MapDB<byte[]>());
+            this(new HashMapDB<byte[]>());
         }
 
-        private StringJDS(MapDB<byte[]> mapDB) {
+        private StringJDS(HashMapDB<byte[]> mapDB) {
             this(mapDB, new CountingBytesSource(mapDB));
         }
 
-        private StringJDS(MapDB<byte[]> mapDB, Source<byte[], byte[]> db) {
+        private StringJDS(HashMapDB<byte[]> mapDB, Source<byte[], byte[]> db) {
             super(db);
             this.db = db;
             this.mapDB = mapDB;
@@ -44,7 +45,7 @@ public class JournalPruneTest {
     }
 
     private void checkDb(StringJDS db, String ... keys) {
-        assertEquals(keys.length, db.mapDB.storage.size());
+        assertEquals(keys.length, db.mapDB.keys().size());
         for (String key : keys) {
             assertTrue(db.get(key.getBytes()) != null);
         }
@@ -80,7 +81,7 @@ public class JournalPruneTest {
         jds.persistUpdate(hashInt(3));
         checkDb(jds, "a1");
 
-        assertEquals(0, ((MapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
     }
 
     @Test
@@ -105,7 +106,7 @@ public class JournalPruneTest {
         jds.revertUpdate(hashInt(2));
         checkDb(jds, "a1", "a3", "a4");
 
-        assertEquals(0, ((MapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
     }
 
     @Test
@@ -142,7 +143,7 @@ public class JournalPruneTest {
         jds.persistUpdate(hashInt(6));
         checkDb(jds, "a2", "a3");
 
-        assertEquals(0, ((MapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
     }
 
     @Test
@@ -169,7 +170,7 @@ public class JournalPruneTest {
         jds.revertUpdate(hashInt(3));
         checkDb(jds, "a1", "a2");
 
-        assertEquals(0, ((MapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
     }
 
     public byte[] hashInt(int i) {

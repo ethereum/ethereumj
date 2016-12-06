@@ -3,7 +3,7 @@ package org.ethereum.vm.program.invoke;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
@@ -34,7 +34,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
 
 
-        this.repository = new RepositoryRoot(new MapDB<byte[]>());
+        this.repository = new RepositoryRoot(new HashMapDB<byte[]>());
         this.repository.createAccount(ownerAddress);
 
         this.repository.createAccount(contractAddress);

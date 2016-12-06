@@ -6,7 +6,7 @@ import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
-import org.ethereum.datasource.MapDB;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.DataWord;
@@ -44,7 +44,7 @@ public class TransactionStoreTest {
                 "contract Adder {" +
                 "  function add(int a, int b) returns (int) {return a + b;}" +
                 "}";
-        MapDB<byte[]> txDb = new MapDB<>();
+        HashMapDB<byte[]> txDb = new HashMapDB<>();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         bc.getBlockchain().withTransactionStore(new TransactionStore(txDb));
@@ -84,7 +84,7 @@ public class TransactionStoreTest {
                 "  int public lastResult;" +
                 "  function add(int a, int b) returns (int) {lastResult = a + b; return lastResult; }" +
                 "}";
-        MapDB txDb = new MapDB();
+        HashMapDB txDb = new HashMapDB();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         TransactionStore transactionStore = new TransactionStore(txDb);
@@ -113,7 +113,7 @@ public class TransactionStoreTest {
     public void backwardCompatibleDbTest() {
         // check that we can read previously saved entries (saved with legacy code)
 
-        MapDB txDb = new MapDB();
+        HashMapDB txDb = new HashMapDB();
         TransactionStore transactionStore = new TransactionStore(txDb);
         StandaloneBlockchain bc = new StandaloneBlockchain();
         bc.getBlockchain().withTransactionStore(transactionStore);
@@ -123,7 +123,7 @@ public class TransactionStoreTest {
         Transaction tx = b1.getTransactionsList().get(0);
         TransactionInfo info = transactionStore.get(tx.getHash()).get(0);
 
-        MapDB<byte[]> txDb1 = new MapDB<>();
+        HashMapDB<byte[]> txDb1 = new HashMapDB<>();
         txDb1.put(tx.getHash(), info.getEncoded()); // legacy serialization
         TransactionStore transactionStore1 = new TransactionStore(txDb1);
         TransactionInfo info1 = transactionStore1.get(tx.getHash()).get(0);
