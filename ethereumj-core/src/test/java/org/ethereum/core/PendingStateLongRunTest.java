@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
-import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.MapDB;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.ByteArrayWrapper;
@@ -103,7 +102,7 @@ public class PendingStateLongRunTest {
 
     private Blockchain createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new MapDB<byte[]>(), new MapDB<byte[]>());
 
         Repository repository = new RepositoryRoot(new MapDB());
 

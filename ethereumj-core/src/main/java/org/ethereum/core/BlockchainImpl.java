@@ -3,7 +3,6 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.MapDB;
 import org.ethereum.db.*;
 import org.ethereum.trie.Trie;

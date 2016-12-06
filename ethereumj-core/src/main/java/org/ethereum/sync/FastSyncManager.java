@@ -8,8 +8,8 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.MapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
@@ -61,7 +61,7 @@ public class FastSyncManager {
 
     @Autowired
     @Qualifier("stateDS")
-    DbSource stateDS = new HashMapDB();
+    DbSource<byte[]> stateDS = new MapDB<>();
 
     @Autowired
     private Repository repository;

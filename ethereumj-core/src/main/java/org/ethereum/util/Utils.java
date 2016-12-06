@@ -186,7 +186,7 @@ public class Utils {
         }
     }
 
-    public static List<ByteArrayWrapper> dumpKeys(DbSource ds) {
+    public static List<ByteArrayWrapper> dumpKeys(DbSource<byte[]> ds) {
 
         ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
 

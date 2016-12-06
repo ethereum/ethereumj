@@ -14,7 +14,7 @@ import java.util.Set;
 
 import static java.lang.System.getProperty;
 
-public class MapDBDataSource implements DbSource, BatchSource<byte[], byte[]> {
+public class MapDBDataSource implements DbSource<byte[]> {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
 

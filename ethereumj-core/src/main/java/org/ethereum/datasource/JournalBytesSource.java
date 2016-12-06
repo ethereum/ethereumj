@@ -19,7 +19,7 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
 
     private Update currentUpdate = new Update();
 
-    private Source<byte[], Update> journal = new MapDB<>();
+    Source<byte[], Update> journal = new MapDB<>();
 
     public JournalBytesSource(Source<byte[], byte[]> src) {
         super(src);

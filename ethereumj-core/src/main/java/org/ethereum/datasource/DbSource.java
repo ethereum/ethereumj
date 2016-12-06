@@ -6,7 +6,7 @@ import java.util.Set;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public interface DbSource extends BatchSource<byte[], byte[]> {
+public interface DbSource<V> extends BatchSource<byte[], V> {
     void setName(String name);
 
     String getName();

@@ -8,7 +8,7 @@ import org.ethereum.datasource.DbSource;
  * Created by Admin on 18.06.2015.
  */
 public class DBStore implements ChunkStore {
-    private DbSource db;
+    private DbSource<byte[]> db;
 
     public DBStore(DbSource db) {
         this.db = db;
