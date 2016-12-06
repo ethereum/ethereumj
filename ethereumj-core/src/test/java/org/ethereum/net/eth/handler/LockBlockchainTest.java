@@ -77,7 +77,8 @@ public class LockBlockchainTest {
             }
         };
 
-        SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, new CompositeEthereumListener()) {
+        SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, blockStoreDummy,
+                new CompositeEthereumListener()) {
             @Override
             public synchronized void sendStatus() {
                 this.blockstore = blockStoreDummy;

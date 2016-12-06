@@ -2,6 +2,7 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -60,13 +61,14 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     protected EthHandler(final EthVersion version, final SystemProperties config,
-                         final Blockchain blockchain, final CompositeEthereumListener ethereumListener) {
+                         final Blockchain blockchain, final BlockStore blockStore,
+                         final CompositeEthereumListener ethereumListener) {
         this.version = version;
         this.config = config;
         this.ethereumListener = ethereumListener;
         this.blockchain = blockchain;
         maxHashesAsk = config.maxHashesAsk();
-        bestBlock = blockchain.getBestBlock();
+        bestBlock = blockStore.getBestBlock();
         this.ethereumListener.addListener(listener);
         // when sync enabled we delay transactions processing until sync is complete
 //        processTransactions = !config.isSyncEnabled();
