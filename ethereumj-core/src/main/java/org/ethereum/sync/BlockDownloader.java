@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -110,7 +109,7 @@ public abstract class BlockDownloader {
                         if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
                             any = pool.getMediocreIdle();
                         } else {
-                            any = pool.getAnyIdle();
+                            any = pool.getBestIdle();
                         }
 
                         if (any == null) {
