@@ -82,7 +82,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        KeyValueDataSource dataSource = keyValueDataSource();
+        DbSource dataSource = keyValueDataSource();
         dataSource.setName(name);
         dataSource.init();
         BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
@@ -96,7 +96,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     @Primary
-    public KeyValueDataSource keyValueDataSource() {
+    public DbSource keyValueDataSource() {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             if ("mapdb".equals(dataSource)) {
@@ -111,8 +111,8 @@ public class CommonConfig {
     }
 
     @Bean
-    public KeyValueDataSource stateDS() {
-        KeyValueDataSource ret = keyValueDataSource();
+    public DbSource stateDS() {
+        DbSource ret = keyValueDataSource();
         ret.setName("state");
         ret.init();
 

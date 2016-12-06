@@ -2,8 +2,7 @@ package org.ethereum.trie;
 
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
-import org.junit.Assert;
+import org.ethereum.datasource.DbSource;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -14,7 +13,7 @@ import static org.junit.Assert.*;
 public class JournalPruneTest {
 
     class StringJDS extends JournalPruneDataSource {
-        public StringJDS(KeyValueDataSource src) {
+        public StringJDS(DbSource src) {
             super(src);
         }
 

@@ -1,7 +1,7 @@
 package org.ethereum.trie;
 
 import org.ethereum.core.BlockHeader;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.db.ByteArrayWrapper;
 
 import java.util.*;
@@ -17,7 +17,7 @@ import java.util.*;
  *
  * Created by Anton Nashatyrev on 01.07.2016.
  */
-public class JournalPruneDataSource implements KeyValueDataSource {
+public class JournalPruneDataSource implements DbSource {
     private class Updates {
         BlockHeader blockHeader;
         Set<ByteArrayWrapper> insertedKeys = new HashSet<>();
@@ -39,12 +39,12 @@ public class JournalPruneDataSource implements KeyValueDataSource {
 
     Map<ByteArrayWrapper, Ref> refCount = new HashMap<>();
 
-    private KeyValueDataSource src;
+    private DbSource src;
     // block hash => updates
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
 
-    public JournalPruneDataSource(KeyValueDataSource src) {
+    public JournalPruneDataSource(DbSource src) {
         this.src = src;
     }
 

@@ -2,7 +2,7 @@ package org.ethereum.datasource.mapdb;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.BatchSource;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
@@ -14,7 +14,7 @@ import java.util.Set;
 
 import static java.lang.System.getProperty;
 
-public class MapDBDataSource implements KeyValueDataSource, BatchSource<byte[], byte[]> {
+public class MapDBDataSource implements DbSource, BatchSource<byte[], byte[]> {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
 

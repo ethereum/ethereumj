@@ -1,7 +1,5 @@
 package org.ethereum.datasource;
 
-import org.ethereum.datasource.Flushable;
-
 /**
  * Created by Anton Nashatyrev on 05.10.2016.
  */

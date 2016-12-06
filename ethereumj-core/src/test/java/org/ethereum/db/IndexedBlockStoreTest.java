@@ -6,12 +6,11 @@ import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.util.FileUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
-import org.mapdb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -422,7 +421,7 @@ public class IndexedBlockStoreTest {
         LevelDbDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
@@ -568,7 +567,7 @@ public class IndexedBlockStoreTest {
         LevelDbDataSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         try {
@@ -729,10 +728,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        KeyValueDataSource indexDB = new LevelDbDataSource("index");
+        DbSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         try {
@@ -838,10 +837,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        KeyValueDataSource indexDB = new LevelDbDataSource("index");
+        DbSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         try {
@@ -909,10 +908,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        KeyValueDataSource indexDB = new LevelDbDataSource("index");
+        DbSource indexDB = new LevelDbDataSource("index");
         indexDB.init();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         try {

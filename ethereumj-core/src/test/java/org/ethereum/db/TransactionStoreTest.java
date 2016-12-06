@@ -6,8 +6,8 @@ import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
-import org.ethereum.datasource.CachingDataSource;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.MapDB;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.DataWord;
@@ -86,10 +86,10 @@ public class TransactionStoreTest {
                 "  int public lastResult;" +
                 "  function add(int a, int b) returns (int) {lastResult = a + b; return lastResult; }" +
                 "}";
-        HashMapDB txDb = new HashMapDB();
+        MapDB txDb = new MapDB();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
-        TransactionStore transactionStore = new TransactionStore(new CachingDataSource(txDb));
+        TransactionStore transactionStore = new TransactionStore(txDb);
         bc.getBlockchain().withTransactionStore(transactionStore);
         SolidityContract contract = bc.submitNewContract(contractSrc);
         Block b1 = bc.createBlock();
@@ -115,8 +115,8 @@ public class TransactionStoreTest {
     public void backwardCompatibleDbTest() {
         // check that we can read previously saved entries (saved with legacy code)
 
-        HashMapDB txDb = new HashMapDB();
-        TransactionStore transactionStore = new TransactionStore(new CachingDataSource(txDb));
+        MapDB txDb = new MapDB();
+        TransactionStore transactionStore = new TransactionStore(txDb);
         StandaloneBlockchain bc = new StandaloneBlockchain();
         bc.getBlockchain().withTransactionStore(transactionStore);
 
@@ -125,9 +125,9 @@ public class TransactionStoreTest {
         Transaction tx = b1.getTransactionsList().get(0);
         TransactionInfo info = transactionStore.get(tx.getHash()).get(0);
 
-        HashMapDB txDb1 = new HashMapDB();
+        MapDB<byte[]> txDb1 = new MapDB<>();
         txDb1.put(tx.getHash(), info.getEncoded()); // legacy serialization
-        TransactionStore transactionStore1 = new TransactionStore(new CachingDataSource(txDb1));
+        TransactionStore transactionStore1 = new TransactionStore(txDb1);
         TransactionInfo info1 = transactionStore1.get(tx.getHash()).get(0);
         Assert.assertArrayEquals(info1.getReceipt().getPostTxState(), info.getReceipt().getPostTxState());
     }

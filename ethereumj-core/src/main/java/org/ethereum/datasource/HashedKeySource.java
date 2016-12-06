@@ -5,7 +5,7 @@ package org.ethereum.datasource;
  * the same Key always maps to the same Value,
  * there could be no put() with the same Key and different Value
  * Normally the Key is the hash of the Value
- * Usually such kind of sources are the Trie backing stores
+ * Usually such kind of sources are Merkle Trie backing stores
  *
  * Created by Anton Nashatyrev on 08.11.2016.
  */

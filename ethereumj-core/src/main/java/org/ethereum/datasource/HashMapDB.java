@@ -7,7 +7,7 @@ import java.util.*;
 
 import static org.ethereum.util.ByteUtil.wrap;
 
-public class HashMapDB implements KeyValueDataSource {
+public class HashMapDB implements DbSource {
 
     Map<ByteArrayWrapper, byte[]> storage = new HashMap<>();
     private boolean clearOnClose = true;

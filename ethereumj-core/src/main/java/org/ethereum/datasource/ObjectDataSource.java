@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by Anton Nashatyrev on 17.03.2016.
  */
-public class ObjectDataSource<V> implements Flushable{
+public class ObjectDataSource<V> {
     private Source<byte[], byte[]> src;
     private Map<ByteArrayWrapper, V> cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(256));
     Serializer<V, byte[]> serializer;

@@ -2,9 +2,8 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.Source;
-import org.ethereum.datasource.XorDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.trie.SecureTrie;
@@ -34,9 +33,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     SystemProperties config = SystemProperties.getDefault();
 
-    KeyValueDataSource dataSource;
-
-    private byte[] rlpEncoded;
+    DbSource dataSource;
 
     private byte[] address = EMPTY_BYTE_ARRAY;
 
@@ -44,20 +41,10 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     private SecureTrie storageTrie = new SecureTrie((byte[]) null);
 
     boolean externalStorage;
-    private KeyValueDataSource externalStorageDataSource;
+    private DbSource externalStorageDataSource;
 
     /** Tests only **/
     public ContractDetailsImpl() {
-    }
-
-    public ContractDetailsImpl(final CommonConfig commonConfig, final SystemProperties config) {
-        this.commonConfig = commonConfig;
-        this.config = config;
-    }
-
-    /** Tests only **/
-    public ContractDetailsImpl(byte[] rlpCode) {
-        decode(rlpCode);
     }
 
     private ContractDetailsImpl(byte[] address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
@@ -85,7 +72,6 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         }
 
         this.setDirty(true);
-        this.rlpEncoded = null;
     }
 
     @Override
@@ -184,7 +170,6 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Override
     public void setAddress(byte[] address) {
         this.address = address;
-        this.rlpEncoded = null;
     }
 
     public SecureTrie getStorageTrie() {
@@ -193,22 +178,6 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     @Override
     public void syncStorage() {
-    }
-
-    public void setDataSource(KeyValueDataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    private KeyValueDataSource getExternalStorageDataSource() {
-        if (externalStorageDataSource == null) {
-            externalStorageDataSource = new XorDataSource(dataSource,
-                    sha3(("details-storage/" + toHexString(address)).getBytes()));
-        }
-        return externalStorageDataSource;
-    }
-
-    public void setExternalStorageDataSource(KeyValueDataSource dataSource) {
-        this.externalStorageDataSource = dataSource;
     }
 
     @Override
