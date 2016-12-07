@@ -17,7 +17,7 @@ import java.util.Arrays;
  *
  * Created by Anton Nashatyrev on 08.11.2016.
  */
-public class CountingBytesSource extends SourceDelegateAdapter<byte[], byte[]>
+public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
     public CountingBytesSource(Source<byte[], byte[]> src) {
@@ -31,25 +31,30 @@ public class CountingBytesSource extends SourceDelegateAdapter<byte[], byte[]>
             return;
         }
 
-        byte[] srcVal = super.get(key);
+        byte[] srcVal = getSource().get(key);
         int srcCount = decodeCount(srcVal);
-        super.put(key, encodeCount(val, srcCount + 1));
+        getSource().put(key, encodeCount(val, srcCount + 1));
     }
 
     @Override
     public byte[] get(byte[] key) {
-        return decodeValue(super.get(key));
+        return decodeValue(getSource().get(key));
     }
 
     @Override
     public void delete(byte[] key) {
-        byte[] srcVal = super.get(key);
+        byte[] srcVal = getSource().get(key);
         int srcCount = decodeCount(srcVal);
         if (srcCount > 1) {
-            super.put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
+            getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
         } else {
-            super.delete(key);
+            getSource().delete(key);
         }
+    }
+
+    @Override
+    protected boolean flushImpl() {
+        return false;
     }
 
     /**
