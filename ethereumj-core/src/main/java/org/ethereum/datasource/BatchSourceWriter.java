@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Clue class between Source and BatchSource
+ *
  * Created by Anton Nashatyrev on 29.11.2016.
  */
 public class BatchSourceWriter<Key, Value> extends SourceDelegateAdapter<Key, Value> {
