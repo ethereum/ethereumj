@@ -7,12 +7,39 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Collects changes and propagate them to the backing Source when flush() is called
+ *
+ * The WriteCache can be of two types: Simple and Counting
+ *
+ * Simple acts as regular Map: single and double adding of the same entry has the same effect
+ * Source entries (key/value pairs) may have arbitrary nature
+ *
+ * Counting counts the resulting number of inserts (+1) and deletes (-1) and when flushed
+ * does the resulting number of inserts (if sum > 0) or deletes (if sum < 0)
+ * Counting Source acts like {@link HashedKeySource} and makes sense only for data
+ * where a single key always corresponds to a single value
+ * Counting cache normally used as backing store for Trie data structure
+ *
  * Created by Anton Nashatyrev on 11.11.2016.
  */
 public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
+    /**
+     * Type of the write cache
+     */
     public enum CacheType {
+        /**
+         * Simple acts as regular Map: single and double adding of the same entry has the same effect
+         * Source entries (key/value pairs) may have arbitrary nature
+         */
         SIMPLE,
+        /**
+         * Counting counts the resulting number of inserts (+1) and deletes (-1) and when flushed
+         * does the resulting number of inserts (if sum > 0) or deletes (if sum < 0)
+         * Counting Source acts like {@link HashedKeySource} and makes sense only for data
+         * where a single key always corresponds to a single value
+         * Counting cache normally used as backing store for Trie data structure
+         */
         COUNTING
     }
 
@@ -190,6 +217,10 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         checked = true;
     }
 
+    /**
+     * Shortcut for WriteCache with byte[] keys. Also prevents accidental
+     * usage of regular Map implementation (non byte[])
+     */
     public static class BytesKey<V> extends WriteCache<byte[], V> implements CachedSource.BytesKey<V> {
 
         public BytesKey(Source<byte[], V> src, CacheType cacheType) {

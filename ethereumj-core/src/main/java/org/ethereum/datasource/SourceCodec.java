@@ -1,6 +1,10 @@
 package org.ethereum.datasource;
 
 /**
+ * Source for converting between different key/value types
+ * Has no own state and immediately propagate all changes
+ * to the backing Source with key/value conversion
+ *
  * Created by Anton Nashatyrev on 03.11.2016.
  */
 public class SourceCodec<Key, Value, SourceKey, SourceValue>
@@ -9,6 +13,12 @@ public class SourceCodec<Key, Value, SourceKey, SourceValue>
     protected Serializer<Key, SourceKey> keySerializer;
     protected Serializer<Value, SourceValue> valSerializer;
 
+    /**
+     * Instantiates class
+     * @param src  Backing Source
+     * @param keySerializer  Key codec Key <=> SourceKey
+     * @param valSerializer  Value codec Value <=> SourceValue
+     */
     public SourceCodec(Source<SourceKey, SourceValue> src, Serializer<Key, SourceKey> keySerializer, Serializer<Value, SourceValue> valSerializer) {
         super(src);
         this.keySerializer = keySerializer;
@@ -36,12 +46,18 @@ public class SourceCodec<Key, Value, SourceKey, SourceValue>
         return false;
     }
 
+    /**
+     * Shortcut class when only value conversion is required
+     */
     public static class ValueOnly<Key, Value, SourceValue> extends SourceCodec<Key, Value, Key, SourceValue> {
         public ValueOnly(Source<Key, SourceValue> src, Serializer<Value, SourceValue> valSerializer) {
             super(src, new Serializers.Identity<Key>(), valSerializer);
         }
     }
 
+    /**
+     * Shortcut class when only value conversion is required and keys are of byte[] type
+     */
     public static class BytesKey<Value, SourceValue> extends ValueOnly<byte[], Value, SourceValue> {
         public BytesKey(Source<byte[], SourceValue> src, Serializer<Value, SourceValue> valSerializer) {
             super(src, valSerializer);

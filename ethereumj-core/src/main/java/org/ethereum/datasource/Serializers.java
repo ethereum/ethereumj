@@ -6,10 +6,14 @@ import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 
 /**
+ * Collection of common Serializers
  * Created by Anton Nashatyrev on 08.11.2016.
  */
 public class Serializers {
 
+    /**
+     *  No conversion
+     */
     public static class Identity<T> implements Serializer<T, T> {
         @Override
         public T serialize(T object) {
@@ -21,6 +25,9 @@ public class Serializers {
         }
     }
 
+    /**
+     * Serializes/Deserializes AccountState instances from the State Trie (part of Ethereum spec)
+     */
     public final static Serializer<AccountState, byte[]> AccountStateSerializer = new Serializer<AccountState, byte[]>() {
         @Override
         public byte[] serialize(AccountState object) {
@@ -33,7 +40,10 @@ public class Serializers {
         }
     };
 
-    public final static Serializer<DataWord, byte[]> WordSerializer = new Serializer<DataWord, byte[]>() {
+    /**
+     * Contract storage key serializer
+     */
+    public final static Serializer<DataWord, byte[]> StorageKeySerializer = new Serializer<DataWord, byte[]>() {
         @Override
         public byte[] serialize(DataWord object) {
             return object.getData();
@@ -45,7 +55,10 @@ public class Serializers {
         }
     };
 
-    public final static Serializer<DataWord, byte[]> TrieWordSerializer = new Serializer<DataWord, byte[]>() {
+    /**
+     * Contract storage value serializer (part of Ethereum spec)
+     */
+    public final static Serializer<DataWord, byte[]> StorageValueSerializer = new Serializer<DataWord, byte[]>() {
         @Override
         public byte[] serialize(DataWord object) {
             return RLP.encodeElement(object.getNoLeadZeroesData());
@@ -59,7 +72,10 @@ public class Serializers {
         }
     };
 
-    public final static Serializer<Value, byte[]> TrieCacheSerializer = new Serializer<Value, byte[]>() {
+    /**
+     * Trie node serializer (part of Ethereum spec)
+     */
+    public final static Serializer<Value, byte[]> TrieNodeSerializer = new Serializer<Value, byte[]>() {
         @Override
         public byte[] serialize(Value object) {
             return object.encode();

@@ -3,9 +3,14 @@ package org.ethereum.datasource;
 import java.util.Collection;
 
 /**
+ * Facade class which encapsulates both Read and Write caches
+ *
  * Created by Anton Nashatyrev on 29.11.2016.
  */
-public class ReadWriteCache<Key, Value> extends SourceChainBox<Key, Value, Key, Value> implements CachedSource<Key, Value> {
+public class ReadWriteCache<Key, Value>
+        extends SourceChainBox<Key, Value, Key, Value>
+        implements CachedSource<Key, Value> {
+
     protected ReadCache<Key, Value> readCache;
     protected WriteCache<Key, Value> writeCache;
 

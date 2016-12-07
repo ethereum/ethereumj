@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Represents a chain of Sources as a single Source
+ * All calls to this Source are delegated to the last Source in the chain
+ * On flush all Sources in chain are flushed in reverse order
+ *
  * Created by Anton Nashatyrev on 07.12.2016.
  */
 public class SourceChainBox<Key, Value, SourceKey, SourceValue>
@@ -16,6 +20,12 @@ public class SourceChainBox<Key, Value, SourceKey, SourceValue>
         super(source);
     }
 
+    /**
+     * Adds next Source in the chain to the collection
+     * Sources should be added from most bottom (connected to the backing Source)
+     * All calls to the SourceChainBox will be delegated to the last added
+     * Source
+     */
     public void add(Source src) {
         chain.add(src);
         lastSource = src;

@@ -20,9 +20,9 @@ public class RepositoryRoot extends RepositoryImpl {
         Trie<byte[]> trie;
 
         public StorageCache(byte[] accountAddress, Trie<byte[]> trie) {
-//            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer),
+//            super(new SourceCodec<>(trie, Serializers.StorageKeySerializer, Serializers.StorageValueSerializer),
 //                    WriteCache.CacheType.SIMPLE);
-            super(new SourceCodec<>(trie, Serializers.WordSerializer, Serializers.TrieWordSerializer), WriteCache.CacheType.SIMPLE);
+            super(new SourceCodec<>(trie, Serializers.StorageKeySerializer, Serializers.StorageValueSerializer), WriteCache.CacheType.SIMPLE);
             this.accountAddress = accountAddress;
             this.trie = trie;
         }
@@ -82,7 +82,7 @@ public class RepositoryRoot extends RepositoryImpl {
     public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root) {
         this.stateDS = stateDS;
 
-        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer);
+        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer);
         trieCache = new WriteCache.BytesKey<>(trieCacheCodec, WriteCache.CacheType.COUNTING);
         stateTrie = createTrie(trieCache, root);
 

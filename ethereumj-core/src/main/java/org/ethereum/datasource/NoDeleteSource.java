@@ -1,6 +1,10 @@
 package org.ethereum.datasource;
 
 /**
+ * Just ignores deletes from the backing Source
+ * Normally used for testing for Trie backing Sources to
+ * not delete older states
+ *
  * Created by Anton Nashatyrev on 03.11.2016.
  */
 public class NoDeleteSource<Key, Value> extends AbstractChainedSource<Key, Value, Key, Value> {

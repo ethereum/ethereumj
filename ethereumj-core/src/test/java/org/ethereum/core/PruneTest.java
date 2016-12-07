@@ -504,7 +504,7 @@ public class PruneTest {
     public Set<ByteArrayWrapper> getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
                                                         byte[] ... roots) {
         final Set<ByteArrayWrapper> ret = new HashSet<>();
-        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer));
+        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer));
         for (byte[] root : roots) {
             trie.scanTree(root, new TrieImpl.ScanAction() {
                 @Override
@@ -532,7 +532,7 @@ public class PruneTest {
     public String dumpState(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
                                                         byte[] root) {
         final StringBuilder ret = new StringBuilder();
-        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieCacheSerializer));
+        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer));
         trie.scanTree(root, new TrieImpl.ScanAction() {
             @Override
             public void doOnNode(byte[] hash, Value node) {

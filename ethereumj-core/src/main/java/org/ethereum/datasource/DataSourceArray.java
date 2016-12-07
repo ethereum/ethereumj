@@ -6,11 +6,13 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.AbstractList;
 
 /**
+ * Stores List structure in Source structure
+ *
  * Created by Anton Nashatyrev on 17.03.2016.
  */
 public class DataSourceArray<V> extends AbstractList<V> {
     private ObjectDataSource<V> src;
-    private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
+    private static final byte[] SIZE_KEY = Hex.decode("FFFFFFFFFFFFFFFF");
     private int size = -1;
 
     public DataSourceArray(ObjectDataSource<V> src) {
@@ -49,7 +51,7 @@ public class DataSourceArray<V> extends AbstractList<V> {
     @Override
     public int size() {
         if (size < 0) {
-            byte[] sizeBB = src.getByteSource().get(sizeKey);
+            byte[] sizeBB = src.getSource().get(SIZE_KEY);
             size = sizeBB == null ? 0 : ByteUtil.byteArrayToInt(sizeBB);
         }
         return size;
@@ -57,6 +59,6 @@ public class DataSourceArray<V> extends AbstractList<V> {
 
     private synchronized void setSize(int newSize) {
         size = newSize;
-        src.getByteSource().put(sizeKey, ByteUtil.intToBytes(newSize));
+        src.getSource().put(SIZE_KEY, ByteUtil.intToBytes(newSize));
     }
 }

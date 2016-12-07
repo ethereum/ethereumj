@@ -5,14 +5,16 @@ import org.ethereum.util.ByteUtil;
 import java.util.Arrays;
 
 /**
- *     'Reference counting' Source. Unlike regular Source if an entry was
+ * 'Reference counting' Source. Unlike regular Source if an entry was
  * e.g. 'put' twice it is actually deleted when 'delete' is called twice
  * I.e. each put increments counter and delete decrements counter, the
  * entry is deleted when the counter becomes zero.
- *     Please note that the counting mechanism makes sense only for
+ *
+ * Please note that the counting mechanism makes sense only for
  * {@link HashedKeySource} like Sources when any taken key can correspond to
  * the only value
- *     This Source is constrained to byte[] values only as the counter
+ *
+ * This Source is constrained to byte[] values only as the counter
  * needs to be encoded to the backing Source value as byte[]
  *
  * Created by Anton Nashatyrev on 08.11.2016.
