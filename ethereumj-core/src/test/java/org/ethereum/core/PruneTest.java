@@ -36,7 +36,7 @@ public class PruneTest {
     public void testJournal1() throws Exception {
         HashMapDB<byte[]> db = new HashMapDB<>();
         CountingBytesSource countDB = new CountingBytesSource(db);
-        JournalBytesSource journalDB = new JournalBytesSource(countDB);
+        JournalSource<byte[]> journalDB = new JournalSource<>(countDB);
 
         put(journalDB, "11");
         put(journalDB, "22");

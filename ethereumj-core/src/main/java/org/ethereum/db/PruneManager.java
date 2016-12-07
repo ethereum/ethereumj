@@ -3,9 +3,8 @@ package org.ethereum.db;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.datasource.JournalBytesSource;
+import org.ethereum.datasource.JournalSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
  */
 public class PruneManager {
 
-    private JournalBytesSource journal;
+    private JournalSource journal;
 
     @Autowired
     private IndexedBlockStore blockStore;
@@ -26,7 +25,7 @@ public class PruneManager {
         pruneBlocksCnt = config.databasePruneDepth();
     }
 
-    public PruneManager(IndexedBlockStore blockStore, JournalBytesSource journal, int pruneBlocksCnt) {
+    public PruneManager(IndexedBlockStore blockStore, JournalSource journal, int pruneBlocksCnt) {
         this.blockStore = blockStore;
         this.journal = journal;
         this.pruneBlocksCnt = pruneBlocksCnt;
