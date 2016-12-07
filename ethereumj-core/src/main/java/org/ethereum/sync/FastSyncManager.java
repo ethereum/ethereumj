@@ -387,8 +387,6 @@ public class FastSyncManager {
 
             retrieveLoop();
 
-            stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
-
             logger.info("FastSync: state trie download complete!");
             last = 0;
             regularTask();
@@ -409,8 +407,9 @@ public class FastSyncManager {
             logger.info("FastSync: downloaded all blocks, proceeding to regular sync");
 
             blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
+            stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
         } else {
-            logger.info("FastSync: current best block is > 0 (" + blockchain.getBestBlock().getShortDescr() + "). " +
+            logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
                     "Continue with regular sync...");
         }
 

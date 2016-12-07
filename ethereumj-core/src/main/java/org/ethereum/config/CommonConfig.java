@@ -73,7 +73,10 @@ public class CommonConfig {
 
     @Bean
     public StateSource stateSource() {
-        StateSource stateSource = new StateSource(stateDS(), systemProperties().databasePruneDepth() >= 0);
+        Source stateDS = stateDS();
+        fastSyncCleanUp();
+        StateSource stateSource = new StateSource((BatchSource<byte[], byte[]>) stateDS,
+                systemProperties().databasePruneDepth() >= 0);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
 
@@ -111,16 +114,44 @@ public class CommonConfig {
         }
     }
 
+    public void fastSyncCleanUp() {
+        DbSource state = stateDS();
+
+        if (state.get(FASTSYNC_DB_KEY) != null) {
+            logger.warn("Last fastsync was interrupted. Removing old data...");
+
+            logger.warn("Removing block data...");
+            DbSource blockSource = keyValueDataSource();
+            blockSource.setName("block");
+            blockSource.init();
+            resetDataSource(blockSource);
+            blockSource.close();
+
+            logger.warn("Removing index data...");
+            DbSource indexSource = keyValueDataSource();
+            indexSource.setName("index");
+            indexSource.init();
+            resetDataSource(indexSource);
+            indexSource.close();
+
+            logger.warn("Removing state data...");
+            resetDataSource(state);
+        }
+    }
+
+    private void resetDataSource(Source source) {
+        if (source instanceof LevelDbDataSource) {
+            ((LevelDbDataSource) source).reset();
+        } else {
+            throw new Error("Cannot cleanup non-LevelDB database");
+        }
+    }
+
     @Bean
     public DbSource stateDS() {
         DbSource ret = keyValueDataSource();
         ret.setName("state");
         ret.init();
-
-        if (ret.get(FASTSYNC_DB_KEY) != null) {
-            logger.warn("Last fastsync was interrupted. Removing state db...");
-            ((LevelDbDataSource)ret).reset();
-        }
 
         return ret;
     }
