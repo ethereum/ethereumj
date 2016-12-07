@@ -74,6 +74,7 @@ public class FastSyncManager {
     FastSyncDownloader downloader;
 
     int nodesInserted = 0;
+    int lastNodeCommit = 0;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
@@ -87,6 +88,9 @@ public class FastSyncManager {
                         TrieNodeRequest request = dbWriteQueue.take();
                         nodesInserted++;
                         repository.addRawNode(request.nodeHash, request.response);
+                        if (nodesInserted - lastNodeCommit >= 100) {
+                            commitNodes();
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("Fatal FastSync error while writing data", e);
@@ -104,6 +108,12 @@ public class FastSyncManager {
                 }
             }
         }.start();
+    }
+
+    private synchronized void commitNodes() {
+        repository.commit();
+        dbFlushManager.commit();
+        lastNodeCommit = nodesInserted;
     }
 
     enum TrieNodeType {
@@ -329,7 +339,7 @@ public class FastSyncManager {
                     synchronized (this) {
                         wait(10);
                     }
-                    regularTask();
+                    logStat();
                 } catch (InterruptedException e) {
                     throw e;
                 } catch (Throwable t) {
@@ -344,20 +354,14 @@ public class FastSyncManager {
     long last = 0;
     long lastNodeCount = 0;
 
-    private void regularTask() {
+    private void logStat() {
         long cur = System.currentTimeMillis();
         if (cur - last > 5000) {
             logger.info("FastSync: received: " + nodesInserted + ", known: " + nodesQueue.size() + ", pending: " + pendingNodes.size()
                     + String.format(", nodes/sec: %1$.2f", 1000d * (nodesInserted - lastNodeCount) / (cur - last)));
             last = cur;
             lastNodeCount = nodesInserted;
-            commitNodes();
         }
-    }
-
-    private synchronized void commitNodes() {
-        repository.commit();
-        dbFlushManager.commit();
     }
 
     public void main() {
@@ -389,7 +393,7 @@ public class FastSyncManager {
 
             logger.info("FastSync: state trie download complete!");
             last = 0;
-            regularTask();
+            logStat();
 
             repository.flush();
             stateDS.flush();
