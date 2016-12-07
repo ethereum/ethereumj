@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Clue class between Source and BatchSource
+ *
  * Created by Anton Nashatyrev on 29.11.2016.
  */
-public class BatchSourceWriter<Key, Value> extends SourceDelegateAdapter<Key, Value> {
+public class BatchSourceWriter<Key, Value> extends AbstractChainedSource<Key, Value, Key, Value> {
 
     Map<Key, Value> buf = new HashMap<>();
 
@@ -26,6 +28,11 @@ public class BatchSourceWriter<Key, Value> extends SourceDelegateAdapter<Key, Va
     @Override
     public synchronized void put(Key key, Value val) {
         buf.put(key, val);
+    }
+
+    @Override
+    public Value get(Key key) {
+        return getSource().get(key);
     }
 
     @Override

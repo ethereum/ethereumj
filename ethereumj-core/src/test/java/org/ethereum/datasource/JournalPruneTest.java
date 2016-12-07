@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class JournalPruneTest {
 
-    class StringJDS extends JournalBytesSource {
+    class StringJDS extends JournalSource<byte[]> {
         final HashMapDB<byte[]> mapDB;
         final Source<byte[], byte[]> db;
 

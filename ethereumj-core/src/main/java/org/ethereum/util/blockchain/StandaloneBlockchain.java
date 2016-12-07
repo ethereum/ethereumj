@@ -55,7 +55,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long timeIncrement = 13;
 
     private HashMapDB<byte[]> stateDS;
-    JournalBytesSource pruningStateDS;
+    JournalSource<byte[]> pruningStateDS;
     PruneManager pruneManager;
 
     private BlockSummary lastSummary;
@@ -387,7 +387,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
         stateDS = new HashMapDB<>();
-        pruningStateDS = new JournalBytesSource(new CountingBytesSource(stateDS));
+        pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));
         pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
 
         RepositoryRoot repository = new RepositoryRoot(pruningStateDS);

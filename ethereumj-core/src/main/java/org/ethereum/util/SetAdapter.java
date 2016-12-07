@@ -1,7 +1,5 @@
 package org.ethereum.util;
 
-import org.ethereum.datasource.ObjectDataSource;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;

@@ -49,7 +49,7 @@ public class DataSourceArray<V> extends AbstractList<V> {
     @Override
     public int size() {
         if (size < 0) {
-            byte[] sizeBB = src.getSrc().get(sizeKey);
+            byte[] sizeBB = src.getByteSource().get(sizeKey);
             size = sizeBB == null ? 0 : ByteUtil.byteArrayToInt(sizeBB);
         }
         return size;
@@ -57,6 +57,6 @@ public class DataSourceArray<V> extends AbstractList<V> {
 
     private synchronized void setSize(int newSize) {
         size = newSize;
-        src.getSrc().put(sizeKey, ByteUtil.intToBytes(newSize));
+        src.getByteSource().put(sizeKey, ByteUtil.intToBytes(newSize));
     }
 }

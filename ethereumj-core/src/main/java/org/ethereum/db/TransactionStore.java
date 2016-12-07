@@ -48,6 +48,7 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         @Override
         public List<TransactionInfo> deserialize(byte[] stream) {
             try {
+                if (stream == null) return null;
                 RLPList params = RLP.decode2(stream);
                 RLPList infoList = (RLPList) params.get(0);
                 List<TransactionInfo> ret = new ArrayList<>();
@@ -106,14 +107,7 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
     }
 
     public TransactionStore(Source<byte[], byte[]> src) {
-        super(src, serializer);
-        withCacheSize(256);
-        withCacheOnWrite(true);
-    }
-
-    @Override
-    public boolean flush() {
-        return getSrc().flush();
+        super(src, serializer, 256);
     }
 
     @PreDestroy

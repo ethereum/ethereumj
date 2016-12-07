@@ -9,8 +9,8 @@ import java.util.List;
 /**
  * Created by Anton Nashatyrev on 08.11.2016.
  */
-public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
-        implements HashedKeySource<byte[], byte[]> {
+public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V>
+        implements HashedKeySource<byte[], V> {
 
     private class Update {
         byte[] updateHash;
@@ -22,24 +22,29 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
 
     Source<byte[], Update> journal = new HashMapDB<>();
 
-    public JournalBytesSource(Source<byte[], byte[]> src) {
+    public JournalSource(Source<byte[], V> src) {
         super(src);
     }
 
     @Override
-    public void put(byte[] key, byte[] val) {
+    public void put(byte[] key, V val) {
         if (val == null) {
             delete(key);
             return;
         }
 
         currentUpdate.insertedKeys.add(key);
-        super.put(key, val);
+        getSource().put(key, val);
     }
 
     @Override
     public void delete(byte[] key) {
         currentUpdate.deletedKeys.add(key);
+    }
+
+    @Override
+    public V get(byte[] key) {
+        return getSource().get(key);
     }
 
     public void commitUpdates(byte[] updateHash) {
@@ -56,7 +61,7 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
         for (byte[] key : update.deletedKeys) {
-            super.delete(key);
+            getSource().delete(key);
         }
         journal.delete(updateHash);
     }
@@ -65,7 +70,7 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
         for (byte[] key : update.insertedKeys) {
-            super.delete(key);
+            getSource().delete(key);
         }
         journal.delete(updateHash);
     }
@@ -73,6 +78,6 @@ public class JournalBytesSource extends SourceDelegateAdapter<byte[], byte[]>
     @Override
     public boolean flushImpl() {
         journal.flush();
-        return super.flushImpl();
+        return false;
     }
 }

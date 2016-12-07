@@ -1,20 +1,19 @@
 package org.ethereum.datasource;
 
 /**
+ * Converter from one type to another and vice versa
+ *
  * Created by Anton Nashatyrev on 17.03.2016.
  */
 public interface Serializer<T, S> {
+    /**
+     * Converts T ==> S
+     * Should correctly handle null parameter
+     */
     S serialize(T object);
+    /**
+     * Converts S ==> T
+     * Should correctly handle null parameter
+     */
     T deserialize(S stream);
-
-    class IdentitySerializer<T> implements Serializer<T, T> {
-        @Override
-        public T serialize(T object) {
-            return object;
-        }
-        @Override
-        public T deserialize(T stream) {
-            return stream;
-        }
-    }
 }
