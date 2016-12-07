@@ -1,13 +1,21 @@
 package org.ethereum.datasource;
 
 /**
+ * Abstract Source implementation with underlying backing Source
+ * The class has control whether the backing Source should be flushed
+ * in 'cascade' manner
+ *
  * Created by Anton Nashatyrev on 06.12.2016.
  */
 public abstract class AbstractChainedSource<Key, Value, SourceKey, SourceValue> implements Source<Key, Value> {
 
-    protected Source<SourceKey, SourceValue> source;
-    protected boolean flushSource;
+    private Source<SourceKey, SourceValue> source;
+    private boolean flushSource;
 
+    /**
+     * Intended for subclasses which wishes to initialize the source
+     * later via {@link #setSource(Source)} method
+     */
     protected AbstractChainedSource() {
     }
 
@@ -15,6 +23,9 @@ public abstract class AbstractChainedSource<Key, Value, SourceKey, SourceValue> 
         this.source = source;
     }
 
+    /**
+     * Intended for subclasses which wishes to initialize the source later
+     */
     protected void setSource(Source<SourceKey, SourceValue> src) {
         source = src;
     }
@@ -27,13 +38,21 @@ public abstract class AbstractChainedSource<Key, Value, SourceKey, SourceValue> 
         this.flushSource = flushSource;
     }
 
+    /**
+     * Invokes {@link #flushImpl()} and does backing Source flush if required
+     * @return true if this or source flush did any changes
+     */
     @Override
     public final synchronized boolean flush() {
+        boolean ret = flushImpl();
         if (flushSource) {
-            getSource().flush();
+            ret |= getSource().flush();
         }
-        return flushImpl();
+        return ret;
     }
 
+    /**
+     * Should be overridden to do actual source flush
+     */
     protected abstract boolean flushImpl();
 }
