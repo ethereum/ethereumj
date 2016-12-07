@@ -411,6 +411,8 @@ public class FastSyncManager {
             logger.info("FastSync: downloaded all blocks, proceeding to regular sync");
 
             blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
+            repository.flush();
+            dbFlushManager.flush();
             stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
         } else {
             logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
