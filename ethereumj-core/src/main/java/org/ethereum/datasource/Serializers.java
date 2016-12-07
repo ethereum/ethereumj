@@ -9,6 +9,18 @@ import org.ethereum.vm.DataWord;
  * Created by Anton Nashatyrev on 08.11.2016.
  */
 public class Serializers {
+
+    public static class Identity<T> implements Serializer<T, T> {
+        @Override
+        public T serialize(T object) {
+            return object;
+        }
+        @Override
+        public T deserialize(T stream) {
+            return stream;
+        }
+    }
+
     public final static Serializer<AccountState, byte[]> AccountStateSerializer = new Serializer<AccountState, byte[]>() {
         @Override
         public byte[] serialize(AccountState object) {

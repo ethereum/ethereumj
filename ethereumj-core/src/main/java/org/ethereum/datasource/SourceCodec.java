@@ -38,7 +38,7 @@ public class SourceCodec<Key, Value, SourceKey, SourceValue>
 
     public static class ValueOnly<Key, Value, SourceValue> extends SourceCodec<Key, Value, Key, SourceValue> {
         public ValueOnly(Source<Key, SourceValue> src, Serializer<Value, SourceValue> valSerializer) {
-            super(src, new Serializer.IdentitySerializer<Key>(), valSerializer);
+            super(src, new Serializers.Identity<Key>(), valSerializer);
         }
     }
 
