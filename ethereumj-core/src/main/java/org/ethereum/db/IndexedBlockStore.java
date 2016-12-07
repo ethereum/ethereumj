@@ -2,7 +2,10 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.datasource.ObjectDataSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +13,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static java.math.BigInteger.ZERO;
 import static org.ethereum.crypto.HashUtil.shortHash;
@@ -31,7 +33,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks) {
         indexDS = index;
         this.index = new DataSourceArray<>(
-                new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER).withCacheSize(256));
+                new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER, 256));
         this.blocksDS = blocks;
         this.blocks = new ObjectDataSource<>(blocks, new Serializer<Block, byte[]>() {
             @Override
@@ -41,9 +43,9 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
             @Override
             public Block deserialize(byte[] bytes) {
-                return new Block(bytes);
+                return bytes == null ? null : new Block(bytes);
             }
-        }).withCacheSize(256);
+        }, 256);
     }
 
     public synchronized Block getBestBlock(){
