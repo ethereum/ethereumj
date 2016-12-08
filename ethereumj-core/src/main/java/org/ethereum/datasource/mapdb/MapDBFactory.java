@@ -5,7 +5,7 @@ import org.mapdb.DB;
 
 public interface MapDBFactory {
 
-    DbSource createDataSource();
+    DbSource<byte[]> createDataSource();
 
     DB createDB(String name);
 

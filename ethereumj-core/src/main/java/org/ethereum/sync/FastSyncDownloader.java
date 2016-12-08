@@ -2,6 +2,7 @@ package org.ethereum.sync;
 
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -28,6 +29,9 @@ public class FastSyncDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
+    @Autowired
+    DbFlushManager dbFlushManager;
+
     private BigInteger cummDiff = BigInteger.ZERO;
 
     int counter;
@@ -45,12 +49,13 @@ public class FastSyncDownloader extends BlockDownloader {
     }
 
     @Override
-    protected void pushBlocks(List<BlockWrapper> blockWrappers) {
+    protected synchronized void pushBlocks(List<BlockWrapper> blockWrappers) {
         if (!blockWrappers.isEmpty()) {
 
             for (BlockWrapper blockWrapper : blockWrappers) {
                 cummDiff = cummDiff.add(ByteUtil.bytesToBigInteger(blockWrapper.getBlock().getDifficulty()));
                 blockStore.saveBlock(blockWrapper.getBlock(), cummDiff, true);
+                dbFlushManager.commit();
             }
             counter += blockWrappers.size();
 

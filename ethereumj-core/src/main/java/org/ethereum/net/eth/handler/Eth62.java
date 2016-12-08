@@ -423,10 +423,14 @@ public class Eth62 extends EthHandler {
 
         syncStats.addBlocks(msg.getBlockBodies().size());
 
-        List<Block> blocks = validateAndMerge(msg);
+        List<Block> blocks = null;
+        try {
+            blocks = validateAndMerge(msg);
+        } catch (Exception e) {
+            logger.info("Fatal validation error while processing block bodies from peer {}", channel.getPeerIdShort());
+        }
 
         if (blocks == null) {
-
             // headers will be returned by #onShutdown()
             dropConnection();
             return;
@@ -786,9 +790,6 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized void dropConnection() {
-
-        // todo: reduce reputation
-
         logger.info("Peer {}: is a bad one, drop", channel.getPeerIdShort());
         disconnect(USELESS_PEER);
     }
