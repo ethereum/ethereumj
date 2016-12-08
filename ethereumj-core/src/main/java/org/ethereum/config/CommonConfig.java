@@ -73,7 +73,7 @@ public class CommonConfig {
 
     @Bean
     public StateSource stateSource() {
-        Source stateDS = stateDS();
+        Source<byte[], byte[]> stateDS = stateDS();
         fastSyncCleanUp();
         StateSource stateSource = new StateSource((BatchSource<byte[], byte[]>) stateDS,
                 systemProperties().databasePruneDepth() >= 0);
@@ -86,7 +86,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        DbSource dataSource = keyValueDataSource();
+        DbSource<byte[]> dataSource = keyValueDataSource();
         dataSource.setName(name);
         dataSource.init();
         BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
@@ -100,7 +100,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     @Primary
-    public DbSource keyValueDataSource() {
+    public DbSource<byte[]> keyValueDataSource() {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             if ("mapdb".equals(dataSource)) {
@@ -115,7 +115,7 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
-        DbSource state = stateDS();
+        DbSource<byte[]> state = stateDS();
 
         if (state.get(FASTSYNC_DB_KEY) != null) {
             logger.warn("Last fastsync was interrupted. Removing old data...");
@@ -148,8 +148,8 @@ public class CommonConfig {
     }
 
     @Bean
-    public DbSource stateDS() {
-        DbSource ret = keyValueDataSource();
+    public DbSource<byte[]> stateDS() {
+        DbSource<byte[]> ret = keyValueDataSource();
         ret.setName("state");
         ret.init();
 
