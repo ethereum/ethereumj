@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -95,14 +96,14 @@ public abstract class BlockDownloader {
             try {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
-                    SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders(MAX_IN_REQUEST * REQUESTS);
-                    if (hReq.getCount() == 0) {
+                    Collection<SyncQueueIfc.HeadersRequest> hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS);
+                    if (hReq.size() == 0) {
                         logger.info("Headers download complete.");
                         headersDownloadComplete = true;
                         return;
                     }
                     int reqHeadersCounter = 0;
-                    for (SyncQueueIfc.HeadersRequest headersRequest : hReq.split(MAX_IN_REQUEST)) {
+                    for (SyncQueueIfc.HeadersRequest headersRequest : hReq) {
                         final Channel any = pool.getAnyIdle();
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
@@ -110,8 +111,8 @@ public abstract class BlockDownloader {
                         } else {
                             logger.debug("headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode());
                             ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
-                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse())
-                                    : any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), 0, headersRequest.isReverse());
+                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse()) :
+                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), headersRequest.getStep(), headersRequest.isReverse());
                             Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
                                 @Override
                                 public void onSuccess(List<BlockHeader> result) {

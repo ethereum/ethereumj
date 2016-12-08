@@ -25,6 +25,8 @@ public interface SyncQueueIfc {
         boolean isReverse();
 
         List<HeadersRequest> split(int maxCount);
+
+        int getStep();
     }
 
     /**
@@ -37,16 +39,22 @@ public interface SyncQueueIfc {
     }
 
     /**
-     * Returns wanted headers request with defined size
+     * Returns wanted headers requests
+     * @param maxSize Maximum number of headers in a singles request
+     * @param maxRequests Maximum number of requests
      */
-    HeadersRequest requestHeaders(int maxSize);
+    Collection<HeadersRequest> requestHeaders(int maxSize, int maxRequests);
 
     /**
      * Adds received headers.
-     * Headers need to verified.
+     * Headers themselves need to be verified (except parent hash)
      * The list can be in any order and shouldn't correspond to prior headers request
+     * @return If this is 'header-only' SyncQueue then the next chain of headers
+     * is popped from SyncQueue and returned
+     * The reverse implementation should return headers in revers order (N, N-1, ...)
+     * If this instance is for headers+blocks downloading then null returned
      */
-    void addHeaders(Collection<BlockHeaderWrapper> headers);
+    List<BlockHeaderWrapper> addHeaders(Collection<BlockHeaderWrapper> headers);
 
     /**
      * Returns wanted blocks hashes

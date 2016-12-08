@@ -22,7 +22,7 @@ public class SyncQueueImplTest {
 
         SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain.subList(0, 32));
 
-        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN);
+        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1).iterator().next();
         System.out.println(headersRequest);
 
         syncQueue.addHeaders(createHeadersFromBlocks(TestUtils.getRandomChain(randomChain.get(16).getHash(), 17, 64), peer0));
@@ -62,6 +62,37 @@ public class SyncQueueImplTest {
         assert requests.get(2).getCount() == 1;
     }
 
+    @Test
+    public void testReverseHeaders1() {
+        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 100);
+        List<Block> randomChain1 = TestUtils.getRandomChain(new byte[32], 0, 100);
+        Peer[] peers = new Peer[]{new Peer(randomChain), new Peer(randomChain1)};
+        SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(randomChain.get(randomChain.size() - 1).getHash(), true);
+        List<BlockHeaderWrapper> result = new ArrayList<>();
+        int peerIdx = 1;
+        Random rnd = new Random();
+        while (true) {
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(10, 5);
+            if (headersRequests.isEmpty()) break;
+            for (SyncQueueIfc.HeadersRequest request : headersRequests) {
+                System.out.println("Req: " + request);
+                List<BlockHeader> headers = rnd.nextBoolean() ? peers[peerIdx].getHeaders(request)
+                        :peers[peerIdx].getRandomHeaders(10);
+                peerIdx = (peerIdx + 1) % 2;
+                List<BlockHeaderWrapper> ret = syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
+//                System.out.println("Res: " + ret);
+                result.addAll(ret);
+                System.out.println("Result length: " + result.size());
+            }
+        }
+
+        assert result.size() == randomChain.size() - 1;
+        for (int  i = 0; i < result.size() - 1; i++) {
+            assert Arrays.equals(result.get(i + 1).getHash(), result.get(i).getHeader().getParentHash());
+        }
+        assert Arrays.equals(randomChain.get(0).getHash(), result.get(result.size() - 1).getHeader().getParentHash());
+    }
+
     public void test2Impl(List<Block> mainChain, List<Block> initChain, Peer[] peers) {
         List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 1024);
         final Block[] maxExportedBlock = new Block[] {randomChain.get(31)};
@@ -88,7 +119,7 @@ public class SyncQueueImplTest {
 
         int i = 0;
         for (; i < 1000; i++) {
-            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN);
+            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1).iterator().next();
             List<BlockHeader> headers = peers[rnd.nextInt(peers.length)].getHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse());
             syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
             SyncQueueIfc.BlocksRequest blocksRequest = syncQueue.requestBlocks(rnd.nextInt(128 + 1));
@@ -114,17 +145,44 @@ public class SyncQueueImplTest {
         }
 
         public List<BlockHeader> getHeaders(long startBlockNum, int count, boolean reverse) {
-            if (reverse) {
-                startBlockNum = startBlockNum - count + 1;
+            return getHeaders(startBlockNum, count, reverse, 0);
+        }
+
+        public List<BlockHeader> getHeaders(SyncQueueIfc.HeadersRequest req) {
+            if (req.getHash() == null) {
+                return getHeaders(req.getStart(), req.getCount(), req.isReverse(), req.getStep());
+            } else {
+                Block block = blocks.get(new ByteArrayWrapper(req.getHash()));
+                if (block == null) return Collections.emptyList();
+                return getHeaders(block.getNumber(), req.getCount(), req.isReverse(), req.getStep());
             }
+        }
+
+        public List<BlockHeader> getRandomHeaders(int count) {
+            List<BlockHeader> ret = new ArrayList<>();
+            Random rnd = new Random();
+            for (int i = 0; i < count; i++) {
+                ret.add(chain.get(rnd.nextInt(chain.size())).getHeader());
+            }
+            return ret;
+        }
+
+
+        public List<BlockHeader> getHeaders(long startBlockNum, int count, boolean reverse, int step) {
+            step = step == 0 ? 1 : step;
+
+            if (reverse) {
+                startBlockNum = startBlockNum - (count - 1 ) * step;
+            }
+
             startBlockNum = Math.max(startBlockNum, chain.get(0).getNumber());
             startBlockNum = Math.min(startBlockNum, chain.get(chain.size() - 1).getNumber());
-            long endBlockNum = startBlockNum + count - 1;
+            long endBlockNum = startBlockNum + (count - 1) * step;
             endBlockNum = Math.max(endBlockNum, chain.get(0).getNumber());
             endBlockNum = Math.min(endBlockNum, chain.get(chain.size() - 1).getNumber());
             List<BlockHeader> ret = new ArrayList<>();
             int startIdx = (int) (startBlockNum - chain.get(0).getNumber());
-            for (int i = startIdx; i < startIdx + (endBlockNum - startBlockNum + 1); i++) {
+            for (int i = startIdx; i < startIdx + (endBlockNum - startBlockNum + 1); i+=step) {
                 ret.add(chain.get(i).getHeader());
             }
             return ret;
