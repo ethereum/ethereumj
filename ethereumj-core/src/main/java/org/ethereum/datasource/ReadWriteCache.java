@@ -38,8 +38,8 @@ public class ReadWriteCache<Key, Value>
     }
 
     @Override
-    public long estimateCashSize() {
-        return readCache.estimateCashSize() + writeCache.estimateCashSize();
+    public long estimateCacheSize() {
+        return readCache.estimateCacheSize() + writeCache.estimateCacheSize();
     }
 
     public static class BytesKey<V> extends ReadWriteCache<byte[], V> {

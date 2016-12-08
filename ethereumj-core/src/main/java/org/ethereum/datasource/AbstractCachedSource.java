@@ -62,7 +62,7 @@ public abstract class AbstractCachedSource <Key, Value>
     }
 
     @Override
-    public long estimateCashSize() {
+    public long estimateCacheSize() {
         return size;
     }
 }
