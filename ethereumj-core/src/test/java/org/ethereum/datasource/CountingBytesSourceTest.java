@@ -25,7 +25,7 @@ public class CountingBytesSourceTest {
         return (new DataWord(i)).getData();
     }
 
-    private String toString(Object obj) {
+    private String str(Object obj) {
         if (obj == null) return null;
         return Hex.toHexString((byte[]) obj);
     }
@@ -56,21 +56,21 @@ public class CountingBytesSourceTest {
         src.put(intToKey(0), intToValue(0));
         src.put(intToKey(0), intToValue(0));
         src.delete(intToKey(0));
-        assertEquals(toString(intToValue(0)), toString(src.get(intToKey(0))));
+        assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         src.delete(intToKey(0));
         assertNull(src.get(intToKey(0)));
 
         src.put(intToKey(1), intToValue(1));
         src.put(intToKey(1), intToValue(1));
         src.put(intToKey(1), null);
-        assertEquals(toString(intToValue(1)), toString(src.get(intToKey(1))));
+        assertEquals(str(intToValue(1)), str(src.get(intToKey(1))));
         src.put(intToKey(1), null);
         assertNull(src.get(intToKey(1)));
 
         src.put(intToKey(1), intToValue(1));
         src.put(intToKey(1), intToValue(2));
         src.delete(intToKey(1));
-        assertEquals(toString(intToValue(2)), toString(src.get(intToKey(1))));
+        assertEquals(str(intToValue(2)), str(src.get(intToKey(1))));
         src.delete(intToKey(1));
         assertNull(src.get(intToKey(1)));
     }
@@ -83,7 +83,7 @@ public class CountingBytesSourceTest {
 
         for (int i = 0; i < 99_999; ++i) {
             src.delete(intToKey(0));
-            assertEquals(toString(intToValue(0)), toString(src.get(intToKey(0))));
+            assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         }
         src.delete(intToKey(0));
         assertNull(src.get(intToKey(0)));
@@ -96,11 +96,11 @@ public class CountingBytesSourceTest {
                 src.put(intToKey(i), intToValue(i));
             }
         }
-        assertEquals(toString(intToValue(0)), toString(src.get(intToKey(0))));
-        assertEquals(toString(intToValue(99)), toString(src.get(intToKey(99))));
+        assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
+        assertEquals(str(intToValue(99)), str(src.get(intToKey(99))));
         assertFalse(src.flush());
-        assertEquals(toString(intToValue(0)), toString(src.get(intToKey(0))));
-        assertEquals(toString(intToValue(99)), toString(src.get(intToKey(99))));
+        assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
+        assertEquals(str(intToValue(99)), str(src.get(intToKey(99))));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class CountingBytesSourceTest {
         src.put(intToKey(0), value);
         src.put(intToKey(0), value);
         src.delete(intToKey(0));
-        assertEquals(toString(value), toString(src.get(intToKey(0))));
+        assertEquals(str(value), str(src.get(intToKey(0))));
         src.delete(intToKey(0));
         assertNull(src.get(intToKey(0)));
     }

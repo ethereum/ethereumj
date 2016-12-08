@@ -22,7 +22,7 @@ public class ReadCacheTest {
         return (new DataWord(i)).getData();
     }
 
-    private String toString(Object obj) {
+    private String str(Object obj) {
         if (obj == null) return null;
         return Hex.toHexString((byte[]) obj);
     }
@@ -42,12 +42,12 @@ public class ReadCacheTest {
             readCache.get(intToKey(i));
         }
         // Everything is cached
-        assertEquals(toString(intToValue(0)), toString(readCache.getCached(intToKey(0))));
-        assertEquals(toString(intToValue(9_999)), toString(readCache.getCached(intToKey(9_999))));
+        assertEquals(str(intToValue(0)), str(readCache.getCached(intToKey(0))));
+        assertEquals(str(intToValue(9_999)), str(readCache.getCached(intToKey(9_999))));
 
         // Source changes doesn't affect cache
         src.delete(intToKey(13));
-        assertEquals(toString(intToValue(13)), toString(readCache.getCached(intToKey(13))));
+        assertEquals(str(intToValue(13)), str(readCache.getCached(intToKey(13))));
 
         // Flush is not implemented
         assertFalse(readCache.flush());
@@ -64,11 +64,11 @@ public class ReadCacheTest {
 
         // Only 100 latest are cached
         assertNull(readCache.getCached(intToKey(0)));
-        assertEquals(toString(intToValue(0)), toString(readCache.get(intToKey(0))));
-        assertEquals(toString(intToValue(0)), toString(readCache.getCached(intToKey(0))));
-        assertEquals(toString(intToValue(9_999)), toString(readCache.getCached(intToKey(9_999))));
+        assertEquals(str(intToValue(0)), str(readCache.get(intToKey(0))));
+        assertEquals(str(intToValue(0)), str(readCache.getCached(intToKey(0))));
+        assertEquals(str(intToValue(9_999)), str(readCache.getCached(intToKey(9_999))));
         // 99_01 - 99_99 and 0 (totally 100)
-        assertEquals(toString(intToValue(9_901)), toString(readCache.getCached(intToKey(9_901))));
+        assertEquals(str(intToValue(9_901)), str(readCache.getCached(intToKey(9_901))));
         assertNull(readCache.getCached(intToKey(9_900)));
     }
 }
