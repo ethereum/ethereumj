@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  */
 public class CountingBytesSourceTest {
 
-    private Source src;
+    private Source<byte[], byte[]> src;
 
     private byte[] intToKey(int i) {
         return sha3(longToBytes(i));
@@ -33,7 +33,8 @@ public class CountingBytesSourceTest {
 
     @Before
     public void setUp() {
-        this.src = new CountingBytesSource(new HashMapDB());
+        Source<byte[], byte[]> parentSrc = new HashMapDB<>();
+        this.src = new CountingBytesSource(parentSrc);
     }
 
     @Test(expected = NullPointerException.class)

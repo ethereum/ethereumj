@@ -29,8 +29,8 @@ public class ReadCacheTest {
 
     @Test
     public void test1() {
-        DbSource src = new HashMapDB();
-        ReadCache readCache = new ReadCache.BytesKey<>(src);
+        Source<byte[], byte[]> src = new HashMapDB<>();
+        ReadCache<byte[], byte[]> readCache = new ReadCache.BytesKey<>(src);
         for (int i = 0; i < 10_000; ++i) {
             src.put(intToKey(i), intToValue(i));
         }
@@ -55,8 +55,8 @@ public class ReadCacheTest {
 
     @Test
     public void testMaxCapacity() {
-        DbSource src = new HashMapDB();
-        ReadCache readCache = new ReadCache.BytesKey<>(src).withMaxCapacity(100);
+        Source<byte[], byte[]> src = new HashMapDB<>();
+        ReadCache<byte[], byte[]> readCache = new ReadCache.BytesKey<>(src).withMaxCapacity(100);
         for (int i = 0; i < 10_000; ++i) {
             src.put(intToKey(i), intToValue(i));
             readCache.get(intToKey(i));

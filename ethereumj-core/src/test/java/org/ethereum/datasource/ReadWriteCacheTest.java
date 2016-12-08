@@ -30,8 +30,8 @@ public class ReadWriteCacheTest {
 
     @Test
     public void testSimple() {
-        DbSource src = new HashMapDB();
-        ReadWriteCache cache = new ReadWriteCache.BytesKey<>(src, WriteCache.CacheType.SIMPLE);
+        Source<byte[], byte[]> src = new HashMapDB<>();
+        ReadWriteCache<byte[], byte[]> cache = new ReadWriteCache.BytesKey<>(src, WriteCache.CacheType.SIMPLE);
 
         for (int i = 0; i < 10_000; ++i) {
             cache.put(intToKey(i), intToValue(i));

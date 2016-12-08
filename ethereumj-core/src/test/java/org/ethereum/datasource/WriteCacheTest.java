@@ -29,8 +29,8 @@ public class WriteCacheTest {
 
     @Test
     public void testSimple() {
-        DbSource src = new HashMapDB();
-        WriteCache writeCache = new WriteCache.BytesKey<>(src, WriteCache.CacheType.SIMPLE);
+        Source<byte[], byte[]> src = new HashMapDB<>();
+        WriteCache<byte[], byte[]> writeCache = new WriteCache.BytesKey<>(src, WriteCache.CacheType.SIMPLE);
         for (int i = 0; i < 10_000; ++i) {
             writeCache.put(intToKey(i), intToValue(i));
         }
@@ -68,8 +68,9 @@ public class WriteCacheTest {
 
     @Test
     public void testCounting() {
-        Source src = new CountingBytesSource(new HashMapDB());
-        WriteCache writeCache = new WriteCache.BytesKey<>(src, WriteCache.CacheType.COUNTING);
+        Source<byte[], byte[]> parentSrc = new HashMapDB<>();
+        Source<byte[], byte[]> src = new CountingBytesSource(parentSrc);
+        WriteCache<byte[], byte[]> writeCache = new WriteCache.BytesKey<>(src, WriteCache.CacheType.COUNTING);
         for (int i = 0; i < 100; ++i) {
             for (int j = 0; j <= i; ++j) {
                 writeCache.put(intToKey(i), intToValue(i));
@@ -108,8 +109,8 @@ public class WriteCacheTest {
 
     @Test
     public void testWithSizeEstimator() {
-        DbSource src = new HashMapDB();
-        WriteCache writeCache = new WriteCache.BytesKey<>(src, WriteCache.CacheType.SIMPLE);
+        Source<byte[], byte[]> src = new HashMapDB<>();
+        WriteCache<byte[], byte[]> writeCache = new WriteCache.BytesKey<>(src, WriteCache.CacheType.SIMPLE);
         writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
         assertEquals(0, writeCache.estimateCacheSize());
 
