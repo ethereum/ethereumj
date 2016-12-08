@@ -73,9 +73,9 @@ public class CommonConfig {
 
     @Bean
     public StateSource stateSource() {
-        Source<byte[], byte[]> stateDS = stateDS();
+        DbSource<byte[]> stateDS = stateDS();
         fastSyncCleanUp();
-        StateSource stateSource = new StateSource((BatchSource<byte[], byte[]>) stateDS,
+        StateSource stateSource = new StateSource(stateDS,
                 systemProperties().databasePruneDepth() >= 0);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
