@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -95,23 +96,31 @@ public abstract class BlockDownloader {
             try {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
-                    SyncQueueIfc.HeadersRequest hReq = syncQueue.requestHeaders(MAX_IN_REQUEST * REQUESTS);
-                    if (hReq.getCount() == 0) {
+                    Collection<SyncQueueIfc.HeadersRequest> hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS);
+                    if (hReq.size() == 0) {
                         logger.info("Headers download complete.");
                         headersDownloadComplete = true;
                         return;
                     }
                     int reqHeadersCounter = 0;
-                    for (SyncQueueIfc.HeadersRequest headersRequest : hReq.split(MAX_IN_REQUEST)) {
-                        final Channel any = pool.getAnyIdle();
+                    for (SyncQueueIfc.HeadersRequest headersRequest : hReq) {
+
+                        // If queue is at least half-full, use not best peers
+                        final Channel any;
+                        if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
+                            any = pool.getMediocreIdle();
+                        } else {
+                            any = getGoodPeer();
+                        }
+
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
                             break;
                         } else {
                             logger.debug("headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode());
                             ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
-                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse())
-                                    : any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), 0, headersRequest.isReverse());
+                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse()) :
+                                    any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), headersRequest.getStep(), headersRequest.isReverse());
                             Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
                                 @Override
                                 public void onSuccess(List<BlockHeader> result) {
@@ -192,7 +201,7 @@ public abstract class BlockDownloader {
 
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
-                        Channel any = pool.getAnyIdle();
+                        Channel any = getGoodPeer();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
                             break;
@@ -314,6 +323,15 @@ public abstract class BlockDownloader {
         }
 
         return true;
+    }
+
+    /**
+     * When sync is not done, we are working with several peers, so we have enough randomness.
+     * When we switch to short sync, we usually need only one peer, so if choosing
+     * the best one, we will get the same one all the time (but we need some randomness)
+     */
+    private Channel getGoodPeer() {
+        return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
     }
 
     public boolean isSyncDone() {

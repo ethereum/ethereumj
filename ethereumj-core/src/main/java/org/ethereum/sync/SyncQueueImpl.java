@@ -6,6 +6,7 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Functional;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
@@ -28,11 +29,20 @@ public class SyncQueueImpl implements SyncQueueIfc {
             this.reverse = reverse;
         }
 
+        public HeadersRequestImpl(byte[] hash, int count, boolean reverse, int step) {
+            this.hash = hash;
+            this.count = count;
+            this.reverse = reverse;
+            this.step = step;
+        }
+
+
         private long start;
         private byte[] hash;
         private int count;
 
         private boolean reverse;
+        private int step = 0;
 
         @Override
         public List<HeadersRequest> split(int maxCount) {
@@ -51,9 +61,10 @@ public class SyncQueueImpl implements SyncQueueIfc {
         @Override
         public String toString() {
             return "HeadersRequest{" +
-                    "start=" + getStart() +
+                    (hash == null ? "start=" + getStart() : "hash=" + Hex.toHexString(hash).substring(0, 8))+
                     ", count=" + getCount() +
                     ", reverse=" + isReverse() +
+                    ", step=" + getStep() +
                     '}';
         }
 
@@ -75,6 +86,11 @@ public class SyncQueueImpl implements SyncQueueIfc {
         @Override
         public boolean isReverse() {
             return reverse;
+        }
+
+        @Override
+        public int getStep() {
+            return step;
         }
     }
 
@@ -270,8 +286,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized HeadersRequest requestHeaders(int count) {
-        return requestHeadersImpl(count);
+    public synchronized Collection<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
+        return Collections.singleton(requestHeadersImpl(maxSize));
     }
 
     private HeadersRequest requestHeadersImpl(int count) {
@@ -297,11 +313,12 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized void addHeaders(Collection<BlockHeaderWrapper> headers) {
+    public synchronized List<BlockHeaderWrapper> addHeaders(Collection<BlockHeaderWrapper> headers) {
         for (BlockHeaderWrapper header : headers) {
             addHeader(header);
         }
         trimChain();
+        return null;
     }
 
     @Override

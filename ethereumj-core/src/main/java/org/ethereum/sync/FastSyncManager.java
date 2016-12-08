@@ -10,6 +10,7 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
@@ -67,9 +68,13 @@ public class FastSyncManager {
     private Repository repository;
 
     @Autowired
+    DbFlushManager dbFlushManager;
+
+    @Autowired
     FastSyncDownloader downloader;
 
     int nodesInserted = 0;
+    int lastNodeCommit = 0;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
@@ -83,6 +88,9 @@ public class FastSyncManager {
                         TrieNodeRequest request = dbWriteQueue.take();
                         nodesInserted++;
                         repository.addRawNode(request.nodeHash, request.response);
+                        if (nodesInserted - lastNodeCommit >= 100) {
+                            commitNodes();
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("Fatal FastSync error while writing data", e);
@@ -100,6 +108,12 @@ public class FastSyncManager {
                 }
             }
         }.start();
+    }
+
+    private synchronized void commitNodes() {
+        repository.commit();
+        dbFlushManager.commit();
+        lastNodeCommit = nodesInserted;
     }
 
     enum TrieNodeType {
@@ -377,8 +391,6 @@ public class FastSyncManager {
 
             retrieveLoop();
 
-            stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
-
             logger.info("FastSync: state trie download complete!");
             last = 0;
             logStat();
@@ -399,8 +411,11 @@ public class FastSyncManager {
             logger.info("FastSync: downloaded all blocks, proceeding to regular sync");
 
             blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
+            repository.flush();
+            dbFlushManager.flush();
+            stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
         } else {
-            logger.info("FastSync: current best block is > 0 (" + blockchain.getBestBlock().getShortDescr() + "). " +
+            logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
                     "Continue with regular sync...");
         }
 

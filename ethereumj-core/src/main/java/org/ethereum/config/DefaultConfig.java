@@ -43,6 +43,7 @@ public class DefaultConfig {
 
     @Bean
     public BlockStore blockStore(){
+        commonConfig.fastSyncCleanUp();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
         indexedBlockStore.init(commonConfig.cachedDbSource("index"), commonConfig.cachedDbSource("block"));
 

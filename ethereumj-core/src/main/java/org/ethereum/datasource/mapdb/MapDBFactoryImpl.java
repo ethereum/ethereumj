@@ -16,7 +16,7 @@ public class MapDBFactoryImpl implements MapDBFactory {
     SystemProperties config = SystemProperties.getDefault(); // initialized for standalone test
 
     @Override
-    public DbSource createDataSource() {
+    public DbSource<byte[]> createDataSource() {
         return new MapDBDataSource();
     }
 
