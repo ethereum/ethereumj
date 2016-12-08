@@ -118,7 +118,7 @@ public class SyncPool {
     }
 
     @Nullable
-    public synchronized Channel getAnyIdleAndLock(SyncState syncState) {
+    public Channel getAnyIdleAndLock(SyncState syncState) {
         Channel peer = getAnyIdle();
         if (peer != null) {
             boolean success = peer.getEthHandler().setStatus(syncState);
@@ -132,6 +132,16 @@ public class SyncPool {
         for (Channel peer : activePeers) {
             if (peer.isIdle())
                 return peer;
+        }
+        return null;
+    }
+
+    @Nullable
+    public synchronized Channel getMediocreIdle() {
+        List<Channel> worstHalf = activePeers.subList((int) Math.floor(activePeers.size() / 2), activePeers.size());
+        if (!worstHalf.isEmpty()) {
+            Collections.shuffle(worstHalf);
+            return worstHalf.get(0);
         }
         return null;
     }

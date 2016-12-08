@@ -103,7 +103,15 @@ public abstract class BlockDownloader {
                     }
                     int reqHeadersCounter = 0;
                     for (SyncQueueIfc.HeadersRequest headersRequest : hReq.split(MAX_IN_REQUEST)) {
-                        final Channel any = pool.getAnyIdle();
+
+                        // If queue is at least half-full, use not best peers
+                        final Channel any;
+                        if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
+                            any = pool.getMediocreIdle();
+                        } else {
+                            any = getGoodPeer();
+                        }
+
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
                             break;
@@ -192,7 +200,7 @@ public abstract class BlockDownloader {
 
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
-                        Channel any = pool.getAnyIdle();
+                        Channel any = getGoodPeer();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
                             break;
@@ -314,6 +322,15 @@ public abstract class BlockDownloader {
         }
 
         return true;
+    }
+
+    /**
+     * When sync is not done, we are working with several peers, so we have enough randomness.
+     * When we switch to short sync, we usually need only one peer, so if choosing
+     * the best one, we will get the same one all the time (but we need some randomness)
+     */
+    private Channel getGoodPeer() {
+        return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
     }
 
     public boolean isSyncDone() {
