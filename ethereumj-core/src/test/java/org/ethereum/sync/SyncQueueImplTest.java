@@ -64,23 +64,26 @@ public class SyncQueueImplTest {
 
     @Test
     public void testReverseHeaders1() {
-        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 100);
-        List<Block> randomChain1 = TestUtils.getRandomChain(new byte[32], 0, 100);
+        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 699);
+        List<Block> randomChain1 = TestUtils.getRandomChain(new byte[32], 0, 699);
         Peer[] peers = new Peer[]{new Peer(randomChain), new Peer(randomChain1)};
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(randomChain.get(randomChain.size() - 1).getHash(), true);
         List<BlockHeaderWrapper> result = new ArrayList<>();
         int peerIdx = 1;
         Random rnd = new Random();
+        int cnt = 0;
         while (true) {
-            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(10, 5);
+            System.out.println("Cnt: " + cnt++);
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5);
             if (headersRequests.isEmpty()) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
                 List<BlockHeader> headers = rnd.nextBoolean() ? peers[peerIdx].getHeaders(request)
                         :peers[peerIdx].getRandomHeaders(10);
+//                List<BlockHeader> headers = peers[0].getHeaders(request);
+
                 peerIdx = (peerIdx + 1) % 2;
                 List<BlockHeaderWrapper> ret = syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
-//                System.out.println("Res: " + ret);
                 result.addAll(ret);
                 System.out.println("Result length: " + result.size());
             }
@@ -171,20 +174,31 @@ public class SyncQueueImplTest {
         public List<BlockHeader> getHeaders(long startBlockNum, int count, boolean reverse, int step) {
             step = step == 0 ? 1 : step;
 
-            if (reverse) {
-                startBlockNum = startBlockNum - (count - 1 ) * step;
+            List<BlockHeader> ret = new ArrayList<>();
+            int i = (int) startBlockNum;
+            for(; count-- > 0 && i >= chain.get(0).getNumber() && i <= chain.get(chain.size() - 1).getNumber();
+                i += reverse ? -step : step) {
+
+                ret.add(chain.get(i).getHeader());
+
             }
 
-            startBlockNum = Math.max(startBlockNum, chain.get(0).getNumber());
-            startBlockNum = Math.min(startBlockNum, chain.get(chain.size() - 1).getNumber());
-            long endBlockNum = startBlockNum + (count - 1) * step;
-            endBlockNum = Math.max(endBlockNum, chain.get(0).getNumber());
-            endBlockNum = Math.min(endBlockNum, chain.get(chain.size() - 1).getNumber());
-            List<BlockHeader> ret = new ArrayList<>();
-            int startIdx = (int) (startBlockNum - chain.get(0).getNumber());
-            for (int i = startIdx; i < startIdx + (endBlockNum - startBlockNum + 1); i+=step) {
-                ret.add(chain.get(i).getHeader());
-            }
+//            step = step == 0 ? 1 : step;
+//
+//            if (reverse) {
+//                startBlockNum = startBlockNum - (count - 1 ) * step;
+//            }
+//
+//            startBlockNum = Math.max(startBlockNum, chain.get(0).getNumber());
+//            startBlockNum = Math.min(startBlockNum, chain.get(chain.size() - 1).getNumber());
+//            long endBlockNum = startBlockNum + (count - 1) * step;
+//            endBlockNum = Math.max(endBlockNum, chain.get(0).getNumber());
+//            endBlockNum = Math.min(endBlockNum, chain.get(chain.size() - 1).getNumber());
+//            List<BlockHeader> ret = new ArrayList<>();
+//            int startIdx = (int) (startBlockNum - chain.get(0).getNumber());
+//            for (int i = startIdx; i < startIdx + (endBlockNum - startBlockNum + 1); i+=step) {
+//                ret.add(chain.get(i).getHeader());
+//            }
             return ret;
         }
 
