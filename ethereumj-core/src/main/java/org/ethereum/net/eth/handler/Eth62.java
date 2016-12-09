@@ -88,7 +88,7 @@ public class Eth62 extends EthHandler {
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
-    protected Queue<GetBlockHeadersMessageWrapper> headerRequests = new LinkedBlockingQueue<>();
+    protected GetBlockHeadersMessageWrapper headerRequest;
 
     private Map<Long, byte[]> blockHashCheck;
 
@@ -195,9 +195,13 @@ public class Eth62 extends EthHandler {
                 maxBlocksAsk
         );
 
+        if (headerRequest != null) {
+            throw new RuntimeException("The peer is waiting for headers response: " + this);
+        }
+
         GetBlockHeadersMessage headersRequest = new GetBlockHeadersMessage(blockNumber, null, maxBlocksAsk, 0, reverse);
         GetBlockHeadersMessageWrapper messageWrapper = new GetBlockHeadersMessageWrapper(headersRequest);
-        headerRequests.add(messageWrapper);
+        headerRequest = messageWrapper;
 
         sendNextHeaderRequest();
 
@@ -222,9 +226,13 @@ public class Eth62 extends EthHandler {
                 maxBlocksAsk, skip, reverse
         );
 
+        if (headerRequest != null) {
+            throw new RuntimeException("The peer is waiting for headers response: " + this);
+        }
+
         GetBlockHeadersMessage headersRequest = new GetBlockHeadersMessage(0, blockHash, maxBlocksAsk, skip, reverse);
         GetBlockHeadersMessageWrapper messageWrapper = new GetBlockHeadersMessageWrapper(headersRequest, newHashes);
-        headerRequests.add(messageWrapper);
+        headerRequest = messageWrapper;
 
         sendNextHeaderRequest();
 
@@ -380,7 +388,8 @@ public class Eth62 extends EthHandler {
                 msg.getBlockHeaders().size()
         );
 
-        GetBlockHeadersMessageWrapper request = headerRequests.poll();
+        GetBlockHeadersMessageWrapper request = headerRequest;
+        headerRequest = null;
 
         if (!isValid(msg, request)) {
 
@@ -477,7 +486,7 @@ public class Eth62 extends EthHandler {
         // do not send header requests if status hasn't been passed yet
         if (ethState == EthState.INIT) return;
 
-        GetBlockHeadersMessageWrapper wrapper = headerRequests.peek();
+        GetBlockHeadersMessageWrapper wrapper = headerRequest;
 
         if (wrapper == null || wrapper.isSent()) return;
 
@@ -796,7 +805,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized boolean setStatus(SyncState syncState) {
-        if (!sentHeaders.isEmpty() && !headerRequests.isEmpty()) return false;
+        if (this.syncState != IDLE) return false;
         this.syncState = syncState;
         return true;
     }
