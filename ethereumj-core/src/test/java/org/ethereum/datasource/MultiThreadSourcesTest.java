@@ -143,17 +143,18 @@ public class MultiThreadSourcesTest {
             try {
                 failSema.await(timeout, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
+                running = false;
                 throw new RuntimeException("Thrown interrupted exception", ex);
             }
+
+            // Shutdown carefully
+            running = false;
 
             if (failSema.getCount() == 0) {
                 throw new RuntimeException("Test failed.");
             } else {
                 System.out.println("Test passed, put counter: " + putCnt.get() + ", delete counter: " + delCnt.get());
             }
-
-            // Shutdown carefully
-            running = false;
         }
     }
 
