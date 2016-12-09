@@ -18,7 +18,7 @@ import static org.junit.Assert.assertNull;
 /**
  * Testing different sources and chain of sources in multi-thread environment
  */
-public class ConcurrencySourcesTest {
+public class MultiThreadSourcesTest {
 
     private byte[] intToKey(int i) {
         return sha3(longToBytes(i));
@@ -38,6 +38,7 @@ public class ConcurrencySourcesTest {
         private Source<byte[], byte[]> cache;
         boolean isCounting = false;
 
+        boolean running = true;
         final CountDownLatch failSema = new CountDownLatch(1);
         final AtomicInteger putCnt = new AtomicInteger(1);
         final AtomicInteger delCnt = new AtomicInteger(1);
@@ -55,7 +56,7 @@ public class ConcurrencySourcesTest {
             @Override
             public void run() {
                 try {
-                    while(true) {
+                    while(running) {
                         int curMax = putCnt.get() - 1;
                         assertEquals(str(intToValue(curMax)), str(cache.get(intToKey(curMax))));
                     }
@@ -70,7 +71,7 @@ public class ConcurrencySourcesTest {
             @Override
             public void run() {
                 try {
-                    while(true) {
+                    while(running) {
                         int curMax = putCnt.get() - 1;
                         int toDelete = delCnt.get();
                         if (curMax - toDelete < 2) {
@@ -103,7 +104,7 @@ public class ConcurrencySourcesTest {
                 @Override
                 public void run() {
                     try {
-                        while(true) {
+                        while(running) {
                             int curCnt = putCnt.get();
                             cache.put(intToKey(curCnt), intToValue(curCnt));
                             if (isCounting) {
@@ -128,7 +129,7 @@ public class ConcurrencySourcesTest {
                 @Override
                 public void run() {
                     try {
-                        while(true) {
+                        while(running) {
                             sleep(10);
                             cache.flush();
                         }
@@ -150,6 +151,9 @@ public class ConcurrencySourcesTest {
             } else {
                 System.out.println("Test passed, put counter: " + putCnt.get() + ", delete counter: " + delCnt.get());
             }
+
+            // Shutdown carefully
+            running = false;
         }
     }
 
