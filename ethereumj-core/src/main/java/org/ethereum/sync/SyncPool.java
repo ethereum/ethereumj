@@ -63,6 +63,7 @@ public class SyncPool {
     private ScheduledExecutorService poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private Functional.Predicate<NodeHandler> nodesSelector;
+    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     public SyncPool(final SystemProperties config, final Blockchain blockchain) {
@@ -91,6 +92,18 @@ public class SyncPool {
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
         );
+        logExecutor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    logActivePeers();
+                    logger.info("\n");
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    logger.error("Exception in log worker", t);
+                }
+            }
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
@@ -320,6 +333,7 @@ public class SyncPool {
             lowerUsefulDifficulty = td;
         }
     }
+
 
     private void heartBeat() {
 //        for (Channel peer : channelManager.getActivePeers()) {

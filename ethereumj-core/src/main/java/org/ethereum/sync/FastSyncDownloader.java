@@ -1,5 +1,6 @@
 package org.ethereum.sync;
 
+import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.DbFlushManager;
@@ -67,6 +68,9 @@ public class FastSyncDownloader extends BlockDownloader {
             }
         }
     }
+
+    @Override
+    protected void pushHeaders(List<BlockHeaderWrapper> headers) {}
 
     @Override
     protected int getBlockQueueSize() {

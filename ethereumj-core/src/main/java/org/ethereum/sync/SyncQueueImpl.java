@@ -286,8 +286,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized Collection<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
-        return Collections.singleton(requestHeadersImpl(maxSize));
+    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
+        return Collections.singletonList(requestHeadersImpl(maxSize));
     }
 
     private HeadersRequest requestHeadersImpl(int count) {

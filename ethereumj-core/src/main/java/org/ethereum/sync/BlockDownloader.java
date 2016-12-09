@@ -11,11 +11,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 
 import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 /**
@@ -30,13 +31,15 @@ public abstract class BlockDownloader {
 
     // Max number of Blocks / Headers in one request
     private static int MAX_IN_REQUEST = 192;
-    private static int REQUESTS = 5;
+    private static int REQUESTS = 32;
 
     private BlockHeaderValidator headerValidator;
 
     private SyncPool pool;
 
     private SyncQueueIfc syncQueue;
+
+    private boolean blockBodiesDownload = true;
 
     private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
     private CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
@@ -52,12 +55,17 @@ public abstract class BlockDownloader {
     }
 
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
+    protected abstract void pushHeaders(List<BlockHeaderWrapper> headers);
     protected abstract int getBlockQueueSize();
 
     protected void finishDownload() {}
 
     public boolean isDownloadComplete() {
         return downloadComplete;
+    }
+
+    public void setBlockBodiesDownload(boolean blockBodiesDownload) {
+        this.blockBodiesDownload = blockBodiesDownload;
     }
 
     public void init(SyncQueueIfc syncQueue, final SyncPool pool) {
@@ -74,13 +82,15 @@ public abstract class BlockDownloader {
         }, "SyncThreadHeaders");
         getHeadersThread.start();
 
-        getBodiesThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                blockRetrieveLoop();
-            }
-        }, "SyncThreadBlocks");
-        getBodiesThread.start();
+        if (blockBodiesDownload) {
+            getBodiesThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    blockRetrieveLoop();
+                }
+            }, "SyncThreadBlocks");
+            getBodiesThread.start();
+        }
     }
 
     public void setHeaderQueueLimit(int headerQueueLimit) {
@@ -92,26 +102,31 @@ public abstract class BlockDownloader {
     }
 
     private void headerRetrieveLoop() {
+        List<SyncQueueIfc.HeadersRequest> hReq = emptyList();
         while(!Thread.currentThread().isInterrupted()) {
             try {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
-                    Collection<SyncQueueIfc.HeadersRequest> hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS);
+                    if (hReq.isEmpty()) {
+                        hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS);
+                    }
                     if (hReq.size() == 0) {
                         logger.info("Headers download complete.");
                         headersDownloadComplete = true;
                         return;
                     }
                     int reqHeadersCounter = 0;
-                    for (SyncQueueIfc.HeadersRequest headersRequest : hReq) {
+                    SyncQueueIfc.HeadersRequest h;
+                    for (Iterator<SyncQueueIfc.HeadersRequest> it = hReq.iterator(); it.hasNext();) {
+                        SyncQueueIfc.HeadersRequest headersRequest = it.next();
 
                         // If queue is at least half-full, use not best peers
-                        final Channel any;
-                        if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
-                            any = pool.getMediocreIdle();
-                        } else {
-                            any = getGoodPeer();
-                        }
+                        final Channel any = pool.getAnyIdleAndLock(SyncState.HASH_RETRIEVING);
+//                        if (syncQueue.getHeadersCount() * 2 > headerQueueLimit) {
+//                            any = pool.getMediocreIdle();
+//                        } else {
+//                            any = getGoodPeer();
+//                        }
 
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
@@ -135,11 +150,12 @@ public abstract class BlockDownloader {
                                     any.getEthHandler().dropConnection();
                                 }
                             });
+                            it.remove();
                             reqHeadersCounter++;
                         }
                     }
-                    receivedHeadersLatch = new CountDownLatch(max(reqHeadersCounter, 1));
-                    }  else {
+                    receivedHeadersLatch = new CountDownLatch(max(reqHeadersCounter / 4, 1));
+                }  else {
                     receivedHeadersLatch = new CountDownLatch(1);
                     logger.debug("headerRetrieveLoop: HeaderQueue is full");
                 }
@@ -297,7 +313,10 @@ public abstract class BlockDownloader {
             wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        syncQueue.addHeaders(wrappers);
+        List<BlockHeaderWrapper> headersReady = syncQueue.addHeaders(wrappers);
+        if (headersReady != null && !headersReady.isEmpty()) {
+            pushHeaders(headersReady);
+        }
 
         receivedHeadersLatch.countDown();
 

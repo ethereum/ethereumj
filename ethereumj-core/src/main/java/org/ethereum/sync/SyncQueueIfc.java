@@ -43,7 +43,7 @@ public interface SyncQueueIfc {
      * @param maxSize Maximum number of headers in a singles request
      * @param maxRequests Maximum number of requests
      */
-    Collection<HeadersRequest> requestHeaders(int maxSize, int maxRequests);
+    List<HeadersRequest> requestHeaders(int maxSize, int maxRequests);
 
     /**
      * Adds received headers.

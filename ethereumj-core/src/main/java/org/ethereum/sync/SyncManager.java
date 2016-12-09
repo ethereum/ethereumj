@@ -83,7 +83,6 @@ public class SyncManager extends BlockDownloader {
     private SyncQueueImpl syncQueue;
 
     private Thread syncQueueThread;
-    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
@@ -129,16 +128,15 @@ public class SyncManager extends BlockDownloader {
 
         syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
         syncQueueThread.start();
-
-        if (logger.isInfoEnabled()) {
-            startLogWorker();
-        }
     }
 
     @Override
     protected void pushBlocks(List<BlockWrapper> blockWrappers) {
         exec1.pushAll(blockWrappers);
     }
+
+    @Override
+    protected void pushHeaders(List<BlockHeaderWrapper> headers) {}
 
     @Override
     protected int getBlockQueueSize() {
@@ -272,26 +270,10 @@ public class SyncManager extends BlockDownloader {
         return lastKnownBlockNumber;
     }
 
-    private void startLogWorker() {
-        logExecutor.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    pool.logActivePeers();
-                    logger.info("\n");
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    logger.error("Exception in log worker", t);
-                }
-            }
-        }, 30, 30, TimeUnit.SECONDS);
-    }
-
     public void close() {
         try {
             exec1.shutdown();
             if (syncQueueThread != null) syncQueueThread.interrupt();
-            logExecutor.shutdown();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);
         }
