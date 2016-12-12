@@ -464,8 +464,6 @@ public class Program {
 
         if (!byTestingSuite())
             track.commit();
-        getResult().addDeleteAccounts(result.getDeleteAccounts());
-        getResult().addTouchAccounts(result.getTouchedAccounts());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
@@ -571,7 +569,6 @@ public class Program {
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
-            getResult().addTouchAccounts(result.getTouchedAccounts());
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated

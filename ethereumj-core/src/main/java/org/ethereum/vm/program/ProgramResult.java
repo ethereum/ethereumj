@@ -167,6 +167,7 @@ public class ProgramResult {
             addDeleteAccounts(another.getDeleteAccounts());
             addLogInfos(another.getLogInfoList());
             addFutureRefund(another.getFutureRefund());
+            addTouchAccounts(another.getTouchedAccounts());
         }
     }
     
