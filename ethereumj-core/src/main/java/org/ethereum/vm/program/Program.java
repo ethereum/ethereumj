@@ -425,6 +425,7 @@ public class Program {
             Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
+            touchedAccounts.addAll(program.getTouchedAccounts());
 
             getResult().merge(result);
         }
