@@ -425,7 +425,6 @@ public class Program {
             Program program = commonConfig.program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
-            touchedAccounts.addAll(program.getTouchedAccounts());
 
             getResult().merge(result);
         }
@@ -466,6 +465,7 @@ public class Program {
         if (!byTestingSuite())
             track.commit();
         getResult().addDeleteAccounts(result.getDeleteAccounts());
+        getResult().addTouchAccounts(result.getTouchedAccounts());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
@@ -554,7 +554,6 @@ public class Program {
 
             getTrace().merge(program.getTrace());
             getResult().merge(result);
-            touchedAccounts.addAll(program.getTouchedAccounts());
 
             if (result.getException() != null) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
@@ -572,6 +571,7 @@ public class Program {
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
+            getResult().addTouchAccounts(result.getTouchedAccounts());
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
@@ -868,14 +868,6 @@ public class Program {
                 i += op.asInt() - OpCode.PUSH1.asInt() + 1;
             }
         }
-    }
-
-    public void touchAccount(byte[] addr) {
-        touchedAccounts.add(addr);
-    }
-
-    public Set<byte[]> getTouchedAccounts() {
-        return touchedAccounts;
     }
 
     static String formatBinData(byte[] binData, int startPC) {

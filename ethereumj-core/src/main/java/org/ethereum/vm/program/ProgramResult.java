@@ -1,5 +1,6 @@
 package org.ethereum.vm.program;
 
+import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.CallCreate;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -24,6 +25,7 @@ public class ProgramResult {
     private RuntimeException exception;
 
     private Set<DataWord> deleteAccounts;
+    private ByteArraySet touchedAccounts = new ByteArraySet();
     private List<InternalTransaction> internalTransactions;
     private List<LogInfo> logInfoList;
     private long futureRefund = 0;
@@ -78,6 +80,20 @@ public class ProgramResult {
     public void addDeleteAccounts(Set<DataWord> accounts) {
         if (!isEmpty(accounts)) {
             getDeleteAccounts().addAll(accounts);
+        }
+    }
+
+    public void addTouchAccount(byte[] addr) {
+        touchedAccounts.add(addr);
+    }
+
+    public Set<byte[]> getTouchedAccounts() {
+        return touchedAccounts;
+    }
+
+    public void addTouchAccounts(Set<byte[]> accounts) {
+        if (!isEmpty(accounts)) {
+            getTouchedAccounts().addAll(accounts);
         }
     }
 
