@@ -923,6 +923,7 @@ public class RepositoryTest {
         assertEquals(horseVal0, horseDetails.get(horseKey2) );
     }
 
+    private boolean running = true;
 
     @Test // testing for snapshot
     public void testMultiThread() throws InterruptedException {
@@ -949,7 +950,7 @@ public class RepositoryTest {
             public void run() {
                 try {
                     int cnt = 1;
-                    while(true) {
+                    while(running) {
                         Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
                         snap.addBalance(cow, BigInteger.TEN);
                         snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
@@ -968,7 +969,7 @@ public class RepositoryTest {
             public void run() {
                 int cnt = 1;
                 try {
-                    while(true) {
+                    while(running) {
                         Repository track2 = repository.startTracking(); //track
                         DataWord cVal = new DataWord(cnt);
                         track2.addStorageRow(cow, cowKey1, cVal);
@@ -995,6 +996,7 @@ public class RepositoryTest {
         }).start();
 
         failSema.await(10, TimeUnit.SECONDS);
+        running = false;
 
         if (failSema.getCount() == 0) {
             throw new RuntimeException("Test failed.");
