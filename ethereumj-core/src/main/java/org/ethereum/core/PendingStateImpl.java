@@ -227,8 +227,8 @@ public class PendingStateImpl implements PendingState {
     // validations which are not performed within executeTx
     private String validate(Transaction tx) {
 
-        if (config.getMineMinGasPrice().compareTo(ByteUtil.bytesToBigInteger(tx.gasPrice)) > 0) {
-            return "Too low gas price for transaction: " + ByteUtil.bytesToBigInteger(tx.gasPrice);
+        if (config.getMineMinGasPrice().compareTo(ByteUtil.bytesToBigInteger(tx.getGasPrice())) > 0) {
+            return "Too low gas price for transaction: " + ByteUtil.bytesToBigInteger(tx.getGasPrice());
         }
 
         return null;
