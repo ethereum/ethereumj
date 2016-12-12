@@ -116,12 +116,12 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onSyncDone() {
+    public void onSyncDone(final SyncState state) {
         for (final EthereumListener listener : listeners) {
             eventDispatchThread.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    listener.onSyncDone();
+                    listener.onSyncDone(state);
                 }
             });
         }

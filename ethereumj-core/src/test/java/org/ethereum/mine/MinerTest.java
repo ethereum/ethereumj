@@ -117,7 +117,7 @@ public class MinerTest {
             }
 
             @Override
-            public void onSyncDone() {
+            public void onSyncDone(SyncState state) {
                 semaphore.countDown();
                 System.err.println("=== Sync Done!");
             }
@@ -197,7 +197,7 @@ public class MinerTest {
             }
 
             @Override
-            public void onSyncDone() {
+            public void onSyncDone(SyncState state) {
                 semaphore.countDown();
             }
         });

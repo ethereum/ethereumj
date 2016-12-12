@@ -131,24 +131,29 @@ public class Eth63 extends Eth62 {
     }
 
     public synchronized ListenableFuture<List<Pair<byte[], byte[]>>> requestTrieNodes(List<byte[]> hashes) {
+        if (syncState != SyncState.IDLE) return null;
+
         GetNodeDataMessage msg = new GetNodeDataMessage(hashes);
         requestedNodes = new ByteArraySet();
         requestedNodes.addAll(hashes);
+
         requestNodesFuture = SettableFuture.create();
         sendMessage(msg);
         lastReqSentTime = System.currentTimeMillis();
+
+        syncState = SyncState.NODE_RETRIEVING;
         return requestNodesFuture;
     }
 
     protected synchronized void processNodeData(NodeDataMessage msg) {
         if (requestedNodes == null) {
-            logger.debug("Received NodeDataMessage when requestedNodes == null. Dropping peer");
+            logger.debug("Received NodeDataMessage when requestedNodes == null. Dropping peer " + channel);
             dropConnection();
         }
 
         List<Pair<byte[], byte[]>> ret = new ArrayList<>();
         if(msg.getDataList().isEmpty()) {
-            String err = "Received NodeDataMessage contains empty node data. Dropping peer";
+            String err = "Received NodeDataMessage contains empty node data. Dropping peer " + channel;
             dropUselessPeer(err);
             return;
         }
@@ -156,7 +161,7 @@ public class Eth63 extends Eth62 {
         for (Value nodeVal : msg.getDataList()) {
             byte[] hash = nodeVal.hash();
             if (!requestedNodes.contains(hash)) {
-                String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer";
+                String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer " + channel;
                 dropUselessPeer(err);
                 return;
             }

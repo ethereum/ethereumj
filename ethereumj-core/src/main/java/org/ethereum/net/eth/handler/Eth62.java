@@ -219,6 +219,8 @@ public class Eth62 extends EthHandler {
 
     protected synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
 
+        if (syncState != IDLE) return null;
+
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
                 channel.getPeerIdShort(),
@@ -241,6 +243,8 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
+        if (syncState != IDLE) return null;
+
         syncState = BLOCK_RETRIEVING;
         sentHeaders.clear();
         sentHeaders.addAll(headers);

@@ -30,12 +30,8 @@ public class FastSyncDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    @Autowired
-    DbFlushManager dbFlushManager;
-
-    private BigInteger cummDiff = BigInteger.ZERO;
-
     int counter;
+    int maxCount;
     long t;
 
     @Autowired
@@ -43,22 +39,25 @@ public class FastSyncDownloader extends BlockDownloader {
         super(headerValidator);
     }
 
-    public void startImporting(Blockchain blockchain, long endNumber, byte[] baseDiff) {
-        cummDiff = cummDiff.add(ByteUtil.bytesToBigInteger(baseDiff));
-        SyncQueueImpl syncQueue = new SyncQueueImpl(blockchain, endNumber);
-        init(syncQueue, syncPool);
+    public void startImporting(byte[] fromHash, int count) {
+        SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
+        init(syncQueueReverse, syncPool);
+        this.maxCount = count <= 0 ? Integer.MAX_VALUE : count;
     }
 
     @Override
-    protected synchronized void pushBlocks(List<BlockWrapper> blockWrappers) {
+    protected void pushBlocks(List<BlockWrapper> blockWrappers) {
         if (!blockWrappers.isEmpty()) {
 
             for (BlockWrapper blockWrapper : blockWrappers) {
-                cummDiff = cummDiff.add(ByteUtil.bytesToBigInteger(blockWrapper.getBlock().getDifficulty()));
-                blockStore.saveBlock(blockWrapper.getBlock(), cummDiff, true);
-                dbFlushManager.commit();
+                blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
+                counter++;
+                if (counter >= maxCount) {
+                    logger.info("All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
+                    stop();
+                    break;
+                }
             }
-            counter += blockWrappers.size();
 
             long c = System.currentTimeMillis();
             if (c - t > 5000) {

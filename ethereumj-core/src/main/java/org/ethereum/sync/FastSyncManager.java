@@ -12,6 +12,9 @@ import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
@@ -23,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -40,7 +44,7 @@ public class FastSyncManager {
     private final static long REQUEST_TIMEOUT = 5 * 1000;
     private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
-    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
+    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 1;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
 
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
@@ -72,6 +76,12 @@ public class FastSyncManager {
 
     @Autowired
     FastSyncDownloader downloader;
+
+    @Autowired
+    CompositeEthereumListener listener;
+
+    @Autowired
+    ApplicationContext applicationContext;
 
     int nodesInserted = 0;
     int lastNodeCommit = 0;
@@ -238,7 +248,7 @@ public class FastSyncManager {
     }
 
     boolean requestNextNodes(int cnt) {
-        final Channel idle = pool.getAnyIdleAndLock(SyncState.NODE_RETRIEVING);
+        final Channel idle = pool.getAnyIdle();
 
         if (idle != null) {
             final List<byte[]> hashes = new ArrayList<>();
@@ -320,7 +330,7 @@ public class FastSyncManager {
                 });
                 return true;
             } else {
-                idle.getEthHandler().setStatus(SyncState.IDLE);
+//                idle.getEthHandler().setStatus(SyncState.IDLE);
                 return false;
             }
         } else {
@@ -367,8 +377,6 @@ public class FastSyncManager {
     public void main() {
 
         if (blockchain.getBestBlock().getNumber() == 0) {
-            startLogWorker();
-
             BlockHeader pivot = getPivotBlock();
 
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
@@ -379,8 +387,6 @@ public class FastSyncManager {
                     return true;
                 }
             });
-
-            downloader.startImporting(blockchain, pivot.getNumber(), blockchain.getBestBlock().getDifficulty());
 
             byte[] pivotStateRoot = pivot.getStateRoot();
             TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
@@ -394,32 +400,60 @@ public class FastSyncManager {
             logger.info("FastSync: state trie download complete!");
             last = 0;
             logStat();
-
-            repository.flush();
-            stateDS.flush();
-
             pool.setNodesSelector(null);
 
-            while (!downloader.isDownloadComplete()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            repository.commit();
+            dbFlushManager.flush();
 
-            logger.info("FastSync: downloaded all blocks, proceeding to regular sync");
+            logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
+            downloader.startImporting(pivot.getHash(), 260);
+            downloader.waitForStop();
+
+            logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
 
             blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
+            dbFlushManager.flush();
+
+            logger.info("FastSync: proceeding to regular sync...");
+
+            final CountDownLatch syncDoneLatch = new CountDownLatch(1);
+            listener.addListener(new EthereumListenerAdapter() {
+                @Override
+                public void onSyncDone(SyncState state) {
+                    syncDoneLatch.countDown();
+                }
+            });
+            syncManager.initRegularSync(EthereumListener.SyncState.UNSECURE);
+            logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
+
+            try {
+                syncDoneLatch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            logger.info("FastSync: regular sync reached the blockchain head.");
+
+
+            logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block is secure...");
+            HeadersDownloader headersDownloader = applicationContext.getBean(HeadersDownloader.class);
+            headersDownloader.init(pivot.getHash());
+            headersDownloader.waitForStop();
+            if (!FastByteComparisons.equal(headersDownloader.getGenesis().getHash(), config.getGenesis().getHash())) {
+                logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
+                        pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + headersDownloader.getGenesis());
+                logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
+                System.exit(-666);
+            }
+            listener.onSyncDone(EthereumListener.SyncState.SECURE);
+            logger.info("FastSync: all headers downloaded. The state is SECURE now.");
+
             stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
-            repository.flush();
+            repository.commit();
             dbFlushManager.flush();
         } else {
             logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
                     "Continue with regular sync...");
         }
-
-        syncManager.initRegularSync();
 
         // set indicator that we can send [STATUS] with the latest block
         // before we should report best block #0
@@ -519,20 +553,4 @@ public class FastSyncManager {
             throw new RuntimeException(e);
         }
     }
-
-    private void startLogWorker() {
-        logExecutor.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    pool.logActivePeers();
-                    logger.info("\n");
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    logger.error("Exception in log worker", t);
-                }
-            }
-        }, 30, 30, TimeUnit.SECONDS);
-    }
-
 }

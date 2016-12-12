@@ -1,5 +1,6 @@
 package org.ethereum.sync;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -31,6 +32,8 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
+    BlockHeader genesis;
+
 
     @Autowired
     public HeadersDownloader(BlockHeaderValidator headerValidator) {
@@ -52,6 +55,9 @@ public class HeadersDownloader extends BlockDownloader {
 
     @Override
     protected void pushHeaders(List<BlockHeaderWrapper> headers) {
+        if (headers.get(headers.size() - 1).getNumber() == 0) {
+            genesis = headers.get(headers.size() - 1).getHeader();
+        }
         logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
     }
 
@@ -63,5 +69,9 @@ public class HeadersDownloader extends BlockDownloader {
     @Override
     protected void finishDownload() {
         blockStore.flush();
+    }
+
+    public BlockHeader getGenesis() {
+        return genesis;
     }
 }

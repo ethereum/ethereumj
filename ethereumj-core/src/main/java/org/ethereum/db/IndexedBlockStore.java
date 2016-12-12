@@ -419,6 +419,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         @Override
         public List<BlockInfo> deserialize(byte[] bytes) {
             try {
+                if (bytes == null) return null;
                 ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
                 ObjectInputStream ois = new ObjectInputStream(bis);
                 return (List<BlockInfo>)ois.readObject();

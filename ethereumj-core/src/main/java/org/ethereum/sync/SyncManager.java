@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.util.Functional;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,6 +84,7 @@ public class SyncManager extends BlockDownloader {
 
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
+    private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
 
     @Autowired
     public SyncManager(final SystemProperties config, BlockHeaderValidator validator) {
@@ -108,12 +107,13 @@ public class SyncManager extends BlockDownloader {
         if (config.isFastSyncEnabled()) {
             fastSyncManager.init();
         } else {
-            initRegularSync();
+            initRegularSync(EthereumListener.SyncState.COMPLETE);
         }
     }
 
-    public void initRegularSync() {
+    public void initRegularSync(EthereumListener.SyncState syncDoneType) {
         logger.info("Initializing SyncManager regular sync.");
+        this.syncDoneType = syncDoneType;
 
         syncQueue = new SyncQueueImpl(blockchain);
         super.init(syncQueue, pool);
@@ -181,7 +181,7 @@ public class SyncManager extends BlockDownloader {
                     if (wrapper.isNewBlock() && !syncDone) {
                         syncDone = true;
                         channelManager.onSyncDone(true);
-                        compositeEthereumListener.onSyncDone();
+                        compositeEthereumListener.onSyncDone(syncDoneType);
                     }
                 }
 

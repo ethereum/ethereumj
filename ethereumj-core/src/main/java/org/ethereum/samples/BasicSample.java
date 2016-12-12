@@ -297,7 +297,7 @@ public class BasicSample implements Runnable {
      */
     EthereumListener listener = new EthereumListenerAdapter() {
         @Override
-        public void onSyncDone() {
+        public void onSyncDone(SyncState state) {
             synced = true;
         }
 
