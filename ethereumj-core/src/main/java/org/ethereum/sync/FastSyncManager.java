@@ -456,9 +456,13 @@ public class FastSyncManager {
 
             logger.info("FastSync: Block bodies and Receipts are now downloaded");
 
+            // TODO update totDiff in IndexedBlockStore starting from Pivot
+
             stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
             repository.commit();
             dbFlushManager.flush();
+
+            listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
         } else {
             logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
                     "Continue with regular sync...");

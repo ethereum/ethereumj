@@ -203,7 +203,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         }
     }
 
-    public synchronized void updateAllTotDifficulties() {
+    public synchronized void updateAllTotDifficulties(long startFrom) {
         for (int i = 1; i <= getMaxNumber() ; i++) {
             List<BlockInfo> level = getBlockInfoForLevel(i);
             for (BlockInfo blockInfo : level) {
