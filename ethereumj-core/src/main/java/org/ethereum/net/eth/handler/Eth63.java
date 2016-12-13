@@ -44,6 +44,8 @@ public class Eth63 extends Eth62 {
     @Autowired
     private Repository repository;
 
+    private List<byte[]> requestedReceipts;
+    private SettableFuture<List<List<TransactionReceipt>>> requestReceiptsFuture;
     private Set<byte[]> requestedNodes;
     private SettableFuture<List<Pair<byte[], byte[]>>> requestNodesFuture;
 
@@ -78,7 +80,7 @@ public class Eth63 extends Eth62 {
                 processGetReceipts((GetReceiptsMessage) msg);
                 break;
             case RECEIPTS:
-                // TODO: Implement
+                processReceipts((ReceiptsMessage) msg);
                 break;
             default:
                 break;
@@ -145,6 +147,20 @@ public class Eth63 extends Eth62 {
         return requestNodesFuture;
     }
 
+    public synchronized ListenableFuture<List<List<TransactionReceipt>>> requestReceipts(List<byte[]> hashes) {
+        if (syncState != SyncState.IDLE) return null;
+
+        GetReceiptsMessage msg = new GetReceiptsMessage(hashes);
+        requestedReceipts = hashes;
+        syncState = SyncState.RECEIPT_RETRIEVING;
+
+        requestReceiptsFuture = SettableFuture.create();
+        sendMessage(msg);
+        lastReqSentTime = System.currentTimeMillis();
+
+        return requestReceiptsFuture;
+    }
+
     protected synchronized void processNodeData(NodeDataMessage msg) {
         if (requestedNodes == null) {
             logger.debug("Received NodeDataMessage when requestedNodes == null. Dropping peer " + channel);
@@ -174,6 +190,30 @@ public class Eth63 extends Eth62 {
         processingTime += (System.currentTimeMillis() - lastReqSentTime);
         syncState = SyncState.IDLE;
     }
+
+    protected synchronized void processReceipts(ReceiptsMessage msg) {
+        if (requestedReceipts == null) {
+            logger.debug("Received ReceiptsMessage when requestedReceipts == null. Dropping peer " + channel);
+            dropConnection();
+        }
+
+
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: processing Receipts, size [{}]",
+                channel.getPeerIdShort(),
+                msg.getReceipts().size()
+        );
+
+        List<List<TransactionReceipt>> receipts = msg.getReceipts();
+
+        requestReceiptsFuture.set(receipts);
+
+        requestedReceipts = null;
+        requestReceiptsFuture = null;
+        processingTime += (System.currentTimeMillis() - lastReqSentTime);
+        syncState = SyncState.IDLE;
+    }
+
 
     private void dropUselessPeer(String err) {
         logger.debug(err);
