@@ -286,7 +286,7 @@ public class Eth62 extends EthHandler {
 
             if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())) {
                 if (!peerDiscoveryMode) {
-                    loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
+                    loggerNet.debug("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 }
                 ethState = EthState.STATUS_FAILED;
                 disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
