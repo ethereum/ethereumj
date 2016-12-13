@@ -6,6 +6,7 @@ import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
+import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,10 +99,21 @@ public class IndexedBlockStore extends AbstractBlockstore{
         blockInfo.setHash(block.getHash());
         blockInfo.setMainChain(mainChain); // FIXME:maybe here I should force reset main chain for all uncles on that level
 
-        blockInfos.add(blockInfo);
+        putBlockInfo(blockInfos, blockInfo);
         index.set((int) block.getNumber(), blockInfos);
 
         blocks.put(block.getHash(), block);
+    }
+
+    private void putBlockInfo(List<BlockInfo> blockInfos, BlockInfo blockInfo) {
+        for (int i = 0; i < blockInfos.size(); i++) {
+            BlockInfo curBlockInfo = blockInfos.get(i);
+            if (FastByteComparisons.equal(curBlockInfo.getHash(), blockInfo.getHash())) {
+                blockInfos.set(i, blockInfo);
+                return;
+            }
+        }
+        blockInfos.add(blockInfo);
     }
 
 
