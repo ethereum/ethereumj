@@ -22,9 +22,9 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
     /**
      * Estimates the size of cached entries in bytes.
      * This value shouldn't be precise size of Java objects
-     * @return cahe size in bytes
+     * @return cache size in bytes
      */
-    long estimateCashSize();
+    long estimateCacheSize();
 
     /**
      * Just a convenient shortcut to the most popular Sources with byte[] key

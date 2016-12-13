@@ -53,7 +53,7 @@ public class DbFlushManager {
     public long getCacheSize() {
         long ret = 0;
         for (WriteCache<byte[], byte[]> writeCache : writeCaches) {
-            ret += writeCache.estimateCashSize();
+            ret += writeCache.estimateCacheSize();
         }
         return ret;
     }
