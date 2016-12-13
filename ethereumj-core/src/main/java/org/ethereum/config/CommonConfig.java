@@ -1,9 +1,6 @@
 package org.ethereum.config;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutor;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
@@ -145,6 +142,21 @@ public class CommonConfig {
         } else {
             throw new Error("Cannot cleanup non-LevelDB database");
         }
+    }
+
+    @Bean
+    @Lazy
+    public DataSourceArray<BlockHeader> headerSource() {
+        DbSource<byte[]> dataSource = keyValueDataSource();
+        dataSource.setName("headers");
+        dataSource.init();
+        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
+        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
+        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+        writeCache.setFlushSource(true);
+        ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
+        DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
+        return dataSourceArray;
     }
 
     @Bean

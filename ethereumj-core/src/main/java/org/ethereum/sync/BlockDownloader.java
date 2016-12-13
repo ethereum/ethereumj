@@ -39,6 +39,7 @@ public abstract class BlockDownloader {
 
     private SyncQueueIfc syncQueue;
 
+    private boolean headersDownload = true;
     private boolean blockBodiesDownload = true;
 
     private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
@@ -47,7 +48,7 @@ public abstract class BlockDownloader {
     private Thread getHeadersThread;
     private Thread getBodiesThread;
 
-    private boolean headersDownloadComplete;
+    protected boolean headersDownloadComplete;
     private boolean downloadComplete;
 
     private CountDownLatch stopLatch = new CountDownLatch(1);
@@ -70,19 +71,25 @@ public abstract class BlockDownloader {
         this.blockBodiesDownload = blockBodiesDownload;
     }
 
+    public void setHeadersDownload(boolean headersDownload) {
+        this.headersDownload = headersDownload;
+    }
+
     public void init(SyncQueueIfc syncQueue, final SyncPool pool) {
         this.syncQueue = syncQueue;
         this.pool = pool;
 
         logger.info("Initializing BlockDownloader.");
 
-        getHeadersThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                headerRetrieveLoop();
-            }
-        }, "SyncThreadHeaders");
-        getHeadersThread.start();
+        if (headersDownload) {
+            getHeadersThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    headerRetrieveLoop();
+                }
+            }, "SyncThreadHeaders");
+            getHeadersThread.start();
+        }
 
         if (blockBodiesDownload) {
             getBodiesThread = new Thread(new Runnable() {
@@ -225,7 +232,9 @@ public abstract class BlockDownloader {
                             if (channel != null) {
                                 ListenableFuture<List<Block>> futureBlocks =
                                         channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
-                                Futures.addCallback(futureBlocks, new BlocksCallback(channel));
+                                if (futureBlocks != null) {
+                                    Futures.addCallback(futureBlocks, new BlocksCallback(channel));
+                                }
                             }
                         }
                     }
@@ -240,8 +249,10 @@ public abstract class BlockDownloader {
                             logger.debug("blockRetrieveLoop: Requesting " + blocksRequest.getBlockHeaders().size() + " blocks from " + any.getNode());
                             ListenableFuture<List<Block>> futureBlocks =
                                     any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
-                            Futures.addCallback(futureBlocks, new BlocksCallback(any));
-                            reqBlocksCounter++;
+                            if (futureBlocks != null) {
+                                Futures.addCallback(futureBlocks, new BlocksCallback(any));
+                                reqBlocksCounter++;
+                            }
                         }
                     }
                     receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter, 1));

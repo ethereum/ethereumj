@@ -3,6 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -32,8 +34,10 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    BlockHeader genesis;
+    @Autowired @Qualifier("headerSource")
+    DataSourceArray<BlockHeader> headerStore;
 
+    byte[] genesisHash;
 
     @Autowired
     public HeadersDownloader(BlockHeaderValidator headerValidator) {
@@ -55,11 +59,17 @@ public class HeadersDownloader extends BlockDownloader {
 
     @Override
     protected void pushHeaders(List<BlockHeaderWrapper> headers) {
-        if (headers.get(headers.size() - 1).getNumber() == 0) {
-            genesis = headers.get(headers.size() - 1).getHeader();
+        if (headers.get(headers.size() - 1).getNumber() == 1) {
+            genesisHash = headers.get(headers.size() - 1).getHeader().getParentHash();
         }
         logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
+        for (BlockHeaderWrapper header : headers) {
+            headerStore.set((int) header.getNumber(), header.getHeader());
+        }
+        headerStore.flush();
     }
+
+
 
     @Override
     protected int getBlockQueueSize() {
@@ -68,10 +78,10 @@ public class HeadersDownloader extends BlockDownloader {
 
     @Override
     protected void finishDownload() {
-        blockStore.flush();
+        stop();
     }
 
-    public BlockHeader getGenesis() {
-        return genesis;
+    public byte[] getGenesisHash() {
+        return genesisHash;
     }
 }

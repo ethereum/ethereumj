@@ -8,6 +8,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
@@ -44,7 +45,7 @@ public class FastSyncManager {
     private final static long REQUEST_TIMEOUT = 5 * 1000;
     private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
-    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 1;
+    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
 
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
@@ -438,14 +439,22 @@ public class FastSyncManager {
             HeadersDownloader headersDownloader = applicationContext.getBean(HeadersDownloader.class);
             headersDownloader.init(pivot.getHash());
             headersDownloader.waitForStop();
-            if (!FastByteComparisons.equal(headersDownloader.getGenesis().getHash(), config.getGenesis().getHash())) {
+            if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
                 logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
-                        pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + headersDownloader.getGenesis());
+                        pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
                 logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
                 System.exit(-666);
             }
             listener.onSyncDone(EthereumListener.SyncState.SECURE);
             logger.info("FastSync: all headers downloaded. The state is SECURE now.");
+
+            logger.info("FastSync: Downloading Block bodies and Receipts...");
+
+            BlockReceiptDownloader blockReceiptDownloader = applicationContext.getBean(BlockReceiptDownloader.class);
+            blockReceiptDownloader.startImporting();
+            blockReceiptDownloader.waitForStop();
+
+            logger.info("FastSync: Block bodies and Receipts are now downloaded");
 
             stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
             repository.commit();
@@ -475,8 +484,9 @@ public class FastSyncManager {
             while (true) {
                 List<Channel> allIdle = pool.getAllIdle();
 
-                if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION
-                        || (System.currentTimeMillis() - start > FORCE_SYNC_TIMEOUT && !allIdle.isEmpty())) {
+                long forceSyncRemains = FORCE_SYNC_TIMEOUT - (System.currentTimeMillis() - start);
+
+                if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION || forceSyncRemains > 0 && !allIdle.isEmpty()) {
                     Channel bestPeer = allIdle.get(0);
                     for (Channel channel : allIdle) {
                         if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
@@ -492,7 +502,7 @@ public class FastSyncManager {
 
                 long t = System.currentTimeMillis();
                 if (t - s > 5000) {
-                    logger.info("FastSync: waiting for at least " + MIN_PEERS_FOR_PIVOT_SELECTION + " peers to select pivot block... ("
+                    logger.info("FastSync: waiting for at least " + MIN_PEERS_FOR_PIVOT_SELECTION + " peers or " + forceSyncRemains / 1000 + " sec to select pivot block... ("
                             + allIdle.size() + " peers so far)");
                     s = t;
                 }

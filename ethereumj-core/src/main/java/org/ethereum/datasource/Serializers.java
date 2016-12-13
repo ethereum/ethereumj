@@ -1,6 +1,7 @@
 package org.ethereum.datasource;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
@@ -84,6 +85,21 @@ public class Serializers {
         @Override
         public Value deserialize(byte[] stream) {
             return Value.fromRlpEncoded(stream);
+        }
+    };
+
+    /**
+     * Trie node serializer (part of Ethereum spec)
+     */
+    public final static Serializer<BlockHeader, byte[]> BlockHeaderSerializer = new Serializer<BlockHeader, byte[]>() {
+        @Override
+        public byte[] serialize(BlockHeader object) {
+            return object == null ? null : object.getEncoded();
+        }
+
+        @Override
+        public BlockHeader deserialize(byte[] stream) {
+            return stream == null ? null : new BlockHeader(stream);
         }
     };
 }
