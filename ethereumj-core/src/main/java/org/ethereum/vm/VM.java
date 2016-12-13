@@ -1161,7 +1161,7 @@ public class VM {
                             PrecompiledContracts.getContractForAddress(codeAddress);
 
                     if (op.equals(CALL)) {
-                        program.touchAccount(codeAddress.getLast20Bytes());
+                        program.getResult().addTouchAccount(codeAddress.getLast20Bytes());
                     }
 
                     if (contract != null) {
@@ -1192,7 +1192,7 @@ public class VM {
                 case SUICIDE: {
                     DataWord address = program.stackPop();
                     program.suicide(address);
-                    program.touchAccount(address.getLast20Bytes());
+                    program.getResult().addTouchAccount(address.getLast20Bytes());
 
                     if (logger.isInfoEnabled())
                         hint = "address: " + Hex.toHexString(program.getOwnerAddress().getLast20Bytes());

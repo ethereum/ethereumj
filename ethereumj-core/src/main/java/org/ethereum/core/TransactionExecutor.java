@@ -320,7 +320,7 @@ public class TransactionExecutor {
                     throw result.getException();
                 }
 
-                touchedAccounts.addAll(program.getTouchedAccounts());
+                touchedAccounts.addAll(result.getTouchedAccounts());
             }
 
             cacheTrack.commit();
