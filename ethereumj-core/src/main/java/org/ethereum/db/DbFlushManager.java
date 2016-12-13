@@ -40,8 +40,10 @@ public class DbFlushManager {
         listener.addListener(new EthereumListenerAdapter() {
             @Override
             public void onSyncDone(SyncState state) {
-                logger.info("DbFlushManager: long sync done, flushing each block now");
-                syncDone = true;
+                if (state == SyncState.COMPLETE) {
+                    logger.info("DbFlushManager: long sync done, flushing each block now");
+                    syncDone = true;
+                }
             }
         });
     }

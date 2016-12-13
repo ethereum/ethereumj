@@ -8,7 +8,7 @@ public enum SyncState {
 
     // Common
     IDLE,
-    HASH_RETRIEVING,
+    HEADER_RETRIEVING,
     BLOCK_RETRIEVING,
     NODE_RETRIEVING,
     RECEIPT_RETRIEVING,

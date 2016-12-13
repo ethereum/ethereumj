@@ -51,7 +51,7 @@ public interface Eth {
     boolean isHashRetrievingDone();
 
     /**
-     * @return true if syncState is HASH_RETRIEVING, false otherwise
+     * @return true if syncState is HEADER_RETRIEVING, false otherwise
      */
     boolean isHashRetrieving();
 

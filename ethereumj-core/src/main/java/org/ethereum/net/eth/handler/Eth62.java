@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.Math.min;
 import static java.util.Collections.singletonList;
@@ -338,7 +337,7 @@ public class Eth62 extends EthHandler {
         // while Long sync is in progress
         if (!syncDone) return;
 
-        if (syncState != HASH_RETRIEVING) {
+        if (syncState != HEADER_RETRIEVING) {
             long firstBlockAsk = Long.MAX_VALUE;
             long lastBlockAsk = 0;
             byte[] firstBlockHash = null;
@@ -494,7 +493,7 @@ public class Eth62 extends EthHandler {
 
         if (wrapper == null || wrapper.isSent()) return;
 
-        syncState = HASH_RETRIEVING;
+        syncState = HEADER_RETRIEVING;
 
         wrapper.send();
         sendMessage(wrapper.getMessage());
@@ -592,7 +591,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public boolean isHashRetrieving() {
-        return syncState == HASH_RETRIEVING;
+        return syncState == HEADER_RETRIEVING;
     }
 
     @Override
@@ -822,7 +821,7 @@ public class Eth62 extends EthHandler {
     public String getSyncStats() {
 
         return String.format(
-                "Peer %s: [ %s, %16s, ping %6s ms, difficulty %s, best block %s ]: %s",
+                "Peer %s: [ %s, %18s, ping %6s ms, difficulty %s, best block %s ]: %s",
                 getVersion(),
                 channel.getPeerIdShort(),
                 syncState,

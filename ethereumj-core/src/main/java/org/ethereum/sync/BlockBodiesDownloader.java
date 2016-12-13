@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Component
 @Scope("prototype")
-public class BlockReceiptDownloader extends BlockDownloader {
+public class BlockBodiesDownloader extends BlockDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     @Autowired
@@ -48,7 +48,7 @@ public class BlockReceiptDownloader extends BlockDownloader {
     Thread headersThread;
 
     @Autowired
-    public BlockReceiptDownloader(BlockHeaderValidator headerValidator) {
+    public BlockBodiesDownloader(BlockHeaderValidator headerValidator) {
         super(headerValidator);
     }
 
