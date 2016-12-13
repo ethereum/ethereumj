@@ -1041,7 +1041,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 e.printStackTrace();
             }
         }
+    }
 
+    public void updateBlockTotDifficulties(int startFrom) {
+        // no synchronization here not to lock instance for long period
+        while(true) {
+            synchronized (this) {
+                ((IndexedBlockStore) blockStore).updateTotDifficulties(startFrom);
+                if (startFrom == bestBlock.getNumber()) {
+                    totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
+                    break;
+                }
+                startFrom++;
+            }
+        }
     }
 
     public void setRepository(Repository repository) {
