@@ -927,6 +927,9 @@ public class RepositoryTest {
 
     @Test // testing for snapshot
     public void testMultiThread() throws InterruptedException {
+        // Add logging line to {@link org.ethereum.datasource.WriteCache} in the beginning of flushImpl() method:
+        //    System.out.printf("Flush start: %s%n", this);
+        // to increase chance of failing. Also increasing waiting time may be helpful.
         final RepositoryImpl repository = new RepositoryRoot(new HashMapDB());
 
         final byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -945,24 +948,26 @@ public class RepositoryTest {
 
         final CountDownLatch failSema = new CountDownLatch(1);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    int cnt = 1;
-                    while(running) {
-                        Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
-                        snap.addBalance(cow, BigInteger.TEN);
-                        snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
-                        snap.rollback();
-                        cnt++;
+        for (int i = 0; i < 10; ++i) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int cnt = 1;
+                        while (running) {
+                            Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
+                            snap.addBalance(cow, BigInteger.TEN);
+                            snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
+                            snap.rollback();
+                            cnt++;
+                        }
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                        failSema.countDown();
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    failSema.countDown();
                 }
-            }
-        }).start();
+            }).start();
+        }
 
         new Thread(new Runnable() {
             @Override

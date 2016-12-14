@@ -47,7 +47,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public AccountState createAccount(byte[] addr) {
+    public synchronized AccountState createAccount(byte[] addr) {
         AccountState state = new AccountState(config.getBlockchainConfig().getCommonConstants().getInitialNonce(),
                 BigInteger.ZERO);
         accountStateCache.put(addr, state);
@@ -55,16 +55,16 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public boolean isExist(byte[] addr) {
+    public synchronized boolean isExist(byte[] addr) {
         return getAccountState(addr) != null;
     }
 
     @Override
-    public AccountState getAccountState(byte[] addr) {
+    public synchronized AccountState getAccountState(byte[] addr) {
         return accountStateCache.get(addr);
     }
 
-    AccountState getOrCreateAccountState(byte[] addr) {
+    synchronized AccountState getOrCreateAccountState(byte[] addr) {
         AccountState ret = accountStateCache.get(addr);
         if (ret == null) {
             ret = createAccount(addr);
@@ -73,43 +73,43 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public void delete(byte[] addr) {
+    public synchronized void delete(byte[] addr) {
         accountStateCache.delete(addr);
     }
 
     @Override
-    public BigInteger increaseNonce(byte[] addr) {
+    public synchronized BigInteger increaseNonce(byte[] addr) {
         AccountState accountState = getOrCreateAccountState(addr);
         accountStateCache.put(addr, accountState.withIncrementedNonce());
         return accountState.getNonce();
     }
 
     @Override
-    public BigInteger setNonce(byte[] addr, BigInteger nonce) {
+    public synchronized BigInteger setNonce(byte[] addr, BigInteger nonce) {
         AccountState accountState = getOrCreateAccountState(addr);
         accountStateCache.put(addr, accountState.withNonce(nonce));
         return accountState.getNonce();
     }
 
     @Override
-    public BigInteger getNonce(byte[] addr) {
+    public synchronized BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
         return accountState == null ? config.getBlockchainConfig().getCommonConstants().getInitialNonce() :
                 accountState.getNonce();
     }
 
     @Override
-    public ContractDetails getContractDetails(byte[] addr) {
+    public synchronized ContractDetails getContractDetails(byte[] addr) {
         return new ContractDetailsImpl(addr);
     }
 
     @Override
-    public boolean hasContractDetails(byte[] addr) {
+    public synchronized boolean hasContractDetails(byte[] addr) {
         return getContractDetails(addr) != null;
     }
 
     @Override
-    public void saveCode(byte[] addr, byte[] code) {
+    public synchronized void saveCode(byte[] addr, byte[] code) {
         byte[] codeHash = HashUtil.sha3(code);
         codeCache.put(codeHash, code);
         AccountState accountState = getOrCreateAccountState(addr);
@@ -117,7 +117,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public byte[] getCode(byte[] addr) {
+    public synchronized byte[] getCode(byte[] addr) {
         AccountState accountState = getAccountState(addr);
         if (accountState != null) {
             byte[] codeHash = accountState.getCodeHash();
@@ -129,7 +129,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
+    public synchronized void addStorageRow(byte[] addr, DataWord key, DataWord value) {
         getOrCreateAccountState(addr);
 
         Source<DataWord, DataWord> contractStorage = storageCache.get(addr);
@@ -137,26 +137,26 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public DataWord getStorageValue(byte[] addr, DataWord key) {
+    public synchronized DataWord getStorageValue(byte[] addr, DataWord key) {
         AccountState accountState = getAccountState(addr);
         return accountState == null ? null : storageCache.get(addr).get(key);
     }
 
     @Override
-    public BigInteger getBalance(byte[] addr) {
+    public synchronized BigInteger getBalance(byte[] addr) {
         AccountState accountState = getAccountState(addr);
         return accountState == null ? BigInteger.ZERO : accountState.getBalance();
     }
 
     @Override
-    public BigInteger addBalance(byte[] addr, BigInteger value) {
+    public synchronized BigInteger addBalance(byte[] addr, BigInteger value) {
         AccountState accountState = getOrCreateAccountState(addr);
         accountStateCache.put(addr, accountState.withBalanceIncrement(value));
         return accountState.getBalance();
     }
 
     @Override
-    public RepositoryImpl startTracking() {
+    public synchronized RepositoryImpl startTracking() {
         Source<byte[], AccountState> trackAccountStateCache = new WriteCache.BytesKey<>(accountStateCache,
                 WriteCache.CacheType.SIMPLE);
         Source<byte[], byte[]> trackCodeCache = new WriteCache.BytesKey<>(codeCache, WriteCache.CacheType.SIMPLE);
@@ -173,19 +173,25 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     @Override
-    public Repository getSnapshotTo(byte[] root) {
+    public synchronized Repository getSnapshotTo(byte[] root) {
         return parent.getSnapshotTo(root);
     }
 
     @Override
-    public void commit() {
-        storageCache.flush();
-        codeCache.flush();
-        accountStateCache.flush();
+    public synchronized void commit() {
+        Repository parentSync = parent == null ? this : parent;
+        // need to synchronize on parent since between different caches flush
+        // the parent repo would not be in consistent state
+        // when no parent just take this instance as a mock
+        synchronized (parentSync) {
+            storageCache.flush();
+            codeCache.flush();
+            accountStateCache.flush();
+        }
     }
 
     @Override
-    public void rollback() {
+    public synchronized void rollback() {
         // nothing to do, will be GCed
     }
 
@@ -194,7 +200,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         throw new RuntimeException("Not supported");
     }
 
-    public String getTrieDump() {
+    public synchronized String getTrieDump() {
         return dumpStateTrie();
     }
 
