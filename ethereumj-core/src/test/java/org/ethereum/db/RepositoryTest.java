@@ -927,7 +927,7 @@ public class RepositoryTest {
 
     /**
      * FIXME: This test fails
-     * Add logging line to {@link org.ethereum.datasource.WriteCache}:
+     * Add logging line to {@link org.ethereum.datasource.WriteCache} in the beginning of flushImpl() method:
      *      System.out.printf("Flush start: %s%n", this);
      * to increase chance of failing. Also increasing waiting time may be helpful.
      * When fail occurs, on track2.commit() correct value is flushed in accountStateCache
