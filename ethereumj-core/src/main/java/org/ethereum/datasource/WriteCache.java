@@ -178,7 +178,6 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     @Override
     public synchronized boolean flushImpl() {
-        System.out.printf("Flush start: %s%n", this);
         boolean ret = false;
         for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
             if (entry.getValue().counter > 0) {

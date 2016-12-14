@@ -925,18 +925,11 @@ public class RepositoryTest {
 
     private boolean running = true;
 
-    /**
-     * FIXME: This test fails
-     * Add logging line to {@link org.ethereum.datasource.WriteCache} in the beginning of flushImpl() method:
-     *      System.out.printf("Flush start: %s%n", this);
-     * to increase chance of failing. Also increasing waiting time may be helpful.
-     * When fail occurs, on track2.commit() correct value is flushed in accountStateCache
-     * But on repository.flush() on flushChild() step of storageCache flushing, this line:
-     *       AccountState storageOwnerAcct = accountStateCache.get(childCache.accountAddress);
-     * returns obsolete data.
-     */
     @Test // testing for snapshot
     public void testMultiThread() throws InterruptedException {
+        // Add logging line to {@link org.ethereum.datasource.WriteCache} in the beginning of flushImpl() method:
+        //    System.out.printf("Flush start: %s%n", this);
+        // to increase chance of failing. Also increasing waiting time may be helpful.
         final RepositoryImpl repository = new RepositoryRoot(new HashMapDB());
 
         final byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");

@@ -19,12 +19,12 @@ public class DataSourceArray<V> extends AbstractList<V> {
         this.src = src;
     }
 
-    public boolean flush() {
+    public synchronized boolean flush() {
         return src.flush();
     }
 
     @Override
-    public V set(int idx, V value) {
+    public synchronized V set(int idx, V value) {
         if (idx >= size()) {
             setSize(idx + 1);
         }
@@ -33,23 +33,23 @@ public class DataSourceArray<V> extends AbstractList<V> {
     }
 
     @Override
-    public void add(int index, V element) {
+    public synchronized void add(int index, V element) {
         set(index, element);
     }
 
     @Override
-    public V remove(int index) {
+    public synchronized V remove(int index) {
         throw new RuntimeException("Not supported yet.");
     }
 
     @Override
-    public V get(int idx) {
+    public synchronized V get(int idx) {
         if (idx < 0 || idx >= size()) throw new IndexOutOfBoundsException(idx + " > " + size);
         return src.get(ByteUtil.intToBytes(idx));
     }
 
     @Override
-    public int size() {
+    public synchronized int size() {
         if (size < 0) {
             byte[] sizeBB = src.getSource().get(SIZE_KEY);
             size = sizeBB == null ? 0 : ByteUtil.byteArrayToInt(sizeBB);
