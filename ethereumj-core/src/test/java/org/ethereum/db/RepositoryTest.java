@@ -925,6 +925,16 @@ public class RepositoryTest {
 
     private boolean running = true;
 
+    /**
+     * FIXME: This test fails
+     * Add logging line to {@link org.ethereum.datasource.WriteCache}:
+     *      System.out.printf("Flush start: %s%n", this);
+     * to increase chance of failing. Also increasing waiting time may be helpful.
+     * When fail occurs, on track2.commit() correct value is flushed in accountStateCache
+     * But on repository.flush() on flushChild() step of storageCache flushing, this line:
+     *       AccountState storageOwnerAcct = accountStateCache.get(childCache.accountAddress);
+     * returns obsolete data.
+     */
     @Test // testing for snapshot
     public void testMultiThread() throws InterruptedException {
         final RepositoryImpl repository = new RepositoryRoot(new HashMapDB());
@@ -945,24 +955,26 @@ public class RepositoryTest {
 
         final CountDownLatch failSema = new CountDownLatch(1);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    int cnt = 1;
-                    while(running) {
-                        Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
-                        snap.addBalance(cow, BigInteger.TEN);
-                        snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
-                        snap.rollback();
-                        cnt++;
+        for (int i = 0; i < 10; ++i) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int cnt = 1;
+                        while (running) {
+                            Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
+                            snap.addBalance(cow, BigInteger.TEN);
+                            snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
+                            snap.rollback();
+                            cnt++;
+                        }
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                        failSema.countDown();
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    failSema.countDown();
                 }
-            }
-        }).start();
+            }).start();
+        }
 
         new Thread(new Runnable() {
             @Override
