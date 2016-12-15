@@ -55,7 +55,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      * The insert might later be reverted due to revertUpdate call
      */
     @Override
-    public void put(byte[] key, V val) {
+    public synchronized void put(byte[] key, V val) {
         if (val == null) {
             delete(key);
             return;
@@ -71,12 +71,12 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      * might be later persisted with persistUpdate call
      */
     @Override
-    public void delete(byte[] key) {
+    public synchronized void delete(byte[] key) {
         currentUpdate.deletedKeys.add(key);
     }
 
     @Override
-    public V get(byte[] key) {
+    public synchronized V get(byte[] key) {
         return getSource().get(key);
     }
 
@@ -88,7 +88,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      * or reverted from the backing Source (inserts only)
      * via revertUpdate call
      */
-    public void commitUpdates(byte[] updateHash) {
+    public synchronized void commitUpdates(byte[] updateHash) {
         currentUpdate.updateHash = updateHash;
         journal.put(updateHash, currentUpdate);
         currentUpdate = new Update();
@@ -97,14 +97,14 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     /**
      *  Checks if the update with this hash key exists
      */
-    public boolean hasUpdate(byte[] updateHash) {
+    public synchronized boolean hasUpdate(byte[] updateHash) {
         return journal.get(updateHash) != null;
     }
 
     /**
      * Persists all deletes to the backing store made under this hash key
      */
-    public void persistUpdate(byte[] updateHash) {
+    public synchronized void persistUpdate(byte[] updateHash) {
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
         for (byte[] key : update.deletedKeys) {
@@ -116,7 +116,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     /**
      * Deletes all inserts to the backing store made under this hash key
      */
-    public void revertUpdate(byte[] updateHash) {
+    public synchronized void revertUpdate(byte[] updateHash) {
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
         for (byte[] key : update.insertedKeys) {
@@ -126,7 +126,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     }
 
     @Override
-    public boolean flushImpl() {
+    public synchronized boolean flushImpl() {
         journal.flush();
         return false;
     }

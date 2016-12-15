@@ -33,14 +33,14 @@ public class RepositoryRoot extends RepositoryImpl {
             super(null);
         }
         @Override
-        protected StorageCache create(byte[] key, StorageCache srcCache) {
+        protected synchronized StorageCache create(byte[] key, StorageCache srcCache) {
             AccountState accountState = accountStateCache.get(key);
             TrieImpl storageTrie = createTrie(trieCache, accountState == null ? null : accountState.getStateRoot());
             return new StorageCache(key, storageTrie);
         }
 
         @Override
-        protected boolean flushChild(StorageCache childCache) {
+        protected synchronized boolean flushChild(StorageCache childCache) {
             if (super.flushChild(childCache)) {
                 AccountState storageOwnerAcct = accountStateCache.get(childCache.accountAddress);
                 if (storageOwnerAcct != null) {
@@ -99,14 +99,14 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     @Override
-    public void commit() {
+    public synchronized void commit() {
         super.commit();
 
         trieCache.flush();
     }
 
     @Override
-    public byte[] getRoot() {
+    public synchronized byte[] getRoot() {
         storageCache.flush();
         accountStateCache.flush();
 
@@ -114,27 +114,27 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     @Override
-    public void flush() {
+    public synchronized void flush() {
         commit();
     }
 
     @Override
-    public Repository getSnapshotTo(byte[] root) {
+    public synchronized Repository getSnapshotTo(byte[] root) {
         return new RepositoryRoot(stateDS, root);
     }
 
     @Override
-    public String dumpStateTrie() {
+    public synchronized String dumpStateTrie() {
         return stateTrie.getTrieDump();
     }
 
     @Override
-    public void syncToRoot(byte[] root) {
+    public synchronized void syncToRoot(byte[] root) {
         stateTrie.setRoot(root);
     }
 
     @Override
-    public Value getState(byte[] stateRoot) {
+    public synchronized Value getState(byte[] stateRoot) {
         return trieCache.get(stateRoot);
     }
 
@@ -143,7 +143,7 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     @Override
-    public void addRawNode(byte[] key, byte[] value) {
+    public synchronized void addRawNode(byte[] key, byte[] value) {
         trieCache.put(key, Value.fromRlpEncoded(value));
     }
 }

@@ -31,7 +31,7 @@ public class BatchSourceWriter<Key, Value> extends AbstractChainedSource<Key, Va
     }
 
     @Override
-    public Value get(Key key) {
+    public synchronized Value get(Key key) {
         return getSource().get(key);
     }
 

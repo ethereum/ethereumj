@@ -266,6 +266,10 @@ public class SyncManager extends BlockDownloader {
         return syncDone;
     }
 
+    public boolean isFastSyncRunning() {
+        return fastSyncManager.isFastSyncInProgress();
+    }
+
     public long getLastKnownBlockNumber() {
         return lastKnownBlockNumber;
     }

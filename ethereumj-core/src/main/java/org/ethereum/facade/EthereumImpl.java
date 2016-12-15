@@ -111,7 +111,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @Override
     public void connect(final String ip, final int port, final String remoteId) {
-        logger.info("Connecting to: {}:{}", ip, port);
+        logger.debug("Connecting to: {}:{}", ip, port);
         worldManager.getActivePeer().connectAsync(ip, port, remoteId, false);
     }
 

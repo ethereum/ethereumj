@@ -25,11 +25,11 @@ public class ReadWriteCache<Key, Value>
     }
 
     @Override
-    public Collection<Key> getModified() {
+    public synchronized Collection<Key> getModified() {
         return writeCache.getModified();
     }
 
-    protected Value getCached(Key key) {
+    protected synchronized Value getCached(Key key) {
         Value v = readCache.getCached(key);
         if (v == null) {
             v = writeCache.getCached(key);
@@ -38,7 +38,7 @@ public class ReadWriteCache<Key, Value>
     }
 
     @Override
-    public long estimateCacheSize() {
+    public synchronized long estimateCacheSize() {
         return readCache.estimateCacheSize() + writeCache.estimateCacheSize();
     }
 
