@@ -11,6 +11,7 @@ import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
@@ -34,8 +35,6 @@ import static java.util.Arrays.asList;
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
-
-    public static final byte[] FASTSYNC_DB_KEY = HashUtil.sha3("Key in state DB indicating fastsync in progress".getBytes());
 
     private static CommonConfig defaultInstance;
 
@@ -114,8 +113,24 @@ public class CommonConfig {
     public void fastSyncCleanUp() {
         DbSource<byte[]> state = stateDS();
 
-        if (state.get(FASTSYNC_DB_KEY) != null) {
-            logger.warn("Last fastsync was interrupted. Removing old data...");
+        byte[] fastsyncStageBytes = state.get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
+        if (fastsyncStageBytes == null) return; // no uncompleted fast sync
+
+        EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
+
+        if (!systemProperties().isFastSyncEnabled() || syncStage == EthereumListener.SyncState.UNSECURE) {
+            // we need to cleanup state/blocks/tranasaction DBs when previous fast sync was not complete:
+            // - if we now want to do regular sync
+            // - if the first fastsync stage was not complete (thus DBs are not in consistent state)
+
+            logger.warn("Last fastsync was interrupted. Removing inconsistent DBs...");
+
+            logger.warn("Removing tx data...");
+            DbSource txSource = keyValueDataSource();
+            txSource.setName("transactions");
+            txSource.init();
+            resetDataSource(txSource);
+            txSource.close();
 
             logger.warn("Removing block data...");
             DbSource blockSource = keyValueDataSource();

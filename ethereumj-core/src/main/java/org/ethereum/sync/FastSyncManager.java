@@ -33,6 +33,9 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
+import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
+import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
 import static org.ethereum.util.CompactEncoder.hasTerminator;
 
 /**
@@ -45,11 +48,14 @@ public class FastSyncManager {
     private final static long REQUEST_TIMEOUT = 5 * 1000;
     private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
-    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
+    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 2;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
     private final static int PIVOT_DISTANCE_FROM_HEAD = 1024;
 
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
+
+    public static final byte[] FASTSYNC_DB_KEY_SYNC_STAGE = HashUtil.sha3("Key in state DB indicating fastsync stage in progress".getBytes());
+    public static final byte[] FASTSYNC_DB_KEY_PIVOT = HashUtil.sha3("Key in state DB with encoded selected pivot block".getBytes());
 
     @Autowired
     private SystemProperties config;
@@ -88,6 +94,8 @@ public class FastSyncManager {
     int nodesInserted = 0;
     int lastNodeCommit = 0;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
+
+    private boolean fastSyncInProgress = false;
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
 
@@ -376,123 +384,185 @@ public class FastSyncManager {
         }
     }
 
+    private void setSyncStage(EthereumListener.SyncState stage) {
+        if (stage == null) {
+            stateDS.delete(FASTSYNC_DB_KEY_SYNC_STAGE);
+        } else {
+            stateDS.put(FASTSYNC_DB_KEY_SYNC_STAGE, new byte[]{(byte) stage.ordinal()});
+        }
+    }
+
+    private EthereumListener.SyncState getSyncStage() {
+        byte[] bytes = stateDS.get(FASTSYNC_DB_KEY_SYNC_STAGE);
+        if (bytes == null) return UNSECURE;
+        return EthereumListener.SyncState.values()[bytes[0]];
+    }
+
+
+    private void syncUnsecure(BlockHeader pivot) {
+        byte[] pivotStateRoot = pivot.getStateRoot();
+        TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
+        nodesQueue.add(request);
+        logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
+
+        setSyncStage(UNSECURE);
+
+        retrieveLoop();
+
+        logger.info("FastSync: state trie download complete!");
+        last = 0;
+        logStat();
+
+        logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
+        downloader.startImporting(pivot.getHash(), 260);
+        downloader.waitForStop();
+
+        logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
+
+        blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
+
+        logger.info("FastSync: proceeding to regular sync...");
+
+        final CountDownLatch syncDoneLatch = new CountDownLatch(1);
+        listener.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onSyncDone(SyncState state) {
+                syncDoneLatch.countDown();
+            }
+        });
+        syncManager.initRegularSync(UNSECURE);
+        logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
+
+        try {
+            syncDoneLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        stateDS.put(FASTSYNC_DB_KEY_PIVOT, pivot.getEncoded());
+        repository.commit();
+        dbFlushManager.flush();
+
+        logger.info("FastSync: regular sync reached the blockchain head.");
+    }
+
+    private void syncSecure() {
+        setSyncStage(EthereumListener.SyncState.SECURE);
+        BlockHeader pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
+
+        logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
+        HeadersDownloader headersDownloader = applicationContext.getBean(HeadersDownloader.class);
+        headersDownloader.init(pivot.getHash());
+        headersDownloader.waitForStop();
+        if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
+            logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
+                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
+            logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
+            System.exit(-666);
+        }
+        repository.commit();
+        dbFlushManager.flush();
+        logger.info("FastSync: all headers downloaded. The state is SECURE now.");
+    }
+
+    private void syncBlocksReceipts() {
+        setSyncStage(EthereumListener.SyncState.COMPLETE);
+        BlockHeader pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
+
+        logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
+
+        BlockBodiesDownloader blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
+        blockBodiesDownloader.startImporting();
+        blockBodiesDownloader.waitForStop();
+
+        logger.info("FastSync: Block bodies downloaded");
+
+        logger.info("FastSync: Downloading receipts...");
+
+        ReceiptsDownloader receiptsDownloader = applicationContext.getBean
+                (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
+        receiptsDownloader.startImporting();
+        receiptsDownloader.waitForStop();
+
+        logger.info("FastSync: receipts downloaded");
+
+        logger.info("FastSync: updating totDifficulties starting from the pivot block...");
+        blockchain.updateBlockTotDifficulties((int) pivot.getNumber());
+        synchronized (blockchain) {
+            Block bestBlock = blockchain.getBestBlock();
+            BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+            logger.info("FastSync: totDifficulties updated: bestBlock: " + bestBlock.getShortDescr() + ", totDiff: " + totalDifficulty);
+        }
+        setSyncStage(null);
+        stateDS.delete(FASTSYNC_DB_KEY_PIVOT);
+        repository.commit();
+        dbFlushManager.flush();
+    }
+
     public void main() {
 
-        if (blockchain.getBestBlock().getNumber() == 0) {
-            BlockHeader pivot = getPivotBlock();
-            if (pivot.getNumber() > 0) {
+        if (blockchain.getBestBlock().getNumber() == 0 || getSyncStage() == SECURE || getSyncStage() == COMPLETE) {
+            // either no DB at all (clear sync or DB was deleted due to UNSECURE stage while initializing
+            // or we have incomplete headers/blocks/receipts download
 
-                pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
-                    @Override
-                    public boolean test(NodeHandler handler) {
-                        if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
-                            return false;
-                        return true;
-                    }
-                });
-
-                byte[] pivotStateRoot = pivot.getStateRoot();
-                TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
-                nodesQueue.add(request);
-                logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
-
-                stateDS.put(CommonConfig.FASTSYNC_DB_KEY, new byte[]{1});
-
-                retrieveLoop();
-
-                logger.info("FastSync: state trie download complete!");
-                last = 0;
-                logStat();
-
-                repository.commit();
-                dbFlushManager.flush();
-
-                logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
-                downloader.startImporting(pivot.getHash(), 260);
-                downloader.waitForStop();
-
-                logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
-
-                blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
-                dbFlushManager.flush();
-
-                logger.info("FastSync: proceeding to regular sync...");
-
-                final CountDownLatch syncDoneLatch = new CountDownLatch(1);
-                listener.addListener(new EthereumListenerAdapter() {
-                    @Override
-                    public void onSyncDone(SyncState state) {
-                        syncDoneLatch.countDown();
-                    }
-                });
-                syncManager.initRegularSync(EthereumListener.SyncState.UNSECURE);
-                logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
-
-                try {
-                    syncDoneLatch.await();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+            fastSyncInProgress = true;
+            pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
+                @Override
+                public boolean test(NodeHandler handler) {
+                    if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
+                        return false;
+                    return true;
                 }
-                logger.info("FastSync: regular sync reached the blockchain head.");
+            });
 
+            try {
+                EthereumListener.SyncState origSyncStage = getSyncStage();
 
-                logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block is secure...");
-                HeadersDownloader headersDownloader = applicationContext.getBean(HeadersDownloader.class);
-                headersDownloader.init(pivot.getHash());
-                headersDownloader.waitForStop();
-                if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
-                    logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
-                            pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
-                    logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
-                    System.exit(-666);
+                switch (origSyncStage) {
+                    case UNSECURE:
+                        BlockHeader pivot = getPivotBlock();
+                        if (pivot.getNumber() == 0) {
+                            logger.info("FastSync: too short blockchain, proceeding with regular sync...");
+                            syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
+                            return;
+                        }
+
+                        syncUnsecure(pivot);  // regularSync should be inited here
+                    case SECURE:
+                        if (origSyncStage == SECURE) {
+                            logger.info("FastSync: UNSECURE sync was completed prior to this run, proceeding with next stage...");
+                            logger.info("Initializing regular sync");
+                            syncManager.initRegularSync(EthereumListener.SyncState.UNSECURE);
+                        }
+
+                        syncSecure();
+
+                        listener.onSyncDone(EthereumListener.SyncState.SECURE);
+                    case COMPLETE:
+                        if (origSyncStage == COMPLETE) {
+                            logger.info("FastSync: SECURE sync was completed prior to this run, proceeding with next stage...");
+                            logger.info("Initializing regular sync");
+                            syncManager.initRegularSync(EthereumListener.SyncState.SECURE);
+                        }
+
+                        syncBlocksReceipts();
+
+                        listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
                 }
-                listener.onSyncDone(EthereumListener.SyncState.SECURE);
-                logger.info("FastSync: all headers downloaded. The state is SECURE now.");
-
-                logger.info("FastSync: Downloading Block bodies...");
-
-                BlockBodiesDownloader blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
-                blockBodiesDownloader.startImporting();
-                blockBodiesDownloader.waitForStop();
-
-                logger.info("FastSync: Block bodies downloaded");
-
-                logger.info("FastSync: Downloading receipts...");
-
-                ReceiptsDownloader receiptsDownloader = applicationContext.getBean
-                        (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
-                receiptsDownloader.startImporting();
-                receiptsDownloader.waitForStop();
-
-                logger.info("FastSync: receipts downloaded");
-
-                logger.info("FastSync: updating totDifficulties starting from the pivot block...");
-                blockchain.updateBlockTotDifficulties((int) pivot.getNumber());
-                synchronized (blockchain) {
-                    Block bestBlock = blockchain.getBestBlock();
-                    BigInteger totalDifficulty = blockchain.getTotalDifficulty();
-                    logger.info("FastSync: totDifficulties updated: bestBlock: " + bestBlock.getShortDescr() + ", totDiff: " + totalDifficulty);
-                }
-
-                stateDS.delete(CommonConfig.FASTSYNC_DB_KEY);
-                repository.commit();
-                dbFlushManager.flush();
-
-                pool.setNodesSelector(null);
-                listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
                 logger.info("FastSync: Full sync done.");
-            } else {
-                logger.info("FastSync: too short blockchain, proceeding with regular sync...");
-                syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
+            } finally {
+                fastSyncInProgress = false;
+                pool.setNodesSelector(null);
             }
         } else {
             logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
                     "Continue with regular sync...");
             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
         }
+    }
 
-        // set indicator that we can send [STATUS] with the latest block
-        // before we should report best block #0
+    public boolean isFastSyncInProgress() {
+        return fastSyncInProgress;
     }
 
     private BlockHeader getPivotBlock() {

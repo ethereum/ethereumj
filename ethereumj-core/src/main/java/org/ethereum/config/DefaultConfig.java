@@ -52,6 +52,7 @@ public class DefaultConfig {
 
     @Bean
     public TransactionStore transactionStore() {
+        commonConfig.fastSyncCleanUp();
         return new TransactionStore(commonConfig.cachedDbSource("transactions"));
     }
 

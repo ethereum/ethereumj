@@ -158,9 +158,21 @@ public class Eth62 extends EthHandler {
         byte protocolVersion = getVersion().getCode();
         int networkId = config.networkId();
 
-        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
-        // Getting it from blockstore, not blocked by blockchain sync
-        byte[] bestHash = blockstore.getBestBlock().getHash();
+        final BigInteger totalDifficulty;
+        final byte[] bestHash;
+
+        if (syncManager.isFastSyncRunning()) {
+            // while fastsync is not complete reporting block #0
+            // until all blocks/receipts are downloaded
+            bestHash = blockstore.getBlockHashByNumber(0);
+            Block genesis = blockstore.getBlockByHash(bestHash);
+            totalDifficulty = genesis.getDifficultyBI();
+        } else {
+            // Getting it from blockstore, not blocked by blockchain sync
+            bestHash = blockstore.getBestBlock().getHash();
+            totalDifficulty = blockchain.getTotalDifficulty();
+        }
+
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
         sendMessage(msg);
