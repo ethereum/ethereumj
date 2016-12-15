@@ -403,7 +403,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             logger.warn("Problems canceling logStatsTimer", e);
         }
         // if persistence is disabled, then don't try to close the db
-        if (db != null) {
+        if (db != null && !db.isClosed()) {
             try {
                 logger.info("Closing discovery DB...");
                 db.close();

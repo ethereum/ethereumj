@@ -23,7 +23,9 @@ import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -34,6 +36,7 @@ import static java.util.Arrays.asList;
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
+    private Set<DbSource> dbSources = new HashSet<>();
 
     public static final byte[] FASTSYNC_DB_KEY = HashUtil.sha3("Key in state DB indicating fastsync in progress".getBytes());
 
@@ -100,12 +103,15 @@ public class CommonConfig {
     public DbSource<byte[]> keyValueDataSource() {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
+            DbSource<byte[]> dbSource;
             if ("mapdb".equals(dataSource)) {
-                return mapDBFactory().createDataSource();
+                dbSource = mapDBFactory().createDataSource();
             } else {
                 dataSource = "leveldb";
-                return new LevelDbDataSource();
+                dbSource = new LevelDbDataSource();
             }
+            dbSources.add(dbSource);
+            return dbSource;
         } finally {
             logger.info(dataSource + " key-value data source created.");
         }
@@ -170,7 +176,7 @@ public class CommonConfig {
 
     @Bean
     public DbFlushManager dbFlushManager() {
-        return new DbFlushManager(systemProperties());
+        return new DbFlushManager(systemProperties(), dbSources);
     }
 
     @Bean

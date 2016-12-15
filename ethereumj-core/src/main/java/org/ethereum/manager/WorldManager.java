@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
@@ -25,7 +26,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
@@ -69,6 +69,9 @@ public class WorldManager {
 
     @Autowired
     private EventDispatchThread eventDispatchThread;
+
+    @Autowired
+    private DbFlushManager dbFlushManager;
 
     @Autowired
     private ApplicationContext ctx;
@@ -232,6 +235,8 @@ public class WorldManager {
         blockchain.close();
         logger.info("close: closing main repository ...");
         repository.close();
+        logger.info("close: database flush manager ...");
+        dbFlushManager.close();
     }
 
 }

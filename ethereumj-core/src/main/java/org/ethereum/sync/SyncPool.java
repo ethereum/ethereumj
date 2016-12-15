@@ -113,6 +113,7 @@ public class SyncPool {
     public void close() {
         try {
             poolLoopExecutor.shutdownNow();
+            logExecutor.shutdownNow();
         } catch (Exception e) {
             logger.warn("Problems shutting down executor", e);
         }
