@@ -12,6 +12,7 @@ import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -48,9 +49,10 @@ public class FastSyncManager {
     private final static long REQUEST_TIMEOUT = 5 * 1000;
     private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
-    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 2;
+    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
     private final static int PIVOT_DISTANCE_FROM_HEAD = 1024;
+    private final static int MSX_DB_QUEUE_SIZE = 20000;
 
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
 
@@ -74,10 +76,10 @@ public class FastSyncManager {
 
     @Autowired
     @Qualifier("stateDS")
-    DbSource<byte[]> stateDS = new HashMapDB<>();
+    DbSource<byte[]> stateDS;
 
     @Autowired
-    private Repository repository;
+    private StateSource stateSource;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -92,31 +94,53 @@ public class FastSyncManager {
     ApplicationContext applicationContext;
 
     int nodesInserted = 0;
-    int lastNodeCommit = 0;
-    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private boolean fastSyncInProgress = false;
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
+    private Thread dbWriterThread;
+    private int dbQueueSizeMonitor = -1;
+
+    private void waitDbQueueSizeBelow(int size) {
+        synchronized (this) {
+            try {
+                dbQueueSizeMonitor = size;
+                while (dbWriteQueue.size() > size) wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                dbQueueSizeMonitor = -1;
+            }
+        }
+    }
+
 
     void init() {
-        new Thread("FastSyncDBWriter") {
+        dbWriterThread = new Thread("FastSyncDBWriter") {
             @Override
             public void run() {
                 try {
-                    while (true) {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        synchronized (FastSyncManager.this) {
+                            if (dbQueueSizeMonitor >= 0 && dbWriteQueue.size() <= dbQueueSizeMonitor) {
+                                FastSyncManager.this.notifyAll();
+                            }
+                        }
                         TrieNodeRequest request = dbWriteQueue.take();
                         nodesInserted++;
-                        repository.addRawNode(request.nodeHash, request.response);
-                        if (nodesInserted - lastNodeCommit >= 100) {
-                            commitNodes();
+                        stateSource.getNoJournalSource().put(request.nodeHash, request.response);
+                        if (nodesInserted % 1000 == 0) {
+                            dbFlushManager.commit();
+                            logger.debug("FastSyncDBWriter: commit: dbWriteQueue.size = " + dbWriteQueue.size());
                         }
                     }
+                } catch (InterruptedException e) {
                 } catch (Exception e) {
                     logger.error("Fatal FastSync error while writing data", e);
                 }
             }
-        }.start();
+        };
+        dbWriterThread.start();
 
         new Thread("FastSyncLoop") {
             @Override
@@ -128,12 +152,6 @@ public class FastSyncManager {
                 }
             }
         }.start();
-    }
-
-    private synchronized void commitNodes() {
-        repository.commit();
-        dbFlushManager.commit();
-        lastNodeCommit = nodesInserted;
     }
 
     enum TrieNodeType {
@@ -359,6 +377,9 @@ public class FastSyncManager {
                     synchronized (this) {
                         wait(10);
                     }
+
+                    waitDbQueueSizeBelow(MSX_DB_QUEUE_SIZE);
+
                     logStat();
                 } catch (InterruptedException e) {
                     throw e;
@@ -366,6 +387,9 @@ public class FastSyncManager {
                     logger.error("Error", t);
                 }
             }
+            waitDbQueueSizeBelow(0);
+
+            dbWriterThread.interrupt();
         } catch (InterruptedException e) {
             logger.warn("Main fast sync loop was interrupted", e);
         }
@@ -440,7 +464,7 @@ public class FastSyncManager {
         }
 
         stateDS.put(FASTSYNC_DB_KEY_PIVOT, pivot.getEncoded());
-        repository.commit();
+        dbFlushManager.commit();
         dbFlushManager.flush();
 
         logger.info("FastSync: regular sync reached the blockchain head.");
@@ -460,7 +484,7 @@ public class FastSyncManager {
             logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
             System.exit(-666);
         }
-        repository.commit();
+        dbFlushManager.commit();
         dbFlushManager.flush();
         logger.info("FastSync: all headers downloaded. The state is SECURE now.");
     }
@@ -495,7 +519,7 @@ public class FastSyncManager {
         }
         setSyncStage(null);
         stateDS.delete(FASTSYNC_DB_KEY_PIVOT);
-        repository.commit();
+        dbFlushManager.commit();
         dbFlushManager.flush();
     }
 
