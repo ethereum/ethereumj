@@ -384,9 +384,10 @@ public class Channel {
 
         Channel channel = (Channel) o;
 
-        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
-        return !(node != null ? !node.equals(channel.node) : channel.node != null);
 
+        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
+        if (node != null ? !node.equals(channel.node) : channel.node != null) return false;
+        return this == channel;
     }
 
     @Override
