@@ -89,7 +89,7 @@ public class ReceiptsDownloader {
         if (block.getNumber() >= fromBlock && validate(block, receipts)) {
             for (int i = 0; i < receipts.size(); i++) {
                 TransactionReceipt receipt = receipts.get(i);
-                TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), (int) block.getNumber());
+                TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), i);
                 txInfo.setTransaction(block.getTransactionsList().get(i));
                 txStore.put(txInfo);
             }
