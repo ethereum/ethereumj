@@ -159,7 +159,11 @@ public class ChannelManager {
         int addCnt = 0;
         for(Channel peer : newPeers) {
 
+            logger.debug("Processing new peer: " + peer);
+
             if(peer.isProtocolsInitialized()) {
+
+                logger.debug("Protocols initialized");
 
                 if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
                     if (!peer.isActive() &&
@@ -318,11 +322,12 @@ public class ChannelManager {
     }
 
     public void add(Channel peer) {
+        logger.debug("New peer in ChannelManager {}", peer);
         newPeers.add(peer);
     }
 
     public void notifyDisconnect(Channel channel) {
-        logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
+        logger.debug("Peer {}: notifies about disconnect", channel);
         channel.onDisconnect();
         syncPool.onDisconnect(channel);
         activePeers.values().remove(channel);
