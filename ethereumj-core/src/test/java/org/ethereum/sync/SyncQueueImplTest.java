@@ -5,6 +5,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.FastByteComparisons;
 import org.junit.Test;
 
 import java.util.*;
@@ -72,7 +73,7 @@ public class SyncQueueImplTest {
         int peerIdx = 1;
         Random rnd = new Random();
         int cnt = 0;
-        while (true) {
+        while (cnt < 1000) {
             System.out.println("Cnt: " + cnt++);
             Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5);
             if (headersRequests.isEmpty()) break;
@@ -89,7 +90,45 @@ public class SyncQueueImplTest {
             }
         }
 
+        assert cnt != 1000;
         assert result.size() == randomChain.size() - 1;
+        for (int  i = 0; i < result.size() - 1; i++) {
+            assert Arrays.equals(result.get(i + 1).getHash(), result.get(i).getHeader().getParentHash());
+        }
+        assert Arrays.equals(randomChain.get(0).getHash(), result.get(result.size() - 1).getHeader().getParentHash());
+    }
+
+    @Test
+    public void testReverseHeaders2() {
+        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 194);
+        Peer[] peers = new Peer[]{new Peer(randomChain), new Peer(randomChain)};
+        SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(randomChain.get(randomChain.size() - 1).getHash(), true);
+        List<BlockHeaderWrapper> result = new ArrayList<>();
+        int peerIdx = 1;
+        int cnt = 0;
+        while (cnt < 100) {
+            System.out.println("Cnt: " + cnt++);
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10);
+            if (headersRequests.isEmpty()) break;
+            for (SyncQueueIfc.HeadersRequest request : headersRequests) {
+                System.out.println("Req: " + request);
+                List<BlockHeader> headers = peers[peerIdx].getHeaders(request);
+
+                // Removing genesis header, which we will not get from real peers
+                Iterator<BlockHeader> it = headers.iterator();
+                while (it.hasNext()) {
+                    if (FastByteComparisons.equal(it.next().getHash(), randomChain.get(0).getHash())) it.remove();
+                }
+
+                peerIdx = (peerIdx + 1) % 2;
+                List<BlockHeaderWrapper> ret = syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
+                result.addAll(ret);
+                System.out.println("Result length: " + result.size());
+            }
+        }
+
+        assert cnt != 100;
+        assert result.size() == randomChain.size() - 1; // - genesis
         for (int  i = 0; i < result.size() - 1; i++) {
             assert Arrays.equals(result.get(i + 1).getHash(), result.get(i).getHeader().getParentHash());
         }

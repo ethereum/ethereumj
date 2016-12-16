@@ -90,7 +90,11 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
         for (; minValidated >= headers.getMin() ; minValidated--) {
             BlockHeaderWrapper header = headers.get(minValidated);
             BlockHeaderWrapper parent = headers.get(minValidated - 1);
-            if (parent == null) break;
+            if (parent == null) {
+                // Some peers doesn't return 0 block header
+                if (minValidated == 1) minValidated = 0;
+                break;
+            }
             if (!FastByteComparisons.equal(header.getHeader().getParentHash(), parent.getHash())) {
                 // chain is broken here (unlikely) - refetch the rest
                 headers.clearAllBefore(header.getNumber());
