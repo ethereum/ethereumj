@@ -97,10 +97,13 @@ public class Channel {
     private boolean isActive;
     private boolean isDisconnected;
 
+    private String remoteId;
+
     private PeerStatistics peerStats = new PeerStatistics();
 
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode, ChannelManager channelManager) {
         this.channelManager = channelManager;
+        this.remoteId = remoteId;
 
         isActive = remoteId != null && !remoteId.isEmpty();
 
@@ -270,7 +273,7 @@ public class Channel {
     }
 
     public String getPeerIdShort() {
-        return node == null ? "<null>" : node.getHexIdShort();
+        return node == null ? remoteId.substring(0,8) : node.getHexIdShort();
     }
 
     public byte[] getNodeId() {
@@ -381,9 +384,10 @@ public class Channel {
 
         Channel channel = (Channel) o;
 
-        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
-        return !(node != null ? !node.equals(channel.node) : channel.node != null);
 
+        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
+        if (node != null ? !node.equals(channel.node) : channel.node != null) return false;
+        return this == channel;
     }
 
     @Override

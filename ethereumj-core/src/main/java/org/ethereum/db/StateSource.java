@@ -39,6 +39,13 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         return journalSource;
     }
 
+    /**
+     * Returns the source behind JournalSource
+     */
+    public CountingBytesSource getNoJournalSource() {
+        return countingSource;
+    }
+
     public WriteCache<byte[], byte[]> getWriteCache() {
         return writeCache;
     }

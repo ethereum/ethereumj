@@ -4,6 +4,7 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -37,6 +38,9 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired @Qualifier("headerSource")
     DataSourceArray<BlockHeader> headerStore;
 
+    @Autowired
+    DbFlushManager dbFlushManager;
+
     byte[] genesisHash;
 
     @Autowired
@@ -66,7 +70,7 @@ public class HeadersDownloader extends BlockDownloader {
         for (BlockHeaderWrapper header : headers) {
             headerStore.set((int) header.getNumber(), header.getHeader());
         }
-        headerStore.flush();
+        dbFlushManager.commit();
     }
 
 
