@@ -207,26 +207,70 @@ public class SyncQueueImpl implements SyncQueueIfc {
     private List<HeaderElement> getLongestChain() {
         Map<ByteArrayWrapper, HeaderElement> lastValidatedGen = headers.get(darkZoneNum);
         assert lastValidatedGen.size() == 1;
-        return getLongestChain(lastValidatedGen.values().iterator().next());
+        HeaderElement lastHeader = lastValidatedGen.values().iterator().next();
+        HeaderChains headerChains = new HeaderChains(lastHeader);
+        boolean inserted = true;
+        while(inserted) {
+            Map<ByteArrayWrapper, HeaderElement> gen = headers.get(lastHeader.header.getNumber() + 1);
+            if (gen == null) break;
+            lastHeader = gen.values().iterator().next();
+            inserted = headerChains.addNodes(gen.values());
+        }
+        return headerChains.getLongestChain();
     }
 
-    private List<HeaderElement> getLongestChain(HeaderElement parent) {
-        Map<ByteArrayWrapper, HeaderElement> gen = headers.get(parent.header.getNumber() + 1);
-        List<HeaderElement> longest = new ArrayList<>();
-        if (gen != null) {
-            for (HeaderElement header : gen.values()) {
-                if (header.getParent() == parent) {
-                    List<HeaderElement> childLongest = getLongestChain(header);
-                    if (childLongest.size() > longest.size()) {
-                        longest = childLongest;
+    // Recursive implementation fails on long chains due to StackoverflowError
+    private class HeaderChains {
+        List<List<HeaderElement>> chains = new ArrayList<>();
+        Map<HeaderElement, Integer> currentHeight = new HashMap<>();
+
+        HeaderChains(HeaderElement firstElement) {
+            List<HeaderElement> firstChain = new ArrayList<>();
+            firstChain.add(firstElement);
+            chains.add(firstChain);
+            currentHeight.put(firstElement, 0);
+        }
+
+        synchronized boolean addNodes(Collection<HeaderElement> elements) {
+            int height = chains.get(0).size();
+            boolean inserted = false;
+            for (HeaderElement element : elements) {
+                if (currentHeight.keySet().contains(element.getParent())) {
+                    List<HeaderElement> rightChain = chains.get(currentHeight.get(element.getParent()));
+                    inserted = true;
+
+                    // Not yet added anything to this chain
+                    if (rightChain.get(rightChain.size() - 1) == element.getParent()) {
+                        rightChain.add(element);
+                    } else {
+                        List<HeaderElement> newChain = new ArrayList<>(rightChain);
+                        newChain.remove(newChain.size() - 1);
+                        newChain.add(element);
+                        chains.add(newChain);
                     }
                 }
             }
+
+            if (inserted) {
+                // purge chains
+                Iterator<List<HeaderElement>> it = chains.iterator();
+                while (it.hasNext()) {
+                    if (it.next().size() == height) it.remove();
+                }
+
+                // update currentHeight
+                currentHeight.clear();
+                for (int i = 0; i < chains.size(); i++) {
+                    currentHeight.put(chains.get(i).get(chains.get(i).size() - 1), i);
+                }
+            }
+
+            return inserted;
         }
-        List<HeaderElement> ret = new ArrayList<>();
-        ret.add(parent);
-        ret.addAll(longest);
-        return ret;
+
+        synchronized List<HeaderElement> getLongestChain() {
+            return chains.get(0);
+        }
     }
 
     private boolean hasGaps() {
