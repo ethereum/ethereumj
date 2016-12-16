@@ -52,9 +52,9 @@ import static java.lang.Thread.sleep;
 import static org.ethereum.core.BlockchainImpl.calcReceiptsTrie;
 
 /**
- * Fast Sync with sanity check
+ * Sync with sanity check
  *
- * Runs fast sync with defined config
+ * Runs sync with defined config
  * - checks State Trie is not broken
  * - checks whether all blocks are in blockstore, validates parent connection and bodies
  * - checks and validate transaction receipts
@@ -65,15 +65,16 @@ import static org.ethereum.core.BlockchainImpl.calcReceiptsTrie;
  *     -Doverride.config.res=longrun/conf/live.conf
  */
 @Ignore
-public class FastSyncSanityTest {
+public class SyncSanityTest {
 
     private Ethereum regularNode;
     private static AtomicBoolean firstRun = new AtomicBoolean(true);
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
     private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
+    private static final AtomicBoolean allChecksAreOver =  new AtomicBoolean(false);
 
-    public FastSyncSanityTest() throws Exception {
+    public SyncSanityTest() throws Exception {
 
         String resetDb = System.getProperty("reset.db.onFirstRun");
         String overrideConfigPath = System.getProperty("override.config.res");
@@ -92,7 +93,7 @@ public class FastSyncSanityTest {
                         statTimer.shutdownNow();
                     }
                 } catch (Throwable t) {
-                    FastSyncSanityTest.testLogger.error("Unhandled exception", t);
+                    SyncSanityTest.testLogger.error("Unhandled exception", t);
                 }
             }
         }, 0, 15, TimeUnit.SECONDS);
@@ -123,8 +124,8 @@ public class FastSyncSanityTest {
         // and make it possible for autowiring other components
         private static class Config {
             @Bean
-            public FastSyncSanityTest.BasicSample basicSample() {
-                return new FastSyncSanityTest.BasicSample();
+            public SyncSanityTest.BasicSample basicSample() {
+                return new SyncSanityTest.BasicSample();
             }
         }
 
@@ -232,7 +233,7 @@ public class FastSyncSanityTest {
         EthereumListener listener = new EthereumListenerAdapter() {
             @Override
             public void onSyncDone(SyncState state) {
-                synced = true;
+                if (state.equals(SyncState.COMPLETE)) synced = true;
             }
 
             @Override
@@ -421,7 +422,7 @@ public class FastSyncSanityTest {
 
             testLogger.info("Checking block transactions successful, ended on block: {}", blockNumber + 1);
         } catch (Exception ex) {
-            testLogger.error("Block validation error", ex);
+            testLogger.error("Transaction validation error", ex);
             fatalErrors.incrementAndGet();
         }
     }
@@ -453,6 +454,7 @@ public class FastSyncSanityTest {
         logStats();
 
         if (!firstRun.get()) {
+            allChecksAreOver.set(true);
             statTimer.shutdownNow();
         }
 
@@ -485,7 +487,8 @@ public class FastSyncSanityTest {
 
         if(statTimer.awaitTermination(MAX_RUN_MINUTES, TimeUnit.MINUTES)) {
             logStats();
-            // Checking error stats
+            // Checking for errors
+            assert allChecksAreOver.get();
             if (!logStats()) assert false;
         }
     }
