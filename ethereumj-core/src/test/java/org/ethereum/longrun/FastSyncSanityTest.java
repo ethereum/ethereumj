@@ -22,13 +22,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Thread.sleep;
 
 /**
- * Sync with sanity check
+ * Fast sync with sanity check
  *
- * Runs sync with defined config
+ * Runs sync with defined config. Stops when all nodes are downloaded in 1 minute.
  * - checks State Trie is not broken
- * - checks whether all blocks are in blockstore, validates parent connection and bodies
- * - checks and validate transaction receipts
- * Stopped, than restarts in 1 minute, syncs and pass all checks again
+ * Restarts, waits until SECURE sync state (all headers are downloaded) in 1 minute.
+ * - checks block headers
+ * Restarts, waits until full sync is over
+ * - checks nodes/headers/blocks/tx receipts
  *
  * Run with '-Dlogback.configurationFile=longrun/logback.xml' for proper logging
  * Also following flags are available:
@@ -36,16 +37,17 @@ import static java.lang.Thread.sleep;
  *     -Doverride.config.res=longrun/conf/live.conf
  */
 @Ignore
-public class SyncSanityTest {
+public class FastSyncSanityTest {
 
     private Ethereum regularNode;
     private static AtomicBoolean firstRun = new AtomicBoolean(true);
+    private static AtomicBoolean secondRun = new AtomicBoolean(true);
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
     private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
     private static final AtomicBoolean allChecksAreOver =  new AtomicBoolean(false);
 
-    public SyncSanityTest() throws Exception {
+    public FastSyncSanityTest() throws Exception {
 
         String resetDb = System.getProperty("reset.db.onFirstRun");
         String overrideConfigPath = System.getProperty("override.config.res");
@@ -64,7 +66,7 @@ public class SyncSanityTest {
                         statTimer.shutdownNow();
                     }
                 } catch (Throwable t) {
-                    SyncSanityTest.testLogger.error("Unhandled exception", t);
+                    FastSyncSanityTest.testLogger.error("Unhandled exception", t);
                 }
             }
         }, 0, 15, TimeUnit.SECONDS);
@@ -105,22 +107,41 @@ public class SyncSanityTest {
             super("sampleNode");
         }
 
+        private void stopSync() {
+            config.setSyncEnabled(false);
+            config.setDiscoveryEnabled(false);
+            ethereum.getChannelManager().close();
+            syncPool.close();
+        }
+
         @Override
         public void waitForSync() throws Exception {
             logger.info("Waiting for the whole blockchain sync (will take up to an hour on fast sync for the whole chain)...");
             while(true) {
                 sleep(10000);
+                if (syncState == null) continue;
 
-                if (syncComplete) {
-                    logger.info("[v] Sync complete! The best block: " + bestBlock.getShortDescr());
-
-                    // Stop syncing
-                    config.setSyncEnabled(false);
-                    config.setDiscoveryEnabled(false);
-                    ethereum.getChannelManager().close();
-                    syncPool.close();
-
-                    return;
+                switch (syncState) {
+                    case UNSECURE:
+                        if (!firstRun.get()) break;
+                        logger.info("[v] Unsecure sync completed");
+                        sleep(60000);
+                        stopSync();
+                        BlockchainValidation.checkNodes(ethereum, commonConfig, fatalErrors);
+                        firstRun.set(false);
+                        break;
+                    case SECURE:
+                        if (!secondRun.get()) break;
+                        logger.info("[v] Secure sync completed");
+                        sleep(60000);
+                        stopSync();
+                        BlockchainValidation.checkFastHeaders(ethereum, commonConfig, fatalErrors);
+                        secondRun.set(false);
+                        break;
+                    case COMPLETE:
+                        logger.info("[v] Sync complete! The best block: " + bestBlock.getShortDescr());
+                        stopSync();
+                        return;
                 }
             }
         }
@@ -152,20 +173,14 @@ public class SyncSanityTest {
     }
 
     private static void fullSanityCheck(Ethereum ethereum, CommonConfig commonConfig) {
-
         BlockchainValidation.fullCheck(ethereum, commonConfig, fatalErrors);
         logStats();
-
-        if (!firstRun.get()) {
-            allChecksAreOver.set(true);
-            statTimer.shutdownNow();
-        }
-
-        firstRun.set(false);
+        allChecksAreOver.set(true);
+        statTimer.shutdownNow();
     }
 
     @Test
-    public void testDoubleCheck() throws Exception {
+    public void testTripleCheck() throws Exception {
 
         runEthereum();
 
@@ -179,9 +194,22 @@ public class SyncSanityTest {
                 testLogger.info("Stopping first run");
                 regularNode.close();
                 testLogger.info("First run stopped");
-                sleep(60_000);
                 testLogger.info("Starting second run");
                 runEthereum();
+                while(secondRun.get()) {
+                    sleep(1000);
+                }
+                testLogger.info("Stopping second run");
+                regularNode.close();
+                testLogger.info("Second run stopped");
+                testLogger.info("Starting third run");
+                runEthereum();
+                while(!allChecksAreOver.get()) {
+                    sleep(1000);
+                }
+                testLogger.info("Stopping third run");
+                regularNode.close();
+                testLogger.info("All checks are finished");
             } catch (Throwable e) {
                 e.printStackTrace();
             }

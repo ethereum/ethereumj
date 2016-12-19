@@ -3,12 +3,14 @@ package org.ethereum.longrun;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Bloom;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
@@ -97,6 +99,32 @@ public class BlockchainValidation {
         }
     }
 
+    public static void checkFastHeaders(Ethereum ethereum, CommonConfig commonConfig, AtomicInteger fatalErrors) {
+        try {
+            DataSourceArray<BlockHeader> headerStore = commonConfig.headerSource();
+            int blockNumber = headerStore.size() - 1;
+            byte[] lastParentHash = null;
+            testLogger.info("Checking fast headers from best block: {}", blockNumber);
+            while (blockNumber > 0) {
+                BlockHeader header = headerStore.get(blockNumber);
+                if (lastParentHash != null) {
+                    assert FastByteComparisons.equal(header.getHash(), lastParentHash);
+                }
+                lastParentHash = header.getParentHash();
+                assert lastParentHash != null;
+                blockNumber--;
+            }
+
+            Block genesis = ethereum.getBlockchain().getBlockByNumber(0);
+            assert FastByteComparisons.equal(genesis.getHash(), lastParentHash);
+
+            testLogger.info("Checking fast headers successful, ended on block: {}", blockNumber + 1);
+        } catch (Exception ex) {
+            testLogger.error("Fast header validation error", ex);
+            fatalErrors.incrementAndGet();
+        }
+    }
+
     public static void checkBlocks(Ethereum ethereum, AtomicInteger fatalErrors) {
         try {
             int blockNumber = (int) ethereum.getBlockchain().getBestBlock().getHeader().getNumber();
@@ -146,5 +174,28 @@ public class BlockchainValidation {
             testLogger.error("Transaction validation error", ex);
             fatalErrors.incrementAndGet();
         }
+    }
+
+    public static void fullCheck(Ethereum ethereum, CommonConfig commonConfig, AtomicInteger fatalErrors) {
+
+        // nodes
+        testLogger.info("Validating nodes: Start");
+        BlockchainValidation.checkNodes(ethereum, commonConfig, fatalErrors);
+        testLogger.info("Validating nodes: End");
+
+        // headers
+        testLogger.info("Validating block headers: Start");
+        BlockchainValidation.checkHeaders(ethereum, fatalErrors);
+        testLogger.info("Validating block headers: End");
+
+        // blocks
+        testLogger.info("Validating blocks: Start");
+        BlockchainValidation.checkBlocks(ethereum, fatalErrors);
+        testLogger.info("Validating blocks: End");
+
+        // receipts
+        testLogger.info("Validating transaction receipts: Start");
+        BlockchainValidation.checkTransactions(ethereum, fatalErrors);
+        testLogger.info("Validating transaction receipts: End");
     }
 }

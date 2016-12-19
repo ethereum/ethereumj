@@ -120,20 +120,12 @@ class BasicNode implements Runnable {
     /**
      * Waits until the whole blockchain sync is complete
      */
-    private void waitForSync() throws Exception {
+    public void waitForSync() throws Exception {
         logger.info("Waiting for the whole blockchain sync (will take up to an hour on fast sync for the whole chain)...");
         while(true) {
             sleep(10000);
-
             if (syncComplete) {
                 logger.info("[v] Sync complete! The best block: " + bestBlock.getShortDescr());
-
-                // Stop syncing
-                config.setSyncEnabled(false);
-                config.setDiscoveryEnabled(false);
-                ethereum.getChannelManager().close();
-                syncPool.close();
-
                 return;
             }
         }
