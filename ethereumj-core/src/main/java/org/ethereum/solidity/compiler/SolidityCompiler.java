@@ -28,7 +28,8 @@ public class SolidityCompiler {
         AST("ast"),
         BIN("bin"),
         INTERFACE("interface"),
-        ABI("abi");
+        ABI("abi"),
+        METADATA("metadata");
 
         private String name;
 
