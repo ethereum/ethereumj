@@ -273,7 +273,8 @@ public class Channel {
     }
 
     public String getPeerIdShort() {
-        return node == null ? remoteId.substring(0,8) : node.getHexIdShort();
+        return node == null ? (remoteId != null && remoteId.length() >= 8 ? remoteId.substring(0,8) :remoteId)
+                : node.getHexIdShort();
     }
 
     public byte[] getNodeId() {
