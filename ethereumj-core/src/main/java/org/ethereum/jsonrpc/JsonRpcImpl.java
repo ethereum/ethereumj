@@ -576,6 +576,7 @@ public class JsonRpcImpl implements JsonRpc {
         String s = null;
         try {
             Transaction tx = new Transaction(StringHexToByteArray(rawData));
+            tx.verify();
 
             eth.submitTransaction(tx);
 

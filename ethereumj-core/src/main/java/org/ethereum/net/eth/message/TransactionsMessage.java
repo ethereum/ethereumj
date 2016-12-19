@@ -5,9 +5,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Wrapper around an Ethereum Transactions message on the network
@@ -42,6 +40,7 @@ public class TransactionsMessage extends EthMessage {
         for (int i = 0; i < paramsList.size(); ++i) {
             RLPList rlpTxData = (RLPList) paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData.getRLPData());
+            tx.verify();
             transactions.add(tx);
         }
         parsed = true;

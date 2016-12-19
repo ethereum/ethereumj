@@ -162,7 +162,13 @@ public class Transaction {
                 getTransactionCost(this);
     }
 
-    public void rlpParse() {
+    public synchronized void verify() {
+        rlpParse();
+        validate();
+    }
+
+    public synchronized void rlpParse() {
+        if (parsed) return;
         try {
             RLPList decodedTxList = RLP.decode2(rlpEncoded);
             RLPList transaction = (RLPList) decodedTxList.get(0);
@@ -197,7 +203,6 @@ public class Transaction {
         } catch (Exception e) {
             throw new RuntimeException("Error on parsing RLP", e);
         }
-        validate();
     }
 
     private void validate() {

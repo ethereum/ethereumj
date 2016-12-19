@@ -42,7 +42,7 @@ public class TransactionTestRunner {
         try {
             byte[] rlp = Utils.parseData(transactionTestCase.getRlp());
             transaction = new Transaction(rlp);
-            transaction.rlpParse();
+            transaction.verify();
         } catch (Exception e) {
             transaction = null;
         }
