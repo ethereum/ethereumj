@@ -21,6 +21,7 @@ dependencies:
     # Cache all the docker images and the ethash DAGs
     - for img in `docker images | grep -v "^<none>" | tail -n +2 | awk '{print $1}'`; do docker save $img > ~/.docker/`echo $img | tr '/' ':'`.tar; done
     - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/ethash/. ~/.ethash
+    - ./gradlew clean
 
 test:
   override:
@@ -33,6 +34,6 @@ test:
     - (tar -C $HOME -xf $HOME/ethereumj/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
 
     # Run hive and move all generated logs into the public artifacts folder
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp --test=. --sim=. --loglevel=10)
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp --test=. --sim=. --loglevel=10)
     - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/logs/* $CIRCLE_ARTIFACTS
 
