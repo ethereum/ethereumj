@@ -44,9 +44,6 @@ public class Block {
     private byte[] rlpEncoded;
     private boolean parsed = false;
 
-    private Trie<byte[]> txsState;
-
-
     /* Constructors */
 
     private Block() {
@@ -335,23 +332,24 @@ public class Block {
         return toStringBuff.toString();
     }
 
-    private void parseTxs(RLPList txTransactions, boolean validate) {
+    private byte[] parseTxs(RLPList txTransactions, boolean validate) {
 
-        this.txsState = new TrieImpl();
+        Trie<byte[]> txsState = new TrieImpl();
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
             Transaction tx = new Transaction(transactionRaw.getRLPData());
             if (validate) tx.verify();
             this.transactionsList.add(tx);
-            this.txsState.put(RLP.encodeInt(i), transactionRaw.getRLPData());
+            txsState.put(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
+        return txsState.getRootHash();
     }
 
 
     private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions, boolean validate) {
 
-        parseTxs(txTransactions, validate);
-        String calculatedRoot = Hex.toHexString(txsState.getRootHash());
+        byte[] rootHash = parseTxs(txTransactions, validate);
+        String calculatedRoot = Hex.toHexString(rootHash);
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot))) {
             logger.debug("Transactions trie root validation failed for block #{}", this.header.getNumber());
             return false;

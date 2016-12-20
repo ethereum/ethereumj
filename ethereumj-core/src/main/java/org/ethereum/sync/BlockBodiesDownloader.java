@@ -46,6 +46,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
     BigInteger curTotalDiff;
 
     Thread headersThread;
+    int downloadCnt = 0;
 
     @Autowired
     public BlockBodiesDownloader(BlockHeaderValidator headerValidator) {
@@ -95,6 +96,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
             for (BlockWrapper blockWrapper : blockWrappers) {
                 curTotalDiff = curTotalDiff.add(blockWrapper.getBlock().getDifficultyBI());
                 blockStore.saveBlock(blockWrapper.getBlock(), curTotalDiff, true);
+                downloadCnt++;
             }
             dbFlushManager.commit();
 
@@ -114,7 +116,9 @@ public class BlockBodiesDownloader extends BlockDownloader {
         return 0;
     }
 
-    // TODO: receipts loading here
+    public int getDownloadedCount() {
+        return downloadCnt;
+    }
 
     @Override
     public void stop() {
