@@ -207,7 +207,7 @@ public class Transaction {
 
     private void validate() {
         if (getNonce().length > HASH_LENGTH) throw new RuntimeException("Nonce is not valid");
-        if (receiveAddress != null && receiveAddress.length != ADDRESS_LENGTH)
+        if (receiveAddress.length != 0 && receiveAddress.length != ADDRESS_LENGTH)
             throw new RuntimeException("Receive address is not valid");
         if (gasLimit.length > HASH_LENGTH)
             throw new RuntimeException("Gas Limit is not valid");

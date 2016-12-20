@@ -40,7 +40,6 @@ public class TransactionsMessage extends EthMessage {
         for (int i = 0; i < paramsList.size(); ++i) {
             RLPList rlpTxData = (RLPList) paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData.getRLPData());
-            tx.verify();
             transactions.add(tx);
         }
         parsed = true;

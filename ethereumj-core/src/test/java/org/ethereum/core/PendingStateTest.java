@@ -2,16 +2,13 @@ package org.ethereum.core;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.util.blockchain.SolidityCallResult;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
@@ -20,8 +17,11 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -607,5 +607,33 @@ public class PendingStateTest {
 
         Assert.assertEquals(l.pollTxUpdateState(tx1), DROPPED);
         Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+    }
+
+    @Test
+    public void testInvalidTransaction() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        final CountDownLatch txHandle = new CountDownLatch(1);
+        PendingListener l = new PendingListener() {
+            @Override
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+                assert !txReceipt.isSuccessful();
+                assert txReceipt.getError().toLowerCase().contains("invalid");
+                assert txReceipt.getError().toLowerCase().contains("receive address");
+                txHandle.countDown();
+            }
+        };
+        bc.addEthereumListener(l);
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        Random rnd = new Random();
+        Block b1 = bc.createBlock();
+        byte[] b = new byte[21];
+        rnd.nextBytes(b);
+
+        Transaction tx1 = bc.createTransaction(alice, 0, b, BigInteger.ONE, new byte[0]);
+        pendingState.addPendingTransaction(tx1);
+
+        assert txHandle.await(3, TimeUnit.SECONDS);
     }
 }
