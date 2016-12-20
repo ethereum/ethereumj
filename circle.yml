@@ -31,7 +31,7 @@ test:
     # Build Geth and move into a known folder
     #    - make geth
     #    - cp ./build/bin/geth $HOME/geth
-    - (cd ~/ethereumj && ./gradlew -x install)
+    - (cd ~/ethereumj && ./gradlew install -x test)
     - (cd ~/ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
     - (tar -C $HOME -xf ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
 
