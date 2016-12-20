@@ -43,6 +43,8 @@ public class HeadersDownloader extends BlockDownloader {
 
     byte[] genesisHash;
 
+    int headersLoaded  = 0;
+
     @Autowired
     public HeadersDownloader(BlockHeaderValidator headerValidator) {
         super(headerValidator);
@@ -69,6 +71,7 @@ public class HeadersDownloader extends BlockDownloader {
         logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
         for (BlockHeaderWrapper header : headers) {
             headerStore.set((int) header.getNumber(), header.getHeader());
+            headersLoaded++;
         }
         dbFlushManager.commit();
     }
@@ -78,6 +81,10 @@ public class HeadersDownloader extends BlockDownloader {
     @Override
     protected int getBlockQueueSize() {
         return 0;
+    }
+
+    public int getHeadersLoaded() {
+        return headersLoaded;
     }
 
     @Override

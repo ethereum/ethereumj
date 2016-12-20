@@ -22,6 +22,7 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -74,6 +75,9 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @Autowired
     PendingState pendingState;
+
+    @Autowired
+    SyncManager syncManager;
 
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
@@ -148,6 +152,11 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         logger.info("Shutting down Ethereum instance...");
         worldManager.close();
         ((AbstractApplicationContext) getApplicationContext()).close();
+    }
+
+    @Override
+    public SyncState getSyncState() {
+        return syncManager.getSyncState();
     }
 
     @Override

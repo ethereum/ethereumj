@@ -168,6 +168,10 @@ public class SyncPool {
         return ret;
     }
 
+    public synchronized List<Channel> getActivePeers() {
+        return new ArrayList<>(activePeers);
+    }
+
     @Nullable
     public synchronized Channel getByNodeId(byte[] nodeId) {
         return channelManager.getActivePeer(nodeId);

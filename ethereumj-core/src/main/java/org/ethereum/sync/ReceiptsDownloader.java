@@ -92,7 +92,7 @@ public class ReceiptsDownloader {
 
     private void processDownloaded(byte[] blockHash, List<TransactionReceipt> receipts) {
         Block block = blockStore.getBlockByHash(blockHash);
-        if (block.getNumber() >= fromBlock && validate(block, receipts)) {
+        if (block.getNumber() >= fromBlock && validate(block, receipts) && !completedBlocks.contains(block.getNumber())) {
             for (int i = 0; i < receipts.size(); i++) {
                 TransactionReceipt receipt = receipts.get(i);
                 TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), (int) block.getNumber());
@@ -155,6 +155,10 @@ public class ReceiptsDownloader {
                 logger.warn("Unexpected during receipts downloading", e);
             }
         }
+    }
+
+    public int getDownloadedBlocksCount() {
+        return cnt;
     }
 
     public void stop() {

@@ -2,8 +2,11 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.Blockchain;
+import org.ethereum.facade.SyncState;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.util.Functional;
@@ -85,6 +88,7 @@ public class SyncManager extends BlockDownloader {
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
+    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     public SyncManager(final SystemProperties config, BlockHeaderValidator validator) {
@@ -95,6 +99,13 @@ public class SyncManager extends BlockDownloader {
     public void init(final ChannelManager channelManager, final SyncPool pool) {
         this.pool = pool;
         this.channelManager = channelManager;
+
+        logExecutor.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                logger.info("Sync state: " + getSyncState());
+            }
+        }, 60, 60, TimeUnit.SECONDS);
+
         if (!config.isSyncEnabled()) {
             logger.info("Sync Manager: OFF");
             return;
@@ -128,6 +139,28 @@ public class SyncManager extends BlockDownloader {
 
         syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
         syncQueueThread.start();
+    }
+
+    public org.ethereum.facade.SyncState getSyncState() {
+        if (config.isFastSyncEnabled()) {
+            SyncState syncState = fastSyncManager.getSyncState();
+            if (syncState.getStage() == SyncState.SyncStage.Complete) {
+                return getSyncStateImpl();
+            } else {
+                return new SyncState(syncState, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
+            }
+        } else {
+            return getSyncStateImpl();
+        }
+    }
+
+    private SyncState getSyncStateImpl() {
+        if (!config.isSyncEnabled())
+            return new SyncState(SyncState.SyncStage.Off, 0, 0, blockchain.getBestBlock().getNumber(),
+                    blockchain.getBestBlock().getNumber());
+
+        return new SyncState(isSyncDone() ? SyncState.SyncStage.Complete : SyncState.SyncStage.Regular,
+                0, 0, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
     }
 
     @Override
@@ -271,12 +304,20 @@ public class SyncManager extends BlockDownloader {
     }
 
     public long getLastKnownBlockNumber() {
-        return lastKnownBlockNumber;
+        long ret = max(blockchain.getBestBlock().getNumber(), lastKnownBlockNumber);
+        for (Channel channel : pool.getActivePeers()) {
+            BlockIdentifier bestKnownBlock = channel.getEthHandler().getBestKnownBlock();
+            if (bestKnownBlock != null) {
+                ret = max(bestKnownBlock.getNumber(), ret);
+            }
+        }
+        return ret;
     }
 
     public void close() {
         try {
             exec1.shutdown();
+            logExecutor.shutdown();
             if (syncQueueThread != null) syncQueueThread.interrupt();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);

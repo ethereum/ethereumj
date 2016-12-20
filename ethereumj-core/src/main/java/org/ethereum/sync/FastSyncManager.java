@@ -4,15 +4,14 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
+import org.ethereum.facade.SyncState;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -101,6 +100,12 @@ public class FastSyncManager {
     private Thread dbWriterThread;
     private int dbQueueSizeMonitor = -1;
 
+    private BlockHeader pivot;
+    private HeadersDownloader headersDownloader;
+    private BlockBodiesDownloader blockBodiesDownloader;
+    private ReceiptsDownloader receiptsDownloader;
+    private long forceSyncRemains;
+
     private void waitDbQueueSizeBelow(int size) {
         synchronized (this) {
             try {
@@ -152,6 +157,36 @@ public class FastSyncManager {
                 }
             }
         }.start();
+    }
+
+    public org.ethereum.facade.SyncState getSyncState() {
+        if (!isFastSyncInProgress()) return new SyncState(SyncState.SyncStage.Complete, 0, 0);
+
+        if (pivot == null) {
+            return new SyncState(SyncState.SyncStage.PivotBlock,
+                    (FORCE_SYNC_TIMEOUT - forceSyncRemains) / 1000, FORCE_SYNC_TIMEOUT / 1000);
+        }
+
+        EthereumListener.SyncState syncStage = getSyncStage();
+        switch (syncStage) {
+            case UNSECURE:
+                return new SyncState(SyncState.SyncStage.StateNodes, nodesInserted,
+                        nodesQueue.size() + pendingNodes.size() + nodesInserted);
+            case SECURE:
+                return new SyncState(SyncState.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
+                        pivot.getNumber());
+            case COMPLETE:
+                if (receiptsDownloader != null) {
+                    return new SyncState(SyncState.SyncStage.Receipts,
+                            receiptsDownloader.getDownloadedBlocksCount(), pivot.getNumber());
+                } else if (blockBodiesDownloader!= null) {
+                    return new SyncState(SyncState.SyncStage.BlockBodies,
+                            blockBodiesDownloader.getDownloadedCount(), pivot.getNumber());
+                } else {
+                    return new SyncState(SyncState.SyncStage.BlockBodies, 0, pivot.getNumber());
+                }
+        }
+        return new SyncState(SyncState.SyncStage.Complete, 0, 0);
     }
 
     enum TrieNodeType {
@@ -472,10 +507,10 @@ public class FastSyncManager {
 
     private void syncSecure() {
         setSyncStage(EthereumListener.SyncState.SECURE);
-        BlockHeader pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
-        HeadersDownloader headersDownloader = applicationContext.getBean(HeadersDownloader.class);
+        headersDownloader = applicationContext.getBean(HeadersDownloader.class);
         headersDownloader.init(pivot.getHash());
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
@@ -491,11 +526,11 @@ public class FastSyncManager {
 
     private void syncBlocksReceipts() {
         setSyncStage(EthereumListener.SyncState.COMPLETE);
-        BlockHeader pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
 
-        BlockBodiesDownloader blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
+        blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
         blockBodiesDownloader.startImporting();
         blockBodiesDownloader.waitForStop();
 
@@ -503,7 +538,7 @@ public class FastSyncManager {
 
         logger.info("FastSync: Downloading receipts...");
 
-        ReceiptsDownloader receiptsDownloader = applicationContext.getBean
+        receiptsDownloader = applicationContext.getBean
                 (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
         receiptsDownloader.startImporting();
         receiptsDownloader.waitForStop();
@@ -544,7 +579,7 @@ public class FastSyncManager {
 
                 switch (origSyncStage) {
                     case UNSECURE:
-                        BlockHeader pivot = getPivotBlock();
+                        pivot = getPivotBlock();
                         if (pivot.getNumber() == 0) {
                             logger.info("FastSync: too short blockchain, proceeding with regular sync...");
                             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
@@ -605,7 +640,7 @@ public class FastSyncManager {
             while (true) {
                 List<Channel> allIdle = pool.getAllIdle();
 
-                long forceSyncRemains = FORCE_SYNC_TIMEOUT - (System.currentTimeMillis() - start);
+                forceSyncRemains = FORCE_SYNC_TIMEOUT - (System.currentTimeMillis() - start);
 
                 if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION || forceSyncRemains < 0 && !allIdle.isEmpty()) {
                     Channel bestPeer = allIdle.get(0);
