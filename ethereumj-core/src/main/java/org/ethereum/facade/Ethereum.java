@@ -49,7 +49,7 @@ public interface Ethereum {
     /**
      * Gets the current sync state
      */
-    SyncState getSyncState();
+    SyncStatus getSyncStatus();
 
     /**
      * Factory for general transaction

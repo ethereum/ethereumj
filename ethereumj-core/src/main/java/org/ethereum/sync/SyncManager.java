@@ -3,7 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Blockchain;
-import org.ethereum.facade.SyncState;
+import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.Channel;
@@ -102,9 +102,9 @@ public class SyncManager extends BlockDownloader {
 
         logExecutor.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                logger.info("Sync state: " + getSyncState());
+                logger.info("Sync state: " + getSyncStatus());
             }
-        }, 60, 60, TimeUnit.SECONDS);
+        }, 10, 10, TimeUnit.SECONDS);
 
         if (!config.isSyncEnabled()) {
             logger.info("Sync Manager: OFF");
@@ -141,25 +141,25 @@ public class SyncManager extends BlockDownloader {
         syncQueueThread.start();
     }
 
-    public org.ethereum.facade.SyncState getSyncState() {
+    public SyncStatus getSyncStatus() {
         if (config.isFastSyncEnabled()) {
-            SyncState syncState = fastSyncManager.getSyncState();
-            if (syncState.getStage() == SyncState.SyncStage.Complete) {
+            SyncStatus syncStatus = fastSyncManager.getSyncState();
+            if (syncStatus.getStage() == SyncStatus.SyncStage.Complete) {
                 return getSyncStateImpl();
             } else {
-                return new SyncState(syncState, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
+                return new SyncStatus(syncStatus, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
             }
         } else {
             return getSyncStateImpl();
         }
     }
 
-    private SyncState getSyncStateImpl() {
+    private SyncStatus getSyncStateImpl() {
         if (!config.isSyncEnabled())
-            return new SyncState(SyncState.SyncStage.Off, 0, 0, blockchain.getBestBlock().getNumber(),
+            return new SyncStatus(SyncStatus.SyncStage.Off, 0, 0, blockchain.getBestBlock().getNumber(),
                     blockchain.getBestBlock().getNumber());
 
-        return new SyncState(isSyncDone() ? SyncState.SyncStage.Complete : SyncState.SyncStage.Regular,
+        return new SyncStatus(isSyncDone() ? SyncStatus.SyncStage.Complete : SyncStatus.SyncStage.Regular,
                 0, 0, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
     }
 

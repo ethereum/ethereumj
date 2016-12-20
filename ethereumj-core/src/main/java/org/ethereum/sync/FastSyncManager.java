@@ -11,7 +11,7 @@ import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
-import org.ethereum.facade.SyncState;
+import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -159,34 +159,34 @@ public class FastSyncManager {
         }.start();
     }
 
-    public org.ethereum.facade.SyncState getSyncState() {
-        if (!isFastSyncInProgress()) return new SyncState(SyncState.SyncStage.Complete, 0, 0);
+    public SyncStatus getSyncState() {
+        if (!isFastSyncInProgress()) return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
 
         if (pivot == null) {
-            return new SyncState(SyncState.SyncStage.PivotBlock,
+            return new SyncStatus(SyncStatus.SyncStage.PivotBlock,
                     (FORCE_SYNC_TIMEOUT - forceSyncRemains) / 1000, FORCE_SYNC_TIMEOUT / 1000);
         }
 
         EthereumListener.SyncState syncStage = getSyncStage();
         switch (syncStage) {
             case UNSECURE:
-                return new SyncState(SyncState.SyncStage.StateNodes, nodesInserted,
+                return new SyncStatus(SyncStatus.SyncStage.StateNodes, nodesInserted,
                         nodesQueue.size() + pendingNodes.size() + nodesInserted);
             case SECURE:
-                return new SyncState(SyncState.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
+                return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
                         pivot.getNumber());
             case COMPLETE:
                 if (receiptsDownloader != null) {
-                    return new SyncState(SyncState.SyncStage.Receipts,
+                    return new SyncStatus(SyncStatus.SyncStage.Receipts,
                             receiptsDownloader.getDownloadedBlocksCount(), pivot.getNumber());
                 } else if (blockBodiesDownloader!= null) {
-                    return new SyncState(SyncState.SyncStage.BlockBodies,
+                    return new SyncStatus(SyncStatus.SyncStage.BlockBodies,
                             blockBodiesDownloader.getDownloadedCount(), pivot.getNumber());
                 } else {
-                    return new SyncState(SyncState.SyncStage.BlockBodies, 0, pivot.getNumber());
+                    return new SyncStatus(SyncStatus.SyncStage.BlockBodies, 0, pivot.getNumber());
                 }
         }
-        return new SyncState(SyncState.SyncStage.Complete, 0, 0);
+        return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
     }
 
     enum TrieNodeType {

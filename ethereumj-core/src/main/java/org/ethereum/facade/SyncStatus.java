@@ -3,7 +3,7 @@ package org.ethereum.facade;
 /**
  * Represents the current state of syncing process
  */
-public class SyncState {
+public class SyncStatus {
     public enum SyncStage {
         /**
          * Fast sync: looking for a Pivot block.
@@ -51,6 +51,20 @@ public class SyncState {
 
         /**
          * Indicates the current state is secure
+         *
+         * When doing fast sync UNSECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * but the state isn't yet confirmed with  the whole block chain and can't be
+         * trusted.
+         * At this stage historical blocks and receipts are unavailable yet
+         *
+         * SECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * The state is now confirmed by the full chain (all block headers are
+         * downloaded and verified) and can be trusted
+         * At this stage historical blocks and receipts are unavailable yet
          */
         public boolean isSecure() {
             return this != PivotBlock || this != StateNodes && this != Headers;
@@ -71,11 +85,11 @@ public class SyncState {
     private final long blockLastImported;
     private final long blockBestKnown;
 
-    public SyncState(SyncState state, long blockLastImported, long blockBestKnown) {
+    public SyncStatus(SyncStatus state, long blockLastImported, long blockBestKnown) {
         this(state.getStage(), state.getCurCnt(), state.getKnownCnt(), blockLastImported, blockBestKnown);
     }
 
-    public SyncState(SyncStage stage, long curCnt, long knownCnt, long blockLastImported, long blockBestKnown) {
+    public SyncStatus(SyncStage stage, long curCnt, long knownCnt, long blockLastImported, long blockBestKnown) {
         this.stage = stage;
         this.curCnt = curCnt;
         this.knownCnt = knownCnt;
@@ -83,7 +97,7 @@ public class SyncState {
         this.blockBestKnown = blockBestKnown;
     }
 
-    public SyncState(SyncStage stage, long curCnt, long knownCnt) {
+    public SyncStatus(SyncStage stage, long curCnt, long knownCnt) {
         this(stage, curCnt, knownCnt, 0, 0);
     }
 

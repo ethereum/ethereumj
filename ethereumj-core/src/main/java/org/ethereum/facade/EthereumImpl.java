@@ -155,8 +155,8 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
-    public SyncState getSyncState() {
-        return syncManager.getSyncState();
+    public SyncStatus getSyncStatus() {
+        return syncManager.getSyncStatus();
     }
 
     @Override
