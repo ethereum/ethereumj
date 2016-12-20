@@ -1,5 +1,13 @@
 package org.ethereum.core;
 
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
+
+import java.math.BigInteger;
+import java.security.SignatureException;
+import java.util.Arrays;
+
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
@@ -10,19 +18,10 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.security.SignatureException;
-import java.util.Arrays;
-
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
 /**
  * A transaction (formally, T) is a single cryptographically
@@ -45,29 +44,29 @@ public class Transaction {
     private byte[] hash;
 
     /* a counter used to make sure each transaction can only be processed once */
-    protected byte[] nonce;
+    private byte[] nonce;
 
     /* the amount of ether to transfer (calculated as wei) */
-    protected byte[] value;
+    private byte[] value;
 
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
-    protected byte[] receiveAddress;
+    private byte[] receiveAddress;
 
     /* the amount of ether to pay as a transaction fee
      * to the miner for each unit of gas */
-    protected byte[] gasPrice;
+    private byte[] gasPrice;
 
     /* the amount of "gas" to allow for the computation.
      * Gas is the fuel of the computational engine;
      * every computational step taken and every byte added
      * to the state or transaction list consumes some gas. */
-    protected byte[] gasLimit;
+    private byte[] gasLimit;
 
     /* An unlimited size byte array specifying
      * input [data] of the message call or
      * Initialization code for a new contract */
-    protected byte[] data;
+    private byte[] data;
 
     /**
      * Since EIP-155, we could encode chainId in V
@@ -245,6 +244,11 @@ public class Transaction {
         return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
 
+    protected void setNonce(byte[] nonce) {
+        this.nonce = nonce;
+        parsed = true;
+    }
+
     public boolean isValueTx() {
         if (!parsed) rlpParse();
         return value != null;
@@ -255,9 +259,19 @@ public class Transaction {
         return value == null ? ZERO_BYTE_ARRAY : value;
     }
 
+    protected void setValue(byte[] value) {
+        this.value = value;
+        parsed = true;
+    }
+
     public byte[] getReceiveAddress() {
         if (!parsed) rlpParse();
         return receiveAddress;
+    }
+
+    protected void setReceiveAddress(byte[] receiveAddress) {
+        this.receiveAddress = receiveAddress;
+        parsed = true;
     }
 
     public byte[] getGasPrice() {
@@ -265,9 +279,19 @@ public class Transaction {
         return gasPrice == null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
+    protected void setGasPrice(byte[] gasPrice) {
+        this.gasPrice = gasPrice;
+        parsed = true;
+    }
+
     public byte[] getGasLimit() {
         if (!parsed) rlpParse();
-        return gasLimit;
+        return gasLimit == null ? ZERO_BYTE_ARRAY : gasLimit;
+    }
+
+    protected void setGasLimit(byte[] gasLimit) {
+        this.gasLimit = gasLimit;
+        parsed = true;
     }
 
     public long nonZeroDataBytes() {
@@ -292,6 +316,11 @@ public class Transaction {
     public byte[] getData() {
         if (!parsed) rlpParse();
         return data;
+    }
+
+    protected void setData(byte[] data) {
+        this.data = data;
+        parsed = true;
     }
 
     public ECDSASignature getSignature() {
