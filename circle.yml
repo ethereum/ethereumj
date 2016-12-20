@@ -13,14 +13,14 @@ dependencies:
     - for img in `ls ~/.docker`; do docker load -i ~/.docker/$img; done
 
     # Pull in and hive, restore cached ethash DAGs and do a dry run
-    - go get -u github.com/cupuyc/hive
-    - (cd ~/.go_workspace/src/github.com/cupuyc/hive && mkdir -p workspace/ethash/ ~/.ethash)
-    - (cd ~/.go_workspace/src/github.com/cupuyc/hive && cp -r ~/.ethash/. workspace/ethash/)
-    - (cd ~/.go_workspace/src/github.com/cupuyc/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
+    - go get -u github.com/ether-camp/hive
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && mkdir -p workspace/ethash/ ~/.ethash)
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && cp -r ~/.ethash/. workspace/ethash/)
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
 
     # Cache all the docker images and the ethash DAGs
     - for img in `docker images | grep -v "^<none>" | tail -n +2 | awk '{print $1}'`; do docker save $img > ~/.docker/`echo $img | tr '/' ':'`.tar; done
-    - cp -r ~/.go_workspace/src/github.com/cupuyc/hive/workspace/ethash/. ~/.ethash
+    - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/ethash/. ~/.ethash
 
 test:
   override:
@@ -33,6 +33,6 @@ test:
     - (tar -C $HOME -xf $HOME/ethereumj/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
 
     # Run hive and move all generated logs into the public artifacts folder
-    - (cd ~/.go_workspace/src/github.com/cupuyc/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp --test=. --sim=.)
-    - cp -r ~/.go_workspace/src/github.com/cupuyc/hive/workspace/logs/* $CIRCLE_ARTIFACTS
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp --test=. --sim=.)
+    - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/logs/* $CIRCLE_ARTIFACTS
 
