@@ -27,13 +27,10 @@ dependencies:
 
 test:
   override:
-    # Build Geth and move into a known folder
-    #    - make geth
-    #    - cp ./build/bin/geth $HOME/geth
+    # Build app and move into a known folder
     - (cd ~/ethereumj && ./gradlew install -x test)
     - (cd ~/ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
     - cp ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar ~/harmony.ether.camp.tar
-#    - (tar -C $HOME -xf ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
 
     # Run hive and move all generated logs into the public artifacts folder
     - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --test=. --sim=. --loglevel=3)
