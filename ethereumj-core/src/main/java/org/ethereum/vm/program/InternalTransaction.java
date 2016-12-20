@@ -48,33 +48,33 @@ public class InternalTransaction extends Transaction {
 
 
     public int getDeep() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return deep;
     }
 
     public int getIndex() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return index;
     }
 
     public boolean isRejected() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return rejected;
     }
 
     public String getNote() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return note;
     }
 
     @Override
     public byte[] getSender() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return sendAddress;
     }
 
     public byte[] getParentHash() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return parentHash;
     }
 
@@ -110,7 +110,8 @@ public class InternalTransaction extends Transaction {
     }
 
     @Override
-    public void rlpParse() {
+    public synchronized void rlpParse() {
+        if (parsed) return;
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
         RLPList transaction = (RLPList) decodedTxList.get(0);
 
