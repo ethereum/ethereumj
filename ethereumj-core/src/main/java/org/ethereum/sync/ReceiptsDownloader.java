@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
+import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.TransactionStore;
@@ -14,6 +15,7 @@ import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +43,9 @@ public class ReceiptsDownloader {
     @Autowired
     TransactionStore txStore;
 
+    @Autowired @Qualifier("headerSource")
+    DataSourceArray<BlockHeader> headerStore;
+
     long fromBlock, toBlock;
     Set<Long> completedBlocks = new HashSet<>();
 
@@ -65,27 +70,28 @@ public class ReceiptsDownloader {
         retrieveThread.start();
     }
 
-    private List<List<Block>> getToDownload(int maxAskSize, int maxAsks) {
-        List<Block> toDownload = getToDownload(maxAskSize * maxAsks);
-        List<List<Block>> ret = new ArrayList<>();
+    private List<List<byte[]>> getToDownload(int maxAskSize, int maxAsks) {
+        List<byte[]> toDownload = getToDownload(maxAskSize * maxAsks);
+        List<List<byte[]>> ret = new ArrayList<>();
         for (int i = 0; i < toDownload.size(); i += maxAskSize) {
             ret.add(toDownload.subList(i, Math.min(toDownload.size(), i + maxAskSize)));
         }
         return ret;
     }
 
-    private synchronized List<Block> getToDownload(int maxSize) {
-        List<Block> ret = new ArrayList<>();
+    private synchronized List<byte[]> getToDownload(int maxSize) {
+        List<byte[]> ret = new ArrayList<>();
         for (long i = fromBlock; i < toBlock && maxSize > 0; i++) {
             if (!completedBlocks.contains(i)) {
-                ret.add(blockStore.getChainBlockByNumber(i));
+                ret.add(headerStore.get((int) i).getHash());
                 maxSize--;
             }
         }
         return ret;
     }
 
-    private void processDownloaded(Block block, List<TransactionReceipt> receipts) {
+    private void processDownloaded(byte[] blockHash, List<TransactionReceipt> receipts) {
+        Block block = blockStore.getBlockByHash(blockHash);
         if (block.getNumber() >= fromBlock && validate(block, receipts)) {
             for (int i = 0; i < receipts.size(); i++) {
                 TransactionReceipt receipt = receipts.get(i);
@@ -114,7 +120,7 @@ public class ReceiptsDownloader {
     }
 
     private void retrieveLoop() {
-        List<List<Block>> toDownload = Collections.emptyList();
+        List<List<byte[]>> toDownload = Collections.emptyList();
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 if (toDownload.isEmpty()) {
@@ -123,13 +129,9 @@ public class ReceiptsDownloader {
 
                 Channel idle = syncPool.getAnyIdle();
                 if (idle != null) {
-                    final List<Block> list = toDownload.remove(0);
-                    List<byte[]> req = new ArrayList<>();
-                    for (Block header : list) {
-                        req.add(header.getHash());
-                    }
+                    final List<byte[]> list = toDownload.remove(0);
                     ListenableFuture<List<List<TransactionReceipt>>> future =
-                            ((Eth63) idle.getEthHandler()).requestReceipts(req);
+                            ((Eth63) idle.getEthHandler()).requestReceipts(list);
                     if (future != null) {
                         Futures.addCallback(future, new FutureCallback<List<List<TransactionReceipt>>>() {
                             @Override
