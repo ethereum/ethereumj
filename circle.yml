@@ -29,7 +29,7 @@ test:
     #    - cp ./build/bin/geth $HOME/geth
     - ./gradlew -x install
     - git clone --depth 1 -b develop git@github.com:ether-camp/ethereum-harmony.git
-    - (cd ethereum-harmony && ./gradlew stage -x test)
+    - (cd ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
     - (tar -C $HOME -xf build/distributions/harmony.ether.camp.tar)
 
     # Run hive and move all generated logs into the public artifacts folder
