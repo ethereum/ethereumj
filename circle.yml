@@ -33,9 +33,10 @@ test:
     #    - cp ./build/bin/geth $HOME/geth
     - (cd ~/ethereumj && ./gradlew install -x test)
     - (cd ~/ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
-    - (tar -C $HOME -xf ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
+    - cp ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar ~/harmony.ether.camp.tar
+#    - (tar -C $HOME -xf ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
 
     # Run hive and move all generated logs into the public artifacts folder
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp --test=. --sim=. --loglevel=10)
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --test=. --sim=. --loglevel=10)
     - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/logs/* $CIRCLE_ARTIFACTS
 
