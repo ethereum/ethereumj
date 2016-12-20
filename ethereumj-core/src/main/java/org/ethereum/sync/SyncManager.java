@@ -276,8 +276,11 @@ public class SyncManager extends BlockDownloader {
 
     public void close() {
         try {
+            logger.info("Shutting down SyncManager");
             exec1.shutdown();
+            pool.close();
             if (syncQueueThread != null) syncQueueThread.interrupt();
+            if (config.isFastSyncEnabled()) fastSyncManager.close();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);
         }

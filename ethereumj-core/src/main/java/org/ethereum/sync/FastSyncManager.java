@@ -4,12 +4,10 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
@@ -99,6 +97,7 @@ public class FastSyncManager {
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
     private Thread dbWriterThread;
+    private Thread fastSyncThread;
     private int dbQueueSizeMonitor = -1;
 
     private void waitDbQueueSizeBelow(int size) {
@@ -142,7 +141,7 @@ public class FastSyncManager {
         };
         dbWriterThread.start();
 
-        new Thread("FastSyncLoop") {
+        fastSyncThread = new Thread("FastSyncLoop") {
             @Override
             public void run() {
                 try {
@@ -151,7 +150,8 @@ public class FastSyncManager {
                     logger.error("Fatal FastSync loop error", e);
                 }
             }
-        }.start();
+        };
+        fastSyncThread.start();
     }
 
     enum TrieNodeType {
@@ -574,6 +574,8 @@ public class FastSyncManager {
                         listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
                 }
                 logger.info("FastSync: Full sync done.");
+            } catch (InterruptedException ex) {
+                logger.info("Shutting down due to interruption");
             } finally {
                 fastSyncInProgress = false;
                 pool.setNodesSelector(null);
@@ -589,7 +591,7 @@ public class FastSyncManager {
         return fastSyncInProgress;
     }
 
-    private BlockHeader getPivotBlock() {
+    private BlockHeader getPivotBlock() throws InterruptedException {
         byte[] pivotBlockHash = config.getFastSyncPivotBlockHash();
         long pivotBlockNumber = 0;
 
@@ -628,11 +630,7 @@ public class FastSyncManager {
                     s = t;
                 }
 
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                Thread.sleep(500);
             }
 
             pivotBlockNumber = Math.max(bestKnownBlock.getNumber() - PIVOT_DISTANCE_FROM_HEAD, 0);
@@ -679,9 +677,24 @@ public class FastSyncManager {
 
                 Thread.sleep(500);
             }
+        } catch (InterruptedException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Unexpected", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public void close() {
+        logger.info("Closing FastSyncManager");
+        try {
+            fastSyncThread.interrupt();
+            fastSyncInProgress = false;
+            dbWriterThread.interrupt();
+            dbFlushManager.commit();
+            dbFlushManager.flush();
+        } catch (Exception e) {
+            logger.warn("Problems closing FastSyncManager", e);
         }
     }
 }

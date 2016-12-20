@@ -43,7 +43,7 @@ public class FastSyncSanityTest {
     private static AtomicBoolean firstRun = new AtomicBoolean(true);
     private static AtomicBoolean secondRun = new AtomicBoolean(true);
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
-    private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten.conf");
+    private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten-fast.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
     private static final AtomicBoolean allChecksAreOver =  new AtomicBoolean(false);
 
@@ -115,7 +115,7 @@ public class FastSyncSanityTest {
 
         @Override
         public void waitForSync() throws Exception {
-            testLogger.info("Waiting for the whole blockchain sync (will take up to an hour on fast sync for the whole chain)...");
+            testLogger.info("Waiting for the complete blockchain sync (will take up to an hour on fast sync for the whole chain)...");
             while(true) {
                 sleep(10000);
                 if (syncState == null) continue;
@@ -193,6 +193,7 @@ public class FastSyncSanityTest {
                 testLogger.info("Stopping first run");
                 regularNode.close();
                 testLogger.info("First run stopped");
+                sleep(10_000);
                 testLogger.info("Starting second run");
                 runEthereum();
                 while(secondRun.get()) {
@@ -201,6 +202,7 @@ public class FastSyncSanityTest {
                 testLogger.info("Stopping second run");
                 regularNode.close();
                 testLogger.info("Second run stopped");
+                sleep(10_000);
                 testLogger.info("Starting third run");
                 runEthereum();
                 while(!allChecksAreOver.get()) {
