@@ -204,7 +204,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
         headers.put(num, genHeaders);
     }
 
-    private List<HeaderElement> getLongestChain() {
+    List<HeaderElement> getLongestChain() {
         Map<ByteArrayWrapper, HeaderElement> lastValidatedGen = headers.get(darkZoneNum);
         assert lastValidatedGen.size() == 1;
         HeaderElement lastHeader = lastValidatedGen.values().iterator().next();

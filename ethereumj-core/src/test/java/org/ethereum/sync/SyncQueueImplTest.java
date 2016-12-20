@@ -135,6 +135,96 @@ public class SyncQueueImplTest {
         assert Arrays.equals(randomChain.get(0).getHash(), result.get(result.size() - 1).getHeader().getParentHash());
     }
 
+    @Test
+    public void testLongLongestChain() {
+        List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 10500, 3);
+        SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
+        assert syncQueue.getLongestChain().size() == 10500;
+    }
+
+    @Test
+    public void testWideLongestChain() {
+        List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 100, 100);
+        SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
+        assert syncQueue.getLongestChain().size() == 100;
+    }
+
+    @Test
+    public void testGapedLongestChain() {
+        List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 100, 5);
+        Iterator<Block> it = randomChain.iterator();
+        while (it.hasNext()) {
+            if (it.next().getHeader().getNumber() == 15) it.remove();
+        }
+        SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
+        assert syncQueue.getLongestChain().size() == 15; // 0 .. 14
+    }
+
+    @Test
+    public void testFirstBlockGapedLongestChain() {
+        List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 100, 5);
+        Iterator<Block> it = randomChain.iterator();
+        while (it.hasNext()) {
+            if (it.next().getHeader().getNumber() == 1) it.remove();
+        }
+        SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
+        assert syncQueue.getLongestChain().size() == 1; // 0
+    }
+
+    @Test(expected = AssertionError.class)
+    public void testZeroBlockGapedLongestChain() {
+        List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 100, 5);
+        Iterator<Block> it = randomChain.iterator();
+        while (it.hasNext()) {
+            if (it.next().getHeader().getNumber() == 0) it.remove();
+        }
+        SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
+        syncQueue.getLongestChain().size();
+    }
+
+    @Test
+    public void testNoParentGapeLongestChain() {
+        List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 100, 5);
+
+        // Moving #15 blocks to the end to be sure it didn't trick SyncQueue
+        Iterator<Block> it = randomChain.iterator();
+        List<Block> blockSaver = new ArrayList<>();
+        while (it.hasNext()) {
+            Block block = it.next();
+            if (block.getHeader().getNumber() == 15) {
+                blockSaver.add(block);
+                it.remove();
+            }
+        }
+        randomChain.addAll(blockSaver);
+
+        SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
+        // We still have linked chain
+        assert syncQueue.getLongestChain().size() == 100;
+
+
+        List<Block> randomChain2 = TestUtils.getRandomAltChain(new byte[32], 0, 100, 5);
+
+        Iterator<Block> it2 = randomChain2.iterator();
+        List<Block> blockSaver2 = new ArrayList<>();
+        while (it2.hasNext()) {
+            Block block = it2.next();
+            if (block.getHeader().getNumber() == 15) {
+                blockSaver2.add(block);
+            }
+        }
+
+        // Removing #15 blocks
+        for (int i = 0; i < 5; ++i) {
+            randomChain.remove(randomChain.size() - 1);
+        }
+        // Adding wrong #15 blocks
+        assert blockSaver2.size() == 5;
+        randomChain.addAll(blockSaver2);
+
+        assert new SyncQueueImpl(randomChain).getLongestChain().size() == 15; // 0 .. 14
+    }
+
     public void test2Impl(List<Block> mainChain, List<Block> initChain, Peer[] peers) {
         List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 1024);
         final Block[] maxExportedBlock = new Block[] {randomChain.get(31)};
