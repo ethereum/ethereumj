@@ -155,13 +155,19 @@ public class Transaction {
 
     public long transactionCost(BlockchainNetConfig config, Block block){
 
-        if (!parsed) rlpParse();
+        rlpParse();
 
         return config.getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
     }
 
-    public void rlpParse() {
+    public synchronized void verify() {
+        rlpParse();
+        validate();
+    }
+
+    public synchronized void rlpParse() {
+        if (parsed) return;
         try {
             RLPList decodedTxList = RLP.decode2(rlpEncoded);
             RLPList transaction = (RLPList) decodedTxList.get(0);
@@ -196,12 +202,11 @@ public class Transaction {
         } catch (Exception e) {
             throw new RuntimeException("Error on parsing RLP", e);
         }
-        validate();
     }
 
     private void validate() {
         if (getNonce().length > HASH_LENGTH) throw new RuntimeException("Nonce is not valid");
-        if (receiveAddress != null && receiveAddress.length != ADDRESS_LENGTH)
+        if (receiveAddress != null && receiveAddress.length != 0 && receiveAddress.length != ADDRESS_LENGTH)
             throw new RuntimeException("Receive address is not valid");
         if (gasLimit.length > HASH_LENGTH)
             throw new RuntimeException("Gas Limit is not valid");
@@ -226,20 +231,20 @@ public class Transaction {
     public byte[] getHash() {
         if (!isEmpty(hash)) return hash;
 
-        if (!parsed) rlpParse();
+        rlpParse();
         byte[] plainMsg = this.getEncoded();
         return HashUtil.sha3(plainMsg);
     }
 
     public byte[] getRawHash() {
-        if (!parsed) rlpParse();
+        rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
     }
 
 
     public byte[] getNonce() {
-        if (!parsed) rlpParse();
+        rlpParse();
 
         return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
@@ -250,12 +255,12 @@ public class Transaction {
     }
 
     public boolean isValueTx() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return value != null;
     }
 
     public byte[] getValue() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return value == null ? ZERO_BYTE_ARRAY : value;
     }
 
@@ -265,7 +270,7 @@ public class Transaction {
     }
 
     public byte[] getReceiveAddress() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return receiveAddress;
     }
 
@@ -275,7 +280,7 @@ public class Transaction {
     }
 
     public byte[] getGasPrice() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return gasPrice == null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
@@ -285,7 +290,7 @@ public class Transaction {
     }
 
     public byte[] getGasLimit() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return gasLimit == null ? ZERO_BYTE_ARRAY : gasLimit;
     }
 
@@ -314,7 +319,7 @@ public class Transaction {
 
 
     public byte[] getData() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return data;
     }
 
@@ -324,7 +329,7 @@ public class Transaction {
     }
 
     public ECDSASignature getSignature() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return signature;
     }
 
@@ -334,7 +339,7 @@ public class Transaction {
     }
 
     public boolean isContractCreation() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return this.receiveAddress == null || Arrays.equals(this.receiveAddress,ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
@@ -360,7 +365,7 @@ public class Transaction {
     }
 
     public Integer getChainId() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return chainId == null ? null : (int) chainId;
     }
 
@@ -382,7 +387,7 @@ public class Transaction {
     }
 
     public String toString(int maxDataSize) {
-        if (!parsed) rlpParse();
+        rlpParse();
         String dataS;
         if (data == null) {
             dataS = "";
@@ -412,7 +417,7 @@ public class Transaction {
      */
     public byte[] getEncodedRaw() {
 
-        if (!parsed) rlpParse();
+        rlpParse();
         if (rlpRaw != null) return rlpRaw;
 
         // parse null as 0 for nonce
