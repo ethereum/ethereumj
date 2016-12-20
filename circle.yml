@@ -22,9 +22,9 @@ dependencies:
     - for img in `docker images | grep -v "^<none>" | tail -n +2 | awk '{print $1}'`; do docker save $img > ~/.docker/`echo $img | tr '/' ':'`.tar; done
     - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/ethash/. ~/.ethash
     # Cache gradle artifacts
-    - ./gradlew clean
+    - (cd ~/ethereumj && ./gradlew compileJava)
     - (cd ~ && git clone --depth 1 -b develop https://github.com/ether-camp/ethereum-harmony.git)
-    - (cd ~/ethereum-harmony && ./gradlew clean)
+    - (cd ~/ethereum-harmony && ./gradlew compileJava)
 
 test:
   override:
