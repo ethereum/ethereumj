@@ -15,7 +15,7 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.sync.SyncState;
+import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -34,8 +34,8 @@ import static java.lang.Math.min;
 import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
-import static org.ethereum.sync.SyncState.*;
-import static org.ethereum.sync.SyncState.BLOCK_RETRIEVING;
+import static org.ethereum.sync.PeerState.*;
+import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
@@ -67,7 +67,7 @@ public class Eth62 extends EthHandler {
 
     protected EthState ethState = EthState.INIT;
 
-    protected SyncState syncState = IDLE;
+    protected PeerState peerState = IDLE;
     protected boolean syncDone = false;
 
     /**
@@ -230,7 +230,7 @@ public class Eth62 extends EthHandler {
 
     protected synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
 
-        if (syncState != IDLE) return null;
+        if (peerState != IDLE) return null;
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockHash [{}], maxBlocksAsk [{}], skip[{}], reverse [{}]",
@@ -254,9 +254,9 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers) {
-        if (syncState != IDLE) return null;
+        if (peerState != IDLE) return null;
 
-        syncState = BLOCK_RETRIEVING;
+        peerState = BLOCK_RETRIEVING;
         sentHeaders.clear();
         sentHeaders.addAll(headers);
 
@@ -349,7 +349,7 @@ public class Eth62 extends EthHandler {
         // while Long sync is in progress
         if (!syncDone) return;
 
-        if (syncState != HEADER_RETRIEVING) {
+        if (peerState != HEADER_RETRIEVING) {
             long firstBlockAsk = Long.MAX_VALUE;
             long lastBlockAsk = 0;
             byte[] firstBlockHash = null;
@@ -421,7 +421,7 @@ public class Eth62 extends EthHandler {
             request.getFutureHeaders().set(received);
         }
 
-        syncState = IDLE;
+        peerState = IDLE;
     }
 
     protected synchronized void processGetBlockBodies(GetBlockBodiesMessage msg) {
@@ -463,7 +463,7 @@ public class Eth62 extends EthHandler {
         futureBlocks.set(blocks);
         futureBlocks = null;
 
-        syncState = IDLE;
+        peerState = IDLE;
     }
 
     protected synchronized void processNewBlock(NewBlockMessage newBlockMessage) {
@@ -492,7 +492,7 @@ public class Eth62 extends EthHandler {
     @Override
     public synchronized void fetchBodies(List<BlockHeaderWrapper> headers) {
         syncStats.reset();
-        syncState = BLOCK_RETRIEVING;
+        peerState = BLOCK_RETRIEVING;
         sendGetBlockBodies(headers);
     }
 
@@ -505,7 +505,7 @@ public class Eth62 extends EthHandler {
 
         if (wrapper == null || wrapper.isSent()) return;
 
-        syncState = HEADER_RETRIEVING;
+        peerState = HEADER_RETRIEVING;
 
         wrapper.send();
         sendMessage(wrapper.getMessage());
@@ -598,12 +598,12 @@ public class Eth62 extends EthHandler {
 
     @Override
     public boolean isHashRetrievingDone() {
-        return syncState == DONE_HASH_RETRIEVING;
+        return peerState == DONE_HASH_RETRIEVING;
     }
 
     @Override
     public boolean isHashRetrieving() {
-        return syncState == HEADER_RETRIEVING;
+        return peerState == HEADER_RETRIEVING;
     }
 
     @Override
@@ -618,7 +618,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public boolean isIdle() {
-        return syncState == IDLE;
+        return peerState == IDLE;
     }
 
     @Override
@@ -819,9 +819,9 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public synchronized boolean setStatus(SyncState syncState) {
-        if (this.syncState != IDLE) return false;
-        this.syncState = syncState;
+    public synchronized boolean setStatus(PeerState peerState) {
+        if (this.peerState != IDLE) return false;
+        this.peerState = peerState;
         return true;
     }
 
@@ -836,7 +836,7 @@ public class Eth62 extends EthHandler {
                 "Peer %s: [ %s, %18s, ping %6s ms, difficulty %s, best block %s ]: %s",
                 getVersion(),
                 channel.getPeerIdShort(),
-                syncState,
+                peerState,
                 (int)channel.getPeerStats().getAvgLatency(),
                 getTotalDifficulty(),
                 getBestKnownBlock().getNumber(),

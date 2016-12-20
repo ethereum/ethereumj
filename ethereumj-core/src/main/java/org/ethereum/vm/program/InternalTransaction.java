@@ -1,17 +1,19 @@
 package org.ethereum.vm.program;
 
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+import static org.ethereum.util.ByteUtil.toHexString;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-
-import static org.apache.commons.lang3.ArrayUtils.*;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 public class InternalTransaction extends Transaction {
 
@@ -48,33 +50,33 @@ public class InternalTransaction extends Transaction {
 
 
     public int getDeep() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return deep;
     }
 
     public int getIndex() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return index;
     }
 
     public boolean isRejected() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return rejected;
     }
 
     public String getNote() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return note;
     }
 
     @Override
     public byte[] getSender() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return sendAddress;
     }
 
     public byte[] getParentHash() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return parentHash;
     }
 
@@ -110,18 +112,19 @@ public class InternalTransaction extends Transaction {
     }
 
     @Override
-    public void rlpParse() {
+    public synchronized void rlpParse() {
+        if (parsed) return;
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
         RLPList transaction = (RLPList) decodedTxList.get(0);
 
-        this.nonce = transaction.get(0).getRLPData();
+        setNonce(transaction.get(0).getRLPData());
         this.parentHash = transaction.get(1).getRLPData();
         this.sendAddress = transaction.get(2).getRLPData();
-        this.receiveAddress = transaction.get(3).getRLPData();
-        this.value = transaction.get(4).getRLPData();
-        this.gasPrice = transaction.get(5).getRLPData();
-        this.gasLimit = transaction.get(6).getRLPData();
-        this.data = transaction.get(7).getRLPData();
+        setReceiveAddress(transaction.get(3).getRLPData());
+        setValue(transaction.get(4).getRLPData());
+        setGasPrice(transaction.get(5).getRLPData());
+        setGasLimit(transaction.get(6).getRLPData());
+        setData(transaction.get(7).getRLPData());
         this.note = new String(transaction.get(8).getRLPData());
         this.deep = decodeInt(transaction.get(9).getRLPData());
         this.index = decodeInt(transaction.get(10).getRLPData());

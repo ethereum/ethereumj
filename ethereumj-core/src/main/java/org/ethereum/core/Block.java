@@ -44,9 +44,6 @@ public class Block {
     private byte[] rlpEncoded;
     private boolean parsed = false;
 
-    private Trie<byte[]> txsState;
-
-
     /* Constructors */
 
     private Block() {
@@ -132,7 +129,7 @@ public class Block {
 
         // Parse Transactions
         RLPList txTransactions = (RLPList) block.get(1);
-        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
+        this.parseTxs(this.header.getTxTrieRoot(), txTransactions, false);
 
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
@@ -335,21 +332,24 @@ public class Block {
         return toStringBuff.toString();
     }
 
-    private void parseTxs(RLPList txTransactions) {
+    private byte[] parseTxs(RLPList txTransactions, boolean validate) {
 
-        this.txsState = new TrieImpl();
+        Trie<byte[]> txsState = new TrieImpl();
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
-            this.transactionsList.add(new Transaction(transactionRaw.getRLPData()));
-            this.txsState.put(RLP.encodeInt(i), transactionRaw.getRLPData());
+            Transaction tx = new Transaction(transactionRaw.getRLPData());
+            if (validate) tx.verify();
+            this.transactionsList.add(tx);
+            txsState.put(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
+        return txsState.getRootHash();
     }
 
 
-    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
+    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions, boolean validate) {
 
-        parseTxs(txTransactions);
-        String calculatedRoot = Hex.toHexString(txsState.getRootHash());
+        byte[] rootHash = parseTxs(txTransactions, validate);
+        String calculatedRoot = Hex.toHexString(rootHash);
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot))) {
             logger.debug("Transactions trie root validation failed for block #{}", this.header.getNumber());
             return false;
@@ -481,7 +481,7 @@ public class Block {
             RLPList transactions = (RLPList) items.get(0);
             RLPList uncles = (RLPList) items.get(1);
 
-            if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+            if (!block.parseTxs(header.getTxTrieRoot(), transactions, true)) {
                 return null;
             }
 

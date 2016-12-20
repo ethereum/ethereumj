@@ -18,7 +18,6 @@ import org.ethereum.vm.program.ProgramResult;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
@@ -46,6 +45,11 @@ public interface Ethereum {
     boolean isConnected();
 
     void close();
+
+    /**
+     * Gets the current sync state
+     */
+    SyncStatus getSyncStatus();
 
     /**
      * Factory for general transaction
