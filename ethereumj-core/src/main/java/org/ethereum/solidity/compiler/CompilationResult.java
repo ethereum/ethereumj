@@ -1,7 +1,7 @@
 package org.ethereum.solidity.compiler;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -30,6 +30,7 @@ public class CompilationResult {
         public String abi;
         public String bin;
         public String solInterface;
+        public String metadata;
 
         public String getInterface() {
             return solInterface;
