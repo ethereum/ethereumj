@@ -12,9 +12,11 @@ import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.sync.SyncManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +43,8 @@ public class LockBlockchainTest {
     public LockBlockchainTest() {
 
         SysPropConfig1.props.overrideParams(
-                "peer.listen.port", "30334",
+                "peer.discovery.enabled", "false",
+                "peer.listen.port", "37777",
                 "peer.privateKey", "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
                 "genesis", "genesis-light.json",
                 "database.dir", "testDB-1");
@@ -78,9 +81,12 @@ public class LockBlockchainTest {
 
         SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, blockStoreDummy,
                 new CompositeEthereumListener()) {
+            {
+                this.blockstore = blockStoreDummy;
+                this.syncManager = Mockito.mock(SyncManager.class);
+            }
             @Override
             public synchronized void sendStatus() {
-                this.blockstore = blockStoreDummy;
                 super.sendStatus();
             }
 
@@ -206,7 +212,11 @@ public class LockBlockchainTest {
         executor2.submit(new Runnable() {
                              @Override
                              public void run() {
-                                 SysPropConfig1.testHandler.sendStatus();
+                                 try {
+                                     SysPropConfig1.testHandler.sendStatus();
+                                 } catch (Exception e) {
+                                     e.printStackTrace();
+                                 }
                              }
                          }
         );
