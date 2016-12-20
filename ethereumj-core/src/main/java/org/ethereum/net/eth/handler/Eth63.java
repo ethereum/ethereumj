@@ -8,7 +8,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
-import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -17,7 +16,7 @@ import org.ethereum.net.eth.message.GetReceiptsMessage;
 import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
 
-import org.ethereum.sync.SyncState;
+import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
 import org.spongycastle.util.encoders.Hex;
@@ -134,7 +133,7 @@ public class Eth63 extends Eth62 {
     }
 
     public synchronized ListenableFuture<List<Pair<byte[], byte[]>>> requestTrieNodes(List<byte[]> hashes) {
-        if (syncState != SyncState.IDLE) return null;
+        if (peerState != PeerState.IDLE) return null;
 
         GetNodeDataMessage msg = new GetNodeDataMessage(hashes);
         requestedNodes = new ByteArraySet();
@@ -144,16 +143,16 @@ public class Eth63 extends Eth62 {
         sendMessage(msg);
         lastReqSentTime = System.currentTimeMillis();
 
-        syncState = SyncState.NODE_RETRIEVING;
+        peerState = PeerState.NODE_RETRIEVING;
         return requestNodesFuture;
     }
 
     public synchronized ListenableFuture<List<List<TransactionReceipt>>> requestReceipts(List<byte[]> hashes) {
-        if (syncState != SyncState.IDLE) return null;
+        if (peerState != PeerState.IDLE) return null;
 
         GetReceiptsMessage msg = new GetReceiptsMessage(hashes);
         requestedReceipts = hashes;
-        syncState = SyncState.RECEIPT_RETRIEVING;
+        peerState = PeerState.RECEIPT_RETRIEVING;
 
         requestReceiptsFuture = SettableFuture.create();
         sendMessage(msg);
@@ -189,7 +188,7 @@ public class Eth63 extends Eth62 {
         requestedNodes = null;
         requestNodesFuture = null;
         processingTime += (System.currentTimeMillis() - lastReqSentTime);
-        syncState = SyncState.IDLE;
+        peerState = PeerState.IDLE;
     }
 
     protected synchronized void processReceipts(ReceiptsMessage msg) {
@@ -212,7 +211,7 @@ public class Eth63 extends Eth62 {
         requestedReceipts = null;
         requestReceiptsFuture = null;
         processingTime += (System.currentTimeMillis() - lastReqSentTime);
-        syncState = SyncState.IDLE;
+        peerState = PeerState.IDLE;
     }
 
 
@@ -223,9 +222,9 @@ public class Eth63 extends Eth62 {
     }
 
     @Override
-    public synchronized boolean setStatus(SyncState syncState) {
+    public synchronized boolean setStatus(PeerState peerState) {
         if(requestedNodes != null && !requestedNodes.isEmpty()) return false;
-        return super.setStatus(syncState);
+        return super.setStatus(peerState);
     }
 
     @Override

@@ -131,10 +131,10 @@ public class SyncPool {
     }
 
     @Nullable
-    public Channel getAnyIdleAndLock(SyncState syncState) {
+    public Channel getAnyIdleAndLock(PeerState peerState) {
         Channel peer = getAnyIdle();
         if (peer != null) {
-            boolean success = peer.getEthHandler().setStatus(syncState);
+            boolean success = peer.getEthHandler().setStatus(peerState);
             if (success) return peer;
         }
         return null;
