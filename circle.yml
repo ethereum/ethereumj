@@ -21,6 +21,7 @@ dependencies:
     # Cache all the docker images and the ethash DAGs
     - for img in `docker images | grep -v "^<none>" | tail -n +2 | awk '{print $1}'`; do docker save $img > ~/.docker/`echo $img | tr '/' ':'`.tar; done
     - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/ethash/. ~/.ethash
+    # Cache gradle artifacts
     - ./gradlew clean
     - (cd ~ && git clone --depth 1 -b develop https://github.com/ether-camp/ethereum-harmony.git)
     - (cd ~/ethereum-harmony && ./gradlew clean)
@@ -30,7 +31,7 @@ test:
     # Build Geth and move into a known folder
     #    - make geth
     #    - cp ./build/bin/geth $HOME/geth
-    - ./gradlew -x install
+    - (cd ~/ethereumj && ./gradlew -x install)
     - (cd ~/ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
     - (tar -C $HOME -xf ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar)
 
