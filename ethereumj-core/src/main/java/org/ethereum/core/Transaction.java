@@ -156,7 +156,7 @@ public class Transaction {
 
     public long transactionCost(BlockchainNetConfig config, Block block){
 
-        if (!parsed) rlpParse();
+        rlpParse();
 
         return config.getConfigForBlock(block.getNumber()).
                 getTransactionCost(this);
@@ -232,46 +232,46 @@ public class Transaction {
     public byte[] getHash() {
         if (!isEmpty(hash)) return hash;
 
-        if (!parsed) rlpParse();
+        rlpParse();
         byte[] plainMsg = this.getEncoded();
         return HashUtil.sha3(plainMsg);
     }
 
     public byte[] getRawHash() {
-        if (!parsed) rlpParse();
+        rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
     }
 
 
     public byte[] getNonce() {
-        if (!parsed) rlpParse();
+        rlpParse();
 
         return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
 
     public boolean isValueTx() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return value != null;
     }
 
     public byte[] getValue() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return value == null ? ZERO_BYTE_ARRAY : value;
     }
 
     public byte[] getReceiveAddress() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return receiveAddress;
     }
 
     public byte[] getGasPrice() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return gasPrice == null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
     public byte[] getGasLimit() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return gasLimit;
     }
 
@@ -295,12 +295,12 @@ public class Transaction {
 
 
     public byte[] getData() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return data;
     }
 
     public ECDSASignature getSignature() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return signature;
     }
 
@@ -310,7 +310,7 @@ public class Transaction {
     }
 
     public boolean isContractCreation() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return this.receiveAddress == null || Arrays.equals(this.receiveAddress,ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
@@ -336,7 +336,7 @@ public class Transaction {
     }
 
     public Integer getChainId() {
-        if (!parsed) rlpParse();
+        rlpParse();
         return chainId == null ? null : (int) chainId;
     }
 
@@ -358,7 +358,7 @@ public class Transaction {
     }
 
     public String toString(int maxDataSize) {
-        if (!parsed) rlpParse();
+        rlpParse();
         String dataS;
         if (data == null) {
             dataS = "";
@@ -388,7 +388,7 @@ public class Transaction {
      */
     public byte[] getEncodedRaw() {
 
-        if (!parsed) rlpParse();
+        rlpParse();
         if (rlpRaw != null) return rlpRaw;
 
         // parse null as 0 for nonce
