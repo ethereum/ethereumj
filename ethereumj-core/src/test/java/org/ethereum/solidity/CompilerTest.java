@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
+
 /**
  * Created by Anton Nashatyrev on 03.03.2016.
  */
@@ -15,7 +17,7 @@ public class CompilerTest {
     @Test
     public void simpleTest() throws IOException {
         String contract =
-            "pragma solidity ^0.4.3;\n" +
+            "pragma solidity ^0.4.7;\n" +
                     "\n" +
                     "contract a {\n" +
                     "\n" +
@@ -27,7 +29,7 @@ public class CompilerTest {
                     "}";
 
         SolidityCompiler.Result res = SolidityCompiler.compile(
-                contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN, SolidityCompiler.Options.INTERFACE);
+                contract.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
