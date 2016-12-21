@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNull;
 /**
  * Testing different sources and chain of sources in multi-thread environment
  */
-@Ignore
 public class MultiThreadSourcesTest {
 
     private byte[] intToKey(int i) {
@@ -44,6 +43,7 @@ public class MultiThreadSourcesTest {
         final CountDownLatch failSema = new CountDownLatch(1);
         final AtomicInteger putCnt = new AtomicInteger(1);
         final AtomicInteger delCnt = new AtomicInteger(1);
+        final AtomicInteger checkCnt = new AtomicInteger(1);
 
         public TestExecutor(Source cache) {
             this.cache = cache;
@@ -60,11 +60,8 @@ public class MultiThreadSourcesTest {
                 try {
                     while(running) {
                         int curMax = putCnt.get() - 1;
-
-                        // While you sleeping here put/delete threads run away from curMax
-                        Thread.sleep(50);
-
                         assertEquals(str(intToValue(curMax)), str(cache.get(intToKey(curMax))));
+                        checkCnt.set(curMax);
                     }
                 } catch (Throwable e) {
                     e.printStackTrace();
@@ -78,9 +75,10 @@ public class MultiThreadSourcesTest {
             public void run() {
                 try {
                     while(running) {
-                        int curMax = putCnt.get() - 1;
                         int toDelete = delCnt.get();
-                        if (curMax - toDelete < 2) {
+                        int curMax = putCnt.get() - 1;
+
+                        if (toDelete > checkCnt.get() || toDelete >= curMax) {
                             sleep(10);
                             continue;
                         }
