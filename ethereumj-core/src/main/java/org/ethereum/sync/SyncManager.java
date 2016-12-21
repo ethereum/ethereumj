@@ -48,6 +48,7 @@ public class SyncManager extends BlockDownloader {
     private ExecutorPipeline<BlockWrapper,BlockWrapper> exec1 = new ExecutorPipeline<>
             (4, 1000, true, new Functional.Function<BlockWrapper,BlockWrapper>() {
                 public BlockWrapper apply(BlockWrapper blockWrapper) {
+                    if () return null;
                     for (Transaction tx : blockWrapper.getBlock().getTransactionsList()) {
                         tx.getSender();
                     }
@@ -62,7 +63,7 @@ public class SyncManager extends BlockDownloader {
     private ExecutorPipeline<BlockWrapper, Void> exec2 = exec1.add(1, 1, new Functional.Consumer<BlockWrapper>() {
         @Override
         public void accept(BlockWrapper blockWrapper) {
-            blockQueueByteSize.addAndGet(blockWrapper.getEncoded().length + BLOCK_BYTES_ADDON);
+            blockQueueByteSize.addAndGet(estimateBlockSize(blockWrapper));
             blockQueue.add(blockWrapper);
         }
     });
@@ -194,6 +195,10 @@ public class SyncManager extends BlockDownloader {
         return Math.min(bytesSpaceInBlocks, availableBlockSpace);
     }
 
+    private long estimateBlockSize(BlockWrapper blockWrapper) {
+        return blockWrapper.getEncoded().length + BLOCK_BYTES_ADDON;
+    }
+
     /**
      * Processing the queue adding blocks to the chain.
      */
@@ -208,7 +213,7 @@ public class SyncManager extends BlockDownloader {
             try {
 
                 wrapper = blockQueue.take();
-                blockQueueByteSize.addAndGet(-wrapper.getEncoded().length - BLOCK_BYTES_ADDON);
+                blockQueueByteSize.addAndGet(-estimateBlockSize(wrapper));
 
                 logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueue.getHeadersCount());
 
