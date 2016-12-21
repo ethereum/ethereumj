@@ -217,6 +217,7 @@ public abstract class BlockDownloader {
                 if (getBlockQueueSize() + MAX_IN_REQUEST < blockQueueLimit) {
                     int maxRequests = (blockQueueLimit - getBlockQueueSize()) / MAX_IN_REQUEST;
                     int maxBlocks = MAX_IN_REQUEST * Math.min(maxRequests, REQUESTS);
+                    if (maxBlocks < 1) continue;
                     SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
 
                     if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
