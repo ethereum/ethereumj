@@ -29,8 +29,6 @@ public class Genesis extends Block {
 
     private Map<ByteArrayWrapper, AccountState> premine = new HashMap<>();
 
-    private Map<String, String> config = new HashMap<>();
-
     public  static byte[] ZERO_HASH_2048 = new byte[256];
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long NUMBER = 0;
@@ -61,13 +59,5 @@ public class Genesis extends Block {
 
     public void setPremine(Map<ByteArrayWrapper, AccountState> premine) {
         this.premine = premine;
-    }
-
-    public Map<String, String> getConfig() {
-        return config;
-    }
-
-    public void setConfig(Map<String, String> config) {
-        this.config = config;
     }
 }
