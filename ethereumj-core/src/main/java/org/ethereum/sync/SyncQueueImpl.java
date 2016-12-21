@@ -5,6 +5,7 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.Functional;
 import org.spongycastle.util.encoders.Hex;
 
@@ -208,69 +209,30 @@ public class SyncQueueImpl implements SyncQueueIfc {
         Map<ByteArrayWrapper, HeaderElement> lastValidatedGen = headers.get(darkZoneNum);
         assert lastValidatedGen.size() == 1;
         HeaderElement lastHeader = lastValidatedGen.values().iterator().next();
-        HeaderChains headerChains = new HeaderChains(lastHeader);
-        boolean inserted = true;
-        while(inserted) {
-            Map<ByteArrayWrapper, HeaderElement> gen = headers.get(lastHeader.header.getNumber() + 1);
-            if (gen == null) break;
-            lastHeader = gen.values().iterator().next();
-            inserted = headerChains.addNodes(gen.values());
-        }
-        return headerChains.getLongestChain();
-    }
 
-    // Recursive implementation fails on long chains due to StackoverflowError
-    private class HeaderChains {
-        List<List<HeaderElement>> chains = new ArrayList<>();
-        Map<HeaderElement, Integer> currentHeight = new HashMap<>();
+        Map<byte[], HeaderElement> chainedParents = new ByteArrayMap<>();
+        chainedParents.put(lastHeader.header.getHash(), lastHeader);
 
-        HeaderChains(HeaderElement firstElement) {
-            List<HeaderElement> firstChain = new ArrayList<>();
-            firstChain.add(firstElement);
-            chains.add(firstChain);
-            currentHeight.put(firstElement, 0);
-        }
-
-        synchronized boolean addNodes(Collection<HeaderElement> elements) {
-            int height = chains.get(0).size();
-            boolean inserted = false;
-            for (HeaderElement element : elements) {
-                if (currentHeight.keySet().contains(element.getParent())) {
-                    List<HeaderElement> rightChain = chains.get(currentHeight.get(element.getParent()));
-                    inserted = true;
-
-                    // Not yet added anything to this chain
-                    if (rightChain.get(rightChain.size() - 1) == element.getParent()) {
-                        rightChain.add(element);
-                    } else {
-                        List<HeaderElement> newChain = new ArrayList<>(rightChain);
-                        newChain.remove(newChain.size() - 1);
-                        newChain.add(element);
-                        chains.add(newChain);
-                    }
+        for(long curNum = darkZoneNum + 1; ; curNum++) {
+            // keep track of blocks chained to lastHeader until no children
+            Map<byte[], HeaderElement> chainedBlocks = new ByteArrayMap<>();
+            Map<ByteArrayWrapper, HeaderElement> curLevel = headers.get(curNum);
+            if (curLevel == null) break;
+            for (HeaderElement element : curLevel.values()) {
+                if (chainedParents.containsKey(element.header.getHeader().getParentHash())) {
+                    chainedBlocks.put(element.header.getHash(), element);
                 }
             }
-
-            if (inserted) {
-                // purge chains
-                Iterator<List<HeaderElement>> it = chains.iterator();
-                while (it.hasNext()) {
-                    if (it.next().size() == height) it.remove();
-                }
-
-                // update currentHeight
-                currentHeight.clear();
-                for (int i = 0; i < chains.size(); i++) {
-                    currentHeight.put(chains.get(i).get(chains.get(i).size() - 1), i);
-                }
-            }
-
-            return inserted;
+            if (chainedBlocks.isEmpty()) break;
+            chainedParents = chainedBlocks;
         }
 
-        synchronized List<HeaderElement> getLongestChain() {
-            return chains.get(0);
+        // reconstruct the chain back from the last block in the longest path
+        List<HeaderElement> ret = new ArrayList<>();
+        for (HeaderElement el = chainedParents.values().iterator().next(); el != lastHeader.getParent(); el = el.getParent()) {
+            ret.add(0, el);
         }
+        return ret;
     }
 
     private boolean hasGaps() {
