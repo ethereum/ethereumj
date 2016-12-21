@@ -76,7 +76,9 @@ public class MultiThreadSourcesTest {
                 try {
                     while(running) {
                         int toDelete = delCnt.get();
-                        if (toDelete > checkCnt.get()) {
+                        int curMax = putCnt.get() - 1;
+
+                        if (toDelete > checkCnt.get() || toDelete >= curMax) {
                             sleep(10);
                             continue;
                         }
