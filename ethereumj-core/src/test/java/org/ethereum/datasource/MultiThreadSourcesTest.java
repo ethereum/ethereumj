@@ -43,7 +43,7 @@ public class MultiThreadSourcesTest {
         final CountDownLatch failSema = new CountDownLatch(1);
         final AtomicInteger putCnt = new AtomicInteger(1);
         final AtomicInteger delCnt = new AtomicInteger(1);
-        final AtomicInteger checkCnt = new AtomicInteger(1);
+        final AtomicInteger checkCnt = new AtomicInteger(0);
 
         public TestExecutor(Source cache) {
             this.cache = cache;
