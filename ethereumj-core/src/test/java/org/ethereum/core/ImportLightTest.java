@@ -502,7 +502,7 @@ public class ImportLightTest {
 
             // checking balance of not existed address should take
             // less that gas limit
-            Assert.assertEquals(21512, spent);
+            Assert.assertEquals(21508, spent);
         }
 
         {
