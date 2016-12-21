@@ -77,7 +77,8 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
             }
         }
 
-        if (minValidated < 0) return Collections.emptyList(); // start header not found
+        // start header not found or we are already done
+        if (minValidated <= 0) return Collections.emptyList();
 
         for (BlockHeaderWrapper header : newHeaders) {
             if (header.getNumber() < minValidated) {
