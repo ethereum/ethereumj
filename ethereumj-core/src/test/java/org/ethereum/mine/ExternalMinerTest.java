@@ -16,7 +16,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.LocalBlockchain;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -40,17 +39,6 @@ import static org.mockito.Mockito.when;
  */
 public class ExternalMinerTest {
 
-    @BeforeClass
-    public static void beforeClass() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
-    }
-
-
     private StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(false);
 
     private CompositeEthereumListener listener = new CompositeEthereumListener();
@@ -61,10 +49,17 @@ public class ExternalMinerTest {
     @InjectMocks
     @Resource
     private BlockMiner blockMiner = new BlockMiner(SystemProperties.getDefault(), listener, bc.getBlockchain(),
-            bc.getBlockchain().getBlockStore(), bc.getPendingState());
+            bc.getBlockchain().getBlockStore(), bc.getPendingState());;
 
     @Before
     public void setup() {
+        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        }));
+
         // Initialize mocks created above
         MockitoAnnotations.initMocks(this);
 
