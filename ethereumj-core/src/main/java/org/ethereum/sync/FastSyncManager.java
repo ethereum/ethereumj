@@ -98,6 +98,7 @@ public class FastSyncManager {
 
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
     private Thread dbWriterThread;
+    private Thread fastSyncThread;
     private int dbQueueSizeMonitor = -1;
 
     private BlockHeader pivot;
@@ -147,7 +148,7 @@ public class FastSyncManager {
         };
         dbWriterThread.start();
 
-        new Thread("FastSyncLoop") {
+        fastSyncThread = new Thread("FastSyncLoop") {
             @Override
             public void run() {
                 try {
@@ -156,7 +157,8 @@ public class FastSyncManager {
                     logger.error("Fatal FastSync loop error", e);
                 }
             }
-        }.start();
+        };
+        fastSyncThread.start();
     }
 
     public SyncStatus getSyncState() {
@@ -609,6 +611,8 @@ public class FastSyncManager {
                         listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
                 }
                 logger.info("FastSync: Full sync done.");
+            } catch (InterruptedException ex) {
+                logger.info("Shutting down due to interruption");
             } finally {
                 fastSyncInProgress = false;
                 pool.setNodesSelector(null);
@@ -624,7 +628,7 @@ public class FastSyncManager {
         return fastSyncInProgress;
     }
 
-    private BlockHeader getPivotBlock() {
+    private BlockHeader getPivotBlock() throws InterruptedException {
         byte[] pivotBlockHash = config.getFastSyncPivotBlockHash();
         long pivotBlockNumber = 0;
 
@@ -663,11 +667,7 @@ public class FastSyncManager {
                     s = t;
                 }
 
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                Thread.sleep(500);
             }
 
             pivotBlockNumber = Math.max(bestKnownBlock.getNumber() - PIVOT_DISTANCE_FROM_HEAD, 0);
@@ -714,9 +714,24 @@ public class FastSyncManager {
 
                 Thread.sleep(500);
             }
+        } catch (InterruptedException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Unexpected", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public void close() {
+        logger.info("Closing FastSyncManager");
+        try {
+            fastSyncThread.interrupt();
+            fastSyncInProgress = false;
+            dbWriterThread.interrupt();
+            dbFlushManager.commit();
+            dbFlushManager.flush();
+        } catch (Exception e) {
+            logger.warn("Problems closing FastSyncManager", e);
         }
     }
 }

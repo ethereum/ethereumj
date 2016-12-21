@@ -74,10 +74,10 @@ public final class TestUtils {
 
         for (int i = 0; i < length; ++i){
 
-            byte[] difficutly = BigIntegers.asUnsignedByteArray(new BigInteger(8, new Random()));
+            byte[] difficulty = BigIntegers.asUnsignedByteArray(new BigInteger(8, new Random()));
             byte[] newHash = randomHash();
 
-            Block block = new Block(lastHash, newHash,  null, null, difficutly, lastIndex, new byte[] {0}, 0, 0, null, null,
+            Block block = new Block(lastHash, newHash,  null, null, difficulty, lastIndex, new byte[] {0}, 0, 0, null, null,
                     null, null, EMPTY_TRIE_HASH, randomHash(), null, null);
 
             ++lastIndex;
@@ -88,5 +88,37 @@ public final class TestUtils {
         return result;
     }
 
+    // Generates chain with alternative sub-chains, maxHeight blocks on each level
+    public static List<Block> getRandomAltChain(byte[] startParentHash, long startNumber, long length, int maxHeight){
 
+        List<Block> result = new ArrayList<>();
+
+        List<byte[]> lastHashes = new ArrayList<>();
+        lastHashes.add(startParentHash);
+        long lastIndex = startNumber;
+        Random rnd = new Random();
+
+        for (int i = 0; i < length; ++i){
+            List<byte[]> currentHashes = new ArrayList<>();
+            int curMaxHeight = maxHeight;
+            if (i == 0) curMaxHeight = 1;
+
+            for (int j = 0; j < curMaxHeight; ++j){
+                byte[] parentHash = lastHashes.get(rnd.nextInt(lastHashes.size()));
+                byte[] difficulty = BigIntegers.asUnsignedByteArray(new BigInteger(8, new Random()));
+                byte[] newHash = randomHash();
+
+                Block block = new Block(parentHash, newHash, null, null, difficulty, lastIndex, new byte[]{0}, 0, 0, null, null,
+                        null, null, EMPTY_TRIE_HASH, randomHash(), null, null);
+                currentHashes.add(block.getHash());
+                result.add(block);
+            }
+
+            ++lastIndex;
+            lastHashes.clear();
+            lastHashes.addAll(currentHashes);
+        }
+
+        return result;
+    }
 }
