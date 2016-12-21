@@ -59,7 +59,7 @@ public abstract class BlockDownloader {
 
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
     protected abstract void pushHeaders(List<BlockHeaderWrapper> headers);
-    protected abstract int getBlockQueueSize();
+    protected abstract int getBlockQueueFreeSize();
 
     protected void finishDownload() {}
 
@@ -118,6 +118,10 @@ public abstract class BlockDownloader {
 
     public void setHeaderQueueLimit(int headerQueueLimit) {
         this.headerQueueLimit = headerQueueLimit;
+    }
+
+    public int getBlockQueueLimit() {
+        return blockQueueLimit;
     }
 
     public void setBlockQueueLimit(int blockQueueLimit) {
@@ -214,10 +218,10 @@ public abstract class BlockDownloader {
         while(!Thread.currentThread().isInterrupted()) {
             try {
 
-                if (getBlockQueueSize() + MAX_IN_REQUEST < blockQueueLimit) {
-                    int maxRequests = (blockQueueLimit - getBlockQueueSize()) / MAX_IN_REQUEST;
+                int blocksToAsk = getBlockQueueFreeSize();
+                if (blocksToAsk > MAX_IN_REQUEST) {
+                    int maxRequests = blocksToAsk / MAX_IN_REQUEST;
                     int maxBlocks = MAX_IN_REQUEST * Math.min(maxRequests, REQUESTS);
-                    if (maxBlocks < 1) continue;
                     SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
 
                     if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
@@ -305,8 +309,7 @@ public abstract class BlockDownloader {
         receivedBlocksLatch.countDown();
 
         if (logger.isDebugEnabled()) logger.debug(
-                "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
-                getBlockQueueSize(),
+                "Blocks waiting to be proceed: lastBlock.number: [{}]",
                 blocks.get(blocks.size() - 1).getNumber()
         );
     }
