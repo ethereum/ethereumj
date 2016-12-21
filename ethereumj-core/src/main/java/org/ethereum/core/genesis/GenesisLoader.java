@@ -3,6 +3,7 @@ package org.ethereum.core.genesis;
 import com.google.common.io.ByteStreams;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Genesis;
@@ -29,41 +30,49 @@ public class GenesisLoader {
     /**
      * Load genesis from passed location or from classpath `genesis` directory
      */
-    public static Genesis loadGenesis(SystemProperties config, ClassLoader classLoader) throws RuntimeException {
+    public static GenesisJson loadGenesisJson(SystemProperties config, ClassLoader classLoader) throws RuntimeException {
         final String genesisFile = config.getProperty("genesisFile", null);
         final String genesisResource = config.genesisInfo();
 
         // #1 try to find genesis at passed location
         if (genesisFile != null) {
             try (InputStream is = new FileInputStream(new File(genesisFile))) {
-                return GenesisLoader.loadGenesis(config, is);
+                return loadGenesisJson(is);
             } catch (Exception e) {
-                showGenesisErrorAndExit("Problem loading " + genesisFile, genesisFile, genesisResource);
+                showLoadError("Problem loading " + genesisFile, genesisFile, genesisResource);
             }
         }
 
         // #2 fall back to old genesis location at `src/main/resources/genesis` directory
-        try {
-            InputStream is = classLoader.getResourceAsStream("genesis/" + genesisResource);
-            if (is != null) {
-                return loadGenesis(config, is);
-            } else {
-                showGenesisErrorAndExit("Genesis file is not found in resource directory", genesisFile, genesisResource);
+        InputStream is = classLoader.getResourceAsStream("genesis/" + genesisResource);
+        if (is != null) {
+            try {
+                return loadGenesisJson(is);
+            } catch (Exception e) {
+                showGenesisErrorAndExit("Problem loading genesis file from resource directory", genesisFile, genesisResource);
             }
-        } catch (Exception e) {
-            showGenesisErrorAndExit("Problem loading genesis file from resource directory", genesisFile, genesisResource);
+        } else {
+            showGenesisErrorAndExit("Genesis file is not found in resource directory", genesisFile, genesisResource);
         }
+
         return null;
     }
 
-    private static void showGenesisErrorAndExit(String message, String genesisFile, String genesisResource) {
+    private static void showLoadError(String message, String genesisFile, String genesisResource) {
+        showGenesisErrorAndExit(
+            message,
+            "Config option 'genesisFile': " + genesisFile,
+            "Config option 'genesis': " + genesisResource);
+    }
+
+    private static void showGenesisErrorAndExit(String message, String... messages) {
         LoggerFactory.getLogger("general").error(message);
 
         System.err.println("");
         System.err.println("");
-        System.err.println("Genesis block configuration is corrupted or not found.");
-        System.err.println("Config option 'genesisFile': " + genesisFile);
-        System.err.println("Config option 'genesis': " + genesisResource);
+        for (String msg : messages) {
+            System.err.println(msg);
+        }
         System.err.println(message);
         System.err.println("");
         System.err.println("");
@@ -72,20 +81,33 @@ public class GenesisLoader {
         throw new RuntimeException("Wasn't able to load genesis. " + message);
     }
 
+    public static Genesis parseGenesis(BlockchainNetConfig blockchainNetConfig, GenesisJson genesisJson) throws RuntimeException {
+        try {
+            Genesis genesis = createBlockForJson(genesisJson);
+
+            Map<ByteArrayWrapper, AccountState> premine = generatePreMine(blockchainNetConfig, genesisJson.getAlloc());
+            genesis.setPremine(premine);
+
+            byte[] rootHash = generateRootHash(premine);
+            genesis.setStateRoot(rootHash);
+
+            return genesis;
+        } catch (Exception e) {
+            e.printStackTrace();
+            showGenesisErrorAndExit("Problem parsing genesis", e.getMessage());
+        }
+        return null;
+    }
+
     /**
      * Method used much in tests.
      */
-    public static Genesis loadGenesis(InputStream genesisJsonIS) throws RuntimeException {
-        try {
-            return loadGenesis(SystemProperties.getDefault(), genesisJsonIS);
-        } catch (Exception e) {
-            System.err.println("Genesis block configuration is corrupted or not found");
-            e.printStackTrace();
-            throw new RuntimeException("Wasn't able to load genesis");
-        }
+    public static Genesis loadGenesis(InputStream resourceAsStream) {
+        GenesisJson genesisJson = loadGenesisJson(resourceAsStream);
+        return parseGenesis(SystemProperties.getDefault().getBlockchainConfig(), genesisJson);
     }
 
-    private static Genesis loadGenesis(SystemProperties config, InputStream genesisJsonIS) throws RuntimeException {
+    public static GenesisJson loadGenesisJson(InputStream genesisJsonIS) throws RuntimeException {
         try {
             String json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
@@ -93,16 +115,7 @@ public class GenesisLoader {
             JavaType type = mapper.getTypeFactory().constructType(GenesisJson.class);
 
             GenesisJson genesisJson  = new ObjectMapper().readValue(json, type);
-
-            Genesis genesis = createBlockForJson(genesisJson);
-
-            Map<ByteArrayWrapper, AccountState> premine = generatePreMine(config, genesisJson.getAlloc());
-            genesis.setPremine(premine);
-
-            byte[] rootHash = generateRootHash(premine);
-            genesis.setStateRoot(rootHash);
-
-            return genesis;
+            return genesisJson;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
@@ -126,11 +139,9 @@ public class GenesisLoader {
         byte[] gasLimitBytes    = ByteUtil.hexStringToBytes(genesisJson.gasLimit);
         long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
 
-        Genesis genesis = new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
+        return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
                             difficulty, 0, gasLimit, 0, timestamp, extraData,
                             mixHash, nonce);
-        genesis.setConfig(genesisJson.config);
-        return genesis;
     }
 
     /**
@@ -154,14 +165,14 @@ public class GenesisLoader {
     }
 
 
-    private static Map<ByteArrayWrapper, AccountState> generatePreMine(SystemProperties config, Map<String, AllocatedAccount> alloc){
+    private static Map<ByteArrayWrapper, AccountState> generatePreMine(BlockchainNetConfig blockchainNetConfig, Map<String, AllocatedAccount> alloc){
 
         Map<ByteArrayWrapper, AccountState> premine = new HashMap<>();
         for (String key : alloc.keySet()){
 
             BigInteger balance = new BigInteger(alloc.get(key).getBalance());
             AccountState acctState = new AccountState(
-                    config.getBlockchainConfig().getCommonConstants().getInitialNonce(), balance);
+                    blockchainNetConfig.getCommonConstants().getInitialNonce(), balance);
 
             premine.put(wrap(ByteUtil.hexStringToBytes(key)), acctState);
         }
@@ -179,5 +190,4 @@ public class GenesisLoader {
 
         return state.getRootHash();
     }
-
 }

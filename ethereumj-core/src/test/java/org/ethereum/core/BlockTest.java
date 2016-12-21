@@ -159,35 +159,29 @@ public class BlockTest {
 
     @Test
     public void testFrontierGenesis(){
+        SystemProperties config = new SystemProperties();
+        config.setGenesisInfo("frontier.json");
 
-        String prev = SystemProperties.getDefault().genesisInfo();
-        SystemProperties.getDefault().setGenesisInfo("frontier.json");
-
-        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault(), getClass().getClassLoader());
+        Block genesis = config.getGenesis();
 
         String hash = Hex.toHexString(genesis.getHash());
         String root = Hex.toHexString(genesis.getStateRoot());
 
         assertEquals("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544", root);
         assertEquals("d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3", hash);
-
-        SystemProperties.getDefault().setGenesisInfo(prev);
     }
 
     @Test
     public void testZeroPrecedingDifficultyGenesis(){
+        SystemProperties config = new SystemProperties();
+        config.setGenesisInfo("genesis-low-difficulty.json");
 
-        String prev = SystemProperties.getDefault().genesisInfo();
-        SystemProperties.getDefault().setGenesisInfo("genesis-low-difficulty.json");
-
-        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault(), getClass().getClassLoader());
+        Block genesis = config.getGenesis();
 
         String hash = Hex.toHexString(genesis.getHash());
         String root = Hex.toHexString(genesis.getStateRoot());
 
         assertEquals("8028c28b55eab8be08883e921f20d1b6cc9f2aa02cc6cd90cfaa9b0462ff6d3e", root);
         assertEquals("05b2dc41ade973d26db921052bcdaf54e2e01b308c9e90723b514823a0923592", hash);
-
-        SystemProperties.getDefault().setGenesisInfo(prev);
     }
 }

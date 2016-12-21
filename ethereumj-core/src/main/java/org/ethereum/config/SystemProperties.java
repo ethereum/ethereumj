@@ -8,6 +8,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.genesis.GenesisJson;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.p2p.P2pHandler;
@@ -128,6 +129,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
+    private GenesisJson genesisJson;
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
@@ -269,8 +271,9 @@ public class SystemProperties {
 
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
-            if (getGenesis().getConfig().size() > 0) {
-                return AbstractNetConfig.fromGenesisConfig(getGenesis().getConfig());
+            if (getGenesisJson().getConfig() != null && getGenesisJson().getConfig().size() > 0) {
+                blockchainConfig = AbstractNetConfig.fromGenesisConfig(getGenesisJson().getConfig());
+                return blockchainConfig;
             }
 
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
@@ -824,10 +827,26 @@ public class SystemProperties {
         return config.getBoolean("mine.fullDataSet");
     }
 
+    private GenesisJson getGenesisJson() {
+        if (genesisJson == null) {
+            genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);
+        }
+        return genesisJson;
+    }
+
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this, classLoader);
+            genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         }
+        return genesis;
+    }
+
+    /**
+     * Method used in StandaloneBlockchain.
+     */
+    public Genesis useGenesis(InputStream inputStream) {
+        genesisJson = GenesisLoader.loadGenesisJson(inputStream);
+        genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         return genesis;
     }
 
