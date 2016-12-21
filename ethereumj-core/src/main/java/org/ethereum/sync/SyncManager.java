@@ -48,7 +48,6 @@ public class SyncManager extends BlockDownloader {
     private ExecutorPipeline<BlockWrapper,BlockWrapper> exec1 = new ExecutorPipeline<>
             (4, 1000, true, new Functional.Function<BlockWrapper,BlockWrapper>() {
                 public BlockWrapper apply(BlockWrapper blockWrapper) {
-                    if () return null;
                     for (Transaction tx : blockWrapper.getBlock().getTransactionsList()) {
                         tx.getSender();
                     }
@@ -189,7 +188,7 @@ public class SyncManager extends BlockDownloader {
         if (blockByteSize == 0 || blockQueueSize == 0) {
             bytesSpaceInBlocks = Integer.MAX_VALUE;
         } else {
-            bytesSpaceInBlocks = (int) Math.floor(availableBytesSpace / (blockQueueByteSize.get() / blockQueue.size()));
+            bytesSpaceInBlocks = (int) Math.floor(availableBytesSpace / (blockByteSize / blockQueueSize));
         }
 
         return Math.min(bytesSpaceInBlocks, availableBlockSpace);
