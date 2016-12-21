@@ -126,9 +126,11 @@ public class GenesisLoader {
         byte[] gasLimitBytes    = ByteUtil.hexStringToBytes(genesisJson.gasLimit);
         long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
 
-        return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
+        Genesis genesis = new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
                             difficulty, 0, gasLimit, 0, timestamp, extraData,
                             mixHash, nonce);
+        genesis.setConfig(genesisJson.config);
+        return genesis;
     }
 
     /**

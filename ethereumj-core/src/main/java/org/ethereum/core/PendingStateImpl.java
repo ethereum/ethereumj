@@ -1,5 +1,17 @@
 package org.ethereum.core;
 
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -17,10 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
-
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
 
 /**
  * Keeps logic providing pending state management

@@ -4,11 +4,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.config.net.MordenNetConfig;
-import org.ethereum.config.net.RopstenNetConfig;
-import org.ethereum.config.net.TestNetConfig;
+import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -270,6 +268,10 @@ public class SystemProperties {
 
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
+            if (getGenesis().getConfig().size() > 0) {
+                return AbstractNetConfig.fromGenesisConfig(getGenesis().getConfig());
+            }
+
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
                 throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
             }

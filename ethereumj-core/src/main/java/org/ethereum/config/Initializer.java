@@ -47,6 +47,9 @@ class Initializer implements BeanPostProcessor {
         // forcing loading genesis to fail fast in case of error
         config.getGenesis();
 
+        // forcing loading blockchain config
+        config.getBlockchainConfig();
+
         // forcing reading private key or generating it in database directory
         config.nodeId();
     }

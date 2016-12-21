@@ -4,7 +4,7 @@ package org.ethereum.sync;
  * @author Mikhail Kalinin
  * @since 14.07.2015
  */
-public enum SyncState {
+public enum PeerState {
 
     // Common
     IDLE,
