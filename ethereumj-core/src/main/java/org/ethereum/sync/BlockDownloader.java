@@ -214,8 +214,10 @@ public abstract class BlockDownloader {
         while(!Thread.currentThread().isInterrupted()) {
             try {
 
-                if (getBlockQueueSize() < blockQueueLimit) {
-                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(MAX_IN_REQUEST * REQUESTS);
+                if (getBlockQueueSize() + MAX_IN_REQUEST < blockQueueLimit) {
+                    int maxRequests = (blockQueueLimit - getBlockQueueSize()) / MAX_IN_REQUEST;
+                    int maxBlocks = MAX_IN_REQUEST * Math.min(maxRequests, REQUESTS);
+                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
 
                     if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
                         logger.info("Block download complete.");
