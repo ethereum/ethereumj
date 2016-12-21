@@ -67,7 +67,7 @@ public class SyncQueueImplTest {
     public void testReverseHeaders1() {
         List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 699);
         List<Block> randomChain1 = TestUtils.getRandomChain(new byte[32], 0, 699);
-        Peer[] peers = new Peer[]{new Peer(randomChain), new Peer(randomChain1)};
+        Peer[] peers = new Peer[]{new Peer(randomChain), new Peer(randomChain, false), new Peer(randomChain1)};
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(randomChain.get(randomChain.size() - 1).getHash(), true);
         List<BlockHeaderWrapper> result = new ArrayList<>();
         int peerIdx = 1;
@@ -80,19 +80,23 @@ public class SyncQueueImplTest {
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
                 List<BlockHeader> headers = rnd.nextBoolean() ? peers[peerIdx].getHeaders(request)
-                        :peers[peerIdx].getRandomHeaders(10);
-//                List<BlockHeader> headers = peers[0].getHeaders(request);
+                        : peers[peerIdx].getRandomHeaders(10);
+                //                List<BlockHeader> headers = peers[0].getHeaders(request);
 
-                peerIdx = (peerIdx + 1) % 2;
+                peerIdx = (peerIdx + 1) % peers.length;
                 List<BlockHeaderWrapper> ret = syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
                 result.addAll(ret);
                 System.out.println("Result length: " + result.size());
             }
         }
 
+        List<BlockHeaderWrapper> extraHeaders =
+                syncQueue.addHeaders(createHeadersFromHeaders(peers[0].getRandomHeaders(10), peer0));
+        assert extraHeaders.isEmpty();
+
         assert cnt != 1000;
         assert result.size() == randomChain.size() - 1;
-        for (int  i = 0; i < result.size() - 1; i++) {
+        for (int i = 0; i < result.size() - 1; i++) {
             assert Arrays.equals(result.get(i + 1).getHash(), result.get(i).getHeader().getParentHash());
         }
         assert Arrays.equals(randomChain.get(0).getHash(), result.get(result.size() - 1).getHeader().getParentHash());
@@ -268,8 +272,14 @@ public class SyncQueueImplTest {
     private static class Peer {
         Map<ByteArrayWrapper, Block> blocks = new HashMap<>();
         List<Block> chain;
+        boolean returnGenesis;
 
         public Peer(List<Block> chain) {
+            this(chain, true);
+        }
+
+        public Peer(List<Block> chain, boolean returnGenesis) {
+            this.returnGenesis = returnGenesis;
             this.chain = chain;
             for (Block block : chain) {
                 blocks.put(new ByteArrayWrapper(block.getHash()), block);
@@ -305,7 +315,7 @@ public class SyncQueueImplTest {
 
             List<BlockHeader> ret = new ArrayList<>();
             int i = (int) startBlockNum;
-            for(; count-- > 0 && i >= chain.get(0).getNumber() && i <= chain.get(chain.size() - 1).getNumber();
+            for(; count-- > 0 && i >= (returnGenesis ? 0 : 1)  && i <= chain.get(chain.size() - 1).getNumber();
                 i += reverse ? -step : step) {
 
                 ret.add(chain.get(i).getHeader());
