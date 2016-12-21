@@ -1125,4 +1125,12 @@ public class RLPTest {
         assertEquals(1, el.size());
         assertEquals(0, Util.rlpDecodeInt(el.get(0)));
     }
+
+    @Test
+    public void shortStringRightBoundTest(){
+        String testString = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"; //String of length 55
+        byte[] rlpEncoded = encode(testString);
+        String res = new String((byte[])decode(rlpEncoded, 0).getDecoded());
+        assertEquals(testString, res); //Fails
+    }
 }
