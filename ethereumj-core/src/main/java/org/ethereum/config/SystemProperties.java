@@ -15,6 +15,7 @@ import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.BuildInfo;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -752,7 +753,7 @@ public class SystemProperties {
     @ValidateMe
     public byte[] getMinerCoinbase() {
         String sc = config.getString("mine.coinbase");
-        byte[] c = Hex.decode(sc);
+        byte[] c = ByteUtil.hexStringToBytes(sc);
         if (c.length != 20) throw new RuntimeException("mine.coinbase has invalid value: '" + sc + "'");
         return c;
     }
