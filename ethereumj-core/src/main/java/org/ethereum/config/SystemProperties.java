@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
@@ -99,6 +100,10 @@ public class SystemProperties {
 
     static boolean isUseOnlySpringConfig() {
         return useOnlySpringConfig;
+    }
+
+    public void withGenesis(Genesis genesis) {
+        this.genesis = genesis;
     }
 
     /**
@@ -268,46 +273,7 @@ public class SystemProperties {
 
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
-            if (getGenesis().getConfig().size() > 0) {
-                return AbstractNetConfig.fromGenesisConfig(getGenesis().getConfig());
-            }
-
-            if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
-                throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
-            }
-            if (config.hasPath("blockchain.config.name")) {
-                switch(config.getString("blockchain.config.name")) {
-                    case "main":
-                        blockchainConfig = new MainNetConfig();
-                        break;
-                    case "olympic":
-                        blockchainConfig = new OlympicConfig();
-                        break;
-                    case "morden":
-                        blockchainConfig = new MordenNetConfig();
-                        break;
-                    case "ropsten":
-                        blockchainConfig = new RopstenNetConfig();
-                        break;
-                    case "testnet":
-                        blockchainConfig = new TestNetConfig();
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
-                }
-            } else {
-                String className = config.getString("blockchain.config.class");
-                try {
-                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
-                    blockchainConfig = aClass.newInstance();
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
-                } catch (ClassCastException e) {
-                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' is not instance of org.ethereum.config.BlockchainForkConfig" , e);
-                } catch (InstantiationException|IllegalAccessException e) {
-                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' couldn't be instantiated (check for default constructor and its accessibility)" , e);
-                }
-            }
+            getGenesis();
         }
         return blockchainConfig;
     }
@@ -825,7 +791,11 @@ public class SystemProperties {
 
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this, classLoader);
+            Pair<Genesis, BlockchainNetConfig> result = GenesisLoader.loadGenesis(this, classLoader);
+            genesis = result.getLeft();
+            if (blockchainConfig == null) {
+                blockchainConfig = result.getRight();
+            }
         }
         return genesis;
     }

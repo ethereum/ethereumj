@@ -383,6 +383,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
+        SystemProperties.getDefault().withGenesis(genesis);
+
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
