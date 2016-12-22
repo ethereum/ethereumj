@@ -388,6 +388,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         peerConnectionManager.close();
         try {
             nodeManagerTasksTimer.cancel();
+            dbWrite();
         } catch (Exception e) {
             logger.warn("Problems canceling nodeManagerTasksTimer", e);
         }
