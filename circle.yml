@@ -16,6 +16,7 @@ dependencies:
     - (cd ~/.go_workspace/src/github.com/ether-camp/hive && mkdir -p workspace/ethash/ ~/.ethash)
     - (cd ~/.go_workspace/src/github.com/ether-camp/hive && cp -r ~/.ethash/. workspace/ethash/)
     - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
+    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=ethereumj:local --test=NONE --sim=NONE --loglevel=6)
 
     # Cache all the docker images and the ethash DAGs
     - for img in `docker images | grep -v "^<none>" | tail -n +2 | awk '{print $1}'`; do docker save $img > ~/.docker/`echo $img | tr '/' ':'`.tar; done
