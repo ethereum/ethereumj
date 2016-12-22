@@ -62,7 +62,7 @@ public class CommonConfig {
 
     @Bean
     public Repository defaultRepository() {
-        return repository(null);
+        return new RepositoryRoot(stateSource(), null);
     }
 
     @Bean @Scope("prototype")
