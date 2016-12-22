@@ -165,7 +165,9 @@ public class SyncManager extends BlockDownloader {
 
     @Override
     protected void pushBlocks(List<BlockWrapper> blockWrappers) {
-        exec1.pushAll(blockWrappers);
+        if (!exec1.isShutdown()) {
+            exec1.pushAll(blockWrappers);
+        }
     }
 
     @Override
@@ -318,9 +320,11 @@ public class SyncManager extends BlockDownloader {
         try {
             logger.info("Shutting down SyncManager");
             exec1.shutdown();
+            exec1.join();
             logExecutor.shutdown();
             pool.close();
             if (syncQueueThread != null) syncQueueThread.interrupt();
+            syncQueueThread.join(10 * 1000);
             if (config.isFastSyncEnabled()) fastSyncManager.close();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);
