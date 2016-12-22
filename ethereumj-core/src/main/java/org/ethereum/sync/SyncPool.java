@@ -132,16 +132,6 @@ public class SyncPool {
     }
 
     @Nullable
-    public Channel getAnyIdleAndLock(PeerState peerState) {
-        Channel peer = getAnyIdle();
-        if (peer != null) {
-            boolean success = peer.getEthHandler().setStatus(peerState);
-            if (success) return peer;
-        }
-        return null;
-    }
-
-    @Nullable
     public synchronized Channel getBestIdle() {
         for (Channel peer : activePeers) {
             if (peer.isIdle())

@@ -135,5 +135,4 @@ public interface Eth {
      */
     void fetchBodies(List<BlockHeaderWrapper> headers);
 
-    boolean setStatus(PeerState peerState);
 }

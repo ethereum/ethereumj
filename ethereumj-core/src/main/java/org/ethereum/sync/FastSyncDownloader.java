@@ -72,8 +72,8 @@ public class FastSyncDownloader extends BlockDownloader {
     protected void pushHeaders(List<BlockHeaderWrapper> headers) {}
 
     @Override
-    protected int getBlockQueueSize() {
-        return 0;
+    protected int getBlockQueueFreeSize() {
+        return Integer.MAX_VALUE;
     }
 
     // TODO: receipts loading here

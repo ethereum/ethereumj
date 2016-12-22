@@ -13,7 +13,6 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
-import org.ethereum.sync.PeerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,8 +135,4 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         return version;
     }
 
-    @Override
-    public synchronized boolean setStatus(PeerState peerState) {
-        return false;
-    }
 }

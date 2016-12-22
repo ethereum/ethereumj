@@ -730,6 +730,8 @@ public class FastSyncManager {
             dbWriterThread.interrupt();
             dbFlushManager.commit();
             dbFlushManager.flush();
+            fastSyncThread.join(10 * 1000);
+            dbWriterThread.join(10 * 1000);
         } catch (Exception e) {
             logger.warn("Problems closing FastSyncManager", e);
         }

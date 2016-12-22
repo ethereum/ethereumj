@@ -3,7 +3,6 @@ package org.ethereum.net.eth.handler;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
@@ -132,8 +131,4 @@ public class EthAdapter implements Eth {
         return BigInteger.ZERO;
     }
 
-    @Override
-    public synchronized boolean setStatus(PeerState peerState) {
-        return false;
-    }
 }

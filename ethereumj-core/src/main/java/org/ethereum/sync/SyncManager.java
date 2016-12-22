@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
@@ -37,6 +38,10 @@ import static org.ethereum.core.ImportResult.*;
 public class SyncManager extends BlockDownloader {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
+
+    private final static AtomicLong blockQueueByteSize = new AtomicLong(0);
+    private final static long BLOCK_BYTES_LIMIT = 32 * 1024 * 1024;
+    private final static int BLOCK_BYTES_ADDON = 4;
 
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
@@ -57,6 +62,7 @@ public class SyncManager extends BlockDownloader {
     private ExecutorPipeline<BlockWrapper, Void> exec2 = exec1.add(1, 1, new Functional.Consumer<BlockWrapper>() {
         @Override
         public void accept(BlockWrapper blockWrapper) {
+            blockQueueByteSize.addAndGet(estimateBlockSize(blockWrapper));
             blockQueue.add(blockWrapper);
         }
     });
@@ -165,15 +171,33 @@ public class SyncManager extends BlockDownloader {
 
     @Override
     protected void pushBlocks(List<BlockWrapper> blockWrappers) {
-        exec1.pushAll(blockWrappers);
+        if (!exec1.isShutdown()) {
+            exec1.pushAll(blockWrappers);
+        }
     }
 
     @Override
     protected void pushHeaders(List<BlockHeaderWrapper> headers) {}
 
     @Override
-    protected int getBlockQueueSize() {
-        return blockQueue.size();
+    protected int getBlockQueueFreeSize() {
+        int blockQueueSize = blockQueue.size();
+        long blockByteSize = blockQueueByteSize.get();
+        int availableBlockSpace = Math.max(0, getBlockQueueLimit() - blockQueueSize);
+        long availableBytesSpace = Math.max(0, BLOCK_BYTES_LIMIT - blockByteSize);
+
+        int bytesSpaceInBlocks;
+        if (blockByteSize == 0 || blockQueueSize == 0) {
+            bytesSpaceInBlocks = Integer.MAX_VALUE;
+        } else {
+            bytesSpaceInBlocks = (int) Math.floor(availableBytesSpace / (blockByteSize / blockQueueSize));
+        }
+
+        return Math.min(bytesSpaceInBlocks, availableBlockSpace);
+    }
+
+    private long estimateBlockSize(BlockWrapper blockWrapper) {
+        return blockWrapper.getEncoded().length + BLOCK_BYTES_ADDON;
     }
 
     /**
@@ -190,6 +214,7 @@ public class SyncManager extends BlockDownloader {
             try {
 
                 wrapper = blockQueue.take();
+                blockQueueByteSize.addAndGet(-estimateBlockSize(wrapper));
 
                 logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueue.getHeadersCount());
 
@@ -318,9 +343,11 @@ public class SyncManager extends BlockDownloader {
         try {
             logger.info("Shutting down SyncManager");
             exec1.shutdown();
+            exec1.join();
             logExecutor.shutdown();
             pool.close();
             if (syncQueueThread != null) syncQueueThread.interrupt();
+            syncQueueThread.join(10 * 1000);
             if (config.isFastSyncEnabled()) fastSyncManager.close();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);

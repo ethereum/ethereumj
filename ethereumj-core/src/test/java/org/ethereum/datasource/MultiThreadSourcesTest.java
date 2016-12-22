@@ -60,6 +60,10 @@ public class MultiThreadSourcesTest {
                 try {
                     while(running) {
                         int curMax = putCnt.get() - 1;
+                        if (checkCnt.get() >= curMax) {
+                            sleep(10);
+                            continue;
+                        }
                         assertEquals(str(intToValue(curMax)), str(cache.get(intToKey(curMax))));
                         checkCnt.set(curMax);
                     }
