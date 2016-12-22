@@ -91,7 +91,7 @@ public class BlockLoader {
             System.out.println("Loading blocks: " + fileSrc);
 
             String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
-            if ("binary".equalsIgnoreCase(blocksFormat)) {
+            if ("rlp".equalsIgnoreCase(blocksFormat)) {
                 Path path = Paths.get(fileSrc);
                 // NOT OPTIMAL, but fine for tests
                 byte[] data = Files.readAllBytes(path);
