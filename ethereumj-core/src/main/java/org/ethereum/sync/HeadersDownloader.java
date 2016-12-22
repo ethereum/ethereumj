@@ -79,8 +79,8 @@ public class HeadersDownloader extends BlockDownloader {
 
 
     @Override
-    protected int getBlockQueueSize() {
-        return 0;
+    protected int getBlockQueueFreeSize() {
+        return Integer.MAX_VALUE;
     }
 
     public int getHeadersLoaded() {
