@@ -90,7 +90,7 @@ public class UDPListener {
 
         for (String boot: args) {
             // since discover IP list has no NodeIds we will generate random but persistent
-            bootNodes.add(Node.createWithoutId(boot));
+            bootNodes.add(Node.instanceOf(boot));
         }
 
         nodeManager.setBootNodes(bootNodes);

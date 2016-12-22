@@ -3,8 +3,7 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.util.ExecutorPipeline;
-import org.ethereum.util.Functional;
+import org.ethereum.util.*;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -86,21 +88,33 @@ public class BlockLoader {
 
         String fileSrc = config.blocksLoader();
         try {
-            FileInputStream inputStream = null;
-            inputStream = new FileInputStream(fileSrc);
-            scanner = new Scanner(inputStream, "UTF-8");
-
             System.out.println("Loading blocks: " + fileSrc);
 
-            while (scanner.hasNextLine()) {
+            String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
+            if ("binary".equalsIgnoreCase(blocksFormat)) {
+                Path path = Paths.get(fileSrc);
+                // NOT OPTIMAL, but fine for tests
+                byte[] data = Files.readAllBytes(path);
+                RLPList list = RLP.decode2(data);
+                for (RLPElement item : list) {
+                    Block block = new Block(item.getRLPData());
+                    exec1.push(block);
+                }
+            } else {
+                FileInputStream inputStream = new FileInputStream(fileSrc);
+                scanner = new Scanner(inputStream, "UTF-8");
 
-                byte[] blockRLPBytes = Hex.decode(scanner.nextLine());
-                Block block = new Block(blockRLPBytes);
+                while (scanner.hasNextLine()) {
 
-                exec1.push(block);
+                    byte[] blockRLPBytes = Hex.decode(scanner.nextLine());
+                    Block block = new Block(blockRLPBytes);
+
+                    exec1.push(block);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
 
@@ -113,6 +127,7 @@ public class BlockLoader {
         blockchain.flush();
 
         System.out.println(" * Done * ");
+        System.exit(0);
     }
 
     private boolean isValid(BlockHeader header) {
