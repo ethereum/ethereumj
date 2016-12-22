@@ -53,7 +53,12 @@ public class Node implements Serializable {
     // discovery endpoint doesn't have real nodeId for example
     private boolean isFakeNodeId = false;
 
-    public static Node createWithoutId(String addressOrEnode) {
+    /**
+     *  - create Node instance from enode if passed,
+     *  - otherwise fallback to random nodeId, if supplied with only "address:port"
+     * NOTE: validation is absent as method is not heavily used
+     */
+    public static Node instanceOf(String addressOrEnode) {
         try {
             URI uri = new URI(addressOrEnode);
             if (uri.getScheme().equals("enode")) {
