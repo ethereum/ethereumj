@@ -3,6 +3,7 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.util.*;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -33,6 +34,9 @@ public class BlockLoader {
 
     @Autowired
     private BlockchainImpl blockchain;
+
+    @Autowired
+    DbFlushManager dbFlushManager;
 
     Scanner scanner = null;
 
@@ -124,7 +128,7 @@ public class BlockLoader {
             throw new RuntimeException(e);
         }
 
-        blockchain.flush();
+        dbFlushManager.flush();
 
         System.out.println(" * Done * ");
         System.exit(0);
