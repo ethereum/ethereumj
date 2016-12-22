@@ -16,6 +16,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.junit.Ignore;
@@ -128,6 +129,9 @@ public class SyncWithLoadTest {
         @Autowired
         ProgramInvokeFactory programInvokeFactory;
 
+        @Autowired
+        SyncManager syncManager;
+
         /**
          * The main EthereumJ callback.
          */
@@ -203,10 +207,8 @@ public class SyncWithLoadTest {
                 sleep(i * 60_000);
 
                 // Stop syncing
-                config.setSyncEnabled(false);
-                config.setDiscoveryEnabled(false);
-                ethereum.getChannelManager().close();
                 syncPool.close();
+                syncManager.close();
             } catch (Exception ex) {
                 testLogger.error("Error occurred during run: ", ex);
             }
