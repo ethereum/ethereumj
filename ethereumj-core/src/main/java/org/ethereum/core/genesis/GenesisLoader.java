@@ -22,7 +22,7 @@ import java.util.Map;
 
 import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.util.ByteUtil.*;
 import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
 
 public class GenesisLoader {
@@ -170,11 +170,19 @@ public class GenesisLoader {
         Map<ByteArrayWrapper, AccountState> premine = new HashMap<>();
         for (String key : alloc.keySet()){
 
-            BigInteger balance = new BigInteger(alloc.get(key).getBalance());
+            final String rawBalance = alloc.get(key).getBalance();
+            final BigInteger balance;
+            if (rawBalance != null && rawBalance.startsWith("0x")) {
+                // hex passed
+                balance = bytesToBigInteger(hexStringToBytes(rawBalance));
+            } else {
+                // decimal passed
+                balance = new BigInteger(rawBalance);
+            }
             AccountState acctState = new AccountState(
                     blockchainNetConfig.getCommonConstants().getInitialNonce(), balance);
 
-            premine.put(wrap(ByteUtil.hexStringToBytes(key)), acctState);
+            premine.put(wrap(hexStringToBytes(key)), acctState);
         }
 
         return premine;
