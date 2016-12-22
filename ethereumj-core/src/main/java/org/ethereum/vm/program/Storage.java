@@ -10,7 +10,9 @@ import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.listener.ProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -203,5 +205,20 @@ public class Storage implements Repository, ProgramListenerAware {
     @Override
     public void addRawNode(byte[] key, byte[] value) {
         throw new RuntimeException("Not supported");
+    }
+
+    @Override
+    public int getStorageSize(byte[] addr) {
+        return repository.getStorageSize(addr);
+    }
+
+    @Override
+    public Set<DataWord> getStorageKeys(byte[] addr) {
+        return repository.getStorageKeys(addr);
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
+        return repository.getStorage(addr, keys);
     }
 }

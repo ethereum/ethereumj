@@ -1,15 +1,11 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
-import org.ethereum.db.DbFlushManager;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.BlockStore;
-import org.ethereum.db.StateSource;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
@@ -61,7 +57,12 @@ public class CommonConfig {
 
     @Bean @Primary
     public Repository repository() {
-        return new RepositoryRoot(stateSource());
+        return new RepositoryWrapper();
+    }
+
+    @Bean
+    public Repository defaultRepository() {
+        return repository(null);
     }
 
     @Bean @Scope("prototype")

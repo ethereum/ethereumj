@@ -120,9 +120,18 @@ public interface Ethereum {
                                        CallTransaction.Function function, Object... funcArgs);
 
     /**
+     * Returns the Repository instance which always refers to the latest (best block) state
+     * It is always better using {@link #getLastRepositorySnapshot()} to work on immutable
+     * state as this instance can change its state between calls (when a new block is imported)
+     *
      * @return - repository for all state data.
      */
     Repository getRepository();
+
+    /**
+     * Returns the latest (best block) Repository snapshot
+     */
+    Repository getLastRepositorySnapshot();
 
     /**
      * @return - pending state repository

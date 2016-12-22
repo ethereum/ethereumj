@@ -1,5 +1,6 @@
 package org.ethereum.net.eth.handler;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
