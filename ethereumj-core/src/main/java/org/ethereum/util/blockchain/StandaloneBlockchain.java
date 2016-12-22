@@ -99,8 +99,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
     List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
 
     public StandaloneBlockchain() {
-        withGenesis(GenesisLoader.loadGenesis(
-                getClass().getResourceAsStream("/genesis/genesis-light-sb.json")));
+        Genesis genesis = GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light-sb.json"));
+
+        withGenesis(genesis);
         withGasPrice(50_000_000_000L);
         withGasLimit(5_000_000L);
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
