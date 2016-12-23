@@ -222,12 +222,6 @@ public class Eth63 extends Eth62 {
     }
 
     @Override
-    public synchronized boolean setStatus(PeerState peerState) {
-        if(requestedNodes != null && !requestedNodes.isEmpty()) return false;
-        return super.setStatus(peerState);
-    }
-
-    @Override
     public String getSyncStats() {
         double nodesPerSec = 1000d * channel.getNodeStatistics().eth63NodesReceived.get() / channel.getNodeStatistics().eth63NodesRetrieveTime.get();
         double missNodesRatio = 1 - (double) channel.getNodeStatistics().eth63NodesReceived.get() / channel.getNodeStatistics().eth63NodesRequested.get();

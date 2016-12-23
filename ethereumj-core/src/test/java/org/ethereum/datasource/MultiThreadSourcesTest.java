@@ -2,6 +2,7 @@ package org.ethereum.datasource;
 
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.vm.DataWord;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -42,6 +43,7 @@ public class MultiThreadSourcesTest {
         final CountDownLatch failSema = new CountDownLatch(1);
         final AtomicInteger putCnt = new AtomicInteger(1);
         final AtomicInteger delCnt = new AtomicInteger(1);
+        final AtomicInteger checkCnt = new AtomicInteger(0);
 
         public TestExecutor(Source cache) {
             this.cache = cache;
@@ -58,7 +60,12 @@ public class MultiThreadSourcesTest {
                 try {
                     while(running) {
                         int curMax = putCnt.get() - 1;
+                        if (checkCnt.get() >= curMax) {
+                            sleep(10);
+                            continue;
+                        }
                         assertEquals(str(intToValue(curMax)), str(cache.get(intToKey(curMax))));
+                        checkCnt.set(curMax);
                     }
                 } catch (Throwable e) {
                     e.printStackTrace();
@@ -72,9 +79,10 @@ public class MultiThreadSourcesTest {
             public void run() {
                 try {
                     while(running) {
-                        int curMax = putCnt.get() - 1;
                         int toDelete = delCnt.get();
-                        if (curMax - toDelete < 2) {
+                        int curMax = putCnt.get() - 1;
+
+                        if (toDelete > checkCnt.get() || toDelete >= curMax) {
                             sleep(10);
                             continue;
                         }

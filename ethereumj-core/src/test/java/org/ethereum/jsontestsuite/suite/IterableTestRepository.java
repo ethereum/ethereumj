@@ -236,6 +236,21 @@ public class IterableTestRepository implements Repository {
         src.loadAccount(addr, cacheAccounts, cacheDetails);
     }
 
+    @Override
+    public int getStorageSize(byte[] addr) {
+        return src.getStorageSize(addr);
+    }
+
+    @Override
+    public Set<DataWord> getStorageKeys(byte[] addr) {
+        return src.getStorageKeys(addr);
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
+        return src.getStorage(addr, keys);
+    }
+
     private class IterableContractDetails implements ContractDetails {
         ContractDetails src;
 

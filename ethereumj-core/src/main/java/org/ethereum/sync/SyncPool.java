@@ -113,6 +113,7 @@ public class SyncPool {
     public void close() {
         try {
             poolLoopExecutor.shutdownNow();
+            logExecutor.shutdownNow();
         } catch (Exception e) {
             logger.warn("Problems shutting down executor", e);
         }
@@ -127,16 +128,6 @@ public class SyncPool {
                 return peer;
         }
 
-        return null;
-    }
-
-    @Nullable
-    public Channel getAnyIdleAndLock(PeerState peerState) {
-        Channel peer = getAnyIdle();
-        if (peer != null) {
-            boolean success = peer.getEthHandler().setStatus(peerState);
-            if (success) return peer;
-        }
         return null;
     }
 

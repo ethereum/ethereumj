@@ -5,9 +5,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Wrapper around an Ethereum Transactions message on the network

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
@@ -94,7 +95,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private static final int MAGIC_REWARD_OFFSET = 8;
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
-    @Autowired
+    @Autowired @Qualifier("defaultRepository")
     private Repository repository;
 
     @Autowired
@@ -454,7 +455,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
-        long time = System.currentTimeMillis() / 1000 + 10;
+        long time = System.currentTimeMillis() / 1000;
         // adjust time to parent block this may happen due to system clocks difference
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
@@ -509,7 +510,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //    @Override
-    public synchronized BlockSummary add(Repository repo, Block block) {
+    public synchronized BlockSummary add(Repository repo, final Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
@@ -538,7 +539,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         BlockSummary summary = processBlock(repo, block);
-        List<TransactionReceipt> receipts = summary.getReceipts();
+        final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
         String receiptHash = Hex.toHexString(block.getReceiptsRoot());
@@ -592,11 +593,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         updateTotalDifficulty(block);
         summary.setTotalDifficulty(getTotalDifficulty());
 
-        storeBlock(block, receipts);
-
         if (!byTest) {
-            repository.commit();
-            dbFlushManager.commit();
+            dbFlushManager.commit(new Runnable() {
+                @Override
+                public void run() {
+                    storeBlock(block, receipts);
+                    repository.commit();
+                }
+            });
+        } else {
+            storeBlock(block, receipts);
         }
 
         return summary;

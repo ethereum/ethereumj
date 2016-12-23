@@ -6,7 +6,7 @@ import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -148,7 +148,7 @@ public class GitHubBlockTest {
     public void runDaoHardForkTest() throws Exception {
         String json = JSONReader.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/hardfork/BlockchainTests/TestNetwork/bcTheDaoTest.json");
 
-        BlockchainNetConfig testConfig = new AbstractNetConfig() {
+        BlockchainNetConfig testConfig = new BaseNetConfig() {
             {
                 add(0, new FrontierConfig());
                 add(5, new HomesteadConfig());

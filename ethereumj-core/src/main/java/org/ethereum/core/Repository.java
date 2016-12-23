@@ -13,7 +13,7 @@ import java.util.Set;
  * @author Roman Mandeleil
  * @since 08.09.2014
  */
-public interface Repository {
+public interface Repository extends org.ethereum.facade.Repository{
 
     /**
      * Create a new account in the database

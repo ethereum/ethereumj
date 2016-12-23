@@ -1,15 +1,11 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
-import org.ethereum.db.DbFlushManager;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.BlockStore;
-import org.ethereum.db.StateSource;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
@@ -24,7 +20,9 @@ import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -35,6 +33,7 @@ import static java.util.Arrays.asList;
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
+    private Set<DbSource> dbSources = new HashSet<>();
 
     private static CommonConfig defaultInstance;
 
@@ -58,7 +57,12 @@ public class CommonConfig {
 
     @Bean @Primary
     public Repository repository() {
-        return new RepositoryRoot(stateSource());
+        return new RepositoryWrapper();
+    }
+
+    @Bean
+    public Repository defaultRepository() {
+        return new RepositoryRoot(stateSource(), null);
     }
 
     @Bean @Scope("prototype")
@@ -99,12 +103,15 @@ public class CommonConfig {
     public DbSource<byte[]> keyValueDataSource() {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
+            DbSource<byte[]> dbSource;
             if ("mapdb".equals(dataSource)) {
-                return mapDBFactory().createDataSource();
+                dbSource = mapDBFactory().createDataSource();
             } else {
                 dataSource = "leveldb";
-                return new LevelDbDataSource();
+                dbSource = new LevelDbDataSource();
             }
+            dbSources.add(dbSource);
+            return dbSource;
         } finally {
             logger.info(dataSource + " key-value data source created.");
         }
@@ -185,7 +192,7 @@ public class CommonConfig {
 
     @Bean
     public DbFlushManager dbFlushManager() {
-        return new DbFlushManager(systemProperties());
+        return new DbFlushManager(systemProperties(), dbSources);
     }
 
     @Bean

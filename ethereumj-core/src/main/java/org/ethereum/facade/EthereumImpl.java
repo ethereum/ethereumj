@@ -291,15 +291,20 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
+    public org.ethereum.facade.Repository getLastRepositorySnapshot() {
+        return getSnapshotTo(getBlockchain().getBestBlock().getStateRoot());
+    }
+
+    @Override
     public org.ethereum.facade.Repository getPendingState() {
-        return (org.ethereum.facade.Repository) worldManager.getPendingState().getRepository();
+        return worldManager.getPendingState().getRepository();
     }
 
     @Override
     public org.ethereum.facade.Repository getSnapshotTo(byte[] root) {
 
         Repository repository = (Repository) worldManager.getRepository();
-        org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);
+        org.ethereum.facade.Repository snapshot = repository.getSnapshotTo(root);
 
         return snapshot;
     }

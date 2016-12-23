@@ -11,6 +11,8 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
     JournalSource<byte[]> journalSource;
+    NoDeleteSource<byte[], byte[]> noDeleteSource;
+
     CountingBytesSource countingSource;
     ReadCache<byte[], byte[]> readCache;
     WriteCache<byte[], byte[]> writeCache;
@@ -26,6 +28,8 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         add(countingSource = new CountingBytesSource(readCache));
         if (pruningEnabled) {
             add(journalSource = new JournalSource<>(countingSource));
+        } else {
+            add(noDeleteSource = new NoDeleteSource<>(countingSource));
         }
     }
 

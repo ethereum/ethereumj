@@ -6,7 +6,7 @@ import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.Eip160HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -40,7 +40,7 @@ public class GitHubTransactionTest {
     @Test
     public void testEIP155TransactionTestFromGitHub() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
+        SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
             add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));

@@ -260,6 +260,7 @@ public class NodeHandler {
         sendMessage(ping);
         getNodeStatistics().discoverOutPing.add();
 
+        if (nodeManager.getPongTimer().isShutdown()) return;
         nodeManager.getPongTimer().schedule(new Runnable() {
             public void run() {
                 try {

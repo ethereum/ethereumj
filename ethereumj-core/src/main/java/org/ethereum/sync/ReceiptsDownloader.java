@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -11,7 +12,6 @@ import org.ethereum.db.TransactionStore;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -83,7 +82,15 @@ public class ReceiptsDownloader {
         List<byte[]> ret = new ArrayList<>();
         for (long i = fromBlock; i < toBlock && maxSize > 0; i++) {
             if (!completedBlocks.contains(i)) {
-                ret.add(headerStore.get((int) i).getHash());
+                BlockHeader header = headerStore.get((int) i);
+
+                // Skipping download for blocks with no transactions
+                if (FastByteComparisons.equal(header.getReceiptsRoot(), HashUtil.EMPTY_TRIE_HASH)) {
+                    finalizeBlock(header.getNumber());
+                    continue;
+                }
+
+                ret.add(header.getHash());
                 maxSize--;
             }
         }
@@ -95,23 +102,27 @@ public class ReceiptsDownloader {
         if (block.getNumber() >= fromBlock && validate(block, receipts) && !completedBlocks.contains(block.getNumber())) {
             for (int i = 0; i < receipts.size(); i++) {
                 TransactionReceipt receipt = receipts.get(i);
-                TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), (int) block.getNumber());
+                TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), i);
                 txInfo.setTransaction(block.getTransactionsList().get(i));
                 txStore.put(txInfo);
             }
 
-            synchronized (this) {
-                completedBlocks.add(block.getNumber());
-
-                while (fromBlock < toBlock && completedBlocks.remove(fromBlock)) fromBlock++;
-
-                if (fromBlock >= toBlock) finishDownload();
-
-                cnt++;
-                if (cnt % 1000 == 0) logger.info("FastSync: downloaded receipts for " + cnt + " blocks.");
-            }
-            dbFlushManager.commit();
+            finalizeBlock(block.getNumber());
         }
+    }
+
+    private void finalizeBlock(Long blockNumber) {
+        synchronized (this) {
+            completedBlocks.add(blockNumber);
+
+            while (fromBlock < toBlock && completedBlocks.remove(fromBlock)) fromBlock++;
+
+            if (fromBlock >= toBlock) finishDownload();
+
+            cnt++;
+            if (cnt % 1000 == 0) logger.info("FastSync: downloaded receipts for " + cnt + " blocks.");
+        }
+        dbFlushManager.commit();
     }
 
     private boolean validate(Block block, List<TransactionReceipt> receipts) {

@@ -818,13 +818,6 @@ public class Eth62 extends EthHandler {
         disconnect(USELESS_PEER);
     }
 
-    @Override
-    public synchronized boolean setStatus(PeerState peerState) {
-        if (this.peerState != IDLE) return false;
-        this.peerState = peerState;
-        return true;
-    }
-
     /*************************
      *       Logging         *
      *************************/

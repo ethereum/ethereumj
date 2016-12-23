@@ -5,6 +5,7 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.Functional;
 import org.spongycastle.util.encoders.Hex;
 
@@ -204,28 +205,33 @@ public class SyncQueueImpl implements SyncQueueIfc {
         headers.put(num, genHeaders);
     }
 
-    private List<HeaderElement> getLongestChain() {
+    List<HeaderElement> getLongestChain() {
         Map<ByteArrayWrapper, HeaderElement> lastValidatedGen = headers.get(darkZoneNum);
         assert lastValidatedGen.size() == 1;
-        return getLongestChain(lastValidatedGen.values().iterator().next());
-    }
+        HeaderElement lastHeader = lastValidatedGen.values().iterator().next();
 
-    private List<HeaderElement> getLongestChain(HeaderElement parent) {
-        Map<ByteArrayWrapper, HeaderElement> gen = headers.get(parent.header.getNumber() + 1);
-        List<HeaderElement> longest = new ArrayList<>();
-        if (gen != null) {
-            for (HeaderElement header : gen.values()) {
-                if (header.getParent() == parent) {
-                    List<HeaderElement> childLongest = getLongestChain(header);
-                    if (childLongest.size() > longest.size()) {
-                        longest = childLongest;
-                    }
+        Map<byte[], HeaderElement> chainedParents = new ByteArrayMap<>();
+        chainedParents.put(lastHeader.header.getHash(), lastHeader);
+
+        for(long curNum = darkZoneNum + 1; ; curNum++) {
+            // keep track of blocks chained to lastHeader until no children
+            Map<byte[], HeaderElement> chainedBlocks = new ByteArrayMap<>();
+            Map<ByteArrayWrapper, HeaderElement> curLevel = headers.get(curNum);
+            if (curLevel == null) break;
+            for (HeaderElement element : curLevel.values()) {
+                if (chainedParents.containsKey(element.header.getHeader().getParentHash())) {
+                    chainedBlocks.put(element.header.getHash(), element);
                 }
             }
+            if (chainedBlocks.isEmpty()) break;
+            chainedParents = chainedBlocks;
         }
+
+        // reconstruct the chain back from the last block in the longest path
         List<HeaderElement> ret = new ArrayList<>();
-        ret.add(parent);
-        ret.addAll(longest);
+        for (HeaderElement el = chainedParents.values().iterator().next(); el != lastHeader.getParent(); el = el.getParent()) {
+            ret.add(0, el);
+        }
         return ret;
     }
 
