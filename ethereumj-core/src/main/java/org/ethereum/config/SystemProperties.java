@@ -4,18 +4,18 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.config.net.MordenNetConfig;
-import org.ethereum.config.net.RopstenNetConfig;
-import org.ethereum.config.net.TestNetConfig;
+import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.genesis.GenesisJson;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.BuildInfo;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -129,6 +129,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
+    private GenesisJson genesisJson;
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
@@ -270,6 +271,11 @@ public class SystemProperties {
 
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
+            if (getGenesisJson().getConfig() != null && getGenesisJson().getConfig().size() > 0) {
+                blockchainConfig = new JsonNetConfig(getGenesisJson().getConfig());
+                return blockchainConfig;
+            }
+
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
                 throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
             }
@@ -784,7 +790,7 @@ public class SystemProperties {
     @ValidateMe
     public byte[] getMinerCoinbase() {
         String sc = config.getString("mine.coinbase");
-        byte[] c = Hex.decode(sc);
+        byte[] c = ByteUtil.hexStringToBytes(sc);
         if (c.length != 20) throw new RuntimeException("mine.coinbase has invalid value: '" + sc + "'");
         return c;
     }
@@ -821,10 +827,26 @@ public class SystemProperties {
         return config.getBoolean("mine.fullDataSet");
     }
 
+    private GenesisJson getGenesisJson() {
+        if (genesisJson == null) {
+            genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);
+        }
+        return genesisJson;
+    }
+
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this, classLoader);
+            genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         }
+        return genesis;
+    }
+
+    /**
+     * Method used in StandaloneBlockchain.
+     */
+    public Genesis useGenesis(InputStream inputStream) {
+        genesisJson = GenesisLoader.loadGenesisJson(inputStream);
+        genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         return genesis;
     }
 

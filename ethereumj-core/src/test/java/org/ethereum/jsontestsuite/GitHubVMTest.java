@@ -1,7 +1,6 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -11,7 +10,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;

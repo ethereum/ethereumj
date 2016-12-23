@@ -1,12 +1,11 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -25,7 +24,7 @@ public class GitHubTestNetTest {
     @Before
     public void setup() {
         SystemProperties.getDefault().setGenesisInfo("frontier.json");
-        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
+        SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
             add(0, new FrontierConfig());
             add(5, new HomesteadConfig());
             add(8, new DaoHFConfig().withForkBlock(8));
