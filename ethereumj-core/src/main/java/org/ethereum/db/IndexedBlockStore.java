@@ -6,7 +6,11 @@ import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -411,28 +415,34 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
         @Override
         public byte[] serialize(List<BlockInfo> value) {
-            try {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.writeObject(value);
+                List<byte[]> rlpBlockInfoList = new ArrayList<>();
+                for (BlockInfo blockInfo : value) {
+                    byte[] hash = RLP.encodeElement(blockInfo.getHash());
+                    byte[] cummDiff = RLP.encodeBigInteger(blockInfo.getCummDifficulty());
+                    byte[] isMainChain = RLP.encodeInt(blockInfo.isMainChain() ? 1 : 0);
+                    rlpBlockInfoList.add(RLP.encodeList(hash, cummDiff, isMainChain));
+                }
+                byte[][] elements = rlpBlockInfoList.toArray(new byte[rlpBlockInfoList.size()][]);
 
-                byte[] data = bos.toByteArray();
-                return data;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+                return RLP.encodeList(elements);
         }
 
         @Override
         public List<BlockInfo> deserialize(byte[] bytes) {
-            try {
-                if (bytes == null) return null;
-                ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
-                ObjectInputStream ois = new ObjectInputStream(bis);
-                return (List<BlockInfo>)ois.readObject();
-            } catch (IOException|ClassNotFoundException e) {
-                throw new RuntimeException(e);
+            if (bytes == null) return null;
+
+            List<BlockInfo> blockInfoList = new ArrayList<>();
+            RLPList list = (RLPList) RLP.decode2(bytes).get(0);
+            for (RLPElement element : list) {
+                RLPList rlpBlock = (RLPList) element;
+                BlockInfo blockInfo = new BlockInfo();
+                blockInfo.setHash(rlpBlock.get(0).getRLPData());
+                blockInfo.setCummDifficulty(ByteUtil.bytesToBigInteger(rlpBlock.get(1).getRLPData()));
+                blockInfo.setMainChain(ByteUtil.byteArrayToInt(rlpBlock.get(2).getRLPData()) == 1);
+                blockInfoList.add(blockInfo);
             }
+
+            return blockInfoList;
         }
     };
 
