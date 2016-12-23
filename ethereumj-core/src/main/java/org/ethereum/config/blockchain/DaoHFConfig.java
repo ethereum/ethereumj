@@ -19,9 +19,14 @@ import java.util.List;
 public class DaoHFConfig extends HomesteadConfig {
     private final List<byte[]> daoAccounts = new ArrayList<>();
     private final byte[] withdrawAccount = Hex.decode("bf4ed7b27f1d666546e30d74d50d173d20bca754");
-    private long forkBlockNumber = 1_920_000;
 
-    public static final byte[] EthForkBlockHash = Hex.decode("4985f5ca3d2afbec36529aa96f74de3cc10a2a4a6c44f2157a57d2c6059a11bb");
+    private long forkBlockNumber = ETH_FORK_BLOCK_NUMBER;
+
+    /**
+     * Hardcoded values from live network
+     */
+    public static final long ETH_FORK_BLOCK_NUMBER = 1_920_000;
+    public static final byte[] ETH_FORK_BLOCK_HASH = Hex.decode("4985f5ca3d2afbec36529aa96f74de3cc10a2a4a6c44f2157a57d2c6059a11bb");
 
     public DaoHFConfig() {
         super();
@@ -65,7 +70,12 @@ public class DaoHFConfig extends HomesteadConfig {
 
     @Override
     public List<Pair<Long, byte[]>> blockHashConstraints() {
-        return Collections.singletonList(Pair.of(forkBlockNumber, EthForkBlockHash));
+        if (forkBlockNumber == ETH_FORK_BLOCK_NUMBER) {
+            return Collections.singletonList(Pair.of(forkBlockNumber, ETH_FORK_BLOCK_HASH));
+        } else {
+            return Collections.emptyList();
+        }
+
     }
 
     private static class DaoAcct {
