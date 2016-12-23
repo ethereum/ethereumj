@@ -7,7 +7,7 @@ import org.ethereum.config.blockchain.HomesteadConfig;
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public class ETCNetConfig extends AbstractNetConfig {
+public class ETCNetConfig extends BaseNetConfig {
     public static final ETCNetConfig INSTANCE = new ETCNetConfig();
 
     public ETCNetConfig() {

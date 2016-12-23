@@ -8,7 +8,7 @@ import java.util.*;
  * Convert JSON config from genesis to Java blockchain net config.
  * Created by Stan Reshetnyk on 23.12.2016.
  */
-public class JsonNetConfig extends AbstractNetConfig {
+public class JsonNetConfig extends BaseNetConfig {
 
     public JsonNetConfig(Map<String, String> config) throws RuntimeException {
         final List<String> keys = Arrays.asList("homesteadBlock", "daoForkBlock", "EIP150Block", "EIP155Block", "EIP158Block");

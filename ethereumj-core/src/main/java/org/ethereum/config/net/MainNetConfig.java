@@ -5,7 +5,7 @@ import org.ethereum.config.blockchain.*;
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public class MainNetConfig extends AbstractNetConfig {
+public class MainNetConfig extends BaseNetConfig {
     public static final MainNetConfig INSTANCE = new MainNetConfig();
 
     public MainNetConfig() {

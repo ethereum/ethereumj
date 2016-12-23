@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * Created by Anton Nashatyrev on 25.02.2016.
  */
-public class AbstractNetConfig implements BlockchainNetConfig {
+public class BaseNetConfig implements BlockchainNetConfig {
     private long[] blockNumbers = new long[64];
     private BlockchainConfig[] configs = new BlockchainConfig[64];
     private int count;
