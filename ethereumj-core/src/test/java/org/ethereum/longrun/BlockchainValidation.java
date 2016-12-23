@@ -14,14 +14,17 @@ import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Value;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,18 +73,18 @@ public class BlockchainValidation {
             Integer rootsSize = getReferencedTrieNodes(stateDS, true, stateRoot);
             testLogger.info("Node validation successful");
             testLogger.info("Non-unique node size: {}", rootsSize);
-        } catch (Exception ex) {
+        } catch (Exception | AssertionError ex) {
             testLogger.error("Node validation error", ex);
             fatalErrors.incrementAndGet();
         }
     }
 
     public static void checkHeaders(Ethereum ethereum, AtomicInteger fatalErrors) {
-        try {
-            int blockNumber = (int) ethereum.getBlockchain().getBestBlock().getHeader().getNumber();
-            byte[] lastParentHash = null;
-            testLogger.info("Checking headers from best block: {}", blockNumber);
+        int blockNumber = (int) ethereum.getBlockchain().getBestBlock().getHeader().getNumber();
+        byte[] lastParentHash = null;
+        testLogger.info("Checking headers from best block: {}", blockNumber);
 
+        try {
             while (blockNumber >= 0) {
                 Block currentBlock = ethereum.getBlockchain().getBlockByNumber(blockNumber);
                 if (lastParentHash != null) {
@@ -93,17 +96,18 @@ public class BlockchainValidation {
             }
 
             testLogger.info("Checking headers successful, ended on block: {}", blockNumber + 1);
-        } catch (Exception ex) {
-            testLogger.error("Block header validation error", ex);
+        } catch (Exception | AssertionError ex) {
+            testLogger.error(String.format("Block header validation error on block #%s", blockNumber), ex);
             fatalErrors.incrementAndGet();
         }
     }
 
     public static void checkFastHeaders(Ethereum ethereum, CommonConfig commonConfig, AtomicInteger fatalErrors) {
+        DataSourceArray<BlockHeader> headerStore = commonConfig.headerSource();
+        int blockNumber = headerStore.size() - 1;
+        byte[] lastParentHash = null;
+
         try {
-            DataSourceArray<BlockHeader> headerStore = commonConfig.headerSource();
-            int blockNumber = headerStore.size() - 1;
-            byte[] lastParentHash = null;
             testLogger.info("Checking fast headers from best block: {}", blockNumber);
             while (blockNumber > 0) {
                 BlockHeader header = headerStore.get(blockNumber);
@@ -119,36 +123,56 @@ public class BlockchainValidation {
             assert FastByteComparisons.equal(genesis.getHash(), lastParentHash);
 
             testLogger.info("Checking fast headers successful, ended on block: {}", blockNumber + 1);
-        } catch (Exception ex) {
-            testLogger.error("Fast header validation error", ex);
+        } catch (Exception | AssertionError ex) {
+            testLogger.error(String.format("Fast header validation error on block #%s", blockNumber), ex);
             fatalErrors.incrementAndGet();
         }
     }
 
     public static void checkBlocks(Ethereum ethereum, AtomicInteger fatalErrors) {
+        Block currentBlock = ethereum.getBlockchain().getBestBlock();
+        int blockNumber = (int) currentBlock.getHeader().getNumber();
+
         try {
-            int blockNumber = (int) ethereum.getBlockchain().getBestBlock().getHeader().getNumber();
+            BlockStore blockStore = ethereum.getBlockchain().getBlockStore();
             testLogger.info("Checking blocks from best block: {}", blockNumber);
+            BigInteger curTotalDiff = blockStore.getTotalDifficultyForHash(currentBlock.getHash());
 
             while (blockNumber > 0) {
-                Block currentBlock = ethereum.getBlockchain().getBlockByNumber(blockNumber);
+                currentBlock = ethereum.getBlockchain().getBlockByNumber(blockNumber);
+
                 // Validate uncles
                 assert ((BlockchainImpl) ethereum.getBlockchain()).validateUncles(currentBlock);
+                // Validate total difficulty
+                Assert.assertTrue(String.format("Total difficulty, count %s == %s blockStore",
+                        curTotalDiff, blockStore.getTotalDifficultyForHash(currentBlock.getHash())),
+                        curTotalDiff.compareTo(blockStore.getTotalDifficultyForHash(currentBlock.getHash())) == 0);
+                curTotalDiff = curTotalDiff.subtract(currentBlock.getDifficultyBI());
+
                 blockNumber--;
             }
 
+            // Checking total difficulty for genesis
+            currentBlock = ethereum.getBlockchain().getBlockByNumber(0);
+            Assert.assertTrue(String.format("Total difficulty for genesis, count %s == %s blockStore",
+                    curTotalDiff, blockStore.getTotalDifficultyForHash(currentBlock.getHash())),
+                    curTotalDiff.compareTo(blockStore.getTotalDifficultyForHash(currentBlock.getHash())) == 0);
+            Assert.assertTrue(String.format("Total difficulty, count %s == %s genesis",
+                    curTotalDiff, currentBlock.getDifficultyBI()),
+                    curTotalDiff.compareTo(currentBlock.getDifficultyBI()) == 0);
+
             testLogger.info("Checking blocks successful, ended on block: {}", blockNumber + 1);
-        } catch (Exception ex) {
-            testLogger.error("Block validation error", ex);
+        } catch (Exception | AssertionError ex) {
+            testLogger.error(String.format("Block validation error on block #%s", blockNumber), ex);
             fatalErrors.incrementAndGet();
         }
     }
 
     public static void checkTransactions(Ethereum ethereum, AtomicInteger fatalErrors) {
-        try {
-            int blockNumber = (int) ethereum.getBlockchain().getBestBlock().getHeader().getNumber();
-            testLogger.info("Checking block transactions from best block: {}", blockNumber);
+        int blockNumber = (int) ethereum.getBlockchain().getBestBlock().getHeader().getNumber();
+        testLogger.info("Checking block transactions from best block: {}", blockNumber);
 
+        try {
             while (blockNumber > 0) {
                 Block currentBlock = ethereum.getBlockchain().getBlockByNumber(blockNumber);
 
@@ -170,8 +194,8 @@ public class BlockchainValidation {
             }
 
             testLogger.info("Checking block transactions successful, ended on block: {}", blockNumber + 1);
-        } catch (Exception ex) {
-            testLogger.error("Transaction validation error", ex);
+        } catch (Exception | AssertionError ex) {
+            testLogger.error(String.format("Transaction validation error on block #%s", blockNumber), ex);
             fatalErrors.incrementAndGet();
         }
     }
