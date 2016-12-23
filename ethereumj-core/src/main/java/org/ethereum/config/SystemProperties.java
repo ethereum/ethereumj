@@ -272,7 +272,7 @@ public class SystemProperties {
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
             if (getGenesisJson().getConfig() != null && getGenesisJson().getConfig().size() > 0) {
-                blockchainConfig = AbstractNetConfig.fromGenesisConfig(getGenesisJson().getConfig());
+                blockchainConfig = new JsonNetConfig(getGenesisJson().getConfig());
                 return blockchainConfig;
             }
 
