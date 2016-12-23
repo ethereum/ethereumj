@@ -54,6 +54,10 @@ public class DbFlushManager {
         });
     }
 
+    public void setSizeThreshold(long sizeThreshold) {
+        this.sizeThreshold = sizeThreshold;
+    }
+
     public void addCache(WriteCache<byte[], byte[]> cache) {
         writeCaches.add(cache);
     }
@@ -66,7 +70,12 @@ public class DbFlushManager {
         return ret;
     }
 
-    public void commit() {
+    public synchronized void commit(Runnable atomicUpdate) {
+        atomicUpdate.run();
+        commit();
+    }
+
+    public synchronized void commit() {
         long cacheSize = getCacheSize();
         if (sizeThreshold >= 0 && cacheSize >= sizeThreshold) {
             logger.info("DbFlushManager: flushing db due to write cache size (" + cacheSize + ") reached threshold (" + sizeThreshold + ")");
@@ -82,7 +91,7 @@ public class DbFlushManager {
         commitCount++;
     }
 
-    public void flush() {
+    public synchronized void flush() {
         long s = System.nanoTime();
         for (WriteCache<byte[], byte[]> writeCache : writeCaches) {
             writeCache.flush();
@@ -93,7 +102,7 @@ public class DbFlushManager {
     /**
      * Flushes all caches and closes all databases
      */
-    public void close() {
+    public synchronized void close() {
         flush();
         for (DbSource dbSource : dbSources) {
             logger.info("Closing DB: {}", dbSource.getName());

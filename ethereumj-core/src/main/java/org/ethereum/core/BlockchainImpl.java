@@ -510,7 +510,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //    @Override
-    public synchronized BlockSummary add(Repository repo, Block block) {
+    public synchronized BlockSummary add(Repository repo, final Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
@@ -539,7 +539,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         BlockSummary summary = processBlock(repo, block);
-        List<TransactionReceipt> receipts = summary.getReceipts();
+        final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
         String receiptHash = Hex.toHexString(block.getReceiptsRoot());
@@ -593,11 +593,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         updateTotalDifficulty(block);
         summary.setTotalDifficulty(getTotalDifficulty());
 
-        storeBlock(block, receipts);
-
         if (!byTest) {
-            repository.commit();
-            dbFlushManager.commit();
+            dbFlushManager.commit(new Runnable() {
+                @Override
+                public void run() {
+                    storeBlock(block, receipts);
+                    repository.commit();
+                }
+            });
+        } else {
+            storeBlock(block, receipts);
         }
 
         return summary;
