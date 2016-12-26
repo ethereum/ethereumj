@@ -45,7 +45,7 @@ import static org.ethereum.util.CompactEncoder.hasTerminator;
 public class FastSyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private final static long REQUEST_TIMEOUT = 5 * 1000;
+    private final static long REQUEST_TIMEOUT = 15 * 1000;
     private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
     private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
