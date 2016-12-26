@@ -7,7 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -21,6 +21,7 @@ import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +41,7 @@ public class Eth63 extends Eth62 {
 
     private static final EthVersion version = V63;
 
-    @Autowired
+    @Autowired @Qualifier("defaultRepository")
     private Repository repository;
 
     private List<byte[]> requestedReceipts;
@@ -95,8 +96,9 @@ public class Eth63 extends Eth62 {
         );
 
         List<Value> states = new ArrayList<>();
+        RepositoryRoot repositoryRoot = ((RepositoryRoot) repository);
         for (byte[] stateRoot : msg.getStateRoots()) {
-            Value value = ((RepositoryImpl) repository).getState(stateRoot);
+            Value value = repositoryRoot.getState(stateRoot);
             if (value != null) {
                 states.add(value);
                 logger.trace("Eth63: " + Hex.toHexString(stateRoot).substring(0, 8) + " -> " + value);
