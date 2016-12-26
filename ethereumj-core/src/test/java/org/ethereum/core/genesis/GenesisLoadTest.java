@@ -89,6 +89,9 @@ public class GenesisLoadTest {
 
         assertThat(bnc.getConfigForBlock(450), instanceOf(Eip150HFConfig.class));
         assertThat(bnc.getConfigForBlock(10_000_000), instanceOf(Eip150HFConfig.class));
+
+        System.out.println(bnc.toString());
+        System.out.println();
     }
 
     private SystemProperties loadGenesis(String genesisFile, String genesisResource) {

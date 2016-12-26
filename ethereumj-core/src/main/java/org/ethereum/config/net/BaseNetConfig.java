@@ -39,4 +39,13 @@ public class BaseNetConfig implements BlockchainNetConfig {
         // TODO make a guard wrapper which throws exception if the requested constant differs among configs
         return configs[0].getConstants();
     }
+
+    @Override
+    public String toString() {
+        return "BaseNetConfig{" +
+                "blockNumbers=" + Arrays.toString(Arrays.copyOfRange(blockNumbers, 0, count)) +
+                ", configs=" + Arrays.toString(Arrays.copyOfRange(configs, 0, count)) +
+                ", count=" + count +
+                '}';
+    }
 }

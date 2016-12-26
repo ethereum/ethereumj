@@ -52,6 +52,10 @@ class Initializer implements BeanPostProcessor {
 
         // forcing reading private key or generating it in database directory
         config.nodeId();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Blockchain config {}", config.getBlockchainConfig().toString());
+        }
     }
 
     @Override

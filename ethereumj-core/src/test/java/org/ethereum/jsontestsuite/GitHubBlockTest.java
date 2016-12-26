@@ -152,7 +152,7 @@ public class GitHubBlockTest {
             {
                 add(0, new FrontierConfig());
                 add(5, new HomesteadConfig());
-                add(8, new DaoHFConfig().withForkBlock(8));
+                add(8, new DaoHFConfig(8));
             }
         };
 

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
@@ -67,7 +68,13 @@ public interface BlockchainConfig {
      * Hardcode the block hashes. I.e. if the block #1920000 should have the hash 0x1111
      * the this method should return [{1920000, 0x1111}]
      */
-    List<Pair<Long, byte[]>> blockHashConstraints();
+//    @Deprecated
+//    List<Pair<Long, byte[]>> blockHashConstraints();
+
+    /**
+     * Fork related check. We ensure that connected peer operates on the same fork with us
+     */
+    List<Pair<Long, BlockHeaderValidator>> headerValidators();
 
     /**
      * EVM operations costs

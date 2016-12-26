@@ -24,14 +24,14 @@ public class BlockHashRule extends BlockHeaderRule {
     public boolean validate(BlockHeader header) {
         errors.clear();
 
-        List<Pair<Long, byte[]>> hashes = blockchainConfig.getConfigForBlock(header.getNumber()).blockHashConstraints();
-
-        for (Pair<Long, byte[]> hash : hashes) {
-            if (header.getNumber() == hash.getLeft() &&
-                    !FastByteComparisons.equal(header.getHash(), hash.getRight())) {
-                errors.add("Block " + header.getNumber() + " hash constraint violated. Expected:" +
-                        Hex.toHexString(hash.getRight()) + ", got: " + Hex.toHexString(header.getHash()));
-                return false;
+        List<Pair<Long, BlockHeaderValidator>> validators = blockchainConfig.getConfigForBlock(header.getNumber()).headerValidators();
+        for (Pair<Long, BlockHeaderValidator> pair : validators) {
+            if (header.getNumber() == pair.getLeft()) {
+                List<String> validationErrors = pair.getRight().getValidationErrors(header);
+                if (!validationErrors.isEmpty()) {
+                    errors.add("Block " + header.getNumber() + " header constraint violated. " + validationErrors.get(0));
+                    return false;
+                }
             }
         }
 

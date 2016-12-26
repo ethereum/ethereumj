@@ -43,9 +43,9 @@ public class JsonNetConfig extends BaseNetConfig {
                     break;
                 case "daoForkBlock":
                     if ("true".equalsIgnoreCase(config.get("daoForkSupport"))) {
-                        add(blockNumber, new DaoHFConfig().withForkBlock(blockNumber));
+                        add(blockNumber, new DaoHFConfig(blockNumber));
                     } else {
-                        add(blockNumber, new DaoNoHFConfig().withForkBlock(blockNumber));
+                        add(blockNumber, new DaoNoHFConfig(blockNumber));
                     }
                     break;
                 case "EIP150Block":

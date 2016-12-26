@@ -2,6 +2,8 @@ package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
 
+import java.util.List;
+
 /**
  * Parent class for {@link BlockHeader} validators
  *
@@ -22,5 +24,11 @@ public abstract class BlockHeaderRule extends AbstractValidationRule {
      * @return true if validation passed, false otherwise
      */
     abstract public boolean validate(BlockHeader header);
+
+//    /**
+//     * Run header validation with print friendly errors
+//     * @return returns empty list on success or non empty otherwise
+//     */
+//    abstract public List<String> getValidationErrors(BlockHeader header);
 
 }

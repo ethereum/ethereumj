@@ -5,40 +5,37 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.Constants;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
+import org.ethereum.validator.BlockHashRule;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 18.07.2016.
  */
-public class DaoHFConfig extends HomesteadConfig {
+public class DaoHFConfig extends AbstractDaoConfig {
+
     private final List<byte[]> daoAccounts = new ArrayList<>();
     private final byte[] withdrawAccount = Hex.decode("bf4ed7b27f1d666546e30d74d50d173d20bca754");
 
-    private long forkBlockNumber = ETH_FORK_BLOCK_NUMBER;
-
-    /**
-     * Hardcoded values from live network
-     */
-    public static final long ETH_FORK_BLOCK_NUMBER = 1_920_000;
-    public static final byte[] ETH_FORK_BLOCK_HASH = Hex.decode("4985f5ca3d2afbec36529aa96f74de3cc10a2a4a6c44f2157a57d2c6059a11bb");
-
     public DaoHFConfig() {
         super();
-        init();
+        init(ETH_FORK_BLOCK_NUMBER);
     }
 
-    public DaoHFConfig(Constants constants) {
-        super(constants);
-        init();
+    public DaoHFConfig(long forkBlockNumber) {
+        super();
+        init(forkBlockNumber);
     }
 
-    private void init() {
+    private void init(long forkBlockNumber) {
+        initDaoConfig(forkBlockNumber, true);
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             DaoAcct[] daoAccts = objectMapper.readValue(accountsJson.replace('\'', '"'), DaoAcct[].class);
@@ -51,12 +48,6 @@ public class DaoHFConfig extends HomesteadConfig {
         }
     }
 
-
-    public DaoHFConfig withForkBlock(long blockNumber) {
-        forkBlockNumber = blockNumber;
-        return this;
-    }
-
     @Override
     public void hardForkTransfers(Block block, Repository repo) {
         if (block.getNumber() == forkBlockNumber) {
@@ -66,16 +57,6 @@ public class DaoHFConfig extends HomesteadConfig {
                 repo.addBalance(withdrawAccount, balance);
             }
         }
-    }
-
-    @Override
-    public List<Pair<Long, byte[]>> blockHashConstraints() {
-        if (forkBlockNumber == ETH_FORK_BLOCK_NUMBER) {
-            return Collections.singletonList(Pair.of(forkBlockNumber, ETH_FORK_BLOCK_HASH));
-        } else {
-            return Collections.emptyList();
-        }
-
     }
 
     private static class DaoAcct {
@@ -318,4 +299,9 @@ public class DaoHFConfig extends HomesteadConfig {
             "      'extraBalanceAccount':'0x807640a13483f8ac783c557fcdf27be11ea4ac7a'" +
             "   }" +
             "]";
+
+    @Override
+    public String toString() {
+        return super.toString() + "(forkBlock:" + forkBlockNumber + ")";
+    }
 }

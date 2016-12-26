@@ -9,6 +9,8 @@ import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.validator.BlockHeaderRule;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
@@ -98,7 +100,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     public void hardForkTransfers(Block block, Repository repo) {}
 
     @Override
-    public List<Pair<Long, byte[]>> blockHashConstraints() {
+    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
         return Collections.emptyList();
     }
 
@@ -128,5 +130,10 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public Integer getChainId() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
     }
 }
