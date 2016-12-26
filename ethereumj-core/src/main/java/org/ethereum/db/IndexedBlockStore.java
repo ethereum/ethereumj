@@ -418,6 +418,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
                 List<byte[]> rlpBlockInfoList = new ArrayList<>();
                 for (BlockInfo blockInfo : value) {
                     byte[] hash = RLP.encodeElement(blockInfo.getHash());
+                    // Encoding works correctly only with positive BigIntegers
+                    if (blockInfo.getCummDifficulty() == null || blockInfo.getCummDifficulty().compareTo(BigInteger.ZERO) < 0) {
+                        throw new RuntimeException("BlockInfo cummDifficulty should be positive BigInteger");
+                    }
                     byte[] cummDiff = RLP.encodeBigInteger(blockInfo.getCummDifficulty());
                     byte[] isMainChain = RLP.encodeInt(blockInfo.isMainChain() ? 1 : 0);
                     rlpBlockInfoList.add(RLP.encodeList(hash, cummDiff, isMainChain));
@@ -436,8 +440,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
             for (RLPElement element : list) {
                 RLPList rlpBlock = (RLPList) element;
                 BlockInfo blockInfo = new BlockInfo();
-                blockInfo.setHash(rlpBlock.get(0).getRLPData());
-                blockInfo.setCummDifficulty(ByteUtil.bytesToBigInteger(rlpBlock.get(1).getRLPData()));
+                byte[] rlpHash = rlpBlock.get(0).getRLPData();
+                blockInfo.setHash(rlpHash == null ? new byte[0] : rlpHash);
+                byte[] rlpCummDiff = rlpBlock.get(1).getRLPData();
+                blockInfo.setCummDifficulty(rlpCummDiff == null ? BigInteger.ZERO : ByteUtil.bytesToBigInteger(rlpCummDiff));
                 blockInfo.setMainChain(ByteUtil.byteArrayToInt(rlpBlock.get(2).getRLPData()) == 1);
                 blockInfoList.add(blockInfo);
             }

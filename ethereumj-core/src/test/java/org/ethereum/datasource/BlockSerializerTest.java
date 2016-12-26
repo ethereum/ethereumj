@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -64,5 +65,40 @@ public class BlockSerializerTest {
         long e = System.currentTimeMillis();
 
         System.out.printf("Serialize/deserialize blocks per 1 ms: %s%n", PASSES * BLOCKS / (e - s));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testNullCummDifficulty() {
+        BlockInfo blockInfo = new BlockInfo();
+        blockInfo.setMainChain(true);
+        blockInfo.setCummDifficulty(null);
+        blockInfo.setHash(new byte[0]);
+        byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(blockInfo));
+        List<BlockInfo> blockInfos = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testNegativeCummDifficulty() {
+        BlockInfo blockInfo = new BlockInfo();
+        blockInfo.setMainChain(true);
+        blockInfo.setCummDifficulty(BigInteger.valueOf(-1));
+        blockInfo.setHash(new byte[0]);
+        byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(blockInfo));
+        List<BlockInfo> blockInfos = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
+    }
+
+    @Test
+    public void testZeroCummDifficultyEmptyHash() {
+        BlockInfo blockInfo = new BlockInfo();
+        blockInfo.setMainChain(true);
+        blockInfo.setCummDifficulty(BigInteger.ZERO);
+        blockInfo.setHash(new byte[0]);
+        byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(blockInfo));
+        List<BlockInfo> blockInfos = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
+        assert blockInfos.size() == 1;
+        BlockInfo actualBlockInfo = blockInfos.get(0);
+        assert actualBlockInfo.isMainChain();
+        assert actualBlockInfo.getCummDifficulty().compareTo(BigInteger.ZERO) == 0;
+        assert actualBlockInfo.getHash().length == 0;
     }
 }
