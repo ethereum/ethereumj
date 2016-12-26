@@ -1,8 +1,7 @@
 package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
-
-import java.util.List;
+import org.slf4j.Logger;
 
 /**
  * Parent class for {@link BlockHeader} validators
@@ -21,14 +20,35 @@ public abstract class BlockHeaderRule extends AbstractValidationRule {
      * Runs header validation and returns its result
      *
      * @param header block header
-     * @return true if validation passed, false otherwise
      */
-    abstract public boolean validate(BlockHeader header);
+    abstract public ValidationResult validate(BlockHeader header);
 
-//    /**
-//     * Run header validation with print friendly errors
-//     * @return returns empty list on success or non empty otherwise
-//     */
-//    abstract public List<String> getValidationErrors(BlockHeader header);
+    protected ValidationResult fault(String error) {
+        return new ValidationResult(false, error);
+    }
 
+    public static final ValidationResult Success = new ValidationResult(true, null);
+
+    public boolean validateAndLog(BlockHeader header, Logger logger) {
+        ValidationResult result = validate(header);
+        if (!result.success && logger.isErrorEnabled()) {
+            logger.warn("{} invalid {}", getEntityClass(), result.error);
+        }
+        return result.success;
+    }
+
+    /**
+     * Validation result is either success or fault
+     */
+    public static final class ValidationResult {
+
+        public final boolean success;
+
+        public final String error;
+
+        public ValidationResult(boolean success, String error) {
+            this.success = success;
+            this.error = error;
+        }
+    }
 }

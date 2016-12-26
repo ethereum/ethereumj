@@ -12,18 +12,14 @@ import org.ethereum.util.FastByteComparisons;
 public class ProofOfWorkRule extends BlockHeaderRule {
 
     @Override
-    public boolean validate(BlockHeader header) {
-
-        errors.clear();
-
+    public ValidationResult validate(BlockHeader header) {
         byte[] proof = header.calcPowValue();
         byte[] boundary = header.getPowBoundary();
 
         if (!header.isGenesis() && FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) > 0) {
-            errors.add(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
-            return false;
+            return fault(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
         }
 
-        return true;
+        return Success;
     }
 }

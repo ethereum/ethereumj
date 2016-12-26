@@ -135,15 +135,6 @@ public class BlockLoader {
     }
 
     private boolean isValid(BlockHeader header) {
-
-        if (!headerValidator.validate(header)) {
-
-            if (logger.isErrorEnabled())
-                headerValidator.logErrors(logger);
-
-            return false;
-        }
-
-        return true;
+        return headerValidator.validateAndLog(header, logger);
     }
 }

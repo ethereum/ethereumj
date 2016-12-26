@@ -1,21 +1,3 @@
-/*
- * Copyright 2015, 2016 Ether.Camp Inc. (US)
- * This file is part of Ethereum Harmony.
- *
- * Ethereum Harmony is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Ethereum Harmony is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
@@ -37,18 +19,14 @@ public class ExtraDataPresenceRule extends BlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header) {
-        errors.clear();
-
+    public ValidationResult validate(BlockHeader header) {
         if (required && !FastByteComparisons.equal(header.getExtraData(), data)) {
-            errors.add("Block " + header.getNumber() + " extra data constraint violated. Expected:" +
-                    Hex.toHexString(data) + ", got: " + Hex.toHexString(header.getExtraData()));
-            return false;
+            return fault("Block " + header.getNumber() + " is no-fork. Expected presence of: " +
+                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(header.getExtraData()));
         } else if (!required && FastByteComparisons.equal(header.getExtraData(), data)) {
-            errors.add("Block " + header.getNumber() + " extra data constraint violated. Expected:" +
-                    Hex.toHexString(data) + ", got: " + Hex.toHexString(header.getExtraData()));
-            return false;
+            return fault("Block " + header.getNumber() + " is pro-fork. Expected no: " +
+                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(header.getExtraData()));
         }
-        return true;
+        return Success;
     }
 }

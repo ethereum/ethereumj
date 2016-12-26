@@ -19,7 +19,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
+import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -545,11 +545,11 @@ public class Eth62 extends EthHandler {
         } else {
             BlockHeaderValidator validator = validatorMap.get(blockNumber);
             if (validator != null) {
-                final List<String> errors = validator.getValidationErrors(blockHeader);
-                if (errors.isEmpty()) {
+                BlockHeaderRule.ValidationResult result = validator.validate(blockHeader);
+                if (result.success) {
                     validatorMap.remove(blockNumber);
                 } else {
-                    logger.debug("Peer {}: wrong fork ({}). Drop the peer and reduce reputation.", channel.getPeerIdShort(), errors.get(0));
+                    logger.debug("Peer {}: wrong fork ({}). Drop the peer and reduce reputation.", channel.getPeerIdShort(), result.error);
                     channel.getNodeStatistics().wrongFork = true;
                     dropConnection();
                 }
