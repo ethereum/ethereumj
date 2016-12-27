@@ -16,7 +16,7 @@ plugins {
     id 'application'
     id 'jacoco'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
-    id 'com.github.kt3k.coveralls' version '2.0.1x'
+//    id 'com.github.kt3k.coveralls' version '2.0.1x'
     id 'com.jfrog.bintray' version '1.0'
 }
 
