@@ -103,14 +103,15 @@ public class SyncManager extends BlockDownloader {
     }
 
     public void init(final ChannelManager channelManager, final SyncPool pool) {
-        this.pool = pool;
-        this.channelManager = channelManager;
-
-        logExecutor.scheduleAtFixedRate(new Runnable() {
-            public void run() {
-                logger.info("Sync state: " + getSyncStatus());
-            }
-        }, 10, 10, TimeUnit.SECONDS);
+        if (this.channelManager == null) {  // First init
+            this.pool = pool;
+            this.channelManager = channelManager;
+            logExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    logger.info("Sync state: " + getSyncStatus());
+                }
+            }, 10, 10, TimeUnit.SECONDS);
+        }
 
         if (!config.isSyncEnabled()) {
             logger.info("Sync Manager: OFF");
@@ -118,17 +119,19 @@ public class SyncManager extends BlockDownloader {
         }
         logger.info("Sync Manager: ON");
 
-        logger.info("Initializing SyncManager.");
-        pool.init(channelManager);
+        if (pool.getChannelManager() == null) {  // Never were on this stage of init
+            logger.info("Initializing SyncManager.");
+            pool.init(channelManager);
 
-        if (config.isFastSyncEnabled()) {
-            fastSyncManager.init();
-        } else {
-            initRegularSync(EthereumListener.SyncState.COMPLETE);
+            if (config.isFastSyncEnabled()) {
+                fastSyncManager.init();
+            } else {
+                initRegularSync(EthereumListener.SyncState.COMPLETE);
+            }
         }
     }
 
-    public void initRegularSync(EthereumListener.SyncState syncDoneType) {
+    void initRegularSync(EthereumListener.SyncState syncDoneType) {
         logger.info("Initializing SyncManager regular sync.");
         this.syncDoneType = syncDoneType;
 
