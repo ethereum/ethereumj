@@ -199,6 +199,8 @@ public class Eth62 extends EthHandler {
     @Override
     public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
 
+        if (peerState != IDLE) return null;
+
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: queue GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
                 channel.getPeerIdShort(),
