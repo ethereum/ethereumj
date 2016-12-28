@@ -1,8 +1,10 @@
 package org.ethereum.config.blockchain;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Transaction;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.validator.ExtraDataPresenceRule;
@@ -36,6 +38,7 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
 
     protected void initDaoConfig(BlockchainConfig parent, long forkBlockNumber) {
         this.parent = parent;
+        this.constants = parent.getConstants();
         this.forkBlockNumber = forkBlockNumber;
         BlockHeaderRule rule = new ExtraDataPresenceRule(DAO_EXTRA_DATA, supportFork);
         validator = Arrays.asList(Pair.of(forkBlockNumber, new BlockHeaderValidator(Arrays.asList(rule))));
@@ -49,5 +52,15 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
     @Override
     public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
         return this.parent.calcDifficulty(curBlock, parent);
+    }
+
+    @Override
+    public long getTransactionCost(Transaction tx) {
+        return parent.getTransactionCost(tx);
+    }
+
+    @Override
+    public boolean acceptTransactionSignature(Transaction tx) {
+        return parent.acceptTransactionSignature(tx);
     }
 }
