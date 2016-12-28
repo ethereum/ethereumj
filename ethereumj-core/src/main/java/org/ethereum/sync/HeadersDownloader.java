@@ -65,6 +65,9 @@ public class HeadersDownloader extends BlockDownloader {
 
     @Override
     protected void pushHeaders(List<BlockHeaderWrapper> headers) {
+        if (headers.get(headers.size() - 1).getNumber() == 0) {
+            genesisHash = headers.get(headers.size() - 1).getHash();
+        }
         if (headers.get(headers.size() - 1).getNumber() == 1) {
             genesisHash = headers.get(headers.size() - 1).getHeader().getParentHash();
         }

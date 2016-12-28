@@ -135,7 +135,9 @@ public abstract class BlockDownloader {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
                     if (hReq.isEmpty()) {
-                        hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                        synchronized (this) {
+                            hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                        }
                     }
                     if (hReq.size() == 0) {
                         logger.info("Headers download complete.");
@@ -345,9 +347,11 @@ public abstract class BlockDownloader {
             wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        List<BlockHeaderWrapper> headersReady = syncQueue.addHeaders(wrappers);
-        if (headersReady != null && !headersReady.isEmpty()) {
-            pushHeaders(headersReady);
+        synchronized (this) {
+            List<BlockHeaderWrapper> headersReady = syncQueue.addHeaders(wrappers);
+            if (headersReady != null && !headersReady.isEmpty()) {
+                pushHeaders(headersReady);
+            }
         }
 
         receivedHeadersLatch.countDown();
