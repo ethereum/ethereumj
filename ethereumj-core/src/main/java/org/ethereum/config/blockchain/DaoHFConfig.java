@@ -1,19 +1,14 @@
 package org.ethereum.config.blockchain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.config.Constants;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
-import org.ethereum.validator.BlockHashRule;
-import org.ethereum.validator.BlockHeaderValidator;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -24,18 +19,21 @@ public class DaoHFConfig extends AbstractDaoConfig {
     private final List<byte[]> daoAccounts = new ArrayList<>();
     private final byte[] withdrawAccount = Hex.decode("bf4ed7b27f1d666546e30d74d50d173d20bca754");
 
+    {
+        supportFork = true;
+    }
+
     public DaoHFConfig() {
-        super();
-        init(ETH_FORK_BLOCK_NUMBER);
+        initDaoConfig(new HomesteadConfig(), ETH_FORK_BLOCK_NUMBER);
     }
 
-    public DaoHFConfig(long forkBlockNumber) {
-        super();
-        init(forkBlockNumber);
+    public DaoHFConfig(BlockchainConfig parent, long forkBlockNumber) {
+        initDaoConfig(parent, forkBlockNumber);
     }
 
-    private void init(long forkBlockNumber) {
-        initDaoConfig(forkBlockNumber, true);
+    @Override
+    protected void initDaoConfig(BlockchainConfig parent, long forkBlockNumber) {
+        super.initDaoConfig(parent, forkBlockNumber);
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             DaoAcct[] daoAccts = objectMapper.readValue(accountsJson.replace('\'', '"'), DaoAcct[].class);
@@ -48,16 +46,24 @@ public class DaoHFConfig extends AbstractDaoConfig {
         }
     }
 
+    /**
+     * Goal is to transfer balance from set of accounts to single refund one.
+     * Accounts may not exists in tests. However refund account should be created anyway.
+     */
     @Override
     public void hardForkTransfers(Block block, Repository repo) {
         if (block.getNumber() == forkBlockNumber) {
+            repo.addBalance(withdrawAccount, BigInteger.ZERO);
             for (byte[] account : daoAccounts) {
-                BigInteger balance = repo.getBalance(account);
-                repo.addBalance(account, balance.negate());
-                repo.addBalance(withdrawAccount, balance);
+                if (repo.isExist(account)) {
+                    BigInteger balance = repo.getBalance(account);
+                    repo.addBalance(account, balance.negate());
+                    repo.addBalance(withdrawAccount, balance);
+                }
             }
         }
     }
+
 
     private static class DaoAcct {
         public String address;

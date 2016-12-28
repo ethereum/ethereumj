@@ -27,8 +27,8 @@ public class GitHubTestNetTest {
         SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
             add(0, new FrontierConfig());
             add(5, new HomesteadConfig());
-            add(8, new DaoHFConfig(8));
-            add(10, new Eip150HFConfig(new DaoHFConfig(8)));
+            add(8, new DaoHFConfig(new HomesteadConfig(), 8));
+            add(10, new Eip150HFConfig(new DaoHFConfig(new HomesteadConfig(), 8)));
 
         }});
     }

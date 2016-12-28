@@ -1,16 +1,22 @@
 package org.ethereum.config.blockchain;
 
+import org.ethereum.config.BlockchainConfig;
+
 /**
  * Created by Anton Nashatyrev on 18.07.2016.
  */
 public class DaoNoHFConfig extends AbstractDaoConfig {
 
-    public DaoNoHFConfig() {
-        initDaoConfig(ETH_FORK_BLOCK_NUMBER, false);
+    {
+        supportFork = false;
     }
 
-    public DaoNoHFConfig(long forkBlockNumber) {
-        initDaoConfig(forkBlockNumber, false);
+    public DaoNoHFConfig() {
+        initDaoConfig(new HomesteadConfig(), ETH_FORK_BLOCK_NUMBER);
+    }
+
+    public DaoNoHFConfig(BlockchainConfig parent, long forkBlockNumber) {
+        initDaoConfig(parent, forkBlockNumber);
     }
 
     @Override

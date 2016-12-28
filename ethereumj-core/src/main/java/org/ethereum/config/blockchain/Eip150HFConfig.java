@@ -25,8 +25,8 @@ import java.util.List;
  * Created by Anton Nashatyrev on 14.10.2016.
  */
 public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
-    protected BlockchainConfig parent;
 
+    protected final BlockchainConfig parent;
 
     static class GasCostEip150HF extends GasCost {
         public int getBALANCE()             {     return 400;     }
