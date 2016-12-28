@@ -6,6 +6,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
@@ -35,6 +36,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Thread.sleep;
 
@@ -67,7 +69,10 @@ public class SyncWithLoadTest {
 
     private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten-noprune.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
-    private static final AtomicBoolean allChecksAreOver =  new AtomicBoolean(false);
+
+    // Timer stops while not syncing
+    private static final AtomicLong lastImport =  new AtomicLong();
+    private static final int LAST_IMPORT_TIMEOUT = 10 * 60 * 1000;
 
     public SyncWithLoadTest() throws Exception {
 
@@ -83,6 +88,13 @@ public class SyncWithLoadTest {
         statTimer.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
+                // Adds error if no successfully imported blocks for LAST_IMPORT_TIMEOUT
+                long currentMillis = System.currentTimeMillis();
+                if (lastImport.get() != 0 && currentMillis - lastImport.get() > LAST_IMPORT_TIMEOUT) {
+                    testLogger.error("No imported block for {} seconds", LAST_IMPORT_TIMEOUT / 1000);
+                    fatalErrors.incrementAndGet();
+                }
+
                 try {
                     if (fatalErrors.get() > 0) {
                         statTimer.shutdownNow();
@@ -91,6 +103,9 @@ public class SyncWithLoadTest {
                 } catch (Throwable t) {
                     SyncWithLoadTest.testLogger.error("Unhandled exception", t);
                 }
+
+                if (lastImport.get() == 0 && isRunning.get()) lastImport.set(currentMillis);
+                if (lastImport.get() != 0 && !isRunning.get()) lastImport.set(0);
             }
         }, 0, 15, TimeUnit.SECONDS);
     }
@@ -136,6 +151,11 @@ public class SyncWithLoadTest {
          * The main EthereumJ callback.
          */
         EthereumListener blockListener = new EthereumListenerAdapter() {
+            @Override
+            public void onBlock(BlockSummary blockSummary) {
+                lastImport.set(System.currentTimeMillis());
+            }
+
             @Override
             public void onBlock(Block block, List<TransactionReceipt> receipts) {
                 for (TransactionReceipt receipt : receipts) {
