@@ -20,16 +20,16 @@ import java.util.List;
 public class GetNodeDataMessage extends EthMessage {
 
     /**
-     * List of state roots for which is state requested
+     * List of node hashes for which is state requested
      */
-    private List<byte[]> stateRoots;
+    private List<byte[]> nodeKeys;
 
     public GetNodeDataMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public GetNodeDataMessage(List<byte[]> stateRoots) {
-        this.stateRoots = stateRoots;
+    public GetNodeDataMessage(List<byte[]> nodeKeys) {
+        this.nodeKeys = nodeKeys;
         this.parsed = true;
     }
 
@@ -37,9 +37,9 @@ public class GetNodeDataMessage extends EthMessage {
         if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        this.stateRoots = new ArrayList<>();
+        this.nodeKeys = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
-            stateRoots.add(paramsList.get(i).getRLPData());
+            nodeKeys.add(paramsList.get(i).getRLPData());
         }
 
         this.parsed = true;
@@ -47,7 +47,7 @@ public class GetNodeDataMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (byte[] hash : stateRoots)
+        for (byte[] hash : nodeKeys)
             encodedElements.add(RLP.encodeElement(hash));
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
 
@@ -66,9 +66,9 @@ public class GetNodeDataMessage extends EthMessage {
         return NodeDataMessage.class;
     }
 
-    public List<byte[]> getStateRoots() {
+    public List<byte[]> getNodeKeys() {
         parse();
-        return stateRoots;
+        return nodeKeys;
     }
 
     @Override
@@ -81,17 +81,17 @@ public class GetNodeDataMessage extends EthMessage {
 
         StringBuilder payload = new StringBuilder();
 
-        payload.append("count( ").append(stateRoots.size()).append(" ) ");
+        payload.append("count( ").append(nodeKeys.size()).append(" ) ");
 
         if (logger.isDebugEnabled()) {
-            for (byte[] hash : stateRoots) {
+            for (byte[] hash : nodeKeys) {
                 payload.append(Hex.toHexString(hash).substring(0, 6)).append(" | ");
             }
-            if (!stateRoots.isEmpty()) {
+            if (!nodeKeys.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());
             }
         } else {
-            payload.append(Utils.getHashListShort(stateRoots));
+            payload.append(Utils.getHashListShort(nodeKeys));
         }
 
         return "[" + getCommand().name() + " " + payload + "]";
