@@ -43,7 +43,7 @@ public class UdpTest {
 
     private static final String privKeyStr = "abb51256c1324a1350598653f46aa3ad693ac3cf5d05f36eba3f495a1f51590f";
     private static final ECKey privKey = ECKey.fromPrivate(Hex.decode(privKeyStr));
-    private static final String defaultMessage = "Hello from client";
+    private static final String defaultMessage = "rpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvrpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvrpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvrpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvHello from client";
 
     private final SimpleNodeManager nodeManager = new SimpleNodeManager();
 
@@ -111,11 +111,11 @@ public class UdpTest {
             String msg = new String(((FindNodeMessage) m).getTarget());
             System.out.printf("Inbound message \"%s\" from %s:%s%n", msg,
                     discoveryEvent.getAddress().getHostString(), discoveryEvent.getAddress().getPort());
-            if (msg.equals(defaultMessage)) {
+            if (msg.endsWith("+1")) {
+                messageSender.channel.close();
+            } else {
                 FindNodeMessage newMsg = FindNodeMessage.create((msg + "+1").getBytes(), privKey);
                 messageSender.sendPacket(newMsg.getPacket(), discoveryEvent.getAddress());
-            } else if (msg.equals(defaultMessage + "+1")) {
-                messageSender.channel.close();
             }
         }
     }
@@ -146,15 +146,19 @@ public class UdpTest {
 
     public void startClient()
             throws InterruptedException {
-        Channel channel = create(clientAddr, clientPort);
-        FindNodeMessage msg = FindNodeMessage.create(defaultMessage.getBytes(), privKey);
-        nodeManager.getMessageSender().sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
-        boolean ok = channel.closeFuture().await(10, TimeUnit.SECONDS);
-        if (!ok) {
-            System.out.println("ERROR: Timeout waiting for response");
-            assert false;
-        } else {
-            System.out.println("OK");
+        for (int i = defaultMessage.length() - 1; i >= 0 ; i--) {
+            Channel channel = create(clientAddr, clientPort);
+            String sendMessage = defaultMessage.substring(i, defaultMessage.length());
+            System.out.printf("Sending message with string payload of size %s%n", sendMessage.length());
+            FindNodeMessage msg = FindNodeMessage.create(sendMessage.getBytes(), privKey);
+            nodeManager.getMessageSender().sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
+            boolean ok = channel.closeFuture().await(10, TimeUnit.SECONDS);
+            if (!ok) {
+                System.out.println("ERROR: Timeout waiting for response");
+                assert false;
+            } else {
+                System.out.println("OK");
+            }
         }
     }
 
