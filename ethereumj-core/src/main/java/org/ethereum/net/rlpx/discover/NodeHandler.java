@@ -19,6 +19,7 @@ public class NodeHandler {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
     static long PingTimeout = 15000; //KademliaOptions.REQ_TIMEOUT;
+    static final int WARN_PACKET_SIZE = 1400;
     private static volatile int msgInCount = 0, msgOutCount = 0;
     private static boolean initialLogging = true;
 
@@ -32,6 +33,12 @@ public class NodeHandler {
             logger.trace(s);
         } else {
             logger.debug(s);
+        }
+
+        if (!inbound && msg.getPacket().length > WARN_PACKET_SIZE) {
+            logger.warn("Sending UDP packet exceeding safe size of {} bytes, actual: {} bytes",
+                    WARN_PACKET_SIZE, msg.getPacket().length);
+            logger.warn(s);
         }
 
         if (initialLogging) {
@@ -228,7 +235,7 @@ public class NodeHandler {
         List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
         closest.add(nodeManager.homeNode);
 
-        sendNeighbours(closest.subList(0, 1));
+        sendNeighbours(closest);
     }
 
     void handleTimedOut() {
