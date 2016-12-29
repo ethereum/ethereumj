@@ -7,6 +7,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.FindNodeMessage;
 import org.ethereum.net.rlpx.Message;
@@ -43,7 +44,7 @@ public class UdpTest {
 
     private static final String privKeyStr = "abb51256c1324a1350598653f46aa3ad693ac3cf5d05f36eba3f495a1f51590f";
     private static final ECKey privKey = ECKey.fromPrivate(Hex.decode(privKeyStr));
-    private static final String defaultMessage = "rpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvrpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvrpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvrpuynovsmadskkegfuomewujbjdlcrfvhbvurqodrrvdbbjgwavcwplxyqkdirypsulkmbpfsnivqueouzrsoesovcrfusuomhaaiqgcdoztkdieezzufrjavcfrubiikijsyrwdhwzsbjygkxcpolqmqxfkbnvlwegwvcacazucitissmjjyzvqzaaaovnmbtiwyibyjxatsknlxxuxypnxrpzhnntoicngmqfwnhpgudtranqyedyxuxfhmyyvHello from client";
+    private static final int MAX_LENGTH = 4096;
 
     private final SimpleNodeManager nodeManager = new SimpleNodeManager();
 
@@ -146,15 +147,23 @@ public class UdpTest {
 
     public void startClient()
             throws InterruptedException {
+        String defaultMessage = RandomStringUtils.randomAlphanumeric(MAX_LENGTH);
         for (int i = defaultMessage.length() - 1; i >= 0 ; i--) {
-            Channel channel = create(clientAddr, clientPort);
-            String sendMessage = defaultMessage.substring(i, defaultMessage.length());
-            System.out.printf("Sending message with string payload of size %s%n", sendMessage.length());
-            FindNodeMessage msg = FindNodeMessage.create(sendMessage.getBytes(), privKey);
-            nodeManager.getMessageSender().sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
-            boolean ok = channel.closeFuture().await(10, TimeUnit.SECONDS);
+            int sendAttempts = 0;
+            boolean ok = false;
+            while (sendAttempts < 3) {
+                Channel channel = create(clientAddr, clientPort);
+                String sendMessage = defaultMessage.substring(i, defaultMessage.length());
+                System.out.printf("Sending message with string payload of size %s, attempt %s%n", sendMessage.length(), sendAttempts + 1);
+                FindNodeMessage msg = FindNodeMessage.create(sendMessage.getBytes(), privKey);
+                nodeManager.getMessageSender().sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
+                ok = channel.closeFuture().await(1, TimeUnit.SECONDS);
+                if (ok) break;
+                sendAttempts++;
+                channel.close().sync();
+            }
             if (!ok) {
-                System.out.println("ERROR: Timeout waiting for response");
+                System.out.println("ERROR: Timeout waiting for response after all attempts");
                 assert false;
             } else {
                 System.out.println("OK");
