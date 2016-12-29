@@ -14,8 +14,8 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -35,7 +35,6 @@ import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
-import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
@@ -90,6 +89,7 @@ public class Eth62 extends EthHandler {
     protected GetBlockHeadersMessageWrapper headerRequest;
 
     private Map<Long, byte[]> blockHashCheck;
+    protected long lastReqSentTime;
 
     private static final EthVersion version = V62;
 
@@ -276,6 +276,7 @@ public class Eth62 extends EthHandler {
         GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
 
         sendMessage(msg);
+        lastReqSentTime = System.currentTimeMillis();
 
         futureBlocks = SettableFuture.create();
         return futureBlocks;
@@ -423,6 +424,7 @@ public class Eth62 extends EthHandler {
             request.getFutureHeaders().set(received);
         }
 
+        lastReqSentTime = 0;
         peerState = IDLE;
     }
 
@@ -465,6 +467,7 @@ public class Eth62 extends EthHandler {
         futureBlocks.set(blocks);
         futureBlocks = null;
 
+        lastReqSentTime = 0;
         peerState = IDLE;
     }
 
@@ -494,7 +497,6 @@ public class Eth62 extends EthHandler {
     @Override
     public synchronized void fetchBodies(List<BlockHeaderWrapper> headers) {
         syncStats.reset();
-        peerState = BLOCK_RETRIEVING;
         sendGetBlockBodies(headers);
     }
 
@@ -511,6 +513,7 @@ public class Eth62 extends EthHandler {
 
         wrapper.send();
         sendMessage(wrapper.getMessage());
+        lastReqSentTime = System.currentTimeMillis();
     }
 
     protected synchronized void processInitHeaders(List<BlockHeader> received) {
@@ -826,15 +829,16 @@ public class Eth62 extends EthHandler {
 
     @Override
     public String getSyncStats() {
-
+        int waitResp = lastReqSentTime > 0 ? (int) (System.currentTimeMillis() - lastReqSentTime) / 1000 : 0;
         return String.format(
-                "Peer %s: [ %s, %18s, ping %6s ms, difficulty %s, best block %s ]: %s",
+                "Peer %s: [ %s, %18s, ping %6s ms, difficulty %s, best block %s%s]: %s",
                 getVersion(),
                 channel.getPeerIdShort(),
                 peerState,
                 (int)channel.getPeerStats().getAvgLatency(),
                 getTotalDifficulty(),
                 getBestKnownBlock().getNumber(),
+                waitResp > 5 ? ", wait " + waitResp + "s" : " ",
                 channel.getNodeStatistics().getClientId());
     }
 
