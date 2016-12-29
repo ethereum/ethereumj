@@ -7,7 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -21,6 +21,7 @@ import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,7 @@ public class Eth63 extends Eth62 {
     private static final EthVersion version = V63;
 
     @Autowired
-    private Repository repository;
+    private StateSource stateSource;
 
     private List<byte[]> requestedReceipts;
     private SettableFuture<List<List<TransactionReceipt>>> requestReceiptsFuture;
@@ -91,20 +92,20 @@ public class Eth63 extends Eth62 {
         if (logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing GetNodeData, size [{}]",
                 channel.getPeerIdShort(),
-                msg.getStateRoots().size()
+                msg.getNodeKeys().size()
         );
 
-        List<Value> states = new ArrayList<>();
-        for (byte[] stateRoot : msg.getStateRoots()) {
-            Value value = ((RepositoryImpl) repository).getState(stateRoot);
-            if (value != null) {
-                states.add(value);
-                logger.trace("Eth63: " + Hex.toHexString(stateRoot).substring(0, 8) + " -> " + value);
-            } else {
+        List<Value> nodeValues = new ArrayList<>();
+        for (byte[] nodeKey : msg.getNodeKeys()) {
+            byte[] rawNode = stateSource.get(nodeKey);
+            if (rawNode != null) {
+                Value value = new Value(rawNode);
+                nodeValues.add(value);
+                logger.trace("Eth63: " + Hex.toHexString(nodeKey).substring(0, 8) + " -> " + value);
             }
         }
 
-        sendMessage(new NodeDataMessage(states));
+        sendMessage(new NodeDataMessage(nodeValues));
     }
 
     protected synchronized void processGetReceipts(GetReceiptsMessage msg) {
