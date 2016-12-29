@@ -26,8 +26,8 @@ public class NodeHandler {
     // they are not so informative when everything is already up and running
     // but could be interesting when discovery just starts
     private void logMessage(Message msg, boolean inbound) {
-        String s = (inbound ? " ===> " : "<===  ") + "[" +
-                msg.getClass().getSimpleName() + "] " + this;
+        String s = String.format("%s[%s (%s)] %s", inbound ? " ===>  " : "<===  ", msg.getClass().getSimpleName(),
+                msg.getPacket().length, this);
         if (msgInCount > 1024) {
             logger.trace(s);
         } else {
@@ -228,7 +228,7 @@ public class NodeHandler {
         List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
         closest.add(nodeManager.homeNode);
 
-        sendNeighbours(closest);
+        sendNeighbours(closest.subList(0, 1));
     }
 
     void handleTimedOut() {
