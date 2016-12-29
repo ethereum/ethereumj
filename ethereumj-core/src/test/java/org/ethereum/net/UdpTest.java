@@ -58,7 +58,7 @@ public class UdpTest {
         create(host, port, handler).closeFuture().sync();
     }
 
-    public void startClient(final String targetHost, final int targetPort, String bindAddr, int bindPort, final String message)
+    public void startClient(final String targetHost, final int targetPort, final String bindAddr, final int bindPort, final String message)
             throws InterruptedException {
         ChannelInboundHandlerAdapter handler = new ChannelInboundHandlerAdapter() {
             @Override
@@ -66,7 +66,7 @@ public class UdpTest {
                 try {
                     InetSocketAddress address = new InetSocketAddress(targetHost, targetPort);
                     DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(message.getBytes()), address);
-                    System.out.println("Sending message");
+                    System.out.println("Sending message from " + bindAddr + ":" + bindPort + " to " + targetHost + ":" + targetPort);
                     ctx.writeAndFlush(packet);
                 } catch (Exception e) {
                     e.printStackTrace();
