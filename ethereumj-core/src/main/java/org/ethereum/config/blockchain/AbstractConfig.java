@@ -100,6 +100,11 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     public void hardForkTransfers(Block block, Repository repo) {}
 
     @Override
+    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
+        return minerExtraData;
+    }
+
+    @Override
     public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
         return Collections.emptyList();
     }

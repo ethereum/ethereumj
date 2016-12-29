@@ -63,4 +63,5 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
     public boolean acceptTransactionSignature(Transaction tx) {
         return parent.acceptTransactionSignature(tx);
     }
+
 }

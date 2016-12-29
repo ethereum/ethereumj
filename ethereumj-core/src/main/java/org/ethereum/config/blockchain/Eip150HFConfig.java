@@ -91,6 +91,11 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
+    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
+        return minerExtraData;
+    }
+
+    @Override
     public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
         return parent.headerValidators();
     }

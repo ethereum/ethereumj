@@ -65,6 +65,11 @@ public interface BlockchainConfig {
     void hardForkTransfers(Block block, Repository repo);
 
     /**
+     * DAO hard fork marker
+     */
+    byte[] getExtraData(byte[] minerExtraData, long blockNumber);
+
+    /**
      * Fork related validators. Ensure that connected peer operates on the same fork with us
      * For example: DAO config will have validator that checks presence of extra data in specific block
      */

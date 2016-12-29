@@ -463,16 +463,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+        final long blockNumber = parent.getNumber() + 1;
+
+        final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
+
         Block block = new Block(parent.getHash(),
                 EMPTY_LIST_HASH, // uncleHash
                 minerCoinbase,
                 new byte[0], // log bloom - from tx receipts
                 new byte[0], // difficulty computed right after block creation
-                parent.getNumber() + 1,
+                blockNumber,
                 parent.getGasLimit(), // (add to config ?)
                 0,  // gas used - computed after running all transactions
                 time,  // block time
-                minerExtraData,  // extra data
+                extraData,  // extra data
                 new byte[0],  // mixHash (to mine)
                 new byte[0],  // nonce   (to mine)
                 new byte[0],  // receiptsRoot - computed after running all transactions
