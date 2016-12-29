@@ -154,8 +154,8 @@ public class UdpTest {
             while (sendAttempts < 3) {
                 Channel channel = create(clientAddr, clientPort);
                 String sendMessage = defaultMessage.substring(i, defaultMessage.length());
-                System.out.printf("Sending message with string payload of size %s, attempt %s%n", sendMessage.length(), sendAttempts + 1);
                 FindNodeMessage msg = FindNodeMessage.create(sendMessage.getBytes(), privKey);
+                System.out.printf("Sending message with string payload of size %s, packet size %s, attempt %s%n", sendMessage.length(), msg.getPacket().length, sendAttempts + 1);
                 nodeManager.getMessageSender().sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
                 ok = channel.closeFuture().await(1, TimeUnit.SECONDS);
                 if (ok) break;
