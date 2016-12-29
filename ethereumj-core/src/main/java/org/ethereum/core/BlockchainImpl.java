@@ -313,6 +313,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return repository;
     }
 
+    public synchronized Repository getRepositorySnapshot() {
+        return repository.getSnapshotTo(getBestBlock().getStateRoot());
+    }
+
     @Override
     public BlockStore getBlockStore() {
         return blockStore;
