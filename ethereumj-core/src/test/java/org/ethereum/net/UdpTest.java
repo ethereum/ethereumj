@@ -9,7 +9,9 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -95,13 +97,25 @@ public class UdpTest {
     @Ignore
     @Test
     public void server() throws Exception {
-        startServer("0.0.0.0", 30303);
+        startServer(bindIp(), 30303);
     }
 
     @Ignore
     @Test
     public void client() throws Exception {
-        startClient("localhost", 30303, "0.0.0.0", 8888, "Hello!");
+        startClient("localhost", 30303, bindIp(), 8888, "Hello!");
     }
 
+    public static String bindIp() {
+        String bindIp;
+            try {
+                Socket s = new Socket("www.google.com", 80);
+                bindIp = s.getLocalAddress().getHostAddress();
+                System.out.printf("UDP local bound to: %s%n", bindIp);
+            } catch (IOException e) {
+                System.out.printf("Can't get bind IP. Fall back to 0.0.0.0: " + e);
+                bindIp = "0.0.0.0";
+            }
+        return bindIp;
+    }
 }
