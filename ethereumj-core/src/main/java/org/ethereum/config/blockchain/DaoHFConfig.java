@@ -67,7 +67,7 @@ public class DaoHFConfig extends AbstractDaoConfig {
 
     @Override
     public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
-        if (forkBlockNumber >= blockNumber && forkBlockNumber <= blockNumber + EXTRA_DATA_AFFECTS_BLOCKS_NUMBER ) {
+        if (blockNumber >= forkBlockNumber && blockNumber < forkBlockNumber + EXTRA_DATA_AFFECTS_BLOCKS_NUMBER ) {
             return DAO_EXTRA_DATA;
         }
         return minerExtraData;
