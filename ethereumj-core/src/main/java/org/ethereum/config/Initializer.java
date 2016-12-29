@@ -28,7 +28,7 @@ class Initializer implements BeanPostProcessor {
      * Effectively is called before any other bean is initialized
      */
     private void initConfig(SystemProperties config) {
-        logger.info("Running {},  core version: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
+        logger.info("Running {},  CORE: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
         BuildInfo.printInfo();
 
         databaseVersionHandler.process(config);
