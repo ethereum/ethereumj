@@ -4,6 +4,7 @@ import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
+import org.ethereum.mine.Ethash;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -17,15 +18,26 @@ public class Start {
     public static void main(String args[]) throws IOException, URISyntaxException {
         CLIInterface.call(args);
 
-        if (!SystemProperties.getDefault().blocksLoader().equals("")) {
-            SystemProperties.getDefault().setSyncEnabled(false);
-            SystemProperties.getDefault().setDiscoveryEnabled(false);
+        final SystemProperties config = SystemProperties.getDefault();
+        final boolean actionBlocksLoader = !config.blocksLoader().equals("");
+        final boolean actionGenerateDag = config.getConfig().hasPath("ethash.blockNumber");
+
+
+        if (actionBlocksLoader || actionGenerateDag) {
+            config.setSyncEnabled(false);
+            config.setDiscoveryEnabled(false);
         }
 
         Ethereum ethereum = EthereumFactory.createEthereum();
 
-        if (!SystemProperties.getDefault().blocksLoader().equals(""))
+        if (actionBlocksLoader) {
             ethereum.getBlockLoader().loadBlocks();
+        } else if (actionGenerateDag) {
+            new Ethash(config, config.getConfig().getLong("ethash.blockNumber")).getFullDataset();
+            // DAG file has been created, lets exit
+            System.exit(0);
+        }
+
     }
 
 }
