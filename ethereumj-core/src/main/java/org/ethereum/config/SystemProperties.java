@@ -497,6 +497,11 @@ public class SystemProperties {
         return databaseDir == null ? config.getString("database.dir") : databaseDir;
     }
 
+    @ValidateMe
+    public String ethashDir() {
+        return config.hasPath("ethash.dir") ? config.getString("ethash.dir") : databaseDir();
+    }
+
     public void setDataBaseDir(String dataBaseDir) {
         this.databaseDir = dataBaseDir;
     }
