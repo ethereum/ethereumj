@@ -22,22 +22,22 @@ public class Start {
         final boolean actionBlocksLoader = !config.blocksLoader().equals("");
         final boolean actionGenerateDag = config.getConfig().hasPath("ethash.blockNumber");
 
-
         if (actionBlocksLoader || actionGenerateDag) {
             config.setSyncEnabled(false);
             config.setDiscoveryEnabled(false);
         }
 
-        Ethereum ethereum = EthereumFactory.createEthereum();
-
-        if (actionBlocksLoader) {
-            ethereum.getBlockLoader().loadBlocks();
-        } else if (actionGenerateDag) {
+        if (actionGenerateDag) {
             new Ethash(config, config.getConfig().getLong("ethash.blockNumber")).getFullDataset();
             // DAG file has been created, lets exit
             System.exit(0);
-        }
+        } else {
+            Ethereum ethereum = EthereumFactory.createEthereum();
 
+            if (actionBlocksLoader) {
+                ethereum.getBlockLoader().loadBlocks();
+            }
+        }
     }
 
 }
