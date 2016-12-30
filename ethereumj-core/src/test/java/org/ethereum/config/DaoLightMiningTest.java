@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.ByteUtil.toHexString;
 import static org.junit.Assert.*;
 
 /**
@@ -29,18 +28,13 @@ public class DaoLightMiningTest {
 
         for (int i = 0; i < FORK_BLOCK + 30; i++) {
             Block b = sb.createBlock();
-//            System.out.println("Created block " + b.getNumber() + " " + toHexString(b.getExtraData()));
+//            System.out.println("Created block " + b.getNumber() + " " + getData(b.getExtraData()));
         }
 
-        final Block preForkBlock = sb.getBlockchain().getBlockByNumber(FORK_BLOCK - 1);
-        final Block forkBlock = sb.getBlockchain().getBlockByNumber(FORK_BLOCK);
-        final Block lastForkBlock = sb.getBlockchain().getBlockByNumber(FORK_BLOCK + FORK_BLOCK_AFFECTED - 1);
-        final Block normalBlock = sb.getBlockchain().getBlockByNumber(FORK_BLOCK + FORK_BLOCK_AFFECTED);
-
-        assertEquals("", toHexString(preForkBlock.getExtraData()));
-        assertEquals("64616f2d686172642d666f726b", toHexString(forkBlock.getExtraData()));
-        assertEquals("64616f2d686172642d666f726b", toHexString(lastForkBlock.getExtraData()));
-        assertEquals("", toHexString(normalBlock.getExtraData()));
+        assertEquals("test", getData(sb, FORK_BLOCK - 1));
+        assertEquals("dao-hard-fork", getData(sb, FORK_BLOCK));
+        assertEquals("dao-hard-fork", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED - 1));
+        assertEquals("test", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED));
     }
 
     @Test
@@ -49,8 +43,16 @@ public class DaoLightMiningTest {
 
         for (int i = 0; i < FORK_BLOCK + 30; i++) {
             Block b = sb.createBlock();
-            assertEquals("", toHexString(b.getExtraData()));
         }
+
+        assertEquals("test", getData(sb, FORK_BLOCK - 1));
+        assertEquals("", getData(sb, FORK_BLOCK));
+        assertEquals("", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED - 1));
+        assertEquals("test", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED));
+    }
+
+    private String getData(StandaloneBlockchain sb, long blockNumber) {
+        return new String(sb.getBlockchain().getBlockByNumber(blockNumber).getExtraData());
     }
 
     private StandaloneBlockchain createBlockchain(boolean proFork) {
@@ -63,7 +65,7 @@ public class DaoLightMiningTest {
         });
         netConfig.add(0, c1);
         netConfig.add(FORK_BLOCK, proFork ? new DaoHFConfig(c1, FORK_BLOCK) : new DaoNoHFConfig(c1, FORK_BLOCK));
-        System.setProperty("mine.extraDataHex", "");
+        System.setProperty("mine.extraData", "test");
 
         SystemProperties.getDefault().setBlockchainConfig(netConfig);
 

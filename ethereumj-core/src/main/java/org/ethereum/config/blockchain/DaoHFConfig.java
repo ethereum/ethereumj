@@ -18,7 +18,6 @@ public class DaoHFConfig extends AbstractDaoConfig {
 
     private final List<byte[]> daoAccounts = new ArrayList<>();
     private final byte[] withdrawAccount = Hex.decode("bf4ed7b27f1d666546e30d74d50d173d20bca754");
-    private final long EXTRA_DATA_AFFECTS_BLOCKS_NUMBER = 10;
 
     {
         supportFork = true;
@@ -63,14 +62,6 @@ public class DaoHFConfig extends AbstractDaoConfig {
                 }
             }
         }
-    }
-
-    @Override
-    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
-        if (blockNumber >= forkBlockNumber && blockNumber < forkBlockNumber + EXTRA_DATA_AFFECTS_BLOCKS_NUMBER ) {
-            return DAO_EXTRA_DATA;
-        }
-        return minerExtraData;
     }
 
     private static class DaoAcct {

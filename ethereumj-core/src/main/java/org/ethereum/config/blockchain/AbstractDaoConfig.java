@@ -23,8 +23,8 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
      * Hardcoded values from live network
      */
     public static final long ETH_FORK_BLOCK_NUMBER = 1_920_000;
-
     public static final byte[] DAO_EXTRA_DATA = Hex.decode("64616f2d686172642d666f726b");
+    private final long EXTRA_DATA_AFFECTS_BLOCKS_NUMBER = 10;
 
     // TODO find a way to remove block number value from blockchain config
     protected long forkBlockNumber;
@@ -42,6 +42,22 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
         this.forkBlockNumber = forkBlockNumber;
         BlockHeaderRule rule = new ExtraDataPresenceRule(DAO_EXTRA_DATA, supportFork);
         validator = Arrays.asList(Pair.of(forkBlockNumber, new BlockHeaderValidator(Arrays.asList(rule))));
+    }
+
+    /**
+     * Miners should include marker for initial 10 blocks. Either "dao-hard-fork" or ""
+     */
+    @Override
+    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
+        if (blockNumber >= forkBlockNumber && blockNumber < forkBlockNumber + EXTRA_DATA_AFFECTS_BLOCKS_NUMBER ) {
+            if (supportFork) {
+                return DAO_EXTRA_DATA;
+            } else {
+                return new byte[0];
+            }
+
+        }
+        return minerExtraData;
     }
 
     @Override
