@@ -147,7 +147,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         }
 
         if (loggerNet.isDebugEnabled())
-            loggerNet.debug("From: \t{} \tRecv: \t{}", channel, msg.toString());
+            loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
 
         ethereumListener.onRecvMessage(channel, msg);
 
@@ -161,7 +161,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         ethereumListener.trace(output);
 
         if (loggerNet.isDebugEnabled())
-            loggerNet.debug("To: \t{} \tSend: \t{}", channel, msg);
+            loggerNet.debug("To:   {}    Send:  {}", channel, msg);
 
         byte[] encoded = msg.getEncoded();
 

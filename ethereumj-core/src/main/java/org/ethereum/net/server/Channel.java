@@ -172,7 +172,7 @@ public class Channel {
         ctx.writeAndFlush(byteBufMsg).sync();
 
         if (logger.isDebugEnabled())
-            logger.debug("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
+            logger.debug("To:   {}    Send:  {}", ctx.channel().remoteAddress(), helloMessage);
         getNodeStatistics().rlpxOutHello.add();
     }
 
