@@ -115,7 +115,7 @@ public class GenesisLoader {
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
 
-            GenesisJson genesisJson  = new ObjectMapper().readValue(json, GenesisJson.class);
+            GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
         } catch (Exception e) {
             e.printStackTrace();
