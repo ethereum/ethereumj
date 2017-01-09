@@ -23,10 +23,11 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
      * Hardcoded values from live network
      */
     public static final long ETH_FORK_BLOCK_NUMBER = 1_920_000;
+    // "dao-hard-fork" encoded message
     public static final byte[] DAO_EXTRA_DATA = Hex.decode("64616f2d686172642d666f726b");
     private final long EXTRA_DATA_AFFECTS_BLOCKS_NUMBER = 10;
 
-    // TODO find a way to remove block number value from blockchain config
+    // MAYBE find a way to remove block number value from blockchain config
     protected long forkBlockNumber;
 
     // set in child classes

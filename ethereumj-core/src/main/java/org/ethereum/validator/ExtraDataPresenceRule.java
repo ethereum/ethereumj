@@ -1,6 +1,7 @@
 package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.encoders.Hex;
 
@@ -20,12 +21,15 @@ public class ExtraDataPresenceRule extends BlockHeaderRule {
 
     @Override
     public ValidationResult validate(BlockHeader header) {
-        if (required && !FastByteComparisons.equal(header.getExtraData(), data)) {
+        final byte[] extraData = header.getExtraData() != null ? header.getExtraData() : ByteUtil.EMPTY_BYTE_ARRAY;
+        final boolean extraDataMatches = FastByteComparisons.equal(extraData, data);
+
+        if (required && !extraDataMatches) {
             return fault("Block " + header.getNumber() + " is no-fork. Expected presence of: " +
-                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(header.getExtraData()));
-        } else if (!required && FastByteComparisons.equal(header.getExtraData(), data)) {
+                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(extraData));
+        } else if (!required && extraDataMatches) {
             return fault("Block " + header.getNumber() + " is pro-fork. Expected no: " +
-                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(header.getExtraData()));
+                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(extraData));
         }
         return Success;
     }

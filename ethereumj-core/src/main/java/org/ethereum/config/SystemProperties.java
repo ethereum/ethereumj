@@ -257,7 +257,7 @@ public class SystemProperties {
                     method.invoke(this);
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Error validating config method: " + method, e);
+                throw new RuntimeException("Error validating config method: " + method + ". " + e.getMessage(), e);
             }
         }
     }
