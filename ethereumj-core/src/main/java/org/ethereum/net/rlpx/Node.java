@@ -10,14 +10,14 @@ import org.mapdb.Serializer;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.bytesToIp;
+import static org.ethereum.util.ByteUtil.hostToBytes;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
@@ -111,20 +111,9 @@ public class Node implements Serializable {
             idB = nodeRLP.get(2).getRLPData();
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(hostB[0] & 0xFF);
-        sb.append(".");
-        sb.append(hostB[1] & 0xFF);
-        sb.append(".");
-        sb.append(hostB[2] & 0xFF);
-        sb.append(".");
-        sb.append(hostB[3] & 0xFF);
-
-//        String host = new String(hostB, Charset.forName("UTF-8"));
-        String host = sb.toString();
         int port = byteArrayToInt(portB);
 
-        this.host = host;
+        this.host = bytesToIp(hostB);
         this.port = port;
         this.id = idB;
     }
@@ -169,21 +158,31 @@ public class Node implements Serializable {
         this.port = port;
     }
 
+    /**
+     * Full RLP
+     * [host, udpPort, tcpPort, nodeId]
+     * @return RLP-encoded node data
+     */
     public byte[] getRLP() {
-        byte[] ip;
-        try {
-            ip = InetAddress.getByName(host).getAddress();
-        } catch (UnknownHostException e) {
-            ip = new byte[4];  // fall back to invalid 0.0.0.0 address
-        }
-
-        byte[] rlphost = RLP.encodeElement(ip);
+        byte[] rlphost = RLP.encodeElement(hostToBytes(host));
         byte[] rlpTCPPort = RLP.encodeInt(port);
         byte[] rlpUDPPort = RLP.encodeInt(port);
         byte[] rlpId = RLP.encodeElement(id);
 
-        byte[] data = RLP.encodeList(rlphost, rlpUDPPort, rlpTCPPort, rlpId);
-        return data;
+        return RLP.encodeList(rlphost, rlpUDPPort, rlpTCPPort, rlpId);
+    }
+
+    /**
+     * RLP without nodeId
+     * [host, udpPort, tcpPort]
+     * @return RLP-encoded node data
+     */
+    public byte[] getBriefRLP() {
+        byte[] rlphost = RLP.encodeElement(hostToBytes(host));
+        byte[] rlpTCPPort = RLP.encodeInt(port);
+        byte[] rlpUDPPort = RLP.encodeInt(port);
+
+        return RLP.encodeList(rlphost, rlpUDPPort, rlpTCPPort);
     }
 
     @Override

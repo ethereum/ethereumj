@@ -9,6 +9,8 @@ import java.io.IOException;
 
 import java.math.BigInteger;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import java.util.Arrays;
@@ -614,5 +616,37 @@ public class ByteUtil {
         if (data.startsWith("0x")) data = data.substring(2);
         if (data.length() % 2 == 1) data = "0" + data;
         return Hex.decode(data);
+    }
+
+    /**
+     * Converts string representation of host/ip to 4-bytes byte[] IPv4
+     */
+    public static byte[] hostToBytes(String ip) {
+        byte[] bytesIp;
+        try {
+            bytesIp = InetAddress.getByName(ip).getAddress();
+        } catch (UnknownHostException e) {
+            bytesIp = new byte[4];  // fall back to invalid 0.0.0.0 address
+        }
+
+        return bytesIp;
+    }
+
+    /**
+     * Converts 4 bytes IPv4 IP to String representation
+     */
+    public static String bytesToIp(byte[] bytesIp) {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(bytesIp[0] & 0xFF);
+        sb.append(".");
+        sb.append(bytesIp[1] & 0xFF);
+        sb.append(".");
+        sb.append(bytesIp[2] & 0xFF);
+        sb.append(".");
+        sb.append(bytesIp[3] & 0xFF);
+
+        String ip = sb.toString();
+        return ip;
     }
 }

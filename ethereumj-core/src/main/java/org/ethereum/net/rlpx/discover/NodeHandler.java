@@ -259,8 +259,7 @@ public class NodeHandler {
         }
 //        logMessage("<===  [PING] " + this);
 
-        Message ping = PingMessage.create(nodeManager.table.getNode().getHost(),
-                nodeManager.table.getNode().getPort(), nodeManager.key);
+        Message ping = PingMessage.create(nodeManager.table.getNode(), getNode(), nodeManager.key);
         logMessage(ping, false);
         waitForPong = true;
         pingSent = Util.curTime();
@@ -284,7 +283,7 @@ public class NodeHandler {
 
     void sendPong(byte[] mdc) {
 //        logMessage("<===  [PONG] " + this);
-        Message pong = PongMessage.create(mdc, node.getHost(), node.getPort(), nodeManager.key);
+        Message pong = PongMessage.create(mdc, node, nodeManager.key);
         logMessage(pong, false);
         sendMessage(pong);
         getNodeStatistics().discoverOutPong.add();
