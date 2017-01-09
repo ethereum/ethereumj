@@ -1,7 +1,8 @@
 package org.ethereum.core.genesis;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
@@ -112,9 +113,9 @@ public class GenesisLoader {
             String json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
             ObjectMapper mapper = new ObjectMapper();
-            JavaType type = mapper.getTypeFactory().constructType(GenesisJson.class);
+            mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
 
-            GenesisJson genesisJson  = new ObjectMapper().readValue(json, type);
+            GenesisJson genesisJson  = new ObjectMapper().readValue(json, GenesisJson.class);
             return genesisJson;
         } catch (Exception e) {
             e.printStackTrace();
