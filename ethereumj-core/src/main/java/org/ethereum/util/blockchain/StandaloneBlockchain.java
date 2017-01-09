@@ -311,7 +311,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     public SolidityContract submitNewContractFromJson(String json, String contractName, Object... constructorArgs) {
 		SolidityContractImpl contract;
 		try {
-			contract = createContractFromJson(json, contractName);
+			contract = createContractFromJson(contractName, json);
 			CallTransaction.Function constructor = contract.contract.getConstructor();
 			if (constructor == null && constructorArgs.length > 0) {
 				throw new RuntimeException("No constructor with params found");

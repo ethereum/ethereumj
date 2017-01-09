@@ -395,7 +395,7 @@ public abstract class BlockDownloader {
 
     public void close() {
         try {
-            pool.close();
+            if (pool != null) pool.close();
             stop();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);
