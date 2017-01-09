@@ -5,54 +5,46 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-//import org.spongycastle.util.encoders.Hex;
 
-import java.nio.charset.Charset;
-
+import static org.ethereum.util.ByteUtil.bytesToIp;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
 
 public class PingMessage extends Message {
 
-    String host;
-    int port;
+    String toHost;
+    int toPort;
+    String fromHost;
+    int fromPort;
     long expires;
     int version;
 
-    public static PingMessage create(String host, int port, ECKey privKey) {
-        return create(host, port, privKey, 4);
+    public static PingMessage create(Node fromNode, Node toNode, ECKey privKey) {
+        return create(fromNode, toNode, privKey, 4);
     }
 
-    public static PingMessage create(String host, int port, ECKey privKey, int version) {
+    public static PingMessage create(Node fromNode, Node toNode, ECKey privKey, int version) {
 
         long expiration = 90 * 60 + System.currentTimeMillis() / 1000;
 
         /* RLP Encode data */
-        byte[] rlpIp = RLP.encodeElement(host.getBytes());
-
-        byte[] tmpPort = longToBytes(port);
-        byte[] rlpPort = RLP.encodeElement(stripLeadingZeroes(tmpPort));
-
-        byte[] rlpIpTo = RLP.encodeElement(host.getBytes());
-
-        byte[] tmpPortTo = longToBytes(port);
-        byte[] rlpPortTo = RLP.encodeElement(stripLeadingZeroes(tmpPortTo));
-
         byte[] tmpExp = longToBytes(expiration);
         byte[] rlpExp = RLP.encodeElement(stripLeadingZeroes(tmpExp));
 
         byte[] type = new byte[]{1};
         byte[] rlpVer = RLP.encodeInt(version);
-        byte[] rlpFromList = RLP.encodeList(rlpIp, rlpPort, rlpPort);
-        byte[] rlpToList = RLP.encodeList(rlpIpTo, rlpPortTo, rlpPortTo);
+        byte[] rlpFromList = fromNode.getBriefRLP();
+        byte[] rlpToList = toNode.getBriefRLP();
         byte[] data = RLP.encodeList(rlpVer, rlpFromList, rlpToList, rlpExp);
 
         PingMessage ping = new PingMessage();
         ping.encode(type, data, privKey);
 
         ping.expires = expiration;
-        ping.host = host;
-        ping.port = port;
+        ping.toHost = toNode.getHost();
+        ping.toPort = toNode.getPort();
+        ping.fromHost = fromNode.getHost();
+        ping.fromPort = fromNode.getPort();
 
         return ping;
     }
@@ -61,12 +53,16 @@ public class PingMessage extends Message {
     public void parse(byte[] data) {
 
         RLPList dataList = (RLPList) RLP.decode2OneItem(data, 0);
-        RLPList fromList = (RLPList) dataList.get(2);
 
-        byte[] ipB = fromList.get(0).getRLPData();
-        this.host = new String(ipB, Charset.forName("UTF-8"));
+        RLPList fromList = (RLPList) dataList.get(1);
+        byte[] ipF = fromList.get(0).getRLPData();
+        this.fromHost = bytesToIp(ipF);
+        this.fromPort = ByteUtil.byteArrayToInt(fromList.get(1).getRLPData());
 
-        this.port = ByteUtil.byteArrayToInt(fromList.get(1).getRLPData());
+        RLPList toList = (RLPList) dataList.get(2);
+        byte[] ipT = toList.get(0).getRLPData();
+        this.toHost = bytesToIp(ipT);
+        this.toPort = ByteUtil.byteArrayToInt(toList.get(1).getRLPData());
 
         RLPItem expires = (RLPItem) dataList.get(3);
         this.expires = ByteUtil.byteArrayToLong(expires.getRLPData());
@@ -75,12 +71,20 @@ public class PingMessage extends Message {
     }
 
 
-    public String getHost() {
-        return host;
+    public String getToHost() {
+        return toHost;
     }
 
-    public int getPort() {
-        return port;
+    public int getToPort() {
+        return toPort;
+    }
+
+    public String getFromHost() {
+        return fromHost;
+    }
+
+    public int getFromPort() {
+        return fromPort;
     }
 
     public long getExpires() {
@@ -92,8 +96,8 @@ public class PingMessage extends Message {
 
         long currTime = System.currentTimeMillis() / 1000;
 
-        String out = String.format("[PingMessage] \n host: %s port: %d \n expires in %d seconds \n %s\n",
-                host, port, (expires - currTime), super.toString());
+        String out = String.format("[PingMessage] \n %s:%d ==> %s:%d \n expires in %d seconds \n %s\n",
+                fromHost, fromPort, toHost, toPort, (expires - currTime), super.toString());
 
         return out;
     }

@@ -7,8 +7,6 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
-//import java.nio.charset.Charset;
-
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
 
@@ -17,15 +15,11 @@ public class PongMessage extends Message {
     byte[] token; // token is the MDC of the ping
     long expires;
 
-    public static PongMessage create(byte[] token, String host, int port, ECKey privKey) {
+    public static PongMessage create(byte[] token, Node toNode, ECKey privKey) {
 
         long expiration = 90 * 60 + System.currentTimeMillis() / 1000;
 
-        byte[] rlpIp = RLP.encodeElement(host.getBytes());
-
-        byte[] tmpPort = longToBytes(port);
-        byte[] rlpPort = RLP.encodeElement(stripLeadingZeroes(tmpPort));
-        byte[] rlpToList = RLP.encodeList(rlpIp, rlpPort, rlpPort);
+        byte[] rlpToList = toNode.getBriefRLP();
 
         /* RLP Encode data */
         byte[] rlpToken = RLP.encodeElement(token);
