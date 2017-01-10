@@ -1,8 +1,8 @@
 package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
@@ -369,5 +369,18 @@ public class BlockHeader {
     public String getShortDescr() {
         return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
                 + Hex.toHexString(getParentHash()).substring(0,6) + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BlockHeader that = (BlockHeader) o;
+        return FastByteComparisons.equal(getHash(), that.getHash());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getHash());
     }
 }
