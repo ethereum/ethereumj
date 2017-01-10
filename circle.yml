@@ -43,6 +43,6 @@ test:
 
     # Run hive and move all generated logs into the public artifacts folder
     - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --test=. --sim=. --loglevel=3):
-        timeout: 1200
+        timeout: 2400
     - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/logs/* $CIRCLE_ARTIFACTS
 
