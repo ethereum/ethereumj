@@ -303,10 +303,10 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (channel.isDiscoveryMode()) {
-            loggerNet.trace("Handshake failed: ", cause);
+            loggerNet.trace("Handshake failed: " + cause);
         } else {
             if (cause instanceof IOException || cause instanceof ReadTimeoutException) {
-                loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress(), cause);
+                loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress() + ": " + cause);
             } else {
                 loggerNet.warn("Handshake failed: ", cause);
             }
