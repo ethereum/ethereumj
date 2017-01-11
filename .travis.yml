@@ -7,6 +7,7 @@ jdk: oraclejdk7
 before_install:
   - echo -n | openssl s_client -connect plugins.gradle.org:443 -CApath /etc/ssl/certs/ | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a $JAVA_HOME/jre/lib/security/gradle-ca.crt
   - cat $JAVA_HOME/jre/lib/security/gradle-ca.crt
+  - keytool --list -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
   - sudo keytool -noprompt -import -alias gradle -file $JAVA_HOME/jre/lib/security/gradle-ca.crt -keystore $JAVA_HOME/jre/lib/security/cacerts.jks -storepass changeit
 
 # publish snapshots to https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core
