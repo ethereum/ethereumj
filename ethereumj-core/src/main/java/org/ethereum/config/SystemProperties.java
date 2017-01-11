@@ -723,11 +723,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public boolean isRedisEnabled() {
-        return config.getBoolean("redis.enabled");
-    }
-
-    @ValidateMe
     public boolean isSyncEnabled() {
         return this.syncEnabled == null ? config.getBoolean("sync.enabled") : syncEnabled;
     }
