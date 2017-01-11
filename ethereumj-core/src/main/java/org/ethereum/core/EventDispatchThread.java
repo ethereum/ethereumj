@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.concurrent.*;
 
 /**
@@ -20,9 +19,6 @@ import java.util.concurrent.*;
 @Component
 public class EventDispatchThread {
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
-    private static EventDispatchThread eventDispatchThread;
-
-    private static final int[] queueSizeWarnLevels = new int[]{0, 10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 10_000_000};
 
     private final BlockingQueue<Runnable> executorQueue = new LinkedBlockingQueue<Runnable>();
     private final ExecutorService executor = new ThreadPoolExecutor(1, 1,
@@ -33,10 +29,7 @@ public class EventDispatchThread {
         }
     });
 
-    private long taskStart;
-    private Runnable lastTask;
-    private int lastQueueSizeWarnLevel = 0;
-
+    private static EventDispatchThread eventDispatchThread;
 
     /**
      * Returns the default instance for initialization of Autowired instances
@@ -56,16 +49,13 @@ public class EventDispatchThread {
 
     public void invokeLater(final Runnable r) {
         if (executor.isShutdown()) return;
-        logStatus();
         executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    lastTask = r;
-                    taskStart = System.nanoTime();
+                    long s = System.nanoTime();
                     r.run();
-                    long t = (System.nanoTime() - taskStart) / 1_000_000;
-                    taskStart = 0;
+                    long t = (System.nanoTime() - s) / 1_000_000;
                     if (t > 1000) {
                         logger.warn("EDT task executed in more than 1 sec: " + t + "ms, " +
                         "Executor queue size: " + executorQueue.size());
@@ -78,31 +68,6 @@ public class EventDispatchThread {
         });
     }
 
-    // monitors EDT queue size and prints warning if exceeds thresholds
-    private void logStatus() {
-        int curLevel = getSizeWarnLevel(executorQueue.size());
-        if (lastQueueSizeWarnLevel == curLevel) return;
-
-        synchronized (this) {
-            if (curLevel > lastQueueSizeWarnLevel) {
-                long t = taskStart == 0 ? 0 : (System.nanoTime() - taskStart) / 1_000_000;
-                String msg = "EDT size grown up to " + executorQueue.size() + " (last task executing for " + t + " ms: " + lastTask;
-                if (curLevel < 3) {
-                    logger.info(msg);
-                } else {
-                    logger.warn(msg);
-                }
-            } else if (curLevel < lastQueueSizeWarnLevel) {
-                logger.info("EDT size shrunk down to " + executorQueue.size());
-            }
-            lastQueueSizeWarnLevel = curLevel;
-        }
-    }
-
-    private static int getSizeWarnLevel(int size) {
-        int idx = Arrays.binarySearch(queueSizeWarnLevels, size);
-        return idx >= 0 ? idx : -(idx + 1) - 1;
-    }
 
     public void shutdown() {
         executor.shutdownNow();

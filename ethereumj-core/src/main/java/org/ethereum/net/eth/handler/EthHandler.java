@@ -50,6 +50,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
     };
 
+    protected int maxHashesAsk;
+
     protected boolean processTransactions = false;
 
     protected EthHandler(EthVersion version) {
@@ -63,6 +65,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.config = config;
         this.ethereumListener = ethereumListener;
         this.blockchain = blockchain;
+        maxHashesAsk = config.maxHashesAsk();
         bestBlock = blockStore.getBestBlock();
         this.ethereumListener.addListener(listener);
         // when sync enabled we delay transactions processing until sync is complete

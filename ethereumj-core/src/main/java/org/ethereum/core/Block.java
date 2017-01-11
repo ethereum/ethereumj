@@ -481,7 +481,7 @@ public class Block {
             RLPList transactions = (RLPList) items.get(0);
             RLPList uncles = (RLPList) items.get(1);
 
-            if (!block.parseTxs(header.getTxTrieRoot(), transactions, false)) {
+            if (!block.parseTxs(header.getTxTrieRoot(), transactions, true)) {
                 return null;
             }
 
