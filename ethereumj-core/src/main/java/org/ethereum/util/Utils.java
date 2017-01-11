@@ -3,6 +3,7 @@ package org.ethereum.util;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.vm.DataWord;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
@@ -203,5 +204,25 @@ public class Utils {
         d.div(DIVISOR);
         ret.sub(d);
         return ret;
+    }
+
+    /**
+     * Show std err messages in red and throw RuntimeException to stop execution.
+     */
+    public static void showErrorAndExit(String message, String... messages) {
+        LoggerFactory.getLogger("general").error(message);
+        final String ANSI_RED = "\u001B[31m";
+        final String ANSI_RESET = "\u001B[0m";
+
+        System.err.println(ANSI_RED);
+        System.err.println("");
+        System.err.println("        " + message);
+        for (String msg : messages) {
+            System.err.println("        " + msg);
+        }
+        System.err.println("");
+        System.err.println(ANSI_RESET);
+
+        throw new RuntimeException(message);
     }
 }
