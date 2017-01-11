@@ -152,7 +152,7 @@ public abstract class BlockDownloader {
                     for (Iterator<SyncQueueIfc.HeadersRequest> it = hReq.iterator(); it.hasNext();) {
                         SyncQueueIfc.HeadersRequest headersRequest = it.next();
 
-                        final Channel any = getAnyPeer();
+                        final Channel any = pool.getAnyIdle();
 
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
@@ -382,17 +382,13 @@ public abstract class BlockDownloader {
         return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
     }
 
-    Channel getAnyPeer() {
-        return pool.getAnyIdle();
-    }
-
     public boolean isSyncDone() {
         return false;
     }
 
     public void close() {
         try {
-            if (pool != null) pool.close();
+            pool.close();
             stop();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);

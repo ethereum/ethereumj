@@ -119,7 +119,7 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     @Override
-    public Repository getSnapshotTo(byte[] root) {
+    public synchronized Repository getSnapshotTo(byte[] root) {
         return new RepositoryRoot(stateDS, root);
     }
 

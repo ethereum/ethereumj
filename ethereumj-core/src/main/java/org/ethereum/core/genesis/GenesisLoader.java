@@ -12,7 +12,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +40,7 @@ public class GenesisLoader {
             try (InputStream is = new FileInputStream(new File(genesisFile))) {
                 return loadGenesisJson(is);
             } catch (Exception e) {
-                showLoadError("Problem loading genesis file from " + genesisFile, genesisFile, genesisResource);
+                showLoadError("Problem loading " + genesisFile, genesisFile, genesisResource);
             }
         }
 
@@ -50,20 +50,36 @@ public class GenesisLoader {
             try {
                 return loadGenesisJson(is);
             } catch (Exception e) {
-                showLoadError("Problem loading genesis file from resource directory", genesisFile, genesisResource);
+                showGenesisErrorAndExit("Problem loading genesis file from resource directory", genesisFile, genesisResource);
             }
         } else {
-            showLoadError("Genesis file was not found in resource directory", genesisFile, genesisResource);
+            showGenesisErrorAndExit("Genesis file is not found in resource directory", genesisFile, genesisResource);
         }
 
         return null;
     }
 
     private static void showLoadError(String message, String genesisFile, String genesisResource) {
-        Utils.showErrorAndExit(
+        showGenesisErrorAndExit(
             message,
             "Config option 'genesisFile': " + genesisFile,
             "Config option 'genesis': " + genesisResource);
+    }
+
+    private static void showGenesisErrorAndExit(String message, String... messages) {
+        LoggerFactory.getLogger("general").error(message);
+
+        System.err.println("");
+        System.err.println("");
+        for (String msg : messages) {
+            System.err.println(msg);
+        }
+        System.err.println(message);
+        System.err.println("");
+        System.err.println("");
+
+        // hope to remove this
+        throw new RuntimeException("Wasn't able to load genesis. " + message);
     }
 
     public static Genesis parseGenesis(BlockchainNetConfig blockchainNetConfig, GenesisJson genesisJson) throws RuntimeException {
@@ -79,7 +95,7 @@ public class GenesisLoader {
             return genesis;
         } catch (Exception e) {
             e.printStackTrace();
-            Utils.showErrorAndExit("Problem parsing genesis", e.getMessage());
+            showGenesisErrorAndExit("Problem parsing genesis", e.getMessage());
         }
         return null;
     }
