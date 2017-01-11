@@ -427,7 +427,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
                 .withEthereumListener(listener)
-                .withSyncManager(new SyncManager(null, null));
+                .withSyncManager(new SyncManager());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         blockchain.setPruneManager(pruneManager);

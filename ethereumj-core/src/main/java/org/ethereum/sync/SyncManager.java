@@ -96,6 +96,10 @@ public class SyncManager extends BlockDownloader {
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
+    public SyncManager() {
+        super(null);
+    }
+
     @Autowired
     public SyncManager(final SystemProperties config, BlockHeaderValidator validator) {
         super(validator);
