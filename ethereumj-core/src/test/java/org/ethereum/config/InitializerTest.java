@@ -84,7 +84,7 @@ public class InitializerTest {
         assertTrue(resetHelper.isDatabaseDirectoryExists(props2));
     }
 
-    @Test(expected = Error.class)
+    @Test(expected = RuntimeException.class)
     public void helper_shouldStop_whenNoVersionFileAndNotFirstVersion() throws IOException {
         SystemProperties props = withConfig(2, EXIT);
         resetHelper.process(props);
@@ -107,7 +107,7 @@ public class InitializerTest {
         assertEquals(new Integer(2), resetHelper.getDatabaseVersion(versionFile));
     }
 
-    @Test(expected = Error.class)
+    @Test(expected = RuntimeException.class)
     public void helper_shouldExit_whenDifferentVersionAndFlag() {
         final SystemProperties props1 = withConfig(1, null);
         resetHelper.process(props1);
@@ -116,7 +116,7 @@ public class InitializerTest {
         resetHelper.process(props2);
     }
 
-    @Test(expected = Error.class)
+    @Test(expected = RuntimeException.class)
     public void helper_shouldExit_byDefault() {
         final SystemProperties props1 = withConfig(1, null);
         resetHelper.process(props1);
