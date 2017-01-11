@@ -5,13 +5,10 @@ language: java
 jdk: oraclejdk7
 
 before_install:
-  - echo $JAVA_OPTS
-  - echo -n | openssl s_client -connect plugins.gradle.org:443 -CApath /etc/ssl/certs/ | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a $JAVA_HOME/jre/lib/security/gradle-ca.crt
-  - cat $JAVA_HOME/jre/lib/security/gradle-ca.crt
-  - sudo keytool -noprompt -import -alias gradle -file $JAVA_HOME/jre/lib/security/gradle-ca.crt -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
   - keytool --list -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
-  - export JAVA_OPTS="-Djavax.net.ssl.trustStrore=$JAVA_HOME/jre/lib/security/cacerts -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
-  - echo $JAVA_OPTS
+  - keytool --list -keystore /usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts -storepass changeit
+  - keytool --list -keystore /usr/lib/jvm/java-7-openjdk/jre/lib/security/cacerts -storepass changeit
+  - keytool --list -keystore /usr/lib/jvm/java-8-openjdk/jre/lib/security/cacerts -storepass changeit
 
 
 # publish snapshots to https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core
@@ -53,5 +50,6 @@ notifications:
 # http://www.gradle.org/docs/current/userguide/tutorial_this_and_that.html#sec:gradle_properties_and_system_properties
 env:
   global:
+    - JAVA_OPTS="-Djavax.net.ssl.trustStrore=/usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
     - secure: "OlSe9DlT1D/b/ru3uO1m8nwevaDhH9XGmAfJ/2U69eBwRtg/aLEF9ZpULrMNTDR8XbNT6uuZsvvRby5HOKPRRkOqnWIY8He2hRpw0IYDONfRfKXIcr4WuJM3N98mQ9RYoNcV9LbHoXFQtfc7oUIp5o7WsCx5Pd/Ygyz4ZVNBc5g="
     - secure: "Y5L4DJXonAavfoUAMgM+RUTVYfyT5YkB8yBp8oUTK6RMCUrSTXB2Kpa8fvP8gvPXIXpIQgxa+bn/85wSrFAm8I9e4zXYO/1h4TPsbXrE1KB3aIXlg96wr1WRg+YyWed1VOtrCDZhO0K9l2fEG4ktysv+vtSaDxRVjtnFX+0Xymk="
