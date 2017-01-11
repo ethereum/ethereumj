@@ -459,4 +459,24 @@ public class ByteUtilTest {
             assertArrayEquals(expected, actuals);
         }
     }
+
+    @Test
+    public void testIpConversion() {
+        String ip1 = "0.0.0.0";
+        byte[] ip1Bytes = ByteUtil.hostToBytes(ip1);
+        assertEquals(ip1, ByteUtil.bytesToIp(ip1Bytes));
+
+        String ip2 = "35.36.37.138";
+        byte[] ip2Bytes = ByteUtil.hostToBytes(ip2);
+        assertEquals(ip2, ByteUtil.bytesToIp(ip2Bytes));
+
+        String ip3 = "255.255.255.255";
+        byte[] ip3Bytes = ByteUtil.hostToBytes(ip3);
+        assertEquals(ip3, ByteUtil.bytesToIp(ip3Bytes));
+
+        // Fallback case
+        String ip4 = "255.255.255.256";
+        byte[] ip4Bytes = ByteUtil.hostToBytes(ip4);
+        assertEquals("0.0.0.0", ByteUtil.bytesToIp(ip4Bytes));
+    }
 }

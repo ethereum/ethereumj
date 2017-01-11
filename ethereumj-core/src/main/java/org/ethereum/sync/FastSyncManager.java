@@ -676,35 +676,25 @@ public class FastSyncManager {
 
         try {
             while (true) {
-                Channel bestIdle = pool.getAnyIdle();
-                if (bestIdle != null) {
-                    try {
-                        ListenableFuture<List<BlockHeader>> future = pivotBlockHash == null ?
-                                bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false) :
-                                bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockHash, 1, 0, false);
-                        List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
-                        if (!blockHeaders.isEmpty()) {
-                            BlockHeader ret = blockHeaders.get(0);
+                BlockHeader result = null;
 
-                            if (pivotBlockHash != null && !FastByteComparisons.equal(pivotBlockHash, ret.getHash())) {
-                                logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
-                                        Hex.toHexString(ret.getHash()) + " Dropping the peer.");
-                                bestIdle.disconnect(ReasonCode.USELESS_PEER);
-                                continue;
+                if (pivotBlockHash != null) {
+                    result = getPivotHeaderByHash(pivotBlockHash);
+                } else {
+                    Pair<BlockHeader, Long> pivotResult = getPivotHeaderByNumber(pivotBlockNumber);
+                    if (pivotResult != null) {
+                        if (pivotResult.getRight() != null) {
+                            pivotBlockNumber = pivotResult.getRight();
+                            if (pivotBlockNumber == 0) {
+                                throw new RuntimeException("Cannot fastsync with current set of peers");
                             }
-
-                            logger.info("Pivot header fetched: " + ret.getShortDescr());
-                            return ret;
                         } else {
-                            logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");
-                            bestIdle.getNodeStatistics().wrongFork = true;
-                            bestIdle.disconnect(ReasonCode.USELESS_PEER);
-                            continue;
+                            result = pivotResult.getLeft();
                         }
-                    } catch (TimeoutException e) {
-                        logger.debug("Timeout waiting for answer", e);
                     }
                 }
+
+                if (result != null) return result;
 
                 long t = System.currentTimeMillis();
                 if (t - s > 5000) {
@@ -720,6 +710,91 @@ public class FastSyncManager {
             logger.error("Unexpected", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private BlockHeader getPivotHeaderByHash(byte[] pivotBlockHash) throws Exception {
+        Channel bestIdle = pool.getAnyIdle();
+        if (bestIdle != null) {
+            try {
+                ListenableFuture<List<BlockHeader>> future =
+                        bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockHash, 1, 0, false);
+                List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
+                if (!blockHeaders.isEmpty()) {
+                    BlockHeader ret = blockHeaders.get(0);
+                    if (FastByteComparisons.equal(pivotBlockHash, ret.getHash())) {
+                        logger.info("Pivot header fetched: " + ret.getShortDescr());
+                        return ret;
+                    }
+                    logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
+                            Hex.toHexString(ret.getHash()) + " Dropping the peer.");
+                    bestIdle.disconnect(ReasonCode.USELESS_PEER);
+                } else {
+                    logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");
+                    bestIdle.getNodeStatistics().wrongFork = true;
+                    bestIdle.disconnect(ReasonCode.USELESS_PEER);
+                }
+            } catch (TimeoutException e) {
+                logger.debug("Timeout waiting for answer", e);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 1. Get pivotBlockNumber blocks from all peers
+     * 2. Ensure that pivot block available from 50% + 1 peer
+     * 3. Otherwise proposes new pivotBlockNumber (stepped back)
+     * @param pivotBlockNumber      Pivot block number
+     * @return     null - if no peers available
+     *             null, newPivotBlockNumber - if it's better to try other pivot block number
+     *             BlockHeader, null - if pivot successfully fetched and verified by majority of peers
+     */
+    private Pair<BlockHeader, Long> getPivotHeaderByNumber(long pivotBlockNumber) throws Exception {
+        List<Channel> allIdle = pool.getAllIdle();
+        if (!allIdle.isEmpty()) {
+            try {
+                List<ListenableFuture<List<BlockHeader>>> result = new ArrayList<>();
+
+                for (Channel channel : allIdle) {
+                    ListenableFuture<List<BlockHeader>> future =
+                            channel.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false);
+                    result.add(future);
+                }
+                ListenableFuture<List<List<BlockHeader>>> successfulRequests = Futures.successfulAsList(result);
+                List<List<BlockHeader>> results = successfulRequests.get(3, TimeUnit.SECONDS);
+
+                Map<BlockHeader, Integer> pivotMap = new HashMap<>();
+                for (List<BlockHeader> blockHeaders : results) {
+                    if (!blockHeaders.isEmpty()) {
+                        BlockHeader currentHeader = blockHeaders.get(0);
+                        if (pivotMap.containsKey(currentHeader)) {
+                            pivotMap.put(currentHeader, pivotMap.get(currentHeader) + 1);
+                        } else {
+                            pivotMap.put(currentHeader, 1);
+                        }
+                    }
+                }
+
+                int peerCount = allIdle.size();
+                for (Map.Entry<BlockHeader, Integer> pivotEntry : pivotMap.entrySet()) {
+                    // Require 50% + 1 peer to trust pivot
+                    if (pivotEntry.getValue() * 2 > peerCount) {
+                        logger.info("Pivot header fetched: " + pivotEntry.getKey().getShortDescr());
+                        return Pair.of(pivotEntry.getKey(), null);
+                    }
+                }
+
+                Long newPivotBlockNumber = Math.max(0, pivotBlockNumber - 1000);
+                logger.info("Current pivot candidate not verified by majority of peers, " +
+                        "stepping back to block #{}", newPivotBlockNumber);
+                return Pair.of(null, newPivotBlockNumber);
+            } catch (TimeoutException e) {
+                logger.debug("Timeout waiting for answer", e);
+            }
+        }
+
+        return null;
     }
 
     public void close() {
