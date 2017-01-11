@@ -1,6 +1,7 @@
 package org.ethereum.net.rlpx.discover;
 
 import org.ethereum.net.rlpx.*;
+import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.swarm.Util;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -233,7 +234,12 @@ public class NodeHandler {
 //        logMessage(" ===> [FIND_NODE] " + this);
         getNodeStatistics().discoverInFind.add();
         List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
-        closest.add(nodeManager.homeNode);
+
+        Node publicHomeNode = nodeManager.getPublicHomeNode();
+        if (publicHomeNode != null) {
+            if (closest.size() == KademliaOptions.BUCKET_SIZE) closest.remove(closest.size() - 1);
+            closest.add(publicHomeNode);
+        }
 
         sendNeighbours(closest);
     }
