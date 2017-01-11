@@ -516,16 +516,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public int maxHashesAsk() {
-        return config.getInt("sync.max.hashes.ask");
-    }
-
-    @ValidateMe
-    public int maxBlocksAsk() {
-        return config.getInt("sync.max.blocks.ask");
-    }
-
-    @ValidateMe
     public int syncPeerCount() {
         return config.getInt("sync.peer.count");
     }
