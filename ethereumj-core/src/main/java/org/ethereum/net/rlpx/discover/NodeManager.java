@@ -384,6 +384,16 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return sb.toString();
     }
 
+    /**
+     * @return home node if config defines it as public, otherwise null
+     */
+    Node getPublicHomeNode() {
+        if (config.isPublicHomeNode()) {
+            return homeNode;
+        }
+        return null;
+    }
+
     public void close() {
         peerConnectionManager.close();
         try {
