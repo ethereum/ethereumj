@@ -20,14 +20,18 @@ public class ExtraDataRule extends BlockHeaderRule {
     }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
+    public boolean validate(BlockHeader header) {
+
+        errors.clear();
+
         if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
-            return fault(String.format(
+            errors.add(String.format(
                     "#%d: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE",
                     header.getNumber()
             ));
+            return false;
         }
 
-        return Success;
+        return true;
     }
 }

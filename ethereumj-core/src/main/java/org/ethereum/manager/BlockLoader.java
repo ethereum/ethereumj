@@ -92,9 +92,9 @@ public class BlockLoader {
 
         String fileSrc = config.blocksLoader();
         try {
-            final String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
-            System.out.println("Loading blocks: " + fileSrc + ", format: " + blocksFormat);
+            System.out.println("Loading blocks: " + fileSrc);
 
+            String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
             if ("rlp".equalsIgnoreCase(blocksFormat)) {
                 Path path = Paths.get(fileSrc);
                 // NOT OPTIMAL, but fine for tests
@@ -103,9 +103,6 @@ public class BlockLoader {
                 for (RLPElement item : list) {
                     Block block = new Block(item.getRLPData());
                     exec1.push(block);
-                    if (block.getNumber() % 10000 == 0) {
-                        dbFlushManager.flush();
-                    }
                 }
             } else {
                 FileInputStream inputStream = new FileInputStream(fileSrc);
@@ -119,7 +116,7 @@ public class BlockLoader {
                     exec1.push(block);
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -138,6 +135,15 @@ public class BlockLoader {
     }
 
     private boolean isValid(BlockHeader header) {
-        return headerValidator.validateAndLog(header, logger);
+
+        if (!headerValidator.validate(header)) {
+
+            if (logger.isErrorEnabled())
+                headerValidator.logErrors(logger);
+
+            return false;
+        }
+
+        return true;
     }
 }

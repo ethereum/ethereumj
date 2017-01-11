@@ -370,7 +370,14 @@ public abstract class BlockDownloader {
      * @return true if block is valid, false otherwise
      */
     protected boolean isValid(BlockHeader header) {
-        return headerValidator.validateAndLog(header, logger);
+
+        if (!headerValidator.validate(header)) {
+
+            headerValidator.logErrors(logger);
+            return false;
+        }
+
+        return true;
     }
 
     /**

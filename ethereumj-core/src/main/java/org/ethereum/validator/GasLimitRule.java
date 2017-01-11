@@ -24,12 +24,15 @@ public class GasLimitRule extends BlockHeaderRule {
     }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
+    public boolean validate(BlockHeader header) {
+
+        errors.clear();
 
         if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(MIN_GAS_LIMIT)) < 0) {
-            return fault("header.getGasLimit() < MIN_GAS_LIMIT");
+            errors.add("header.getGasLimit() < MIN_GAS_LIMIT");
+            return false;
         }
 
-        return Success;
+        return true;
     }
 }

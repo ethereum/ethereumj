@@ -256,7 +256,7 @@ public class SystemProperties {
                     method.invoke(this);
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Error validating config method: " + method + ". " + e.getMessage(), e);
+                throw new RuntimeException("Error validating config method: " + method, e);
             }
         }
     }
@@ -485,11 +485,6 @@ public class SystemProperties {
     @ValidateMe
     public String databaseDir() {
         return databaseDir == null ? config.getString("database.dir") : databaseDir;
-    }
-
-    @ValidateMe
-    public String ethashDir() {
-        return config.hasPath("ethash.dir") ? config.getString("ethash.dir") : databaseDir();
     }
 
     public void setDataBaseDir(String dataBaseDir) {
