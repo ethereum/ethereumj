@@ -447,15 +447,6 @@ public class SystemProperties {
     }
 
 
-    public String samplesDir() {
-        return config.getString("samples.dir");
-    }
-
-    @ValidateMe
-    public String coinbaseSecret() {
-        return config.getString("coinbase.secret");
-    }
-
     @ValidateMe
     public Integer peerChannelReadTimeout() {
         return config.getInt("peer.channel.read.timeout");
