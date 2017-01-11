@@ -40,6 +40,10 @@ ext.generatedSrcDir = file('src/gen/java')
 
 sourceSets.main.java.srcDirs += generatedSrcDir
 
+run {
+    /* Can pass all the properties: */
+    systemProperties System.getProperties()
+}
 
 tasks.withType(JavaCompile){
     options.warnings = false
