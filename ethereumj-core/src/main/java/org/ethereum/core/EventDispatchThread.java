@@ -36,7 +36,7 @@ public class EventDispatchThread {
     private long taskStart;
     private Runnable lastTask;
     private int lastQueueSizeWarnLevel = 0;
-
+    private int counter;
 
     /**
      * Returns the default instance for initialization of Autowired instances
@@ -56,7 +56,8 @@ public class EventDispatchThread {
 
     public void invokeLater(final Runnable r) {
         if (executor.isShutdown()) return;
-        logStatus();
+        if (counter++ % 1000 == 0) logStatus();
+
         executor.submit(new Runnable() {
             @Override
             public void run() {
