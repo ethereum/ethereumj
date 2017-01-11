@@ -82,12 +82,24 @@ public class LevelDbDataSource implements DbSource<byte[]> {
                 try {
                     db = factory.open(dbPath.toFile(), options);
                 } catch (IOException e) {
-                    // database must be corrupted
-                    logger.warn("Problem initializing database.", e);
-                    logger.info("LevelDB database must be corrupted. Trying to repair. Could take some time.");
-                    factory.repair(dbPath.toFile(), options);
-                    logger.info("Repair finished. Opening database again.");
-                    db = factory.open(dbPath.toFile(), options);
+
+                    System.out.println("e.getMessage() " + e.getMessage());
+
+                    // database could be corrupted
+                    // exception in std out may look:
+                    // org.fusesource.leveldbjni.internal.NativeDB$DBException: Corruption: 16 missing files; e.g.: /Users/stan/ethereumj/database-test/block/000026.ldb
+                    // org.fusesource.leveldbjni.internal.NativeDB$DBException: Corruption: checksum mismatch
+                    if (e.getMessage().contains("Corruption:")) {
+                        logger.warn("Problem initializing database.", e);
+                        logger.info("LevelDB database must be corrupted. Trying to repair. Could take some time.");
+                        factory.repair(dbPath.toFile(), options);
+                        logger.info("Repair finished. Opening database again.");
+                        db = factory.open(dbPath.toFile(), options);
+                    } else {
+                        // must be db lock
+                        // org.fusesource.leveldbjni.internal.NativeDB$DBException: IO error: lock /Users/stan/ethereumj/database-test/state/LOCK: Resource temporarily unavailable
+                        throw e;
+                    }
                 }
 
                 alive = true;
