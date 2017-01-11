@@ -448,6 +448,15 @@ public class SystemProperties {
 
 
     @ValidateMe
+    public Integer blockQueueSize() {
+        return config.getInt("cache.blockQueueSize") * 1024 * 1024;
+    }
+    @ValidateMe
+    public Integer headerQueueSize() {
+        return config.getInt("cache.headerQueueSize") * 1024 * 1024;
+    }
+
+    @ValidateMe
     public Integer peerChannelReadTimeout() {
         return config.getInt("peer.channel.read.timeout");
     }
