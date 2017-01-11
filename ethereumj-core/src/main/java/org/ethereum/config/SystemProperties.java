@@ -203,9 +203,6 @@ public class SystemProperties {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
         }
-
-        logger.info("Init config took: " + (System.currentTimeMillis() - startTime));
-        logger.info("");
     }
 
     public Config getConfig() {
