@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,11 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     public void setConfig(SystemProperties config) {
         int size = config.getConfig().getInt("cache.stateCacheSize");
         readCache.withMaxCapacity(size * 1024 * 1024 / 512); // 512 - approx size of a node
+    }
+
+    @Autowired
+    public void setCommonConfig(CommonConfig commonConfig) {
+        journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
     }
 
     public JournalSource<byte[]> getJournalSource() {
