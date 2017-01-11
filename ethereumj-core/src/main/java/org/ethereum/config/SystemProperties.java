@@ -1,9 +1,6 @@
 package org.ethereum.config;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.*;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
@@ -152,6 +149,7 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig, ClassLoader classLoader) {
+        long startTime = System.currentTimeMillis();
         try {
             this.classLoader = classLoader;
 
@@ -186,7 +184,8 @@ public class SystemProperties {
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
 
-            config = javaSystemProperties.withFallback(config);
+            config = javaSystemProperties.withFallback(config)
+                    .resolve();     // substitute variables in config if any
             validateConfig();
 
             Properties props = new Properties();
@@ -204,6 +203,9 @@ public class SystemProperties {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
         }
+
+        logger.info("Init config took: " + (System.currentTimeMillis() - startTime));
+        logger.info("");
     }
 
     public Config getConfig() {
