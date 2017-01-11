@@ -111,7 +111,6 @@ public class Eth62 extends EthHandler {
           final Blockchain blockchain, final BlockStore blockStore,
           final CompositeEthereumListener ethereumListener) {
         super(version, config, blockchain, blockStore, ethereumListener);
-        maxHashesAsk = config.maxHashesAsk();
     }
 
     @Override

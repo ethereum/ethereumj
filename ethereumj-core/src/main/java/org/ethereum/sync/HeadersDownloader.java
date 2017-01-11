@@ -6,6 +6,7 @@ import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -79,7 +80,15 @@ public class HeadersDownloader extends BlockDownloader {
         dbFlushManager.commit();
     }
 
-
+    /**
+     * Headers download could block chain synchronization occupying all peers
+     * Prevents this by leaving one peer without work
+     * Fallbacks to any peer when low number of active peers available
+     */
+    @Override
+    Channel getAnyPeer() {
+        return syncPool.getActivePeersCount() > 2 ? syncPool.getNotLastIdle() : syncPool.getAnyIdle();
+    }
 
     @Override
     protected int getBlockQueueFreeSize() {
