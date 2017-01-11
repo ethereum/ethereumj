@@ -588,11 +588,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public int detailsInMemoryStorageLimit() {
-        return config.getInt("details.inmemory.storage.limit");
-    }
-
-    @ValidateMe
     public int cacheFlushBlocks() {
         return config.getInt("cache.flush.blocks");
     }

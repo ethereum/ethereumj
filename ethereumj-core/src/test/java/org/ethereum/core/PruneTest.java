@@ -415,7 +415,6 @@ public class PruneTest {
                         "}");
         Block b1 = bc.createBlock();
 
-        final int inMemoryStorageLimit = SystemProperties.getDefault().detailsInMemoryStorageLimit();
         int entriesForExtStorage = 100;
 
         for (int i = 0; i < entriesForExtStorage; i++) {
