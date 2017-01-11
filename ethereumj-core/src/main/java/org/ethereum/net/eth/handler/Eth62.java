@@ -91,8 +91,6 @@ public class Eth62 extends EthHandler {
 
     protected GetBlockHeadersMessageWrapper headerRequest;
 
-//    private Map<Long, byte[]> blockHashCheck;
-
     private Map<Long, BlockHeaderValidator> validatorMap;
 
     private static final EthVersion version = V62;
