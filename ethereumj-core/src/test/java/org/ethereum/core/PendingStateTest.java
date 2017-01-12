@@ -367,6 +367,7 @@ public class PendingStateTest {
         Assert.assertArrayEquals(txUpd.getRight().getHash(), b2.getHash());
     }
 
+    @Ignore
     @Test
     public void testOldBlockIncluded() throws InterruptedException {
         StandaloneBlockchain bc = new StandaloneBlockchain();
@@ -535,6 +536,7 @@ public class PendingStateTest {
         }
     }
 
+    @Ignore
     @Test
     public void testIncludedRejected() throws InterruptedException {
         // check INCLUDED => DROPPED state transition when a new (long) fork without
