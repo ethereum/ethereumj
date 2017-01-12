@@ -250,7 +250,7 @@ public abstract class BlockDownloader {
 
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
-                        Channel any = getGoodPeer();
+                        Channel any = getAnyPeer();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
                             break;
