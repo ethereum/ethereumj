@@ -32,7 +32,22 @@ public class AbiTest {
         assertTrue(onlyFunc.constant);
     }
 
-    public static void main(String[] args) throws Exception {
-        new AbiTest().simpleTest();
+    @Test
+    public void simpleLegacyTest() throws IOException {
+        String contractAbi = "[{"
+                + "\"name\":\"simpleFunction\","
+                + "\"constant\":true,"
+                + "\"type\":\"function\","
+                + "\"inputs\": [{\"name\":\"_in\", \"type\":\"bytes32\"}],"
+                + "\"outputs\":[{\"name\":\"_out\",\"type\":\"bytes32\"}]}]";
+
+        Abi abi = Abi.fromJson(contractAbi);
+        assertEquals(abi.size(), 1);
+
+        Entry onlyFunc = abi.get(0);
+        assertEquals(onlyFunc.type, Type.function);
+        assertEquals(onlyFunc.inputs.size(), 1);
+        assertEquals(onlyFunc.outputs.size(), 1);
+        assertTrue(onlyFunc.constant);
     }
 }
