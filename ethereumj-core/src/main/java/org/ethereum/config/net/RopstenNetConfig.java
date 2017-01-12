@@ -14,11 +14,6 @@ public class RopstenNetConfig extends AbstractNetConfig {
 
     public RopstenNetConfig() {
         add(0, new HomesteadConfig());
-        add(10, new Eip160HFConfig(new HomesteadConfig()) {
-            @Override
-            public Integer getChainId() {
-                return 3;
-            }
-        });
+        add(10, new RopstenConfig(new HomesteadConfig()));
     }
 }
