@@ -216,6 +216,7 @@ public class TransactionExecutor {
             byte[] code = track.getCode(targetAddress);
             if (isEmpty(code)) {
                 m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
+                result.spendGas(basicTxCost);
             } else {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
@@ -244,6 +245,7 @@ public class TransactionExecutor {
 
         if (isEmpty(tx.getData())) {
             m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
+            result.spendGas(basicTxCost);
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
