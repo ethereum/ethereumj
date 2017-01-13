@@ -1,5 +1,6 @@
 package org.ethereum.solidity;
 
+import org.ethereum.core.CallTransaction;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.Assert;
@@ -38,6 +39,27 @@ public class CompilerTest {
         else
             Assert.fail();
     }
+
+    @Test
+    public void defaultFuncTest() throws IOException {
+        String contractSrc =
+            "pragma solidity ^0.4.7;\n" +
+                    "contract a {" +
+                    "        function() {throw;}" +
+                    "}";
+
+        SolidityCompiler.Result res = SolidityCompiler.compile(
+                contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        CompilationResult.ContractMetadata a = result.contracts.get("a");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.printf(contract.functions[0].toString());
+    }
+
+
 
     public static void main(String[] args) throws Exception {
         new CompilerTest().simpleTest();
