@@ -60,9 +60,13 @@ public class SyncPool {
     @Autowired
     private NodeManager nodeManager;
 
-    @Autowired
     private ChannelManager channelManager;
     private ScheduledExecutorService poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
+
+    @Autowired
+    public SyncPool(ChannelManager channelManager) {
+        this.channelManager = channelManager;
+    }
 
     @PostConstruct
     public void init() {
