@@ -42,7 +42,9 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
 
     @Autowired
     public void setCommonConfig(CommonConfig commonConfig) {
-        journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
+        if (journalSource != null) {
+            journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
+        }
     }
 
     public JournalSource<byte[]> getJournalSource() {
