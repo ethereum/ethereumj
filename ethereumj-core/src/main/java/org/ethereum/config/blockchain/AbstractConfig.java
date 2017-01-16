@@ -72,16 +72,21 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         BigInteger fromParent = pd.add(quotient.multiply(sign));
         BigInteger difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), fromParent);
 
-        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        int explosion = getExplosion(curBlock, parent);
 
-        if (periodCount > 1) {
-            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(periodCount - 2)));
+        if (explosion >= 0) {
+            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
         }
 
         return difficulty;
     }
 
     protected abstract BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent);
+
+    protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
+        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        return periodCount - 2;
+    }
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
