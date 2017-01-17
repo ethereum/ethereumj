@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.BloomFilter;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -468,7 +469,12 @@ public class FastSyncManager {
 
         setSyncStage(UNSECURE);
 
+        // this bloom takes ~ 25Mb of Heap
+        stateSource.getBloomedSource().startBlooming(new BloomFilter(0.01, 20_000_000));
+
         retrieveLoop();
+
+        stateSource.getBloomedSource().stopBlooming();
 
         logger.info("FastSync: state trie download complete!");
         last = 0;
