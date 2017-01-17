@@ -151,11 +151,10 @@ public class WorldManager {
 
     public void loadBlockchain() {
 
-        if (!config.databaseReset())
+        if (!config.databaseReset() || config.databaseResetBlock() != 0)
             blockStore.load();
 
-        Block bestBlock = blockStore.getBestBlock();
-        if (bestBlock == null) {
+        if (blockStore.getBestBlock() == null) {
             logger.info("DB is empty - adding Genesis");
 
             Genesis genesis = (Genesis)Genesis.getInstance(config);
@@ -183,9 +182,25 @@ public class WorldManager {
                 throw new RuntimeException("DB doesn't match genesis");
             }
 
+            Block bestBlock = blockStore.getBestBlock();
+            if (config.databaseReset() && config.databaseResetBlock() > 0) {
+                if (config.databaseResetBlock() > bestBlock.getNumber()) {
+                    logger.error("*** Can't reset to block [{}] since block store is at block [{}].", config.databaseResetBlock(), bestBlock);
+                    throw new RuntimeException("Reset block ahead of block store.");
+                }
+                bestBlock = blockStore.getChainBlockByNumber(config.databaseResetBlock());
+
+                Repository snapshot = repository.getSnapshotTo(bestBlock.getStateRoot());
+                if (false) { // TODO: some way to tell if the snapshot hasn't been pruned
+                    logger.error("*** Could not reset database to block [{}] with stateRoot [{}], since state information is " +
+                            "unavailable.  It might have been pruned from the database.");
+                    throw new RuntimeException("State unavailable for reset block.");
+                }
+            }
+
             blockchain.setBestBlock(bestBlock);
 
-            BigInteger totalDifficulty = blockStore.getTotalDifficulty();
+            BigInteger totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
             blockchain.setTotalDifficulty(totalDifficulty);
 
             logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",

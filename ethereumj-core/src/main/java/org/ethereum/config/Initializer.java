@@ -82,7 +82,7 @@ class Initializer implements BeanPostProcessor {
         }
 
         public void process(SystemProperties config) {
-            if (config.databaseReset()){
+            if (config.databaseReset() && config.databaseResetBlock() == 0){
                 FileUtil.recursiveDelete(config.databaseDir());
                 putDatabaseVersion(config, config.databaseVersion());
                 logger.info("Database reset done");
