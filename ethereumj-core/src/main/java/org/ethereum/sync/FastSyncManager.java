@@ -762,10 +762,10 @@ public class FastSyncManager {
                     result.add(future);
                 }
                 ListenableFuture<List<List<BlockHeader>>> successfulRequests = Futures.successfulAsList(result);
-                List<List<BlockHeader>> results = successfulRequests.get(3, TimeUnit.SECONDS);
+                List<List<BlockHeader>> successfulResults = successfulRequests.get(3, TimeUnit.SECONDS);
 
                 Map<BlockHeader, Integer> pivotMap = new HashMap<>();
-                for (List<BlockHeader> blockHeaders : results) {
+                for (List<BlockHeader> blockHeaders : successfulResults) {
                     if (!blockHeaders.isEmpty()) {
                         BlockHeader currentHeader = blockHeaders.get(0);
                         if (pivotMap.containsKey(currentHeader)) {
