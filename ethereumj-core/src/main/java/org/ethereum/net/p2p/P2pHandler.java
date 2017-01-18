@@ -4,14 +4,14 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
-import org.ethereum.net.eth.message.NewBlockMessage;
-import org.ethereum.net.eth.message.TransactionsMessage;
+import org.ethereum.net.eth.message.v62.NewBlockMessage;
+import org.ethereum.net.eth.message.v62.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.par.ParVersion;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 
@@ -27,15 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
 
+import static org.ethereum.net.client.Capability.PAR;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.message.StaticMessages.*;
 
@@ -217,7 +213,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             List<Capability> capInCommon = getSupportedCapabilities(msg);
             channel.initMessageCodes(capInCommon);
             for (Capability capability : capInCommon) {
-                if (capability.getName().equals(Capability.ETH)) {
+                if(capability.getName().equals(Capability.PAR)) {
+
+                    // Activate ParHandler for this peer
+                    // TODO: ParHandler could be activated only together with ETH?
+                    channel.activatePar(ctx, ParVersion.fromCode(capability.getVersion()));
+
+                } else if(capability.getName().equals(Capability.ETH)) {
 
                     // Activate EthHandler for this peer
                     channel.activateEth(ctx, fromCode(capability.getVersion()));
@@ -331,7 +333,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             }
         }
 
-        supported.add(highest);
+        if (!supported.contains(new Capability(PAR, (byte) 1)))  supported.add(highest);
         return supported;
     }
 

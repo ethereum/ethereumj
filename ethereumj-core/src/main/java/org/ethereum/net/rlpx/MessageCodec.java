@@ -14,6 +14,8 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.par.ParVersion;
+import org.ethereum.net.par.message.ParMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
@@ -50,9 +52,11 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     private MessageFactory p2pMessageFactory;
     private MessageFactory ethMessageFactory;
+    private MessageFactory parMessageFactory;
     private MessageFactory shhMessageFactory;
     private MessageFactory bzzMessageFactory;
     private EthVersion ethVersion;
+    private ParVersion parVersion;
 
     @Autowired
     EthereumListener ethereumListener;
@@ -221,6 +225,10 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             code = messageCodesResolver.withEthOffset(((EthMessageCodes) msgCommand).asByte());
         }
 
+        if (msgCommand instanceof ParMessageCodes){
+            code = messageCodesResolver.withParOffset(((ParMessageCodes) msgCommand).asByte());
+        }
+
         if (msgCommand instanceof ShhMessageCodes){
             code = messageCodesResolver.withShhOffset(((ShhMessageCodes)msgCommand).asByte());
         }
@@ -244,6 +252,11 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             return ethMessageFactory.create(resolved, payload);
         }
 
+        resolved = messageCodesResolver.resolvePar(code);
+        if (parMessageFactory != null && ParMessageCodes.inRange(resolved, parVersion)) {
+            return parMessageFactory.create(resolved, payload);
+        }
+
         resolved = messageCodesResolver.resolveShh(code);
         if (shhMessageFactory != null && ShhMessageCodes.inRange(resolved)) {
             return shhMessageFactory.create(resolved, payload);
@@ -265,6 +278,10 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         this.ethVersion = ethVersion;
     }
 
+    public void setParVersion(ParVersion parVersion) {
+        this.parVersion = parVersion;
+    }
+
     public void setMaxFramePayloadSize(int maxFramePayloadSize) {
         this.maxFramePayloadSize = maxFramePayloadSize;
     }
@@ -279,6 +296,10 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     public void setEthMessageFactory(MessageFactory ethMessageFactory) {
         this.ethMessageFactory = ethMessageFactory;
+    }
+
+    public void setParMessageFactory(MessageFactory parMessageFactory) {
+        this.parMessageFactory = parMessageFactory;
     }
 
     public void setShhMessageFactory(MessageFactory shhMessageFactory) {

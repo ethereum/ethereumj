@@ -11,17 +11,13 @@ import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
-import org.ethereum.net.eth.message.GetNodeDataMessage;
-import org.ethereum.net.eth.message.GetReceiptsMessage;
-import org.ethereum.net.eth.message.NodeDataMessage;
-import org.ethereum.net.eth.message.ReceiptsMessage;
+import org.ethereum.net.eth.message.v63.*;
 
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -217,7 +213,7 @@ public class Eth63 extends Eth62 {
     }
 
 
-    private void dropUselessPeer(String err) {
+    void dropUselessPeer(String err) {
         logger.debug(err);
         requestNodesFuture.setException(new RuntimeException(err));
         dropConnection();

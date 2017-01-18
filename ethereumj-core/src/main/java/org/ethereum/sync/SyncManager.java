@@ -80,6 +80,9 @@ public class SyncManager extends BlockDownloader {
     @Autowired
     private FastSyncManager fastSyncManager;
 
+    @Autowired
+    private WarpSyncManager warpSyncManager;
+
     ChannelManager channelManager;
 
     private SystemProperties config;
@@ -129,11 +132,13 @@ public class SyncManager extends BlockDownloader {
             logger.info("Initializing SyncManager.");
             pool.init(channelManager);
 
-            if (config.isFastSyncEnabled()) {
-                fastSyncManager.init();
-            } else {
-                initRegularSync(EthereumListener.SyncState.COMPLETE);
-            }
+            warpSyncManager.init();
+            // TODO
+//            if (config.isFastSyncEnabled()) {
+//                fastSyncManager.init();
+//            } else {
+//                initRegularSync(EthereumListener.SyncState.COMPLETE);
+//            }
         }
     }
 

@@ -4,6 +4,8 @@ import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.par.ParVersion;
+import org.ethereum.net.par.message.ParMessageCodes;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 
@@ -34,6 +36,14 @@ public class MessageCodesResolver {
         int offset = P2pMessageCodes.USER.asByte() + 1;
 
         for (Capability capability : caps) {
+
+            // FIXME: I'm not correct, passed param is not used
+            if (capability.getName().equals(Capability.PAR)) {
+                setParOffset(offset);
+                ParVersion v = ParVersion.fromCode(capability.getVersion());
+                offset += ParMessageCodes.values(v).length;
+            }
+
             if (capability.getName().equals(Capability.ETH)) {
                 setEthOffset(offset);
                 EthVersion v = fromCode(capability.getVersion());
@@ -65,6 +75,10 @@ public class MessageCodesResolver {
         return withOffset(code, Capability.ETH);
     }
 
+    public byte withParOffset(byte code) {
+        return withOffset(code, Capability.PAR);
+    }
+
     public byte withShhOffset(byte code) {
         return withOffset(code, Capability.SHH);
     }
@@ -84,6 +98,10 @@ public class MessageCodesResolver {
 
     public byte resolveEth(byte code) {
         return resolve(code, Capability.ETH);
+    }
+
+    public byte resolvePar(byte code) {
+        return resolve(code, Capability.PAR);
     }
 
     public byte resolveShh(byte code) {
@@ -106,6 +124,10 @@ public class MessageCodesResolver {
 
     public void setEthOffset(int offset) {
         setOffset(Capability.ETH, offset);
+    }
+
+    public void setParOffset(int offset) {
+        setOffset(Capability.PAR, 33);
     }
 
     public void setShhOffset(int offset) {

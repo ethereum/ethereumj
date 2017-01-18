@@ -1,5 +1,7 @@
-package org.ethereum.net.eth.message;
+package org.ethereum.net.eth.message.v62;
 
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 

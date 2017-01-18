@@ -1,6 +1,6 @@
 package org.ethereum.net;
 
-import org.ethereum.net.eth.message.NewBlockMessage;
+import org.ethereum.net.eth.message.v62.NewBlockMessage;
 
 import org.junit.Test;
 
