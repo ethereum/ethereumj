@@ -108,9 +108,9 @@ public class SnapshotManifestMessage extends ParMessage {
     public String toString() {
         parse();
 
-        String root = Hex.toHexString(stateRoot);
-        String hash = Hex.toHexString(blockHash);
-        long number = blockNumber;
-        return "SNAPSHOT_MANIFEST [ blockNumber: " + number + " hash:" + hash + " stateRoot: " + root + " ]";
+        return String.format("SNAPSHOT_MANIFEST [ blockNumber: %d hash:%s stateRoot: %s ]",
+                blockNumber,
+                blockHash == null ? "" : Hex.toHexString(blockHash),
+                stateRoot == null ? "" : Hex.toHexString(stateRoot));
     }
 }

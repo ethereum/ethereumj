@@ -204,6 +204,8 @@ public class Channel {
     }
 
     public void activatePar(ChannelHandlerContext ctx, ParVersion version) {
+        if (!isParCompatible(version)) return;
+
         ParHandler handler = parHandlerFactory.create(version);
         MessageFactory messageFactory = createParMessageFactory(version);
         messageCodec.setParVersion(version);
@@ -216,6 +218,7 @@ public class Channel {
         handler.setMsgQueue(msgQueue);
         handler.setChannel(this);
         handler.setPeerDiscoveryMode(discoveryMode);
+        handler.setEthHandler(eth);
 
         handler.activate();
 
@@ -352,7 +355,11 @@ public class Channel {
         return eth;
     }
 
-    public ParHandler getPar() {
+    public boolean isParCompatible(ParVersion version) {
+        return (eth.getVersion().equals(EthVersion.V63) && ParVersion.PAR1.equals(version));
+    }
+
+    public ParHandler getParHandler() {
         return par;
     }
 

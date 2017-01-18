@@ -1,16 +1,19 @@
 package org.ethereum.net.par.handler;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.SnapshotManifest;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.MessageQueue;
+import org.ethereum.net.eth.handler.Eth;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.par.ParVersion;
@@ -47,6 +50,8 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
     protected ParVersion version;
 
     protected boolean peerDiscoveryMode = false;
+
+    protected Eth ethHandler;
 
     protected Block bestBlock;
     protected EthereumListener listener = new EthereumListenerAdapter() {
@@ -122,6 +127,12 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
         return channel.getNodeStatistics().getEthLastInboundStatusMsg();
     }
 
+    public synchronized ListenableFuture<SnapshotManifest> requestManifest() {
+        return null;
+    }
+
+    // TODO: Add something like Eth.hasStatusPassed
+
     public void setMsgQueue(MessageQueue msgQueue) {
         this.msgQueue = msgQueue;
     }
@@ -132,6 +143,10 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
 
     public void setChannel(Channel channel) {
         this.channel = channel;
+    }
+
+    public void setEthHandler(Eth ethHandler) {
+        this.ethHandler = ethHandler;
     }
 
     public ParVersion getVersion() {

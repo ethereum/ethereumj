@@ -1,10 +1,11 @@
 package org.ethereum.sync;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.SnapshotManifest;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
@@ -13,9 +14,6 @@ import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.par.handler.Par1;
-import org.ethereum.net.par.message.SnapshotManifestMessage;
-import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.Functional;
@@ -26,6 +24,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -85,7 +84,7 @@ public class WarpSyncManager {
     private boolean warpSyncInProgress = false;
     private Thread warpSyncThread;
 
-    private BlockHeader manifest;
+    private SnapshotManifest manifest;
     private long forceSyncRemains;
 
     void init() {
@@ -109,7 +108,8 @@ public class WarpSyncManager {
     }
 
 
-    private void syncUnsecure(BlockHeader pivot) {
+    private void syncUnsecure(SnapshotManifest manifest) {
+        // TODO: Implement
     }
 
     public void main() {
@@ -122,10 +122,7 @@ public class WarpSyncManager {
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
                 public boolean test(NodeHandler handler) {
-                    // FIXME: Test Warp capability
-                    if (!handler.getNodeStatistics().capabilities.contains(PAR1_CAPABILITY))
-                        return false;
-                    return true;
+                    return handler.getNodeStatistics().capabilities.contains(PAR1_CAPABILITY);
                 }
             });
 
@@ -135,7 +132,7 @@ public class WarpSyncManager {
                 switch (origSyncStage) {
                     case UNSECURE:
                         manifest = getManifest();
-                        if (manifest.getNumber() == 0) {
+                        if (manifest.getBlockNumber() == 0) {
                             logger.info("WarpSync: too short blockchain, proceeding with regular sync...");
                             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
                             return;
@@ -171,9 +168,7 @@ public class WarpSyncManager {
         return warpSyncInProgress;
     }
 
-    private BlockHeader getManifest() throws InterruptedException {
-        byte[] manifestBlockHash;
-        long manifestBlockNumber = 0;
+    private SnapshotManifest getManifest() throws InterruptedException {
 
         long start = System.currentTimeMillis();
         long s = start;
@@ -214,9 +209,7 @@ public class WarpSyncManager {
 
         try {
             while (true) {
-                BlockHeader result = null;
-
-                result = getManifestByHash();
+                SnapshotManifest result = getBestManifest();
 
                 if (result != null) return result;
 
@@ -236,22 +229,32 @@ public class WarpSyncManager {
         }
     }
 
-    private BlockHeader getManifestByHash() throws Exception {
-        Channel anyIdle = pool.getAnyIdle();
-        if (anyIdle != null) {
+    private SnapshotManifest getBestManifest() throws Exception {
+        List<Channel> allIdle = pool.getAllIdle();
+        if (!allIdle.isEmpty()) {
             try {
-                ListenableFuture<SnapshotManifestMessage> future =
-                        ((Par1) anyIdle.getEthHandler()).requestManifest();
-                SnapshotManifestMessage manifest = future.get(3, TimeUnit.SECONDS);
-                if (manifest.getStateRoot() != null) {
-                    Long blockNumber = manifest.getBlockNumber();
+                List<ListenableFuture<SnapshotManifest>> result = new ArrayList<>();
 
-                    logger.info("Manifest fetched for block #" + blockNumber);
-                    return null;
-                } else {
-                    logger.warn("Peer " + anyIdle + " doesn't returned correct manifest block. Dropping the peer.");
-                    anyIdle.getNodeStatistics().wrongFork = true;
-                    anyIdle.disconnect(ReasonCode.USELESS_PEER);
+                for (Channel channel : allIdle) {
+                    ListenableFuture<SnapshotManifest> future =
+                            channel.getParHandler().requestManifest();
+                    result.add(future);
+                }
+                ListenableFuture<List<SnapshotManifest>> successfulRequests = Futures.successfulAsList(result);
+                List<SnapshotManifest> successfulResults = successfulRequests.get(3, TimeUnit.SECONDS);
+
+                SnapshotManifest best = null;
+                for (SnapshotManifest manifest : successfulResults) {
+                    if (best == null && manifest.getBlockNumber() > 0) {
+                        best = manifest;
+                    } else if (best != null && manifest.getBlockNumber() > best.getBlockNumber()) {
+                         best = manifest;
+                    }
+                }
+
+                if (best != null) {
+                    logger.info("Snapshot manifest fetched: {}", best);
+                    return best;
                 }
             } catch (TimeoutException e) {
                 logger.debug("Timeout waiting for answer", e);

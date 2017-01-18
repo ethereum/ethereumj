@@ -212,13 +212,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         else {
             List<Capability> capInCommon = getSupportedCapabilities(msg);
             channel.initMessageCodes(capInCommon);
+            ParVersion parPostponed = null;
             for (Capability capability : capInCommon) {
                 if(capability.getName().equals(Capability.PAR)) {
 
-                    // Activate ParHandler for this peer
-                    // TODO: ParHandler could be activated only together with ETH?
-                    channel.activatePar(ctx, ParVersion.fromCode(capability.getVersion()));
-
+                    // ParHandler could be activated only after ETH
+                    parPostponed = ParVersion.fromCode(capability.getVersion());
                 } else if(capability.getName().equals(Capability.ETH)) {
 
                     // Activate EthHandler for this peer
@@ -236,6 +235,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     // Activate ShhHandler for this peer
                     channel.activateBzz(ctx);
                 }
+            }
+
+            // TODO: Do it in better way
+            if (parPostponed != null) {
+                // Activate ParHandler for this peer
+                channel.activatePar(ctx, parPostponed);
             }
 
             //todo calculate the Offsets
@@ -332,8 +337,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 highest = eth;
             }
         }
+        supported.add(highest);
 
-        if (!supported.contains(new Capability(PAR, (byte) 1)))  supported.add(highest);
         return supported;
     }
 

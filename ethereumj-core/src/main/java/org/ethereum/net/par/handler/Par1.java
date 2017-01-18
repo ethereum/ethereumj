@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.SnapshotManifest;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.StateSource;
@@ -51,7 +52,7 @@ public class Par1 extends ParHandler {
     private StateSource stateSource;
 
     private boolean requestedSnapshotManifest = false;
-    private SettableFuture<SnapshotManifestMessage> requestSnapshotManifestFuture;
+    private SettableFuture<SnapshotManifest> requestSnapshotManifestFuture;
     protected long lastReqSentTime;
 
     protected Block bestBlock;
@@ -108,16 +109,16 @@ public class Par1 extends ParHandler {
                 return;
             }
 
-            // TODO: Remove me, test only
-            requestManifest();
-
+            // TODO: splitting of status proceeding should be done in better way
+            // TODO: We should unlock processing for all methods after ETH passed all checkings
+            ethHandler.sendGetBlockHeaders(msg.getBestHash(), 1, 0, false);
         } catch (NoSuchElementException e) {
             logger.debug("ParHandler already removed");
         }
     }
 
-
-    public synchronized ListenableFuture<SnapshotManifestMessage> requestManifest() {
+    @Override
+    public synchronized ListenableFuture<SnapshotManifest> requestManifest() {
         if (peerState != PeerState.IDLE) return null;
 
         GetSnapshotManifestMessage msg = new GetSnapshotManifestMessage();
@@ -140,7 +141,15 @@ public class Par1 extends ParHandler {
 
         // TODO: Add checkings
 
-        requestSnapshotManifestFuture.set(msg);
+        SnapshotManifest snapshotManifest = new SnapshotManifest(
+                msg.getStateHashes(),
+                msg.getBlockHashes(),
+                msg.getStateRoot(),
+                msg.getBlockNumber(),
+                msg.getBlockHash()
+        );
+
+        requestSnapshotManifestFuture.set(snapshotManifest);
 
         requestedSnapshotManifest = false;
         requestSnapshotManifestFuture = null;
