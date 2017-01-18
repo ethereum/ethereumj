@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Random;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytes;
@@ -190,12 +191,13 @@ public class Ethash {
      */
     public ListenableFuture<MiningResult> mine(final Block block, int nThreads) {
         return new MineTask(block, nThreads,  new Callable<MiningResult>() {
+            AtomicLong taskStartNonce = new AtomicLong(startNonce >= 0 ? startNonce : new Random().nextLong());
             @Override
             public MiningResult call() throws Exception {
+                long threadStartNonce = taskStartNonce.getAndAdd(0x100000000L);
                 long nonce = getEthashAlgo().mine(getFullSize(), getFullDataset(),
                         sha3(block.getHeader().getEncodedWithoutNonce()),
-                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()),
-                        startNonce >= 0 ? startNonce : new Random().nextLong());
+                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()), threadStartNonce);
                 final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
                 return new MiningResult(nonce, pair.getLeft(), block);
             }
@@ -219,12 +221,13 @@ public class Ethash {
      */
     public ListenableFuture<MiningResult> mineLight(final Block block, int nThreads) {
         return new MineTask(block, nThreads,  new Callable<MiningResult>() {
+            AtomicLong taskStartNonce = new AtomicLong(startNonce >= 0 ? startNonce : new Random().nextLong());
             @Override
             public MiningResult call() throws Exception {
+                long threadStartNonce = taskStartNonce.getAndAdd(0x100000000L);
                 final long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(),
                         sha3(block.getHeader().getEncodedWithoutNonce()),
-                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()),
-                        startNonce >= 0 ? startNonce : new Random().nextLong());
+                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()), threadStartNonce);
                 final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
                 return new MiningResult(nonce, pair.getLeft(), block);
             }
