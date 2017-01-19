@@ -395,7 +395,9 @@ public class Channel {
     }
 
     public boolean isIdle() {
-        return eth.isIdle() && par.isIdle();  // TODO: Maybe protocol-specific idles?
+        boolean result = eth.isIdle();
+        if (par != null) result &= par.isIdle();  // TODO: Maybe protocol-specific idles?
+        return result;
     }
 
     public void prohibitTransactionProcessing() {
