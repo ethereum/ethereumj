@@ -20,6 +20,10 @@ public class Par1MessageFactory implements MessageFactory {
                 return new GetSnapshotManifestMessage(encoded);
             case SNAPSHOT_MANIFEST:
                 return new SnapshotManifestMessage(encoded);
+            case GET_SNAPSHOT_DATA:
+                return new GetSnapshotDataMessage(encoded);
+            case SNAPSHOT_DATA:
+                return new SnapshotDataMessage(encoded);
             default:
                 throw new IllegalArgumentException("No such message");
         }

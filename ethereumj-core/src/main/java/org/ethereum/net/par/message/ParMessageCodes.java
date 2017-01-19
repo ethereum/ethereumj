@@ -44,9 +44,22 @@ public enum ParMessageCodes {
      * Respond to a GetSnapshotManifest message with either an empty RLP list or
      * a 1-item RLP list containing a snapshot manifest.
      */
-    SNAPSHOT_MANIFEST(0x12);
+    SNAPSHOT_MANIFEST(0x12),
 
-    // TODO: Add chunk-related messages
+    /**
+     * {@code [+0x13, [chunk_hash]] } <br>
+     *
+     * Request a chunk (identified by the given 32-bytes hash) from a peer.
+     */
+    GET_SNAPSHOT_DATA(0x13),
+
+    /**
+     * {@code [+0x14, [chunk_data] } <br>
+     *
+     * Respond to a GetSnapshotData message with either an empty RLP list or
+     * a 1-item RLP list containing the raw chunk data requested.
+     */
+    SNAPSHOT_DATA(0x14);
 
     private int cmd;
 
@@ -57,7 +70,9 @@ public enum ParMessageCodes {
         versionToValuesMap.put(ParVersion.PAR1, new ParMessageCodes[]{
                 STATUS,
                 GET_SNAPSHOT_MANIFEST,
-                SNAPSHOT_MANIFEST
+                SNAPSHOT_MANIFEST,
+                GET_SNAPSHOT_DATA,
+                SNAPSHOT_DATA
         });
 
         for (ParVersion v : ParVersion.values()) {

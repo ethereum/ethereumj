@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Wrapper around an Parity v1 'SnapshotManifest" message on the network
+ * Wrapper around Parity v1 'SnapshotManifest" message on the network
  *
  * @see ParMessageCodes#SNAPSHOT_MANIFEST
  */

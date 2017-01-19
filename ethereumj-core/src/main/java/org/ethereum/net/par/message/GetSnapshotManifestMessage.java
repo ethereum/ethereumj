@@ -3,7 +3,7 @@ package org.ethereum.net.par.message;
 import org.ethereum.util.RLP;
 
 /**
- * Wrapper around an Parity v1 'GetSnapshotManifest" message on the network
+ * Wrapper around Parity v1 'GetSnapshotManifest" message on the network
  *
  * @see ParMessageCodes#GET_SNAPSHOT_MANIFEST
  */

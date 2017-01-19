@@ -368,7 +368,10 @@ public class Channel {
     }
 
     public String logSyncStats() {
-        return eth.getSyncStats();
+        String result = eth.getSyncStats();
+        if (par != null && !par.isIdle())
+            result = result + "\n\t" + par.getSyncStats();
+        return result;
     }
 
     public BigInteger getTotalDifficulty() {
@@ -392,7 +395,7 @@ public class Channel {
     }
 
     public boolean isIdle() {
-        return eth.isIdle();
+        return eth.isIdle() && par.isIdle();  // TODO: Maybe protocol-specific idles?
     }
 
     public void prohibitTransactionProcessing() {

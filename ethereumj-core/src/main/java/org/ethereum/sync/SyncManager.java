@@ -162,16 +162,24 @@ public class SyncManager extends BlockDownloader {
     }
 
     public SyncStatus getSyncStatus() {
-        if (config.isFastSyncEnabled()) {
-            SyncStatus syncStatus = fastSyncManager.getSyncState();
+            SyncStatus syncStatus = warpSyncManager.getSyncState();
             if (syncStatus.getStage() == SyncStatus.SyncStage.Complete) {
                 return getSyncStateImpl();
             } else {
                 return new SyncStatus(syncStatus, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
             }
-        } else {
-            return getSyncStateImpl();
-        }
+
+        // TODO: uncomment me and do it well
+//        if (config.isFastSyncEnabled()) {
+//            SyncStatus syncStatus = fastSyncManager.getSyncState();
+//            if (syncStatus.getStage() == SyncStatus.SyncStage.Complete) {
+//                return getSyncStateImpl();
+//            } else {
+//                return new SyncStatus(syncStatus, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
+//            }
+//        } else {
+//            return getSyncStateImpl();
+//        }
     }
 
     private SyncStatus getSyncStateImpl() {

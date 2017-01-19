@@ -20,12 +20,15 @@ import org.ethereum.net.par.ParVersion;
 import org.ethereum.net.par.message.ParMessage;
 import org.ethereum.net.par.message.ParMessageCodes;
 import org.ethereum.net.server.Channel;
+import org.ethereum.sync.PeerState;
+import org.ethereum.util.RLPElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
+import static org.ethereum.sync.PeerState.IDLE;
 
 /**
  * Process the messages between peers with 'par' capability on the network<br>
@@ -36,6 +39,10 @@ import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage> {
 
     private final static Logger logger = LoggerFactory.getLogger("net");
+
+    protected PeerState peerState = IDLE;
+
+    protected long lastReqSentTime;
 
     protected Blockchain blockchain;
 
@@ -131,6 +138,14 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
         return null;
     }
 
+    public synchronized ListenableFuture<RLPElement> requestSnapshotData(byte[] snapshotHash) {
+        return null;
+    }
+
+    public boolean isIdle() {
+        return peerState == IDLE;
+    }
+
     // TODO: Add something like Eth.hasStatusPassed
 
     public void setMsgQueue(MessageQueue msgQueue) {
@@ -156,5 +171,15 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
     public synchronized void dropConnection() {
         logger.info("Peer {}: is a bad one, drop", channel.getPeerIdShort());
         disconnect(USELESS_PEER);
+    }
+
+    public String getSyncStats() {
+        int waitResp = lastReqSentTime > 0 ? (int) (System.currentTimeMillis() - lastReqSentTime) / 1000 : 0;
+        return String.format(
+                "%s: [ %s, %18s%s]",
+                getVersion(),
+                channel.getPeerIdShort(),
+                peerState,
+                waitResp > 5 ? ", wait " + waitResp + "s" : " ");
     }
 }

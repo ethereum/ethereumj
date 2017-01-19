@@ -1,34 +1,50 @@
 package org.ethereum.sync;
 
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Repository;
 import org.ethereum.core.SnapshotManifest;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryWrapper;
 import org.ethereum.db.StateSource;
+import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.ByteArrayMap;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Functional;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.xerial.snappy.Snappy;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
 import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
 import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
@@ -42,10 +58,11 @@ public class WarpSyncManager {
 
     private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
+    private final static int CHUNK_DL_TIMEOUT = 180 * 1000;
 
     private static final Capability PAR1_CAPABILITY = new Capability(Capability.PAR, (byte) 1);
 
-    public static final byte[] WARPSYNC_DB_KEY_SYNC_STAGE = HashUtil.sha3("Key in state DB indicating warpsync stage in progress".getBytes());
+    public static final byte[] WARPSYNC_DB_KEY_SYNC_STAGE = sha3("Key in state DB indicating warpsync stage in progress".getBytes());
 
     @Autowired
     private SystemProperties config;
@@ -58,6 +75,9 @@ public class WarpSyncManager {
 
     @Autowired
     private IndexedBlockStore blockStore;
+
+    @Autowired
+    private Repository repository;
 
     @Autowired
     private SyncManager syncManager;
@@ -101,15 +121,260 @@ public class WarpSyncManager {
         warpSyncThread.start();
     }
 
+
+    public SyncStatus getSyncState() {
+        if (!warpSyncInProgress) return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
+
+        if (manifest == null) {
+            return new SyncStatus(SyncStatus.SyncStage.PivotBlock,
+                    (FORCE_SYNC_TIMEOUT - forceSyncRemains) / 1000, FORCE_SYNC_TIMEOUT / 1000);
+        }
+
+        EthereumListener.SyncState syncStage = getSyncStage();
+        switch (syncStage) {
+            case UNSECURE:
+                return new SyncStatus(SyncStatus.SyncStage.StateNodes,
+                        manifest.getStateHashes().size() - pendingStateChunks.size() - stateChunkQueue.size(),
+                        manifest.getStateHashes().size());
+        }
+        return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
+    }
+
     private EthereumListener.SyncState getSyncStage() {
         byte[] bytes = stateDS.get(WARPSYNC_DB_KEY_SYNC_STAGE);
         if (bytes == null) return UNSECURE;
         return EthereumListener.SyncState.values()[bytes[0]];
     }
 
+    synchronized void processTimeouts() {
+        long cur = System.currentTimeMillis();
+        List<StateChunkRequest> requests = new ArrayList<>(pendingStateChunks.values());
+        for (StateChunkRequest request : requests) {
+            if (cur - request.requestSent > CHUNK_DL_TIMEOUT) {
+                logger.trace("Removing state chunk {} from pending due to timeout", Hex.toHexString(request.stateChunkHash));
+                pendingStateChunks.remove(request.stateChunkHash);
+                stateChunkQueue.addFirst(request);
+            }
+        }
+    }
 
-    private void syncUnsecure(SnapshotManifest manifest) {
-        // TODO: Implement
+    private void syncUnsecure() {
+
+        logger.info("WarpSync: downloading state tries from {} state chunks", manifest.getStateHashes().size());
+
+        for (byte[] stateChunkHash : manifest.getStateHashes()) {
+            stateChunkQueue.add(new StateChunkRequest(stateChunkHash));
+        }
+
+        stateRetrieveLoop();
+
+        repository.flush();
+        dbFlushManager.commit();
+        dbFlushManager.flush();
+
+        logger.info("Saving state finished, checking state root");
+        if (repository.getRoot() == manifest.getStateRoot()) {
+            logger.info("State root matches manifest, unsecure sync finished");
+        } else {
+            logger.error("State root {} doesn't match manifest state root {}. WarpSync failed.",
+                    Hex.toHexString(repository.getRoot()), Hex.toHexString(manifest.getStateRoot()));
+            throw new RuntimeException("Fatal WarpSync error, incorrect state trie.");
+        }
+    }
+
+    // TODO: Refactor to chunk request
+    private class StateChunkRequest {
+        byte[] stateChunkHash;
+        byte[] response;
+        Long requestSent;
+
+        StateChunkRequest(byte[] stateChunkHash) {
+            this.stateChunkHash = stateChunkHash;
+        }
+
+        public void reqSent() {
+            synchronized (WarpSyncManager.this) {
+                Long timestamp = System.currentTimeMillis();
+                requestSent = timestamp;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("StateChunkRequest {chunkHash=%s}", Hex.toHexString(stateChunkHash));
+        }
+    }
+
+    Deque<StateChunkRequest> stateChunkQueue = new LinkedBlockingDeque<>();
+    ByteArrayMap<StateChunkRequest> pendingStateChunks = new ByteArrayMap<>();
+
+    void stateRetrieveLoop() {
+        try {
+            while (!stateChunkQueue.isEmpty() || !pendingStateChunks.isEmpty()) {
+                try {
+                    processTimeouts();
+
+                    while (requestNextStateChunks()) ;
+
+                    synchronized (this) {
+                        wait(10);
+                    }
+                } catch (InterruptedException e) {
+                    throw e;
+                } catch (Throwable t) {
+                    logger.error("Error", t);
+                }
+            }
+        } catch (InterruptedException e) {
+            logger.warn("State chunks warp sync loop was interrupted", e);
+        }
+    }
+
+    // FIXME: Something heavy is freezing everything. Definitely, underneath
+    boolean requestNextStateChunks() {
+        // TODO: Change to any idle after test
+        final Channel idle = pool.getAnyIdle();
+
+        if (idle != null) {
+            StateChunkRequest req = null;
+            synchronized (this) {
+                if (!stateChunkQueue.isEmpty()) {
+                    req = stateChunkQueue.poll();
+                    StateChunkRequest request = pendingStateChunks.get(req.stateChunkHash);
+                    if (request == null) {
+                        pendingStateChunks.put(req.stateChunkHash, req);
+                        req.reqSent();
+                    } else {
+                        req = null;
+                    }
+                }
+            }
+            if (req != null) {
+                final StateChunkRequest reqSave = req;
+                logger.trace("Requesting {} state chunk from peer: {}", Hex.toHexString(req.stateChunkHash), idle);
+                ListenableFuture<RLPElement> dataFuture = idle.getParHandler().requestSnapshotData(req.stateChunkHash);
+                Futures.addCallback(dataFuture, new FutureCallback<RLPElement>() {
+                    @Override
+                    public void onSuccess(RLPElement result) {
+                        try {
+                            // FIXME: if we could get really empty correct chunk?
+                            synchronized (WarpSyncManager.this) {
+                                final StateChunkRequest request = pendingStateChunks.remove(reqSave.stateChunkHash);
+                                if (request == null) return;
+                                if (result == null) {
+                                    stateChunkQueue.addFirst(request);
+                                    WarpSyncManager.this.notifyAll();
+                                    return;
+                                }
+                            }
+                            byte[] accountStatesCompressed = result.getRLPData();
+
+                            // Validation
+                            byte[] hashActual = sha3(accountStatesCompressed);
+                            if (!FastByteComparisons.equal(reqSave.stateChunkHash, hashActual)) {
+                                logger.info("Received bad state chunk from peer: {}, expected hash: {}, actual hash: {}",
+                                        idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.stateChunkHash));
+                                // TODO: drop peer etc
+                            };
+
+                            byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
+                            RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
+                            synchronized (WarpSyncManager.this) {
+                                if (pendingStateChunks.get(reqSave.stateChunkHash) == null) {
+                                    WarpSyncManager.this.notifyAll();
+                                    return;
+                                }
+                                RepositoryWrapper repositoryWrapper = (RepositoryWrapper) repository;
+                                // TODO: in case of any error rollback etc
+                                logger.trace("Received {} states from peer: {}", accountStateList.size(), idle);
+                                for (RLPElement accountStateElement : accountStateList) {
+                                    RLPList accountStateItem = (RLPList) accountStateElement;
+                                    byte[] accountAddress = accountStateItem.get(0).getRLPData();
+                                    RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
+
+                                    byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
+                                    BigInteger nonce = nonceRaw == null ? BigInteger.ZERO : ByteUtil.bytesToBigInteger(nonceRaw);
+                                    byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
+                                    BigInteger balance = balanceRaw == null ? BigInteger.ZERO : ByteUtil.bytesToBigInteger(balanceRaw);
+                                    repositoryWrapper.createAccount(accountAddress);
+                                    repositoryWrapper.setNonce(accountAddress, nonce);
+                                    repositoryWrapper.addBalance(accountAddress, balance);
+
+                                    // 1-byte code flag
+                                    byte[] codeFlagRaw = accountStateInfo.get(2).getRLPData();
+                                    byte codeFlag = codeFlagRaw == null? 0x00 : codeFlagRaw[0];
+                                    byte[] code = null;
+                                    byte[] codeHash = null;
+                                    switch (codeFlag) {
+                                        case 0x01:  // code
+                                            code = accountStateInfo.get(3).getRLPData();
+                                            break;
+                                        case 0x02:  // code hash. some account with lower address should contain code
+                                            codeHash = accountStateInfo.get(3).getRLPData();
+                                        default:
+                                            // TODO: do something bad
+                                    }
+                                    // TODO: check that code was recovered successfully
+                                    // TODO: use repositoryWrapper??
+                                    if (codeHash != null) repositoryWrapper.saveCodeHash(accountAddress, codeHash);
+                                    if (code != null) repositoryWrapper.saveCode(accountAddress, code);
+
+                                    if (code != null || codeHash != null) {
+                                        RLPList storageDataList = (RLPList) accountStateInfo.get(4);
+                                        for (RLPElement storageRowElement : storageDataList) {
+                                            RLPList storageRowList = (RLPList) storageRowElement;
+                                            byte[] keyHash = storageRowList.get(0).getRLPData();
+                                            byte[] valRlp = storageRowList.get(1).getRLPData();
+                                            byte[] val = RLP.decode2(valRlp).get(0).getRLPData();
+                                            // TODO: better
+                                            assert FastByteComparisons.equal(keyHash, sha3(valRlp));
+
+                                            repositoryWrapper.addStorageRow(accountAddress,
+                                                    new DataWord(keyHash), new DataWord(val));
+                                        }
+                                    }
+                                }
+
+                                repositoryWrapper.commit();
+                                dbFlushManager.commit();
+                                dbFlushManager.flush();
+
+                                WarpSyncManager.this.notifyAll();
+
+                                // TODO: Add stats
+//                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+//                                idle.getNodeStatistics().eth63NodesReceived.add(result.size());
+//                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
+                            }
+                        } catch (Exception e) {
+                            logger.error("Unexpected error processing state chunk", e);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        logger.warn("Error with snapshot data request: " + t);
+                        synchronized (WarpSyncManager.this) {
+                            final StateChunkRequest request = pendingStateChunks.get(reqSave.stateChunkHash);
+                            if (request == null) return;
+                            stateChunkQueue.addFirst(request);
+                            pendingStateChunks.remove(reqSave.stateChunkHash);
+                            WarpSyncManager.this.notifyAll();
+                        }
+                    }
+                });
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+
+    private void syncSecure() {
+        logger.info("WarpSync: proceeding with secure sync.");
     }
 
     public void main() {
@@ -138,15 +403,12 @@ public class WarpSyncManager {
                             return;
                         }
 
-                        syncUnsecure(manifest);  // regularSync should be inited here
+                        syncUnsecure();
+                    case SECURE:
+
+                        syncSecure();
+                        listener.onSyncDone(EthereumListener.SyncState.SECURE);
                     case COMPLETE:
-//                        if (origSyncStage == COMPLETE) {
-//                            logger.info("FastSync: SECURE sync was completed prior to this run, proceeding with next stage...");
-//                            logger.info("Initializing regular sync");
-//                            syncManager.initRegularSync(EthereumListener.SyncState.SECURE);
-//                        }
-//
-//                        syncBlocksReceipts();
 
                         listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
                 }
@@ -234,7 +496,7 @@ public class WarpSyncManager {
         if (!allIdle.isEmpty()) {
             try {
                 List<ListenableFuture<SnapshotManifest>> result = new ArrayList<>();
-
+                // TODO: If we keep status answer data in ParHandler, we could know best peer
                 for (Channel channel : allIdle) {
                     ListenableFuture<SnapshotManifest> future =
                             channel.getParHandler().requestManifest();
@@ -245,9 +507,10 @@ public class WarpSyncManager {
 
                 SnapshotManifest best = null;
                 for (SnapshotManifest manifest : successfulResults) {
-                    if (best == null && manifest.getBlockNumber() > 0) {
+                    if (manifest == null || manifest.getBlockNumber() == null || manifest.getBlockNumber()  == 0) continue;
+                    if (best == null) {
                         best = manifest;
-                    } else if (best != null && manifest.getBlockNumber() > best.getBlockNumber()) {
+                    } else if (manifest.getBlockNumber() > best.getBlockNumber()) {
                          best = manifest;
                     }
                 }

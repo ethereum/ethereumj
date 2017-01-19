@@ -9,18 +9,21 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.SnapshotManifest;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.StateSource;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.par.ParVersion;
+import org.ethereum.net.par.message.GetSnapshotDataMessage;
 import org.ethereum.net.par.message.GetSnapshotManifestMessage;
 import org.ethereum.net.par.message.ParMessage;
 import org.ethereum.net.par.message.ParStatusMessage;
+import org.ethereum.net.par.message.SnapshotDataMessage;
 import org.ethereum.net.par.message.SnapshotManifestMessage;
 import org.ethereum.sync.PeerState;
+import org.ethereum.util.RLPElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,20 +43,17 @@ import static org.ethereum.sync.PeerState.IDLE;
 @Scope("prototype")
 public class Par1 extends ParHandler {
 
-    protected PeerState peerState = IDLE;
-
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private static final ParVersion version = ParVersion.PAR1;
 
     private MessageQueue msgQueue = null;
 
-    @Autowired
-    private StateSource stateSource;
-
     private boolean requestedSnapshotManifest = false;
     private SettableFuture<SnapshotManifest> requestSnapshotManifestFuture;
-    protected long lastReqSentTime;
+
+    private ByteArrayWrapper requestedSnapshotData = null;
+    private SettableFuture<RLPElement> requestSnapshotDataFuture;
 
     protected Block bestBlock;
     protected EthereumListener listener = new EthereumListenerAdapter() {
@@ -84,6 +84,9 @@ public class Par1 extends ParHandler {
 //                break;
             case SNAPSHOT_MANIFEST:
                 processManifest((SnapshotManifestMessage) msg);
+                break;
+            case SNAPSHOT_DATA:
+                processData((SnapshotDataMessage) msg);
                 break;
             default:
                 break;
@@ -153,6 +156,39 @@ public class Par1 extends ParHandler {
 
         requestedSnapshotManifest = false;
         requestSnapshotManifestFuture = null;
+        lastReqSentTime = 0;
+        peerState = PeerState.IDLE;
+    }
+
+    @Override
+    public synchronized ListenableFuture<RLPElement> requestSnapshotData(byte[] snapshotHash) {
+        if (peerState != PeerState.IDLE) return null;
+        peerState = PeerState.SNAPSHOT_DATA_RETRIEVING;
+
+        ByteArrayWrapper hash = new ByteArrayWrapper(snapshotHash);
+        GetSnapshotDataMessage msg = new GetSnapshotDataMessage(hash);
+
+        requestSnapshotDataFuture = SettableFuture.create();
+        requestedSnapshotData = hash;
+        sendMessage(msg);
+        lastReqSentTime = System.currentTimeMillis();
+
+        return requestSnapshotDataFuture;
+    }
+
+    protected synchronized void processData(SnapshotDataMessage msg) {
+        if (requestedSnapshotData == null) {
+            logger.debug("Received SnapshotDataMessage when requestedSnapshotData == null. Dropping peer " +
+                    channel);
+            dropConnection();
+        }
+
+        // TODO: Add checkings
+
+        requestSnapshotDataFuture.set(msg.getChunkData());
+
+        requestedSnapshotData = null;
+        requestSnapshotDataFuture = null;
         lastReqSentTime = 0;
         peerState = PeerState.IDLE;
     }
