@@ -146,6 +146,7 @@ public class WarpSyncManager {
         return EthereumListener.SyncState.values()[bytes[0]];
     }
 
+    // TODO: not a best way considering large size and different internet connections
     synchronized void processTimeouts() {
         long cur = System.currentTimeMillis();
         List<StateChunkRequest> requests = new ArrayList<>(pendingStateChunks.values());
@@ -168,7 +169,6 @@ public class WarpSyncManager {
 
         stateRetrieveLoop();
 
-        repository.flush();
         dbFlushManager.commit();
         dbFlushManager.flush();
 
@@ -280,25 +280,21 @@ public class WarpSyncManager {
                             byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
                             RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
                             synchronized (WarpSyncManager.this) {
-                                if (pendingStateChunks.get(reqSave.stateChunkHash) == null) {
-                                    WarpSyncManager.this.notifyAll();
-                                    return;
-                                }
                                 RepositoryWrapper repositoryWrapper = (RepositoryWrapper) repository;
                                 // TODO: in case of any error rollback etc
                                 logger.trace("Received {} states from peer: {}", accountStateList.size(), idle);
                                 for (RLPElement accountStateElement : accountStateList) {
                                     RLPList accountStateItem = (RLPList) accountStateElement;
+
+                                    // FIXME: IT'S HASH of account address
                                     byte[] accountAddress = accountStateItem.get(0).getRLPData();
                                     RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
 
-                                    byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
-                                    BigInteger nonce = nonceRaw == null ? BigInteger.ZERO : ByteUtil.bytesToBigInteger(nonceRaw);
-                                    byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
-                                    BigInteger balance = balanceRaw == null ? BigInteger.ZERO : ByteUtil.bytesToBigInteger(balanceRaw);
                                     repositoryWrapper.createAccount(accountAddress);
-                                    repositoryWrapper.setNonce(accountAddress, nonce);
-                                    repositoryWrapper.addBalance(accountAddress, balance);
+                                    byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
+                                    if (nonceRaw != null) repositoryWrapper.setNonce(accountAddress, ByteUtil.bytesToBigInteger(nonceRaw));
+                                    byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
+                                    if (balanceRaw != null) repositoryWrapper.addBalance(accountAddress, ByteUtil.bytesToBigInteger(balanceRaw));
 
                                     // 1-byte code flag
                                     byte[] codeFlagRaw = accountStateInfo.get(2).getRLPData();
@@ -337,7 +333,6 @@ public class WarpSyncManager {
 
                                 repositoryWrapper.commit();
                                 dbFlushManager.commit();
-                                dbFlushManager.flush();
 
                                 WarpSyncManager.this.notifyAll();
 
@@ -467,7 +462,7 @@ public class WarpSyncManager {
             Thread.sleep(500);
         }
 
-        logger.info("WarpSync: fetching manifest from best peer with block #" + bestKnownBlock);
+        logger.info("WarpSync: fetching manifest from all peers to find best one available");
 
         try {
             while (true) {
