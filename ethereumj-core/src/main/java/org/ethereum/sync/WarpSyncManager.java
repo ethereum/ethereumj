@@ -6,12 +6,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.Repository;
 import org.ethereum.core.SnapshotManifest;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryWrapper;
+import org.ethereum.db.RepositoryInsecureTrie;
 import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -77,7 +76,7 @@ public class WarpSyncManager {
     private IndexedBlockStore blockStore;
 
     @Autowired
-    private Repository repository;
+    private RepositoryInsecureTrie repository;
 
     @Autowired
     private SyncManager syncManager;
@@ -172,7 +171,10 @@ public class WarpSyncManager {
         dbFlushManager.commit();
         dbFlushManager.flush();
 
+        blockchain.getRepository().syncToRoot(repository.getRoot());
+
         logger.info("Saving state finished, checking state root");
+
         if (repository.getRoot() == manifest.getStateRoot()) {
             logger.info("State root matches manifest, unsecure sync finished");
         } else {
@@ -280,21 +282,20 @@ public class WarpSyncManager {
                             byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
                             RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
                             synchronized (WarpSyncManager.this) {
-                                RepositoryWrapper repositoryWrapper = (RepositoryWrapper) repository;
                                 // TODO: in case of any error rollback etc
                                 logger.trace("Received {} states from peer: {}", accountStateList.size(), idle);
                                 for (RLPElement accountStateElement : accountStateList) {
                                     RLPList accountStateItem = (RLPList) accountStateElement;
 
                                     // FIXME: IT'S HASH of account address
-                                    byte[] accountAddress = accountStateItem.get(0).getRLPData();
+                                    byte[] addressHash = accountStateItem.get(0).getRLPData();
                                     RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
 
-                                    repositoryWrapper.createAccount(accountAddress);
+                                    repository.createAccount(addressHash);
                                     byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
-                                    if (nonceRaw != null) repositoryWrapper.setNonce(accountAddress, ByteUtil.bytesToBigInteger(nonceRaw));
+                                    if (nonceRaw != null) repository.setNonce(addressHash, ByteUtil.bytesToBigInteger(nonceRaw));
                                     byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
-                                    if (balanceRaw != null) repositoryWrapper.addBalance(accountAddress, ByteUtil.bytesToBigInteger(balanceRaw));
+                                    if (balanceRaw != null) repository.addBalance(addressHash, ByteUtil.bytesToBigInteger(balanceRaw));
 
                                     // 1-byte code flag
                                     byte[] codeFlagRaw = accountStateInfo.get(2).getRLPData();
@@ -312,8 +313,8 @@ public class WarpSyncManager {
                                     }
                                     // TODO: check that code was recovered successfully
                                     // TODO: use repositoryWrapper??
-                                    if (codeHash != null) repositoryWrapper.saveCodeHash(accountAddress, codeHash);
-                                    if (code != null) repositoryWrapper.saveCode(accountAddress, code);
+                                    if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
+                                    if (code != null) repository.saveCode(addressHash, code);
 
                                     if (code != null || codeHash != null) {
                                         RLPList storageDataList = (RLPList) accountStateInfo.get(4);
@@ -325,13 +326,13 @@ public class WarpSyncManager {
                                             // TODO: better
                                             assert FastByteComparisons.equal(keyHash, sha3(valRlp));
 
-                                            repositoryWrapper.addStorageRow(accountAddress,
+                                            repository.addStorageRow(addressHash,
                                                     new DataWord(keyHash), new DataWord(val));
                                         }
                                     }
                                 }
 
-                                repositoryWrapper.commit();
+                                repository.commit();
                                 dbFlushManager.commit();
 
                                 WarpSyncManager.this.notifyAll();
