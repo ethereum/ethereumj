@@ -232,7 +232,6 @@ public class WarpSyncManager {
         }
     }
 
-    // FIXME: Something heavy is freezing everything. Definitely, underneath
     boolean requestNextStateChunks() {
         // TODO: Change to any idle after test
         final Channel idle = pool.getAnyIdle();
@@ -278,6 +277,7 @@ public class WarpSyncManager {
                                         idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.stateChunkHash));
                                 // TODO: drop peer etc
                             };
+                            // TODO: Put it in some queue and work with it in separate thread, heavy ops underneath
 
                             byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
                             RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
@@ -287,7 +287,6 @@ public class WarpSyncManager {
                                 for (RLPElement accountStateElement : accountStateList) {
                                     RLPList accountStateItem = (RLPList) accountStateElement;
 
-                                    // FIXME: IT'S HASH of account address
                                     byte[] addressHash = accountStateItem.get(0).getRLPData();
                                     RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
 
@@ -311,8 +310,6 @@ public class WarpSyncManager {
                                         default:
                                             // TODO: do something bad
                                     }
-                                    // TODO: check that code was recovered successfully
-                                    // TODO: use repositoryWrapper??
                                     if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
                                     if (code != null) repository.saveCode(addressHash, code);
 
