@@ -151,6 +151,37 @@ public class SolidityCompiler {
         return new Result(error.getContent(), output.getContent(), success);
     }
 
+    public static String runGetVersionOutput() throws IOException {
+        List<String> commandParts = new ArrayList<>();
+        commandParts.add(getInstance().solc.getExecutable().getCanonicalPath());
+        commandParts.add("--version");
+
+        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
+                .directory(getInstance().solc.getExecutable().getParentFile());
+        processBuilder.environment().put("LD_LIBRARY_PATH",
+                getInstance().solc.getExecutable().getParentFile().getCanonicalPath());
+
+        Process process = processBuilder.start();
+
+        ParallelReader error = new ParallelReader(process.getErrorStream());
+        ParallelReader output = new ParallelReader(process.getInputStream());
+        error.start();
+        output.start();
+
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (process.exitValue() == 0) {
+            return output.getContent();
+        }
+
+        throw new RuntimeException("Problem getting solc version: " + error.getContent());
+    }
+
+
+
     public static SolidityCompiler getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new SolidityCompiler(SystemProperties.getDefault());

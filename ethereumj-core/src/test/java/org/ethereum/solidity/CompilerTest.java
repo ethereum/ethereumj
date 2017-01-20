@@ -9,11 +9,25 @@ import org.junit.Test;
 import java.io.IOException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 
 /**
  * Created by Anton Nashatyrev on 03.03.2016.
  */
 public class CompilerTest {
+
+    @Test
+    public void solc_getVersion_shouldWork() throws IOException {
+        final String version = SolidityCompiler.runGetVersionOutput();
+
+        // ##### May produce 2 lines:
+        //solc, the solidity compiler commandline interface
+        //Version: 0.4.7+commit.822622cf.mod.Darwin.appleclang
+        System.out.println(version);
+
+        assertThat(version, containsString("Version:"));
+    }
 
     @Test
     public void simpleTest() throws IOException {
