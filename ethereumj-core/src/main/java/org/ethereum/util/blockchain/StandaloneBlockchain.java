@@ -231,8 +231,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
             for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
-                pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
-                pendingTxes.get(i).txResult.executionSummary = lastSummary.getSummaries().get(i);
+                TransactionReceipt receipt = lastSummary.getReceipts().get(i);
+                pendingTxes.get(i).txResult.receipt = receipt;
+                if(receipt.isSuccessful()) {
+                    pendingTxes.get(i).txResult.executionSummary = lastSummary.getSummaries().get(i);
+                }
             }
 
             submittedTxes.clear();
