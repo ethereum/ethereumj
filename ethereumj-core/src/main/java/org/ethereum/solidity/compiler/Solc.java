@@ -47,10 +47,8 @@ public class Solc {
         while (scanner.hasNext()) {
             String s = scanner.next();
             File targetFile = new File(tmpDir, s);
-            if (!targetFile.canRead()) {
-                InputStream fis = getClass().getResourceAsStream("/native/" + getOS() + "/solc/" + s);
-                Files.copy(fis, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
+            InputStream fis = getClass().getResourceAsStream("/native/" + getOS() + "/solc/" + s);
+            Files.copy(fis, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             if (solc == null) {
                 // first file in the list denotes executable
                 solc = targetFile;

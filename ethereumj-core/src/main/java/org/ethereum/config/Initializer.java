@@ -5,12 +5,14 @@ import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.FileUtil;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -108,10 +110,11 @@ class Initializer implements BeanPostProcessor {
                 } else {
                     logger.warn("Detected incompatible database version. Detected:{}, required:{}", actualVersion, expectedVersion);
                     if (behavior == Behavior.EXIT) {
-                        System.err.println("Please remove database directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`");
-                        System.err.println("Database directory location is " + config.databaseDir());
-                        throw new Error("Incompatible database version " + actualVersion + ". Please remove database " +
-                                "directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`");
+                        Utils.showErrorAndExit(
+                                "Incompatible database version " + actualVersion,
+                                "Please remove database directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`",
+                                "Database directory location is " + config.databaseDir()
+                        );
                     } else if (behavior == Behavior.RESET) {
                         boolean res = FileUtil.recursiveDelete(config.databaseDir());
                         if (!res) {

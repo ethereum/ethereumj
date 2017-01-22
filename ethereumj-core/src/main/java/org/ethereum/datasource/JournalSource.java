@@ -1,6 +1,9 @@
 package org.ethereum.datasource;
 
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -30,10 +33,42 @@ import java.util.List;
 public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V>
         implements HashedKeySource<byte[], V> {
 
-    private class Update {
+    private static class Update {
         byte[] updateHash;
         List<byte[]> insertedKeys = new ArrayList<>();
         List<byte[]> deletedKeys = new ArrayList<>();
+
+        public Update() {
+        }
+
+        public Update(byte[] bytes) {
+            parse(bytes);
+        }
+
+        public byte[] serialize() {
+            byte[][] insertedBytes = new byte[insertedKeys.size()][];
+            for (int i = 0; i < insertedBytes.length; i++) {
+                insertedBytes[i] = RLP.encodeElement(insertedKeys.get(i));
+            }
+            byte[][] deletedBytes = new byte[deletedKeys.size()][];
+            for (int i = 0; i < deletedBytes.length; i++) {
+                deletedBytes[i] = RLP.encodeElement(deletedKeys.get(i));
+            }
+            return RLP.encodeList(RLP.encodeElement(updateHash),
+                    RLP.encodeList(insertedBytes), RLP.encodeList(deletedBytes));
+        }
+
+        private void parse(byte[] encoded) {
+            RLPList l = (RLPList) RLP.decode2(encoded).get(0);
+            updateHash = l.get(0).getRLPData();
+
+            for (RLPElement aRInserted : (RLPList) l.get(1)) {
+                insertedKeys.add(aRInserted.getRLPData());
+            }
+            for (RLPElement aRDeleted : (RLPList) l.get(2)) {
+                deletedKeys.add(aRDeleted.getRLPData());
+            }
+        }
     }
 
     private Update currentUpdate = new Update();
@@ -47,6 +82,14 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      */
     public JournalSource(Source<byte[], V> src) {
         super(src);
+    }
+
+    public void setJournalStore(Source<byte[], byte[]> journalSource) {
+        journal = new SourceCodec.BytesKey<>(journalSource,
+                new Serializer<Update, byte[]>() {
+                    public byte[] serialize(Update object) { return object.serialize(); }
+                    public Update deserialize(byte[] stream) { return stream == null ? null : new Update(stream); }
+                });
     }
 
     /**
