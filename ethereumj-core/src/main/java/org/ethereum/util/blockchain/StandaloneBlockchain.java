@@ -148,6 +148,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
+    public StandaloneBlockchain withCurrentTime(Date date) {
+        this.time = date.getTime() / 1000;
+        return this;
+    }
+
     /**
      * [-100, 100]
      * 0 - the same block gas limit as parent
