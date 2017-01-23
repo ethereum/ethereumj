@@ -148,6 +148,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
+    public StandaloneBlockchain withCurrentTime(Date date) {
+        this.time = date.getTime() / 1000;
+        return this;
+    }
+
     /**
      * [-100, 100]
      * 0 - the same block gas limit as parent
@@ -231,8 +236,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
             for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
-                pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
-                pendingTxes.get(i).txResult.executionSummary = lastSummary.getSummaries().get(i);
+                TransactionReceipt receipt = lastSummary.getReceipts().get(i);
+                pendingTxes.get(i).txResult.receipt = receipt;
+                if(receipt.isSuccessful()) {
+                    pendingTxes.get(i).txResult.executionSummary = lastSummary.getSummaries().get(i);
+                }
             }
 
             submittedTxes.clear();
