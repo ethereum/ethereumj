@@ -19,6 +19,7 @@ import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -236,11 +237,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
             for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
-                TransactionReceipt receipt = lastSummary.getReceipts().get(i);
-                pendingTxes.get(i).txResult.receipt = receipt;
-                if(receipt.isSuccessful()) {
-                    pendingTxes.get(i).txResult.executionSummary = lastSummary.getSummaries().get(i);
-                }
+                pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
+                pendingTxes.get(i).txResult.executionSummary = getTxSummary(lastSummary, i);
             }
 
             submittedTxes.clear();
@@ -248,6 +246,16 @@ public class StandaloneBlockchain implements LocalBlockchain {
         } catch (InterruptedException|ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private TransactionExecutionSummary getTxSummary(BlockSummary bs, int idx) {
+        TransactionReceipt txReceipt = bs.getReceipts().get(idx);
+        for (TransactionExecutionSummary summary : bs.getSummaries()) {
+            if (FastByteComparisons.equal(txReceipt.getTransaction().getHash(), summary.getTransaction().getHash())) {
+                return summary;
+            }
+        }
+        return null;
     }
 
     public Transaction createTransaction(long nonce, byte[] toAddress, long value, byte[] data) {
