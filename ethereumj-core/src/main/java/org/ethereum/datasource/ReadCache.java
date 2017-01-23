@@ -110,6 +110,11 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         return Collections.emptyList();
     }
 
+    @Override
+    public boolean hasModified() {
+        return false;
+    }
+
     public synchronized Value getCached(Key key) {
         return cache.get(key);
     }

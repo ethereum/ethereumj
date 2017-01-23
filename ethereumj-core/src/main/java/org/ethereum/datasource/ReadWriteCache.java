@@ -29,6 +29,11 @@ public class ReadWriteCache<Key, Value>
         return writeCache.getModified();
     }
 
+    @Override
+    public boolean hasModified() {
+        return writeCache.hasModified();
+    }
+
     protected synchronized Value getCached(Key key) {
         Value v = readCache.getCached(key);
         if (v == null) {
