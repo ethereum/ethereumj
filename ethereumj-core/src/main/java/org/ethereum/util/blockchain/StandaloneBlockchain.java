@@ -122,15 +122,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     public StandaloneBlockchain withAccountBalance(byte[] address, BigInteger weis) {
-        initialBallances.add(Pair.of(address, weis));
+        AccountState state = new AccountState(BigInteger.ZERO, weis);
+        genesis.getPremine().put(new ByteArrayWrapper(address), state);
+        genesis.setStateRoot(GenesisLoader.generateRootHash(genesis.getPremine()));
+
         return this;
-//        Repository repository = blockchain.getRepository();
-//        Repository track = repository.startTracking();
-//        if (!blockchain.getRepository().isExist(address)) {
-//            track.createAccount(address);
-//        }
-//        track.addBalance(address, weis);
-//        track.commit();
     }
 
 
@@ -459,10 +455,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
             track.createAccount(key.getData());
             track.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-        }
-        for (Pair<byte[], BigInteger> acc : initialBallances) {
-            track.createAccount(acc.getLeft());
-            track.addBalance(acc.getLeft(), acc.getRight());
         }
 
         track.commit();

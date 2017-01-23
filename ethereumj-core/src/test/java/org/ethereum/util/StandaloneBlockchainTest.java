@@ -136,4 +136,25 @@ public class StandaloneBlockchainTest {
         sb.createBlock();
     }
 
+    @Test
+    public void initBalanceTest() {
+        // check StandaloneBlockchain.withAccountBalance method
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        ECKey alice = sb.getSender();
+        ECKey bob = new ECKey();
+        sb.withAccountBalance(bob.getAddress(), convert(123, ETHER));
+
+        BigInteger aliceInitBal = sb.getBlockchain().getRepository().getBalance(alice.getAddress());
+        BigInteger bobInitBal = sb.getBlockchain().getRepository().getBalance(bob.getAddress());
+        assert convert(123, ETHER).equals(bobInitBal);
+
+        sb.setSender(bob);
+        sb.sendEther(alice.getAddress(), BigInteger.ONE);
+
+        sb.createBlock();
+
+        assert convert(123, ETHER).compareTo(sb.getBlockchain().getRepository().getBalance(bob.getAddress())) > 0;
+        assert aliceInitBal.add(BigInteger.ONE).equals(sb.getBlockchain().getRepository().getBalance(alice.getAddress()));
+    }
+
 }
