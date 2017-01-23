@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.AbstractCachedSource;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.WriteCache;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -20,7 +21,7 @@ import java.util.Set;
 public class DbFlushManager {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    List<WriteCache<byte[], byte[]>> writeCaches = new ArrayList<>();
+    List<AbstractCachedSource<byte[], byte[]>> writeCaches = new ArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
 
     long sizeThreshold;
@@ -58,13 +59,13 @@ public class DbFlushManager {
         this.sizeThreshold = sizeThreshold;
     }
 
-    public void addCache(WriteCache<byte[], byte[]> cache) {
+    public void addCache(AbstractCachedSource<byte[], byte[]> cache) {
         writeCaches.add(cache);
     }
 
     public long getCacheSize() {
         long ret = 0;
-        for (WriteCache<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
             ret += writeCache.estimateCacheSize();
         }
         return ret;
@@ -93,7 +94,7 @@ public class DbFlushManager {
 
     public synchronized void flush() {
         long s = System.nanoTime();
-        for (WriteCache<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
             writeCache.flush();
         }
         logger.debug("Flush took " + (System.nanoTime() - s) / 1000000 + " ms");
