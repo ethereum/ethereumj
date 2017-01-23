@@ -5,6 +5,9 @@ import org.ethereum.util.ByteArrayMap;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by Anton Nashatyrev on 12.10.2016.
@@ -12,6 +15,10 @@ import java.util.Set;
 public class HashMapDB<V> implements DbSource<V> {
 
     protected final Map<byte[], V> storage;
+
+    protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    protected Lock readLock = rwLock.readLock();
+    protected Lock writeLock = rwLock.writeLock();
 
     public HashMapDB() {
         this(new ByteArrayMap<V>());
@@ -22,26 +29,41 @@ public class HashMapDB<V> implements DbSource<V> {
     }
 
     @Override
-    public synchronized void put(byte[] key, V val) {
+    public void put(byte[] key, V val) {
         if (val == null) {
             delete(key);
         } else {
-            storage.put(key, val);
+            try {
+                writeLock.lock();
+                storage.put(key, val);
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 
     @Override
-    public synchronized V get(byte[] key) {
-        return storage.get(key);
+    public V get(byte[] key) {
+        try {
+            readLock.lock();
+            return storage.get(key);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     @Override
-    public synchronized void delete(byte[] key) {
-        storage.remove(key);
+    public void delete(byte[] key) {
+        try {
+            writeLock.lock();
+            storage.remove(key);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     @Override
-    public synchronized boolean flush() {
+    public boolean flush() {
         return true;
     }
 
@@ -65,18 +87,28 @@ public class HashMapDB<V> implements DbSource<V> {
     public void close() {}
 
     @Override
-    public synchronized Set<byte[]> keys() {
-        return getStorage().keySet();
-    }
-
-    @Override
-    public synchronized void updateBatch(Map<byte[], V> rows) {
-        for (Map.Entry<byte[], V> entry : rows.entrySet()) {
-            put(entry.getKey(), entry.getValue());
+    public Set<byte[]> keys() {
+        try {
+            readLock.lock();
+            return getStorage().keySet();
+        } finally {
+            readLock.unlock();
         }
     }
 
-    public synchronized Map<byte[], V> getStorage() {
+    @Override
+    public void updateBatch(Map<byte[], V> rows) {
+        try {
+            writeLock.lock();
+            for (Map.Entry<byte[], V> entry : rows.entrySet()) {
+                put(entry.getKey(), entry.getValue());
+            }
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    public Map<byte[], V> getStorage() {
         return storage;
     }
 }
