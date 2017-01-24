@@ -35,10 +35,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.xerial.snappy.Snappy;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -509,6 +510,10 @@ public class WarpSyncManager {
         }
     }
 
+    /**
+     * Requires at least 2 peers with the same manifest if there are more than 1 peer
+     * Chooses the best manifest available
+     */
     private SnapshotManifest getBestManifest() throws Exception {
         List<Channel> allIdle = pool.getAllIdle();
         if (!allIdle.isEmpty()) {
@@ -523,19 +528,31 @@ public class WarpSyncManager {
                 ListenableFuture<List<SnapshotManifest>> successfulRequests = Futures.successfulAsList(result);
                 List<SnapshotManifest> successfulResults = successfulRequests.get(3, TimeUnit.SECONDS);
 
-                SnapshotManifest best = null;
+                Map<SnapshotManifest, Integer> snapshotMap = new HashMap<>();
                 for (SnapshotManifest manifest : successfulResults) {
                     if (manifest == null || manifest.getBlockNumber() == null || manifest.getBlockNumber()  == 0) continue;
-                    if (best == null) {
-                        best = manifest;
-                    } else if (manifest.getBlockNumber() > best.getBlockNumber()) {
-                         best = manifest;
+                    if (snapshotMap.get(manifest) == null) {
+                        snapshotMap.put(manifest, 1);
+                    } else {
+                         snapshotMap.put(manifest, snapshotMap.get(manifest) + 1);
                     }
                 }
 
-                if (best != null) {
-                    logger.info("Snapshot manifest fetched: {}", best);
-                    return best;
+                // Require at least 2 peers with the same manifest, if we have more than 1 peer
+                int peerCount = allIdle.size();
+                SnapshotManifest candidate = null;
+                for (Map.Entry<SnapshotManifest, Integer> snapshotEntry : snapshotMap.entrySet()) {
+                    if (peerCount == 1 || snapshotEntry.getValue() > 1) {
+                        SnapshotManifest current = snapshotEntry.getKey();
+                        if (candidate == null || candidate.getBlockNumber() < current.getBlockNumber()) {
+                            candidate = current;
+                        }
+                    }
+                }
+
+                if (candidate != null) {
+                    logger.info("Snapshot manifest fetched: {}", candidate);
+                    return candidate;
                 }
             } catch (TimeoutException e) {
                 logger.debug("Timeout waiting for answer", e);
