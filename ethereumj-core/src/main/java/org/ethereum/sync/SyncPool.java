@@ -273,8 +273,6 @@ public class SyncPool {
     private synchronized void prepareActive() {
         List<Channel> managerActive = new ArrayList<>(channelManager.getActivePeers());
 
-        if (managerActive.isEmpty()) return;
-
         // Filtering out because of server-connected nodes
         NodeSelector nodeSelector = new NodeSelector(BigInteger.ZERO);
         List<Channel> active = new ArrayList<>();
@@ -283,6 +281,8 @@ public class SyncPool {
                 active.add(channel);
             }
         }
+
+        if (active.isEmpty()) return;
 
         // filtering by 20% from top difficulty
         Collections.sort(active, new Comparator<Channel>() {
