@@ -4,26 +4,23 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.NodeFilter;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.PendingState;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-
 import org.ethereum.facade.Ethereum;
-import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
-
-import javax.annotation.PostConstruct;
 
 import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
 import static org.ethereum.net.message.ReasonCode.TOO_MANY_PEERS;
@@ -43,18 +40,27 @@ public class ChannelManager {
     private static final int inboundConnectionBanTimeout = 10 * 1000;
 
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
-    private final Map<ByteArrayWrapper, Channel> activePeers = Collections.synchronizedMap(new HashMap<ByteArrayWrapper, Channel>());
+    private final Map<ByteArrayWrapper, Channel> activePeers = new ConcurrentHashMap<>();
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
     private int maxActivePeers;
     private Map<InetAddress, Date> recentlyDisconnected = Collections.synchronizedMap(new LRUMap<InetAddress, Date>(500));
     private NodeFilter trustedPeers;
 
-    @Autowired
-    SystemProperties config;
+    /**
+     * Queue with new blocks from other peers
+     */
+    private BlockingQueue<BlockWrapper> newForeignBlocks = new LinkedBlockingQueue<>();
 
-    @Autowired
-    SyncManager syncManager;
+    /**
+     * Queue with new peers used for after channel init tasks
+     */
+    private BlockingQueue<Channel> newActivePeers = new LinkedBlockingQueue<>();
+
+    private Thread blockDistributeThread;
+    private Thread txDistributeThread;
+
+    Random rnd = new Random();  // Used for distributing new blocks / hashes logic
 
     @Autowired
     SyncPool syncPool;
@@ -63,10 +69,20 @@ public class ChannelManager {
     private Ethereum ethereum;
 
     @Autowired
-    PeerServer peerServer;
+    private PendingState pendingState;
 
-    @PostConstruct
-    public void init() {
+    private SystemProperties config;
+
+    private SyncManager syncManager;
+
+    private PeerServer peerServer;
+
+    @Autowired
+    private ChannelManager(final SystemProperties config, final SyncManager syncManager,
+                           final PeerServer peerServer) {
+        this.config = config;
+        this.syncManager = syncManager;
+        this.peerServer = peerServer;
         maxActivePeers = config.maxActivePeers();
         trustedPeers = config.peerTrusted();
         mainWorker.scheduleWithFixedDelay(new Runnable() {
@@ -88,6 +104,24 @@ public class ChannelManager {
                     },
             "PeerServerThread").start();
         }
+
+        // Resending new blocks to network in loop
+        this.blockDistributeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                newBlocksDistributeLoop();
+            }
+        }, "NewSyncThreadBlocks");
+        this.blockDistributeThread.start();
+
+        // Resending pending txs to newly connected peers
+        this.txDistributeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                newTxDistributeLoop();
+            }
+        }, "NewPeersThread");
+        this.txDistributeThread.start();
     }
 
     public void connect(Node node) {
@@ -125,7 +159,11 @@ public class ChannelManager {
         int addCnt = 0;
         for(Channel peer : newPeers) {
 
+            logger.debug("Processing new peer: " + peer);
+
             if(peer.isProtocolsInitialized()) {
+
+                logger.debug("Protocols initialized");
 
                 if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
                     if (!peer.isActive() &&
@@ -176,10 +214,10 @@ public class ChannelManager {
             // prohibit transactions processing until main sync is done
             if (syncManager.isSyncDone()) {
                 peer.onSyncDone(true);
+                // So we could perform some tasks on recently connected peer
+                newActivePeers.add(peer);
             }
-            synchronized (activePeers) {
-                activePeers.put(peer.getNodeIdWrapper(), peer);
-            }
+            activePeers.put(peer.getNodeIdWrapper(), peer);
         }
     }
 
@@ -191,10 +229,75 @@ public class ChannelManager {
      *                     the transactions were originated by this peer
      */
     public void sendTransaction(List<Transaction> tx, Channel receivedFrom) {
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values()) {
-                if (channel != receivedFrom) {
-                    channel.sendTransaction(tx);
+        for (Channel channel : activePeers.values()) {
+            if (channel != receivedFrom) {
+                channel.sendTransaction(tx);
+            }
+        }
+    }
+
+    /**
+     * Propagates the new block message across active peers
+     * Suitable only for self-mined blocks
+     * Use {@link #sendNewBlock(Block, Channel)} for sending blocks received from net
+     * @param block  new Block to be sent
+     */
+    public void sendNewBlock(Block block) {
+        for (Channel channel : activePeers.values()) {
+            channel.sendNewBlock(block);
+        }
+    }
+
+    /**
+     * Called on new blocks received from other peers
+     * @param blockWrapper  Block with additional info
+     */
+    public void onNewForeignBlock(BlockWrapper blockWrapper) {
+        newForeignBlocks.add(blockWrapper);
+    }
+
+    /**
+     * Processing new blocks received from other peers from queue
+     */
+    private void newBlocksDistributeLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            BlockWrapper wrapper = null;
+            try {
+                wrapper = newForeignBlocks.take();
+                Channel receivedFrom = getActivePeer(wrapper.getNodeId());
+                sendNewBlock(wrapper.getBlock(), receivedFrom);
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                if (wrapper != null) {
+                    logger.error("Error broadcasting new block {}: ", wrapper.getBlock().getShortDescr(), e);
+                    logger.error("Block dump: {}", wrapper.getBlock());
+                } else {
+                    logger.error("Error broadcasting unknown block", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends all pending txs to new active peers
+     */
+    private void newTxDistributeLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            Channel channel = null;
+            try {
+                channel = newActivePeers.take();
+                List<Transaction> pendingTransactions = pendingState.getPendingTransactions();
+                if (!pendingTransactions.isEmpty()) {
+                    channel.sendTransaction(pendingTransactions);
+                }
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                if (channel != null) {
+                    logger.error("Error sending transactions to peer {}: ", channel.getNode().getHexIdShort(), e);
+                } else {
+                    logger.error("Unknown error when sending transactions to new peer", e);
                 }
             }
         }
@@ -203,26 +306,28 @@ public class ChannelManager {
     /**
      * Propagates the new block message across active peers with exclusion of
      * 'receivedFrom' peer.
+     * Distributes full block to 30% of peers and only its hash to remains
      * @param block  new Block to be sent
-     * @param receivedFrom the peer which sent original message or null if
-     *                     the block has been mined by us
+     * @param receivedFrom the peer which sent original message
      */
-    public void sendNewBlock(Block block, Channel receivedFrom) {
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values()) {
-                if (channel != receivedFrom) {
-                    channel.sendNewBlock(block);
-                }
+    private void sendNewBlock(Block block, Channel receivedFrom) {
+        for (Channel channel : activePeers.values()) {
+            if (channel == receivedFrom) continue;
+            if (rnd.nextInt(10) < 3) {  // 30%
+                channel.sendNewBlock(block);
+            } else {                    // 70%
+                channel.sendNewBlockHashes(block);
             }
         }
     }
 
     public void add(Channel peer) {
+        logger.debug("New peer in ChannelManager {}", peer);
         newPeers.add(peer);
     }
 
     public void notifyDisconnect(Channel channel) {
-        logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
+        logger.debug("Peer {}: notifies about disconnect", channel);
         channel.onDisconnect();
         syncPool.onDisconnect(channel);
         activePeers.values().remove(channel);
@@ -230,17 +335,12 @@ public class ChannelManager {
     }
 
     public void onSyncDone(boolean done) {
-
-        synchronized (activePeers) {
-            for (Channel channel : activePeers.values())
-                channel.onSyncDone(done);
-        }
+        for (Channel channel : activePeers.values())
+            channel.onSyncDone(done);
     }
 
     public Collection<Channel> getActivePeers() {
-        synchronized (activePeers) {
-            return new ArrayList<>(activePeers.values());
-        }
+        return new ArrayList<>(activePeers.values());
     }
 
     public Channel getActivePeer(byte[] nodeId) {
@@ -249,6 +349,10 @@ public class ChannelManager {
 
     public void close() {
         try {
+            logger.info("Shutting down block and tx distribute threads...");
+            if (blockDistributeThread != null) blockDistributeThread.interrupt();
+            if (txDistributeThread != null) txDistributeThread.interrupt();
+
             logger.info("Shutting down ChannelManager worker thread...");
             mainWorker.shutdownNow();
             mainWorker.awaitTermination(5, TimeUnit.SECONDS);
@@ -257,16 +361,14 @@ public class ChannelManager {
         }
         peerServer.close();
 
-        synchronized (activePeers) {
-            ArrayList<Channel> allPeers = new ArrayList<>(activePeers.values());
-            allPeers.addAll(newPeers);
+        ArrayList<Channel> allPeers = new ArrayList<>(activePeers.values());
+        allPeers.addAll(newPeers);
 
-            for (Channel channel : allPeers) {
-                try {
-                    channel.dropConnection();
-                } catch (Exception e) {
-                    logger.warn("Problems disconnecting channel " + channel, e);
-                }
+        for (Channel channel : allPeers) {
+            try {
+                channel.dropConnection();
+            } catch (Exception e) {
+                logger.warn("Problems disconnecting channel " + channel, e);
             }
         }
     }

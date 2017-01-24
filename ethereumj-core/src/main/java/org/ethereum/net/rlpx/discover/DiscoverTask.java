@@ -58,8 +58,9 @@ public class DiscoverTask implements Runnable {
                         nodeManager.getNodeHandler(n).sendFindNode(nodeId);
                         tried.add(n);
                         Thread.sleep(50);
+                    }catch (InterruptedException e) {
                     } catch (Exception ex) {
-                        logger.info("{}", ex);
+                        logger.error("Unexpected Exception " + ex, ex);
                     }
                 }
                 if (tried.size() == KademliaOptions.ALPHA) {

@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -31,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see <a href="http://netty.io">http://netty.io</a>
  */
 @Component
-@Scope("prototype")
 public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
@@ -45,14 +43,17 @@ public class PeerClient {
     @Autowired
     EthereumListener ethereumListener;
 
-    private static EventLoopGroup workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
-        AtomicInteger cnt = new AtomicInteger(0);
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r, "EthJClientWorker-" + cnt.getAndIncrement());
-        }
-    });
+    private EventLoopGroup workerGroup;
 
+    public PeerClient() {
+        workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
+            AtomicInteger cnt = new AtomicInteger(0);
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "EthJClientWorker-" + cnt.getAndIncrement());
+            }
+        });
+    }
 
     public void connect(String host, int port, String remoteId) {
         connect(host, port, remoteId, false);
@@ -105,5 +106,11 @@ public class PeerClient {
 
         // Start the client.
         return b.connect();
+    }
+
+    public void close() {
+        logger.info("Shutdown peerClient");
+        workerGroup.shutdownGracefully();
+        workerGroup.terminationFuture().syncUninterruptibly();
     }
 }

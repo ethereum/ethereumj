@@ -17,6 +17,7 @@ import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
+import org.ethereum.net.eth.message.Eth63MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.sync.SyncStatistics;
@@ -83,6 +84,8 @@ public class Channel {
     @Autowired
     private StaticMessages staticMessages;
 
+    private ChannelManager channelManager;
+
     private Eth eth = new EthAdapter();
 
     private InetSocketAddress inetSocketAddress;
@@ -94,9 +97,13 @@ public class Channel {
     private boolean isActive;
     private boolean isDisconnected;
 
+    private String remoteId;
+
     private PeerStatistics peerStats = new PeerStatistics();
 
-    public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
+    public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode, ChannelManager channelManager) {
+        this.channelManager = channelManager;
+        this.remoteId = remoteId;
 
         isActive = remoteId != null && !remoteId.isEmpty();
 
@@ -165,7 +172,7 @@ public class Channel {
         ctx.writeAndFlush(byteBufMsg).sync();
 
         if (logger.isDebugEnabled())
-            logger.debug("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
+            logger.debug("To:   {}    Send:  {}", ctx.channel().remoteAddress(), helloMessage);
         getNodeStatistics().rlpxOutHello.add();
     }
 
@@ -191,6 +198,7 @@ public class Channel {
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
             case V62:   return new Eth62MessageFactory();
+            case V63:   return new Eth63MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }
@@ -265,7 +273,8 @@ public class Channel {
     }
 
     public String getPeerIdShort() {
-        return node == null ? "<null>" : node.getHexIdShort();
+        return node == null ? (remoteId != null && remoteId.length() >= 8 ? remoteId.substring(0,8) :remoteId)
+                : node.getHexIdShort();
     }
 
     public byte[] getNodeId() {
@@ -353,12 +362,20 @@ public class Channel {
         eth.sendNewBlock(block);
     }
 
+    public void sendNewBlockHashes(Block block) {
+        eth.sendNewBlockHashes(block);
+    }
+
     public EthVersion getEthVersion() {
         return eth.getVersion();
     }
 
     public void dropConnection() {
         eth.dropConnection();
+    }
+
+    public ChannelManager getChannelManager() {
+        return channelManager;
     }
 
     @Override
@@ -368,9 +385,10 @@ public class Channel {
 
         Channel channel = (Channel) o;
 
-        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
-        return !(node != null ? !node.equals(channel.node) : channel.node != null);
 
+        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
+        if (node != null ? !node.equals(channel.node) : channel.node != null) return false;
+        return this == channel;
     }
 
     @Override

@@ -78,6 +78,22 @@ public class TransactionReceipt {
         this.logInfoList = logInfoList;
     }
 
+    public TransactionReceipt(final RLPList rlpList) {
+        if (rlpList == null || rlpList.size() != 4)
+            throw new RuntimeException("Should provide RLPList with postTxState, cumulativeGas, bloomFilter, logInfoList");
+
+        this.postTxState = rlpList.get(0).getRLPData();
+        this.cumulativeGas = rlpList.get(1).getRLPData();
+        this.bloomFilter = new Bloom(rlpList.get(2).getRLPData());
+
+        List<LogInfo> logInfos = new ArrayList<>();
+        for (RLPElement logInfoEl: (RLPList) rlpList.get(3)) {
+            LogInfo logInfo = new LogInfo(logInfoEl.getRLPData());
+            logInfos.add(logInfo);
+        }
+        this.logInfoList = logInfos;
+    }
+
     public byte[] getPostTxState() {
         return postTxState;
     }
@@ -138,7 +154,7 @@ public class TransactionReceipt {
         return rlpEncoded;
     }
 
-    private byte[] getEncoded(boolean receiptTrie) {
+    public byte[] getEncoded(boolean receiptTrie) {
 
         byte[] postTxStateRLP = RLP.encodeElement(this.postTxState);
         byte[] cumulativeGasRLP = RLP.encodeElement(this.cumulativeGas);

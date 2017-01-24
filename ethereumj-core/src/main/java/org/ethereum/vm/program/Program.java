@@ -7,6 +7,7 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
@@ -78,6 +79,7 @@ public class Program {
     private byte lastOp;
     private byte previouslyExecutedOp;
     private boolean stopped;
+    private ByteArraySet touchedAccounts = new ByteArraySet();
 
     private Set<Integer> jumpdest = new HashSet<>();
 
@@ -395,16 +397,12 @@ public class Program {
         Repository track = getStorage().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        if (track.isExist(newAddress)) {
-            BigInteger oldBalance = track.getBalance(newAddress);
-            track.createAccount(newAddress);
-            track.addBalance(newAddress, oldBalance);
-        } else
-            track.createAccount(newAddress);
-
+        BigInteger oldBalance = track.getBalance(newAddress);
+        track.createAccount(newAddress);
         if (blockchainConfig.eip161()) {
             track.increaseNonce(newAddress);
         }
+        track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
         BigInteger newBalance = ZERO;
@@ -465,9 +463,7 @@ public class Program {
         }
 
         if (!byTestingSuite())
-            track.commit(getNumber().longValue());
-        getResult().addDeleteAccounts(result.getDeleteAccounts());
-        getResult().addLogInfos(result.getLogInfoList());
+            track.commit();
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
@@ -539,7 +535,7 @@ public class Program {
         }
 
         // CREATE CALL INTERNAL TRANSACTION
-        InternalTransaction internalTx = addInternalTx(null, getGasLimit(), senderAddress, contextAddress, endowment, programCode, "call");
+        InternalTransaction internalTx = addInternalTx(null, getGasLimit(), senderAddress, contextAddress, endowment, data, "call");
 
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
@@ -585,7 +581,7 @@ public class Program {
         }
 
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        track.commit(getNumber().longValue());
+        track.commit();
         stackPushOne();
 
         // 5. REFUND THE REMAIN GAS
@@ -604,9 +600,11 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        if (logger.isDebugEnabled()) {
+            logger.debug("[{}] Spent for cause: [{}], gas: [{}]", invoke.hashCode(), cause, gasValue);
+        }
 
-        if (getGas().longValue() < gasValue) {
+        if (getGasLong() < gasValue) {
             throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
         }
         getResult().spendGas(gasValue);
@@ -676,6 +674,10 @@ public class Program {
         return invoke.getMinGasPrice().clone();
     }
 
+    public long getGasLong() {
+        return invoke.getGasLong() - getResult().getGasUsed();
+    }
+
     public DataWord getGas() {
         return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
     }
@@ -697,7 +699,8 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key.clone());
+        return ret == null ? null : ret.clone();
     }
 
     public DataWord getPrevHash() {
@@ -1101,15 +1104,6 @@ public class Program {
             this.refundGas(0, "call pre-compiled"); //matches cpp logic
             this.stackPushZero();
             track.rollback();
-
-            // corner case for EIP 161 and a single execution of the tx
-            // cf416c536ec1a19ed1fb89e4ec7ffb3cf73aa413b3aa9b77d60e4fd81a4296ba
-            // in the block #2675119
-            // Even on OOG the contract should still be marked dirty
-            // To be cleared if it is 'empty'
-            track = getStorage().startTracking();
-            track.getAccountState(contextAddress).setDirty(true);
-            track.commit(getNumber().longValue());
         } else {
 
             this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
@@ -1117,7 +1111,7 @@ public class Program {
 
             this.memorySave(msg.getOutDataOffs().intValue(), out);
             this.stackPushOne();
-            track.commit(getNumber().longValue());
+            track.commit();
         }
     }
 

@@ -6,10 +6,8 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.ethereum.vm.program.InternalTransaction;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Roman Mandeleil
@@ -57,6 +55,31 @@ public interface EthereumListener {
         }
     }
 
+    enum SyncState {
+        /**
+         * When doing fast sync UNSECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * but the state isn't yet confirmed with  the whole block chain and can't be
+         * trusted.
+         * At this stage historical blocks and receipts are unavailable yet
+         */
+        UNSECURE,
+        /**
+         * When doing fast sync SECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * The state is now confirmed by the full chain (all block headers are
+         * downloaded and verified) and can be trusted
+         * At this stage historical blocks and receipts are unavailable yet
+         */
+        SECURE,
+        /**
+         * Sync is fully complete. All blocks and receipts are downloaded.
+         */
+        COMPLETE
+    }
+
     void trace(String output);
 
     void onNodeDiscovered(Node node);
@@ -97,7 +120,7 @@ public interface EthereumListener {
      */
     void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block);
 
-    void onSyncDone();
+    void onSyncDone(SyncState state);
 
     void onNoConnections();
 

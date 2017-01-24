@@ -16,12 +16,12 @@ package org.ethereum.crypto;
  */
 
 import org.ethereum.config.Constants;
-import org.ethereum.crypto.jce.ECAlgorithmParameters;
 import org.ethereum.crypto.jce.ECKeyAgreement;
 import org.ethereum.crypto.jce.ECKeyFactory;
 import org.ethereum.crypto.jce.ECKeyPairGenerator;
 import org.ethereum.crypto.jce.ECSignatureFactory;
 import org.ethereum.crypto.jce.SpongyCastleProvider;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,6 @@ import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
 import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
-import org.spongycastle.crypto.AsymmetricCipherKeyPair;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
@@ -54,11 +53,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.io.Serializable;
-
 import java.math.BigInteger;
-
 import java.nio.charset.Charset;
-
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -68,19 +64,15 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
-
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
-
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
-
 import javax.crypto.KeyAgreement;
 
 import static org.ethereum.util.BIUtil.isLessThan;
-import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 /**
@@ -677,6 +669,21 @@ public class ECKey implements Serializable {
             System.arraycopy(bigIntegerToBytes(this.r, 32), 0, sigData, 1, 32);
             System.arraycopy(bigIntegerToBytes(this.s, 32), 0, sigData, 33, 32);
             return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
+        }
+
+        public byte[] toByteArray() {
+            final byte fixedV = this.v >= 27
+                    ? (byte) (this.v - 27)
+                    :this.v;
+
+            return ByteUtil.merge(
+                    ByteUtil.bigIntegerToBytes(this.r),
+                    ByteUtil.bigIntegerToBytes(this.s),
+                    new byte[]{fixedV});
+        }
+
+        public String toHex() {
+            return Hex.toHexString(toByteArray());
         }
 
         @Override

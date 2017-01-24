@@ -1,15 +1,13 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
-import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.*;
+import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
-import org.ethereum.db.BlockStore;
-import org.ethereum.db.ContractDetailsImpl;
-import org.ethereum.db.RepositoryImpl;
-import org.ethereum.db.RepositoryTrack;
+import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
@@ -21,7 +19,10 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -32,6 +33,7 @@ import static java.util.Arrays.asList;
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
+    private Set<DbSource> dbSources = new HashSet<>();
 
     private static CommonConfig defaultInstance;
 
@@ -52,27 +54,145 @@ public class CommonConfig {
         return new Initializer();
     }
 
+
+    @Bean @Primary
+    public Repository repository() {
+        return new RepositoryWrapper();
+    }
+
     @Bean
-    @Primary
-    Repository repository() {
-        return new RepositoryImpl();
+    public Repository defaultRepository() {
+        return new RepositoryRoot(stateSource(), null);
+    }
+
+    @Bean @Scope("prototype")
+    public Repository repository(byte[] stateRoot) {
+        return new RepositoryRoot(stateSource(), stateRoot);
+    }
+
+
+    @Bean
+    public StateSource stateSource() {
+        DbSource<byte[]> stateDS = stateDS();
+        fastSyncCleanUp();
+        StateSource stateSource = new StateSource(stateDS,
+                systemProperties().databasePruneDepth() >= 0);
+
+        dbFlushManager().addCache(stateSource.getWriteCache());
+
+        return stateSource;
+    }
+
+    @Bean
+    @Scope("prototype")
+    public Source<byte[], byte[]> cachedDbSource(String name) {
+        DbSource<byte[]> dataSource = keyValueDataSource();
+        dataSource.setName(name);
+        dataSource.init();
+        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
+        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
+        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+        writeCache.setFlushSource(true);
+        dbFlushManager().addCache(writeCache);
+        return writeCache;
     }
 
     @Bean
     @Scope("prototype")
     @Primary
-    public KeyValueDataSource keyValueDataSource() {
+    public DbSource<byte[]> keyValueDataSource() {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
+            DbSource<byte[]> dbSource;
             if ("mapdb".equals(dataSource)) {
-                return mapDBFactory().createDataSource();
+                dbSource = mapDBFactory().createDataSource();
             } else {
                 dataSource = "leveldb";
-                return new LevelDbDataSource();
+                dbSource = new LevelDbDataSource();
             }
+            dbSources.add(dbSource);
+            return dbSource;
         } finally {
             logger.info(dataSource + " key-value data source created.");
         }
+    }
+
+    public void fastSyncCleanUp() {
+        DbSource<byte[]> state = stateDS();
+
+        byte[] fastsyncStageBytes = state.get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
+        if (fastsyncStageBytes == null) return; // no uncompleted fast sync
+
+        EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
+
+        if (!systemProperties().isFastSyncEnabled() || syncStage == EthereumListener.SyncState.UNSECURE) {
+            // we need to cleanup state/blocks/tranasaction DBs when previous fast sync was not complete:
+            // - if we now want to do regular sync
+            // - if the first fastsync stage was not complete (thus DBs are not in consistent state)
+
+            logger.warn("Last fastsync was interrupted. Removing inconsistent DBs...");
+
+            logger.warn("Removing tx data...");
+            DbSource txSource = keyValueDataSource();
+            txSource.setName("transactions");
+            txSource.init();
+            resetDataSource(txSource);
+            txSource.close();
+
+            logger.warn("Removing block data...");
+            DbSource blockSource = keyValueDataSource();
+            blockSource.setName("block");
+            blockSource.init();
+            resetDataSource(blockSource);
+            blockSource.close();
+
+            logger.warn("Removing index data...");
+            DbSource indexSource = keyValueDataSource();
+            indexSource.setName("index");
+            indexSource.init();
+            resetDataSource(indexSource);
+            indexSource.close();
+
+            logger.warn("Removing state data...");
+            resetDataSource(state);
+        }
+    }
+
+    private void resetDataSource(Source source) {
+        if (source instanceof LevelDbDataSource) {
+            ((LevelDbDataSource) source).reset();
+        } else {
+            throw new Error("Cannot cleanup non-LevelDB database");
+        }
+    }
+
+    @Bean
+    @Lazy
+    public DataSourceArray<BlockHeader> headerSource() {
+        DbSource<byte[]> dataSource = keyValueDataSource();
+        dataSource.setName("headers");
+        dataSource.init();
+        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
+        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
+        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+        writeCache.setFlushSource(true);
+        ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
+        DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
+        return dataSourceArray;
+    }
+
+    @Bean
+    public DbSource<byte[]> stateDS() {
+        DbSource<byte[]> ret = keyValueDataSource();
+        ret.setName("state");
+        ret.init();
+
+        return ret;
+    }
+
+    @Bean
+    public DbFlushManager dbFlushManager() {
+        return new DbFlushManager(systemProperties(), dbSources);
     }
 
     @Bean
@@ -94,18 +214,6 @@ public class CommonConfig {
     @Scope("prototype")
     public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
         return new Program(ops, programInvoke, transaction, systemProperties());
-    }
-
-    @Bean
-    @Scope("prototype")
-    public ContractDetailsImpl contractDetailsImpl() {
-        return new ContractDetailsImpl();
-    }
-
-    @Bean
-    @Scope("prototype")
-    public RepositoryTrack repositoryTrack(Repository parent) {
-        return new RepositoryTrack(parent);
     }
 
     @Bean

@@ -1,21 +1,18 @@
 package org.ethereum.config;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.*;
+import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.config.net.MordenNetConfig;
-import org.ethereum.config.net.RopstenNetConfig;
-import org.ethereum.config.net.TestNetConfig;
+import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.genesis.GenesisJson;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.BuildInfo;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -86,6 +83,10 @@ public class SystemProperties {
         return CONFIG;
     }
 
+    public static void resetToDefault() {
+        CONFIG = null;
+    }
+
     /**
      * Used mostly for testing purposes to ensure the application
      * refers only to the config passed as a Spring bean.
@@ -115,6 +116,7 @@ public class SystemProperties {
     private Boolean databaseReset = null;
     private String projectVersion = null;
     private String projectVersionModifier = null;
+    protected Integer databaseVersion = null;
 
     private String genesisInfo = null;
 
@@ -124,6 +126,7 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
+    private GenesisJson genesisJson;
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
 
@@ -146,6 +149,7 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig, ClassLoader classLoader) {
+        long startTime = System.currentTimeMillis();
         try {
             this.classLoader = classLoader;
 
@@ -180,7 +184,8 @@ public class SystemProperties {
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
 
-            config = javaSystemProperties.withFallback(config);
+            config = javaSystemProperties.withFallback(config)
+                    .resolve();     // substitute variables in config if any
             validateConfig();
 
             Properties props = new Properties();
@@ -193,6 +198,7 @@ public class SystemProperties {
 
             this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
+            this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
@@ -264,6 +270,11 @@ public class SystemProperties {
 
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
+            if (getGenesisJson().getConfig() != null && getGenesisJson().getConfig().size() > 0) {
+                blockchainConfig = new JsonNetConfig(getGenesisJson().getConfig());
+                return blockchainConfig;
+            }
+
             if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
                 throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
             }
@@ -436,13 +447,13 @@ public class SystemProperties {
     }
 
 
-    public String samplesDir() {
-        return config.getString("samples.dir");
-    }
-
     @ValidateMe
-    public String coinbaseSecret() {
-        return config.getString("coinbase.secret");
+    public Integer blockQueueSize() {
+        return config.getInt("cache.blockQueueSize") * 1024 * 1024;
+    }
+    @ValidateMe
+    public Integer headerQueueSize() {
+        return config.getInt("cache.headerQueueSize") * 1024 * 1024;
     }
 
     @ValidateMe
@@ -505,16 +516,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public int maxHashesAsk() {
-        return config.getInt("sync.max.hashes.ask");
-    }
-
-    @ValidateMe
-    public int maxBlocksAsk() {
-        return config.getInt("sync.max.blocks.ask");
-    }
-
-    @ValidateMe
     public int syncPeerCount() {
         return config.getInt("sync.peer.count");
     }
@@ -534,6 +535,11 @@ public class SystemProperties {
     @ValidateMe
     public String projectVersion() {
         return projectVersion;
+    }
+
+    @ValidateMe
+    public Integer databaseVersion() {
+        return databaseVersion;
     }
 
     @ValidateMe
@@ -572,16 +578,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public int detailsInMemoryStorageLimit() {
-        return config.getInt("details.inmemory.storage.limit");
-    }
-
-    @ValidateMe
-    public double cacheFlushMemory() {
-        return config.getDouble("cache.flush.memory");
-    }
-
-    @ValidateMe
     public int cacheFlushBlocks() {
         return config.getInt("cache.flush.blocks");
     }
@@ -591,7 +587,10 @@ public class SystemProperties {
         return config.getString("vm.structured.dir");
     }
 
-    @ValidateMe
+    public String customSolcPath() {
+        return config.hasPath("solc.path") ? config.getString("solc.path"): null;
+    }
+
     public String privateKey() {
         if (config.hasPath("peer.privateKey")) {
             String key = config.getString("peer.privateKey");
@@ -632,7 +631,6 @@ public class SystemProperties {
         return generatedNodePrivateKey;
     }
 
-    @ValidateMe
     public ECKey getMyKey() {
         return ECKey.fromPrivate(Hex.decode(privateKey()));
     }
@@ -640,7 +638,6 @@ public class SystemProperties {
     /**
      *  Home NodeID calculated from 'peer.privateKey' property
      */
-    @ValidateMe
     public byte[] nodeId() {
         return getMyKey().getNodeId();
     }
@@ -726,17 +723,25 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public boolean isRedisEnabled() {
-        return config.getBoolean("redis.enabled");
-    }
-
-    @ValidateMe
     public boolean isSyncEnabled() {
         return this.syncEnabled == null ? config.getBoolean("sync.enabled") : syncEnabled;
     }
 
     public void setSyncEnabled(Boolean syncEnabled) {
         this.syncEnabled = syncEnabled;
+    }
+
+    @ValidateMe
+    public boolean isFastSyncEnabled() {
+        return this.syncEnabled == null ? config.getBoolean("sync.fast.enabled") : syncEnabled;
+    }
+
+    @ValidateMe
+    public byte[] getFastSyncPivotBlockHash() {
+        if (!config.hasPath("sync.fast.pivotBlockHash")) return null;
+        byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
+        if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
+        return ret;
     }
 
     @ValidateMe
@@ -764,7 +769,7 @@ public class SystemProperties {
     @ValidateMe
     public byte[] getMinerCoinbase() {
         String sc = config.getString("mine.coinbase");
-        byte[] c = Hex.decode(sc);
+        byte[] c = ByteUtil.hexStringToBytes(sc);
         if (c.length != 20) throw new RuntimeException("mine.coinbase has invalid value: '" + sc + "'");
         return c;
     }
@@ -801,10 +806,26 @@ public class SystemProperties {
         return config.getBoolean("mine.fullDataSet");
     }
 
+    private GenesisJson getGenesisJson() {
+        if (genesisJson == null) {
+            genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);
+        }
+        return genesisJson;
+    }
+
     public Genesis getGenesis() {
         if (genesis == null) {
-            genesis = GenesisLoader.loadGenesis(this, classLoader);
+            genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         }
+        return genesis;
+    }
+
+    /**
+     * Method used in StandaloneBlockchain.
+     */
+    public Genesis useGenesis(InputStream inputStream) {
+        genesisJson = GenesisLoader.loadGenesisJson(inputStream);
+        genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         return genesis;
     }
 

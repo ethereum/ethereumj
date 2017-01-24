@@ -428,5 +428,55 @@ public class ByteUtilTest {
             byte[] expected = Hex.decode(str);
             assertArrayEquals(expected, actuals);
         }
+        {
+            String str = "0x"; // Empty
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0"; // Same as 0x00
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0x00"; // This case shouldn't be empty array
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {0};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0xd"; // Should work with odd length, adding leading 0
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {13};
+            assertArrayEquals(expected, actuals);
+        }
+        {
+            String str = "0xd0d"; // Should work with odd length, adding leading 0
+            byte[] actuals = ByteUtil.hexStringToBytes(str);
+            byte[] expected = new byte[] {13, 13};
+            assertArrayEquals(expected, actuals);
+        }
+    }
+
+    @Test
+    public void testIpConversion() {
+        String ip1 = "0.0.0.0";
+        byte[] ip1Bytes = ByteUtil.hostToBytes(ip1);
+        assertEquals(ip1, ByteUtil.bytesToIp(ip1Bytes));
+
+        String ip2 = "35.36.37.138";
+        byte[] ip2Bytes = ByteUtil.hostToBytes(ip2);
+        assertEquals(ip2, ByteUtil.bytesToIp(ip2Bytes));
+
+        String ip3 = "255.255.255.255";
+        byte[] ip3Bytes = ByteUtil.hostToBytes(ip3);
+        assertEquals(ip3, ByteUtil.bytesToIp(ip3Bytes));
+
+        // Fallback case
+        String ip4 = "255.255.255.256";
+        byte[] ip4Bytes = ByteUtil.hostToBytes(ip4);
+        assertEquals("0.0.0.0", ByteUtil.bytesToIp(ip4Bytes));
     }
 }

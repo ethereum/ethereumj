@@ -1,10 +1,12 @@
 package org.ethereum.jsonrpc;
 
 import org.apache.commons.collections4.map.LRUMap;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.db.TransactionStore;
@@ -25,13 +27,13 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -101,9 +103,6 @@ public class JsonRpcImpl implements JsonRpc {
     public Repository repository;
 
     @Autowired
-    BlockchainImpl blockchain;
-
-    @Autowired
     Ethereum eth;
 
     @Autowired
@@ -119,9 +118,6 @@ public class JsonRpcImpl implements JsonRpc {
     ChannelManager channelManager;
 
     @Autowired
-    CompositeEthereumListener compositeEthereumListener;
-
-    @Autowired
     BlockMiner blockMiner;
 
     @Autowired
@@ -130,6 +126,20 @@ public class JsonRpcImpl implements JsonRpc {
     @Autowired
     PendingStateImpl pendingState;
 
+    @Autowired
+    SolidityCompiler solidityCompiler;
+
+    @Autowired
+    ProgramInvokeFactory programInvokeFactory;
+
+    @Autowired
+    CommonConfig commonConfig = CommonConfig.getDefault();
+
+    BlockchainImpl blockchain;
+
+    CompositeEthereumListener compositeEthereumListener;
+
+
     long initialBlockNumber;
 
     Map<ByteArrayWrapper, Account> accounts = new HashMap<>();
@@ -137,8 +147,10 @@ public class JsonRpcImpl implements JsonRpc {
     Map<Integer, Filter> installedFilters = new Hashtable<>();
     Map<ByteArrayWrapper, TransactionReceipt> pendingReceipts = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, TransactionReceipt>(1024));
 
-    @PostConstruct
-    private void init() {
+    @Autowired
+    public JsonRpcImpl(final BlockchainImpl blockchain, final CompositeEthereumListener compositeEthereumListener) {
+        this.blockchain = blockchain;
+        this.compositeEthereumListener = compositeEthereumListener;
         initialBlockNumber = blockchain.getBestBlock().getNumber();
 
         compositeEthereumListener.addListener(new EthereumListenerAdapter() {
@@ -548,7 +560,7 @@ public class JsonRpcImpl implements JsonRpc {
             Account account = getAccount(from);
             if (account == null) throw new RuntimeException("No account " + from);
 
-            tx.sign(account.getEcKey().getPrivKeyBytes());
+            tx.sign(account.getEcKey());
 
             eth.submitTransaction(tx);
 
@@ -564,6 +576,7 @@ public class JsonRpcImpl implements JsonRpc {
         String s = null;
         try {
             Transaction tx = new Transaction(StringHexToByteArray(rawData));
+            tx.verify();
 
             eth.submitTransaction(tx);
 
@@ -574,6 +587,14 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     public TransactionReceipt createCallTxAndExecute(CallArguments args, Block block) throws Exception {
+        Repository repository = ((Repository) worldManager.getRepository())
+                .getSnapshotTo(block.getStateRoot())
+                .startTracking();
+
+        return createCallTxAndExecute(args, block, repository, worldManager.getBlockStore());
+    }
+
+    public TransactionReceipt createCallTxAndExecute(CallArguments args, Block block, Repository repository, BlockStore blockStore) throws Exception {
         BinaryCallArguments bca = new BinaryCallArguments();
         bca.setArguments(args);
         Transaction tx = CallTransaction.createRawTransaction(0,
@@ -583,14 +604,39 @@ public class JsonRpcImpl implements JsonRpc {
                 bca.value,
                 bca.data);
 
-        return eth.callConstant(tx, block);
+        // put mock signature if not present
+        if (tx.getSignature() == null) {
+            tx.sign(ECKey.fromPrivate(new byte[32]));
+        }
+
+        try {
+            TransactionExecutor executor = commonConfig.transactionExecutor
+                    (tx, block.getCoinbase(), repository, blockStore,
+                            programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                    .setLocalCall(true);
+
+            executor.init();
+            executor.execute();
+            executor.go();
+            executor.finalization();
+
+            return executor.getReceipt();
+        } finally {
+            repository.rollback();
+        }
     }
 
     public String eth_call(CallArguments args, String bnOrId) throws Exception {
 
         String s = null;
         try {
-            TransactionReceipt res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
+            TransactionReceipt res;
+            if ("pending".equals(bnOrId)) {
+                Block pendingBlock = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.<BlockHeader>emptyList());
+                res = createCallTxAndExecute(args, pendingBlock, pendingState.getRepository(), worldManager.getBlockStore());
+            } else {
+                res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
+            }
             return s = TypeConverter.toJsonHex(res.getExecutionResult());
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_call(" + args + "): " + s);
@@ -857,9 +903,9 @@ public class JsonRpcImpl implements JsonRpc {
     public CompilationResult eth_compileSolidity(String contract) throws Exception {
         CompilationResult s = null;
         try {
-            SolidityCompiler.Result res = SolidityCompiler.compile(
-                    contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
-            if (!res.errors.isEmpty()) {
+            SolidityCompiler.Result res = solidityCompiler.compileSrc(
+                    contract.getBytes(), true, true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+            if (res.isFailed()) {
                 throw new RuntimeException("Compilation error: " + res.errors);
             }
             org.ethereum.solidity.compiler.CompilationResult result = org.ethereum.solidity.compiler.CompilationResult.parse(res.output);

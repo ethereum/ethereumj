@@ -17,8 +17,14 @@ public class RepositoryValidator {
 
         List<String> results = new ArrayList<>();
 
-        Set<byte[]> currentKeys = currentRepository.getAccountsKeys();
         Set<byte[]> expectedKeys = postRepository.getAccountsKeys();
+
+        for (byte[] key : expectedKeys) {
+            // force to load known accounts to cache to enumerate them
+            currentRepository.getAccountState(key);
+        }
+
+        Set<byte[]> currentKeys = currentRepository.getAccountsKeys();
 
         if (expectedKeys.size() != currentKeys.size()) {
 

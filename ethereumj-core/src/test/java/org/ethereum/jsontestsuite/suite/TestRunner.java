@@ -7,13 +7,8 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
-import org.ethereum.db.RepositoryVMTestDummy;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.*;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
@@ -82,7 +77,7 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
@@ -92,13 +87,11 @@ public class TestRunner {
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
-        pendingState.init();
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.setPendingState(pendingState);
         pendingState.setBlockchain(blockchain);
@@ -141,6 +134,8 @@ public class TestRunner {
                     block.getCumulativeDifficulty(), importResult.toString());
         }
 
+        repository = blockchain.getRepository();
+
         //Check state root matches last valid block
         List<String> results = new ArrayList<>();
         String currRoot = Hex.toHexString(repository.getRoot());
@@ -171,7 +166,9 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(), testCase.getPre());
+        IterableTestRepository testRepository = new IterableTestRepository(new RepositoryRoot(new HashMapDB<byte[]>()));
+        testRepository.environmental = true;
+        Repository repository = loadRepository(testRepository, testCase.getPre());
 
         try {
 
@@ -544,7 +541,7 @@ public class TestRunner {
         return transaction;
     }
 
-    public RepositoryImpl loadRepository(RepositoryImpl track, Map<ByteArrayWrapper, AccountState> pre) {
+    public Repository loadRepository(Repository track, Map<ByteArrayWrapper, AccountState> pre) {
 
 
             /* 1. Store pre-exist accounts - Pre */

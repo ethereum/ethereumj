@@ -22,6 +22,7 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -30,11 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.FutureAdapter;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.*;
@@ -46,7 +47,7 @@ import java.util.concurrent.Future;
  * @since 27.07.2014
  */
 @Component
-public class EthereumImpl implements Ethereum {
+public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
     private static final Logger gLogger = LoggerFactory.getLogger("general");
@@ -76,25 +77,24 @@ public class EthereumImpl implements Ethereum {
     PendingState pendingState;
 
     @Autowired
-    SystemProperties config;
-
-    @Autowired
-    CompositeEthereumListener compositeEthereumListener;
+    SyncManager syncManager;
 
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
+    private SystemProperties config;
+
+    private CompositeEthereumListener compositeEthereumListener;
+
 
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
-    public EthereumImpl() {
+    @Autowired
+    public EthereumImpl(final SystemProperties config, final CompositeEthereumListener compositeEthereumListener) {
+        this.compositeEthereumListener = compositeEthereumListener;
+        this.config = config;
         System.out.println();
-    }
-
-    @PostConstruct
-    public void init() {
-        compositeEthereumListener.addListener(gasPriceTracker);
-
+        this.compositeEthereumListener.addListener(gasPriceTracker);
         gLogger.info("EthereumJ node started: enode://" + Hex.toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
     }
 
@@ -115,9 +115,8 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public void connect(final String ip, final int port, final String remoteId) {
-        logger.info("Connecting to: {}:{}", ip, port);
-        final PeerClient peerClient = ctx.getBean(PeerClient.class);
-        peerClient.connectAsync(ip, port, remoteId, false);
+        logger.debug("Connecting to: {}:{}", ip, port);
+        worldManager.getActivePeer().connectAsync(ip, port, remoteId, false);
     }
 
     @Override
@@ -133,7 +132,7 @@ public class EthereumImpl implements Ethereum {
     public ImportResult addNewMinedBlock(Block block) {
         ImportResult importResult = worldManager.getBlockchain().tryToConnect(block);
         if (importResult == ImportResult.IMPORTED_BEST) {
-            channelManager.sendNewBlock(block, null);
+            channelManager.sendNewBlock(block);
         }
         return importResult;
     }
@@ -156,15 +155,13 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
+    public SyncStatus getSyncStatus() {
+        return syncManager.getSyncStatus();
+    }
+
+    @Override
     public PeerClient getDefaultPeer() {
-
-        PeerClient peer = worldManager.getActivePeer();
-        if (peer == null) {
-
-            peer = new PeerClient();
-            worldManager.setActivePeer(peer);
-        }
-        return peer;
+        return worldManager.getActivePeer();
     }
 
     @Override
@@ -294,15 +291,20 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
+    public org.ethereum.facade.Repository getLastRepositorySnapshot() {
+        return getSnapshotTo(getBlockchain().getBestBlock().getStateRoot());
+    }
+
+    @Override
     public org.ethereum.facade.Repository getPendingState() {
-        return (org.ethereum.facade.Repository) worldManager.getPendingState().getRepository();
+        return worldManager.getPendingState().getRepository();
     }
 
     @Override
     public org.ethereum.facade.Repository getSnapshotTo(byte[] root) {
 
         Repository repository = (Repository) worldManager.getRepository();
-        org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);
+        org.ethereum.facade.Repository snapshot = repository.getSnapshotTo(root);
 
         return snapshot;
     }
@@ -359,10 +361,50 @@ public class EthereumImpl implements Ethereum {
         worldManager.getBlockchain().setExitOn(number);
     }
 
+    @Override
+    public void initSyncing() {
+        worldManager.initSyncing();
+    }
+
+
     /**
      * For testing purposes and 'hackers'
      */
     public ApplicationContext getApplicationContext() {
         return ctx;
+    }
+
+    @Override
+    public boolean isAutoStartup() {
+        return false;
+    }
+
+    /**
+     * Shutting down all app beans
+     */
+    @Override
+    public void stop(Runnable callback) {
+        logger.info("### Shutdown initiated ### ");
+        close();
+        callback.run();
+    }
+
+    @Override
+    public void start() {}
+
+    @Override
+    public void stop() {}
+
+    @Override
+    public boolean isRunning() {
+        return true;
+    }
+
+    /**
+     * Called first on shutdown lifecycle
+     */
+    @Override
+    public int getPhase() {
+        return Integer.MAX_VALUE;
     }
 }

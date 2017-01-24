@@ -32,7 +32,7 @@ public class TransactionBomb extends EthereumListenerAdapter {
 
 
     @Override
-    public void onSyncDone() {
+    public void onSyncDone(SyncState state) {
 
         // We will send transactions only
         // after we have the full chain syncs

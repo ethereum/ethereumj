@@ -45,7 +45,7 @@ public class AccountValidator {
             results.add(formattedString);
         }
 
-        byte[] code = currentDetails.getCode(currentState.getCodeHash());
+        byte[] code = currentDetails.getCode();
         if (!Arrays.equals(expectedDetails.getCode(), code)) {
             String formattedString = String.format("Account: %s: has unexpected code, expected code: %s found code: %s",
                     address, Hex.toHexString(expectedDetails.getCode()), Hex.toHexString(currentDetails.getCode()));
@@ -54,8 +54,14 @@ public class AccountValidator {
 
 
         // compare storage
-        Set<DataWord> currentKeys = currentDetails.getStorage().keySet();
         Set<DataWord> expectedKeys = expectedDetails.getStorage().keySet();
+
+        for (DataWord key : expectedKeys) {
+            // force to load known keys to cache to enumerate them
+            currentDetails.get(key);
+        }
+
+        Set<DataWord> currentKeys = currentDetails.getStorage().keySet();
         Set<DataWord> checked = new HashSet<>();
 
         for (DataWord key : currentKeys) {

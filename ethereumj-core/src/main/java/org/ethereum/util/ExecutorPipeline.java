@@ -133,6 +133,10 @@ public class ExecutorPipeline <In, Out>{
         }
     }
 
+    public boolean isShutdown() {
+        return exec.isShutdown();
+    }
+
     /**
      * Shutdowns executors and waits until all pipeline
      * submitted tasks complete

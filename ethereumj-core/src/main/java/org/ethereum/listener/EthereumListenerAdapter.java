@@ -48,7 +48,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onSyncDone() {
+    public void onSyncDone(SyncState state) {
 
     }
 

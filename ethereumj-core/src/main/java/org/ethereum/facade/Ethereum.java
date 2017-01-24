@@ -18,7 +18,6 @@ import org.ethereum.vm.program.ProgramResult;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
@@ -46,6 +45,11 @@ public interface Ethereum {
     boolean isConnected();
 
     void close();
+
+    /**
+     * Gets the current sync state
+     */
+    SyncStatus getSyncStatus();
 
     /**
      * Factory for general transaction
@@ -116,17 +120,24 @@ public interface Ethereum {
                                        CallTransaction.Function function, Object... funcArgs);
 
     /**
+     * Returns the Repository instance which always refers to the latest (best block) state
+     * It is always better using {@link #getLastRepositorySnapshot()} to work on immutable
+     * state as this instance can change its state between calls (when a new block is imported)
+     *
      * @return - repository for all state data.
      */
     Repository getRepository();
+
+    /**
+     * Returns the latest (best block) Repository snapshot
+     */
+    Repository getLastRepositorySnapshot();
 
     /**
      * @return - pending state repository
      */
     Repository getPendingState();
 
-
-    void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
     Repository getSnapshotTo(byte[] root);
@@ -156,6 +167,11 @@ public interface Ethereum {
      *  Gets the Miner component
      */
     BlockMiner getBlockMiner();
+
+    /**
+     * Initiates blockchain syncing process
+     */
+    void initSyncing();
 
     /**
      * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices

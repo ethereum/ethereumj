@@ -14,11 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.lang.Math.min;
 
@@ -69,6 +70,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private boolean inited = false;
     private Timer logStatsTimer = new Timer();
     private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
+    private ScheduledExecutorService pongTimer;
 
     @Autowired
     public NodeManager(SystemProperties config, EthereumListener ethereumListener, MapDBFactory mapDBFactory, PeerConnectionTester peerConnectionManager) {
@@ -91,9 +93,14 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }, 1 * 1000, 60 * 1000);
 
+        this.pongTimer = Executors.newSingleThreadScheduledExecutor();
         for (Node node : config.peerActive()) {
             getNodeHandler(node).getNodeStatistics().setPredefined(true);
         }
+    }
+
+    public ScheduledExecutorService getPongTimer() {
+        return pongTimer;
     }
 
     void setBootNodes(List<Node> bootNodes) {
@@ -305,44 +312,6 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     /**
-     * Returns list of unused Eth nodes with highest total difficulty<br>
-     *     Search criteria:
-     *     <ul>
-     *         <li>not presented in {@code usedIds} collection</li>
-     *         <li>eth status processing succeeded</li>
-     *         <li>difficulty is higher than {@code lowerDifficulty}</li>
-     *     </ul>
-     *
-     *
-     * @param usedIds collections of ids which are excluded from results
-     * @param lowerDifficulty nodes having TD lower than this value are sorted out
-     * @param limit max size of returning list
-     *
-     * @return list of nodes with highest difficulty, ordered by TD in desc order
-     */
-    public List<NodeHandler> getBestEthNodes(
-            final Set<String> usedIds,
-            final BigInteger lowerDifficulty,
-            int limit
-    ) {
-        return getNodes(new Functional.Predicate<NodeHandler>() {
-            @Override
-            public boolean test(NodeHandler handler) {
-                if (usedIds.contains(handler.getNode().getHexId())) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().isPredefined()) return true;
-
-                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
-            }
-        }, limit);
-    }
-
-    /**
      * Returns limited list of nodes matching {@code predicate} criteria<br>
      * The nodes are sorted then by their totalDifficulties
      *
@@ -351,7 +320,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      *
      * @return list of nodes matching criteria
      */
-    private List<NodeHandler> getNodes(
+    public List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
             int limit    ) {
         ArrayList<NodeHandler> filtered = new ArrayList<>();
@@ -409,29 +378,49 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 sb.append(nodeHandler).append("\t").append(nodeHandler.getNodeStatistics()).append("\n");
             } else {
                 zeroReputCount++;
-            }
+        }
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
+    }
+
+    /**
+     * @return home node if config defines it as public, otherwise null
+     */
+    Node getPublicHomeNode() {
+        if (config.isPublicHomeNode()) {
+            return homeNode;
+        }
+        return null;
     }
 
     public void close() {
         peerConnectionManager.close();
         try {
             nodeManagerTasksTimer.cancel();
+            dbWrite();
         } catch (Exception e) {
             logger.warn("Problems canceling nodeManagerTasksTimer", e);
+        }
+        try {
+            logger.info("Cancelling pongTimer");
+            pongTimer.shutdownNow();
+        } catch (Exception e) {
+            logger.warn("Problems cancelling pongTimer", e);
         }
         try {
             logStatsTimer.cancel();
         } catch (Exception e) {
             logger.warn("Problems canceling logStatsTimer", e);
         }
-        try {
-            logger.info("Closing discovery DB...");
-            db.close();
-        } catch (Throwable e) {
-            logger.warn("Problems closing db", e);
+        // if persistence is disabled, then don't try to close the db
+        if (db != null && !db.isClosed()) {
+            try {
+                logger.info("Closing discovery DB...");
+                db.close();
+            } catch (Throwable e) {
+                logger.warn("Problems closing db", e);
+            }
         }
     }
 

@@ -7,10 +7,8 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
@@ -29,10 +27,9 @@ public class PeerConnectionTester {
     private long ReconnectMaxPeers;
 
     @Autowired
-    private ApplicationContext ctx;
+    private PeerClient peerClient;
 
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
+    private SystemProperties config = SystemProperties.getDefault();
 
     // NodeHandler instance should be unique per Node instance
     private Map<NodeHandler, ?> connectedCandidates = Collections.synchronizedMap(new IdentityHashMap());
@@ -57,7 +54,6 @@ public class PeerConnectionTester {
                     nodeHandler.getNodeStatistics().rlpxConnectionAttempts.add();
                     logger.debug("Trying node connection: " + nodeHandler);
                     Node node = nodeHandler.getNode();
-                    PeerClient peerClient = ctx.getBean(PeerClient.class);
                     peerClient.connect(node.getHost(), node.getPort(),
                             Hex.encodeHexString(node.getId()), true);
                     logger.debug("Terminated node connection: " + nodeHandler);
@@ -84,11 +80,9 @@ public class PeerConnectionTester {
         }
     }
 
-    public PeerConnectionTester() {
-    }
-
-    @PostConstruct
-    void init() {
+    @Autowired
+    public PeerConnectionTester(final SystemProperties config) {
+        this.config = config;
         ConnectThreads = config.peerDiscoveryWorkers();
         ReconnectPeriod = config.peerDiscoveryTouchPeriod() * 1000;
         ReconnectMaxPeers = config.peerDiscoveryTouchMaxNodes();
@@ -118,6 +112,7 @@ public class PeerConnectionTester {
     }
 
     public void nodeStatusChanged(final NodeHandler nodeHandler) {
+        if (peerConnectionPool.isShutdown()) return;
         if (connectedCandidates.size() < NodeManager.MAX_NODES
                 && !connectedCandidates.containsKey(nodeHandler)
                 && !nodeHandler.getNode().isDiscoveryNode()) {

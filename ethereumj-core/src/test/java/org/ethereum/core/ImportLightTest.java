@@ -3,28 +3,31 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.util.blockchain.SolidityContract;
-import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.*;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.blockchain.SolidityContract;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -43,8 +46,85 @@ public class ImportLightTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.resetToDefault();
     }
+
+
+    @Test
+    public void simpleFork() {
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        Block b1 = sb.createBlock();
+        Block b2_ = sb.createBlock();
+        Block b3_ = sb.createForkBlock(b2_);
+        Block b2 = sb.createForkBlock(b1);
+        Block b3 = sb.createForkBlock(b2);
+        Block b4 = sb.createForkBlock(b3);
+        Block b5 = sb.createForkBlock(b4);
+    }
+
+    @Test
+    @Ignore
+    public void importBlocks() throws Exception {
+        Logger logger = LoggerFactory.getLogger("VM");
+        logger.info("#######################################");
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/frontier.json")));
+        Scanner scanner = new Scanner(new FileInputStream("D:\\ws\\ethereumj\\work\\blocks-rec.dmp"));
+        while (scanner.hasNext()) {
+            String blockHex = scanner.next();
+            Block block = new Block(Hex.decode(blockHex));
+            ImportResult result = blockchain.tryToConnect(block);
+            if (result != ImportResult.EXIST && result != ImportResult.IMPORTED_BEST) {
+                throw new RuntimeException(result + ": " + block + "");
+            }
+            System.out.println("Imported " + block.getShortDescr());
+        }
+    }
+
+    @Ignore // periodically get different roots ?
+    @Test
+    public void putZeroValue() {
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        SolidityContract a = sb.submitNewContract("contract A { uint public a; function set() { a = 0;}}");
+        a.callFunction("set");
+        Block block = sb.createBlock();
+        System.out.println(Hex.toHexString(block.getStateRoot()));
+        Assert.assertEquals("cad42169cafc7855c25b8889df83faf38e493fb6e95b2c9c8e155dbc340160d6", Hex.toHexString(block.getStateRoot()));
+    }
+
+    @Test
+    public void simpleRebranch() {
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        Block b0 = sb.getBlockchain().getBestBlock();
+
+        ECKey addr1 = ECKey.fromPrivate(HashUtil.sha3("1".getBytes()));
+        BigInteger bal2 = sb.getBlockchain().getRepository().getBalance(sb.getSender().getAddress());
+
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(100));
+        Block b1 = sb.createBlock();
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(100));
+        Block b2 = sb.createBlock();
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(100));
+        Block b3 = sb.createBlock();
+
+        BigInteger bal1 = sb.getBlockchain().getRepository().getBalance(addr1.getAddress());
+        Assert.assertEquals(BigInteger.valueOf(300), bal1);
+
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b1_ = sb.createForkBlock(b0);
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b2_ = sb.createForkBlock(b1_);
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b3_ = sb.createForkBlock(b2_);
+        sb.sendEther(addr1.getAddress(), BigInteger.valueOf(200));
+        Block b4_ = sb.createForkBlock(b3_);
+
+        BigInteger bal1_ = sb.getBlockchain().getRepository().getBalance(addr1.getAddress());
+        Assert.assertEquals(BigInteger.valueOf(800), bal1_);
+//        BigInteger bal2_ = sb.getBlockchain().getRepository().getBalance(sb.getSender().getAddress());
+//        Assert.assertEquals(bal2, bal2_);
+    }
+
 
     @Test
     public void createFork() throws Exception {
@@ -234,6 +314,21 @@ public class ImportLightTest {
     }
 
     @Test
+    public void simpleDbTest() {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract parent = bc.submitNewContract("contract A {" +
+                "  uint public a;" +
+                "  function set(uint a_) { a = a_;}" +
+                "}");
+        bc.createBlock();
+        parent.callFunction("set", 123);
+        bc.createBlock();
+        Object ret = parent.callConstFunction("a")[0];
+        System.out.println("Ret = " + ret);
+    }
+
+
+    @Test
     public void createContractFork() throws Exception {
         //  #1 (Parent) --> #2 --> #3 (Child) ----------------------> #4 (call Child)
         //    \-------------------------------> #2' (forked Child)
@@ -318,21 +413,24 @@ public class ImportLightTest {
     public void createValueTest() throws IOException, InterruptedException {
         // checks that correct msg.value is passed when contract internally created with value
         String contract =
-                "contract B {" +
-                "  uint public valReceived;" +
-                "  function B() {" +
-                "    valReceived = msg.value;" +
-                "  }" +
-                "}" +
-                "contract A {" +
-                "    address public child;" +
-                "    function create() {" +
-                "        child = (new B).value(20)();" +
-                "    }" +
+                "pragma solidity ^0.4.3;\n" +
+                "contract B {\n" +
+                "      uint public valReceived;\n" +
+                "      \n" +
+                "      function B() payable {\n" +
+                "        valReceived = msg.value;\n" +
+                "      }\n" +
+                "}\n" +
+                "contract A {\n" +
+                "    function () payable { }\n" +
+                "    address public child;\n" +
+                "    function create() payable {\n" +
+                "        child = (new B).value(20)();\n" +
+                "    }\n" +
                 "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
-        bc.sendEther(a.getAddress(), BigInteger.valueOf(10000));
+        bc.sendEther(a.getAddress(), BigInteger.valueOf(10_000));
         a.callFunction(10, "create");
         byte[] childAddress = (byte[]) a.callConstFunction("child")[0];
         SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
@@ -370,31 +468,73 @@ public class ImportLightTest {
     }
 
     @Test
-    public void getBalanceTest() throws IOException, InterruptedException {
+    public void operateNotExistingContractTest() throws IOException, InterruptedException {
         // checking that addr.balance doesn't cause the account to be created
         // and the subsequent call to that non-existent address costs 25K gas
         byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
         String contractA =
+                "pragma solidity ^0.4.3;" +
                 "contract B { function dummy() {}}" +
                 "contract A {" +
-                "  function call() returns (uint) {" +
+                "  function callBalance() returns (uint) {" +
                 "    address addr = 0x" + Hex.toHexString(addr) + ";" +
                 "    uint bal = addr.balance;" +
+                "  }" +
+                "  function callMethod() returns (uint) {" +
+                "    address addr = 0x" + Hex.toHexString(addr) + ";" +
                 "    B b = B(addr);" +
                 "    b.dummy();" +
                 "  }" +
                 "}";
 
-        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
+        StandaloneBlockchain bc = new StandaloneBlockchain()
+                .withGasPrice(1)
+                .withGasLimit(5_000_000L);
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
+
+        {
+            BigInteger balance1 = getSenderBalance(bc);
+            a.callFunction("callBalance");
+            bc.createBlock();
+            BigInteger balance2 = getSenderBalance(bc);
+            long spent = balance1.subtract(balance2).longValue();
+
+            // checking balance of not existed address should take
+            // less that gas limit
+            Assert.assertEquals(21508, spent);
+        }
+
+        {
+            BigInteger balance1 = getSenderBalance(bc);
+            a.callFunction("callMethod");
+            bc.createBlock();
+            BigInteger balance2 = getSenderBalance(bc);
+            long spent = balance1.subtract(balance2).longValue();
+
+            // invalid jump error occurred
+            // all gas wasted
+            // (for history: it is worked fine in ^0.3.1)
+            Assert.assertEquals(5_000_000L, spent);
+        }
+    }
+
+    private BigInteger getSenderBalance(StandaloneBlockchain bc) {
+        return bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
+    }
+
+    @Test
+    public void spendGasSimpleTest() throws IOException, InterruptedException {
+        // check the caller spend value for tx
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasPrice(1);
         BigInteger balance1 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
-        a.callFunction("call");
+        bc.sendEther(new byte[20], BigInteger.ZERO);
         bc.createBlock();
         BigInteger balance2 = bc.getBlockchain().getRepository().getBalance(bc.getSender().getAddress());
         long spent = balance1.subtract(balance2).longValue();
-        Assert.assertEquals(46634, spent);
+        Assert.assertNotEquals(0, spent);
     }
+
 
     @Test
     public void deepRecursionTest() throws Exception {
@@ -413,6 +553,191 @@ public class ImportLightTest {
 
         // no StackOverflowException
     }
+
+    @Test
+    public void prevBlockHashOnFork() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  bytes32 public blockHash;" +
+                "  function a(){" +
+                "    blockHash = block.blockhash(block.number - 1);" +
+                "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b3 = bc.createBlock();
+        Block b4 = bc.createBlock();
+        Block b5 = bc.createBlock();
+        Block b6 = bc.createBlock();
+        Block b2_ = bc.createForkBlock(b1);
+        a.callFunction("a");
+        Block b3_ = bc.createForkBlock(b2_);
+        Object hash = a.callConstFunction(b3_, "blockHash")[0];
+
+        Assert.assertArrayEquals((byte[]) hash, b2_.getHash());
+
+        // no StackOverflowException
+    }
+
+    @Test
+    public void rollbackInternalTx() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  uint public a;" +
+                "  uint public b;" +
+                "  function f() {" +
+                "    b = 1;" +
+                "    this.call(bytes4(sha3('exception()')));" +
+                "    a = 2;" +
+                "  }" +
+
+                "  function exception() {" +
+                "    b = 2;" +
+                "    throw;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        Object av = a.callConstFunction("a")[0];
+        Object bv = a.callConstFunction("b")[0];
+
+        assert BigInteger.valueOf(2).equals(av);
+        assert BigInteger.valueOf(1).equals(bv);
+    }
+
+    @Test()
+    public void selfdestructAttack() throws Exception {
+        String contractSrc = "" +
+                "pragma solidity ^0.4.3;" +
+                "contract B {" +
+                "  function suicide(address benefic) {" +
+                "    selfdestruct(benefic);" +
+                "  }" +
+                "}" +
+                "contract A {" +
+                "  uint public a;" +
+                "  function f() {" +
+                "    B b = new B();" +
+                "    for (uint i = 0; i < 3500; i++) {" +
+                "      b.suicide(address(i));" +
+                "    }" +
+                "    a = 2;" +
+                "  }" +
+                "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain()
+                .withGasLimit(1_000_000_000L)
+                .withDbDelay(0);
+        SolidityContract a = bc.submitNewContract(contractSrc, "A");
+        bc.createBlock();
+        a.callFunction("f");
+        bc.createBlock();
+        String stateRoot = Hex.toHexString(bc.getBlockchain().getRepository().getRoot());
+//        Assert.assertEquals("82d5bdb6531e26011521da5601481c9dbef326aa18385f2945fd77bee288ca31", stateRoot);
+        Object av = a.callConstFunction("a")[0];
+        assert BigInteger.valueOf(2).equals(av);
+        assert bc.getTotalDbHits() < 8300; // reduce this assertion if you make further optimizations
+    }
+
+    @Test
+    @Ignore
+    public void threadRacePendingTest() throws Exception {
+        String contractA =
+                "contract A {" +
+                "  uint[32] public somedata1;" +
+                "  uint[32] public somedata2;" +
+                "  function set1(uint idx, uint val){" +
+                "    somedata1[idx] = val;" +
+                "  }" +
+                "  function set2(uint idx, uint val){" +
+                "    somedata2[idx] = val;" +
+                "  }" +
+                "}";
+
+        final StandaloneBlockchain bc = new StandaloneBlockchain();
+        final StandaloneBlockchain.SolidityContractImpl a = (StandaloneBlockchain.SolidityContractImpl) bc.submitNewContract(contractA);
+        bc.createBlock();
+
+        Block b = null;
+        int cnt = 1;
+
+        final CallTransaction.Function function = a.contract.getByName("set");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int cnt = 1;
+                while (cnt++ > 0) {
+                    try {
+                        bc.generatePendingTransactions();
+//                    byte[] encode = function.encode(cnt % 32, cnt);
+//                    Transaction callTx1 = bc.createTransaction(new ECKey(), 0, a.getAddress(), BigInteger.ZERO, encode);
+//                    bc.getPendingState().addPendingTransaction(callTx1);
+//                    Transaction callTx2 = bc.createTransaction(, 0, a.getAddress(), BigInteger.ZERO, encode);
+//                    bc.getPendingState().addPendingTransaction(callTx);
+                        Thread.sleep(10);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+
+        Block b_1 = null;
+        while(cnt++ > 0) {
+            long s = System.nanoTime();
+
+            a.callFunction("set1", cnt % 32, cnt);
+            a.callFunction("set2", cnt % 32, cnt);
+            bc.sendEther(new byte[32], BigInteger.ONE);
+            a.callFunction("set1", (cnt + 1) % 32, cnt + 1);
+            a.callFunction("set2", (cnt + 1) % 32, cnt + 1);
+            bc.sendEther(new byte[32], BigInteger.ONE);
+
+            Block prev = b;
+            if (cnt % 5 == 0) {
+                b = bc.createForkBlock(b_1);
+            } else {
+                b = bc.createBlock();
+            }
+            b_1 = prev;
+
+            if (cnt % 3 == 0) {
+                bc.getBlockchain().flush();
+            }
+            long t = System.nanoTime() - s;
+
+
+            System.out.println("" + String.format(Locale.US, "%1$.2f", t / 1_000_000d) + ", " + b.getDifficultyBI() + ", " + b.getShortDescr());
+        }
+
+
+//        SolidityContract a = bc.submitNewContract(contractA);
+//        Block b1 = bc.createBlock();
+//        Block b2 = bc.createBlock();
+//        Block b3 = bc.createBlock();
+//        Block b4 = bc.createBlock();
+//        Block b5 = bc.createBlock();
+//        Block b6 = bc.createBlock();
+//        Block b2_ = bc.createForkBlock(b1);
+//        a.callFunction("a");
+//        Block b3_ = bc.createForkBlock(b2_);
+//        Object hash = a.callConstFunction(b3_, "blockHash")[0];
+//
+//        System.out.println(Hex.toHexString((byte[]) hash));
+//        System.out.println(Hex.toHexString(b2_.getHash()));
+
+        // no StackOverflowException
+    }
+
+
+
 
     @Test
     public void suicideInFailedCall() throws Exception {
@@ -453,11 +778,44 @@ public class ImportLightTest {
         // no StackOverflowException
     }
 
+    @Test
+    public void logInFailedCall() throws Exception {
+        // check that if a contract is suicide in call which is failed (thus suicide is reverted)
+        // the refund for this suicide is not added
+        String contractA =
+                        "contract A {" +
+                        "  function f(){" +
+                        "    this.call(bytes4(sha3('bad()')));" +
+                        "  }" +
+                        "  function bad() {" +
+                        "    log0(1234);" +
+                        "    throw;" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+        final List<LogInfo> logs = new ArrayList<>();
+        bc.addEthereumListener(new EthereumListenerAdapter() {
+            @Override
+            public void onTransactionExecuted(TransactionExecutionSummary summary) {
+                logs.addAll(summary.getLogs());
+            }
+        });
+        a.callFunction("f");
+        bc.createBlock();
+
+        Assert.assertEquals(0, logs.size());
+
+        // no StackOverflowException
+    }
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB(), new HashMapDB());
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
-        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryRoot repository = new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<byte[]>()));
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
@@ -466,13 +824,10 @@ public class ImportLightTest {
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
-        programInvokeFactory.setBlockchain(blockchain);
 
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(listener, blockchain);
-
-        pendingState.init();
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
@@ -484,7 +839,7 @@ public class ImportLightTest {
         }
 
         track.commit();
-        repository.commitBlock(genesis.getHeader());
+        repository.commit();
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 

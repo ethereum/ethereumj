@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.*;
-import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -30,16 +30,11 @@ public class GitHubStateTest {
     public void setup() {
         // TODO remove this after Homestead launch and shacommit update with actual block number
         // for this JSON test commit the Homestead block was defined as 900000
-        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
+        SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
             add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()){
-                @Override
-                public Integer getChainId() {
-                    return null;
-                }
-            });
+            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()));
 
         }});
     }
@@ -128,6 +123,12 @@ public class GitHubStateTest {
 
         Set<String> excluded = new HashSet<>();
         excluded.add("CallRecursiveBombPreCall"); // Max Gas value is pending to be < 2^63
+
+        // the test creates a contract with the same address as existing contract (which is not possible in
+        // live). In this case we need to clear the storage in TransactionExecutor.create
+        // return back to this case when the contract deleting will be implemented
+        excluded.add("createJS_ExampleContract");
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
 

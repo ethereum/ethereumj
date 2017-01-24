@@ -32,16 +32,13 @@ public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    @Autowired
-    SystemProperties config;
+    private SystemProperties config;
 
-    @Autowired
     private ApplicationContext ctx;
 
-    public EthereumChannelInitializer ethereumChannelInitializer;
+    private EthereumListener ethereumListener;
 
-    @Autowired
-    EthereumListener ethereumListener;
+    public EthereumChannelInitializer ethereumChannelInitializer;
 
     private boolean listening;
 
@@ -49,9 +46,13 @@ public class PeerServer {
     EventLoopGroup workerGroup;
     ChannelFuture channelFuture;
 
-    public PeerServer() {
+    @Autowired
+    public PeerServer(final SystemProperties config, final ApplicationContext ctx,
+                      final EthereumListener ethereumListener) {
+        this.ctx = ctx;
+        this.config = config;
+        this.ethereumListener = ethereumListener;
     }
-
 
     public void start(int port) {
 

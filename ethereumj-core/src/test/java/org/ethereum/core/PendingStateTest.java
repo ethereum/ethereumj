@@ -2,17 +2,14 @@ package org.ethereum.core;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 
@@ -20,13 +17,14 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
-import static org.ethereum.util.BIUtil.toBI;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
 
@@ -462,6 +460,37 @@ public class PendingStateTest {
     }
 
     @Test
+    public void testPrevBlock() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        ECKey bob = new ECKey();
+
+        SolidityContract contract = bc.submitNewContract("contract A {" +
+                "  function getPrevBlockHash() returns (bytes32) {" +
+                "    return block.blockhash(block.number - 1);" +
+                "  }" +
+                "}");
+
+        bc.sendEther(bob.getAddress(), convert(100, ETHER));
+
+        Block b1 = bc.createBlock();
+        Block b2 = bc.createBlock();
+        Block b3 = bc.createBlock();
+
+        PendingListener l = new PendingListener();
+        bc.addEthereumListener(l);
+        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd;
+
+        contract.callFunction("getPrevBlockHash");
+        bc.generatePendingTransactions();
+        txUpd = l.onPendingTransactionUpdate.values().iterator().next().poll();
+
+        Assert.assertArrayEquals(txUpd.getLeft().getExecutionResult(), b3.getHash());
+    }
+
+    @Test
     public void testTrackTx2() throws InterruptedException {
         StandaloneBlockchain bc = new StandaloneBlockchain();
         PendingListener l = new PendingListener();
@@ -576,5 +605,33 @@ public class PendingStateTest {
 
         Assert.assertEquals(l.pollTxUpdateState(tx1), DROPPED);
         Assert.assertTrue(l.getQueueFor(tx1).isEmpty());
+    }
+
+    @Test
+    public void testInvalidTransaction() throws InterruptedException {
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        final CountDownLatch txHandle = new CountDownLatch(1);
+        PendingListener l = new PendingListener() {
+            @Override
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+                assert !txReceipt.isSuccessful();
+                assert txReceipt.getError().toLowerCase().contains("invalid");
+                assert txReceipt.getError().toLowerCase().contains("receive address");
+                txHandle.countDown();
+            }
+        };
+        bc.addEthereumListener(l);
+        PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
+
+        ECKey alice = new ECKey();
+        Random rnd = new Random();
+        Block b1 = bc.createBlock();
+        byte[] b = new byte[21];
+        rnd.nextBytes(b);
+
+        Transaction tx1 = bc.createTransaction(alice, 0, b, BigInteger.ONE, new byte[0]);
+        pendingState.addPendingTransaction(tx1);
+
+        assert txHandle.await(3, TimeUnit.SECONDS);
     }
 }

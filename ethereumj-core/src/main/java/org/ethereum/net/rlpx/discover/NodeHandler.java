@@ -1,16 +1,13 @@
 package org.ethereum.net.rlpx.discover;
 
 import org.ethereum.net.rlpx.*;
+import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.swarm.Util;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 public class NodeHandler {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
-    private static ScheduledExecutorService pongTimer = Executors.newSingleThreadScheduledExecutor();
     static long PingTimeout = 15000; //KademliaOptions.REQ_TIMEOUT;
+    static final int WARN_PACKET_SIZE = 1400;
     private static volatile int msgInCount = 0, msgOutCount = 0;
     private static boolean initialLogging = true;
 
@@ -31,12 +28,18 @@ public class NodeHandler {
     // they are not so informative when everything is already up and running
     // but could be interesting when discovery just starts
     private void logMessage(Message msg, boolean inbound) {
-        String s = (inbound ? " ===> " : "<===  ") + "[" +
-                msg.getClass().getSimpleName() + "] " + this;
+        String s = String.format("%s[%s (%s)] %s", inbound ? " ===>  " : "<===  ", msg.getClass().getSimpleName(),
+                msg.getPacket().length, this);
         if (msgInCount > 1024) {
             logger.trace(s);
         } else {
             logger.debug(s);
+        }
+
+        if (!inbound && msg.getPacket().length > WARN_PACKET_SIZE) {
+            logger.warn("Sending UDP packet exceeding safe size of {} bytes, actual: {} bytes",
+                    WARN_PACKET_SIZE, msg.getPacket().length);
+            logger.warn(s);
         }
 
         if (initialLogging) {
@@ -231,7 +234,12 @@ public class NodeHandler {
 //        logMessage(" ===> [FIND_NODE] " + this);
         getNodeStatistics().discoverInFind.add();
         List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
-        closest.add(nodeManager.homeNode);
+
+        Node publicHomeNode = nodeManager.getPublicHomeNode();
+        if (publicHomeNode != null) {
+            if (closest.size() == KademliaOptions.BUCKET_SIZE) closest.remove(closest.size() - 1);
+            closest.add(publicHomeNode);
+        }
 
         sendNeighbours(closest);
     }
@@ -257,15 +265,15 @@ public class NodeHandler {
         }
 //        logMessage("<===  [PING] " + this);
 
-        Message ping = PingMessage.create(nodeManager.table.getNode().getHost(),
-                nodeManager.table.getNode().getPort(), nodeManager.key);
+        Message ping = PingMessage.create(nodeManager.table.getNode(), getNode(), nodeManager.key);
         logMessage(ping, false);
         waitForPong = true;
         pingSent = Util.curTime();
         sendMessage(ping);
         getNodeStatistics().discoverOutPing.add();
 
-        pongTimer.schedule(new Runnable() {
+        if (nodeManager.getPongTimer().isShutdown()) return;
+        nodeManager.getPongTimer().schedule(new Runnable() {
             public void run() {
                 try {
                     if (waitForPong) {
@@ -281,7 +289,7 @@ public class NodeHandler {
 
     void sendPong(byte[] mdc) {
 //        logMessage("<===  [PONG] " + this);
-        Message pong = PongMessage.create(mdc, node.getHost(), node.getPort(), nodeManager.key);
+        Message pong = PongMessage.create(mdc, node, nodeManager.key);
         logMessage(pong, false);
         sendMessage(pong);
         getNodeStatistics().discoverOutPong.add();

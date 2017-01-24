@@ -48,6 +48,7 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         @Override
         public List<TransactionInfo> deserialize(byte[] stream) {
             try {
+                if (stream == null) return null;
                 RLPList params = RLP.decode2(stream);
                 RLPList infoList = (RLPList) params.get(0);
                 List<TransactionInfo> ret = new ArrayList<>();
@@ -105,27 +106,17 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         return null;
     }
 
-    public TransactionStore(KeyValueDataSource src) {
-        super(src, serializer);
-        withCacheSize(256);
-        withCacheOnWrite(true);
+    public TransactionStore(Source<byte[], byte[]> src) {
+        super(src, serializer, 256);
     }
 
-    @Override
-    public void flush() {
-        if (getSrc() instanceof Flushable) {
-            ((Flushable) getSrc()).flush();
-        }
-    }
-
-    @Override
     @PreDestroy
     public void close() {
-        try {
-            logger.info("Closing TransactionStore...");
-            super.close();
-        } catch (Exception e) {
-            logger.warn("Problems closing TransactionStore", e);
-        }
+//        try {
+//            logger.info("Closing TransactionStore...");
+//            super.close();
+//        } catch (Exception e) {
+//            logger.warn("Problems closing TransactionStore", e);
+//        }
     }
 }

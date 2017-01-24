@@ -8,6 +8,7 @@ import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -52,23 +52,28 @@ public class SyncPool {
     private EthereumListener ethereumListener;
 
     @Autowired
-    private Blockchain blockchain;
-
-    @Autowired
-    private SystemProperties config;
-
-    @Autowired
     private NodeManager nodeManager;
 
-    @Autowired
     private ChannelManager channelManager;
+
+    private Blockchain blockchain;
+
+    private SystemProperties config;
+
     private ScheduledExecutorService poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
 
-    @PostConstruct
-    public void init() {
+    private Functional.Predicate<NodeHandler> nodesSelector;
+    private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        if (!config.isSyncEnabled()) return;
+    @Autowired
+    public SyncPool(final SystemProperties config, final Blockchain blockchain) {
+        this.config = config;
+        this.blockchain = blockchain;
+    }
 
+    public void init(final ChannelManager channelManager) {
+        if (this.channelManager != null) return; // inited already
+        this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
         poolLoopExecutor.scheduleWithFixedDelay(
@@ -87,11 +92,28 @@ public class SyncPool {
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
         );
+        logExecutor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    logActivePeers();
+                    logger.info("\n");
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    logger.error("Exception in log worker", t);
+                }
+            }
+        }, 30, 30, TimeUnit.SECONDS);
+    }
+
+    public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
+        this.nodesSelector = nodesSelector;
     }
 
     public void close() {
         try {
             poolLoopExecutor.shutdownNow();
+            logExecutor.shutdownNow();
         } catch (Exception e) {
             logger.warn("Problems shutting down executor", e);
         }
@@ -116,6 +138,41 @@ public class SyncPool {
                 return peer;
         }
         return null;
+    }
+
+    @Nullable
+    public synchronized Channel getNotLastIdle() {
+        ArrayList<Channel> channels = new ArrayList<>(activePeers);
+        Collections.shuffle(channels);
+        Channel candidate = null;
+        for (Channel peer : channels) {
+            if (peer.isIdle()) {
+                if (candidate == null) {
+                    candidate = peer;
+                } else {
+                    return candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public synchronized List<Channel> getAllIdle() {
+        List<Channel> ret = new ArrayList<>();
+        for (Channel peer : activePeers) {
+            if (peer.isIdle())
+                ret.add(peer);
+        }
+        return ret;
+    }
+
+    public synchronized List<Channel> getActivePeers() {
+        return new ArrayList<>(activePeers);
+    }
+
+    public synchronized int getActivePeersCount() {
+        return activePeers.size();
     }
 
     @Nullable
@@ -162,12 +219,40 @@ public class SyncPool {
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         if(lackSize <= 0) return;
 
-        Set<String> nodesInUse = nodesInUse();
+        final Set<String> nodesInUse = nodesInUse();
         nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
-        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
+        class NodeSelector implements Functional.Predicate<NodeHandler> {
+            BigInteger lowerDifficulty;
+
+            public NodeSelector(BigInteger lowerDifficulty) {
+                this.lowerDifficulty = lowerDifficulty;
+            }
+
+            @Override
+            public boolean test(NodeHandler handler) {
+                if (nodesInUse.contains(handler.getNode().getHexId())) {
+                    return false;
+                }
+
+                if (handler.getNodeStatistics().isPredefined()) return true;
+
+                if (nodesSelector != null && !nodesSelector.test(handler)) return false;
+
+                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                    return false;
+                }
+
+                if (handler.getNodeStatistics().getReputation() < 100) return false;
+
+                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
+            }
+        }
+
+        List<NodeHandler> newNodes;
+        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty), lackSize);
         if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
+            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO), lackSize);
         }
 
         if (logger.isTraceEnabled()) {
@@ -256,12 +341,16 @@ public class SyncPool {
         }
     }
 
+    public ChannelManager getChannelManager() {
+        return channelManager;
+    }
+
     private void heartBeat() {
-        for (Channel peer : channelManager.getActivePeers()) {
-            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
-                logger.info("Peer {}: no response after %d seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
-                peer.dropConnection();
-            }
-        }
+//        for (Channel peer : channelManager.getActivePeers()) {
+//            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
+//                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
+//                peer.dropConnection();
+//            }
+//        }
     }
 }

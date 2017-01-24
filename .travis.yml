@@ -4,6 +4,9 @@ dist: trusty
 language: java
 jdk: oraclejdk7
 
+before_install:
+  - 'if [ ! -d $HOME/.jdk/jdk1.7.0_79 ]; then wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.tar.gz && tar -zxvf jdk-7u79-linux-x64.tar.gz && rm jdk-7u79-linux-x64.tar.gz && mv jdk1.7.0_79 $HOME/.jdk ; fi'
+  - export JAVA_HOME=$HOME/.jdk/jdk1.7.0_79
 
 # publish snapshots to https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core
 # publish releases to http://jcenter.bintray.com/org/ethereum/ethereumj-core
@@ -15,6 +18,7 @@ script:
 cache:
   directories:
     - $HOME/.gradle
+    - $HOME/.jdk
 
 notifications:
   irc:

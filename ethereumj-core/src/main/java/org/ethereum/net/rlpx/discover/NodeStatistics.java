@@ -15,7 +15,6 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Math.max;
@@ -33,11 +32,13 @@ public class NodeStatistics {
     public final static int REPUTATION_HANDSHAKE = 3000;
     public final static int REPUTATION_AUTH = 1000;
     public final static int REPUTATION_DISCOVER_PING = 1;
+    public final static long TOO_MANY_PEERS_PENALIZE_TIMEOUT = 10 * 1000;
 
     public class StatHandler {
-        AtomicInteger count = new AtomicInteger(0);
+        AtomicLong count = new AtomicLong(0);
         public void add() {count.incrementAndGet(); }
-        public int get() {return count.get();}
+        public void add(long delta) {count.addAndGet(delta); }
+        public long get() {return count.get();}
         public String toString() {return count.toString();}
     }
 
@@ -95,7 +96,7 @@ public class NodeStatistics {
 
     private ReasonCode rlpxLastRemoteDisconnectReason = null;
     private ReasonCode rlpxLastLocalDisconnectReason = null;
-    private boolean disconnected = false;
+    private long lastDisconnectedTime = 0;
 
     // Eth stat
     public final StatHandler ethHandshake = new StatHandler();
@@ -104,17 +105,20 @@ public class NodeStatistics {
     private StatusMessage ethLastInboundStatusMsg = null;
     private BigInteger ethTotalDifficulty = BigInteger.ZERO;
 
+    // Eth63 stat
+    public final StatHandler eth63NodesRequested = new StatHandler();
+    public final StatHandler eth63NodesReceived = new StatHandler();
+    public final StatHandler eth63NodesRetrieveTime = new StatHandler();
+
     public NodeStatistics(Node node) {
         this.node = node;
         discoverMessageLatency = (Statter.SimpleStatter) Statter.create(getStatName() + ".discoverMessageLatency");
     }
 
-    int getSessionReputation() {
+    private int getSessionReputation() {
         return getSessionFairReputation() + (isPredefined ? REPUTATION_PREDEFINED : 0);
     }
-    int getSessionFairReputation() {
-        if (wrongFork) return 0;
-
+    private int getSessionFairReputation() {
         int discoverReput = 0;
 
         discoverReput += min(discoverInPong.get(), 10) * (discoverOutPing.get() == discoverInPong.get() ? 2 : 1);
@@ -126,7 +130,7 @@ public class NodeStatistics {
         rlpxReput += rlpxHandshake.get() > 0 ? 20 : 0;
         rlpxReput += min(rlpxInMessages.get(), 10) * 3;
 
-        if (disconnected) {
+        if (wasDisconnected()) {
             if (rlpxLastLocalDisconnectReason == null && rlpxLastRemoteDisconnectReason == null) {
                 // means connection was dropped without reporting any reason - bad
                 rlpxReput *= 0.3;
@@ -134,10 +138,10 @@ public class NodeStatistics {
                 // the disconnect was not initiated by discover mode
                 if (rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS) {
                     // The peer is popular, but we were unlucky
-                    rlpxReput *= 0.8;
-                } else {
+                    rlpxReput *= 0.3;
+                } else if (rlpxLastRemoteDisconnectReason != ReasonCode.REQUESTED) {
                     // other disconnect reasons
-                    rlpxReput *= 0.5;
+                    rlpxReput *= 0.2;
                 }
             }
         }
@@ -146,19 +150,43 @@ public class NodeStatistics {
     }
 
     public int getReputation() {
-        return savedReputation / 2 + getSessionReputation();
+        return isReputationPenalized() ? 0 : savedReputation / 2 + getSessionReputation();
+    }
+
+    private boolean isReputationPenalized() {
+        if (wrongFork) return true;
+        if (wasDisconnected() && rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS &&
+                System.currentTimeMillis() - lastDisconnectedTime < TOO_MANY_PEERS_PENALIZE_TIMEOUT) {
+            return true;
+        }
+        if (wasDisconnected() && rlpxLastRemoteDisconnectReason == ReasonCode.DUPLICATE_PEER &&
+                System.currentTimeMillis() - lastDisconnectedTime < TOO_MANY_PEERS_PENALIZE_TIMEOUT) {
+            return true;
+        }
+        return  rlpxLastLocalDisconnectReason == ReasonCode.NULL_IDENTITY ||
+                rlpxLastRemoteDisconnectReason == ReasonCode.NULL_IDENTITY ||
+                rlpxLastLocalDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL ||
+                rlpxLastRemoteDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL ||
+                rlpxLastLocalDisconnectReason == ReasonCode.USELESS_PEER ||
+                rlpxLastRemoteDisconnectReason == ReasonCode.USELESS_PEER;
     }
 
     public void nodeDisconnectedRemote(ReasonCode reason) {
+        lastDisconnectedTime = System.currentTimeMillis();
         rlpxLastRemoteDisconnectReason = reason;
     }
 
     public void nodeDisconnectedLocal(ReasonCode reason) {
+        lastDisconnectedTime = System.currentTimeMillis();
         rlpxLastLocalDisconnectReason = reason;
     }
 
     public void disconnected() {
-        disconnected = true;
+        lastDisconnectedTime = System.currentTimeMillis();
+    }
+
+    public boolean wasDisconnected() {
+        return lastDisconnectedTime > 0;
     }
 
 
@@ -202,7 +230,7 @@ public class NodeStatistics {
 
     Persistent getPersistent() {
         Persistent persistent = new Persistent();
-        persistent.reputation = (getSessionFairReputation() + savedReputation) / 2;
+        persistent.reputation = isReputationPenalized() ? 0 : (savedReputation + getSessionFairReputation()) / 2;
         return persistent;
     }
 
@@ -222,7 +250,7 @@ public class NodeStatistics {
                 rlpxInMessages + "/" + rlpxOutMessages +
                 ", eth: " + ethHandshake + "/" + ethInbound + "/" + ethOutbound + " " +
                 (ethLastInboundStatusMsg != null ? ByteUtil.toHexString(ethLastInboundStatusMsg.getTotalDifficulty()) : "-") + " " +
-                (disconnected ? "X " : "") +
+                (wasDisconnected() ? "X " : "") +
                 (rlpxLastLocalDisconnectReason != null ? ("<=" + rlpxLastLocalDisconnectReason) : " ") +
                 (rlpxLastRemoteDisconnectReason != null ? ("=>" + rlpxLastRemoteDisconnectReason) : " ")  +
                 "[" + clientId + "]";

@@ -615,24 +615,24 @@ public class RLP {
             return null;
         }
         int prefix = data[pos] & 0xFF;
-        if (prefix == OFFSET_SHORT_ITEM) {
+        if (prefix == OFFSET_SHORT_ITEM) {  // 0x80
             return new DecodeResult(pos + 1, ""); // means no length or 0
-        } else if (prefix < OFFSET_SHORT_ITEM) {
+        } else if (prefix < OFFSET_SHORT_ITEM) {  // [0x00, 0x7f]
             return new DecodeResult(pos + 1, new byte[]{data[pos]}); // byte is its own RLP encoding
-        } else if (prefix < OFFSET_LONG_ITEM) {
+        } else if (prefix <= OFFSET_LONG_ITEM) {  // [0x81, 0xb7]
             int len = prefix - OFFSET_SHORT_ITEM; // length of the encoded bytes
             return new DecodeResult(pos + 1 + len, copyOfRange(data, pos + 1, pos + 1 + len));
-        } else if (prefix < OFFSET_SHORT_LIST) {
+        } else if (prefix < OFFSET_SHORT_LIST) {  // [0xb8, 0xbf]
             int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
             int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
             return new DecodeResult(pos + 1 + lenlen + lenbytes, copyOfRange(data, pos + 1 + lenlen, pos + 1 + lenlen
                     + lenbytes));
-        } else if (prefix <= OFFSET_LONG_LIST) {
+        } else if (prefix <= OFFSET_LONG_LIST) {  // [0xc0, 0xf7]
             int len = prefix - OFFSET_SHORT_LIST; // length of the encoded list
             int prevPos = pos;
             pos++;
             return decodeList(data, pos, prevPos, len);
-        } else if (prefix < 0xFF) {
+        } else if (prefix <= 0xFF) {  // [0xf8, 0xff]
             int lenlen = prefix - OFFSET_LONG_LIST; // length of length the encoded list
             int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
             pos = pos + lenlen + 1; // start at position of first element in list

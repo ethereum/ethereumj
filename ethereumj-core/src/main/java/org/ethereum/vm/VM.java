@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -152,7 +151,7 @@ public class VM {
             String hint = "";
             long callGas = 0, memWords = 0; // parameters for logging
             long gasCost = op.getTier().asInt();
-            long gasBefore = program.getGas().longValue();
+            long gasBefore = program.getGasLong();
             int stepBefore = program.getPC();
             GasCost gasCosts = blockchainConfig.getGasCost();
             DataWord adjustedCallGas = null;
@@ -259,8 +258,8 @@ public class VM {
                     //check to see if account does not exist and is not a precompiled contract
 
                     if (op == CALL) {
+                        DataWord value = stack.get(stack.size() - 3);
                         if (blockchainConfig.eip161()) {
-                            DataWord value = stack.get(stack.size() - 3);
                             if (isDeadAccount(program, callAddressWord.getLast20Bytes()) && !value.isZero()) {
                                 gasCost += gasCosts.getNEW_ACCT_CALL();
                             }
@@ -1161,6 +1160,10 @@ public class VM {
                     PrecompiledContracts.PrecompiledContract contract =
                             PrecompiledContracts.getContractForAddress(codeAddress);
 
+                    if (op.equals(CALL)) {
+                        program.getResult().addTouchAccount(codeAddress.getLast20Bytes());
+                    }
+
                     if (contract != null) {
                         program.callToPrecompiledAddress(msg, contract);
                     } else {
@@ -1189,6 +1192,7 @@ public class VM {
                 case SUICIDE: {
                     DataWord address = program.stackPop();
                     program.suicide(address);
+                    program.getResult().addTouchAccount(address.getLast20Bytes());
 
                     if (logger.isInfoEnabled())
                         hint = "address: " + Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
@@ -1241,7 +1245,7 @@ public class VM {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         } catch (StackOverflowError soe){
-            logger.error("\n !!! StackOverflowError: update your java run command with -Xss32M !!!\n", soe);
+            logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M !!!\n", soe);
             System.exit(-1);
         }
     }

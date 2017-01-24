@@ -1,7 +1,6 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.net.AbstractNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -11,7 +10,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +32,7 @@ public class GitHubVMTest {
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "env1");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "ExtCodeSizeAddressInputTooBigRightMyAddress");
     }
 
     @Test
@@ -127,7 +125,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore
     @Test // testing full suite
     public void testvmSystemOperationsTestGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -160,5 +157,6 @@ public class GitHubVMTest {
             String json = JSONReader.loadJSON("VMTests//RandomTests/" + fileName);
             GitHubJSONTestSuite.runGitHubJsonVMTest(json);
         }
+
     }
 }

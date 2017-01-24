@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.AfterClass;
@@ -13,6 +14,9 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
+import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
  * Created by Anton Nashatyrev on 06.07.2016.
@@ -31,7 +35,7 @@ public class StandaloneBlockchainTest {
 
     @AfterClass
     public static void cleanup() {
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.resetToDefault();
     }
 
     @Test
@@ -115,6 +119,42 @@ public class StandaloneBlockchainTest {
         BigInteger r = (BigInteger) a.callConstFunction("a")[0];
         System.out.println(r.toString(16));
         Assert.assertEquals(new BigInteger(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
+    }
+
+    @Test
+    public void invalidTxTest() {
+        // check that invalid tx doesn't break implementation
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        ECKey alice = sb.getSender();
+        ECKey bob = new ECKey();
+        sb.sendEther(bob.getAddress(), BigInteger.valueOf(1000));
+        sb.setSender(bob);
+        sb.sendEther(alice.getAddress(), BigInteger.ONE);
+        sb.setSender(alice);
+        sb.sendEther(bob.getAddress(), BigInteger.valueOf(2000));
+
+        sb.createBlock();
+    }
+
+    @Test
+    public void initBalanceTest() {
+        // check StandaloneBlockchain.withAccountBalance method
+        StandaloneBlockchain sb = new StandaloneBlockchain();
+        ECKey alice = sb.getSender();
+        ECKey bob = new ECKey();
+        sb.withAccountBalance(bob.getAddress(), convert(123, ETHER));
+
+        BigInteger aliceInitBal = sb.getBlockchain().getRepository().getBalance(alice.getAddress());
+        BigInteger bobInitBal = sb.getBlockchain().getRepository().getBalance(bob.getAddress());
+        assert convert(123, ETHER).equals(bobInitBal);
+
+        sb.setSender(bob);
+        sb.sendEther(alice.getAddress(), BigInteger.ONE);
+
+        sb.createBlock();
+
+        assert convert(123, ETHER).compareTo(sb.getBlockchain().getRepository().getBalance(bob.getAddress())) > 0;
+        assert aliceInitBal.add(BigInteger.ONE).equals(sb.getBlockchain().getRepository().getBalance(alice.getAddress()));
     }
 
 }

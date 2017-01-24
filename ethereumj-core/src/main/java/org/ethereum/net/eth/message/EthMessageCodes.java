@@ -112,7 +112,40 @@ public enum EthMessageCodes {
      * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification.
      */
-    NEW_BLOCK(0x07);
+    NEW_BLOCK(0x07),
+
+    /**
+     * {@code [+0x0d, hash_0: B_32, hash_1: B_32, ...] } <br>
+     *
+     * Require peer to return a NodeData message. Hint that useful values in it
+     * are those which correspond to given hashes.
+     */
+    GET_NODE_DATA(0x0d),
+
+    /**
+     * {@code [+0x0e, value_0: B, value_1: B, ...] } <br>
+     *
+     * Provide a set of values which correspond to previously asked node data
+     * hashes from GetNodeData. Does not need to contain all; best effort is
+     * fine. If it contains none, then has no information for previous
+     * GetNodeData hashes.
+     */
+    NODE_DATA(0x0e),
+
+    /**
+     * {@code [+0x0f, hash_0: B_32, hash_1: B_32, ...] } <br>
+     *
+     * Require peer to return a Receipts message. Hint that useful values in it
+     * are those which correspond to blocks of the given hashes.
+     */
+    GET_RECEIPTS(0x0f),
+
+    /**
+     * {@code [+0x10, [receipt_0, receipt_1], ...] } <br>
+     *
+     * Provide a set of receipts which correspond to previously asked in GetReceipts.
+     */
+    RECEIPTS(0x10);
 
     private int cmd;
 
@@ -130,6 +163,21 @@ public enum EthMessageCodes {
                 GET_BLOCK_BODIES,
                 BLOCK_BODIES,
                 NEW_BLOCK
+        });
+
+        versionToValuesMap.put(V63, new EthMessageCodes[]{
+                STATUS,
+                NEW_BLOCK_HASHES,
+                TRANSACTIONS,
+                GET_BLOCK_HEADERS,
+                BLOCK_HEADERS,
+                GET_BLOCK_BODIES,
+                BLOCK_BODIES,
+                NEW_BLOCK,
+                GET_NODE_DATA,
+                NODE_DATA,
+                GET_RECEIPTS,
+                RECEIPTS
         });
 
         for (EthVersion v : EthVersion.values()) {

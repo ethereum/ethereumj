@@ -2,6 +2,7 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -14,9 +15,7 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -29,13 +28,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 
-    @Autowired
     protected Blockchain blockchain;
 
-    @Autowired
     protected SystemProperties config;
 
-    @Autowired
     protected CompositeEthereumListener ethereumListener;
 
     protected Channel channel;
@@ -54,21 +50,23 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
     };
 
-    protected int maxHashesAsk;
-
     protected boolean processTransactions = false;
 
     protected EthHandler(EthVersion version) {
         this.version = version;
     }
 
-    @PostConstruct
-    private void init() {
-        maxHashesAsk = config.maxHashesAsk();
-        bestBlock = blockchain.getBestBlock();
-        ethereumListener.addListener(listener);
+    protected EthHandler(final EthVersion version, final SystemProperties config,
+                         final Blockchain blockchain, final BlockStore blockStore,
+                         final CompositeEthereumListener ethereumListener) {
+        this.version = version;
+        this.config = config;
+        this.ethereumListener = ethereumListener;
+        this.blockchain = blockchain;
+        bestBlock = blockStore.getBestBlock();
+        this.ethereumListener.addListener(listener);
         // when sync enabled we delay transactions processing until sync is complete
-        processTransactions = !config.isSyncEnabled();
+//        processTransactions = !config.isSyncEnabled();
     }
 
     @Override
@@ -128,4 +126,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     public void setChannel(Channel channel) {
         this.channel = channel;
     }
+
+    @Override
+    public EthVersion getVersion() {
+        return version;
+    }
+
 }

@@ -13,7 +13,7 @@ import java.util.Set;
  * @author Roman Mandeleil
  * @since 08.09.2014
  */
-public interface Repository {
+public interface Repository extends org.ethereum.facade.Repository{
 
     /**
      * Create a new account in the database
@@ -53,6 +53,15 @@ public interface Repository {
      * @return new value of the nonce
      */
     BigInteger increaseNonce(byte[] addr);
+
+    /**
+     * Sets the account nonce of the given account
+     *
+     * @param addr of the account
+     * @param nonce new nonce
+     * @return new value of the nonce
+     */
+    BigInteger setNonce(byte[] addr, BigInteger nonce);
 
     /**
      * Get current nonce of a given account
@@ -205,5 +214,8 @@ public interface Repository {
     Repository getSnapshotTo(byte[] root);
 
 
-
+    /**
+     * Adds raw Node data in state DS
+     */
+    void addRawNode(byte[] key, byte[] value);
 }

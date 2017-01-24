@@ -1,15 +1,10 @@
 package org.ethereum.config;
 
-import org.ethereum.datasource.CachingDataSource;
-import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.PruneManager;
 import org.ethereum.db.TransactionStore;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +12,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
-
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.ethereum.db.IndexedBlockStore.BLOCK_INFO_SERIALIZER;
 
 /**
  *
@@ -46,8 +32,7 @@ public class DefaultConfig {
     @Autowired
     SystemProperties config;
 
-    @PostConstruct
-    public void init() {
+    public DefaultConfig() {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
@@ -58,24 +43,26 @@ public class DefaultConfig {
 
     @Bean
     public BlockStore blockStore(){
-        KeyValueDataSource index = commonConfig.keyValueDataSource();
-        index.setName("index");
-        index.init();
-        KeyValueDataSource blocks = commonConfig.keyValueDataSource();
-        blocks.setName("block");
-        blocks.init();
+        commonConfig.fastSyncCleanUp();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(new CachingDataSource(index), new CachingDataSource(blocks));
+        indexedBlockStore.init(commonConfig.cachedDbSource("index"), commonConfig.cachedDbSource("block"));
 
         return indexedBlockStore;
     }
 
     @Bean
     public TransactionStore transactionStore() {
-        KeyValueDataSource ds = commonConfig.keyValueDataSource();
-        ds.setName("transactions");
-        ds.init();
-        CachingDataSource cachingDataSource = new CachingDataSource(ds);
-        return new TransactionStore(cachingDataSource);
+        commonConfig.fastSyncCleanUp();
+        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
+    }
+
+    @Bean
+    public PruneManager pruneManager() {
+        if (config.databasePruneDepth() >= 0) {
+            return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
+                    config.databasePruneDepth());
+        } else {
+            return new PruneManager(null, null, -1); // dummy
+        }
     }
 }

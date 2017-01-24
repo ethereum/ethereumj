@@ -2,6 +2,9 @@ package org.ethereum.solidity.compiler;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import org.ethereum.config.SystemProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -9,13 +12,24 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+@Component
 public class SolidityCompiler {
+
+    private Solc solc;
+
+    private static SolidityCompiler INSTANCE;
+
+    @Autowired
+    public SolidityCompiler(SystemProperties config) {
+        solc = new Solc(config);
+    }
 
     public enum Options {
         AST("ast"),
         BIN("bin"),
         INTERFACE("interface"),
-        ABI("abi");
+        ABI("abi"),
+        METADATA("metadata");
 
         private String name;
 
@@ -36,14 +50,16 @@ public class SolidityCompiler {
     public static class Result {
         public String errors;
         public String output;
+        private boolean success = false;
 
-        public Result(String errors, String output) {
+        public Result(String errors, String output, boolean success) {
             this.errors = errors;
             this.output = output;
+            this.success = success;
         }
 
         public boolean isFailed() {
-            return isNotBlank(errors);
+            return !success;
         }
     }
 
@@ -90,22 +106,16 @@ public class SolidityCompiler {
         }
     }
 
-    private static String readStream(InputStream stream) throws IOException {
-        StringBuilder result = new StringBuilder();
-
-        try (BufferedReader reader =new BufferedReader(new InputStreamReader(stream))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line).append("\n");
-            }
-        }
-
-        return result.toString();
+    public static Result compile(byte[] source, boolean combinedJson, Options... options) throws IOException {
+        return getInstance().compileSrc(source, false, combinedJson, options);
     }
 
-    public static Result compile(byte[] source, boolean combinedJson, Options... options) throws IOException {
+    public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
         List<String> commandParts = new ArrayList<>();
-        commandParts.add(Solc.INSTANCE.getExecutable().getCanonicalPath());
+        commandParts.add(solc.getExecutable().getCanonicalPath());
+        if (optimize) {
+            commandParts.add("--optimize");
+        }
         if (combinedJson) {
             commandParts.add("--combined-json");
             commandParts.add(Joiner.on(',').join(options));
@@ -116,9 +126,9 @@ public class SolidityCompiler {
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
-                .directory(Solc.INSTANCE.getExecutable().getParentFile());
+                .directory(solc.getExecutable().getParentFile());
         processBuilder.environment().put("LD_LIBRARY_PATH",
-                Solc.INSTANCE.getExecutable().getParentFile().getCanonicalPath());
+                solc.getExecutable().getParentFile().getCanonicalPath());
 
         Process process = processBuilder.start();
 
@@ -136,7 +146,46 @@ public class SolidityCompiler {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        boolean success = process.exitValue() == 0;
 
-        return new Result(error.getContent(), output.getContent());
+        return new Result(error.getContent(), output.getContent(), success);
+    }
+
+    public static String runGetVersionOutput() throws IOException {
+        List<String> commandParts = new ArrayList<>();
+        commandParts.add(getInstance().solc.getExecutable().getCanonicalPath());
+        commandParts.add("--version");
+
+        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
+                .directory(getInstance().solc.getExecutable().getParentFile());
+        processBuilder.environment().put("LD_LIBRARY_PATH",
+                getInstance().solc.getExecutable().getParentFile().getCanonicalPath());
+
+        Process process = processBuilder.start();
+
+        ParallelReader error = new ParallelReader(process.getErrorStream());
+        ParallelReader output = new ParallelReader(process.getInputStream());
+        error.start();
+        output.start();
+
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (process.exitValue() == 0) {
+            return output.getContent();
+        }
+
+        throw new RuntimeException("Problem getting solc version: " + error.getContent());
+    }
+
+
+
+    public static SolidityCompiler getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new SolidityCompiler(SystemProperties.getDefault());
+        }
+        return INSTANCE;
     }
 }

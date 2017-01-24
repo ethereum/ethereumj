@@ -1,71 +1,29 @@
 package org.ethereum.datasource;
 
-import org.apache.commons.collections4.map.LRUMap;
-import org.ethereum.db.ByteArrayWrapper;
-
-import java.util.Collections;
-import java.util.Map;
-
 /**
- * Created by Anton Nashatyrev on 17.03.2016.
+ * Just a convenient class to store arbitrary Objects into byte[] value backing
+ * Source.
+ * Includes ReadCache for caching deserialized objects and object Serializer
+ *
+ * Created by Anton Nashatyrev on 06.12.2016.
  */
-public class ObjectDataSource<V> implements Flushable{
-    private KeyValueDataSource src;
-    private Map<ByteArrayWrapper, V> cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(256));
-    Serializer<V, byte[]> serializer;
-    boolean cacheOnWrite = true;
+public class ObjectDataSource<V> extends SourceChainBox<byte[], V, byte[], byte[]> {
+    ReadCache<byte[], V> cache;
+    SourceCodec<byte[], V, byte[], byte[]> codec;
+    Source<byte[], byte[]> byteSource;
 
-    public ObjectDataSource(KeyValueDataSource src, Serializer<V, byte[]> serializer) {
-        this.src = src;
-        this.serializer = serializer;
-    }
-
-    public ObjectDataSource<V> withCacheSize(int cacheSize) {
-        cache = Collections.synchronizedMap(new LRUMap<ByteArrayWrapper, V>(cacheSize));
-        return this;
-    }
-
-    public ObjectDataSource<V> withWriteThrough(boolean writeThrough) {
-        if (!writeThrough) {
-            throw new RuntimeException("Not implemented yet");
+    /**
+     * Creates new instance
+     * @param byteSource baking store
+     * @param serializer for encode/decode byte[] <=> V
+     * @param readCacheEntries number of entries to cache
+     */
+    public ObjectDataSource(Source<byte[], byte[]> byteSource, Serializer<V, byte[]> serializer, int readCacheEntries) {
+        super(byteSource);
+        this.byteSource = byteSource;
+        add(codec = new SourceCodec<>(byteSource, new Serializers.Identity<byte[]>(), serializer));
+        if (readCacheEntries > 0) {
+            add(cache = new ReadCache.BytesKey<>(codec).withMaxCapacity(readCacheEntries));
         }
-        return this;
-    }
-
-    public ObjectDataSource<V> withCacheOnWrite(boolean cacheOnWrite) {
-        this.cacheOnWrite = cacheOnWrite;
-        return this;
-    }
-
-    public void flush() {
-        // for write-back type cache only
-    }
-
-    public synchronized void put(byte[] key, V value) {
-        byte[] bytes = serializer.serialize(value);
-        src.put(key, bytes);
-        if (cacheOnWrite) {
-            cache.put(new ByteArrayWrapper(key), value);
-        }
-    }
-
-    public synchronized V get(byte[] key) {
-        ByteArrayWrapper keyW = new ByteArrayWrapper(key);
-        V ret = cache.get(keyW);
-        if (ret == null) {
-            byte[] bytes = src.get(key);
-            if (bytes == null) return null;
-            ret = serializer.deserialize(bytes);
-            cache.put(keyW, ret);
-        }
-        return ret;
-    }
-
-    protected KeyValueDataSource getSrc() {
-        return src;
-    }
-
-    public void close() {
-        src.close();
     }
 }

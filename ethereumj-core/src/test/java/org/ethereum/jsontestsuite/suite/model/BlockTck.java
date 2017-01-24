@@ -1,16 +1,18 @@
 package org.ethereum.jsontestsuite.suite.model;
 
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
 import java.util.List;
 
+@JsonIgnoreProperties({"acomment", "comment", "chainname", "chainnetwork"})
 public class BlockTck {
 
-    String acomment;
     BlockHeaderTck blockHeader;
     List<TransactionTck> transactions;
     List<BlockHeaderTck> uncleHeaders;
     String rlp;
     String blocknumber;
-    String chainname;
     boolean reverted;
 
     public BlockTck() {
@@ -22,14 +24,6 @@ public class BlockTck {
 
     public void setBlocknumber(String blocknumber) {
         this.blocknumber = blocknumber;
-    }
-
-    public String getChainname() {
-        return chainname;
-    }
-
-    public void setChainname(String chainname) {
-        this.chainname = chainname;
     }
 
     public BlockHeaderTck getBlockHeader() {
@@ -70,14 +64,6 @@ public class BlockTck {
 
     public void setReverted(boolean reverted) {
         this.reverted = reverted;
-    }
-
-    public String getAcomment() {
-        return acomment;
-    }
-
-    public void setAcomment(String acomment) {
-        this.acomment = acomment;
     }
 
     @Override

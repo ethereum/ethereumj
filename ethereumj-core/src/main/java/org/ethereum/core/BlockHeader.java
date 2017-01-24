@@ -1,13 +1,14 @@
 package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -21,6 +22,10 @@ import static org.ethereum.util.ByteUtil.toHexString;
  */
 public class BlockHeader {
 
+    public static final int NONCE_LENGTH = 8;
+    public static final int HASH_LENGTH = 32;
+    public static final int ADDRESS_LENGTH = 20;
+    public static final int MAX_HEADER_SIZE = 592;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     private byte[] parentHash;
@@ -280,7 +285,7 @@ public class BlockHeader {
         byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
 
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
-        byte[] difficulty = RLP.encodeElement(this.difficulty);
+        byte[] difficulty = RLP.encodeBigInteger(new BigInteger(1, this.difficulty));
         byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
         byte[] gasLimit = RLP.encodeElement(this.gasLimit);
         byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
@@ -339,6 +344,7 @@ public class BlockHeader {
 
     private String toStringWithSuffix(final String suffix) {
         StringBuilder toStringBuff = new StringBuilder();
+        toStringBuff.append("  hash=").append(toHexString(getHash())).append(suffix);
         toStringBuff.append("  parentHash=").append(toHexString(parentHash)).append(suffix);
         toStringBuff.append("  unclesHash=").append(toHexString(unclesHash)).append(suffix);
         toStringBuff.append("  coinbase=").append(toHexString(coinbase)).append(suffix);
@@ -361,4 +367,21 @@ public class BlockHeader {
         return toStringWithSuffix("");
     }
 
+    public String getShortDescr() {
+        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
+                + Hex.toHexString(getParentHash()).substring(0,6) + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BlockHeader that = (BlockHeader) o;
+        return FastByteComparisons.equal(getHash(), that.getHash());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getHash());
+    }
 }

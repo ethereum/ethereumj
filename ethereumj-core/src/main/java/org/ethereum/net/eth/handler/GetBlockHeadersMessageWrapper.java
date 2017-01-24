@@ -1,6 +1,10 @@
 package org.ethereum.net.eth.handler;
 
+import com.google.common.util.concurrent.SettableFuture;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+
+import java.util.List;
 
 /**
  * Wraps {@link GetBlockHeadersMessage},
@@ -14,6 +18,7 @@ public class GetBlockHeadersMessageWrapper {
     private GetBlockHeadersMessage message;
     private boolean newHashesHandling = false;
     private boolean sent = false;
+    private SettableFuture<List<BlockHeader>> futureHeaders = SettableFuture.create();
 
     public GetBlockHeadersMessageWrapper(GetBlockHeadersMessage message) {
         this.message = message;
@@ -38,5 +43,9 @@ public class GetBlockHeadersMessageWrapper {
 
     public void send() {
         this.sent = true;
+    }
+
+    public SettableFuture<List<BlockHeader>> getFutureHeaders() {
+        return futureHeaders;
     }
 }

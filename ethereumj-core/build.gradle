@@ -11,11 +11,12 @@ buildscript {
     }
 }
 
+
 plugins {
     id 'application'
     id 'jacoco'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
-    id 'com.github.kt3k.coveralls' version '2.0.1x'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.jfrog.bintray' version '1.0'
 }
 
@@ -25,7 +26,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss32m", "-Xmx4000M", "-XX:-OmitStackTraceInFastThrow"]
+applicationDefaultJvmArgs = ["-server", "-Xss2m", "-Xmx1024M", "-XX:-OmitStackTraceInFastThrow"]
 
 if ( project.hasProperty('jvmArgs') ) {
     applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
@@ -72,12 +73,12 @@ task tckRun(type:JavaExec){
 
     if (project.hasProperty("filePath")) {
         args = ["filerun", "$filePath"]
-        jvmArgs = ["-Xss32M"]
+        jvmArgs = ["-Xss2M"]
     }
 
     if (project.hasProperty("content")) {
         args = ["content", "$content"]
-        jvmArgs = ["-Xss32M"]
+        jvmArgs = ["-Xss2M"]
     }
 
     main = "org.ethereum.tck.RunTck"
@@ -92,7 +93,7 @@ test {
         logger.lifecycle("Running test: ${descriptor}")
     }
 
-    jvmArgs '-Xss32m', '-Xmx3G'
+    jvmArgs '-Xss2m', '-Xmx3G'
 
     testLogging {
         events "failed"
@@ -106,7 +107,6 @@ ext {
     slf4jVersion = '1.7.7'
     leveldbVersion = '0.7'
     scastleVersion = '1.53.0.0'
-    log4jVersion = '1.2.17'
     springVersion = '4.2.0.RELEASE'
     hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
@@ -117,15 +117,16 @@ dependencies {
     compile "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
     compile "com.madgag.spongycastle:prov:${scastleVersion}" // for SHA3 and SECP256K1
 
-    compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
+    compile "org.iq80.leveldb:leveldb:${leveldbVersion}"     // Java API wrapper around native components
 
-    compile "org.fusesource.leveldbjni:leveldbjni:1.8"
-    compile "org.ethereum:leveldbjni-all:1.18.2"
+    compile "org.ethereum:leveldbjni-all:1.18.3"             // native leveldb components
+
+    compile "org.ethereum:solcJ-all:0.4.8"                   // Solidity Compiler win/mac/linux binaries
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile "log4j:log4j:${log4jVersion}"
+    compile "ch.qos.logback:logback-classic:1.1.7"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
@@ -139,16 +140,16 @@ dependencies {
 
     compile "org.mapdb:mapdb:2.0-beta12"
 
-    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    compile "log4j:apache-log4j-extras:${log4jVersion}"
-
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
     }
-    optional "commons-logging:commons-logging:1.0"
+
+    // used to hide spring initialization logs messages in samples
     optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
+    testCompile "org.mockito:mockito-all:1.9.5"
 }
 
 

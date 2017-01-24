@@ -56,7 +56,7 @@ public class StateTestRunner {
             executor.go();
             executor.finalization();
         } catch (StackOverflowError soe){
-            logger.error(" !!! StackOverflowError: update your java run command with -Xss32M !!!");
+            logger.error(" !!! StackOverflowError: update your java run command with -Xss2M !!!");
             System.exit(-1);
         }
 
@@ -83,11 +83,10 @@ public class StateTestRunner {
 
         blockchain.setBestBlock(block);
         blockchain.setProgramInvokeFactory(invokeFactory);
-        blockchain.startTracking();
 
         ProgramResult programResult = executeTransaction(transaction);
 
-        repository.flushNoReconnect();
+        repository.commit();
 
         List<LogInfo> origLogs = programResult.getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase.getLogs());

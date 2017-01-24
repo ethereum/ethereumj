@@ -1,6 +1,5 @@
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <!-- Be sure to flush latest logs on exit -->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}]  %m%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <appender name="TEST" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}]  %m%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./logs/ethereum.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover hourly -->
+            <fileNamePattern>./logs/ethereum-%d{yyyy-MM-dd-'h'HH}.log.zip</fileNamePattern>
+            <!-- ~1 month -->
+            <maxHistory>720</maxHistory>
+            <totalSizeCap>50GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}]  %m%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>TRACE</level>
+        </filter>
+    </appender>
+
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- Don't discard INFO, DEBUG, TRACE events in case of queue is 80% full -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- Default is 256 -->
+        <!-- Logger will block incoming events (log calls) until queue will free some space -->
+        <!-- (the smaller value -> flush occurs often) -->
+        <queueSize>100</queueSize>
+
+        <appender-ref ref="FILE" />
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ASYNC"/>
+    </root>
+
+
+    <logger name="TestLogger" level="INFO">
+        <appender-ref ref="TEST"/>
+    </logger>>
+    <logger name="org.springframework" level="ERROR"/>
+    <logger name="state" level="WARN"/>
+    <logger name="trie" level="ERROR"/>
+    <logger name="net" level="DEBUG"/>
+    <logger name="execute" level="ERROR"/>
+    <logger name="VM" level="ERROR"/>
+    <logger name="pending" level="DEBUG"/>
+    <logger name="sync" level="TRACE"/>
+    <logger name="wire" level="ERROR"/>
+    <logger name="db" level="DEBUG"/>
+    <logger name="general" level="DEBUG"/>
+    <logger name="TCK-Test" level="ERROR"/>
+    <logger name="org.hibernate" level="ERROR"/>
+    <logger name="repository" level="INFO"/>
+    <logger name="blockchain" level="INFO"/>
+    <logger name="mine" level="DEBUG"/>
+    <logger name="blockqueue" level="DEBUG"/>
+    <logger name="rlp" level="ERROR"/>
+    <logger name="java.nio" level="ERROR"/>
+    <logger name="io.netty" level="ERROR"/>
+    <logger name="discover" level="DEBUG"/>
+    <logger name="hsqldb.db" level="ERROR"/>
+
+
+</configuration>
+

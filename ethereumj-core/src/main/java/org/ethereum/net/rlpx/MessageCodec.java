@@ -12,6 +12,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
@@ -23,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,8 +57,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     @Autowired
     EthereumListener ethereumListener;
 
-    @Autowired
-    SystemProperties config;
+    private SystemProperties config;
 
     private boolean supportChunkedFrames = true;
 
@@ -66,8 +65,12 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     // LRU avoids OOM on invalid peers
     AtomicInteger contextIdCounter = new AtomicInteger(1);
 
-    @PostConstruct
-    private void init() {
+    public MessageCodec() {
+    }
+
+    @Autowired
+    private MessageCodec(final SystemProperties config) {
+        this.config = config;
         setMaxFramePayloadSize(config.rlpxMaxFrameSize());
     }
 
@@ -85,6 +88,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 //                    loggerNet.warn("No initial frame received for context-id: " + frame.contextId + ". Discarding this frame as invalid.");
                     // TODO: refactor this logic (Cpp sends non-chunked frames with context-id)
                     Message message = decodeMessage(ctx, Collections.singletonList(frame));
+                    if (message == null) return;
                     out.add(message);
                     return;
                 } else {
@@ -133,10 +137,17 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Recv: Encoded: {} [{}]", frameType, Hex.toHexString(payload));
 
-        Message msg = createMessage((byte) frameType, payload);
+        Message msg;
+        try {
+            msg = createMessage((byte) frameType, payload);
+        } catch (Exception ex) {
+            loggerNet.debug("Incorrectly encoded message from: \t{}, dropping peer", channel);
+            channel.disconnect(ReasonCode.BAD_PROTOCOL);
+            return null;
+        }
 
         if (loggerNet.isDebugEnabled())
-            loggerNet.debug("From: \t{} \tRecv: \t{}", channel, msg.toString());
+            loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
 
         ethereumListener.onRecvMessage(channel, msg);
 
@@ -150,7 +161,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         ethereumListener.trace(output);
 
         if (loggerNet.isDebugEnabled())
-            loggerNet.debug("To: \t{} \tSend: \t{}", channel, msg);
+            loggerNet.debug("To:   {}    Send:  {}", channel, msg);
 
         byte[] encoded = msg.getEncoded();
 

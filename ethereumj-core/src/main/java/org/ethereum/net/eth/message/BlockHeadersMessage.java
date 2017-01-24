@@ -32,7 +32,8 @@ public class BlockHeadersMessage extends EthMessage {
         parsed = true;
     }
 
-    private void parse() {
+    private synchronized void parse() {
+        if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockHeaders = new ArrayList<>();
@@ -64,7 +65,7 @@ public class BlockHeadersMessage extends EthMessage {
     }
 
     public List<BlockHeader> getBlockHeaders() {
-        if (!parsed) parse();
+        parse();
         return blockHeaders;
     }
 
@@ -75,7 +76,7 @@ public class BlockHeadersMessage extends EthMessage {
 
     @Override
     public String toString() {
-        if (!parsed) parse();
+        parse();
 
         StringBuilder payload = new StringBuilder();
 

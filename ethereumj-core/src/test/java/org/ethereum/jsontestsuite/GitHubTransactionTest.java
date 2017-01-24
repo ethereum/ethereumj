@@ -1,14 +1,12 @@
 package org.ethereum.jsontestsuite;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.Eip160HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.AbstractNetConfig;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -23,17 +21,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTransactionTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
     public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
-
-    public GitHubTransactionTest() {
-        // Enable for debugging
-        // LogManager.getLogger("TCK-Test").setLevel(Level.INFO);
-    }
 
     @Before
     public void setup() {
@@ -48,11 +40,11 @@ public class GitHubTransactionTest {
     @Test
     public void testEIP155TransactionTestFromGitHub() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        SystemProperties.getDefault().setBlockchainConfig(new AbstractNetConfig() {{
+        SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
             add(0, new FrontierConfig());
             add(1_150_000, new HomesteadConfig());
             add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_700_000, new Eip160HFConfig(new DaoHFConfig()){
+            add(2_675_000, new Eip160HFConfig(new DaoHFConfig()){
                 @Override
                 public Integer getChainId() {
                     return null;

@@ -60,10 +60,10 @@ public class FrameCodecHandler extends NettyByteToMessageCodec<FrameCodec.Frame>
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (channel.isDiscoveryMode()) {
-            loggerNet.trace("FrameCodec failed: ", cause);
+            loggerNet.trace("FrameCodec failed: " + cause);
         } else {
             if (cause instanceof IOException) {
-                loggerNet.debug("FrameCodec failed: " + ctx.channel().remoteAddress(), cause);
+                loggerNet.debug("FrameCodec failed: " + ctx.channel().remoteAddress() + ": " + cause);
             } else {
                 loggerNet.warn("FrameCodec failed: ", cause);
             }

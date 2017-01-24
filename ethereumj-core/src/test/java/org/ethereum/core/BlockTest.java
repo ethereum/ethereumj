@@ -32,6 +32,8 @@ public class BlockTest {
     private String GENESIS_HASH = "fd4af92a79c7fc2fd8bf0d342f2e832e1d4f485c85b9152d2039e03bc604fdca";
     private String GENESIS_STATE_ROOT = "9178d0f23c965d81f0834a4c72c6253ce6830f4022b1359aaebfc1ecba442d4e";
 
+    private String MESSY_NONCE_GENESIS_RLP = "f901f8f901f3a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a0da3d5bd4c2f8443fbca1f12c0b9eaa4996825e9d32d239ffb302b8f98f202c97a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008301000080832fefd8808080a00000000000000000000000000000000000000000000000000000000000000000880000000000000000c0c0";
+    private String MESSY_NONCE_GENESIS_HASH = "b096cfdeb2a3c0abd3ce9f77cf5adc92a8cead34aa4d2be54c004373e3986788";
 
     static String TEST_GENESIS =
             "{" +
@@ -66,17 +68,58 @@ public class BlockTest {
         assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
     }
 
-    @Test
-    public void testGenesisFromNew() {
-
-        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
+    private Block loadGenesisFromFile(String resPath) {
+        Block genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream(resPath));
         logger.info(genesis.toString());
 
         logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));
         logger.info("genesis rlp: [{}]", Hex.toHexString(genesis.getEncoded()));
 
+        return genesis;
+    }
+
+    @Test
+    public void testGenesisFromNew() {
+        Block genesis = loadGenesisFromFile("/genesis/olympic.json");
+
         assertEquals(GENESIS_HASH, Hex.toHexString(genesis.getHash()));
         assertEquals(GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
+    }
+
+    /**
+     * Test genesis loading from JSON with some
+     * freedom for user like odd length of hex values etc.
+     */
+    @Test
+    public void testGenesisFromNewMessy() {
+        Block genesis = loadGenesisFromFile("/genesis/olympic-messy.json");
+
+        assertEquals(GENESIS_HASH, Hex.toHexString(genesis.getHash()));
+        assertEquals(GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
+    }
+
+    /**
+     * Test genesis with empty nonce
+     * + alloc addresses with 0x
+     */
+    @Test
+    public void testGenesisEmptyNonce() {
+        Block genesis = loadGenesisFromFile("/genesis/nonce-messy.json");
+
+        assertEquals(MESSY_NONCE_GENESIS_HASH, Hex.toHexString(genesis.getHash()));
+        assertEquals(MESSY_NONCE_GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
+    }
+
+    /**
+     * Test genesis with short nonce
+     * + alloc addresses with 0x
+     */
+    @Test
+    public void testGenesisShortNonce() {
+        Block genesis = loadGenesisFromFile("/genesis/nonce-messy2.json");
+
+        assertEquals(MESSY_NONCE_GENESIS_HASH, Hex.toHexString(genesis.getHash()));
+        assertEquals(MESSY_NONCE_GENESIS_RLP, Hex.toHexString(genesis.getEncoded()));
     }
 
     @Test
@@ -95,7 +138,7 @@ public class BlockTest {
 
         Set keys = genesisMap.keySet();
 
-        Trie state = new SecureTrie(null);
+        Trie state = new SecureTrie((byte[]) null);
 
         for (Object key : keys) {
 
@@ -106,7 +149,7 @@ public class BlockTest {
             BigInteger wei = Denomination.valueOf(denom.toUpperCase()).value().multiply(new BigInteger(value));
 
             AccountState acctState = new AccountState(BigInteger.ZERO, wei);
-            state.update(Hex.decode(key.toString()), acctState.getEncoded());
+            state.put(Hex.decode(key.toString()), acctState.getEncoded());
         }
 
         logger.info("root: " + Hex.toHexString(state.getRootHash()));
@@ -116,20 +159,29 @@ public class BlockTest {
 
     @Test
     public void testFrontierGenesis(){
+        SystemProperties config = new SystemProperties();
+        config.setGenesisInfo("frontier.json");
 
-        String prev = SystemProperties.getDefault().genesisInfo();
-        SystemProperties.getDefault().setGenesisInfo("frontier.json");
-
-        Block genesis = GenesisLoader.loadGenesis(SystemProperties.getDefault(), getClass().getClassLoader());
+        Block genesis = config.getGenesis();
 
         String hash = Hex.toHexString(genesis.getHash());
         String root = Hex.toHexString(genesis.getStateRoot());
 
         assertEquals("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544", root);
         assertEquals("d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3", hash);
-
-        SystemProperties.getDefault().setGenesisInfo(prev);
     }
 
+    @Test
+    public void testZeroPrecedingDifficultyGenesis(){
+        SystemProperties config = new SystemProperties();
+        config.setGenesisInfo("genesis-low-difficulty.json");
 
+        Block genesis = config.getGenesis();
+
+        String hash = Hex.toHexString(genesis.getHash());
+        String root = Hex.toHexString(genesis.getStateRoot());
+
+        assertEquals("8028c28b55eab8be08883e921f20d1b6cc9f2aa02cc6cd90cfaa9b0462ff6d3e", root);
+        assertEquals("05b2dc41ade973d26db921052bcdaf54e2e01b308c9e90723b514823a0923592", hash);
+    }
 }
