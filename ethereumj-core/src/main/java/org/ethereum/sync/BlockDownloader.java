@@ -135,7 +135,9 @@ public abstract class BlockDownloader {
 
                 if (syncQueue.getHeadersCount() < headerQueueLimit) {
                     if (hReq.isEmpty()) {
-                        hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                        synchronized (this) {
+                            hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                        }
                     }
                     if (hReq.size() == 0) {
                         logger.info("Headers download complete.");
@@ -150,7 +152,7 @@ public abstract class BlockDownloader {
                     for (Iterator<SyncQueueIfc.HeadersRequest> it = hReq.iterator(); it.hasNext();) {
                         SyncQueueIfc.HeadersRequest headersRequest = it.next();
 
-                        final Channel any = pool.getAnyIdle();
+                        final Channel any = getAnyPeer();
 
                         if (any == null) {
                             logger.debug("headerRetrieveLoop: No IDLE peers found");
@@ -248,7 +250,7 @@ public abstract class BlockDownloader {
 
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
-                        Channel any = getGoodPeer();
+                        Channel any = getAnyPeer();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
                             break;
@@ -345,9 +347,11 @@ public abstract class BlockDownloader {
             wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
-        List<BlockHeaderWrapper> headersReady = syncQueue.addHeaders(wrappers);
-        if (headersReady != null && !headersReady.isEmpty()) {
-            pushHeaders(headersReady);
+        synchronized (this) {
+            List<BlockHeaderWrapper> headersReady = syncQueue.addHeaders(wrappers);
+            if (headersReady != null && !headersReady.isEmpty()) {
+                pushHeaders(headersReady);
+            }
         }
 
         receivedHeadersLatch.countDown();
@@ -385,13 +389,17 @@ public abstract class BlockDownloader {
         return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
     }
 
+    Channel getAnyPeer() {
+        return pool.getAnyIdle();
+    }
+
     public boolean isSyncDone() {
         return false;
     }
 
     public void close() {
         try {
-            pool.close();
+            if (pool != null) pool.close();
             stop();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);

@@ -142,7 +142,7 @@ public class Transaction {
 
     private Byte extractChainIdFromV(byte v) {
         if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;
-        return (byte) ((v - CHAIN_ID_INC) / 2);
+        return (byte) (((0xFF & v) - CHAIN_ID_INC) / 2);
     }
 
     private byte getRealV(byte v) {

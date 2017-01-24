@@ -1,9 +1,6 @@
 package org.ethereum.config;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.*;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
@@ -152,6 +149,7 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig, ClassLoader classLoader) {
+        long startTime = System.currentTimeMillis();
         try {
             this.classLoader = classLoader;
 
@@ -186,7 +184,8 @@ public class SystemProperties {
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
 
-            config = javaSystemProperties.withFallback(config);
+            config = javaSystemProperties.withFallback(config)
+                    .resolve();     // substitute variables in config if any
             validateConfig();
 
             Properties props = new Properties();
@@ -448,13 +447,13 @@ public class SystemProperties {
     }
 
 
-    public String samplesDir() {
-        return config.getString("samples.dir");
-    }
-
     @ValidateMe
-    public String coinbaseSecret() {
-        return config.getString("coinbase.secret");
+    public Integer blockQueueSize() {
+        return config.getInt("cache.blockQueueSize") * 1024 * 1024;
+    }
+    @ValidateMe
+    public Integer headerQueueSize() {
+        return config.getInt("cache.headerQueueSize") * 1024 * 1024;
     }
 
     @ValidateMe
@@ -517,16 +516,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public int maxHashesAsk() {
-        return config.getInt("sync.max.hashes.ask");
-    }
-
-    @ValidateMe
-    public int maxBlocksAsk() {
-        return config.getInt("sync.max.blocks.ask");
-    }
-
-    @ValidateMe
     public int syncPeerCount() {
         return config.getInt("sync.peer.count");
     }
@@ -586,11 +575,6 @@ public class SystemProperties {
     @ValidateMe
     public int vmTraceInitStorageLimit() {
         return config.getInt("vm.structured.initStorageLimit");
-    }
-
-    @ValidateMe
-    public int detailsInMemoryStorageLimit() {
-        return config.getInt("details.inmemory.storage.limit");
     }
 
     @ValidateMe
@@ -736,11 +720,6 @@ public class SystemProperties {
     @ValidateMe
     public String getKeyValueDataSource() {
         return config.getString("keyvalue.datasource");
-    }
-
-    @ValidateMe
-    public boolean isRedisEnabled() {
-        return config.getBoolean("redis.enabled");
     }
 
     @ValidateMe

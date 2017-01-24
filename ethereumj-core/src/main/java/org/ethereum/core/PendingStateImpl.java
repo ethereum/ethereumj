@@ -107,7 +107,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private Repository getOrigRepository() {
-        return blockchain.getRepository();
+        return blockchain.getRepositorySnapshot();
     }
 
     @Override

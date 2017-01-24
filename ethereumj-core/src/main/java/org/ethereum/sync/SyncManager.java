@@ -40,7 +40,6 @@ public class SyncManager extends BlockDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private final static AtomicLong blockQueueByteSize = new AtomicLong(0);
-    private final static long BLOCK_BYTES_LIMIT = 32 * 1024 * 1024;
     private final static int BLOCK_BYTES_ADDON = 4;
 
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
@@ -91,26 +90,34 @@ public class SyncManager extends BlockDownloader {
 
     private Thread syncQueueThread;
 
+    private long blockBytesLimit = 32 * 1024 * 1024;
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
+    public SyncManager() {
+        super(null);
+    }
+
     @Autowired
     public SyncManager(final SystemProperties config, BlockHeaderValidator validator) {
         super(validator);
         this.config = config;
+        blockBytesLimit = config.blockQueueSize();
+        setHeaderQueueLimit(config.headerQueueSize() / BlockHeader.MAX_HEADER_SIZE);
     }
 
     public void init(final ChannelManager channelManager, final SyncPool pool) {
-        this.pool = pool;
-        this.channelManager = channelManager;
-
-        logExecutor.scheduleAtFixedRate(new Runnable() {
-            public void run() {
-                logger.info("Sync state: " + getSyncStatus());
-            }
-        }, 10, 10, TimeUnit.SECONDS);
+        if (this.channelManager == null) {  // First init
+            this.pool = pool;
+            this.channelManager = channelManager;
+            logExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    logger.info("Sync state: " + getSyncStatus());
+                }
+            }, 10, 10, TimeUnit.SECONDS);
+        }
 
         if (!config.isSyncEnabled()) {
             logger.info("Sync Manager: OFF");
@@ -118,17 +125,19 @@ public class SyncManager extends BlockDownloader {
         }
         logger.info("Sync Manager: ON");
 
-        logger.info("Initializing SyncManager.");
-        pool.init(channelManager);
+        if (pool.getChannelManager() == null) {  // Never were on this stage of init
+            logger.info("Initializing SyncManager.");
+            pool.init(channelManager);
 
-        if (config.isFastSyncEnabled()) {
-            fastSyncManager.init();
-        } else {
-            initRegularSync(EthereumListener.SyncState.COMPLETE);
+            if (config.isFastSyncEnabled()) {
+                fastSyncManager.init();
+            } else {
+                initRegularSync(EthereumListener.SyncState.COMPLETE);
+            }
         }
     }
 
-    public void initRegularSync(EthereumListener.SyncState syncDoneType) {
+    void initRegularSync(EthereumListener.SyncState syncDoneType) {
         logger.info("Initializing SyncManager regular sync.");
         this.syncDoneType = syncDoneType;
 
@@ -184,7 +193,7 @@ public class SyncManager extends BlockDownloader {
         int blockQueueSize = blockQueue.size();
         long blockByteSize = blockQueueByteSize.get();
         int availableBlockSpace = Math.max(0, getBlockQueueLimit() - blockQueueSize);
-        long availableBytesSpace = Math.max(0, BLOCK_BYTES_LIMIT - blockByteSize);
+        long availableBytesSpace = Math.max(0, blockBytesLimit - blockByteSize);
 
         int bytesSpaceInBlocks;
         if (blockByteSize == 0 || blockQueueSize == 0) {
@@ -346,8 +355,10 @@ public class SyncManager extends BlockDownloader {
             exec1.join();
             logExecutor.shutdown();
             pool.close();
-            if (syncQueueThread != null) syncQueueThread.interrupt();
-            syncQueueThread.join(10 * 1000);
+            if (syncQueueThread != null) {
+                syncQueueThread.interrupt();
+                syncQueueThread.join(10 * 1000);
+            }
             if (config.isFastSyncEnabled()) fastSyncManager.close();
         } catch (Exception e) {
             logger.warn("Problems closing SyncManager", e);

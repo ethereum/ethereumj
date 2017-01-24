@@ -128,7 +128,7 @@ public class PrecompiledContracts {
                 System.arraycopy(data, 96, s, 0, sLength);
 
                 ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v[31]);
-                if (signature.validateComponents()) {
+                if (validateV(v) && signature.validateComponents()) {
                     out = new DataWord(ECKey.signatureToAddress(h, signature));
                 }
             } catch (Throwable any) {
@@ -139,6 +139,13 @@ public class PrecompiledContracts {
             } else {
                 return out.getData();
             }
+        }
+
+        private static boolean validateV(byte[] v) {
+            for (int i = 0; i < v.length - 1; i++) {
+                if (v[i] != 0) return false;
+            }
+            return true;
         }
     }
 
