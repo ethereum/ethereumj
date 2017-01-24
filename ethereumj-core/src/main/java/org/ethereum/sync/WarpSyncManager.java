@@ -348,7 +348,7 @@ public class WarpSyncManager {
                                     byte[] addressHash = accountStateItem.get(0).getRLPData();
                                     repository.createAccount(addressHash);
 
-                                    if (accountStateItem.get(1) == null ||
+                                    if (accountStateItem.get(1).getRLPData() == null ||
                                             accountStateItem.get(1).getRLPData().length == 0) continue;
                                     RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
 
