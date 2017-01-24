@@ -150,7 +150,7 @@ public class WarpSyncManager {
         long cur = System.currentTimeMillis();
         List<StateChunkRequest> requests = new ArrayList<>(pendingStateChunks.values());
         for (StateChunkRequest request : requests) {
-            if (cur - request.requestSent > CHUNK_DL_TIMEOUT) {
+            if (request.requestSent != null && cur - request.requestSent > CHUNK_DL_TIMEOUT) {
                 logger.trace("Removing state chunk {} from pending due to timeout", Hex.toHexString(request.stateChunkHash));
                 pendingStateChunks.remove(request.stateChunkHash);
                 stateChunkQueue.addFirst(request);
@@ -175,7 +175,7 @@ public class WarpSyncManager {
 
         logger.info("Saving state finished, checking state root");
 
-        if (repository.getRoot() == manifest.getStateRoot()) {
+        if (!FastByteComparisons.equal(repository.getRoot(), manifest.getStateRoot())) {
             logger.info("State root matches manifest, unsecure sync finished");
         } else {
             logger.error("State root {} doesn't match manifest state root {}. WarpSync failed.",
@@ -252,7 +252,8 @@ public class WarpSyncManager {
             }
             if (req != null) {
                 final StateChunkRequest reqSave = req;
-                logger.trace("Requesting {} state chunk from peer: {}", Hex.toHexString(req.stateChunkHash), idle);
+                logger.debug("stateChunkQueue: {}, pendingQueue: {}", stateChunkQueue.size(), pendingStateChunks.size());
+                logger.debug("Requesting {} state chunk from peer: {}", Hex.toHexString(req.stateChunkHash), idle);
                 ListenableFuture<RLPElement> dataFuture = idle.getParHandler().requestSnapshotData(req.stateChunkHash);
                 Futures.addCallback(dataFuture, new FutureCallback<RLPElement>() {
                     @Override
@@ -260,41 +261,64 @@ public class WarpSyncManager {
                         try {
                             // FIXME: if we could get really empty correct chunk?
                             synchronized (WarpSyncManager.this) {
-                                final StateChunkRequest request = pendingStateChunks.remove(reqSave.stateChunkHash);
+                                final StateChunkRequest request = pendingStateChunks.get(reqSave.stateChunkHash);
                                 if (request == null) return;
+                                request.requestSent = null;
                                 if (result == null) {
+                                    logger.debug("Received empty state chunk for hash {} from peer: {}",
+                                            Hex.toHexString(reqSave.stateChunkHash), idle);
                                     stateChunkQueue.addFirst(request);
+                                    pendingStateChunks.remove(reqSave.stateChunkHash);
                                     WarpSyncManager.this.notifyAll();
+                                    idle.dropConnection();
                                     return;
                                 }
                             }
                             byte[] accountStatesCompressed = result.getRLPData();
+                            logger.debug("Received {} bytes state chunk for hash: {}",
+                                    accountStatesCompressed.length,
+                                    Hex.toHexString(reqSave.stateChunkHash));
 
                             // Validation
                             byte[] hashActual = sha3(accountStatesCompressed);
+                            logger.info("Processing node with hash: {}", Hex.toHexString(hashActual));
                             if (!FastByteComparisons.equal(reqSave.stateChunkHash, hashActual)) {
                                 logger.info("Received bad state chunk from peer: {}, expected hash: {}, actual hash: {}",
                                         idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.stateChunkHash));
-                                // TODO: drop peer etc
+                                synchronized (WarpSyncManager.this) {
+                                    pendingStateChunks.remove(reqSave.stateChunkHash);
+                                    stateChunkQueue.addFirst(reqSave);
+                                    WarpSyncManager.this.notifyAll();
+                                    idle.dropConnection();
+                                    return;
+                                }
                             };
                             // TODO: Put it in some queue and work with it in separate thread, heavy ops underneath
 
                             byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
+                            logger.debug("State chunk with hash %s uncompressed size: %s",
+                                    Hex.toHexString(reqSave.stateChunkHash),
+                                    accountStates.length);
                             RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
                             synchronized (WarpSyncManager.this) {
                                 // TODO: in case of any error rollback etc
-                                logger.trace("Received {} states from peer: {}", accountStateList.size(), idle);
+                                logger.debug("Received {} states from peer: {}", accountStateList.size(), idle);
                                 for (RLPElement accountStateElement : accountStateList) {
                                     RLPList accountStateItem = (RLPList) accountStateElement;
 
                                     byte[] addressHash = accountStateItem.get(0).getRLPData();
+                                    repository.createAccount(addressHash);
+
+                                    if (accountStateItem.get(1).getRLPData().length == 0) continue;
                                     RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
 
-                                    repository.createAccount(addressHash);
                                     byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
-                                    if (nonceRaw != null) repository.setNonce(addressHash, ByteUtil.bytesToBigInteger(nonceRaw));
+                                    if (nonceRaw != null) repository.setNonce(addressHash,
+                                            ByteUtil.bytesToBigInteger(nonceRaw));
+
                                     byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
-                                    if (balanceRaw != null) repository.addBalance(addressHash, ByteUtil.bytesToBigInteger(balanceRaw));
+                                    if (balanceRaw != null) repository.addBalance(addressHash,
+                                            ByteUtil.bytesToBigInteger(balanceRaw));
 
                                     // 1-byte code flag
                                     byte[] codeFlagRaw = accountStateInfo.get(2).getRLPData();
@@ -302,6 +326,8 @@ public class WarpSyncManager {
                                     byte[] code = null;
                                     byte[] codeHash = null;
                                     switch (codeFlag) {
+                                        case 0x00:  // No code
+                                            break;
                                         case 0x01:  // code
                                             code = accountStateInfo.get(3).getRLPData();
                                             break;
@@ -313,24 +339,23 @@ public class WarpSyncManager {
                                     if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
                                     if (code != null) repository.saveCode(addressHash, code);
 
-                                    if (code != null || codeHash != null) {
-                                        RLPList storageDataList = (RLPList) accountStateInfo.get(4);
-                                        for (RLPElement storageRowElement : storageDataList) {
-                                            RLPList storageRowList = (RLPList) storageRowElement;
-                                            byte[] keyHash = storageRowList.get(0).getRLPData();
-                                            byte[] valRlp = storageRowList.get(1).getRLPData();
-                                            byte[] val = RLP.decode2(valRlp).get(0).getRLPData();
-                                            // TODO: better
-                                            assert FastByteComparisons.equal(keyHash, sha3(valRlp));
+                                    RLPList storageDataList = (RLPList) accountStateInfo.get(4);
+                                    for (RLPElement storageRowElement : storageDataList) {
+                                        RLPList storageRowList = (RLPList) storageRowElement;
+                                        byte[] keyHash = storageRowList.get(0).getRLPData();
+                                        byte[] valRlp = storageRowList.get(1).getRLPData();
+                                        byte[] val = RLP.decode2(valRlp).get(0).getRLPData();
+                                        // TODO: better
+                                        assert FastByteComparisons.equal(keyHash, sha3(valRlp));
 
-                                            repository.addStorageRow(addressHash,
-                                                    new DataWord(keyHash), new DataWord(val));
-                                        }
+                                        repository.addStorageRow(addressHash,
+                                                new DataWord(keyHash), new DataWord(val));
                                     }
                                 }
 
                                 repository.commit();
                                 dbFlushManager.commit();
+                                pendingStateChunks.remove(reqSave.stateChunkHash);
 
                                 WarpSyncManager.this.notifyAll();
 
