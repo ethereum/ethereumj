@@ -1,8 +1,13 @@
 package org.ethereum.core;
 
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +16,8 @@ import java.util.Objects;
  * Snapshot Manifest contains best manifest block info and chunk hashes
  */
 public class SnapshotManifest {
+
+    private byte[] encoded;
 
     private List<byte[]> stateHashes;
     private List<byte[]> blockHashes;
@@ -25,6 +32,28 @@ public class SnapshotManifest {
         this.stateRoot = stateRoot;
         this.blockNumber = blockNumber;
         this.blockHash = blockHash;
+    }
+
+    // TODO: may be pass somethhin encoded from Message?
+    public byte[] getEncoded() {
+        if (encoded == null) encode();
+        return encoded;
+    }
+
+    private synchronized void encode() {
+        byte[][] encodedStateHashesArray = stateHashes
+                .toArray(new byte[stateHashes.size()][]);
+        byte[] stateHashesRlp = RLP.encodeList(encodedStateHashesArray);
+
+        byte[][] encodedBlockHashesArray = blockHashes
+                .toArray(new byte[blockHashes.size()][]);
+        byte[] blockHashesRlp = RLP.encodeList(encodedBlockHashesArray);
+
+        byte[] stateRootRlp = RLP.encodeElement(stateRoot);
+        byte[] blockNumberRlp = ByteUtil.longToBytes(blockNumber);
+        byte[] blockHashRlp = RLP.encodeElement(blockHash);
+
+        encoded = RLP.encodeList(stateHashesRlp, blockHashesRlp, stateRootRlp, blockNumberRlp, blockHashRlp);
     }
 
     public List<byte[]> getStateHashes() {

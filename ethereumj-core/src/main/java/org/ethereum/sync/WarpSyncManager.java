@@ -15,6 +15,7 @@ import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
@@ -40,6 +41,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -63,6 +65,7 @@ public class WarpSyncManager {
     private static final Capability PAR1_CAPABILITY = new Capability(Capability.PAR, (byte) 1);
 
     public static final byte[] WARPSYNC_DB_KEY_SYNC_STAGE = sha3("Key in state DB indicating warpsync stage in progress".getBytes());
+    public static final byte[] WARPSYNC_DB_KEY_MANIFEST = sha3("Key in state DB with encoded selected manifest".getBytes());
 
     @Autowired
     private SystemProperties config;
@@ -176,13 +179,48 @@ public class WarpSyncManager {
 
         logger.info("Saving state finished, checking state root");
 
-        if (!FastByteComparisons.equal(repository.getRoot(), manifest.getStateRoot())) {
-            logger.info("State root matches manifest, unsecure sync finished");
+        if (FastByteComparisons.equal(repository.getRoot(), manifest.getStateRoot())) {
+            logger.info("WarpSync: state trie download complete!");
         } else {
             logger.error("State root {} doesn't match manifest state root {}. WarpSync failed.",
                     Hex.toHexString(repository.getRoot()), Hex.toHexString(manifest.getStateRoot()));
             throw new RuntimeException("Fatal WarpSync error, incorrect state trie.");
         }
+
+
+        logger.info("WarpSync: downloading 256 blocks prior to manifest block ( #{} {} )",
+                manifest.getBlockNumber(), Hex.toHexString(manifest.getBlockHash()));
+        downloader.startImporting(manifest.getBlockHash(), 260);
+        downloader.waitForStop();
+
+        logger.info("WarpSync: complete downloading 256 blocks prior to manifest block ( #{} {} )",
+                manifest.getBlockNumber(), Hex.toHexString(manifest.getBlockHash()));
+
+        blockchain.setBestBlock(blockStore.getBlockByHash(manifest.getBlockHash()));
+
+        logger.info("WarpSync: proceeding to regular sync...");
+
+        final CountDownLatch syncDoneLatch = new CountDownLatch(1);
+        listener.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onSyncDone(SyncState state) {
+                syncDoneLatch.countDown();
+            }
+        });
+        syncManager.initRegularSync(UNSECURE);
+        logger.info("WarpSync: waiting for regular sync to reach the blockchain head...");
+
+        try {
+            syncDoneLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        stateDS.put(WARPSYNC_DB_KEY_MANIFEST, manifest.getEncoded());
+        dbFlushManager.commit();
+        dbFlushManager.flush();
+
+        logger.info("WarpSync: regular sync reached the blockchain head.");
     }
 
     // TODO: Refactor to chunk request
