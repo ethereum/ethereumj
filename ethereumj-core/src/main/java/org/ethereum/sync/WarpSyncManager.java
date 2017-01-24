@@ -282,9 +282,9 @@ public class WarpSyncManager {
 
                             // Validation
                             byte[] hashActual = sha3(accountStatesCompressed);
-                            logger.info("Processing node with hash: {}", Hex.toHexString(hashActual));
+                            logger.debug("Processing node with hash: {}", Hex.toHexString(hashActual));
                             if (!FastByteComparisons.equal(reqSave.stateChunkHash, hashActual)) {
-                                logger.info("Received bad state chunk from peer: {}, expected hash: {}, actual hash: {}",
+                                logger.debug("Received bad state chunk from peer: {}, expected hash: {}, actual hash: {}",
                                         idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.stateChunkHash));
                                 synchronized (WarpSyncManager.this) {
                                     pendingStateChunks.remove(reqSave.stateChunkHash);
