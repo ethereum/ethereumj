@@ -172,7 +172,7 @@ public class GenesisLoader {
         return premine;
     }
 
-    private static byte[] generateRootHash(Map<ByteArrayWrapper, AccountState> premine){
+    public static byte[] generateRootHash(Map<ByteArrayWrapper, AccountState> premine){
 
         Trie<byte[]> state = new SecureTrie((byte[]) null);
 
