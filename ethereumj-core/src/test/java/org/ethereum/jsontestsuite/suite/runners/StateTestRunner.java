@@ -60,7 +60,7 @@ public class StateTestRunner {
             System.exit(-1);
         }
 
-        track.commit(blockchain.getBestBlock().getNumber());
+        track.commit();
         return executor.getResult();
     }
 

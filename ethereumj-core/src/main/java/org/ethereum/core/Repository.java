@@ -175,8 +175,6 @@ public interface Repository extends org.ethereum.facade.Repository{
      */
     void rollback();
 
-    void commit(long blockNumber);
-
     /**
      * Return to one of the previous snapshots
      * by moving the root.
