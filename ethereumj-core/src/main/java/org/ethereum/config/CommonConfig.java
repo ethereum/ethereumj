@@ -2,6 +2,7 @@ package org.ethereum.config;
 
 import org.ethereum.core.*;
 import org.ethereum.datasource.*;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
@@ -106,6 +107,8 @@ public class CommonConfig {
             DbSource<byte[]> dbSource;
             if ("mapdb".equals(dataSource)) {
                 dbSource = mapDBFactory().createDataSource();
+            } else if ("inmem".equals(dataSource)) {
+                dbSource = new HashMapDB<>();
             } else {
                 dataSource = "leveldb";
                 dbSource = new LevelDbDataSource();
