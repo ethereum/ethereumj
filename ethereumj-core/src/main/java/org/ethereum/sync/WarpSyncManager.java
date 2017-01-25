@@ -4,14 +4,19 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.SnapshotManifest;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionInfo;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryInsecureTrie;
-import org.ethereum.db.StateSource;
+import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
@@ -19,6 +24,8 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -36,6 +43,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.xerial.snappy.Snappy;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -80,6 +88,9 @@ public class WarpSyncManager {
     private IndexedBlockStore blockStore;
 
     @Autowired
+    private TransactionStore txStore;
+
+    @Autowired
     private RepositoryInsecureTrie repository;
 
     @Autowired
@@ -88,9 +99,6 @@ public class WarpSyncManager {
     @Autowired
     @Qualifier("stateDS")
     DbSource<byte[]> stateDS;
-
-    @Autowired
-    private StateSource stateSource;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -103,6 +111,10 @@ public class WarpSyncManager {
 
     @Autowired
     ApplicationContext applicationContext;
+
+    private HeadersDownloader headersDownloader;
+    private BlockBodiesDownloader blockBodiesDownloader;
+    private ReceiptsDownloader receiptsDownloader;
 
     private boolean warpSyncInProgress = false;
     private Thread warpSyncThread;
@@ -137,8 +149,21 @@ public class WarpSyncManager {
         switch (syncStage) {
             case UNSECURE:
                 return new SyncStatus(SyncStatus.SyncStage.StateNodes,
-                        manifest.getStateHashes().size() - pendingStateChunks.size() - stateChunkQueue.size(),
+                        manifest.getStateHashes().size() - pendingChunks.size() - chunkQueue.size(),
                         manifest.getStateHashes().size());
+            case SECURE:
+                return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
+                        manifest.getBlockNumber());
+            case COMPLETE:
+                if (receiptsDownloader != null) {
+                    return new SyncStatus(SyncStatus.SyncStage.Receipts,
+                            receiptsDownloader.getDownloadedBlocksCount(), manifest.getBlockNumber());
+                } else if (blockBodiesDownloader!= null) {
+                    return new SyncStatus(SyncStatus.SyncStage.BlockBodies,
+                            blockBodiesDownloader.getDownloadedCount(), manifest.getBlockNumber());
+                } else {
+                    return new SyncStatus(SyncStatus.SyncStage.BlockBodies, 0, manifest.getBlockNumber());
+                }
         }
         return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
     }
@@ -149,25 +174,35 @@ public class WarpSyncManager {
         return EthereumListener.SyncState.values()[bytes[0]];
     }
 
+
+    private void setSyncStage(EthereumListener.SyncState stage) {
+        if (stage == null) {
+            stateDS.delete(WARPSYNC_DB_KEY_SYNC_STAGE);
+        } else {
+            stateDS.put(WARPSYNC_DB_KEY_SYNC_STAGE, new byte[]{(byte) stage.ordinal()});
+        }
+    }
+
     // TODO: not a best way considering large size and different internet connections
     synchronized void processTimeouts() {
         long cur = System.currentTimeMillis();
-        List<StateChunkRequest> requests = new ArrayList<>(pendingStateChunks.values());
-        for (StateChunkRequest request : requests) {
+        List<ChunkRequest> requests = new ArrayList<>(pendingChunks.values());
+        for (ChunkRequest request : requests) {
             if (request.requestSent != null && cur - request.requestSent > CHUNK_DL_TIMEOUT) {
-                logger.trace("Removing state chunk {} from pending due to timeout", Hex.toHexString(request.stateChunkHash));
-                pendingStateChunks.remove(request.stateChunkHash);
-                stateChunkQueue.addFirst(request);
+                logger.trace("Removing state chunk {} from pending due to timeout", Hex.toHexString(request.chunkHash));
+                pendingChunks.remove(request.chunkHash);
+                chunkQueue.addFirst(request);
             }
         }
     }
 
     private void syncUnsecure() {
+        setSyncStage(UNSECURE);
 
         logger.info("WarpSync: downloading state tries from {} state chunks", manifest.getStateHashes().size());
 
         for (byte[] stateChunkHash : manifest.getStateHashes()) {
-            stateChunkQueue.add(new StateChunkRequest(stateChunkHash));
+            chunkQueue.add(new ChunkRequest(stateChunkHash));
         }
 
         stateRetrieveLoop();
@@ -187,7 +222,7 @@ public class WarpSyncManager {
             throw new RuntimeException("Fatal WarpSync error, incorrect state trie.");
         }
 
-
+        // TODO: we could skip import of these blocks from block chunks?
         logger.info("WarpSync: downloading 256 blocks prior to manifest block ( #{} {} )",
                 manifest.getBlockNumber(), Hex.toHexString(manifest.getBlockHash()));
         downloader.startImporting(manifest.getBlockHash(), 260);
@@ -223,14 +258,12 @@ public class WarpSyncManager {
         logger.info("WarpSync: regular sync reached the blockchain head.");
     }
 
-    // TODO: Refactor to chunk request
-    private class StateChunkRequest {
-        byte[] stateChunkHash;
-        byte[] response;
+    private class ChunkRequest {
+        byte[] chunkHash;
         Long requestSent;
 
-        StateChunkRequest(byte[] stateChunkHash) {
-            this.stateChunkHash = stateChunkHash;
+        ChunkRequest(byte[] chunkHash) {
+            this.chunkHash = chunkHash;
         }
 
         public void reqSent() {
@@ -242,20 +275,20 @@ public class WarpSyncManager {
 
         @Override
         public String toString() {
-            return String.format("StateChunkRequest {chunkHash=%s}", Hex.toHexString(stateChunkHash));
+            return String.format("ChunkRequest {chunkHash=%s}", Hex.toHexString(chunkHash));
         }
     }
 
-    Deque<StateChunkRequest> stateChunkQueue = new LinkedBlockingDeque<>();
-    ByteArrayMap<StateChunkRequest> pendingStateChunks = new ByteArrayMap<>();
+    Deque<ChunkRequest> chunkQueue = new LinkedBlockingDeque<>();
+    ByteArrayMap<ChunkRequest> pendingChunks = new ByteArrayMap<>();
 
-    void stateRetrieveLoop() {
+    private void stateRetrieveLoop() {
         try {
-            while (!stateChunkQueue.isEmpty() || !pendingStateChunks.isEmpty()) {
+            while (!chunkQueue.isEmpty() || !pendingChunks.isEmpty()) {
                 try {
                     processTimeouts();
 
-                    while (requestNextStateChunks()) ;
+                    while (requestNextStateChunk()) ;
 
                     synchronized (this) {
                         wait(10);
@@ -271,18 +304,17 @@ public class WarpSyncManager {
         }
     }
 
-    boolean requestNextStateChunks() {
-        // TODO: Change to any idle after test
+    boolean requestNextStateChunk() {
         final Channel idle = pool.getAnyIdle();
 
         if (idle != null) {
-            StateChunkRequest req = null;
+            ChunkRequest req = null;
             synchronized (this) {
-                if (!stateChunkQueue.isEmpty()) {
-                    req = stateChunkQueue.poll();
-                    StateChunkRequest request = pendingStateChunks.get(req.stateChunkHash);
+                if (!chunkQueue.isEmpty()) {
+                    req = chunkQueue.poll();
+                    ChunkRequest request = pendingChunks.get(req.chunkHash);
                     if (request == null) {
-                        pendingStateChunks.put(req.stateChunkHash, req);
+                        pendingChunks.put(req.chunkHash, req);
                         req.reqSent();
                     } else {
                         req = null;
@@ -290,24 +322,24 @@ public class WarpSyncManager {
                 }
             }
             if (req != null) {
-                final StateChunkRequest reqSave = req;
-                logger.debug("stateChunkQueue: {}, pendingQueue: {}", stateChunkQueue.size(), pendingStateChunks.size());
-                logger.debug("Requesting {} state chunk from peer: {}", Hex.toHexString(req.stateChunkHash), idle);
-                ListenableFuture<RLPElement> dataFuture = idle.getParHandler().requestSnapshotData(req.stateChunkHash);
+                final ChunkRequest reqSave = req;
+                logger.debug("chunkQueue: {}, pendingQueue: {}", chunkQueue.size(), pendingChunks.size());
+                logger.debug("Requesting {} state chunk from peer: {}", Hex.toHexString(req.chunkHash), idle);
+                ListenableFuture<RLPElement> dataFuture = idle.getParHandler().requestSnapshotData(req.chunkHash);
                 Futures.addCallback(dataFuture, new FutureCallback<RLPElement>() {
                     @Override
                     public void onSuccess(RLPElement result) {
                         try {
                             // FIXME: if we could get really empty correct chunk?
                             synchronized (WarpSyncManager.this) {
-                                final StateChunkRequest request = pendingStateChunks.get(reqSave.stateChunkHash);
+                                final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                                 if (request == null) return;
                                 request.requestSent = null;
                                 if (result == null) {
                                     logger.debug("Received empty state chunk for hash {} from peer: {}",
-                                            Hex.toHexString(reqSave.stateChunkHash), idle);
-                                    stateChunkQueue.addFirst(request);
-                                    pendingStateChunks.remove(reqSave.stateChunkHash);
+                                            Hex.toHexString(reqSave.chunkHash), idle);
+                                    chunkQueue.addFirst(request);
+                                    pendingChunks.remove(reqSave.chunkHash);
                                     WarpSyncManager.this.notifyAll();
                                     idle.dropConnection();
                                     return;
@@ -316,17 +348,17 @@ public class WarpSyncManager {
                             byte[] accountStatesCompressed = result.getRLPData();
                             logger.debug("Received {} bytes state chunk for hash: {}",
                                     accountStatesCompressed.length,
-                                    Hex.toHexString(reqSave.stateChunkHash));
+                                    Hex.toHexString(reqSave.chunkHash));
 
                             // Validation
                             byte[] hashActual = sha3(accountStatesCompressed);
-                            logger.debug("Processing node with hash: {}", Hex.toHexString(hashActual));
-                            if (!FastByteComparisons.equal(reqSave.stateChunkHash, hashActual)) {
+                            logger.debug("Processing state chunk with hash: {}", Hex.toHexString(hashActual));
+                            if (!FastByteComparisons.equal(reqSave.chunkHash, hashActual)) {
                                 logger.debug("Received bad state chunk from peer: {}, expected hash: {}, actual hash: {}",
-                                        idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.stateChunkHash));
+                                        idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.chunkHash));
                                 synchronized (WarpSyncManager.this) {
-                                    pendingStateChunks.remove(reqSave.stateChunkHash);
-                                    stateChunkQueue.addFirst(reqSave);
+                                    pendingChunks.remove(reqSave.chunkHash);
+                                    chunkQueue.addFirst(reqSave);
                                     WarpSyncManager.this.notifyAll();
                                     idle.dropConnection();
                                     return;
@@ -336,7 +368,7 @@ public class WarpSyncManager {
 
                             byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
                             logger.debug("State chunk with hash %s uncompressed size: %s",
-                                    Hex.toHexString(reqSave.stateChunkHash),
+                                    Hex.toHexString(reqSave.chunkHash),
                                     accountStates.length);
                             RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
                             synchronized (WarpSyncManager.this) {
@@ -368,10 +400,10 @@ public class WarpSyncManager {
                                     switch (codeFlag) {
                                         case 0x00:  // No code
                                             break;
-                                        case 0x01:  // code
+                                        case 0x01:  // Code
                                             code = accountStateInfo.get(3).getRLPData();
                                             break;
-                                        case 0x02:  // code hash. some account with lower address should contain code
+                                        case 0x02:  // Code hash. some account with lower address should contain code
                                             codeHash = accountStateInfo.get(3).getRLPData();
                                         default:
                                             // TODO: do something bad
@@ -395,7 +427,7 @@ public class WarpSyncManager {
 
                                 repository.commit();
                                 dbFlushManager.commit();
-                                pendingStateChunks.remove(reqSave.stateChunkHash);
+                                pendingChunks.remove(reqSave.chunkHash);
 
                                 WarpSyncManager.this.notifyAll();
 
@@ -413,10 +445,10 @@ public class WarpSyncManager {
                     public void onFailure(Throwable t) {
                         logger.warn("Error with snapshot data request: " + t);
                         synchronized (WarpSyncManager.this) {
-                            final StateChunkRequest request = pendingStateChunks.get(reqSave.stateChunkHash);
+                            final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                             if (request == null) return;
-                            stateChunkQueue.addFirst(request);
-                            pendingStateChunks.remove(reqSave.stateChunkHash);
+                            chunkQueue.addFirst(request);
+                            pendingChunks.remove(reqSave.chunkHash);
                             WarpSyncManager.this.notifyAll();
                         }
                     }
@@ -430,9 +462,249 @@ public class WarpSyncManager {
         }
     }
 
-
     private void syncSecure() {
-        logger.info("WarpSync: proceeding with secure sync.");
+        logger.info("WarpSync: proceeding with complete sync.");
+        setSyncStage(EthereumListener.SyncState.SECURE);
+
+        manifest = new SnapshotManifest(stateDS.get(WARPSYNC_DB_KEY_MANIFEST));
+
+        for (byte[] blockChunkHash : manifest.getBlockHashes()) {
+            chunkQueue.addLast(new ChunkRequest(blockChunkHash));
+        }
+
+        blockRetrieveLoop();
+
+        dbFlushManager.commit();
+        dbFlushManager.flush();
+
+        Block gapBlock = getGapBlock(manifest);
+        logger.info("WarpSync: Block chunks downloaded finished. Blockchain synced to #{}", gapBlock.getNumber());
+
+        logger.info("WarpSync: downloading headers from gap block down to genesis block for ensure manifest block ({}) is secure...",
+                manifest.getShortDescr());
+        headersDownloader = applicationContext.getBean(HeadersDownloader.class);
+        headersDownloader.init(gapBlock.getHash());
+        headersDownloader.waitForStop();
+        if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
+            logger.error("WARPSYNC FATAL ERROR: after downloading header chain starting from the manifest block (" +
+                    manifest.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
+            logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
+            System.exit(-666);
+        }
+        dbFlushManager.commit();
+        dbFlushManager.flush();
+        logger.info("WarpSync: all headers downloaded. The state is SECURE now.");
+    }
+
+    private void blockRetrieveLoop() {
+        try {
+            while (!chunkQueue.isEmpty() || !pendingChunks.isEmpty()) {
+                try {
+                    processTimeouts();
+
+                    while (requestNextBlockChunk()) ;
+
+                    synchronized (this) {
+                        wait(10);
+                    }
+                } catch (InterruptedException e) {
+                    throw e;
+                } catch (Throwable t) {
+                    logger.error("Error", t);
+                }
+            }
+        } catch (InterruptedException e) {
+            logger.warn("Block chunks warp sync loop was interrupted", e);
+        }
+    }
+
+    private byte[] getTrieHash(RLPList rlpElements) {
+        Trie<byte[]> txsState = new TrieImpl();
+        for (int i = 0; i < rlpElements.size(); i++) {
+            txsState.put(RLP.encodeInt(i), rlpElements.get(i).getRLPData());
+        }
+
+        return txsState.getRootHash();
+    }
+
+    // TODO: we are getting only 30k blocks preceding manifest by this.
+    // In future we could mix several snapshots and usual download of absent data
+    boolean requestNextBlockChunk() {
+        final Channel idle = pool.getAnyIdle();
+
+        if (idle != null) {
+            ChunkRequest req = null;
+            synchronized (this) {
+                if (!chunkQueue.isEmpty()) {
+                    req = chunkQueue.pollFirst();
+                    ChunkRequest request = pendingChunks.get(req.chunkHash);
+                    if (request == null) {
+                        pendingChunks.put(req.chunkHash, req);
+                        req.reqSent();
+                    } else {
+                        req = null;
+                    }
+                }
+            }
+            if (req != null) {
+                final ChunkRequest reqSave = req;
+                logger.debug("chunkQueue: {}, pendingQueue: {}", chunkQueue.size(), pendingChunks.size());
+                logger.debug("Requesting {} block chunk from peer: {}", Hex.toHexString(req.chunkHash), idle);
+                ListenableFuture<RLPElement> dataFuture = idle.getParHandler().requestSnapshotData(req.chunkHash);
+                Futures.addCallback(dataFuture, new FutureCallback<RLPElement>() {
+                    @Override
+                    public void onSuccess(RLPElement result) {
+                        try {
+                            synchronized (WarpSyncManager.this) {
+                                final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
+                                if (request == null) return;
+                                request.requestSent = null;
+                                if (result == null) {
+                                    logger.debug("Received empty block chunk for hash {} from peer: {}",
+                                            Hex.toHexString(reqSave.chunkHash), idle);
+                                    chunkQueue.addFirst(request);
+                                    pendingChunks.remove(reqSave.chunkHash);
+                                    WarpSyncManager.this.notifyAll();
+                                    idle.dropConnection();
+                                    return;
+                                }
+                            }
+                            byte[] blockStatesCompressed = result.getRLPData();
+                            logger.debug("Received {} bytes block chunk for hash: {}",
+                                    blockStatesCompressed.length,
+                                    Hex.toHexString(reqSave.chunkHash));
+
+                            // Validation
+                            byte[] hashActual = sha3(blockStatesCompressed);
+                            logger.debug("Processing block chunk with hash: {}", Hex.toHexString(hashActual));
+                            if (!FastByteComparisons.equal(reqSave.chunkHash, hashActual)) {
+                                logger.debug("Received bad block chunk from peer: {}, expected hash: {}, actual hash: {}",
+                                        idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.chunkHash));
+                                synchronized (WarpSyncManager.this) {
+                                    pendingChunks.remove(reqSave.chunkHash);
+                                    chunkQueue.addFirst(reqSave);
+                                    WarpSyncManager.this.notifyAll();
+                                    idle.dropConnection();
+                                    return;
+                                }
+                            };
+                            // TODO: Put it in some queue and work with it in separate thread, heavy ops underneath
+
+                            byte[] blockHashes = Snappy.uncompress(blockStatesCompressed);
+                            logger.debug("Block chunk with hash %s uncompressed size: %s",
+                                    Hex.toHexString(reqSave.chunkHash),
+                                    blockHashes.length);
+                            RLPList blockList = (RLPList) RLP.decode2(blockHashes).get(0);
+
+                            synchronized (WarpSyncManager.this) {
+                                // TODO: in case of any error rollback etc
+
+                                long firstBlockNumber = ByteUtil.byteArrayToLong(blockList.get(0).getRLPData());
+                                if (logger.isDebugEnabled()) {
+                                    long blockCount = blockList.size() - 3;
+                                    logger.debug("Received {} blocks [{} - {}] from peer: {}",
+                                                    blockCount, firstBlockNumber, firstBlockNumber + blockCount, idle);
+                                }
+
+                                byte[] parentHash = blockList.get(1).getRLPData();
+                                BigInteger curTotalDiff = ByteUtil.bytesToBigInteger(blockList.get(2).getRLPData());
+                                long currentBlockNumber = firstBlockNumber + 1;
+
+                                for (int i = 3; i < blockList.size(); i++) {
+                                    RLPList currentBlockData = (RLPList) blockList.get(i);
+                                    RLPList abridgedBlock = (RLPList) currentBlockData.get(0);
+                                    RLPList receiptsRlp = (RLPList) currentBlockData.get(1);
+
+                                    byte[] author = abridgedBlock.get(0).getRLPData();
+                                    byte[] stateRoot = abridgedBlock.get(1).getRLPData();
+                                    byte[] logsBloom = abridgedBlock.get(2).getRLPData();
+                                    byte[] difficulty = abridgedBlock.get(3).getRLPData();
+                                    curTotalDiff = curTotalDiff.add(ByteUtil.bytesToBigInteger(difficulty));
+                                    byte[] gasLimit = abridgedBlock.get(4).getRLPData();
+                                    long gasUsed = ByteUtil.byteArrayToLong(abridgedBlock.get(5).getRLPData());
+                                    long timestamp = ByteUtil.byteArrayToLong(abridgedBlock.get(6).getRLPData());
+                                    byte[] extraData = abridgedBlock.get(7).getRLPData();
+
+                                    RLPList transactionsRlp = (RLPList) abridgedBlock.get(8);
+                                    List<Transaction> transactionsList = new ArrayList<>();
+                                    for (RLPElement txRlp : transactionsRlp) {
+                                        transactionsList.add(new Transaction(txRlp.getRLPData()));
+                                    }
+
+                                    RLPList unclesRlp = (RLPList) abridgedBlock.get(9);
+                                    List<BlockHeader> uncleList = new ArrayList<>();
+                                    for (RLPElement uncleRlp : unclesRlp) {
+                                        uncleList.add(new BlockHeader(uncleRlp.getRLPData()));
+                                    }
+
+                                    byte[] mixHash = abridgedBlock.get(10).getRLPData();
+                                    byte[] nonce = abridgedBlock.get(11).getRLPData();
+
+                                    // TODO: validation
+                                    BlockHeader header = new BlockHeader(
+                                            parentHash, sha3(unclesRlp.getRLPData()), author, logsBloom, difficulty,
+                                            currentBlockNumber, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce
+                                    );
+                                    header.setStateRoot(stateRoot);
+                                    byte[] transactionsRoot = getTrieHash(transactionsRlp);
+                                    header.setTransactionsRoot(transactionsRoot);
+                                    byte[] receiptsRoot = getTrieHash(receiptsRlp);
+                                    header.setReceiptsRoot(receiptsRoot);
+
+                                    // Creating and saving block
+                                    Block block = new Block(header, transactionsList, uncleList);
+                                    blockStore.saveBlock(block, curTotalDiff, true);
+
+
+                                    // Creating and saving receipts
+                                    // TODO: add validation (block, receipts)
+                                    List<TransactionReceipt> receipts = new ArrayList<>();
+                                    for (RLPElement txReceiptRlp : receiptsRlp) {
+                                        receipts.add(new TransactionReceipt((RLPList) txReceiptRlp));
+                                    }
+                                    for (int j = 0; j < receipts.size(); j++) {
+                                        TransactionReceipt receipt = receipts.get(j);
+                                        TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), j);
+                                        txInfo.setTransaction(block.getTransactionsList().get(j));
+                                        txStore.put(txInfo);
+                                    }
+
+                                    currentBlockNumber++;
+                                    parentHash = block.getHash();
+                                }
+                                dbFlushManager.commit();
+                                pendingChunks.remove(reqSave.chunkHash);
+                                WarpSyncManager.this.notifyAll();
+
+                                // TODO: Add stats
+//                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+//                                idle.getNodeStatistics().eth63NodesReceived.add(result.size());
+//                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
+                            }
+                        } catch (Exception e) {
+                            logger.error("Unexpected error processing block chunk", e);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        logger.warn("Error with snapshot data request: " + t);
+                        synchronized (WarpSyncManager.this) {
+                            final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
+                            if (request == null) return;
+                            chunkQueue.addFirst(request);
+                            pendingChunks.remove(reqSave.chunkHash);
+                            WarpSyncManager.this.notifyAll();
+                        }
+                    }
+                });
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     public void main() {
@@ -463,10 +735,23 @@ public class WarpSyncManager {
 
                         syncUnsecure();
                     case SECURE:
+                        if (origSyncStage == SECURE) {
+                            logger.info("WarpSync: UNSECURE sync was completed prior to this run, proceeding with next stage...");
+                            logger.info("Initializing regular sync");
+                            syncManager.initRegularSync(EthereumListener.SyncState.UNSECURE);
+                        }
 
                         syncSecure();
+
                         listener.onSyncDone(EthereumListener.SyncState.SECURE);
                     case COMPLETE:
+                        if (origSyncStage == COMPLETE) {
+                            logger.info("WarpSync: SECURE sync was completed prior to this run, proceeding with next stage...");
+                            logger.info("Initializing regular sync");
+                            syncManager.initRegularSync(EthereumListener.SyncState.SECURE);
+                        }
+
+                        syncBlocksReceipts();
 
                         listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
                 }
@@ -482,6 +767,48 @@ public class WarpSyncManager {
                     "Continue with regular sync...");
             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
         }
+    }
+
+    private Block getGapBlock(SnapshotManifest manifest) {
+        // [0..null blocks..gapBlock..full blocks..HEAD], gapBlock is full
+        long gapBlockNumber = manifest.getBlockNumber() - 30000 + 1;
+
+        return blockStore.getChainBlockByNumber(gapBlockNumber);
+    }
+
+    private void syncBlocksReceipts() {
+        setSyncStage(EthereumListener.SyncState.COMPLETE);
+        manifest = new SnapshotManifest(stateDS.get(WARPSYNC_DB_KEY_MANIFEST));
+
+        Block gapBlock = getGapBlock(manifest);
+        logger.info("WarpSync: Downloading Block bodies up to gap block (" + gapBlock.getShortDescr() + ")...");
+
+        blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
+        blockBodiesDownloader.startImporting();
+        blockBodiesDownloader.waitForStop();
+
+        logger.info("WarpSync: Block bodies downloaded");
+
+        logger.info("WarpSync: Downloading receipts...");
+
+        receiptsDownloader = applicationContext.getBean
+                (ReceiptsDownloader.class, 1, gapBlock.getNumber() + 1);
+        receiptsDownloader.startImporting();
+        receiptsDownloader.waitForStop();
+
+        logger.info("WarpSync: receipts downloaded");
+
+        logger.info("WarpSync: updating totDifficulties starting from the manifest block...");
+        blockchain.updateBlockTotDifficulties(manifest.getBlockNumber().intValue());
+        synchronized (blockchain) {
+            Block bestBlock = blockchain.getBestBlock();
+            BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+            logger.info("WarpSync: totDifficulties updated: bestBlock: " + bestBlock.getShortDescr() + ", totDiff: " + totalDifficulty);
+        }
+        setSyncStage(null);
+        stateDS.delete(WARPSYNC_DB_KEY_MANIFEST);
+        dbFlushManager.commit();
+        dbFlushManager.flush();
     }
 
     public boolean isWarpSyncInProgress() {
@@ -550,7 +877,7 @@ public class WarpSyncManager {
     }
 
     /**
-     * Requires at least 2 peers with the same manifest if there are more than 1 peer
+     * Requires at least 2 peers with the same manifest if there are more than 1 peer - disabled
      * Chooses the best manifest available
      */
     private SnapshotManifest getBestManifest() throws Exception {
@@ -581,12 +908,12 @@ public class WarpSyncManager {
                 int peerCount = allIdle.size();
                 SnapshotManifest candidate = null;
                 for (Map.Entry<SnapshotManifest, Integer> snapshotEntry : snapshotMap.entrySet()) {
-                    if (peerCount == 1 || snapshotEntry.getValue() > 1) {
+//                    if (peerCount == 1 || snapshotEntry.getValue() > 1) {
                         SnapshotManifest current = snapshotEntry.getKey();
                         if (candidate == null || candidate.getBlockNumber() < current.getBlockNumber()) {
                             candidate = current;
                         }
-                    }
+//                    }
                 }
 
                 if (candidate != null) {

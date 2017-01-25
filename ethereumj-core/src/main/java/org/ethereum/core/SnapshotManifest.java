@@ -1,12 +1,12 @@
 package org.ethereum.core;
 
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,23 +34,55 @@ public class SnapshotManifest {
         this.blockHash = blockHash;
     }
 
-    // TODO: may be pass somethhin encoded from Message?
+    public SnapshotManifest(byte[] encoded) {
+        this.encoded = encoded;
+        RLPList manifestContainerRlp = RLP.decode2(encoded);
+        RLPList manifestRlp = (RLPList) manifestContainerRlp.get(0);
+
+        stateHashes = new ArrayList<>();
+        RLPList stateHashesRlp = (RLPList) manifestRlp.get(0);
+        for (RLPElement stateHashRlp : stateHashesRlp) {
+            stateHashes.add(stateHashRlp.getRLPData());
+        }
+
+        blockHashes = new ArrayList<>();
+        RLPList blockHashesRlp = (RLPList) manifestRlp.get(1);
+        for (RLPElement blockHashRlp : blockHashesRlp) {
+            blockHashes.add(blockHashRlp.getRLPData());
+        }
+
+        stateRoot = manifestRlp.get(2).getRLPData();
+        byte[] blockNumberBytes = manifestRlp.get(3).getRLPData();
+        blockNumber = blockNumberBytes == null ? 0 : (new BigInteger(1, blockNumberBytes)).longValue();
+        blockHash = manifestRlp.get(4).getRLPData();
+    }
+
+    // TODO: may be pass something encoded from Message?
     public byte[] getEncoded() {
         if (encoded == null) encode();
         return encoded;
     }
 
     private synchronized void encode() {
-        byte[][] encodedStateHashesArray = stateHashes
-                .toArray(new byte[stateHashes.size()][]);
+        // TODO: refactor me, check nulls
+        byte[][] encodedStateHashesArray = new byte[stateHashes.size()][];
+        int i = 0;
+        for (byte[] stateHash : stateHashes) {
+            encodedStateHashesArray[i] = RLP.encodeElement(stateHash);
+            i++;
+        }
         byte[] stateHashesRlp = RLP.encodeList(encodedStateHashesArray);
 
-        byte[][] encodedBlockHashesArray = blockHashes
-                .toArray(new byte[blockHashes.size()][]);
+        byte[][] encodedBlockHashesArray = new byte[blockHashes.size()][];
+        int j = 0;
+        for (byte[] blockHash : blockHashes) {
+            encodedBlockHashesArray[j] = RLP.encodeElement(blockHash);
+            j++;
+        }
         byte[] blockHashesRlp = RLP.encodeList(encodedBlockHashesArray);
 
         byte[] stateRootRlp = RLP.encodeElement(stateRoot);
-        byte[] blockNumberRlp = ByteUtil.longToBytes(blockNumber);
+        byte[] blockNumberRlp = RLP.encodeBigInteger(BigInteger.valueOf(blockNumber));
         byte[] blockHashRlp = RLP.encodeElement(blockHash);
 
         encoded = RLP.encodeList(stateHashesRlp, blockHashesRlp, stateRootRlp, blockNumberRlp, blockHashRlp);
@@ -100,6 +132,14 @@ public class SnapshotManifest {
                 stateRoot == null ? "null" : Hex.toHexString(stateRoot),
                 stateHashes == null ? 0 : stateHashes.size(),
                 blockHashes == null ? 0 : blockHashes.size()
+        );
+    }
+
+    public String getShortDescr() {
+        return String.format(
+                "SnapshotManifest {Manifest block: #%d [%s]}",
+                blockNumber,
+                blockHash == null ? "null" : Hex.toHexString(blockHash)
         );
     }
 }
