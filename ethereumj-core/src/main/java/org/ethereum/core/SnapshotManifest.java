@@ -34,6 +34,11 @@ public class SnapshotManifest {
         this.blockHash = blockHash;
     }
 
+    public SnapshotManifest(Long blockNumber, byte[] blockHash) {
+        this.blockNumber = blockNumber;
+        this.blockHash = blockHash;
+    }
+
     public SnapshotManifest(byte[] encoded) {
         this.encoded = encoded;
         RLPList manifestContainerRlp = RLP.decode2(encoded);
@@ -106,6 +111,26 @@ public class SnapshotManifest {
 
     public byte[] getBlockHash() {
         return blockHash;
+    }
+
+    public void setStateHashes(List<byte[]> stateHashes) {
+        this.stateHashes = stateHashes;
+    }
+
+    public void setBlockHashes(List<byte[]> blockHashes) {
+        this.blockHashes = blockHashes;
+    }
+
+    public void setStateRoot(byte[] stateRoot) {
+        this.stateRoot = stateRoot;
+    }
+
+    public void setBlockNumber(Long blockNumber) {
+        this.blockNumber = blockNumber;
+    }
+
+    public void setBlockHash(byte[] blockHash) {
+        this.blockHash = blockHash;
     }
 
     @Override

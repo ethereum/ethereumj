@@ -3,6 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -44,6 +45,8 @@ public class SyncPool {
 
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
+    private boolean forceSync = false;
+
     private final List<Channel> activePeers = Collections.synchronizedList(new ArrayList<Channel>());
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
@@ -76,22 +79,8 @@ public class SyncPool {
         this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
-        poolLoopExecutor.scheduleWithFixedDelay(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            heartBeat();
-                            updateLowerUsefulDifficulty();
-                            fillUp();
-                            prepareActive();
-                            cleanupActive();
-                        } catch (Throwable t) {
-                            logger.error("Unhandled exception", t);
-                        }
-                    }
-                }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
-        );
+        startPoolLoopExecutor(WORKER_TIMEOUT);
+
         logExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -106,17 +95,27 @@ public class SyncPool {
         }, 30, 30, TimeUnit.SECONDS);
     }
 
-    public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
-        this.nodesSelector = nodesSelector;
+    private void startPoolLoopExecutor(long delayInSeconds) {
+        poolLoopExecutor.scheduleWithFixedDelay(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            heartBeat();
+                            updateLowerUsefulDifficulty();
+                            fillUp();
+                            prepareActive();
+                            cleanupActive();
+                        } catch (Throwable t) {
+                            logger.error("Unhandled exception", t);
+                        }
+                    }
+                }, delayInSeconds, delayInSeconds, TimeUnit.SECONDS
+        );
     }
 
-    public void close() {
-        try {
-            poolLoopExecutor.shutdownNow();
-            logExecutor.shutdownNow();
-        } catch (Exception e) {
-            logger.warn("Problems shutting down executor", e);
-        }
+    public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
+        this.nodesSelector = nodesSelector;
     }
 
     @Nullable
@@ -279,6 +278,8 @@ public class SyncPool {
         for (Channel channel : managerActive) {
             if (nodeSelector.test(nodeManager.getNodeHandler(channel.getNode()))) {
                 active.add(channel);
+            } else if (forceSync) {
+                channel.disconnect(ReasonCode.TOO_MANY_PEERS);
             }
         }
 
@@ -356,6 +357,21 @@ public class SyncPool {
         }
     }
 
+    public void setForceSync(boolean forceSync) {
+        boolean restart = forceSync != this.forceSync;
+        this.forceSync = forceSync;
+        if (restart) {
+            try {
+                poolLoopExecutor.shutdownNow();
+                poolLoopExecutor.awaitTermination(5, TimeUnit.SECONDS);
+                poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
+                startPoolLoopExecutor(forceSync ? 3 : WORKER_TIMEOUT);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException("Unable to restart sync pool loop executor");
+            }
+        }
+    }
+
     public ChannelManager getChannelManager() {
         return channelManager;
     }
@@ -367,5 +383,14 @@ public class SyncPool {
 //                peer.dropConnection();
 //            }
 //        }
+    }
+
+    public void close() {
+        try {
+            poolLoopExecutor.shutdownNow();
+            logExecutor.shutdownNow();
+        } catch (Exception e) {
+            logger.warn("Problems shutting down executor", e);
+        }
     }
 }

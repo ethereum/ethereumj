@@ -347,7 +347,7 @@ public class SyncManager extends BlockDownloader {
     }
 
     public boolean isFastSyncRunning() {
-        return fastSyncManager.isFastSyncInProgress();
+        return fastSyncManager.isFastSyncInProgress() || warpSyncManager.isWarpSyncInProgress();
     }
 
     public long getLastKnownBlockNumber() {

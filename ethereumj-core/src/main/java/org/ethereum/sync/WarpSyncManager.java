@@ -47,8 +47,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -66,9 +68,15 @@ import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
 public class WarpSyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private final static int MIN_PEERS_FOR_PIVOT_SELECTION = 5;
+    private final static int MIN_PEERS_FOR_MANIFEST_SELECTION = 5;
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
     private final static int CHUNK_DL_TIMEOUT = 180 * 1000;
+
+    // TODO: move to config
+    private final static int MAX_SEARCH_TIME = 10 * 60 * 1000;
+    private final static int MIN_SNAPSHOT_PEERS = 2;
+
+    private final static int MAX_SNAPSHOT_DISTANCE = 30_000 + 1_000;
 
     private static final Capability PAR1_CAPABILITY = new Capability(Capability.PAR, (byte) 1);
 
@@ -367,7 +375,7 @@ public class WarpSyncManager {
                             // TODO: Put it in some queue and work with it in separate thread, heavy ops underneath
 
                             byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
-                            logger.debug("State chunk with hash %s uncompressed size: %s",
+                            logger.debug("State chunk with hash {} uncompressed size: {}",
                                     Hex.toHexString(reqSave.chunkHash),
                                     accountStates.length);
                             RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
@@ -418,7 +426,14 @@ public class WarpSyncManager {
                                         byte[] valRlp = storageRowList.get(1).getRLPData();
                                         byte[] val = RLP.decode2(valRlp).get(0).getRLPData();
                                         // TODO: better
-                                        assert FastByteComparisons.equal(keyHash, sha3(valRlp));
+                                        if (!FastByteComparisons.equal(keyHash, sha3(valRlp))) {
+                                            pendingChunks.remove(reqSave.chunkHash);
+                                            chunkQueue.addFirst(reqSave);
+                                            repository.rollback();
+                                            WarpSyncManager.this.notifyAll();
+                                            idle.dropConnection();
+                                            return;
+                                        };
 
                                         repository.addStorageRow(addressHash,
                                                 new DataWord(keyHash), new DataWord(val));
@@ -472,11 +487,12 @@ public class WarpSyncManager {
             chunkQueue.addLast(new ChunkRequest(blockChunkHash));
         }
 
-        blockRetrieveLoop();
+        blockChunkRetrieveLoop();
 
         dbFlushManager.commit();
         dbFlushManager.flush();
 
+        pool.setNodesSelector(null);
         Block gapBlock = getGapBlock(manifest);
         logger.info("WarpSync: Block chunks downloaded finished. Blockchain synced to #{}", gapBlock.getNumber());
 
@@ -496,7 +512,7 @@ public class WarpSyncManager {
         logger.info("WarpSync: all headers downloaded. The state is SECURE now.");
     }
 
-    private void blockRetrieveLoop() {
+    private void blockChunkRetrieveLoop() {
         try {
             while (!chunkQueue.isEmpty() || !pendingChunks.isEmpty()) {
                 try {
@@ -714,10 +730,12 @@ public class WarpSyncManager {
             // or we have incomplete headers/blocks/receipts download
 
             warpSyncInProgress = true;
+            pool.setForceSync(true);
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
                 public boolean test(NodeHandler handler) {
-                    return handler.getNodeStatistics().capabilities.contains(PAR1_CAPABILITY);
+                    return handler.getNodeStatistics().capabilities.isEmpty() ||
+                            handler.getNodeStatistics().capabilities.contains(PAR1_CAPABILITY);
                 }
             });
 
@@ -727,7 +745,7 @@ public class WarpSyncManager {
                 switch (origSyncStage) {
                     case UNSECURE:
                         manifest = getManifest();
-                        if (manifest.getBlockNumber() == 0) {
+                        if (manifest == null || manifest.getBlockNumber() == 0) {
                             logger.info("WarpSync: too short blockchain, proceeding with regular sync...");
                             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
                             return;
@@ -761,6 +779,7 @@ public class WarpSyncManager {
             } finally {
                 warpSyncInProgress = false;
                 pool.setNodesSelector(null);
+                pool.setForceSync(false);
             }
         } else {
             logger.info("WarpSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
@@ -828,7 +847,7 @@ public class WarpSyncManager {
 
             forceSyncRemains = FORCE_SYNC_TIMEOUT - (System.currentTimeMillis() - start);
 
-            if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION || forceSyncRemains < 0 && !allIdle.isEmpty()) {
+            if (allIdle.size() >= MIN_PEERS_FOR_MANIFEST_SELECTION || forceSyncRemains < 0 && !allIdle.isEmpty()) {
                 Channel bestPeer = allIdle.get(0);
                 for (Channel channel : allIdle) {
                     if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
@@ -844,7 +863,7 @@ public class WarpSyncManager {
 
             long t = System.currentTimeMillis();
             if (t - s > 5000) {
-                logger.info("WarpSync: waiting for at least " + MIN_PEERS_FOR_PIVOT_SELECTION + " peers or " + forceSyncRemains / 1000 + " sec to select manifest block... ("
+                logger.info("WarpSync: waiting for at least " + MIN_PEERS_FOR_MANIFEST_SELECTION + " peers or " + forceSyncRemains / 1000 + " sec to select manifest block... ("
                         + allIdle.size() + " peers so far)");
                 s = t;
             }
@@ -855,10 +874,17 @@ public class WarpSyncManager {
         logger.info("WarpSync: fetching manifest from all peers to find best one available");
 
         try {
+            Long manifestSearchStart = System.currentTimeMillis();
             while (true) {
                 SnapshotManifest result = getBestManifest();
 
                 if (result != null) return result;
+                if (System.currentTimeMillis() - manifestSearchStart > MAX_SEARCH_TIME) {
+                    logger.info("Maximum search time for good snapshot manifest peers exceeded. Aborting.");
+                    logger.info("Required at least {} peer(s) with manifest for block in {} or less blocks to the HEAD.",
+                            MIN_SNAPSHOT_PEERS, MAX_SNAPSHOT_DISTANCE);
+                    return null;
+                }
 
                 long t = System.currentTimeMillis();
                 if (t - s > 5000) {
@@ -877,16 +903,45 @@ public class WarpSyncManager {
     }
 
     /**
-     * Requires at least 2 peers with the same manifest if there are more than 1 peer - disabled
-     * Chooses the best manifest available
+     * Requires at least 2 peers with the same manifest
+     * in less than 31_000 of blocks to the best known
      */
     private SnapshotManifest getBestManifest() throws Exception {
         List<Channel> allIdle = pool.getAllIdle();
         if (!allIdle.isEmpty()) {
             try {
-                List<ListenableFuture<SnapshotManifest>> result = new ArrayList<>();
-                // TODO: If we keep status answer data in ParHandler, we could know best peer
+                long bestBlockNumber = 0L;
+                SnapshotManifest bestShort = null;
+                Set<Channel> bestChannels = new HashSet<>();
+
                 for (Channel channel : allIdle) {
+                    if (channel.getParHandler() == null) channel.getEthHandler().dropConnection();
+
+                    long channelBestBlockNumber = channel.getEthHandler().getBestKnownBlock().getNumber();
+                    if (channelBestBlockNumber > bestBlockNumber) {
+                        bestBlockNumber = channelBestBlockNumber;
+                    }
+
+                    SnapshotManifest channelManifest = channel.getParHandler() == null ?
+                            null : channel.getParHandler().getShortManifest();
+                    if (channelManifest != null) {
+                        if (bestShort == null || bestShort.getBlockNumber() < channelManifest.getBlockNumber()) {
+                            bestShort = channelManifest;
+                            bestChannels.clear();
+                            bestChannels.add(channel);
+                        } else if (bestShort.getBlockNumber().equals(channelManifest.getBlockNumber())) {
+                            bestChannels.add(channel);
+                        }
+                    }
+                }
+
+                long minManifestBlockNumber = bestBlockNumber - MAX_SNAPSHOT_DISTANCE;
+                if (minManifestBlockNumber < 0 || bestShort == null) return null;
+                if (bestShort.getBlockNumber() < minManifestBlockNumber) return null;
+                if (bestChannels.isEmpty() || bestChannels.size() < MIN_SNAPSHOT_PEERS) return null;
+
+                List<ListenableFuture<SnapshotManifest>> result = new ArrayList<>();
+                for (Channel channel : bestChannels) {
                     ListenableFuture<SnapshotManifest> future =
                             channel.getParHandler().requestManifest();
                     result.add(future);
@@ -900,25 +955,17 @@ public class WarpSyncManager {
                     if (snapshotMap.get(manifest) == null) {
                         snapshotMap.put(manifest, 1);
                     } else {
-                         snapshotMap.put(manifest, snapshotMap.get(manifest) + 1);
+                        snapshotMap.put(manifest, snapshotMap.get(manifest) + 1);
                     }
                 }
 
-                // Require at least 2 peers with the same manifest, if we have more than 1 peer
-                int peerCount = allIdle.size();
-                SnapshotManifest candidate = null;
                 for (Map.Entry<SnapshotManifest, Integer> snapshotEntry : snapshotMap.entrySet()) {
-//                    if (peerCount == 1 || snapshotEntry.getValue() > 1) {
+                    if (snapshotEntry.getValue() >= MIN_SNAPSHOT_PEERS) {
                         SnapshotManifest current = snapshotEntry.getKey();
-                        if (candidate == null || candidate.getBlockNumber() < current.getBlockNumber()) {
-                            candidate = current;
-                        }
-//                    }
-                }
+                        logger.info("Snapshot manifest fetched: {}", current);
 
-                if (candidate != null) {
-                    logger.info("Snapshot manifest fetched: {}", candidate);
-                    return candidate;
+                        return  current;
+                    }
                 }
             } catch (TimeoutException e) {
                 logger.debug("Timeout waiting for answer", e);

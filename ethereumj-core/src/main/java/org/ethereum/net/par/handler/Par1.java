@@ -47,8 +47,6 @@ public class Par1 extends ParHandler {
 
     private static final ParVersion version = ParVersion.PAR1;
 
-    private MessageQueue msgQueue = null;
-
     private boolean requestedSnapshotManifest = false;
     private SettableFuture<SnapshotManifest> requestSnapshotManifestFuture;
 
@@ -111,6 +109,9 @@ public class Par1 extends ParHandler {
                 disconnect(ReasonCode.NULL_IDENTITY);
                 return;
             }
+
+            this.snapshotManifest = new SnapshotManifest(msg.getSnapshotNumber(), msg.getSnapshotHash());
+            this.statusPassed = true;
 
             // TODO: splitting of status proceeding should be done in better way
             // TODO: We should unlock processing for all methods after ETH passed all checkings

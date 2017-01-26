@@ -61,14 +61,17 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
     protected Eth ethHandler;
 
     protected Block bestBlock;
+
+    protected boolean statusPassed = false;
+
+    protected SnapshotManifest snapshotManifest;
+
     protected EthereumListener listener = new EthereumListenerAdapter() {
         @Override
         public void onBlock(Block block, List<TransactionReceipt> receipts) {
             bestBlock = block;
         }
     };
-
-    protected boolean processTransactions = false;
 
     protected ParHandler(ParVersion version) {
         this.version = version;
@@ -154,6 +157,17 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
         this.peerDiscoveryMode = peerDiscoveryMode;
+    }
+
+    /**
+     * @return true if StatusMessage was processed, false otherwise
+     */
+    public boolean hasStatusPassed() {
+        return statusPassed;
+    };
+
+    public SnapshotManifest getShortManifest() {
+        return snapshotManifest;
     }
 
     public void setChannel(Channel channel) {
