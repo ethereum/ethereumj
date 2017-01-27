@@ -733,7 +733,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean isFastSyncEnabled() {
-        return this.syncEnabled == null ? config.getBoolean("sync.fast.enabled") : syncEnabled;
+        return isSyncEnabled() && config.getBoolean("sync.fast.enabled");
     }
 
     @ValidateMe
@@ -742,6 +742,26 @@ public class SystemProperties {
         byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
         if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
         return ret;
+    }
+
+    @ValidateMe
+    public boolean isWarpSyncEnabled() {
+        return isSyncEnabled() && config.getBoolean("sync.warp.enabled");
+    }
+
+    @ValidateMe
+    public int getWarpMinPeers() {
+        return config.getInt("sync.warp.minPeers");
+    }
+
+    @ValidateMe
+    public int getWarpMaxSearchTime() {
+        return config.getInt("sync.warp.maxSearchTime");
+    }
+
+    @ValidateMe
+    public boolean getWarpSnapshotCreation() {
+        return config.getBoolean("sync.warp.snapshotCreation");
     }
 
     @ValidateMe

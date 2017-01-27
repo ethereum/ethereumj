@@ -74,9 +74,8 @@ public class WarpSyncManager {
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
     private final static int CHUNK_DL_TIMEOUT = 180 * 1000;
 
-    // TODO: move to config
-    private final static int MAX_SEARCH_TIME = 10 * 60 * 1000;
-    private final static int MIN_SNAPSHOT_PEERS = 2;
+    private int maxSearchTime = 5 * 60 * 1000;
+    private int minSnapshotPeers = 2;
 
     private final static int MAX_SNAPSHOT_DISTANCE = 30_000 + 1_000;
 
@@ -139,6 +138,8 @@ public class WarpSyncManager {
     private long forceSyncTimer;
 
     void init() {
+        minSnapshotPeers = config.getWarpMinPeers();
+        maxSearchTime = config.getWarpMaxSearchTime();
         warpSyncThread = new Thread("WarpSyncLoop") {
             @Override
             public void run() {
@@ -158,7 +159,7 @@ public class WarpSyncManager {
 
         if (manifest == null) {
             return new SyncStatus(SyncStatus.SyncStage.SnapshotManifest,
-                    forceSyncTimer / 1000,(FORCE_SYNC_TIMEOUT + MAX_SEARCH_TIME)/ 1000);
+                    forceSyncTimer / 1000,(FORCE_SYNC_TIMEOUT + maxSearchTime)/ 1000);
         }
 
         EthereumListener.SyncState syncStage = getSyncStage();
@@ -928,10 +929,10 @@ public class WarpSyncManager {
                 SnapshotManifest result = getBestManifest();
 
                 if (result != null) return result;
-                if (System.currentTimeMillis() - manifestSearchStart > MAX_SEARCH_TIME) {
+                if (System.currentTimeMillis() - manifestSearchStart > maxSearchTime) {
                     logger.info("Maximum search time for good snapshot manifest peers exceeded. Aborting.");
                     logger.info("Required at least {} peer(s) with manifest for block in {} or less blocks to the HEAD.",
-                            MIN_SNAPSHOT_PEERS, MAX_SNAPSHOT_DISTANCE);
+                            minSnapshotPeers, MAX_SNAPSHOT_DISTANCE);
                     return null;
                 }
 
@@ -987,7 +988,7 @@ public class WarpSyncManager {
                 long minManifestBlockNumber = bestBlockNumber - MAX_SNAPSHOT_DISTANCE;
                 if (minManifestBlockNumber < 0 || bestShort == null) return null;
                 if (bestShort.getBlockNumber() < minManifestBlockNumber) return null;
-                if (bestChannels.isEmpty() || bestChannels.size() < MIN_SNAPSHOT_PEERS) return null;
+                if (bestChannels.isEmpty() || bestChannels.size() < minSnapshotPeers) return null;
 
                 List<ListenableFuture<SnapshotManifest>> result = new ArrayList<>();
                 for (Channel channel : bestChannels) {
@@ -1009,7 +1010,7 @@ public class WarpSyncManager {
                 }
 
                 for (Map.Entry<SnapshotManifest, Integer> snapshotEntry : snapshotMap.entrySet()) {
-                    if (snapshotEntry.getValue() >= MIN_SNAPSHOT_PEERS) {
+                    if (snapshotEntry.getValue() >= minSnapshotPeers) {
                         SnapshotManifest current = snapshotEntry.getKey();
                         logger.info("Snapshot manifest fetched: {}", current);
 

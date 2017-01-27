@@ -132,13 +132,13 @@ public class SyncManager extends BlockDownloader {
             logger.info("Initializing SyncManager.");
             pool.init(channelManager);
 
-            warpSyncManager.init();
-            // TODO
-//            if (config.isFastSyncEnabled()) {
-//                fastSyncManager.init();
-//            } else {
-//                initRegularSync(EthereumListener.SyncState.COMPLETE);
-//            }
+            if (config.isFastSyncEnabled()) {
+                fastSyncManager.init();
+            } else if (config.isWarpSyncEnabled()) {
+                warpSyncManager.init();
+            } else {
+                initRegularSync(EthereumListener.SyncState.COMPLETE);
+            }
         }
     }
 
@@ -162,24 +162,17 @@ public class SyncManager extends BlockDownloader {
     }
 
     public SyncStatus getSyncStatus() {
-            SyncStatus syncStatus = warpSyncManager.getSyncState();
+        if (config.isFastSyncEnabled() || config.isWarpSyncEnabled()) {
+            SyncStatus syncStatus = null;
+            syncStatus = config.isFastSyncEnabled() ? fastSyncManager.getSyncState() : warpSyncManager.getSyncState();
             if (syncStatus.getStage() == SyncStatus.SyncStage.Complete) {
                 return getSyncStateImpl();
             } else {
                 return new SyncStatus(syncStatus, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
             }
-
-        // TODO: uncomment me and do it well
-//        if (config.isFastSyncEnabled()) {
-//            SyncStatus syncStatus = fastSyncManager.getSyncState();
-//            if (syncStatus.getStage() == SyncStatus.SyncStage.Complete) {
-//                return getSyncStateImpl();
-//            } else {
-//                return new SyncStatus(syncStatus, blockchain.getBestBlock().getNumber(), getLastKnownBlockNumber());
-//            }
-//        } else {
-//            return getSyncStateImpl();
-//        }
+        } else {
+            return getSyncStateImpl();
+        }
     }
 
     private SyncStatus getSyncStateImpl() {
