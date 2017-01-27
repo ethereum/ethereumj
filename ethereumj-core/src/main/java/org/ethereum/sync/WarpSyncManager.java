@@ -378,15 +378,11 @@ public class WarpSyncManager {
                             byte[] code = null;
                             byte[] codeHash = null;
                             switch (codeFlag) {
-                                case 0x00:  // No code
-                                    break;
                                 case 0x01:  // Code
                                     code = accountStateInfo.get(3).getRLPData();
                                     break;
                                 case 0x02:  // Code hash. some account with lower address should contain code
                                     codeHash = accountStateInfo.get(3).getRLPData();
-                                default:
-                                    // TODO: do something bad
                             }
                             if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
                             if (code != null) repository.saveCode(addressHash, code);
@@ -406,17 +402,14 @@ public class WarpSyncManager {
                         repository.commit();
                         dbFlushManager.commit();
                         pendingChunks.remove(req.chunkHash);
+                        req.peer.getNodeStatistics().par1ChunksReceived.add(1);
+                        req.peer.getNodeStatistics().par1ChunksRequested.add(1);
                     } catch (Exception e) {
                         logger.error("Processing error while processing state chunk from peer {}", req.peer);
                         repository.rollback();
                         processFailedRequest(req);
                     }
                 }
-
-                    // TODO: Add stats
-//                    idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
-//                    idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-//                    idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
             } catch (InterruptedException e) {
             } catch (IOException ex) {
                 logger.error("Cannot unpack state chunk data from peer {}", req.peer);
@@ -450,9 +443,11 @@ public class WarpSyncManager {
                     @Override
                     public void onSuccess(RLPElement result) {
                         try {
+                            Long requestSent;
                             synchronized (WarpSyncManager.this) {
                                 final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                                 if (request == null) return;
+                                requestSent = request.requestSent;
                                 request.requestSent = null;
                                 if (result == null) {
                                     logger.debug("Received empty state chunk for hash {} from peer: {}",
@@ -462,6 +457,8 @@ public class WarpSyncManager {
                                 }
                             }
                             byte[] accountStatesCompressed = result.getRLPData();
+                            idle.getNodeStatistics().par1ChunksRetrieveTime.add(System.currentTimeMillis() - requestSent);
+                            idle.getNodeStatistics().par1ChunkBytesReceived.add(accountStatesCompressed.length);
                             logger.debug("Received {} bytes state chunk for hash: {}",
                                     accountStatesCompressed.length,
                                     Hex.toHexString(reqSave.chunkHash));
@@ -501,6 +498,7 @@ public class WarpSyncManager {
 
     private synchronized void processFailedRequest(ChunkRequest request) {
         if (request == null) return;
+        request.peer.getNodeStatistics().par1ChunksRequested.add(1);
         request.peer.dropConnection();
         request.peer = null;
         request.responseData = null;
@@ -667,11 +665,8 @@ public class WarpSyncManager {
                     }
                     dbFlushManager.commit();
                     pendingChunks.remove(req.chunkHash);
-
-                    // TODO: Add stats
-//                    idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
-//                    idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-//                    idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
+                    req.peer.getNodeStatistics().par1ChunksReceived.add(1);
+                    req.peer.getNodeStatistics().par1ChunksRequested.add(1);
                 }
             } catch (InterruptedException e) {
             } catch (Exception ex) {
@@ -721,9 +716,11 @@ public class WarpSyncManager {
                     @Override
                     public void onSuccess(RLPElement result) {
                         try {
+                            Long requestSent;
                             synchronized (WarpSyncManager.this) {
                                 final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                                 if (request == null) return;
+                                requestSent = request.requestSent;
                                 request.requestSent = null;
                                 if (result == null) {
                                     logger.debug("Received empty block chunk for hash {} from peer: {}",
@@ -733,6 +730,8 @@ public class WarpSyncManager {
                                 }
                             }
                             byte[] blockStatesCompressed = result.getRLPData();
+                            idle.getNodeStatistics().par1ChunksRetrieveTime.add(System.currentTimeMillis() - requestSent);
+                            idle.getNodeStatistics().par1ChunkBytesReceived.add(blockStatesCompressed.length);
                             logger.debug("Received {} bytes block chunk for hash: {}",
                                     blockStatesCompressed.length,
                                     Hex.toHexString(reqSave.chunkHash));

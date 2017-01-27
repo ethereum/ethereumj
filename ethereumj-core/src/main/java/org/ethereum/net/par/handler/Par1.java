@@ -169,4 +169,11 @@ public class Par1 extends ParHandler {
         lastReqSentTime = 0;
         peerState = PeerState.IDLE;
     }
+
+    @Override
+    public String getSyncStats() {
+        double chunksPerSec = 1d * channel.getNodeStatistics().par1ChunkBytesReceived.get() / channel.getNodeStatistics().par1ChunksRetrieveTime.get();
+        double missChunksRatio = 1 - (double) channel.getNodeStatistics().par1ChunksReceived.get() / channel.getNodeStatistics().par1ChunksRequested.get();
+        return super.getSyncStats() + String.format("\tKB/sec: %1$.2f, miss: %2$.2f", chunksPerSec, missChunksRatio);
+    }
 }
