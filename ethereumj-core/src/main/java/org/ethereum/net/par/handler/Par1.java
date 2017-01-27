@@ -159,15 +159,21 @@ public class Par1 extends ParHandler {
                     channel);
             dropConnection();
         }
-
-        // TODO: Add checkings
-
         requestSnapshotDataFuture.set(msg.getChunkData());
 
         requestedSnapshotData = null;
         requestSnapshotDataFuture = null;
         lastReqSentTime = 0;
         peerState = PeerState.IDLE;
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelUnregistered(ctx);
+        if (requestSnapshotDataFuture != null)
+            requestSnapshotDataFuture.setException(new RuntimeException("Disconnected"));
+        if (requestSnapshotManifestFuture != null)
+            requestSnapshotManifestFuture.setException(new RuntimeException("Disconnected"));
     }
 
     @Override

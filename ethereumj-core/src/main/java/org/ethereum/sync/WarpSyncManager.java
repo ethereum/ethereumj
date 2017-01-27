@@ -224,7 +224,7 @@ public class WarpSyncManager {
     private void syncUnsecure() {
         setSyncStage(UNSECURE);
 
-        logger.info("WarpSync: downloading state tries from {} state chunks", manifest.getStateHashes().size());
+        logger.info("WarpSync: downloading {} state chunks", manifest.getStateHashes().size());
 
         for (byte[] stateChunkHash : manifest.getStateHashes()) {
             chunkQueue.add(new ChunkRequest(stateChunkHash));
@@ -344,7 +344,7 @@ public class WarpSyncManager {
     }
 
     private void processStateChunks() {
-        while (!stateChunksThread.isInterrupted()) {
+        while (stateChunksThread!= null && !stateChunksThread.isInterrupted()) {
             ChunkRequest req = null;
             try {
                 req = stateChunks.take();
@@ -483,7 +483,7 @@ public class WarpSyncManager {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        logger.warn("Error with snapshot data request: " + t);
+                        logger.debug("Error \"{}\" with snapshot data request from peer {}", t, reqSave.peer);
                         final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                         processFailedRequest(request);
                     }
@@ -579,13 +579,13 @@ public class WarpSyncManager {
     }
 
     private void processBlockChunks() {
-        while (!blockChunksThread.isInterrupted()) {
+        while (blockChunksThread != null && !blockChunksThread.isInterrupted()) {
             ChunkRequest req = null;
             try {
                 req = blockChunks.take();
 
                 byte[] blockHashes = Snappy.uncompress(req.responseData);
-                logger.debug("Block chunk with hash %s uncompressed size: %s",
+                logger.debug("Block chunk with hash {} uncompressed size: {}",
                         Hex.toHexString(req.chunkHash),
                         blockHashes.length);
                 RLPList blockList = (RLPList) RLP.decode2(blockHashes).get(0);
@@ -764,7 +764,7 @@ public class WarpSyncManager {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        logger.warn("Error with snapshot data request: " + t);
+                        logger.debug("Error \"{}\" with snapshot data request from peer {}", t, reqSave.peer);
                         final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                         processFailedRequest(request);
                     }
