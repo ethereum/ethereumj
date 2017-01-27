@@ -13,8 +13,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.net.MessageQueue;
-import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.par.ParVersion;
 import org.ethereum.net.par.message.GetSnapshotDataMessage;
 import org.ethereum.net.par.message.GetSnapshotManifestMessage;
@@ -30,11 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
-
-import static org.ethereum.sync.PeerState.IDLE;
 
 /**
  * Warp synchronization (PAR1 / Parity) Handler
@@ -93,32 +88,16 @@ public class Par1 extends ParHandler {
 
 
     protected synchronized void processStatus(ParStatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
-
-        try {
-
-            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())) {
-                if (!peerDiscoveryMode) {
-                    logger.debug("Removing ParHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
-                }
-                disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
-                ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-                return;
-            }
-
-            if (msg.getNetworkId() != config.networkId()) {
-                disconnect(ReasonCode.NULL_IDENTITY);
-                return;
-            }
-
-            this.snapshotManifest = new SnapshotManifest(msg.getSnapshotNumber(), msg.getSnapshotHash());
-            this.statusPassed = true;
-
-            // TODO: splitting of status proceeding should be done in better way
-            // TODO: We should unlock processing for all methods after ETH passed all checkings
-            ethHandler.sendGetBlockHeaders(msg.getBestHash(), 1, 0, false);
-        } catch (NoSuchElementException e) {
-            logger.debug("ParHandler already removed");
-        }
+        StatusMessage ethMsg = new StatusMessage(
+                msg.getProtocolVersion(),
+                msg.getNetworkId(),
+                msg.getTotalDifficulty(),
+                msg.getBestHash(),
+                msg.getGenesisHash()
+        );
+        ethHandler.processStatus(ethMsg, ctx);
+        this.snapshotManifest = new SnapshotManifest(msg.getSnapshotNumber(), msg.getSnapshotHash());
+        this.statusPassed = true;
     }
 
     @Override

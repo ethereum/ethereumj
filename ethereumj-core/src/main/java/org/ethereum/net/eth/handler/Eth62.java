@@ -294,7 +294,7 @@ public class Eth62 extends EthHandler {
      *  Message Processing   *
      *************************/
 
-    protected synchronized void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
+    public synchronized void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         try {
 

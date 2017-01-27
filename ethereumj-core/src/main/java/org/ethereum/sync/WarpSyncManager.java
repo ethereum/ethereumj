@@ -43,6 +43,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.xerial.snappy.Snappy;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -51,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -127,8 +129,14 @@ public class WarpSyncManager {
     private boolean warpSyncInProgress = false;
     private Thread warpSyncThread;
 
+    private Thread stateChunksThread;
+    private BlockingQueue<ChunkRequest> stateChunks = new LinkedBlockingDeque<>() ;
+
+    private Thread blockChunksThread;
+    private BlockingQueue<ChunkRequest> blockChunks = new LinkedBlockingDeque<>() ;
+
     private SnapshotManifest manifest;
-    private long forceSyncRemains;
+    private long forceSyncTimer;
 
     void init() {
         warpSyncThread = new Thread("WarpSyncLoop") {
@@ -149,19 +157,25 @@ public class WarpSyncManager {
         if (!warpSyncInProgress) return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
 
         if (manifest == null) {
-            return new SyncStatus(SyncStatus.SyncStage.PivotBlock,
-                    (FORCE_SYNC_TIMEOUT - forceSyncRemains) / 1000, FORCE_SYNC_TIMEOUT / 1000);
+            return new SyncStatus(SyncStatus.SyncStage.SnapshotManifest,
+                    forceSyncTimer / 1000,(FORCE_SYNC_TIMEOUT + MAX_SEARCH_TIME)/ 1000);
         }
 
         EthereumListener.SyncState syncStage = getSyncStage();
         switch (syncStage) {
             case UNSECURE:
-                return new SyncStatus(SyncStatus.SyncStage.StateNodes,
+                return new SyncStatus(SyncStatus.SyncStage.StateChunks,
                         manifest.getStateHashes().size() - pendingChunks.size() - chunkQueue.size(),
                         manifest.getStateHashes().size());
             case SECURE:
-                return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
-                        manifest.getBlockNumber());
+                if (!pendingChunks.isEmpty() || !chunkQueue.isEmpty()) {
+                    return new SyncStatus(SyncStatus.SyncStage.BlockChunks,
+                            manifest.getBlockHashes().size() - pendingChunks.size() - chunkQueue.size(),
+                            manifest.getBlockHashes().size());
+                } else {
+                    return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
+                            manifest.getBlockNumber());
+                }
             case COMPLETE:
                 if (receiptsDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.Receipts,
@@ -197,7 +211,7 @@ public class WarpSyncManager {
         List<ChunkRequest> requests = new ArrayList<>(pendingChunks.values());
         for (ChunkRequest request : requests) {
             if (request.requestSent != null && cur - request.requestSent > CHUNK_DL_TIMEOUT) {
-                logger.trace("Removing state chunk {} from pending due to timeout", Hex.toHexString(request.chunkHash));
+                logger.debug("Removing state chunk {} from pending due to timeout", Hex.toHexString(request.chunkHash));
                 pendingChunks.remove(request.chunkHash);
                 chunkQueue.addFirst(request);
             }
@@ -230,7 +244,6 @@ public class WarpSyncManager {
             throw new RuntimeException("Fatal WarpSync error, incorrect state trie.");
         }
 
-        // TODO: we could skip import of these blocks from block chunks?
         logger.info("WarpSync: downloading 256 blocks prior to manifest block ( #{} {} )",
                 manifest.getBlockNumber(), Hex.toHexString(manifest.getBlockHash()));
         downloader.startImporting(manifest.getBlockHash(), 260);
@@ -268,17 +281,17 @@ public class WarpSyncManager {
 
     private class ChunkRequest {
         byte[] chunkHash;
+        byte[] responseData;
+        Channel peer;
         Long requestSent;
 
         ChunkRequest(byte[] chunkHash) {
             this.chunkHash = chunkHash;
         }
 
-        public void reqSent() {
-            synchronized (WarpSyncManager.this) {
-                Long timestamp = System.currentTimeMillis();
-                requestSent = timestamp;
-            }
+        void reqSent(Channel peer) {
+            this.peer = peer;
+            this.requestSent = System.currentTimeMillis();
         }
 
         @Override
@@ -291,6 +304,18 @@ public class WarpSyncManager {
     ByteArrayMap<ChunkRequest> pendingChunks = new ByteArrayMap<>();
 
     private void stateRetrieveLoop() {
+        stateChunksThread = new Thread("stateChunksThread") {
+            @Override
+            public void run() {
+                try {
+                    processStateChunks();
+                } catch (Exception e) {
+                    logger.error("Fatal state chunks processing error", e);
+                }
+            }
+        };
+        stateChunksThread.start();
+
         try {
             while (!chunkQueue.isEmpty() || !pendingChunks.isEmpty()) {
                 try {
@@ -309,10 +334,96 @@ public class WarpSyncManager {
             }
         } catch (InterruptedException e) {
             logger.warn("State chunks warp sync loop was interrupted", e);
+        } finally {
+            stateChunksThread.interrupt();
+            stateChunksThread = null;
         }
     }
 
-    boolean requestNextStateChunk() {
+    private void processStateChunks() {
+        while (!stateChunksThread.isInterrupted()) {
+            ChunkRequest req = null;
+            try {
+                req = stateChunks.take();
+                byte[] accountStates = Snappy.uncompress(req.responseData);
+                logger.debug("State chunk with hash {} uncompressed size: {}",
+                        Hex.toHexString(req.chunkHash),
+                        accountStates.length);
+                RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
+                logger.debug("Received {} states from peer: {}", accountStateList.size(), req.peer);
+                synchronized (this) {
+                    try {
+                        for (RLPElement accountStateElement : accountStateList) {
+                            RLPList accountStateItem = (RLPList) accountStateElement;
+
+                            byte[] addressHash = accountStateItem.get(0).getRLPData();
+                            repository.createAccount(addressHash);
+
+                            if (accountStateItem.get(1).getRLPData() == null ||
+                                    accountStateItem.get(1).getRLPData().length == 0) continue;
+                            RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
+
+                            byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
+                            if (nonceRaw != null) repository.setNonce(addressHash,
+                                    ByteUtil.bytesToBigInteger(nonceRaw));
+
+                            byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
+                            if (balanceRaw != null) repository.addBalance(addressHash,
+                                    ByteUtil.bytesToBigInteger(balanceRaw));
+
+                            // 1-byte code flag
+                            byte[] codeFlagRaw = accountStateInfo.get(2).getRLPData();
+                            byte codeFlag = codeFlagRaw == null ? 0x00 : codeFlagRaw[0];
+                            byte[] code = null;
+                            byte[] codeHash = null;
+                            switch (codeFlag) {
+                                case 0x00:  // No code
+                                    break;
+                                case 0x01:  // Code
+                                    code = accountStateInfo.get(3).getRLPData();
+                                    break;
+                                case 0x02:  // Code hash. some account with lower address should contain code
+                                    codeHash = accountStateInfo.get(3).getRLPData();
+                                default:
+                                    // TODO: do something bad
+                            }
+                            if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
+                            if (code != null) repository.saveCode(addressHash, code);
+
+                            // TODO: add validation
+                            RLPList storageDataList = (RLPList) accountStateInfo.get(4);
+                            for (RLPElement storageRowElement : storageDataList) {
+                                RLPList storageRowList = (RLPList) storageRowElement;
+                                byte[] keyHash = storageRowList.get(0).getRLPData();
+                                byte[] valRlp = storageRowList.get(1).getRLPData();
+                                byte[] val = RLP.decode2(valRlp).get(0).getRLPData();
+
+                                repository.addStorageRow(addressHash,
+                                        new DataWord(keyHash), new DataWord(val));
+                            }
+                        }
+                        repository.commit();
+                        dbFlushManager.commit();
+                        pendingChunks.remove(req.chunkHash);
+                    } catch (Exception e) {
+                        logger.error("Processing error while processing state chunk from peer {}", req.peer);
+                        repository.rollback();
+                        processFailedRequest(req);
+                    }
+                }
+
+                    // TODO: Add stats
+//                    idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+//                    idle.getNodeStatistics().eth63NodesReceived.add(result.size());
+//                    idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
+            } catch (InterruptedException e) {
+            } catch (IOException ex) {
+                logger.error("Cannot unpack state chunk data from peer {}", req.peer);
+            }
+        }
+    }
+
+    private boolean requestNextStateChunk() {
         final Channel idle = pool.getAnyIdle();
 
         if (idle != null) {
@@ -323,7 +434,7 @@ public class WarpSyncManager {
                     ChunkRequest request = pendingChunks.get(req.chunkHash);
                     if (request == null) {
                         pendingChunks.put(req.chunkHash, req);
-                        req.reqSent();
+                        req.reqSent(idle);
                     } else {
                         req = null;
                     }
@@ -338,7 +449,6 @@ public class WarpSyncManager {
                     @Override
                     public void onSuccess(RLPElement result) {
                         try {
-                            // FIXME: if we could get really empty correct chunk?
                             synchronized (WarpSyncManager.this) {
                                 final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
                                 if (request == null) return;
@@ -346,10 +456,7 @@ public class WarpSyncManager {
                                 if (result == null) {
                                     logger.debug("Received empty state chunk for hash {} from peer: {}",
                                             Hex.toHexString(reqSave.chunkHash), idle);
-                                    chunkQueue.addFirst(request);
-                                    pendingChunks.remove(reqSave.chunkHash);
-                                    WarpSyncManager.this.notifyAll();
-                                    idle.dropConnection();
+                                    processFailedRequest(reqSave);
                                     return;
                                 }
                             }
@@ -364,93 +471,12 @@ public class WarpSyncManager {
                             if (!FastByteComparisons.equal(reqSave.chunkHash, hashActual)) {
                                 logger.debug("Received bad state chunk from peer: {}, expected hash: {}, actual hash: {}",
                                         idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.chunkHash));
-                                synchronized (WarpSyncManager.this) {
-                                    pendingChunks.remove(reqSave.chunkHash);
-                                    chunkQueue.addFirst(reqSave);
-                                    WarpSyncManager.this.notifyAll();
-                                    idle.dropConnection();
-                                    return;
-                                }
+                                processFailedRequest(reqSave);
+                                return;
                             };
-                            // TODO: Put it in some queue and work with it in separate thread, heavy ops underneath
 
-                            byte[] accountStates = Snappy.uncompress(accountStatesCompressed);
-                            logger.debug("State chunk with hash {} uncompressed size: {}",
-                                    Hex.toHexString(reqSave.chunkHash),
-                                    accountStates.length);
-                            RLPList accountStateList = (RLPList) RLP.decode2(accountStates).get(0);
-                            synchronized (WarpSyncManager.this) {
-                                // TODO: in case of any error rollback etc
-                                logger.debug("Received {} states from peer: {}", accountStateList.size(), idle);
-                                for (RLPElement accountStateElement : accountStateList) {
-                                    RLPList accountStateItem = (RLPList) accountStateElement;
-
-                                    byte[] addressHash = accountStateItem.get(0).getRLPData();
-                                    repository.createAccount(addressHash);
-
-                                    if (accountStateItem.get(1).getRLPData() == null ||
-                                            accountStateItem.get(1).getRLPData().length == 0) continue;
-                                    RLPList accountStateInfo = (RLPList) accountStateItem.get(1);
-
-                                    byte[] nonceRaw = accountStateInfo.get(0).getRLPData();
-                                    if (nonceRaw != null) repository.setNonce(addressHash,
-                                            ByteUtil.bytesToBigInteger(nonceRaw));
-
-                                    byte[] balanceRaw = accountStateInfo.get(1).getRLPData();
-                                    if (balanceRaw != null) repository.addBalance(addressHash,
-                                            ByteUtil.bytesToBigInteger(balanceRaw));
-
-                                    // 1-byte code flag
-                                    byte[] codeFlagRaw = accountStateInfo.get(2).getRLPData();
-                                    byte codeFlag = codeFlagRaw == null? 0x00 : codeFlagRaw[0];
-                                    byte[] code = null;
-                                    byte[] codeHash = null;
-                                    switch (codeFlag) {
-                                        case 0x00:  // No code
-                                            break;
-                                        case 0x01:  // Code
-                                            code = accountStateInfo.get(3).getRLPData();
-                                            break;
-                                        case 0x02:  // Code hash. some account with lower address should contain code
-                                            codeHash = accountStateInfo.get(3).getRLPData();
-                                        default:
-                                            // TODO: do something bad
-                                    }
-                                    if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
-                                    if (code != null) repository.saveCode(addressHash, code);
-
-                                    RLPList storageDataList = (RLPList) accountStateInfo.get(4);
-                                    for (RLPElement storageRowElement : storageDataList) {
-                                        RLPList storageRowList = (RLPList) storageRowElement;
-                                        byte[] keyHash = storageRowList.get(0).getRLPData();
-                                        byte[] valRlp = storageRowList.get(1).getRLPData();
-                                        byte[] val = RLP.decode2(valRlp).get(0).getRLPData();
-                                        // TODO: better
-                                        if (!FastByteComparisons.equal(keyHash, sha3(valRlp))) {
-                                            pendingChunks.remove(reqSave.chunkHash);
-                                            chunkQueue.addFirst(reqSave);
-                                            repository.rollback();
-                                            WarpSyncManager.this.notifyAll();
-                                            idle.dropConnection();
-                                            return;
-                                        };
-
-                                        repository.addStorageRow(addressHash,
-                                                new DataWord(keyHash), new DataWord(val));
-                                    }
-                                }
-
-                                repository.commit();
-                                dbFlushManager.commit();
-                                pendingChunks.remove(reqSave.chunkHash);
-
-                                WarpSyncManager.this.notifyAll();
-
-                                // TODO: Add stats
-//                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
-//                                idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-//                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
-                            }
+                            reqSave.responseData = accountStatesCompressed;
+                            stateChunks.add(reqSave);
                         } catch (Exception e) {
                             logger.error("Unexpected error processing state chunk", e);
                         }
@@ -459,13 +485,8 @@ public class WarpSyncManager {
                     @Override
                     public void onFailure(Throwable t) {
                         logger.warn("Error with snapshot data request: " + t);
-                        synchronized (WarpSyncManager.this) {
-                            final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
-                            if (request == null) return;
-                            chunkQueue.addFirst(request);
-                            pendingChunks.remove(reqSave.chunkHash);
-                            WarpSyncManager.this.notifyAll();
-                        }
+                        final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
+                        processFailedRequest(request);
                     }
                 });
                 return true;
@@ -475,6 +496,15 @@ public class WarpSyncManager {
         } else {
             return false;
         }
+    }
+
+    private synchronized void processFailedRequest(ChunkRequest request) {
+        if (request == null) return;
+        request.peer.dropConnection();
+        request.peer = null;
+        request.responseData = null;
+        chunkQueue.addFirst(request);
+        pendingChunks.remove(request.chunkHash);
     }
 
     private void syncSecure() {
@@ -513,6 +543,17 @@ public class WarpSyncManager {
     }
 
     private void blockChunkRetrieveLoop() {
+        blockChunksThread = new Thread("blockChunksThread") {
+            @Override
+            public void run() {
+                try {
+                    processBlockChunks();
+                } catch (Exception e) {
+                    logger.error("Fatal block chunks processing error", e);
+                }
+            }
+        };
+        blockChunksThread.start();
         try {
             while (!chunkQueue.isEmpty() || !pendingChunks.isEmpty()) {
                 try {
@@ -531,6 +572,114 @@ public class WarpSyncManager {
             }
         } catch (InterruptedException e) {
             logger.warn("Block chunks warp sync loop was interrupted", e);
+        } finally {
+            blockChunksThread.interrupt();
+            blockChunksThread = null;
+        }
+    }
+
+    private void processBlockChunks() {
+        while (!blockChunksThread.isInterrupted()) {
+            ChunkRequest req = null;
+            try {
+                req = blockChunks.take();
+
+                byte[] blockHashes = Snappy.uncompress(req.responseData);
+                logger.debug("Block chunk with hash %s uncompressed size: %s",
+                        Hex.toHexString(req.chunkHash),
+                        blockHashes.length);
+                RLPList blockList = (RLPList) RLP.decode2(blockHashes).get(0);
+
+                long firstBlockNumber = ByteUtil.byteArrayToLong(blockList.get(0).getRLPData());
+                if (logger.isDebugEnabled()) {
+                    long blockCount = blockList.size() - 3;
+                    logger.debug("Received {} blocks [{} - {}] from peer: {}",
+                            blockCount, firstBlockNumber, firstBlockNumber + blockCount, req.peer);
+                }
+
+                byte[] parentHash = blockList.get(1).getRLPData();
+                BigInteger curTotalDiff = ByteUtil.bytesToBigInteger(blockList.get(2).getRLPData());
+                long currentBlockNumber = firstBlockNumber + 1;
+
+                synchronized (WarpSyncManager.this) {
+                    for (int i = 3; i < blockList.size(); i++) {
+                        RLPList currentBlockData = (RLPList) blockList.get(i);
+                        RLPList abridgedBlock = (RLPList) currentBlockData.get(0);
+                        RLPList receiptsRlp = (RLPList) currentBlockData.get(1);
+
+                        byte[] author = abridgedBlock.get(0).getRLPData();
+                        byte[] stateRoot = abridgedBlock.get(1).getRLPData();
+                        byte[] logsBloom = abridgedBlock.get(2).getRLPData();
+                        byte[] difficulty = abridgedBlock.get(3).getRLPData();
+                        curTotalDiff = curTotalDiff.add(ByteUtil.bytesToBigInteger(difficulty));
+                        byte[] gasLimit = abridgedBlock.get(4).getRLPData();
+                        long gasUsed = ByteUtil.byteArrayToLong(abridgedBlock.get(5).getRLPData());
+                        long timestamp = ByteUtil.byteArrayToLong(abridgedBlock.get(6).getRLPData());
+                        byte[] extraData = abridgedBlock.get(7).getRLPData();
+
+                        RLPList transactionsRlp = (RLPList) abridgedBlock.get(8);
+                        List<Transaction> transactionsList = new ArrayList<>();
+                        for (RLPElement txRlp : transactionsRlp) {
+                            transactionsList.add(new Transaction(txRlp.getRLPData()));
+                        }
+
+                        RLPList unclesRlp = (RLPList) abridgedBlock.get(9);
+                        List<BlockHeader> uncleList = new ArrayList<>();
+                        for (RLPElement uncleRlp : unclesRlp) {
+                            uncleList.add(new BlockHeader(uncleRlp.getRLPData()));
+                        }
+
+                        byte[] mixHash = abridgedBlock.get(10).getRLPData();
+                        byte[] nonce = abridgedBlock.get(11).getRLPData();
+
+                        // TODO: validation
+                        BlockHeader header = new BlockHeader(
+                                parentHash, sha3(unclesRlp.getRLPData()), author, logsBloom, difficulty,
+                                currentBlockNumber, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce
+                        );
+                        header.setStateRoot(stateRoot);
+                        byte[] transactionsRoot = getTrieHash(transactionsRlp);
+                        header.setTransactionsRoot(transactionsRoot);
+                        byte[] receiptsRoot = getTrieHash(receiptsRlp);
+                        header.setReceiptsRoot(receiptsRoot);
+
+                        // Creating and saving block
+                        Block block = new Block(header, transactionsList, uncleList);
+                        blockStore.saveBlock(block, curTotalDiff, true);
+
+
+                        // Creating and saving receipts
+                        // TODO: add validation (block, receipts)
+                        List<TransactionReceipt> receipts = new ArrayList<>();
+                        for (RLPElement txReceiptRlp : receiptsRlp) {
+                            receipts.add(new TransactionReceipt((RLPList) txReceiptRlp));
+                        }
+                        for (int j = 0; j < receipts.size(); j++) {
+                            TransactionReceipt receipt = receipts.get(j);
+                            TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), j);
+                            txInfo.setTransaction(block.getTransactionsList().get(j));
+                            txStore.put(txInfo);
+                        }
+
+                        currentBlockNumber++;
+                        parentHash = block.getHash();
+                    }
+                    dbFlushManager.commit();
+                    pendingChunks.remove(req.chunkHash);
+
+                    // TODO: Add stats
+//                    idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+//                    idle.getNodeStatistics().eth63NodesReceived.add(result.size());
+//                    idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
+                }
+            } catch (InterruptedException e) {
+            } catch (Exception ex) {
+                if (req != null) {
+                    logger.error("Processing error while processing block chunk from peer {}", req.peer);
+                    repository.rollback();
+                    processFailedRequest(req);
+                }
+            }
         }
     }
 
@@ -556,7 +705,7 @@ public class WarpSyncManager {
                     ChunkRequest request = pendingChunks.get(req.chunkHash);
                     if (request == null) {
                         pendingChunks.put(req.chunkHash, req);
-                        req.reqSent();
+                        req.reqSent(idle);
                     } else {
                         req = null;
                     }
@@ -578,10 +727,7 @@ public class WarpSyncManager {
                                 if (result == null) {
                                     logger.debug("Received empty block chunk for hash {} from peer: {}",
                                             Hex.toHexString(reqSave.chunkHash), idle);
-                                    chunkQueue.addFirst(request);
-                                    pendingChunks.remove(reqSave.chunkHash);
-                                    WarpSyncManager.this.notifyAll();
-                                    idle.dropConnection();
+                                    processFailedRequest(reqSave);
                                     return;
                                 }
                             }
@@ -596,107 +742,12 @@ public class WarpSyncManager {
                             if (!FastByteComparisons.equal(reqSave.chunkHash, hashActual)) {
                                 logger.debug("Received bad block chunk from peer: {}, expected hash: {}, actual hash: {}",
                                         idle, Hex.toHexString(hashActual), Hex.toHexString(reqSave.chunkHash));
-                                synchronized (WarpSyncManager.this) {
-                                    pendingChunks.remove(reqSave.chunkHash);
-                                    chunkQueue.addFirst(reqSave);
-                                    WarpSyncManager.this.notifyAll();
-                                    idle.dropConnection();
-                                    return;
-                                }
+                                processFailedRequest(reqSave);
+                                return;
                             };
-                            // TODO: Put it in some queue and work with it in separate thread, heavy ops underneath
 
-                            byte[] blockHashes = Snappy.uncompress(blockStatesCompressed);
-                            logger.debug("Block chunk with hash %s uncompressed size: %s",
-                                    Hex.toHexString(reqSave.chunkHash),
-                                    blockHashes.length);
-                            RLPList blockList = (RLPList) RLP.decode2(blockHashes).get(0);
-
-                            synchronized (WarpSyncManager.this) {
-                                // TODO: in case of any error rollback etc
-
-                                long firstBlockNumber = ByteUtil.byteArrayToLong(blockList.get(0).getRLPData());
-                                if (logger.isDebugEnabled()) {
-                                    long blockCount = blockList.size() - 3;
-                                    logger.debug("Received {} blocks [{} - {}] from peer: {}",
-                                                    blockCount, firstBlockNumber, firstBlockNumber + blockCount, idle);
-                                }
-
-                                byte[] parentHash = blockList.get(1).getRLPData();
-                                BigInteger curTotalDiff = ByteUtil.bytesToBigInteger(blockList.get(2).getRLPData());
-                                long currentBlockNumber = firstBlockNumber + 1;
-
-                                for (int i = 3; i < blockList.size(); i++) {
-                                    RLPList currentBlockData = (RLPList) blockList.get(i);
-                                    RLPList abridgedBlock = (RLPList) currentBlockData.get(0);
-                                    RLPList receiptsRlp = (RLPList) currentBlockData.get(1);
-
-                                    byte[] author = abridgedBlock.get(0).getRLPData();
-                                    byte[] stateRoot = abridgedBlock.get(1).getRLPData();
-                                    byte[] logsBloom = abridgedBlock.get(2).getRLPData();
-                                    byte[] difficulty = abridgedBlock.get(3).getRLPData();
-                                    curTotalDiff = curTotalDiff.add(ByteUtil.bytesToBigInteger(difficulty));
-                                    byte[] gasLimit = abridgedBlock.get(4).getRLPData();
-                                    long gasUsed = ByteUtil.byteArrayToLong(abridgedBlock.get(5).getRLPData());
-                                    long timestamp = ByteUtil.byteArrayToLong(abridgedBlock.get(6).getRLPData());
-                                    byte[] extraData = abridgedBlock.get(7).getRLPData();
-
-                                    RLPList transactionsRlp = (RLPList) abridgedBlock.get(8);
-                                    List<Transaction> transactionsList = new ArrayList<>();
-                                    for (RLPElement txRlp : transactionsRlp) {
-                                        transactionsList.add(new Transaction(txRlp.getRLPData()));
-                                    }
-
-                                    RLPList unclesRlp = (RLPList) abridgedBlock.get(9);
-                                    List<BlockHeader> uncleList = new ArrayList<>();
-                                    for (RLPElement uncleRlp : unclesRlp) {
-                                        uncleList.add(new BlockHeader(uncleRlp.getRLPData()));
-                                    }
-
-                                    byte[] mixHash = abridgedBlock.get(10).getRLPData();
-                                    byte[] nonce = abridgedBlock.get(11).getRLPData();
-
-                                    // TODO: validation
-                                    BlockHeader header = new BlockHeader(
-                                            parentHash, sha3(unclesRlp.getRLPData()), author, logsBloom, difficulty,
-                                            currentBlockNumber, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce
-                                    );
-                                    header.setStateRoot(stateRoot);
-                                    byte[] transactionsRoot = getTrieHash(transactionsRlp);
-                                    header.setTransactionsRoot(transactionsRoot);
-                                    byte[] receiptsRoot = getTrieHash(receiptsRlp);
-                                    header.setReceiptsRoot(receiptsRoot);
-
-                                    // Creating and saving block
-                                    Block block = new Block(header, transactionsList, uncleList);
-                                    blockStore.saveBlock(block, curTotalDiff, true);
-
-
-                                    // Creating and saving receipts
-                                    // TODO: add validation (block, receipts)
-                                    List<TransactionReceipt> receipts = new ArrayList<>();
-                                    for (RLPElement txReceiptRlp : receiptsRlp) {
-                                        receipts.add(new TransactionReceipt((RLPList) txReceiptRlp));
-                                    }
-                                    for (int j = 0; j < receipts.size(); j++) {
-                                        TransactionReceipt receipt = receipts.get(j);
-                                        TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), j);
-                                        txInfo.setTransaction(block.getTransactionsList().get(j));
-                                        txStore.put(txInfo);
-                                    }
-
-                                    currentBlockNumber++;
-                                    parentHash = block.getHash();
-                                }
-                                dbFlushManager.commit();
-                                pendingChunks.remove(reqSave.chunkHash);
-                                WarpSyncManager.this.notifyAll();
-
-                                // TODO: Add stats
-//                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
-//                                idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-//                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
-                            }
+                            reqSave.responseData = blockStatesCompressed;
+                            blockChunks.add(reqSave);
                         } catch (Exception e) {
                             logger.error("Unexpected error processing block chunk", e);
                         }
@@ -705,13 +756,8 @@ public class WarpSyncManager {
                     @Override
                     public void onFailure(Throwable t) {
                         logger.warn("Error with snapshot data request: " + t);
-                        synchronized (WarpSyncManager.this) {
-                            final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
-                            if (request == null) return;
-                            chunkQueue.addFirst(request);
-                            pendingChunks.remove(reqSave.chunkHash);
-                            WarpSyncManager.this.notifyAll();
-                        }
+                        final ChunkRequest request = pendingChunks.get(reqSave.chunkHash);
+                        processFailedRequest(request);
                     }
                 });
                 return true;
@@ -845,9 +891,10 @@ public class WarpSyncManager {
         while (true) {
             List<Channel> allIdle = pool.getAllIdle();
 
-            forceSyncRemains = FORCE_SYNC_TIMEOUT - (System.currentTimeMillis() - start);
+            forceSyncTimer = System.currentTimeMillis() - start;
 
-            if (allIdle.size() >= MIN_PEERS_FOR_MANIFEST_SELECTION || forceSyncRemains < 0 && !allIdle.isEmpty()) {
+            if (allIdle.size() >= MIN_PEERS_FOR_MANIFEST_SELECTION ||
+                    forceSyncTimer > FORCE_SYNC_TIMEOUT && !allIdle.isEmpty()) {
                 Channel bestPeer = allIdle.get(0);
                 for (Channel channel : allIdle) {
                     if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
@@ -863,7 +910,8 @@ public class WarpSyncManager {
 
             long t = System.currentTimeMillis();
             if (t - s > 5000) {
-                logger.info("WarpSync: waiting for at least " + MIN_PEERS_FOR_MANIFEST_SELECTION + " peers or " + forceSyncRemains / 1000 + " sec to select manifest block... ("
+                logger.info("WarpSync: waiting for at least " + MIN_PEERS_FOR_MANIFEST_SELECTION + " peers or " +
+                        FORCE_SYNC_TIMEOUT / 1000 + " sec to start searching for manifest block... ("
                         + allIdle.size() + " peers so far)");
                 s = t;
             }
@@ -876,6 +924,7 @@ public class WarpSyncManager {
         try {
             Long manifestSearchStart = System.currentTimeMillis();
             while (true) {
+                forceSyncTimer = System.currentTimeMillis() - start;
                 SnapshotManifest result = getBestManifest();
 
                 if (result != null) return result;
@@ -980,6 +1029,8 @@ public class WarpSyncManager {
         try {
             warpSyncThread.interrupt();
             warpSyncInProgress = false;
+            if (stateChunksThread != null) stateChunksThread.interrupt();
+            if (blockChunksThread != null) blockChunksThread.interrupt();
             dbFlushManager.commit();
             dbFlushManager.flush();
             warpSyncThread.join(10 * 1000);

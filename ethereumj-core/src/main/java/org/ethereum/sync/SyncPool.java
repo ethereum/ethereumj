@@ -365,7 +365,7 @@ public class SyncPool {
                 poolLoopExecutor.shutdownNow();
                 poolLoopExecutor.awaitTermination(5, TimeUnit.SECONDS);
                 poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
-                startPoolLoopExecutor(forceSync ? 3 : WORKER_TIMEOUT);
+                startPoolLoopExecutor(forceSync ? 1 : WORKER_TIMEOUT);
             } catch (InterruptedException ex) {
                 throw new RuntimeException("Unable to restart sync pool loop executor");
             }

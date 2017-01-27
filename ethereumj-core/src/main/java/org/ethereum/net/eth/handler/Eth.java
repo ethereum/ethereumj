@@ -1,9 +1,11 @@
 package org.ethereum.net.eth.handler;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 
@@ -19,6 +21,12 @@ import java.util.List;
  * @since 20.08.2015
  */
 public interface Eth {
+
+    /**
+     * Processes ETH status message
+     */
+    void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException;
+
 
     /**
      * @return true if StatusMessage was processed, false otherwise
