@@ -33,6 +33,7 @@ import org.ethereum.util.Functional;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,9 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
-import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
-import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
+import static org.ethereum.listener.EthereumListener.SyncState.*;
 
 /**
  * Sync using Parity v1 protocol (PAR1)
@@ -120,6 +119,9 @@ public class WarpSyncManager {
 
     @Autowired
     ApplicationContext applicationContext;
+
+    @Autowired
+    private BlockHeaderValidator headerValidator;
 
     private HeadersDownloader headersDownloader;
     private BlockBodiesDownloader blockBodiesDownloader;
@@ -387,7 +389,6 @@ public class WarpSyncManager {
                             if (codeHash != null) repository.saveCodeHash(addressHash, codeHash);
                             if (code != null) repository.saveCode(addressHash, code);
 
-                            // TODO: add validation
                             RLPList storageDataList = (RLPList) accountStateInfo.get(4);
                             for (RLPElement storageRowElement : storageDataList) {
                                 RLPList storageRowList = (RLPList) storageRowElement;
@@ -601,6 +602,7 @@ public class WarpSyncManager {
                 long currentBlockNumber = firstBlockNumber + 1;
 
                 synchronized (WarpSyncManager.this) {
+                    boolean failed = false;
                     for (int i = 3; i < blockList.size(); i++) {
                         RLPList currentBlockData = (RLPList) blockList.get(i);
                         RLPList abridgedBlock = (RLPList) currentBlockData.get(0);
@@ -631,7 +633,6 @@ public class WarpSyncManager {
                         byte[] mixHash = abridgedBlock.get(10).getRLPData();
                         byte[] nonce = abridgedBlock.get(11).getRLPData();
 
-                        // TODO: validation
                         BlockHeader header = new BlockHeader(
                                 parentHash, sha3(unclesRlp.getRLPData()), author, logsBloom, difficulty,
                                 currentBlockNumber, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce
@@ -642,13 +643,18 @@ public class WarpSyncManager {
                         byte[] receiptsRoot = getTrieHash(receiptsRlp);
                         header.setReceiptsRoot(receiptsRoot);
 
+                        // Header validation
+                        if (!headerValidator.validate(header)) {
+                            logger.error("Header is not valid for block chunk received from peer {}", req.peer);
+                            failed = true;
+                            break;
+                        }
+
                         // Creating and saving block
                         Block block = new Block(header, transactionsList, uncleList);
                         blockStore.saveBlock(block, curTotalDiff, true);
 
-
                         // Creating and saving receipts
-                        // TODO: add validation (block, receipts)
                         List<TransactionReceipt> receipts = new ArrayList<>();
                         for (RLPElement txReceiptRlp : receiptsRlp) {
                             receipts.add(new TransactionReceipt((RLPList) txReceiptRlp));
@@ -663,16 +669,19 @@ public class WarpSyncManager {
                         currentBlockNumber++;
                         parentHash = block.getHash();
                     }
-                    dbFlushManager.commit();
-                    pendingChunks.remove(req.chunkHash);
-                    req.peer.getNodeStatistics().par1ChunksReceived.add(1);
-                    req.peer.getNodeStatistics().par1ChunksRequested.add(1);
+                    if (!failed) {
+                        dbFlushManager.commit();
+                        pendingChunks.remove(req.chunkHash);
+                        req.peer.getNodeStatistics().par1ChunksReceived.add(1);
+                        req.peer.getNodeStatistics().par1ChunksRequested.add(1);
+                    } else {
+                        processFailedRequest(req);
+                    }
                 }
             } catch (InterruptedException e) {
             } catch (Exception ex) {
                 if (req != null) {
                     logger.error("Processing error while processing block chunk from peer {}", req.peer);
-                    repository.rollback();
                     processFailedRequest(req);
                 }
             }
