@@ -2,6 +2,7 @@ package org.ethereum.datasource;
 
 import com.googlecode.concurentlocks.ReadWriteUpdateLock;
 import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
+import org.ethereum.util.ALock;
 import org.ethereum.util.ByteArrayMap;
 
 import java.util.Collection;
@@ -78,7 +79,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
         @Override
         public V getValue() {
-            return counter < 0 ? (V) NULL : value;
+            return counter < 0 ? null : value;
         }
     }
 
@@ -109,9 +110,9 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     protected Map<Key, CacheEntry<Value>> cache = new HashMap<>();
 
     protected ReadWriteUpdateLock rwuLock = new ReentrantReadWriteUpdateLock();
-    protected Lock readLock = rwuLock.readLock();
-    protected Lock writeLock = rwuLock.writeLock();
-    protected Lock updateLock = rwuLock.updateLock();
+    protected ALock readLock = new ALock(rwuLock.readLock());
+    protected ALock writeLock = new ALock(rwuLock.writeLock());
+    protected ALock updateLock = new ALock(rwuLock.updateLock());
 
     private boolean checked = false;
 
@@ -127,11 +128,8 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     @Override
     public Collection<Key> getModified() {
-        try {
-            readLock.lock();
+        try (ALock l = readLock.lock()){
             return cache.keySet();
-        } finally {
-            readLock.unlock();
         }
     }
 
@@ -157,8 +155,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         }
 
 
-        try {
-            writeLock.lock();
+        try (ALock l = writeLock.lock()){
             CacheEntry<Value> curVal = cache.get(key);
             if (curVal == null) {
                 curVal = createCacheEntry(val);
@@ -172,32 +169,26 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
             // for counting cache the value should be immutable (see HashedKeySource)
             curVal.value = val;
             curVal.added();
-        } finally {
-            writeLock.unlock();
         }
     }
 
     @Override
     public Value get(Key key) {
         checkByteArrKey(key);
-        try {
-            readLock.lock();
+        try (ALock l = readLock.lock()){
             CacheEntry<Value> curVal = cache.get(key);
             if (curVal == null) {
                 return getSource() == null ? null : getSource().get(key);
             } else {
                 return curVal.getValue();
             }
-        } finally {
-            readLock.unlock();
         }
     }
 
     @Override
     public void delete(Key key) {
         checkByteArrKey(key);
-        try {
-            writeLock.lock();
+        try (ALock l = writeLock.lock()){
             CacheEntry<Value> curVal = cache.get(key);
             if (curVal == null) {
                 curVal = createCacheEntry(getSource() == null ? null : getSource().get(key));
@@ -208,16 +199,13 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
                 cacheAdded(key, curVal.value);
             }
             curVal.deleted();
-        } finally {
-            writeLock.unlock();
         }
     }
 
     @Override
     public boolean flushImpl() {
         boolean ret = false;
-        try {
-            updateLock.lock();
+        try (ALock l = updateLock.lock()){
             for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
                 if (entry.getValue().counter > 0) {
                     for (int i = 0; i < entry.getValue().counter; i++) {
@@ -231,27 +219,23 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
                     ret = true;
                 }
             }
-            try {
-                writeLock.lock();
+            try (ALock l1 = writeLock.lock()){
                 cache.clear();
                 cacheCleared();
-            } finally {
-                writeLock.unlock();
             }
-
             return ret;
-        } finally {
-            updateLock.unlock();
         }
     }
 
     public Value getCached(Key key) {
-        try {
-            readLock.lock();
+        try (ALock l = readLock.lock()){
             CacheEntry<Value> entry = cache.get(key);
-            return entry == null ? null : entry.getValue();
-        } finally {
-            readLock.unlock();
+            if (entry == null) {
+                return null;
+            }else {
+                Value value = entry.getValue();
+                return value == null ? (Value) NULL : value;
+            }
         }
     }
 
