@@ -62,30 +62,14 @@ public class SnapshotManifest {
         blockHash = manifestRlp.get(4).getRLPData();
     }
 
-    // TODO: may be pass something encoded from Message?
     public byte[] getEncoded() {
         if (encoded == null) encode();
         return encoded;
     }
 
     private synchronized void encode() {
-        // TODO: refactor me, check nulls
-        byte[][] encodedStateHashesArray = new byte[stateHashes.size()][];
-        int i = 0;
-        for (byte[] stateHash : stateHashes) {
-            encodedStateHashesArray[i] = RLP.encodeElement(stateHash);
-            i++;
-        }
-        byte[] stateHashesRlp = RLP.encodeList(encodedStateHashesArray);
-
-        byte[][] encodedBlockHashesArray = new byte[blockHashes.size()][];
-        int j = 0;
-        for (byte[] blockHash : blockHashes) {
-            encodedBlockHashesArray[j] = RLP.encodeElement(blockHash);
-            j++;
-        }
-        byte[] blockHashesRlp = RLP.encodeList(encodedBlockHashesArray);
-
+        byte[] stateHashesRlp = RLP.encodeList(stateHashes);
+        byte[] blockHashesRlp = RLP.encodeList(blockHashes);
         byte[] stateRootRlp = RLP.encodeElement(stateRoot);
         byte[] blockNumberRlp = RLP.encodeBigInteger(BigInteger.valueOf(blockNumber));
         byte[] blockHashRlp = RLP.encodeElement(blockHash);

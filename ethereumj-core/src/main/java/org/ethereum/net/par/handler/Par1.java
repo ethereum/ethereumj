@@ -121,9 +121,6 @@ public class Par1 extends ParHandler {
                     channel);
             dropConnection();
         }
-
-        // TODO: Add checkings
-
         SnapshotManifest snapshotManifest = new SnapshotManifest(
                 msg.getStateHashes(),
                 msg.getBlockHashes(),

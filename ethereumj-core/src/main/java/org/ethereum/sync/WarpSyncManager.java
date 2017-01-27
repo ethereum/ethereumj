@@ -15,7 +15,7 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.RepositoryInsecureTrie;
+import org.ethereum.db.RepositoryHashedKeysTrie;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -101,7 +101,7 @@ public class WarpSyncManager {
     private TransactionStore txStore;
 
     @Autowired
-    private RepositoryInsecureTrie repository;
+    private RepositoryHashedKeysTrie repository;
 
     @Autowired
     private SyncManager syncManager;

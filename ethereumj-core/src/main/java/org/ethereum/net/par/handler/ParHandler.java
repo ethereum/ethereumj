@@ -86,8 +86,6 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
         this.blockchain = blockchain;
         bestBlock = blockStore.getBestBlock();
         this.ethereumListener.addListener(listener);
-        // when sync enabled we delay transactions processing until sync is complete
-//        processTransactions = !config.isSyncEnabled();
     }
 
     @Override
@@ -148,8 +146,6 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
     public boolean isIdle() {
         return peerState == IDLE;
     }
-
-    // TODO: Add something like Eth.hasStatusPassed
 
     public void setMsgQueue(MessageQueue msgQueue) {
         this.msgQueue = msgQueue;

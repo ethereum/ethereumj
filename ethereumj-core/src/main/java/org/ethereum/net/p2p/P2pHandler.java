@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static org.ethereum.net.client.Capability.PAR;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.message.StaticMessages.*;
 
@@ -237,15 +236,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 }
             }
 
-            // TODO: Do it in better way
             if (parPostponed != null) {
                 // Activate ParHandler for this peer
                 channel.activatePar(ctx, parPostponed);
             }
 
-            //todo calculate the Offsets
             ethereumListener.onHandShakePeer(channel, msg);
-
         }
     }
 

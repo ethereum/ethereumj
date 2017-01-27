@@ -37,17 +37,18 @@ public class MessageCodesResolver {
 
         for (Capability capability : caps) {
 
-            // FIXME: I'm not correct, passed param is not used
-            if (capability.getName().equals(Capability.PAR)) {
-                setParOffset(offset);
-                ParVersion v = ParVersion.fromCode(capability.getVersion());
-                offset += ParMessageCodes.values(v).length;
-            }
-
             if (capability.getName().equals(Capability.ETH)) {
                 setEthOffset(offset);
                 EthVersion v = fromCode(capability.getVersion());
                 offset += EthMessageCodes.values(v).length;
+            }
+
+            if (capability.getName().equals(Capability.PAR)) {
+                // TODO: Why???
+                setParOffset(33);
+                ParVersion v = ParVersion.fromCode(capability.getVersion());
+                // TODO: need we?
+                offset += ParMessageCodes.values(v).length;
             }
 
             if (capability.getName().equals(Capability.SHH)) {
@@ -127,7 +128,7 @@ public class MessageCodesResolver {
     }
 
     public void setParOffset(int offset) {
-        setOffset(Capability.PAR, 33);
+        setOffset(Capability.PAR, offset);
     }
 
     public void setShhOffset(int offset) {

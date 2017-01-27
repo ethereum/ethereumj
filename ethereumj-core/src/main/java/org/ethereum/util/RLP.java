@@ -971,6 +971,19 @@ public class RLP {
         return data;
     }
 
+    public static byte[] encodeList(List<byte[]> elements) {
+        if (elements == null) return encodeList(new byte[0]);
+
+        byte[][] encodedBytesArray = new byte[elements.size()][];
+        int i = 0;
+        for (byte[] element : elements) {
+            encodedBytesArray[i] = RLP.encodeElement(element);
+            i++;
+        }
+
+        return RLP.encodeList(encodedBytesArray);
+    }
+
     /*
      *  Utility function to convert Objects into byte arrays
      */

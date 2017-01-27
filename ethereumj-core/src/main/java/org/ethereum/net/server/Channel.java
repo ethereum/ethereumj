@@ -396,7 +396,7 @@ public class Channel {
 
     public boolean isIdle() {
         boolean result = eth.isIdle();
-        if (par != null) result &= par.isIdle();  // TODO: Maybe protocol-specific idles?
+        if (par != null) result &= par.isIdle();
         return result;
     }
 

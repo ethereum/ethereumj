@@ -13,14 +13,14 @@ import org.springframework.stereotype.Component;
  * this one expects that keys are already hashed with sha3()
  */
 @Component
-public class RepositoryInsecureTrie extends RepositoryRoot {
+public class RepositoryHashedKeysTrie extends RepositoryRoot {
 
     @Autowired
-    public RepositoryInsecureTrie(StateSource stateDS) {
+    public RepositoryHashedKeysTrie(StateSource stateDS) {
         super(stateDS);
     }
 
-    public RepositoryInsecureTrie(Source<byte[], byte[]> stateDS, byte[] root) {
+    public RepositoryHashedKeysTrie(Source<byte[], byte[]> stateDS, byte[] root) {
         super(stateDS, root);
     }
 

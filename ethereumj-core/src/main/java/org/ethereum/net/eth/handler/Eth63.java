@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
 
 /**
