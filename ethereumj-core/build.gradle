@@ -26,7 +26,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss32m", "-Xmx3500M", "-XX:-OmitStackTraceInFastThrow"]
+applicationDefaultJvmArgs = ["-server", "-Xss2m", "-Xmx1024M", "-XX:-OmitStackTraceInFastThrow"]
 
 if ( project.hasProperty('jvmArgs') ) {
     applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
@@ -73,12 +73,12 @@ task tckRun(type:JavaExec){
 
     if (project.hasProperty("filePath")) {
         args = ["filerun", "$filePath"]
-        jvmArgs = ["-Xss32M"]
+        jvmArgs = ["-Xss2M"]
     }
 
     if (project.hasProperty("content")) {
         args = ["content", "$content"]
-        jvmArgs = ["-Xss32M"]
+        jvmArgs = ["-Xss2M"]
     }
 
     main = "org.ethereum.tck.RunTck"
@@ -93,7 +93,7 @@ test {
         logger.lifecycle("Running test: ${descriptor}")
     }
 
-    jvmArgs '-Xss32m', '-Xmx3G'
+    jvmArgs '-Xss2m', '-Xmx3G'
 
     testLogging {
         events "failed"
@@ -121,7 +121,7 @@ dependencies {
 
     compile "org.ethereum:leveldbjni-all:1.18.3"             // native leveldb components
 
-    compile "org.ethereum:solcJ-all:0.4.7"                   // Solidity Compiler win/mac/linux binaries
+    compile "org.ethereum:solcJ-all:0.4.8"                   // Solidity Compiler win/mac/linux binaries
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"

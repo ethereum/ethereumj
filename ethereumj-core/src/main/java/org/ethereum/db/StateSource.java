@@ -17,12 +17,15 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     CountingBytesSource countingSource;
     ReadCache<byte[], byte[]> readCache;
     WriteCache<byte[], byte[]> writeCache;
+    BloomedSource<byte[]> bloomedSource;
     BatchSourceWriter<byte[], byte[]> batchDBWriter;
 
     public StateSource(BatchSource<byte[], byte[]> src, boolean pruningEnabled) {
         super(src);
         add(batchDBWriter = new BatchSourceWriter<>(src));
-        add(writeCache = new WriteCache.BytesKey<>(batchDBWriter, WriteCache.CacheType.SIMPLE));
+        add(bloomedSource = new BloomedSource<>(batchDBWriter));
+        bloomedSource.setFlushSource(true);
+        add(writeCache = new WriteCache.BytesKey<>(bloomedSource, WriteCache.CacheType.SIMPLE));
         writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
         writeCache.setFlushSource(true);
         add(readCache = new ReadCache.BytesKey<>(writeCache).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
@@ -42,11 +45,17 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
 
     @Autowired
     public void setCommonConfig(CommonConfig commonConfig) {
-        journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
+        if (journalSource != null) {
+            journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
+        }
     }
 
     public JournalSource<byte[]> getJournalSource() {
         return journalSource;
+    }
+
+    public BloomedSource<byte[]> getBloomedSource() {
+        return bloomedSource;
     }
 
     /**

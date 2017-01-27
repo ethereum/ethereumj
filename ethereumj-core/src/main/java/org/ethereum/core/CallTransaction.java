@@ -80,9 +80,9 @@ public class CallTransaction {
         public boolean anonymous;
         public boolean constant;
         public boolean payable;
-        public String name;
-        public Param[] inputs;
-        public Param[] outputs;
+        public String name = "";
+        public Param[] inputs = new Param[0];
+        public Param[] outputs = new Param[0];
         public FunctionType type;
 
         private Function() {}

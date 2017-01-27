@@ -811,6 +811,46 @@ public class ImportLightTest {
         // no StackOverflowException
     }
 
+    @Test
+    public void ecRecoverTest() throws Exception {
+        // checks that ecrecover precompile contract rejects v > 255
+        String contractA =
+                "contract A {" +
+                        "  function f (bytes32 hash, bytes32 v, bytes32 r, bytes32 s) returns (address) {" +
+                        "    assembly {" +
+                        "      mstore(0x100, hash)" +
+                        "      mstore(0x120, v)" +
+                        "      mstore(0x140, r)" +
+                        "      mstore(0x160, s)" +
+                        "      callcode(0x50000, 0x01, 0x0, 0x100, 0x80, 0x200, 0x220)" + // call ecrecover
+                        "      return(0x200, 0x20)" +
+                        "    }" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
+        SolidityContract a = bc.submitNewContract(contractA, "A");
+        bc.createBlock();
+
+        ECKey key = ECKey.fromPrivate(BigInteger.ONE);
+        byte[] hash = new byte[32];
+        ECKey.ECDSASignature signature = key.sign(hash);
+
+        Object[] ret = a.callConstFunction("f", hash,
+                ByteUtil.merge(new byte[31], new byte[]{signature.v}),
+                ByteUtil.bigIntegerToBytes(signature.r, 32),
+                ByteUtil.bigIntegerToBytes(signature.s, 32));
+
+        Assert.assertArrayEquals(key.getAddress(), (byte[])ret[0]);
+
+        ret = a.callConstFunction("f", hash,
+                ByteUtil.merge(new byte[] {1}, new byte[30], new byte[]{signature.v}),
+                ByteUtil.bigIntegerToBytes(signature.r, 32),
+                ByteUtil.bigIntegerToBytes(signature.s, 32));
+
+        Assert.assertArrayEquals(new byte[20], (byte[])ret[0]);
+    }
+
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
