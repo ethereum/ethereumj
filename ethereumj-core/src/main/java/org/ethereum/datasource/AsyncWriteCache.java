@@ -2,7 +2,7 @@ package org.ethereum.datasource;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -39,19 +39,23 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     }
 
     @Override
-    public synchronized Value get(Key key) {
-        Value value = curCache.getCached(key);
-        if (value != null) return value == WriteCache.NULL ? null : value;
-        if (flushingCache != null) {
-            value = flushingCache.getCached(key);
-            if (value != null) return value == WriteCache.NULL ? null : value;
-        }
-        return curCache.get(key);
+    public synchronized void delete(Key key) {
+        curCache.delete(key);
     }
 
     @Override
-    public synchronized void delete(Key key) {
-        curCache.delete(key);
+    public Value get(Key key) {
+        WriteCache<Key, Value> curCache;
+        synchronized(this) {
+            curCache = this.curCache;
+            Value value = curCache.getCached(key);
+            if (value != null) return value == WriteCache.NULL ? null : value;
+            if (flushingCache != null) {
+                value = flushingCache.getCached(key);
+                if (value != null) return value == WriteCache.NULL ? null : value;
+            }
+        }
+        return curCache.get(key);
     }
 
     @Override
@@ -65,6 +69,7 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
 
         flushingCache = curCache;
         curCache = createCache(getSource());
+        boolean ret = flushingCache.hasModified();
         flushExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -75,6 +80,6 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
                 }
             }
         });
-        return flushingCache.hasModified();
+        return ret;
     }
 }

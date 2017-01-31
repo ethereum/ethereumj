@@ -187,7 +187,7 @@ public class BloomFilter implements Serializable {
     /**
      * Sets all bits to false in the Bloom filter.
      */
-    public void clear() {
+    public synchronized void clear() {
         bitset.clear();
         numberOfAddedElements = 0;
     }
@@ -199,7 +199,7 @@ public class BloomFilter implements Serializable {
      *
      * @param bytes array of bytes to add to the Bloom filter.
      */
-    public void add(byte[] bytes) {
+    public synchronized void add(byte[] bytes) {
         int[] hashes = createHashes(bytes, k);
         for (int hash : hashes)
             bitset.set(Math.abs(hash % bitSetSize), true);
@@ -220,7 +220,7 @@ public class BloomFilter implements Serializable {
      * @param bytes array of bytes to check.
      * @return true if the array could have been inserted into the Bloom filter.
      */
-    public boolean contains(byte[] bytes) {
+    public synchronized boolean contains(byte[] bytes) {
         int[] hashes = createHashes(bytes, k);
         for (int hash : hashes) {
             if (!bitset.get(Math.abs(hash % bitSetSize))) {
@@ -235,7 +235,7 @@ public class BloomFilter implements Serializable {
      * @param bit the bit to read.
      * @return true if the bit is set, false if it is not.
      */
-    public boolean getBit(int bit) {
+    public synchronized boolean getBit(int bit) {
         return bitset.get(bit);
     }
 
@@ -244,7 +244,7 @@ public class BloomFilter implements Serializable {
      * @param bit is the bit to set.
      * @param value If true, the bit is set. If false, the bit is cleared.
      */
-    public void setBit(int bit, boolean value) {
+    public synchronized void setBit(int bit, boolean value) {
         bitset.set(bit, value);
     }
 
@@ -252,7 +252,7 @@ public class BloomFilter implements Serializable {
      * Return the bit set used to store the Bloom filter.
      * @return bit set representing the Bloom filter.
      */
-    public BitSet getBitSet() {
+    public synchronized BitSet getBitSet() {
         return bitset;
     }
 
@@ -262,7 +262,7 @@ public class BloomFilter implements Serializable {
      *
      * @return the size of the bitset used by the Bloom filter.
      */
-    public int size() {
+    public synchronized int size() {
         return this.bitSetSize;
     }
 
@@ -272,7 +272,7 @@ public class BloomFilter implements Serializable {
      *
      * @return number of elements added to the Bloom filter.
      */
-    public int count() {
+    public synchronized int count() {
         return this.numberOfAddedElements;
     }
 

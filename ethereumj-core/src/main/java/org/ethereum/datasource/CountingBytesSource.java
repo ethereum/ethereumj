@@ -28,30 +28,34 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
     }
 
     @Override
-    public synchronized void put(byte[] key, byte[] val) {
+    public void put(byte[] key, byte[] val) {
         if (val == null) {
             delete(key);
             return;
         }
 
-        byte[] srcVal = getSource().get(key);
-        int srcCount = decodeCount(srcVal);
-        getSource().put(key, encodeCount(val, srcCount + 1));
+        synchronized (this) {
+            byte[] srcVal = getSource().get(key);
+            int srcCount = decodeCount(srcVal);
+            getSource().put(key, encodeCount(val, srcCount + 1));
+        }
     }
 
     @Override
-    public synchronized byte[] get(byte[] key) {
+    public byte[] get(byte[] key) {
         return decodeValue(getSource().get(key));
     }
 
     @Override
-    public synchronized void delete(byte[] key) {
-        byte[] srcVal = getSource().get(key);
-        int srcCount = decodeCount(srcVal);
-        if (srcCount > 1) {
-            getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
-        } else {
-            getSource().delete(key);
+    public void delete(byte[] key) {
+        synchronized (this) {
+            byte[] srcVal = getSource().get(key);
+            int srcCount = decodeCount(srcVal);
+            if (srcCount > 1) {
+                getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
+            } else {
+                getSource().delete(key);
+            }
         }
     }
 

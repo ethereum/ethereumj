@@ -203,7 +203,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public boolean flushImpl() {
+    public boolean flush() {
         boolean ret = false;
         try (ALock l = updateLock.lock()){
             for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
@@ -219,12 +219,20 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
                     ret = true;
                 }
             }
+            if (flushSource) {
+                getSource().flush();
+            }
             try (ALock l1 = writeLock.lock()){
                 cache.clear();
                 cacheCleared();
             }
             return ret;
         }
+    }
+
+    @Override
+    protected boolean flushImpl() {
+        return false;
     }
 
     public Value getCached(Key key) {

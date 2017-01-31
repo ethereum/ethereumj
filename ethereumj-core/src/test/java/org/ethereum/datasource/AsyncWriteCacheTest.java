@@ -1,8 +1,20 @@
 package org.ethereum.datasource;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.SlowHashMapDb;
+import org.ethereum.db.StateSource;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Map;
+
+import static java.lang.Math.max;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.intsToBytes;
 import static org.spongycastle.util.encoders.Hex.decode;
 
 /**
@@ -84,5 +96,60 @@ public class AsyncWriteCacheTest {
         assert db.get(decode("1111")) == "1112";
         assert db.get(decode("2222")) == "2222";
         assert db.get(decode("3333")) == "3333";
+    }
+
+    @Ignore
+    @Test
+    public void highLoadTest1() throws InterruptedException {
+        final SlowHashMapDb<byte[]> db = new SlowHashMapDb<byte[]>() {
+            @Override
+            public void updateBatch(Map<byte[], byte[]> rows) {
+                Utils.sleep(10000);
+                super.updateBatch(rows);
+            }
+        };
+        StateSource stateSource = new StateSource(db, false);
+        stateSource.getReadCache().withMaxCapacity(1);
+
+        stateSource.put(sha3(intToBytes(1)), intToBytes(1));
+        stateSource.put(sha3(intToBytes(2)), intToBytes(2));
+
+        System.out.println("Flush...");
+        stateSource.flush();
+        System.out.println("Flush!");
+
+        Thread.sleep(100);
+        System.out.println("Get...");
+        byte[] bytes1 = stateSource.get(sha3(intToBytes(1)));
+        System.out.println("Get!: " + bytes1);
+        byte[] bytes2 = stateSource.get(sha3(intToBytes(2)));
+        System.out.println("Get!: " + bytes2);
+
+
+//        int cnt = 0;
+//        while(true) {
+//            for (int i = 0; i < 1000; i++) {
+//                stateSource.put(sha3(intToBytes(cnt)), intToBytes(cnt));
+//                cnt++;
+//            }
+//
+//            stateSource.getWriteCache().flush();
+//
+////            for (int i = 0; i < 200; i++) {
+////                stateSource.put(sha3(intToBytes(cnt)), intToBytes(cnt));
+////                cnt++;
+////            }
+//
+//            Thread.sleep(800);
+//
+//                for (int i = max(0, cnt - 1000); i < cnt; i++) {
+//
+//                    byte[] bytes = stateSource.get(sha3(intToBytes(i)));
+//                    assert Arrays.equals(bytes, intToBytes(i));
+//                }
+//            System.err.println("Iteration done");
+//        }
+//
+//
     }
 }

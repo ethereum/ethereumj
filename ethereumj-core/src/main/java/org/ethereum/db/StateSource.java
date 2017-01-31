@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
+    public static StateSource INST;
+
     JournalSource<byte[]> journalSource;
     NoDeleteSource<byte[], byte[]> noDeleteSource;
 
@@ -22,9 +24,12 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
 
     public StateSource(BatchSource<byte[], byte[]> src, boolean pruningEnabled) {
         super(src);
+        INST = this;
         add(batchDBWriter = new BatchSourceWriter<>(src));
         add(bloomedSource = new BloomedSource<>(batchDBWriter));
+//        add(bloomedSource = new BloomedSource<>(src));
         bloomedSource.setFlushSource(true);
+//        bloomedSource.startBlooming(new BloomFilter(0.01, 1_000_000));
         add(readCache = new ReadCache.BytesKey<>(bloomedSource).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
         readCache.setFlushSource(true);
         add(countingSource = new CountingBytesSource(readCache));
@@ -32,13 +37,25 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         writeCache = new AsyncWriteCache<byte[], byte[]>(countingSource) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
-                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.COUNTING);
+                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING) {
+                    @Override
+                    public boolean flush() {
+                        System.err.println("###### Flush started");
+                        boolean ret = super.flush();
+                        System.err.println("###### Flush complete");
+                        return ret;
+                    }
+                };
                 ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+                ret.setFlushSource(true);
                 return ret;
             }
         };
+//        writeCache = new WriteCache.BytesKey<>(countingSource, WriteCache.CacheType.COUNTING);
+//        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+//        writeCache.setFlushSource(false);
+
         add(writeCache);
-        writeCache.setFlushSource(true);
 
         if (pruningEnabled) {
             add(journalSource = new JournalSource<>(writeCache));
@@ -77,5 +94,9 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
 
     public AbstractCachedSource<byte[], byte[]> getWriteCache() {
         return writeCache;
+    }
+
+    public ReadCache<byte[], byte[]> getReadCache() {
+        return readCache;
     }
 }

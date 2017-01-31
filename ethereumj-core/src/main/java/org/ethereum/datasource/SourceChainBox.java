@@ -26,32 +26,37 @@ public class SourceChainBox<Key, Value, SourceKey, SourceValue>
      * All calls to the SourceChainBox will be delegated to the last added
      * Source
      */
-    public synchronized void add(Source src) {
+    public void add(Source src) {
         chain.add(src);
         lastSource = src;
     }
 
     @Override
-    public synchronized void put(Key key, Value val) {
+    public void put(Key key, Value val) {
         lastSource.put(key, val);
     }
 
     @Override
-    public synchronized Value get(Key key) {
+    public Value get(Key key) {
         return lastSource.get(key);
     }
 
     @Override
-    public synchronized void delete(Key key) {
+    public void delete(Key key) {
         lastSource.delete(key);
     }
 
+//    @Override
+//    public boolean flush() {
+////        boolean ret = false;
+////        for (int i = chain.size() - 1; i >= 0 ; i--) {
+////            ret |= chain.get(i).flush();
+////        }
+//        return lastSource.flush();
+//    }
+
     @Override
-    public synchronized boolean flushImpl() {
-        boolean ret = false;
-        for (int i = chain.size() - 1; i >= 0 ; i--) {
-            ret |= chain.get(i).flush();
-        }
-        return ret;
+    protected boolean flushImpl() {
+        return lastSource.flush();
     }
 }
