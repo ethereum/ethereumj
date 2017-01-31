@@ -50,8 +50,10 @@ public class BlockLoader {
             }
 
             ImportResult result = blockchain.tryToConnect(block);
-            System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
-                    + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ")");
+            if (block.getNumber() % 10 == 0) {
+                System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
+                        + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ")");
+            }
 
         } else {
 
@@ -67,8 +69,10 @@ public class BlockLoader {
         exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
             @Override
             public Block apply(Block b) {
-                for (Transaction tx : b.getTransactionsList()) {
-                    tx.getSender();
+                if (b.getNumber() >= blockchain.getBestBlock().getNumber()) {
+                    for (Transaction tx : b.getTransactionsList()) {
+                        tx.getSender();
+                    }
                 }
                 return b;
             }
