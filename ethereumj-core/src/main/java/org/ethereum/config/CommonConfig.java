@@ -182,6 +182,16 @@ public class CommonConfig {
     }
 
     @Bean
+    @Lazy
+    public DbSource<byte[]> snapshotDS() {
+        DbSource<byte[]> dataSource = keyValueDataSource();
+        dataSource.setName("snapshot");
+        dataSource.init();
+
+        return dataSource;
+    }
+
+    @Bean
     public DbSource<byte[]> stateDS() {
         DbSource<byte[]> ret = keyValueDataSource();
         ret.setName("state");

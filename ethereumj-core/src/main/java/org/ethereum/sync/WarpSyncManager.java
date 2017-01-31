@@ -21,6 +21,7 @@ import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.manager.SnapshotManager;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
@@ -104,9 +105,12 @@ public class WarpSyncManager {
     @Autowired
     private SyncManager syncManager;
 
-    @Autowired
-    @Qualifier("stateDS")
+    @Autowired @Qualifier("stateDS")
     DbSource<byte[]> stateDS;
+
+    // TODO: make it lazy
+    @Autowired @Qualifier("snapshotDS")
+    DbSource<byte[]> snapshotDS;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -348,6 +352,7 @@ public class WarpSyncManager {
             ChunkRequest req = null;
             try {
                 req = stateChunks.take();
+                snapshotDS.put(req.chunkHash, req.responseData);
                 byte[] accountStates = Snappy.uncompress(req.responseData);
                 logger.debug("State chunk with hash {} uncompressed size: {}",
                         Hex.toHexString(req.chunkHash),
@@ -583,6 +588,7 @@ public class WarpSyncManager {
             ChunkRequest req = null;
             try {
                 req = blockChunks.take();
+                snapshotDS.put(req.chunkHash, req.responseData);
 
                 byte[] blockHashes = Snappy.uncompress(req.responseData);
                 logger.debug("Block chunk with hash {} uncompressed size: {}",
@@ -805,7 +811,7 @@ public class WarpSyncManager {
                             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
                             return;
                         }
-
+                        snapshotDS.put(SnapshotManager.MANIFEST_KEY, manifest.getEncoded());
                         syncUnsecure();
                     case SECURE:
                         if (origSyncStage == SECURE) {

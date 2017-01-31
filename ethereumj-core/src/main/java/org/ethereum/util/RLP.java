@@ -984,6 +984,23 @@ public class RLP {
         return RLP.encodeList(encodedBytesArray);
     }
 
+    /**
+     * Sames as #encodeList(List<byte[]>) but assumes that elements
+     * are already RLP wrapped and doesn't wrap them again
+     */
+    public static byte[] encodeRLPList(List<byte[]> elements) {
+        if (elements == null) return encodeList(new byte[0]);
+
+        byte[][] encodedBytesArray = new byte[elements.size()][];
+        int i = 0;
+        for (byte[] element : elements) {
+            encodedBytesArray[i] = element;
+            i++;
+        }
+
+        return RLP.encodeList(encodedBytesArray);
+    }
+
     /*
      *  Utility function to convert Objects into byte arrays
      */
