@@ -107,7 +107,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     private final boolean isCounting;
 
-    protected Map<Key, CacheEntry<Value>> cache = new HashMap<>();
+    protected volatile Map<Key, CacheEntry<Value>> cache = new HashMap<>();
 
     protected ReadWriteUpdateLock rwuLock = new ReentrantReadWriteUpdateLock();
     protected ALock readLock = new ALock(rwuLock.readLock());

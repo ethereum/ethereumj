@@ -13,18 +13,20 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
 
     private static Executor flushExecutor = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat("AsyncWriteCacheThread-%d").build());
 
-    protected WriteCache<Key, Value> curCache;
-    protected volatile WriteCache<Key, Value> flushingCache;
+    protected volatile WriteCache<Key, Value> curCache;
+    protected WriteCache<Key, Value> flushingCache;
 
     public AsyncWriteCache(Source<Key, Value> source) {
         super(source);
-        curCache = createCache(source);
+        flushingCache = createCache(source);
+        flushingCache.setFlushSource(true);
+        curCache = createCache(flushingCache);
     }
 
     protected abstract WriteCache<Key, Value> createCache(Source<Key, Value> source);
 
     @Override
-    public synchronized Collection<Key> getModified() {
+    public Collection<Key> getModified() {
         return curCache.getModified();
     }
 
@@ -34,52 +36,49 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     }
 
     @Override
-    public synchronized void put(Key key, Value val) {
+    public void put(Key key, Value val) {
         curCache.put(key, val);
     }
 
     @Override
-    public synchronized void delete(Key key) {
+    public void delete(Key key) {
         curCache.delete(key);
     }
 
     @Override
     public Value get(Key key) {
-        WriteCache<Key, Value> curCache;
-        synchronized(this) {
-            curCache = this.curCache;
-            Value value = curCache.getCached(key);
-            if (value != null) return value == WriteCache.NULL ? null : value;
-            if (flushingCache != null) {
-                value = flushingCache.getCached(key);
-                if (value != null) return value == WriteCache.NULL ? null : value;
-            }
-        }
         return curCache.get(key);
     }
 
+    boolean flushing = false;
     @Override
-    protected synchronized boolean flushImpl() {
-        while (flushingCache != null) try {
+    public synchronized boolean flush() {
+        while (flushing) try {
             wait();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
         }
-
-        flushingCache = curCache;
-        curCache = createCache(getSource());
+        flushing = true;
+        flushingCache.cache = curCache.cache;
+        curCache = createCache(flushingCache);
         boolean ret = flushingCache.hasModified();
+
         flushExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 flushingCache.flush();
                 synchronized (AsyncWriteCache.this) {
-                    flushingCache = null;
+                    flushing = false;
                     AsyncWriteCache.this.notifyAll();
                 }
             }
         });
         return ret;
+    }
+
+    @Override
+    protected synchronized boolean flushImpl() {
+        return false;
     }
 }
