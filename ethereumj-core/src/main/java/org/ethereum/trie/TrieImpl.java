@@ -152,7 +152,9 @@ public class TrieImpl implements Trie<byte[]> {
             }
 
             Value currentNode = this.getNode(node);
-            if (currentNode == null) return null;
+            if (currentNode == null) {
+                throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
+            }
 
             if (currentNode.length() == PAIR_SIZE) {
                 // Decode the key
