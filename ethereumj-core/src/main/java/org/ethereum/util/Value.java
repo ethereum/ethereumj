@@ -50,6 +50,11 @@ public class Value {
         }
     }
 
+    public Value withHash(byte[] hash) {
+        sha3 = hash;
+        return this;
+    }
+
     /* *****************
      *      Convert
      * *****************/
