@@ -62,6 +62,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.listener.EthereumListener.SyncState.*;
+import static org.ethereum.sync.FastSyncManager.ETH63_CAPABILITY;
 
 /**
  * Sync using Parity v1 protocol (PAR1)
@@ -79,7 +80,7 @@ public class WarpSyncManager {
 
     private final static int MAX_SNAPSHOT_DISTANCE = 30_000 + 1_000;
 
-    private static final Capability PAR1_CAPABILITY = new Capability(Capability.PAR, (byte) 1);
+    public static final Capability PAR1_CAPABILITY = new Capability(Capability.PAR, (byte) 1);
 
     public static final byte[] WARPSYNC_DB_KEY_SYNC_STAGE = sha3("Key in state DB indicating warpsync stage in progress".getBytes());
     public static final byte[] WARPSYNC_DB_KEY_MANIFEST = sha3("Key in state DB with encoded selected manifest".getBytes());
@@ -144,6 +145,10 @@ public class WarpSyncManager {
     private long forceSyncTimer;
 
     void init() {
+        // TODO: remove, test only
+//        pool.close();
+//        applicationContext.getBean(SnapshotManager.class);
+//        if (true) return;
         minSnapshotPeers = config.getWarpMinPeers();
         maxSearchTime = config.getWarpMaxSearchTime();
         warpSyncThread = new Thread("WarpSyncLoop") {
@@ -526,8 +531,15 @@ public class WarpSyncManager {
 
         dbFlushManager.commit();
         dbFlushManager.flush();
-
-        pool.setNodesSelector(null);
+        pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
+            @Override
+            public boolean test(NodeHandler handler) {
+                if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
+                    return false;
+                return true;
+            }
+        });
+        
         Block gapBlock = getGapBlock(manifest);
         logger.info("WarpSync: Block chunks downloaded finished. Blockchain synced to #{}", gapBlock.getNumber());
 
@@ -614,14 +626,16 @@ public class WarpSyncManager {
                         RLPList abridgedBlock = (RLPList) currentBlockData.get(0);
                         RLPList receiptsRlp = (RLPList) currentBlockData.get(1);
 
-                        byte[] author = abridgedBlock.get(0).getRLPData();
+                        byte[] coinBase = abridgedBlock.get(0).getRLPData();
                         byte[] stateRoot = abridgedBlock.get(1).getRLPData();
                         byte[] logsBloom = abridgedBlock.get(2).getRLPData();
                         byte[] difficulty = abridgedBlock.get(3).getRLPData();
                         curTotalDiff = curTotalDiff.add(ByteUtil.bytesToBigInteger(difficulty));
                         byte[] gasLimit = abridgedBlock.get(4).getRLPData();
-                        long gasUsed = ByteUtil.byteArrayToLong(abridgedBlock.get(5).getRLPData());
-                        long timestamp = ByteUtil.byteArrayToLong(abridgedBlock.get(6).getRLPData());
+                        byte[] guBytes = abridgedBlock.get(5).getRLPData();
+                        long gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
+                        byte[] tBytes = abridgedBlock.get(6).getRLPData();
+                        long timestamp = tBytes == null ? 0 : (new BigInteger(1, tBytes)).longValue();
                         byte[] extraData = abridgedBlock.get(7).getRLPData();
 
                         RLPList transactionsRlp = (RLPList) abridgedBlock.get(8);
@@ -640,7 +654,7 @@ public class WarpSyncManager {
                         byte[] nonce = abridgedBlock.get(11).getRLPData();
 
                         BlockHeader header = new BlockHeader(
-                                parentHash, sha3(unclesRlp.getRLPData()), author, logsBloom, difficulty,
+                                parentHash, sha3(unclesRlp.getRLPData()), coinBase, logsBloom, difficulty,
                                 currentBlockNumber, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce
                         );
                         header.setStateRoot(stateRoot);
