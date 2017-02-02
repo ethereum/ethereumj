@@ -133,8 +133,9 @@ public class CommonConfig {
             return; // no uncompleted fast sync
         }
 
-        if (!systemProperties().isFastSyncEnabled() || syncStage == EthereumListener.SyncState.UNSECURE) {
-            // we need to cleanup state/blocks/tranasaction DBs when previous fast sync was not complete:
+        if ((!systemProperties().isFastSyncEnabled() && !systemProperties().isWarpSyncEnabled())
+                || syncStage == EthereumListener.SyncState.UNSECURE) {
+            // we need to cleanup state/blocks/tranasaction DBs when previous warp/fast sync was not complete:
             // - if we now want to do regular sync
             // - if the first fastsync stage was not complete (thus DBs are not in consistent state)
 
