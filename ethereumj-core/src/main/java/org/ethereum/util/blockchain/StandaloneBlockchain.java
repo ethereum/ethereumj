@@ -380,10 +380,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
 		return contract;
 	}
 
-	/**
-	 * @param contractData
-	 * @return
-	 */
 	private SolidityContractImpl createContract(ContractMetadata contractData) {
 		SolidityContractImpl contract = new SolidityContractImpl(contractData);
 		return contract;
