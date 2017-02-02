@@ -9,6 +9,8 @@ import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
+import org.ethereum.jsontestsuite.suite.TransactionTestSuite;
+import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Before;
@@ -19,6 +21,7 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -34,7 +37,7 @@ public class GitHubTransactionTest {
 
     @After
     public void recover() {
-        SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
+        SystemProperties.resetToDefault();
     }
 
     @Test
@@ -53,6 +56,15 @@ public class GitHubTransactionTest {
         }});
         String json = JSONReader.loadJSONFromCommit("TransactionTests/EIP155/ttTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
+    }
+
+    @Ignore
+    @Test
+    public void runsingleTest() throws Exception {
+        String json = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/ttTransactionTest.json", shacommit);
+        TransactionTestSuite testSuite = new TransactionTestSuite(json);
+        List<String> res = TransactionTestRunner.run(testSuite.getTestCases().get("V_overflow64bitPlus28"));
+        System.out.println(res);
     }
 
     @Test

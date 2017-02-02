@@ -730,4 +730,28 @@ public class TransactionTest {
         Integer chainId = tx.getChainId();
         assert 61 == chainId;
     }
+
+    @Test
+    public void longChainIdTest() {
+        Transaction tx = new Transaction(Hex.decode("f8ae82477b8504a817c80083015f9094977ddf44438d540892d1b8618fea65395399971680b844eceb6e3e57696e6454757262696e655f30310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007827e19a025f55532f5cebec362f3f750a3b9c47ab76322622eb3a26ad24c80f9c388c15ba02dcc7ebcfb6ad6ae09f56a29d710cc4115e960a83b98405cf98f7177c14d8a51"));
+        Integer chainId = tx.getChainId();
+        assert 16123 == chainId;
+
+        Transaction tx1 = Transaction.create(
+                "3535353535353535353535353535353535353535",
+                new BigInteger("1000000000000000000"),
+                new BigInteger("9"),
+                new BigInteger("20000000000"),
+                new BigInteger("21000"),
+                333333
+        );
+
+        ECKey key = new ECKey();
+        tx1.sign(key);
+
+        Transaction tx2 = new Transaction(tx1.getEncoded());
+        assert 333333 == tx2.getChainId();
+        assert Arrays.equals(tx2.getSender(), key.getAddress());
+
+    }
 }
