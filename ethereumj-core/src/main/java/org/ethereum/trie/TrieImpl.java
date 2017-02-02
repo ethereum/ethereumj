@@ -379,7 +379,8 @@ public class TrieImpl implements Trie<byte[]> {
         } else if (keyBytes.length < 32) {
             return new Value(keyBytes);
         }
-        return this.cache.get(keyBytes).withHash(keyBytes);
+        Value ret = this.cache.get(keyBytes);
+        return ret == null ? null : ret.withHash(keyBytes);
     }
 
     private Object putToCache(Object node) {
