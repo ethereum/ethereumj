@@ -354,6 +354,10 @@ public class SyncManager extends BlockDownloader {
         return ret;
     }
 
+    public void setPause(boolean pause) {
+        pool.setPause(pause);
+    }
+
     public void close() {
         try {
             logger.info("Shutting down SyncManager");

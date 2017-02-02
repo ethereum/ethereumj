@@ -68,7 +68,7 @@ public class ParStatusMessage extends ParMessage {
 
         this.snapshotHash = paramsList.get(5).getRLPData();
         byte[] snapshotNumber = paramsList.get(6).getRLPData();
-        this.snapshotNumber = snapshotNumber == null ? 0 : ByteUtil.byteArrayToLong(snapshotNumber);
+        this.snapshotNumber = snapshotNumber == null ? 0 : new BigInteger(1, snapshotNumber).longValue();
 
         parsed = true;
     }
@@ -80,7 +80,7 @@ public class ParStatusMessage extends ParMessage {
         byte[] bestHash = RLP.encodeElement(this.bestHash);
         byte[] genesisHash = RLP.encodeElement(this.genesisHash);
         byte[] snapshotHash = RLP.encodeElement(this.snapshotHash);
-        byte[] snapshotNumber = RLP.encodeElement(ByteUtil.longToBytes(this.snapshotNumber));
+        byte[] snapshotNumber = RLP.encodeBigInteger(BigInteger.valueOf(this.snapshotNumber));
 
         this.encoded = RLP.encodeList( protocolVersion, networkId,
                 totalDifficulty, bestHash, genesisHash, snapshotHash, snapshotNumber);

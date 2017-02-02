@@ -56,4 +56,9 @@ public enum ParVersion {
             return this.getCode() < PAR1.getCode();
         }
     }
+
+    @Override
+    public String toString() {
+        return "" + code;
+    }
 }

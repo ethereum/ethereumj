@@ -13,6 +13,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.manager.SnapshotManager;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.par.ParVersion;
 import org.ethereum.net.par.message.GetSnapshotDataMessage;
@@ -22,13 +23,17 @@ import org.ethereum.net.par.message.ParStatusMessage;
 import org.ethereum.net.par.message.SnapshotDataMessage;
 import org.ethereum.net.par.message.SnapshotManifestMessage;
 import org.ethereum.sync.PeerState;
+import org.ethereum.sync.SyncManager;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLPElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -38,9 +43,18 @@ import java.util.List;
 @Scope("prototype")
 public class Par1 extends ParHandler {
 
+    @Autowired
+    SnapshotManager snapshotManager;
+
+    @Autowired
+    SyncManager syncManager;
+
+    @Autowired
+    protected BlockStore blockstore;
+
     private final static Logger logger = LoggerFactory.getLogger("net");
 
-    private static final ParVersion version = ParVersion.PAR1;
+    public static final ParVersion VERSION = ParVersion.PAR1;
 
     private boolean requestedSnapshotManifest = false;
     private SettableFuture<SnapshotManifest> requestSnapshotManifestFuture;
@@ -60,7 +74,7 @@ public class Par1 extends ParHandler {
     @Autowired
     public Par1(final SystemProperties config, final Blockchain blockchain, BlockStore blockStore,
                 final CompositeEthereumListener ethereumListener) {
-        super(version, config, blockchain, blockStore, ethereumListener);
+        super(VERSION, config, blockchain, blockStore, ethereumListener);
     }
 
     @Override
@@ -72,11 +86,14 @@ public class Par1 extends ParHandler {
             case STATUS:
                 processStatus((ParStatusMessage) msg, ctx);
                 break;
-//            case GET_SNAPSHOT_MANIFEST:
-//                processGetSnapshotManifest((GetSnapshotManifestMessage) msg);
-//                break;
+            case GET_SNAPSHOT_MANIFEST:
+                processGetSnapshotManifest((GetSnapshotManifestMessage) msg);
+                break;
             case SNAPSHOT_MANIFEST:
                 processManifest((SnapshotManifestMessage) msg);
+                break;
+            case GET_SNAPSHOT_DATA:
+                processGetData((GetSnapshotDataMessage) msg);
                 break;
             case SNAPSHOT_DATA:
                 processData((SnapshotDataMessage) msg);
@@ -86,6 +103,35 @@ public class Par1 extends ParHandler {
         }
     }
 
+    @Override
+    public synchronized void sendStatus() {
+        byte protocolVersion = getVersion().getCode();
+        int networkId = config.networkId();
+
+        final BigInteger totalDifficulty;
+        final byte[] bestHash;
+
+        if (syncManager.isFastSyncRunning()) {
+            // while fastsync is not complete reporting block #0
+            // until all blocks/receipts are downloaded
+            bestHash = blockstore.getBlockHashByNumber(0);
+            Block genesis = blockstore.getBlockByHash(bestHash);
+            totalDifficulty = genesis.getDifficultyBI();
+        } else {
+            // Getting it from blockstore, not blocked by blockchain sync
+            bestHash = blockstore.getBestBlock().getHash();
+            totalDifficulty = blockchain.getTotalDifficulty();
+        }
+
+        SnapshotManifest manifest = snapshotManager.getManifest();
+        byte[] snapshotBlockHash = manifest == null ? null : manifest.getBlockHash();
+        long snapshotBlockNumber = manifest == null ? 0 : manifest.getBlockNumber();
+
+        ParStatusMessage msg = new ParStatusMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash(),
+                snapshotBlockHash, snapshotBlockNumber);
+        sendMessage(msg);
+    }
 
     protected synchronized void processStatus(ParStatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
         StatusMessage ethMsg = new StatusMessage(
@@ -121,6 +167,11 @@ public class Par1 extends ParHandler {
                     channel);
             dropConnection();
         }
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: processing SnapshotManifestMessage for block #{}",
+                channel.getPeerIdShort(),
+                msg.getBlockNumber()
+        );
         SnapshotManifest snapshotManifest = new SnapshotManifest(
                 msg.getStateHashes(),
                 msg.getBlockHashes(),
@@ -135,6 +186,15 @@ public class Par1 extends ParHandler {
         requestSnapshotManifestFuture = null;
         lastReqSentTime = 0;
         peerState = PeerState.IDLE;
+    }
+
+    protected synchronized void processGetSnapshotManifest(GetSnapshotManifestMessage msg) {
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: processing GetSnapshotManifestMessage",
+                channel.getPeerIdShort()
+        );
+
+        sendMessage(new SnapshotManifestMessage(snapshotManager.getManifest()));
     }
 
     @Override
@@ -159,12 +219,32 @@ public class Par1 extends ParHandler {
                     channel);
             dropConnection();
         }
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: processing SnapshotDataMessage, chunk size: {} bytes",
+                channel.getPeerIdShort(),
+                msg.getEncoded().length
+        );
         requestSnapshotDataFuture.set(msg.getChunkData());
 
         requestedSnapshotData = null;
         requestSnapshotDataFuture = null;
         lastReqSentTime = 0;
         peerState = PeerState.IDLE;
+    }
+
+    protected synchronized void processGetData(GetSnapshotDataMessage msg) {
+        if (logger.isTraceEnabled()) logger.trace(
+                "Peer {}: processing GetSnapshotDataMessage, hash: {}",
+                channel.getPeerIdShort(),
+                Hex.toHexString(msg.getChunkHash())
+        );
+
+        byte[] chunkDataBytes = snapshotManager.getChunk(msg.getChunkHash());
+        ByteArrayWrapper chunkData = chunkDataBytes == null ?
+                new ByteArrayWrapper(new byte[0]) : new ByteArrayWrapper(chunkDataBytes);
+
+        SnapshotDataMessage dataMessage = new SnapshotDataMessage(chunkData);
+        sendMessage(dataMessage);
     }
 
     @Override

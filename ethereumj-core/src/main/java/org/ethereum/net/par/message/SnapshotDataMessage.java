@@ -1,5 +1,6 @@
 package org.ethereum.net.par.message;
 
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -21,20 +22,10 @@ public class SnapshotDataMessage extends ParMessage {
     public SnapshotDataMessage(byte[] encoded) {
         super(encoded);
     }
-// TODO
-//    public SnapshotManifestMessage(Block block, byte[] difficulty) {
-//        this.block = block;
-//        this.difficulty = difficulty;
-//        this.parsed = true;
-//        encode();
-//    }
-//
-//    private void encode() {
-//        byte[] block = this.block.getEncoded();
-//        byte[] diff = RLP.encodeElement(this.difficulty);
-//
-//        this.encoded = RLP.encodeList(block, diff);
-//    }
+
+    public SnapshotDataMessage(ByteArrayWrapper chunkData) {
+        this.encoded = RLP.encodeList(chunkData.getData());
+    }
 
     private synchronized void parse() {
         if (parsed) return;

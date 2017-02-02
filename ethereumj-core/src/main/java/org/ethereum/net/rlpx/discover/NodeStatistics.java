@@ -110,6 +110,10 @@ public class NodeStatistics {
     public final StatHandler eth63NodesReceived = new StatHandler();
     public final StatHandler eth63NodesRetrieveTime = new StatHandler();
 
+    // Par stat
+    public final StatHandler parInbound = new StatHandler();
+    public final StatHandler parOutbound = new StatHandler();
+
     // Par1 stat
     public final StatHandler par1ChunksRequested = new StatHandler();
     public final StatHandler par1ChunksReceived = new StatHandler();

@@ -96,8 +96,7 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
             logger.trace("ParHandler invoke: [{}]", msg.getCommand());
 
         ethereumListener.trace(String.format("ParHandler invoke: [%s]", msg.getCommand()));
-        // FIXME: Par instead of eth
-//        channel.getNodeStatistics().ethInbound.add();
+        channel.getNodeStatistics().parInbound.add();
 
         msgQueue.receivedMessage(msg);
     }
@@ -116,8 +115,11 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
 
     public void activate() {
         logger.debug("PAR protocol activated");
+        sendStatus();
         ethereumListener.trace("PAR protocol activated");
     }
+
+    public synchronized void sendStatus() {}
 
     protected void disconnect(ReasonCode reason) {
         msgQueue.disconnect(reason);
@@ -126,13 +128,7 @@ public abstract class ParHandler extends SimpleChannelInboundHandler<ParMessage>
 
     protected void sendMessage(ParMessage message) {
         msgQueue.sendMessage(message);
-        // FIXME: Par instead of eth
-        channel.getNodeStatistics().ethOutbound.add();
-    }
-
-    public StatusMessage getHandshakeStatusMessage() {
-        // FIXME: Par instead of eth
-        return channel.getNodeStatistics().getEthLastInboundStatusMsg();
+        channel.getNodeStatistics().parOutbound.add();
     }
 
     public synchronized ListenableFuture<SnapshotManifest> requestManifest() {

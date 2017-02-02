@@ -1,11 +1,13 @@
 package org.ethereum.net.par.message;
 
+import org.ethereum.core.SnapshotManifest;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,20 +27,24 @@ public class SnapshotManifestMessage extends ParMessage {
     public SnapshotManifestMessage(byte[] encoded) {
         super(encoded);
     }
-// TODO
-//    public SnapshotManifestMessage(Block block, byte[] difficulty) {
-//        this.block = block;
-//        this.difficulty = difficulty;
-//        this.parsed = true;
-//        encode();
-//    }
-//
-//    private void encode() {
-//        byte[] block = this.block.getEncoded();
-//        byte[] diff = RLP.encodeElement(this.difficulty);
-//
-//        this.encoded = RLP.encodeList(block, diff);
-//    }
+
+    public SnapshotManifestMessage(SnapshotManifest manifest) {
+        if (manifest == null) {
+            fallbackMessage();
+        } else {
+            this.blockNumber = manifest.getBlockNumber();
+            this.blockHash = manifest.getBlockHash();
+            this.stateRoot = manifest.getStateRoot();
+            this.stateHashes = manifest.getStateHashes();
+            this.blockHashes = manifest.getBlockHashes();
+            this.encoded = manifest.getEncoded();
+        }
+    }
+
+    private void fallbackMessage() {
+        byte[] nullElement = RLP.encodeElement(null);
+        this.encoded = RLP.encodeList(RLP.encodeList(), RLP.encodeList(), nullElement, nullElement, nullElement);
+    }
 
     private synchronized void parse() {
         if (parsed) return;
@@ -64,7 +70,8 @@ public class SnapshotManifestMessage extends ParMessage {
         }
 
         stateRoot = params.get(2).getRLPData();
-        blockNumber = ByteUtil.byteArrayToLong(params.get(3).getRLPData());
+        byte[] bnData = params.get(3).getRLPData();
+        blockNumber = bnData == null ? 0 : new BigInteger(1, bnData).longValue();
         blockHash = params.get(4).getRLPData();
 
         parsed = true;

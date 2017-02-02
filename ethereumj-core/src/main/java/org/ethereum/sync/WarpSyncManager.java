@@ -145,12 +145,9 @@ public class WarpSyncManager {
     private long forceSyncTimer;
 
     void init() {
-        // TODO: remove, test only
-//        pool.close();
-//        applicationContext.getBean(SnapshotManager.class);
-//        if (true) return;
         minSnapshotPeers = config.getWarpMinPeers();
         maxSearchTime = config.getWarpMaxSearchTime();
+        applicationContext.getBean(SnapshotManager.class);
         warpSyncThread = new Thread("WarpSyncLoop") {
             @Override
             public void run() {
@@ -539,7 +536,7 @@ public class WarpSyncManager {
                 return true;
             }
         });
-        
+
         Block gapBlock = getGapBlock(manifest);
         logger.info("WarpSync: Block chunks downloaded finished. Blockchain synced to #{}", gapBlock.getNumber());
 

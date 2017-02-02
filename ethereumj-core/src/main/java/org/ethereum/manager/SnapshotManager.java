@@ -6,7 +6,6 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockSummary;
-import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.SnapshotManifest;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
@@ -16,12 +15,14 @@ import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryHashedKeysTrie;
 import org.ethereum.db.StateSource;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
@@ -56,19 +57,16 @@ public class SnapshotManager {
 
     private static final Logger logger = LoggerFactory.getLogger("snapshot");
 
-
-    private SystemProperties config;
-
     private CompositeEthereumListener listener;
 
     @Autowired @Qualifier("snapshotDS")
-    DbSource<byte[]> snapshotDS;
+    private DbSource<byte[]> snapshotDS;
 
     @Autowired @Qualifier("stateDS")
-    DbSource<byte[]> stateDS;
+    private DbSource<byte[]> stateDS;
 
     @Autowired
-    StateSource stateSource;
+    private StateSource stateSource;
 
     @Autowired
     private RepositoryHashedKeysTrie repository;
@@ -79,35 +77,29 @@ public class SnapshotManager {
     @Autowired
     private TransactionStore txStore;
 
-    private boolean enabled = false;
+    @Autowired
+    private DbFlushManager dbFlushManager;
+
+    @Autowired
+    private SyncManager syncManager;
 
     private boolean syncDone = false;
 
-    private static final long BLOCK_FREQUENCY = 30_000;
+    private static final long BLOCK_FREQUENCY = 10_000;
 
     private static final long CHUNK_SIZE = 4 * 1024 * 1024;
+
+    private static final int EXTRA_BLOCKS_WAIT = 32;
 
     public static final byte[] MANIFEST_KEY = HashUtil.sha3("SNAPSHOT_MANIFEST".getBytes());
 
     @Autowired
-    public SnapshotManager(SystemProperties config, CompositeEthereumListener listener, final BlockchainImpl blockchain) {
-        this.config = config;
+    public SnapshotManager(CompositeEthereumListener listener, SystemProperties config) {
         this.listener = listener;
-        if (config.getWarpSnapshotCreation()) enabled = true;
-        if (enabled) init();
-        // TODO: remove, test only
-//        new java.util.Timer().schedule(
-//                new java.util.TimerTask() {
-//                    @Override
-//                    public void run() {
-//                        createSnapshot(blockStore.getChainBlockByNumber(new SnapshotManifest(snapshotDS.get(MANIFEST_KEY)).getBlockNumber()));
-//                    }
-//                },
-//                5000
-//        );
+        if (config.getWarpSnapshotCreation()) initCreation();
     }
 
-    private void init() {
+    private void initCreation() {
         listener.addListener(new EthereumListenerAdapter() {
             @Override
             public void onSyncDone(SyncState state) {
@@ -117,12 +109,19 @@ public class SnapshotManager {
             }
 
             @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (syncDone && blockSummary.getBlock().getNumber() % BLOCK_FREQUENCY == 0) {
-                    // TODO: Stop sync
-                    // TODO: Flush everything
-                    // Run snapshot service
-                    createSnapshot(blockSummary.getBlock());
+            public void onBlock(final BlockSummary blockSummary) {
+                if (syncDone && blockSummary.getBlock().getNumber() % BLOCK_FREQUENCY == EXTRA_BLOCKS_WAIT) {
+                    syncManager.setPause(true);
+                    dbFlushManager.commit();
+                    dbFlushManager.flush();
+                    try {
+                        long manifestBlockNumber = blockSummary.getBlock().getNumber() - EXTRA_BLOCKS_WAIT;
+                        createSnapshot(blockStore.getChainBlockByNumber(manifestBlockNumber));
+                    } catch (Exception e) {
+                        logger.error("Failed to create snapshot for block #{}", blockSummary.getBlock().getNumber());
+                    } finally {
+                        syncManager.setPause(false);
+                    }
                 }
             }
         });
@@ -157,6 +156,19 @@ public class SnapshotManager {
                 block.getStateRoot(),
                 block.getNumber(),
                 block.getHash());
+
+        byte[] oldManifestBytes = snapshotDS.get(MANIFEST_KEY);
+        if (oldManifestBytes != null) {
+            SnapshotManifest oldManifest = new SnapshotManifest(oldManifestBytes);
+            logger.info("Removing old manifest data: {}", oldManifest);
+            for (byte[] stateChunkHash : oldManifest.getStateHashes()) {
+                snapshotDS.put(stateChunkHash, null);
+            }
+            for (byte[] blocksChunkHash : oldManifest.getBlockHashes()) {
+                snapshotDS.put(blocksChunkHash, null);
+            }
+        }
+
         snapshotDS.put(MANIFEST_KEY, manifest.getEncoded());
         logger.info("Manifest saved: {}", manifest);
     }
@@ -414,5 +426,17 @@ public class SnapshotManager {
                 compressedBlocksChunk.length);
         blockChunkHashes.add(blocksChunkHash);
         snapshotDS.put(blocksChunkHash, compressedBlocksChunk);
+    }
+
+    public SnapshotManifest getManifest() {
+        SnapshotManifest manifest = null;
+        byte[] manifestBytes = snapshotDS.get(MANIFEST_KEY);
+        if (manifestBytes != null) manifest = new SnapshotManifest(manifestBytes);
+
+        return manifest;
+    }
+
+    public byte[] getChunk(byte[] chunkHash) {
+        return snapshotDS.get(chunkHash);
     }
 }
