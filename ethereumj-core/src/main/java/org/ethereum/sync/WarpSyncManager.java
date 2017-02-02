@@ -23,6 +23,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.SnapshotManager;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
 import org.ethereum.trie.Trie;
@@ -242,6 +243,7 @@ public class WarpSyncManager {
         dbFlushManager.flush();
 
         blockchain.getRepository().syncToRoot(repository.getRoot());
+        pool.setNodesSelector(null);
 
         logger.info("Saving state finished, checking state root");
 
@@ -522,6 +524,18 @@ public class WarpSyncManager {
 
         for (byte[] blockChunkHash : manifest.getBlockHashes()) {
             chunkQueue.addLast(new ChunkRequest(blockChunkHash));
+        }
+
+        // Compatible only with Parity
+        pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
+            @Override
+            public boolean test(NodeHandler handler) {
+                return handler.getNodeStatistics().capabilities.isEmpty() ||
+                        handler.getNodeStatistics().capabilities.contains(PAR1_CAPABILITY);
+            }
+        });
+        for (Channel channel : pool.getAllIdle()) {
+            if (channel.getParHandler() == null) channel.disconnect(ReasonCode.TOO_MANY_PEERS);
         }
 
         blockChunkRetrieveLoop();
