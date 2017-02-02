@@ -191,7 +191,7 @@ public class WarpSyncManager {
                             receiptsDownloader.getDownloadedBlocksCount(), manifest.getBlockNumber());
                 } else if (blockBodiesDownloader!= null) {
                     return new SyncStatus(SyncStatus.SyncStage.BlockBodies,
-                            blockBodiesDownloader.getDownloadedCount(), manifest.getBlockNumber());
+                            blockBodiesDownloader.getDownloadedCount(), getGapBlock(manifest).getNumber());
                 } else {
                     return new SyncStatus(SyncStatus.SyncStage.BlockBodies, 0, manifest.getBlockNumber());
                 }
@@ -528,6 +528,9 @@ public class WarpSyncManager {
 
         dbFlushManager.commit();
         dbFlushManager.flush();
+
+        // From now we could share our manifest and its data and don't require Parity peers for next steps
+        snapshotDS.put(SnapshotManager.MANIFEST_KEY, manifest.getEncoded());
         pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
             @Override
             public boolean test(NodeHandler handler) {
@@ -822,7 +825,6 @@ public class WarpSyncManager {
                             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
                             return;
                         }
-                        snapshotDS.put(SnapshotManager.MANIFEST_KEY, manifest.getEncoded());
                         syncUnsecure();
                     case SECURE:
                         if (origSyncStage == SECURE) {
