@@ -61,9 +61,6 @@ public class SnapshotManager {
     @Autowired @Qualifier("snapshotDS")
     private DbSource<byte[]> snapshotDS;
 
-    @Autowired @Qualifier("stateDS")
-    private DbSource<byte[]> stateDS;
-
     @Autowired
     private StateSource stateSource;
 
@@ -165,10 +162,17 @@ public class SnapshotManager {
 
         byte[] oldManifestBytes = snapshotDS.get(MANIFEST_KEY);
         if (oldManifestBytes != null) {
+            // There could be large unchanged accounts
+            Set<ByteArrayWrapper> currentStateHashes = new HashSet<>();
+            for (byte[] hash : manifest.getStateHashes()) {
+                currentStateHashes.add(new ByteArrayWrapper(hash));
+            }
             SnapshotManifest oldManifest = new SnapshotManifest(oldManifestBytes);
             logger.info("Removing old manifest data: {}", oldManifest);
             for (byte[] stateChunkHash : oldManifest.getStateHashes()) {
-                snapshotDS.delete(stateChunkHash);
+                if (!currentStateHashes.contains(new ByteArrayWrapper(stateChunkHash))) {
+                    snapshotDS.delete(stateChunkHash);
+                }
             }
             for (byte[] blocksChunkHash : oldManifest.getBlockHashes()) {
                 snapshotDS.delete(blocksChunkHash);
