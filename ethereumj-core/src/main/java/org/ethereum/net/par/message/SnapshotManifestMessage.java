@@ -37,8 +37,9 @@ public class SnapshotManifestMessage extends ParMessage {
             this.stateRoot = manifest.getStateRoot();
             this.stateHashes = manifest.getStateHashes();
             this.blockHashes = manifest.getBlockHashes();
-            this.encoded = manifest.getEncoded();
+            this.encoded = RLP.encodeList(manifest.getEncoded());
         }
+        parsed = true;
     }
 
     private void fallbackMessage() {

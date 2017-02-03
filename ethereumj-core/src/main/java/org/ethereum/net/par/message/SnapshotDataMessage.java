@@ -24,7 +24,7 @@ public class SnapshotDataMessage extends ParMessage {
     }
 
     public SnapshotDataMessage(ByteArrayWrapper chunkData) {
-        this.encoded = RLP.encodeList(chunkData.getData());
+        this.encoded = RLP.encodeList(RLP.encodeElement(chunkData.getData()));
     }
 
     private synchronized void parse() {
