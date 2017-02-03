@@ -346,9 +346,9 @@ public class MultiThreadSourcesTest {
     @Test
     public void testStateSource() throws Exception {
         HashMapDB<byte[]> src = new HashMapDB<>();
-        LevelDbDataSource ldb = new LevelDbDataSource("test");
-        ldb.init();
-        StateSource stateSource = new StateSource(ldb, false);
+//        LevelDbDataSource ldb = new LevelDbDataSource("test");
+//        ldb.init();
+        StateSource stateSource = new StateSource(src, false);
         stateSource.getReadCache().withMaxCapacity(10);
 
         TestExecutor1 testExecutor = new TestExecutor1(stateSource);

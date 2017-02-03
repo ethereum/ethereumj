@@ -3,6 +3,8 @@ package org.ethereum.db;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
+    private static final Logger logger = LoggerFactory.getLogger("db");
 
     public static StateSource INST;
 
@@ -40,9 +43,10 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING) {
                     @Override
                     public boolean flush() {
-                        System.err.println("###### Flush started");
+                        long s = System.currentTimeMillis();
+                        logger.info("State flush started...");
                         boolean ret = super.flush();
-                        System.err.println("###### Flush complete");
+                        logger.info("State flush completed in " + (System.currentTimeMillis() - s) + " ms");
                         return ret;
                     }
                 };

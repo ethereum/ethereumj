@@ -6,6 +6,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URISyntaxException;
 
 /**
@@ -22,7 +23,15 @@ public class Start {
             SystemProperties.getDefault().setDiscoveryEnabled(false);
         }
 
-        Ethereum ethereum = EthereumFactory.createEthereum();
+        final Ethereum ethereum = EthereumFactory.createEthereum();
+//        ethereum.exitOn(2287000);
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                ethereum.close();
+            }
+        });
 
         if (!SystemProperties.getDefault().blocksLoader().equals(""))
             ethereum.getBlockLoader().loadBlocks();

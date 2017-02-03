@@ -1,20 +1,23 @@
 package org.ethereum.datasource;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.*;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Created by Anton Nashatyrev on 18.01.2017.
  */
-public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
+public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<Key, Value> implements AsyncFlushable {
 
-    private static Executor flushExecutor = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat("AsyncWriteCacheThread-%d").build());
+    private static ListeningExecutorService flushExecutor = MoreExecutors.listeningDecorator(
+            Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat("AsyncWriteCacheThread-%d").build()));
 
     protected volatile WriteCache<Key, Value> curCache;
     protected WriteCache<Key, Value> flushingCache;
+
+    private ListenableFuture<Boolean> lastFlush = Futures.immediateFuture(false);
 
     public AsyncWriteCache(Source<Key, Value> source) {
         super(source);
@@ -50,31 +53,34 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
         return curCache.get(key);
     }
 
-    boolean flushing = false;
     @Override
     public synchronized boolean flush() {
-        while (flushing) try {
-            wait();
+        try {
+            flushAsync();
+            return flushingCache.hasModified();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+            throw new RuntimeException(e);
         }
-        flushing = true;
+    }
+
+    public synchronized ListenableFuture<Boolean> flushAsync() throws InterruptedException {
+        // if previous flush still running
+        try {
+            lastFlush.get();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
         flushingCache.cache = curCache.cache;
         curCache = createCache(flushingCache);
-        boolean ret = flushingCache.hasModified();
 
-        flushExecutor.execute(new Runnable() {
+        lastFlush = flushExecutor.submit(new Callable<Boolean>() {
             @Override
-            public void run() {
-                flushingCache.flush();
-                synchronized (AsyncWriteCache.this) {
-                    flushing = false;
-                    AsyncWriteCache.this.notifyAll();
-                }
+            public Boolean call() {
+                return flushingCache.flush();
             }
         });
-        return ret;
+        return lastFlush;
     }
 
     @Override

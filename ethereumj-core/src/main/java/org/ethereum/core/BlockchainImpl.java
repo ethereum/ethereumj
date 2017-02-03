@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
@@ -11,10 +12,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
+import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -39,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.*;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -533,7 +532,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
-            dbFlushManager.flush();
+            dbFlushManager.flushSync();
             System.exit(-1);
         }
 
@@ -844,7 +843,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    private BlockSummary applyBlock(Repository track, Block block) {
+    private ExecutorService rootCalcExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("TireRootCalcThread-%d").build());
+
+    private BlockSummary applyBlock(final Repository track, Block block) {
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
@@ -855,6 +856,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         long totalGasUsed = 0;
         List<TransactionReceipt> receipts = new ArrayList<>();
         List<TransactionExecutionSummary> summaries = new ArrayList<>();
+
+        Future<byte[]> trieRootFut = null;
 
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
@@ -870,12 +873,35 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             totalGasUsed += executor.getGasUsed();
 
-            txTrack.commit();
-            TransactionReceipt receipt = executor.getReceipt();
-            receipt.setPostTxState(track.getRoot());
+            try {
+                if (trieRootFut != null) trieRootFut.get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
-            stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
-                    Hex.toHexString(track.getRoot()));
+            txTrack.commit();
+            final TransactionReceipt receipt = executor.getReceipt();
+
+            trieRootFut = rootCalcExecutor.submit(new Callable<byte[]>() {
+                @Override
+                public byte[] call() throws Exception {
+                    byte[] root = track.getRoot();
+                    receipt.setPostTxState(root);
+                    return root;
+                }
+            });
+            try {
+                trieRootFut.get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+//            receipt.setPostTxState(track.getRoot());
+
+//
+//            stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
+//                    Hex.toHexString(track.getRoot()));
 
             stateLogger.info("[{}] ", receipt.toString());
 
@@ -890,6 +916,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (summary != null) {
                 summaries.add(summary);
             }
+        }
+        try {
+            if (trieRootFut != null) trieRootFut.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         Map<byte[], BigInteger> rewards = addReward(track, block, summaries);
