@@ -466,7 +466,15 @@ public class WarpSyncManager {
                                     return;
                                 }
                             }
+
                             byte[] accountStatesCompressed = result.getRLPData();
+                            if (accountStatesCompressed == null) {
+                                logger.debug("Received empty state chunk from peer: {}, expected hash: {}",
+                                        idle, Hex.toHexString(reqSave.chunkHash));
+                                processFailedRequest(reqSave);
+                                return;
+                            };
+                            
                             idle.getNodeStatistics().par1ChunksRetrieveTime.add(System.currentTimeMillis() - requestSent);
                             idle.getNodeStatistics().par1ChunkBytesReceived.add(accountStatesCompressed.length);
                             logger.debug("Received {} bytes state chunk for hash: {}",
@@ -772,7 +780,15 @@ public class WarpSyncManager {
                                     return;
                                 }
                             }
+
                             byte[] blockStatesCompressed = result.getRLPData();
+                            if (blockStatesCompressed == null) {
+                                logger.debug("Received empty blocks chunk from peer: {}, expected hash: {}",
+                                        idle, Hex.toHexString(reqSave.chunkHash));
+                                processFailedRequest(reqSave);
+                                return;
+                            };
+
                             idle.getNodeStatistics().par1ChunksRetrieveTime.add(System.currentTimeMillis() - requestSent);
                             idle.getNodeStatistics().par1ChunkBytesReceived.add(blockStatesCompressed.length);
                             logger.debug("Received {} bytes block chunk for hash: {}",

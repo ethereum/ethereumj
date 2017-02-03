@@ -47,8 +47,6 @@ public class SyncPool {
 
     private boolean forceSync = false;
 
-    private boolean pause = false;
-
     private final List<Channel> activePeers = Collections.synchronizedList(new ArrayList<Channel>());
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
@@ -122,7 +120,6 @@ public class SyncPool {
 
     @Nullable
     public synchronized Channel getAnyIdle() {
-        if(pause) return null;
         ArrayList<Channel> channels = new ArrayList<>(activePeers);
         Collections.shuffle(channels);
         for (Channel peer : channels) {
@@ -135,7 +132,6 @@ public class SyncPool {
 
     @Nullable
     public synchronized Channel getBestIdle() {
-        if(pause) return null;
         for (Channel peer : activePeers) {
             if (peer.isIdle())
                 return peer;
@@ -145,7 +141,6 @@ public class SyncPool {
 
     @Nullable
     public synchronized Channel getNotLastIdle() {
-        if(pause) return null;
         ArrayList<Channel> channels = new ArrayList<>(activePeers);
         Collections.shuffle(channels);
         Channel candidate = null;
@@ -164,7 +159,6 @@ public class SyncPool {
 
     public synchronized List<Channel> getAllIdle() {
         List<Channel> ret = new ArrayList<>();
-        if(pause) return ret;
         for (Channel peer : activePeers) {
             if (peer.isIdle())
                 ret.add(peer);
@@ -389,10 +383,6 @@ public class SyncPool {
 //                peer.dropConnection();
 //            }
 //        }
-    }
-
-    public synchronized void setPause(boolean pause) {
-        this.pause = pause;
     }
 
     public void close() {

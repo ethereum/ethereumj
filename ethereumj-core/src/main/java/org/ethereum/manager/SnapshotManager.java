@@ -22,7 +22,6 @@ import org.ethereum.db.StateSource;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
@@ -80,12 +79,13 @@ public class SnapshotManager {
     @Autowired
     private DbFlushManager dbFlushManager;
 
-    @Autowired
-    private SyncManager syncManager;
+    private Thread snapshotThread;
 
     private boolean syncDone = false;
 
     private static final long BLOCK_FREQUENCY = 10_000;
+
+    private static final long BLOCK_CHUNKS_LENGTH = 30_000;
 
     private static final long CHUNK_SIZE = 4 * 1024 * 1024;
 
@@ -111,17 +111,23 @@ public class SnapshotManager {
             @Override
             public void onBlock(final BlockSummary blockSummary) {
                 if (syncDone && blockSummary.getBlock().getNumber() % BLOCK_FREQUENCY == EXTRA_BLOCKS_WAIT) {
-                    syncManager.setPause(true);
                     dbFlushManager.commit();
                     dbFlushManager.flush();
-                    try {
-                        long manifestBlockNumber = blockSummary.getBlock().getNumber() - EXTRA_BLOCKS_WAIT;
-                        createSnapshot(blockStore.getChainBlockByNumber(manifestBlockNumber));
-                    } catch (Exception e) {
-                        logger.error("Failed to create snapshot for block #{}", blockSummary.getBlock().getNumber());
-                    } finally {
-                        syncManager.setPause(false);
-                    }
+                    final long manifestBlockNumber = blockSummary.getBlock().getNumber() - EXTRA_BLOCKS_WAIT;
+                    Runnable snapshotTask =  new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                createSnapshot(blockStore.getChainBlockByNumber(manifestBlockNumber));
+                            } catch (Exception e) {
+                                logger.error(String.format("Failed to create snapshot for block #%s", manifestBlockNumber), e);
+                            } finally {
+                                snapshotThread = null;
+                            }
+                        }
+                    };
+                    snapshotThread = new Thread(snapshotTask, "SnapshotThread");
+                    snapshotThread.start();
                 }
             }
         });
@@ -162,15 +168,15 @@ public class SnapshotManager {
             SnapshotManifest oldManifest = new SnapshotManifest(oldManifestBytes);
             logger.info("Removing old manifest data: {}", oldManifest);
             for (byte[] stateChunkHash : oldManifest.getStateHashes()) {
-                snapshotDS.put(stateChunkHash, null);
+                snapshotDS.delete(stateChunkHash);
             }
             for (byte[] blocksChunkHash : oldManifest.getBlockHashes()) {
-                snapshotDS.put(blocksChunkHash, null);
+                snapshotDS.delete(blocksChunkHash);
             }
         }
 
         snapshotDS.put(MANIFEST_KEY, manifest.getEncoded());
-        logger.info("Manifest saved: {}", manifest);
+        logger.info("New manifest saved: {}", manifest);
     }
 
     /**
@@ -320,10 +326,10 @@ public class SnapshotManager {
             compressedStateChunk = Snappy.compress(uncompressedStateChunk);
         } catch (IOException e) {
             logger.error("Fatal error during compression of state chunk, size {} bytes", uncompressedStateChunk.length);
-            throw new RuntimeException("Fatal error during compression of state chunk");
+            throw new RuntimeException("Fatal error during compression of state chunk", e);
         }
         byte[] stateChunkHash = HashUtil.sha3(compressedStateChunk);
-        logger.info("Writing state chunk with {} accounts, hash {} (uncompressed size: {}, compressed size: {})",
+        logger.debug("Writing state chunk with {} accounts, hash {} (uncompressed size: {}, compressed size: {})",
                 chunkAccountStates.size(), Hex.toHexString(stateChunkHash), uncompressedStateChunk.length,
                 compressedStateChunk.length);
         stateChunkHashes.add(stateChunkHash);
@@ -332,7 +338,7 @@ public class SnapshotManager {
 
     private List<byte[]> createBlocksSnapshot(Block block) {
 
-        Block endBlock = blockStore.getChainBlockByNumber(block.getNumber() - BLOCK_FREQUENCY);
+        Block endBlock = blockStore.getChainBlockByNumber(block.getNumber() - BLOCK_CHUNKS_LENGTH);
         List<byte[]> blockChunkHashes = new ArrayList<>();
         long extraDataLength = RLP.encodeBigInteger(BigInteger.valueOf(endBlock.getNumber())).length +
                 RLP.encodeElement(endBlock.getHash()).length +
@@ -375,6 +381,8 @@ public class SnapshotManager {
             List<byte[]> receiptRlpList = new ArrayList<>();
             for (Transaction transaction :currentBlock.getTransactionsList()) {
                 TransactionInfo transactionInfo = txStore.get(transaction.getHash(), currentBlock.getHash());
+                // FIXME: hack for inconsistent receipts store, remove me after txStore fix
+                if (transactionInfo == null) transactionInfo = txStore.get(transaction.getHash()).get(0);
                 receiptRlpList.add(transactionInfo.getReceipt().getEncoded(true));
             }
             byte[] receiptsRlp = RLP.encodeRLPList(receiptRlpList);
@@ -418,10 +426,10 @@ public class SnapshotManager {
         } catch (IOException e) {
             logger.error("Fatal error during compression of blocks chunk, size {} bytes",
                     uncompressedBlocksChunk.length);
-            throw new RuntimeException("Fatal error during compression of blocks chunk");
+            throw new RuntimeException("Fatal error during compression of blocks chunk", e);
         }
         byte[] blocksChunkHash = HashUtil.sha3(compressedBlocksChunk);
-        logger.info("Writing blocks chunk with {} blocks, hash {} (uncompressed size: {}, compressed size: {})",
+        logger.debug("Writing blocks chunk with {} blocks, hash {} (uncompressed size: {}, compressed size: {})",
                 blocksData.size() - 3, Hex.toHexString(blocksChunkHash), uncompressedBlocksChunk.length,
                 compressedBlocksChunk.length);
         blockChunkHashes.add(blocksChunkHash);
