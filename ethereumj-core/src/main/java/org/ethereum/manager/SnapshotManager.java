@@ -385,8 +385,6 @@ public class SnapshotManager {
             List<byte[]> receiptRlpList = new ArrayList<>();
             for (Transaction transaction :currentBlock.getTransactionsList()) {
                 TransactionInfo transactionInfo = txStore.get(transaction.getHash(), currentBlock.getHash());
-                // FIXME: hack for inconsistent receipts store, remove me after txStore fix
-                if (transactionInfo == null) transactionInfo = txStore.get(transaction.getHash()).get(0);
                 receiptRlpList.add(transactionInfo.getReceipt().getEncoded(true));
             }
             byte[] receiptsRlp = RLP.encodeRLPList(receiptRlpList);
