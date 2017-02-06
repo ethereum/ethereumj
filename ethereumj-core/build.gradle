@@ -219,7 +219,8 @@ artifactoryPublish.onlyIf {
             project.version.endsWith('-SNAPSHOT') &&
             (branchName.startsWith('master') ||
                     branchName.startsWith('develop') ||
-                    branchName.startsWith('stage'))
+                    branchName.startsWith('stage') ||
+                    branchName.startsWith('experiment'))
 }
 
 bintray {
