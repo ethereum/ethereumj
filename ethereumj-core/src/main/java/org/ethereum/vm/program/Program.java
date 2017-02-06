@@ -84,7 +84,6 @@ public class Program {
 
     private ProgramPrecompile programPrecompile;
 
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
     private final SystemProperties config;
@@ -133,6 +132,11 @@ public class Program {
             }
         }
         return programPrecompile;
+    }
+
+    public Program withCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+        return this;
     }
 
     public int getCallDeep() {
@@ -441,8 +445,8 @@ public class Program {
         ProgramResult result = ProgramResult.empty();
         if (isNotEmpty(programCode)) {
 
-            VM vm = commonConfig.vm();
-            Program program = commonConfig.program(programCode, programInvoke, internalTx);
+            VM vm = new VM(config);
+            Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 
@@ -565,8 +569,8 @@ public class Program {
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            VM vm = commonConfig.vm();
-            Program program = commonConfig.program(codeAddress, programCode, programInvoke, internalTx);
+            VM vm = new VM(config);
+            Program program = new Program(codeAddress, programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 

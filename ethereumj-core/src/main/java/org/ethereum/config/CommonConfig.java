@@ -231,23 +231,6 @@ public class CommonConfig {
     }
 
     @Bean
-    @Scope("prototype")
-    public VM vm() {
-        return new VM(systemProperties());
-    }
-
-    @Bean
-    @Scope("prototype")
-    public Program program(byte[] codeAddr, byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        return new Program(codeAddr, ops, programInvoke, transaction, systemProperties());
-    }
-    @Bean
-    @Scope("prototype")
-    public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        return new Program(ops, programInvoke, transaction, systemProperties());
-    }
-
-    @Bean
     public BlockHeaderValidator headerValidator() {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
