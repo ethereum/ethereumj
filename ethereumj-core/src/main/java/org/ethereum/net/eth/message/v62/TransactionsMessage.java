@@ -1,6 +1,8 @@
-package org.ethereum.net.eth.message;
+package org.ethereum.net.eth.message.v62;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 

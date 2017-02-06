@@ -90,6 +90,14 @@ public interface Repository extends org.ethereum.facade.Repository{
     void saveCode(byte[] addr, byte[] code);
 
     /**
+     * Store code hash associated with an account
+     *
+     * @param addr for the account
+     * @param codeHash that will be associated with this account
+     */
+    void saveCodeHash(byte[] addr, byte[] codeHash);
+
+    /**
      * Retrieve the code associated with an account
      *
      * @param addr of the account

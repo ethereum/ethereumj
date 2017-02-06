@@ -115,6 +115,11 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
+    public synchronized void saveCodeHash(byte[] addr, byte[] codeHash) {
+        throw new RuntimeException("Not implemented");
+    }
+
+    @Override
     public byte[] getCode(byte[] addr) {
         if (environmental) {
             if (!src.isExist(addr)) {

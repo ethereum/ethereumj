@@ -112,6 +112,11 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     public synchronized void saveCode(byte[] addr, byte[] code) {
         byte[] codeHash = HashUtil.sha3(code);
         codeCache.put(codeHash, code);
+        saveCodeHash(addr, codeHash);
+    }
+
+    @Override
+    public synchronized void saveCodeHash(byte[] addr, byte[] codeHash) {
         AccountState accountState = getOrCreateAccountState(addr);
         accountStateCache.put(addr, accountState.withCodeHash(codeHash));
     }

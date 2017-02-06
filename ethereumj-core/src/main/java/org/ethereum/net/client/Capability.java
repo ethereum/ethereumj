@@ -7,6 +7,7 @@ public class Capability implements Comparable<Capability> {
 
     public final static String P2P = "p2p";
     public final static String ETH = "eth";
+    public final static String PAR = "par";
     public final static String SHH = "shh";
     public final static String BZZ = "bzz";
 

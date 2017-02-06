@@ -2,7 +2,7 @@ package org.ethereum.net;
 
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.net.eth.message.NewBlockHashesMessage;
+import org.ethereum.net.eth.message.v62.NewBlockHashesMessage;
 import org.junit.Test;
 
 import java.util.Arrays;

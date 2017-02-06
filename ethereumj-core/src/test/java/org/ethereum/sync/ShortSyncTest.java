@@ -14,6 +14,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.v62.*;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;

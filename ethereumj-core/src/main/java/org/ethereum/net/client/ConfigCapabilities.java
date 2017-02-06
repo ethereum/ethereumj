@@ -2,6 +2,7 @@ package org.ethereum.net.client;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.par.ParVersion;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class ConfigCapabilities {
             for (EthVersion v : EthVersion.supported())
                 AllCaps.add(new Capability(ETH, v.getCode()));
         }
-
+        AllCaps.add(new Capability(PAR, ParVersion.PAR1.getCode()));
         AllCaps.add(new Capability(SHH, ShhHandler.VERSION));
         AllCaps.add(new Capability(BZZ, BzzHandler.VERSION));
     }

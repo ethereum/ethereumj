@@ -750,6 +750,26 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean isWarpSyncEnabled() {
+        return isSyncEnabled() && config.getBoolean("sync.warp.enabled");
+    }
+
+    @ValidateMe
+    public int getWarpMinPeers() {
+        return config.getInt("sync.warp.minPeers");
+    }
+
+    @ValidateMe
+    public int getWarpMaxSearchTime() {
+        return config.getInt("sync.warp.maxSearchTime");
+    }
+
+    @ValidateMe
+    public boolean getWarpSnapshotCreation() {
+        return config.getBoolean("sync.warp.snapshotCreation");
+    }
+
+    @ValidateMe
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
 
     @ValidateMe

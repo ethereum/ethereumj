@@ -110,6 +110,12 @@ public class NodeStatistics {
     public final StatHandler eth63NodesReceived = new StatHandler();
     public final StatHandler eth63NodesRetrieveTime = new StatHandler();
 
+    // Par1 stat
+    public final StatHandler par1ChunksRequested = new StatHandler();
+    public final StatHandler par1ChunksReceived = new StatHandler();
+    public final StatHandler par1ChunkBytesReceived = new StatHandler();
+    public final StatHandler par1ChunksRetrieveTime = new StatHandler();
+
     public NodeStatistics(Node node) {
         this.node = node;
         discoverMessageLatency = (Statter.SimpleStatter) Statter.create(getStatName() + ".discoverMessageLatency");

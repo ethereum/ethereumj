@@ -80,6 +80,9 @@ public class SyncManager extends BlockDownloader {
     @Autowired
     private FastSyncManager fastSyncManager;
 
+    @Autowired
+    private WarpSyncManager warpSyncManager;
+
     ChannelManager channelManager;
 
     private SystemProperties config;
@@ -131,6 +134,8 @@ public class SyncManager extends BlockDownloader {
 
             if (config.isFastSyncEnabled()) {
                 fastSyncManager.init();
+            } else if (config.isWarpSyncEnabled()) {
+                warpSyncManager.init();
             } else {
                 initRegularSync(EthereumListener.SyncState.COMPLETE);
             }
@@ -157,8 +162,9 @@ public class SyncManager extends BlockDownloader {
     }
 
     public SyncStatus getSyncStatus() {
-        if (config.isFastSyncEnabled()) {
-            SyncStatus syncStatus = fastSyncManager.getSyncState();
+        if (config.isFastSyncEnabled() || config.isWarpSyncEnabled()) {
+            SyncStatus syncStatus = null;
+            syncStatus = config.isFastSyncEnabled() ? fastSyncManager.getSyncState() : warpSyncManager.getSyncState();
             if (syncStatus.getStage() == SyncStatus.SyncStage.Complete) {
                 return getSyncStateImpl();
             } else {
@@ -334,7 +340,7 @@ public class SyncManager extends BlockDownloader {
     }
 
     public boolean isFastSyncRunning() {
-        return fastSyncManager.isFastSyncInProgress();
+        return fastSyncManager.isFastSyncInProgress() || warpSyncManager.isWarpSyncInProgress();
     }
 
     public long getLastKnownBlockNumber() {

@@ -1,5 +1,7 @@
-package org.ethereum.net.eth.message;
+package org.ethereum.net.eth.message.v63;
 
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
@@ -9,45 +11,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Wrapper around an Ethereum GetBlockBodies message on the network
+ * Wrapper around an Ethereum GetNodeData message on the network
+ * Could contain:
+ * - state roots
+ * - accounts state roots
+ * - accounts code hashes
  *
- * @see EthMessageCodes#GET_BLOCK_BODIES
- *
- * @author Mikhail Kalinin
- * @since 04.09.2015
+ * @see EthMessageCodes#GET_NODE_DATA
  */
-public class GetBlockBodiesMessage extends EthMessage {
+public class GetNodeDataMessage extends EthMessage {
 
     /**
-     * List of block hashes for which to retrieve the block bodies
+     * List of node hashes for which is state requested
      */
-    private List<byte[]> blockHashes;
+    private List<byte[]> nodeKeys;
 
-    public GetBlockBodiesMessage(byte[] encoded) {
+    public GetNodeDataMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public GetBlockBodiesMessage(List<byte[]> blockHashes) {
-        this.blockHashes = blockHashes;
-        parsed = true;
+    public GetNodeDataMessage(List<byte[]> nodeKeys) {
+        this.nodeKeys = nodeKeys;
+        this.parsed = true;
     }
 
     private synchronized void parse() {
         if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        blockHashes = new ArrayList<>();
+        this.nodeKeys = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
-            blockHashes.add(paramsList.get(i).getRLPData());
+            nodeKeys.add(paramsList.get(i).getRLPData());
         }
-        parsed = true;
+
+        this.parsed = true;
     }
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (byte[] hash : blockHashes)
+        for (byte[] hash : nodeKeys)
             encodedElements.add(RLP.encodeElement(hash));
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
+
         this.encoded = RLP.encodeList(encodedElementArray);
     }
 
@@ -59,18 +64,18 @@ public class GetBlockBodiesMessage extends EthMessage {
 
 
     @Override
-    public Class<BlockBodiesMessage> getAnswerMessage() {
-        return BlockBodiesMessage.class;
+    public Class<NodeDataMessage> getAnswerMessage() {
+        return NodeDataMessage.class;
     }
 
-    public List<byte[]> getBlockHashes() {
+    public List<byte[]> getNodeKeys() {
         parse();
-        return blockHashes;
+        return nodeKeys;
     }
 
     @Override
     public EthMessageCodes getCommand() {
-        return EthMessageCodes.GET_BLOCK_BODIES;
+        return EthMessageCodes.GET_NODE_DATA;
     }
 
     public String toString() {
@@ -78,17 +83,17 @@ public class GetBlockBodiesMessage extends EthMessage {
 
         StringBuilder payload = new StringBuilder();
 
-        payload.append("count( ").append(blockHashes.size()).append(" ) ");
+        payload.append("count( ").append(nodeKeys.size()).append(" ) ");
 
         if (logger.isDebugEnabled()) {
-            for (byte[] hash : blockHashes) {
+            for (byte[] hash : nodeKeys) {
                 payload.append(Hex.toHexString(hash).substring(0, 6)).append(" | ");
             }
-            if (!blockHashes.isEmpty()) {
+            if (!nodeKeys.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());
             }
         } else {
-            payload.append(Utils.getHashListShort(blockHashes));
+            payload.append(Utils.getHashListShort(nodeKeys));
         }
 
         return "[" + getCommand().name() + " " + payload + "]";

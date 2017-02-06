@@ -11,7 +11,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.v62.NewBlockMessage;
 import org.ethereum.util.ByteUtil;
 import org.junit.BeforeClass;
 import org.junit.Ignore;

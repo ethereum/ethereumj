@@ -1,6 +1,7 @@
 package org.ethereum.util;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Mikhail Kalinin
@@ -35,6 +36,19 @@ public class CollectionUtils {
                 break;
             }
         }
+        return truncated;
+    }
+
+    public static <T> List<T> truncateRand(List<T> items, int limit) {
+        if(limit > items.size()) {
+            return new ArrayList<>(items);
+        }
+        List<T> truncated = new ArrayList<>(limit);
+        int randomNum = ThreadLocalRandom.current().nextInt(0, items.size() - limit);
+        for (int i = 0; i < limit; i++) {
+            truncated.add(items.get(i + randomNum));
+        }
+
         return truncated;
     }
 

@@ -83,6 +83,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     @Override
+    public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {}
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.warn("Eth handling failed", cause);
         ctx.close();
