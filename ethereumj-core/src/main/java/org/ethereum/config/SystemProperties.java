@@ -384,6 +384,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public long databaseResetBlock() {
+        return config.getLong("database.resetBlock");
+    }
+
+    @ValidateMe
     public int databasePruneDepth() {
         return config.getBoolean("database.prune.enabled") ? config.getInt("database.prune.maxDepth") : -1;
     }

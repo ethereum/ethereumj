@@ -110,22 +110,36 @@ public class GenesisLoader {
     private static Genesis createBlockForJson(GenesisJson genesisJson) {
 
         byte[] nonce       = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
-        byte[] difficulty  = ByteUtil.hexStringToBytes(genesisJson.difficulty);
-        byte[] mixHash     = ByteUtil.hexStringToBytes(genesisJson.mixhash);
-        byte[] coinbase    = ByteUtil.hexStringToBytes(genesisJson.coinbase);
+        byte[] difficulty  = hexStringToBytesValidate(genesisJson.difficulty, 32, true);
+        byte[] mixHash     = hexStringToBytesValidate(genesisJson.mixhash, 32, false);
+        byte[] coinbase    = hexStringToBytesValidate(genesisJson.coinbase, 20, false);
 
-        byte[] timestampBytes = ByteUtil.hexStringToBytes(genesisJson.timestamp);
+        byte[] timestampBytes = hexStringToBytesValidate(genesisJson.timestamp, 8, true);
         long   timestamp         = ByteUtil.byteArrayToLong(timestampBytes);
 
-        byte[] parentHash  = ByteUtil.hexStringToBytes(genesisJson.parentHash);
-        byte[] extraData   = ByteUtil.hexStringToBytes(genesisJson.extraData);
+        byte[] parentHash  = hexStringToBytesValidate(genesisJson.parentHash, 32, false);
+        byte[] extraData   = hexStringToBytesValidate(genesisJson.extraData, 32, true);
 
-        byte[] gasLimitBytes    = ByteUtil.hexStringToBytes(genesisJson.gasLimit);
+        byte[] gasLimitBytes    = hexStringToBytesValidate(genesisJson.gasLimit, 8, true);
         long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
 
         return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
                             difficulty, 0, gasLimit, 0, timestamp, extraData,
                             mixHash, nonce);
+    }
+
+    private static byte[] hexStringToBytesValidate(String hex, int bytes, boolean notGreater) {
+        byte[] ret = ByteUtil.hexStringToBytes(hex);
+        if (notGreater) {
+            if (ret.length > bytes) {
+                throw new RuntimeException("Wrong value length: " + hex + ", expected length < " + bytes + " bytes");
+            }
+        } else {
+            if (ret.length != bytes) {
+                throw new RuntimeException("Wrong value length: " + hex + ", expected length " + bytes + " bytes");
+            }
+        }
+        return ret;
     }
 
     /**

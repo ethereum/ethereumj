@@ -16,6 +16,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
+import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
@@ -304,14 +305,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public SolidityContract submitNewContract(String soliditySrc, String contractName, Object... constructorArgs) {
         SolidityContractImpl contract = createContract(soliditySrc, contractName);
-        CallTransaction.Function constructor = contract.contract.getConstructor();
-        if (constructor == null && constructorArgs.length > 0) {
-            throw new RuntimeException("No constructor with params found");
-        }
-        byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
-        submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
-                ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null, new TransactionResult()));
-        return contract;
+        return submitNewContract(contract, constructorArgs);
     }
 
     @Override
@@ -324,19 +318,29 @@ public class StandaloneBlockchain implements LocalBlockchain {
 		SolidityContractImpl contract;
 		try {
 			contract = createContractFromJson(contractName, json);
-			CallTransaction.Function constructor = contract.contract.getConstructor();
-			if (constructor == null && constructorArgs.length > 0) {
-				throw new RuntimeException("No constructor with params found");
-			}
-			byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
-			submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
-					ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null,
-					new TransactionResult()));
-			return contract;
+			return submitNewContract(contract, constructorArgs);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
     }
+
+    @Override
+	public SolidityContract submitNewContract(ContractMetadata contractMetaData, Object... constructorArgs) {
+		SolidityContractImpl contract = new SolidityContractImpl(contractMetaData);
+		return submitNewContract(contract, constructorArgs);
+	}
+
+	private SolidityContract submitNewContract(SolidityContractImpl contract, Object... constructorArgs) {
+		CallTransaction.Function constructor = contract.contract.getConstructor();
+		if (constructor == null && constructorArgs.length > 0) {
+			throw new RuntimeException("No constructor with params found");
+		}
+		byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
+		submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
+				ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null,
+				new TransactionResult()));
+		return contract;
+	}
 
     private SolidityContractImpl createContract(String soliditySrc, String contractName) {
         try {
@@ -358,11 +362,26 @@ public class StandaloneBlockchain implements LocalBlockchain {
 		    }
 		}
 
-		SolidityContractImpl contract = new SolidityContractImpl(result.contracts.get(contractName));
+		return createContract(contractName, result);
+	}
+
+	/**
+	 * @param contractName
+	 * @param result
+	 * @return
+	 */
+	private SolidityContractImpl createContract(String contractName, CompilationResult result) {
+		ContractMetadata cMetaData = result.contracts.get(contractName);
+		SolidityContractImpl contract = createContract(cMetaData);
 
 		for (CompilationResult.ContractMetadata metadata : result.contracts.values()) {
 		    contract.addRelatedContract(metadata.abi);
 		}
+		return contract;
+	}
+
+	private SolidityContractImpl createContract(ContractMetadata contractData) {
+		SolidityContractImpl contract = new SolidityContractImpl(contractData);
 		return contract;
 	}
 

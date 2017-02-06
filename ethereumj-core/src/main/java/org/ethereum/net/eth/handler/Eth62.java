@@ -535,18 +535,16 @@ public class Eth62 extends EthHandler {
             for (Pair<Long, byte[]> constraint : constraints) {
                 if (constraint.getLeft() <= getBestKnownBlock().getNumber()) {
                     blockHashCheck.put(constraint.getLeft(), constraint.getRight());
-                    sendGetBlockHeaders(constraint.getLeft(), 1, false);
                 }
             }
-
-            logger.trace("Peer " + channel.getPeerIdShort() + ": Requested " + blockHashCheck.size() +
-                    " headers for hash check: " + blockHashCheck.keySet());
+            requestNextHashCheck();
 
         } else {
             byte[] expectedHash = blockHashCheck.get(first.getNumber());
             if (expectedHash != null) {
                 if (FastByteComparisons.equal(expectedHash, first.getHash())) {
                     blockHashCheck.remove(first.getNumber());
+                    requestNextHashCheck();
                 } else {
                     logger.debug("Peer " + channel.getPeerIdShort() + ": wrong fork (expected block " +
                             first.getNumber() + " hash " + Hex.toHexString(expectedHash) + ", but got " +
@@ -561,6 +559,14 @@ public class Eth62 extends EthHandler {
             ethState = EthState.STATUS_SUCCEEDED;
 
             logger.trace("Peer {}: all validations passed", channel.getPeerIdShort());
+        }
+    }
+
+    private void requestNextHashCheck() {
+        if (!blockHashCheck.isEmpty()) {
+            Long checkHeader = blockHashCheck.keySet().iterator().next();
+            sendGetBlockHeaders(checkHeader, 1, false);
+            logger.trace("Peer {}: Requested #{} header for hash check.", channel.getPeerIdShort(), checkHeader);
         }
     }
 
