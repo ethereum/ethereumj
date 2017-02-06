@@ -406,7 +406,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                         block.getNumber());
 
             // retry of well known block
-            return EXIST;
+//            return EXIST;
         }
 
         final ImportResult ret;

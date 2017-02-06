@@ -120,6 +120,8 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
+        if (Boolean.TRUE) return;
+
         DbSource<byte[]> state = stateDS();
 
         byte[] fastsyncStageBytes = state.get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
