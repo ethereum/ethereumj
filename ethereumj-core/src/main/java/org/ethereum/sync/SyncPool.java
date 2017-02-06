@@ -3,6 +3,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -44,6 +45,8 @@ public class SyncPool {
 
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
+    private boolean forceSync = false;
+
     private final List<Channel> activePeers = Collections.synchronizedList(new ArrayList<Channel>());
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
@@ -76,22 +79,8 @@ public class SyncPool {
         this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
-        poolLoopExecutor.scheduleWithFixedDelay(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            heartBeat();
-                            updateLowerUsefulDifficulty();
-                            fillUp();
-                            prepareActive();
-                            cleanupActive();
-                        } catch (Throwable t) {
-                            logger.error("Unhandled exception", t);
-                        }
-                    }
-                }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
-        );
+        startPoolLoopExecutor(WORKER_TIMEOUT);
+
         logExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -106,17 +95,27 @@ public class SyncPool {
         }, 30, 30, TimeUnit.SECONDS);
     }
 
-    public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
-        this.nodesSelector = nodesSelector;
+    private void startPoolLoopExecutor(long delayInSeconds) {
+        poolLoopExecutor.scheduleWithFixedDelay(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            heartBeat();
+                            updateLowerUsefulDifficulty();
+                            fillUp();
+                            prepareActive();
+                            cleanupActive();
+                        } catch (Throwable t) {
+                            logger.error("Unhandled exception", t);
+                        }
+                    }
+                }, delayInSeconds, delayInSeconds, TimeUnit.SECONDS
+        );
     }
 
-    public void close() {
-        try {
-            poolLoopExecutor.shutdownNow();
-            logExecutor.shutdownNow();
-        } catch (Exception e) {
-            logger.warn("Problems shutting down executor", e);
-        }
+    public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
+        this.nodesSelector = nodesSelector;
     }
 
     @Nullable
@@ -215,6 +214,39 @@ public class SyncPool {
         }
     }
 
+    class NodeSelector implements Functional.Predicate<NodeHandler> {
+        BigInteger lowerDifficulty;
+        Set<String> nodesInUse;
+
+        public NodeSelector(BigInteger lowerDifficulty) {
+            this.lowerDifficulty = lowerDifficulty;
+        }
+
+        public NodeSelector(BigInteger lowerDifficulty, Set<String> nodesInUse) {
+            this.lowerDifficulty = lowerDifficulty;
+            this.nodesInUse = nodesInUse;
+        }
+
+        @Override
+        public boolean test(NodeHandler handler) {
+            if (nodesInUse != null && nodesInUse.contains(handler.getNode().getHexId())) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().isPredefined()) return true;
+
+            if (nodesSelector != null && !nodesSelector.test(handler)) return false;
+
+            if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().getReputation() < 100) return false;
+
+            return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
+        }
+    }
+
     private void fillUp() {
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         if(lackSize <= 0) return;
@@ -222,37 +254,10 @@ public class SyncPool {
         final Set<String> nodesInUse = nodesInUse();
         nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
-        class NodeSelector implements Functional.Predicate<NodeHandler> {
-            BigInteger lowerDifficulty;
-
-            public NodeSelector(BigInteger lowerDifficulty) {
-                this.lowerDifficulty = lowerDifficulty;
-            }
-
-            @Override
-            public boolean test(NodeHandler handler) {
-                if (nodesInUse.contains(handler.getNode().getHexId())) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().isPredefined()) return true;
-
-                if (nodesSelector != null && !nodesSelector.test(handler)) return false;
-
-                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().getReputation() < 100) return false;
-
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
-            }
-        }
-
         List<NodeHandler> newNodes;
-        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty), lackSize);
+        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty, nodesInUse), lackSize);
         if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO), lackSize);
+            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO, nodesInUse), lackSize);
         }
 
         if (logger.isTraceEnabled()) {
@@ -265,7 +270,18 @@ public class SyncPool {
     }
 
     private synchronized void prepareActive() {
-        List<Channel> active = new ArrayList<>(channelManager.getActivePeers());
+        List<Channel> managerActive = new ArrayList<>(channelManager.getActivePeers());
+
+        // Filtering out because of server-connected nodes
+        NodeSelector nodeSelector = new NodeSelector(BigInteger.ZERO);
+        List<Channel> active = new ArrayList<>();
+        for (Channel channel : managerActive) {
+            if (nodeSelector.test(nodeManager.getNodeHandler(channel.getNode()))) {
+                active.add(channel);
+            } else if (forceSync) {
+                channel.disconnect(ReasonCode.TOO_MANY_PEERS);
+            }
+        }
 
         if (active.isEmpty()) return;
 
@@ -341,6 +357,21 @@ public class SyncPool {
         }
     }
 
+    public void setForceSync(boolean forceSync) {
+        boolean restart = forceSync != this.forceSync;
+        this.forceSync = forceSync;
+        if (restart) {
+            try {
+                poolLoopExecutor.shutdownNow();
+                poolLoopExecutor.awaitTermination(5, TimeUnit.SECONDS);
+                poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
+                startPoolLoopExecutor(forceSync ? 1 : WORKER_TIMEOUT);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException("Unable to restart sync pool loop executor");
+            }
+        }
+    }
+
     public ChannelManager getChannelManager() {
         return channelManager;
     }
@@ -352,5 +383,14 @@ public class SyncPool {
 //                peer.dropConnection();
 //            }
 //        }
+    }
+
+    public void close() {
+        try {
+            poolLoopExecutor.shutdownNow();
+            logExecutor.shutdownNow();
+        } catch (Exception e) {
+            logger.warn("Problems shutting down executor", e);
+        }
     }
 }

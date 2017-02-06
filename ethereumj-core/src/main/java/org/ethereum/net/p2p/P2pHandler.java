@@ -4,14 +4,14 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
-import org.ethereum.net.eth.message.NewBlockMessage;
-import org.ethereum.net.eth.message.TransactionsMessage;
+import org.ethereum.net.eth.message.v62.NewBlockMessage;
+import org.ethereum.net.eth.message.v62.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.par.ParVersion;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 
@@ -27,13 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.ethereum.net.eth.EthVersion.*;
@@ -216,8 +211,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         else {
             List<Capability> capInCommon = getSupportedCapabilities(msg);
             channel.initMessageCodes(capInCommon);
+            ParVersion parPostponed = null;
             for (Capability capability : capInCommon) {
-                if (capability.getName().equals(Capability.ETH)) {
+                if(capability.getName().equals(Capability.PAR)) {
+
+                    // ParHandler could be activated only after ETH
+                    parPostponed = ParVersion.fromCode(capability.getVersion());
+                } else if(capability.getName().equals(Capability.ETH)) {
 
                     // Activate EthHandler for this peer
                     channel.activateEth(ctx, fromCode(capability.getVersion()));
@@ -236,9 +236,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 }
             }
 
-            //todo calculate the Offsets
-            ethereumListener.onHandShakePeer(channel, msg);
+            if (parPostponed != null) {
+                // Activate ParHandler for this peer
+                channel.activatePar(ctx, parPostponed);
+            }
 
+            ethereumListener.onHandShakePeer(channel, msg);
         }
     }
 
@@ -330,8 +333,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 highest = eth;
             }
         }
-
         supported.add(highest);
+
         return supported;
     }
 

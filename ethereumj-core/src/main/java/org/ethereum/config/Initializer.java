@@ -1,6 +1,8 @@
 package org.ethereum.config;
 
 import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.par.handler.Par1;
+import org.ethereum.net.par.handler.ParHandler;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.util.BuildInfo;
@@ -42,6 +44,9 @@ class Initializer implements BeanPostProcessor {
             }
             versions.delete(versions.length() - 2, versions.length());
             logger.info("capability eth version: [{}]", versions);
+        }
+        if (config.isWarpSyncEnabled()) {
+            logger.info("capability par version: [{}]", Par1.VERSION);
         }
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);

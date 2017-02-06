@@ -16,8 +16,12 @@ import org.ethereum.net.eth.handler.EthAdapter;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.Eth62MessageFactory;
-import org.ethereum.net.eth.message.Eth63MessageFactory;
+import org.ethereum.net.eth.message.v62.Eth62MessageFactory;
+import org.ethereum.net.eth.message.v63.Eth63MessageFactory;
+import org.ethereum.net.par.ParVersion;
+import org.ethereum.net.par.handler.ParHandler;
+import org.ethereum.net.par.handler.ParHandlerFactory;
+import org.ethereum.net.par.message.Par1MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.sync.SyncStatistics;
@@ -82,11 +86,15 @@ public class Channel {
     private EthHandlerFactory ethHandlerFactory;
 
     @Autowired
+    private ParHandlerFactory parHandlerFactory;
+
+    @Autowired
     private StaticMessages staticMessages;
 
     private ChannelManager channelManager;
 
     private Eth eth = new EthAdapter();
+    private ParHandler par;
 
     private InetSocketAddress inetSocketAddress;
 
@@ -195,10 +203,39 @@ public class Channel {
         eth = handler;
     }
 
+    public void activatePar(ChannelHandlerContext ctx, ParVersion version) {
+        if (!isParCompatible(version)) return;
+
+        ParHandler handler = parHandlerFactory.create(version);
+        MessageFactory messageFactory = createParMessageFactory(version);
+        messageCodec.setParVersion(version);
+        messageCodec.setParMessageFactory(messageFactory);
+
+        logger.debug("Par{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
+
+        ctx.pipeline().addLast(Capability.PAR, handler);
+
+        handler.setMsgQueue(msgQueue);
+        handler.setChannel(this);
+        handler.setPeerDiscoveryMode(discoveryMode);
+        handler.setEthHandler(eth);
+
+        handler.activate();
+
+        par = handler;
+    }
+
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
             case V62:   return new Eth62MessageFactory();
             case V63:   return new Eth63MessageFactory();
+            default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
+        }
+    }
+
+    private MessageFactory createParMessageFactory(ParVersion version) {
+        switch (version) {
+            case PAR1:   return new Par1MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }
@@ -318,12 +355,23 @@ public class Channel {
         return eth;
     }
 
+    public boolean isParCompatible(ParVersion version) {
+        return (eth.getVersion().equals(EthVersion.V63) && ParVersion.PAR1.equals(version));
+    }
+
+    public ParHandler getParHandler() {
+        return par;
+    }
+
     public boolean hasEthStatusSucceeded() {
         return eth.hasStatusSucceeded();
     }
 
     public String logSyncStats() {
-        return eth.getSyncStats();
+        String result = eth.getSyncStats();
+        if (par != null && !par.isIdle())
+            result = result + "\n\t" + par.getSyncStats();
+        return result;
     }
 
     public BigInteger getTotalDifficulty() {
@@ -347,7 +395,9 @@ public class Channel {
     }
 
     public boolean isIdle() {
-        return eth.isIdle();
+        boolean result = eth.isIdle();
+        if (par != null) result &= par.isIdle();
+        return result;
     }
 
     public void prohibitTransactionProcessing() {

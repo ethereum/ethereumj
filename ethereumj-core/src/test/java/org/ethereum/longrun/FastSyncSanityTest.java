@@ -43,7 +43,7 @@ public class FastSyncSanityTest {
     private static AtomicBoolean firstRun = new AtomicBoolean(true);
     private static AtomicBoolean secondRun = new AtomicBoolean(true);
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
-    private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten-fast.conf");
+    private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/live-fast.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
     private static final AtomicBoolean allChecksAreOver =  new AtomicBoolean(false);
 
@@ -217,12 +217,11 @@ public class FastSyncSanityTest {
             }
         }).start();
 
-        if(statTimer.awaitTermination(MAX_RUN_MINUTES, TimeUnit.MINUTES)) {
-            logStats();
-            // Checking for errors
-            assert allChecksAreOver.get();
-            if (!logStats()) assert false;
-        }
+        statTimer.awaitTermination(MAX_RUN_MINUTES, TimeUnit.MINUTES);
+        logStats();
+        // Checking for errors
+        assert allChecksAreOver.get();
+        if (!logStats()) assert false;
     }
 
     public void runEthereum() throws Exception {

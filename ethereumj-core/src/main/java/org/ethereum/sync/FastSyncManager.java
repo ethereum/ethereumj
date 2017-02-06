@@ -54,7 +54,7 @@ public class FastSyncManager {
     private final static int PIVOT_DISTANCE_FROM_HEAD = 1024;
     private final static int MSX_DB_QUEUE_SIZE = 20000;
 
-    private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
+    public static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
 
     public static final byte[] FASTSYNC_DB_KEY_SYNC_STAGE = HashUtil.sha3("Key in state DB indicating fastsync stage in progress".getBytes());
     public static final byte[] FASTSYNC_DB_KEY_PIVOT = HashUtil.sha3("Key in state DB with encoded selected pivot block".getBytes());
@@ -768,10 +768,10 @@ public class FastSyncManager {
                     result.add(future);
                 }
                 ListenableFuture<List<List<BlockHeader>>> successfulRequests = Futures.successfulAsList(result);
-                List<List<BlockHeader>> results = successfulRequests.get(3, TimeUnit.SECONDS);
+                List<List<BlockHeader>> successfulResults = successfulRequests.get(3, TimeUnit.SECONDS);
 
                 Map<BlockHeader, Integer> pivotMap = new HashMap<>();
-                for (List<BlockHeader> blockHeaders : results) {
+                for (List<BlockHeader> blockHeaders : successfulResults) {
                     if (!blockHeaders.isEmpty()) {
                         BlockHeader currentHeader = blockHeaders.get(0);
                         if (pivotMap.containsKey(currentHeader)) {

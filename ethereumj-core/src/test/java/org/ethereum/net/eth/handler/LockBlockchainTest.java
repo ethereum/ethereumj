@@ -1,6 +1,5 @@
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -11,11 +10,10 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.message.EthMessage;
-import org.ethereum.net.eth.message.GetBlockBodiesMessage;
-import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.v62.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.v62.GetBlockHeadersMessage;
 import org.ethereum.sync.SyncManager;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;

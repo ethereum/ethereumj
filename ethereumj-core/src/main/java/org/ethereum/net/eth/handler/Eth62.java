@@ -10,6 +10,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.v62.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
@@ -293,7 +294,7 @@ public class Eth62 extends EthHandler {
      *  Message Processing   *
      *************************/
 
-    protected synchronized void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
+    public synchronized void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         try {
 

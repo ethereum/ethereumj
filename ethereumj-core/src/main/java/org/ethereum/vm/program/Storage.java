@@ -85,6 +85,11 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
+    public synchronized void saveCodeHash(byte[] addr, byte[] codeHash) {
+        repository.saveCodeHash(addr, codeHash);
+    }
+
+    @Override
     public byte[] getCode(byte[] addr) {
         return repository.getCode(addr);
     }

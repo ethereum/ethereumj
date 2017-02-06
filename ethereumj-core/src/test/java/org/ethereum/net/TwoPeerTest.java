@@ -11,6 +11,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.v62.*;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;

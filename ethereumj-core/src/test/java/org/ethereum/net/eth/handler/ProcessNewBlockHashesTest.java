@@ -1,7 +1,7 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.BlockIdentifier;
-import org.ethereum.net.eth.message.NewBlockHashesMessage;
+import org.ethereum.net.eth.message.v62.NewBlockHashesMessage;
 import org.ethereum.net.server.Channel;
 import org.junit.Test;
 import org.slf4j.Logger;

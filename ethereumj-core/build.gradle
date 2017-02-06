@@ -144,6 +144,10 @@ dependencies {
         exclude group: 'junit', module: 'junit'
     }
 
+    // Snappy compression is used for chunks in Par1 protocol
+    // TODO: consider using levelDb driver impl
+    compile "org.xerial.snappy:snappy-java:1.1.2.1"
+
     // used to hide spring initialization logs messages in samples
     optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
 

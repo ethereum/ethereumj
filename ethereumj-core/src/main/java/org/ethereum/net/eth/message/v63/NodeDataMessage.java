@@ -1,5 +1,7 @@
-package org.ethereum.net.eth.message;
+package org.ethereum.net.eth.message.v63;
 
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Value;

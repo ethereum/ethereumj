@@ -1,8 +1,10 @@
-package org.ethereum.net.eth.message;
+package org.ethereum.net.eth.message.v63;
 
 import org.ethereum.core.Bloom;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;

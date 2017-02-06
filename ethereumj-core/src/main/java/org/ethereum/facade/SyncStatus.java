@@ -16,6 +16,20 @@ public class SyncStatus {
          */
         StateNodes,
         /**
+         * Warp sync: looking for a Snapshot Manifest.
+         * Normally we need several peers to find good manifest but
+         * the block can be selected from existing peers due to timeout
+         */
+        SnapshotManifest,
+        /**
+         * Warp sync: downloading state trie chunks and creating state trie
+         */
+        StateChunks,
+        /**
+         * Warp sync: downloading block chunks with 30000 blocks prior to manifest block
+         */
+        BlockChunks,
+        /**
          * Fast sync: downloading headers for securing the latest state
          */
         Headers,

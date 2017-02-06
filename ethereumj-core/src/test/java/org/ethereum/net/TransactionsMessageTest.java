@@ -4,7 +4,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.net.eth.message.TransactionsMessage;
+import org.ethereum.net.eth.message.v62.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 
 import org.junit.Ignore;

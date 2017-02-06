@@ -1,8 +1,9 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.BlockHeader;
-import org.ethereum.net.eth.message.BlockHeadersMessage;
-import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.v62.BlockHeadersMessage;
+import org.ethereum.net.eth.message.v62.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.v62.GetBlockHeadersMessageWrapper;
 import org.junit.Test;
 
 import java.util.ArrayList;

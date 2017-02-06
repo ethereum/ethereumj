@@ -1,8 +1,10 @@
 package org.ethereum.net.eth.handler;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
@@ -107,6 +109,11 @@ public class EthAdapter implements Eth {
 
     @Override
     public void onSyncDone(boolean done) {
+    }
+
+    @Override
+    public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
+
     }
 
     @Override

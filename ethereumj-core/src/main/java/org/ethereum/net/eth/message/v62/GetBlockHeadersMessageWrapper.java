@@ -1,8 +1,7 @@
-package org.ethereum.net.eth.handler;
+package org.ethereum.net.eth.message.v62;
 
 import com.google.common.util.concurrent.SettableFuture;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 
 import java.util.List;
 

@@ -8,6 +8,7 @@ import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
+import org.ethereum.sync.WarpSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
@@ -121,16 +122,24 @@ public class CommonConfig {
         DbSource<byte[]> state = stateDS();
 
         byte[] fastsyncStageBytes = state.get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
-        if (fastsyncStageBytes == null) return; // no uncompleted fast sync
+        byte[] warpsyncStageBytes = state.get(WarpSyncManager.WARPSYNC_DB_KEY_SYNC_STAGE);
 
-        EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
+        EthereumListener.SyncState syncStage = null;
+        if (fastsyncStageBytes != null){
+            syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
+        } else if (warpsyncStageBytes != null) {
+            syncStage = EthereumListener.SyncState.values()[warpsyncStageBytes[0]];
+        } else  {
+            return; // no uncompleted fast sync
+        }
 
-        if (!systemProperties().isFastSyncEnabled() || syncStage == EthereumListener.SyncState.UNSECURE) {
-            // we need to cleanup state/blocks/tranasaction DBs when previous fast sync was not complete:
+        if ((!systemProperties().isFastSyncEnabled() && !systemProperties().isWarpSyncEnabled())
+                || syncStage == EthereumListener.SyncState.UNSECURE) {
+            // we need to cleanup state/blocks/tranasaction DBs when previous warp/fast sync was not complete:
             // - if we now want to do regular sync
             // - if the first fastsync stage was not complete (thus DBs are not in consistent state)
 
-            logger.warn("Last fastsync was interrupted. Removing inconsistent DBs...");
+            logger.warn("Last fastsync/warpsync was interrupted. Removing inconsistent DBs...");
 
             logger.warn("Removing tx data...");
             DbSource txSource = keyValueDataSource();
@@ -179,6 +188,16 @@ public class CommonConfig {
         ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
         DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
         return dataSourceArray;
+    }
+
+    @Bean
+    @Lazy
+    public DbSource<byte[]> snapshotDS() {
+        DbSource<byte[]> dataSource = keyValueDataSource();
+        dataSource.setName("snapshot");
+        dataSource.init();
+
+        return dataSource;
     }
 
     @Bean
