@@ -9,8 +9,10 @@ import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
+import org.ethereum.vm.DataWord;
 import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramPrecompile;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -182,6 +184,30 @@ public class CommonConfig {
     }
 
     @Bean
+    public Source<byte[], ProgramPrecompile> precompileSource() {
+
+        StateSource source = stateSource();
+        return new SourceCodec<byte[], ProgramPrecompile, byte[], byte[]>(source,
+                new Serializer<byte[], byte[]>() {
+                    public byte[] serialize(byte[] object) {
+                        DataWord ret = new DataWord(object);
+                        ret.add(new DataWord(1));
+                        return ret.getLast20Bytes();
+                    }
+                    public byte[] deserialize(byte[] stream) {
+                        throw new RuntimeException("Shouldn't be called");
+                    }
+                }, new Serializer<ProgramPrecompile, byte[]>() {
+                    public byte[] serialize(ProgramPrecompile object) {
+                        return object == null ? null : object.serialize();
+                    }
+                    public ProgramPrecompile deserialize(byte[] stream) {
+                        return stream == null ? null : ProgramPrecompile.deserialize(stream);
+                    }
+        });
+    }
+
+    @Bean
     public DbSource<byte[]> stateDS() {
         DbSource<byte[]> ret = keyValueDataSource();
         ret.setName("state");
@@ -210,6 +236,11 @@ public class CommonConfig {
         return new VM(systemProperties());
     }
 
+    @Bean
+    @Scope("prototype")
+    public Program program(byte[] codeAddr, byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
+        return new Program(codeAddr, ops, programInvoke, transaction, systemProperties());
+    }
     @Bean
     @Scope("prototype")
     public Program program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {

@@ -222,7 +222,7 @@ public class TransactionExecutor {
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
                 this.vm = commonConfig.vm();
-                this.program = commonConfig.program(code, programInvoke, tx);
+                this.program = commonConfig.program(targetAddress, code, programInvoke, tx);
             }
         }
 

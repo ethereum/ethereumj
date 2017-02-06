@@ -74,6 +74,7 @@ public class Program {
     private ProgramResult result = new ProgramResult();
     private ProgramTrace trace = new ProgramTrace();
 
+    private byte[] codeHash;
     private byte[] ops;
     private int pc;
     private byte lastOp;
@@ -81,7 +82,7 @@ public class Program {
     private boolean stopped;
     private ByteArraySet touchedAccounts = new ByteArraySet();
 
-    private Set<Integer> jumpdest = new HashSet<>();
+    private ProgramPrecompile programPrecompile;
 
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
@@ -99,10 +100,15 @@ public class Program {
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+        this(null, ops, programInvoke, transaction, config);
+    }
+
+    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
         this.config = config;
         this.invoke = programInvoke;
         this.transaction = transaction;
 
+        this.codeHash = codeHash;
         this.ops = nullToEmpty(ops);
 
         traceListener = new ProgramTraceListener(config.vmTrace());
@@ -111,8 +117,22 @@ public class Program {
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
+    }
 
-        precompile();
+    public ProgramPrecompile getProgramPrecompile() {
+        if (programPrecompile == null) {
+            if (codeHash != null) {
+                programPrecompile = commonConfig.precompileSource().get(codeHash);
+            }
+            if (programPrecompile == null) {
+                programPrecompile = ProgramPrecompile.compile(ops);
+
+                if (codeHash != null) {
+                    commonConfig.precompileSource().put(codeHash, programPrecompile);
+                }
+            }
+        }
+        return programPrecompile;
     }
 
     public int getCallDeep() {
@@ -546,7 +566,7 @@ public class Program {
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
             VM vm = commonConfig.vm();
-            Program program = commonConfig.program(programCode, programInvoke, internalTx);
+            Program program = commonConfig.program(codeAddress, programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -853,20 +873,6 @@ public class Program {
         return trace;
     }
 
-    public void precompile() {
-        for (int i = 0; i < ops.length; ++i) {
-
-            OpCode op = OpCode.code(ops[i]);
-            if (op == null) continue;
-
-            if (op.equals(OpCode.JUMPDEST)) jumpdest.add(i);
-
-            if (op.asInt() >= OpCode.PUSH1.asInt() && op.asInt() <= OpCode.PUSH32.asInt()) {
-                i += op.asInt() - OpCode.PUSH1.asInt() + 1;
-            }
-        }
-    }
-
     static String formatBinData(byte[] binData, int startPC) {
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < binData.length; i += 16) {
@@ -1051,7 +1057,7 @@ public class Program {
             throw Program.Exception.badJumpDestination(-1);
         }
         int ret = nextPC.intValue();
-        if (!jumpdest.contains(ret)) {
+        if (!getProgramPrecompile().hasJumpDest(ret)) {
             throw Program.Exception.badJumpDestination(ret);
         }
         return ret;
