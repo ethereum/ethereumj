@@ -129,6 +129,7 @@ public class SystemProperties {
     private GenesisJson genesisJson;
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
+    private Boolean vmTrace;
 
     private final ClassLoader classLoader;
 
@@ -569,7 +570,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean vmTrace() {
-        return config.getBoolean("vm.structured.trace");
+        return vmTrace == null ? (vmTrace = config.getBoolean("vm.structured.trace")) : vmTrace;
     }
 
     @ValidateMe
