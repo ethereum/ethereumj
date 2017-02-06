@@ -211,6 +211,11 @@ public class PrivateMinerSample {
      *  Creating two EthereumJ instances with different config classes
      */
     public static void main(String[] args) throws Exception {
+        if (Runtime.getRuntime().maxMemory() < (1250L << 20)) {
+            MinerNode.sLogger.error("Not enough JVM heap (" + (Runtime.getRuntime().maxMemory() >> 20) + "Mb) to generate DAG for mining (DAG requires min 1G). For this sample it is recommended to set -Xmx2G JVM option");
+            return;
+        }
+
         BasicSample.sLogger.info("Starting EthtereumJ miner instance!");
         EthereumFactory.createEthereum(MinerConfig.class);
 
