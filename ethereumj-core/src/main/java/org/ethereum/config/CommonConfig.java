@@ -41,7 +41,12 @@ public class CommonConfig {
 
     public static CommonConfig getDefault() {
         if (defaultInstance == null && !SystemProperties.isUseOnlySpringConfig()) {
-            defaultInstance = new CommonConfig();
+            defaultInstance = new CommonConfig() {
+                @Override
+                public Source<byte[], ProgramPrecompile> precompileSource() {
+                    return null;
+                }
+            };
         }
         return defaultInstance;
     }
@@ -120,8 +125,6 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
-        if (Boolean.TRUE) return;
-
         DbSource<byte[]> state = stateDS();
 
         byte[] fastsyncStageBytes = state.get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
