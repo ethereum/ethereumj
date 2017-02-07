@@ -19,8 +19,8 @@ public class PrecompiledContracts {
 
     private static final DataWord ecRecoverAddr =   new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
     private static final DataWord sha256Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
-    private static final DataWord ripempd160Addr =  new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
-    private static final DataWord identityAddr =    new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
+    private static final DataWord ripempd160Addr =  new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
+    private static final DataWord identityAddr =    new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
 
 
     public static PrecompiledContract getContractForAddress(DataWord address) {
