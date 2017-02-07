@@ -16,14 +16,12 @@ public class RepositoryRoot extends RepositoryImpl {
 
 //    private static class StorageCache extends ReadWriteCache<DataWord, DataWord> {
     private static class StorageCache extends ReadWriteCache<DataWord, DataWord> {
-        byte[] accountAddress;
         Trie<byte[]> trie;
 
-        public StorageCache(byte[] accountAddress, Trie<byte[]> trie) {
+        public StorageCache(Trie<byte[]> trie) {
 //            super(new SourceCodec<>(trie, Serializers.StorageKeySerializer, Serializers.StorageValueSerializer),
 //                    WriteCache.CacheType.SIMPLE);
             super(new SourceCodec<>(trie, Serializers.StorageKeySerializer, Serializers.StorageValueSerializer), WriteCache.CacheType.SIMPLE);
-            this.accountAddress = accountAddress;
             this.trie = trie;
         }
     }
@@ -36,21 +34,21 @@ public class RepositoryRoot extends RepositoryImpl {
         protected synchronized StorageCache create(byte[] key, StorageCache srcCache) {
             AccountState accountState = accountStateCache.get(key);
             TrieImpl storageTrie = createTrie(trieCache, accountState == null ? null : accountState.getStateRoot());
-            return new StorageCache(key, storageTrie);
+            return new StorageCache(storageTrie);
         }
 
         @Override
-        protected synchronized boolean flushChild(StorageCache childCache) {
-            if (super.flushChild(childCache)) {
-                AccountState storageOwnerAcct = accountStateCache.get(childCache.accountAddress);
-                if (storageOwnerAcct != null) {
+        protected synchronized boolean flushChild(byte[] key, StorageCache childCache) {
+            if (super.flushChild(key, childCache)) {
+                if (childCache != null) {
+                    AccountState storageOwnerAcct = accountStateCache.get(key);
                     // need to update account storage root
                     byte[] rootHash = childCache.trie.getRootHash();
-                    accountStateCache.put(childCache.accountAddress, storageOwnerAcct.withStateRoot(rootHash));
+                    accountStateCache.put(key, storageOwnerAcct.withStateRoot(rootHash));
                     return true;
                 } else {
                     // account was deleted
-                    return false;
+                    return true;
                 }
             } else {
                 // no storage changes

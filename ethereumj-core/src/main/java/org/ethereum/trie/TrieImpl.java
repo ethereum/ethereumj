@@ -152,7 +152,9 @@ public class TrieImpl implements Trie<byte[]> {
             }
 
             Value currentNode = this.getNode(node);
-            if (currentNode == null) return null;
+            if (currentNode == null) {
+                throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
+            }
 
             if (currentNode.length() == PAIR_SIZE) {
                 // Decode the key
@@ -377,7 +379,8 @@ public class TrieImpl implements Trie<byte[]> {
         } else if (keyBytes.length < 32) {
             return new Value(keyBytes);
         }
-        return this.cache.get(keyBytes);
+        Value ret = this.cache.get(keyBytes);
+        return ret == null ? null : ret.withHash(keyBytes);
     }
 
     private Object putToCache(Object node) {

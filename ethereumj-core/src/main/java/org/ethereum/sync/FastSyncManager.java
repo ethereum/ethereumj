@@ -500,11 +500,11 @@ public class FastSyncManager {
         syncManager.initRegularSync(UNSECURE);
         logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
 
-        try {
-            syncDoneLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            syncDoneLatch.await();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
 
         stateDS.put(FASTSYNC_DB_KEY_PIVOT, pivot.getEncoded());
         dbFlushManager.commit();
@@ -810,7 +810,7 @@ public class FastSyncManager {
             fastSyncInProgress = false;
             dbWriterThread.interrupt();
             dbFlushManager.commit();
-            dbFlushManager.flush();
+            dbFlushManager.flushSync();
             fastSyncThread.join(10 * 1000);
             dbWriterThread.join(10 * 1000);
         } catch (Exception e) {

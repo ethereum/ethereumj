@@ -1,10 +1,14 @@
 package org.ethereum.datasource;
 
+import com.googlecode.concurentlocks.ReadWriteUpdateLock;
+import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
+import org.ethereum.util.ALock;
 import org.ethereum.util.ByteArrayMap;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Collects changes and propagate them to the backing Source when flush() is called
@@ -23,6 +27,8 @@ import java.util.Map;
  * Created by Anton Nashatyrev on 11.11.2016.
  */
 public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
+
+    public static final Object NULL = new Object();
 
     /**
      * Type of the write cache
@@ -101,7 +107,12 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     private final boolean isCounting;
 
-    protected Map<Key, CacheEntry<Value>> cache = new HashMap<>();
+    protected volatile Map<Key, CacheEntry<Value>> cache = new HashMap<>();
+
+    protected ReadWriteUpdateLock rwuLock = new ReentrantReadWriteUpdateLock();
+    protected ALock readLock = new ALock(rwuLock.readLock());
+    protected ALock writeLock = new ALock(rwuLock.writeLock());
+    protected ALock updateLock = new ALock(rwuLock.updateLock());
 
     private boolean checked = false;
 
@@ -116,8 +127,15 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized Collection<Key> getModified() {
-        return cache.keySet();
+    public Collection<Key> getModified() {
+        try (ALock l = readLock.lock()){
+            return cache.keySet();
+        }
+    }
+
+    @Override
+    public boolean hasModified() {
+        return !cache.isEmpty();
     }
 
     private CacheEntry<Value> createCacheEntry(Value val) {
@@ -129,78 +147,104 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized void put(Key key, Value val) {
+    public void put(Key key, Value val) {
         checkByteArrKey(key);
         if (val == null)  {
             delete(key);
             return;
         }
-        CacheEntry<Value> curVal = cache.get(key);
-        if (curVal == null) {
-            curVal = createCacheEntry(val);
-            CacheEntry<Value> oldVal = cache.put(key, curVal);
-            if (oldVal != null) {
-                cacheRemoved(key, oldVal.value);
+
+
+        try (ALock l = writeLock.lock()){
+            CacheEntry<Value> curVal = cache.get(key);
+            if (curVal == null) {
+                curVal = createCacheEntry(val);
+                CacheEntry<Value> oldVal = cache.put(key, curVal);
+                if (oldVal != null) {
+                    cacheRemoved(key, oldVal.value);
+                }
+                cacheAdded(key, curVal.value);
             }
-            cacheAdded(key, curVal.value);
-        }
-        // assigning for non-counting cache only
-        // for counting cache the value should be immutable (see HashedKeySource)
-        curVal.value = val;
-        curVal.added();
-    }
-
-    @Override
-    public synchronized Value get(Key key) {
-        checkByteArrKey(key);
-        CacheEntry<Value> curVal = cache.get(key);
-        if (curVal == null) {
-            return getSource() == null ? null : getSource().get(key);
-        } else {
-            return curVal.getValue();
+            // assigning for non-counting cache only
+            // for counting cache the value should be immutable (see HashedKeySource)
+            curVal.value = val;
+            curVal.added();
         }
     }
 
     @Override
-    public synchronized void delete(Key key) {
+    public Value get(Key key) {
         checkByteArrKey(key);
-        CacheEntry<Value> curVal = cache.get(key);
-        if (curVal == null) {
-            curVal = createCacheEntry(getSource() == null ? null : getSource().get(key));
-            CacheEntry<Value> oldVal = cache.put(key, curVal);
-            if (oldVal != null) {
-                cacheRemoved(key, oldVal.value);
+        try (ALock l = readLock.lock()){
+            CacheEntry<Value> curVal = cache.get(key);
+            if (curVal == null) {
+                return getSource() == null ? null : getSource().get(key);
+            } else {
+                return curVal.getValue();
             }
-            cacheAdded(key, curVal.value);
         }
-        curVal.deleted();
     }
 
     @Override
-    public synchronized boolean flushImpl() {
+    public void delete(Key key) {
+        checkByteArrKey(key);
+        try (ALock l = writeLock.lock()){
+            CacheEntry<Value> curVal = cache.get(key);
+            if (curVal == null) {
+                curVal = createCacheEntry(getSource() == null ? null : getSource().get(key));
+                CacheEntry<Value> oldVal = cache.put(key, curVal);
+                if (oldVal != null) {
+                    cacheRemoved(key, oldVal.value);
+                }
+                cacheAdded(key, curVal.value);
+            }
+            curVal.deleted();
+        }
+    }
+
+    @Override
+    public boolean flush() {
         boolean ret = false;
-        for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
-            if (entry.getValue().counter > 0) {
-                for (int i = 0; i < entry.getValue().counter; i++) {
-                    getSource().put(entry.getKey(), entry.getValue().value);
+        try (ALock l = updateLock.lock()){
+            for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
+                if (entry.getValue().counter > 0) {
+                    for (int i = 0; i < entry.getValue().counter; i++) {
+                        getSource().put(entry.getKey(), entry.getValue().value);
+                    }
+                    ret = true;
+                } else if (entry.getValue().counter < 0) {
+                    for (int i = 0; i > entry.getValue().counter; i--) {
+                        getSource().delete(entry.getKey());
+                    }
+                    ret = true;
                 }
-                ret = true;
-            } else if (entry.getValue().counter < 0) {
-                for (int i = 0; i > entry.getValue().counter; i--) {
-                    getSource().delete(entry.getKey());
-                }
-                ret = true;
             }
+            if (flushSource) {
+                getSource().flush();
+            }
+            try (ALock l1 = writeLock.lock()){
+                cache.clear();
+                cacheCleared();
+            }
+            return ret;
         }
-        cache.clear();
-        cacheCleared();
-
-        return ret;
     }
 
-    public synchronized Value getCached(Key key) {
-        CacheEntry<Value> entry = cache.get(key);
-        return entry == null ? null : entry.getValue();
+    @Override
+    protected boolean flushImpl() {
+        return false;
+    }
+
+    public Value getCached(Key key) {
+        try (ALock l = readLock.lock()){
+            CacheEntry<Value> entry = cache.get(key);
+            if (entry == null) {
+                return null;
+            }else {
+                Value value = entry.getValue();
+                return value == null ? (Value) NULL : value;
+            }
+        }
     }
 
     // Guard against wrong cache Map

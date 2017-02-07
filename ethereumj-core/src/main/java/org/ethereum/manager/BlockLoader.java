@@ -69,8 +69,10 @@ public class BlockLoader {
         exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
             @Override
             public Block apply(Block b) {
-                for (Transaction tx : b.getTransactionsList()) {
-                    tx.getSender();
+                if (b.getNumber() >= blockchain.getBestBlock().getNumber()) {
+                    for (Transaction tx : b.getTransactionsList()) {
+                        tx.getSender();
+                    }
                 }
                 return b;
             }

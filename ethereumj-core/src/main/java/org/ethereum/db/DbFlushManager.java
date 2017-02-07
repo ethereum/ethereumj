@@ -1,6 +1,11 @@
 package org.ethereum.db;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.JdkFutureAdapters;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.AbstractCachedSource;
+import org.ethereum.datasource.AsyncFlushable;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.WriteCache;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -13,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
@@ -20,7 +26,7 @@ import java.util.Set;
 public class DbFlushManager {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    List<WriteCache<byte[], byte[]>> writeCaches = new ArrayList<>();
+    List<AbstractCachedSource<byte[], byte[]>> writeCaches = new ArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
 
     long sizeThreshold;
@@ -58,13 +64,13 @@ public class DbFlushManager {
         this.sizeThreshold = sizeThreshold;
     }
 
-    public void addCache(WriteCache<byte[], byte[]> cache) {
+    public void addCache(AbstractCachedSource<byte[], byte[]> cache) {
         writeCaches.add(cache);
     }
 
     public long getCacheSize() {
         long ret = 0;
-        for (WriteCache<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
             ret += writeCache.estimateCacheSize();
         }
         return ret;
@@ -91,19 +97,45 @@ public class DbFlushManager {
         commitCount++;
     }
 
-    public synchronized void flush() {
-        long s = System.nanoTime();
-        for (WriteCache<byte[], byte[]> writeCache : writeCaches) {
-            writeCache.flush();
+    public synchronized void flushSync() {
+        try {
+            flush().get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    public synchronized ListenableFuture flush() {
+        long s = System.nanoTime();
+        List<ListenableFuture<Boolean>> asyncFlushes = new ArrayList<>();
+
+        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+            if (writeCache instanceof AsyncFlushable) {
+                try {
+                    asyncFlushes.add(((AsyncFlushable) writeCache).flushAsync());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                writeCache.flush();
+            }
+        }
+
+        ListenableFuture<List<Boolean>> allFut = Futures.allAsList(asyncFlushes);
+
+        //
         logger.debug("Flush took " + (System.nanoTime() - s) / 1000000 + " ms");
+
+        return allFut;
     }
 
     /**
      * Flushes all caches and closes all databases
      */
     public synchronized void close() {
-        flush();
+        logger.info("Flushing DBs...");
+        flushSync();
+        logger.info("Flush done.");
         for (DbSource dbSource : dbSources) {
             logger.info("Closing DB: {}", dbSource.getName());
             try {

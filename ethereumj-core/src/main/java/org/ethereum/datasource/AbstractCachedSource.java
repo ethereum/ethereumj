@@ -24,7 +24,7 @@ public abstract class AbstractCachedSource <Key, Value>
      * If the value for the key is changed the {@link #cacheRemoved}
      * needs to be called first
      */
-    protected void cacheAdded(Key key, Value value) {
+    protected synchronized void cacheAdded(Key key, Value value) {
         if (keySizeEstimator != null) {
             size += keySizeEstimator.estimateSize(key);
         }
@@ -36,7 +36,7 @@ public abstract class AbstractCachedSource <Key, Value>
     /**
      * Needs to be called by the implementation when cache entry is removed
      */
-    protected void cacheRemoved(Key key, Value value) {
+    protected synchronized void cacheRemoved(Key key, Value value) {
         if (keySizeEstimator != null) {
             size -= keySizeEstimator.estimateSize(key);
         }
@@ -48,7 +48,7 @@ public abstract class AbstractCachedSource <Key, Value>
     /**
      * Needs to be called by the implementation when cache is cleared
      */
-    protected void cacheCleared() {
+    protected synchronized void cacheCleared() {
         size = 0;
     }
 

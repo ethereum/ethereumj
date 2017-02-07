@@ -25,17 +25,22 @@ import java.util.Map;
  */
 public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
-    private Map<Key, Value> cache = new HashMap<>();
+    private final Value NULL = (Value) new Object();
+
+    private Map<Key, Value> cache;
+    private boolean byteKeyMap;
 
     public ReadCache(Source<Key, Value> src) {
         super(src);
+        withCache(new HashMap<Key, Value>());
     }
 
     /**
      * Installs the specific cache Map implementation
      */
     public ReadCache<Key, Value> withCache(Map<Key, Value> cache) {
-        this.cache = cache;
+        byteKeyMap = cache instanceof ByteArrayMap;
+        this.cache = Collections.synchronizedMap(cache);
         return this;
     }
 
@@ -58,7 +63,7 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         if (checked) return;
 
         if (key instanceof byte[]) {
-            if (!(cache instanceof ByteArrayMap)) {
+            if (!byteKeyMap) {
                 throw new RuntimeException("Wrong map/set for byte[] key");
             }
         }
@@ -66,7 +71,7 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized void put(Key key, Value val) {
+    public void put(Key key, Value val) {
         checkByteArrKey(key);
         if (val == null) {
             delete(key);
@@ -78,23 +83,22 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized Value get(Key key) {
+    public Value get(Key key) {
         checkByteArrKey(key);
         Value ret = cache.get(key);
+        if (ret == NULL) {
+            return null;
+        }
         if (ret == null) {
-            if (cache.containsKey(key)) {
-                ret = null;
-            } else {
-                ret = getSource().get(key);
-                cache.put(key, ret);
-                cacheAdded(key, ret);
-            }
+            ret = getSource().get(key);
+            cache.put(key, ret == null ? NULL : ret);
+            cacheAdded(key, ret);
         }
         return ret;
     }
 
     @Override
-    public synchronized void delete(Key key) {
+    public void delete(Key key) {
         checkByteArrKey(key);
         Value value = cache.remove(key);
         cacheRemoved(key, value);
@@ -108,6 +112,11 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     public synchronized Collection<Key> getModified() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean hasModified() {
+        return false;
     }
 
     public synchronized Value getCached(Key key) {

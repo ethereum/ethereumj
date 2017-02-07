@@ -22,11 +22,17 @@ public class ReadWriteCache<Key, Value>
         super(src);
         add(writeCache = new WriteCache<>(src, cacheType));
         add(readCache = new ReadCache<>(writeCache));
+        readCache.setFlushSource(true);
     }
 
     @Override
     public synchronized Collection<Key> getModified() {
         return writeCache.getModified();
+    }
+
+    @Override
+    public boolean hasModified() {
+        return writeCache.hasModified();
     }
 
     protected synchronized Value getCached(Key key) {
@@ -47,6 +53,7 @@ public class ReadWriteCache<Key, Value>
             super(src);
             add(this.writeCache = new WriteCache.BytesKey<>(src, cacheType));
             add(this.readCache = new ReadCache.BytesKey<>(writeCache));
+            readCache.setFlushSource(true);
         }
     }
 }

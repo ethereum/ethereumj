@@ -239,13 +239,13 @@ public class SyncPool {
 
                 if (nodesSelector != null && !nodesSelector.test(handler)) return false;
 
-                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
+//                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+//                    return false;
+//                }
 
                 if (handler.getNodeStatistics().getReputation() < 100) return false;
 
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
+                return true; //handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
             }
         }
 

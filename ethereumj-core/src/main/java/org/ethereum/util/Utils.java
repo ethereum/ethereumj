@@ -225,4 +225,12 @@ public class Utils {
 
         throw new RuntimeException(message);
     }
+
+    public static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 }

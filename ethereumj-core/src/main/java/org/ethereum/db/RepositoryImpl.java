@@ -11,6 +11,7 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Nullable;
@@ -75,6 +76,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     @Override
     public synchronized void delete(byte[] addr) {
         accountStateCache.delete(addr);
+        storageCache.delete(addr);
     }
 
     @Override
