@@ -289,9 +289,14 @@ public abstract class SolidityType {
                 byte[] bytes = ((String) value).getBytes(StandardCharsets.UTF_8);
                 System.arraycopy(bytes, 0, ret, 0, bytes.length);
                 return ret;
+            } else if (value instanceof byte[]) {
+                byte[] bytes = (byte[]) value;
+                byte[] ret = new byte[32];
+                System.arraycopy(bytes, 0, ret, 32 - bytes.length, bytes.length);
+                return ret;
             }
 
-            return new byte[0];
+            throw new RuntimeException("Can't encode java type " + value.getClass() + " to bytes32");
         }
 
         @Override
