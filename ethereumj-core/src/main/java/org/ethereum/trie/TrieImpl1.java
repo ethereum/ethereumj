@@ -50,8 +50,21 @@ public class TrieImpl1  implements Trie<byte[]> {
             int kLen = k.getLength();
             if (len < kLen) return null;
 
+            if ((off & 1) == (k.off & 1)) {
+                // optimization to compare whole keys bytes
+                if ((off & 1) == 1) {
+                    if (getHex(0) != k.getHex(0)) return null;
+                }
+                int idx1 = (off   + 1) >> 1;
+                int idx2 = (k.off + 1) >> 1;
+                int l = kLen >> 1;
+                for (int i = 0; i < l; i++, idx1++, idx2++) {
+                    if (key[idx1] != k.key[idx2]) return null;
+                }
+            } else {
             for (int i = 0; i < kLen; i++) {
                 if (getHex(i) != k.getHex(i)) return null;
+            }
             }
             return shift(kLen);
         }
