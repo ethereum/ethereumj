@@ -85,11 +85,13 @@ public class TrieImpl1  implements Trie<byte[]> {
         KVNodeNode
     }
 
+    private final static Object NULL_NODE = new Object();
     public final class Node {
-        byte[] hash = null;
-        byte[] rlp = null;
+        private byte[] hash = null;
+        private byte[] rlp = null;
+        private RLP.LList parsedRlp = null;
 
-        Object[] children = null;
+        private Object[] children = null;
 
         public Node(byte[] hashOrRlp) {
             if (hashOrRlp.length == 32) {
@@ -99,8 +101,12 @@ public class TrieImpl1  implements Trie<byte[]> {
             }
         }
 
+        private Node(RLP.LList parsedRlp) {
+            this.parsedRlp = parsedRlp;
+        }
+
         private void resolve() {
-            if (rlp != null) return;
+            if (rlp != null || parsedRlp != null) return;
             rlp = resolveHash(hash);
             if (rlp == null) {
                 throw new RuntimeException("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
@@ -111,47 +117,72 @@ public class TrieImpl1  implements Trie<byte[]> {
             if (children != null) return;
             resolve();
 
-            RLPList l = (RLPList) RLP.decode2(rlp).get(0);
+            RLP.LList list = parsedRlp == null ? RLP.decodeLazyList(rlp) : parsedRlp;
 
-            if (l.size() == 2) {
+            if (list.size() == 2) {
                 children = new Object[2];
-                Key key = Key.fromPacked(l.get(0).getRLPData());
+                Key key = Key.fromPacked(list.getBytes(0));
                 children[0] = key;
                 if (key.isTerminal()) {
-                    children[1] = l.get(1).getRLPData();
+                    children[1] = list.getBytes(1);
                 } else {
-                    children[1] = new Node(l.get(1).getRLPData());
+                    children[1] = list.isList(1) ? new Node(list.getList(1)) : new Node(list.getBytes(1));
                 }
             } else {
                 children = new Object[17];
-                for (int i = 0; i < 16; i++) {
-                    byte[] bytes = l.get(i).getRLPData();
-                    children[i] = bytes == null ? null : new Node(bytes);
-                }
-                children[16] = l.get(16).getRLPData();
+                parsedRlp = list;
             }
         }
 
         public Node branchNodeGetChild(int hex) {
+            parse();
             assert getType() == NodeType.BranchNode;
-            return (Node) children[hex];
+            Object n = children[hex];
+            if (n == null) {
+                if (parsedRlp.isList(hex)) {
+                    n = new Node(parsedRlp.getList(hex));
+                } else {
+                    byte[] bytes = parsedRlp.getBytes(hex);
+                    if (bytes.length == 0) {
+                        n = NULL_NODE;
+                    } else {
+                        n = new Node(bytes);
+                    }
+                }
+                children[hex] = n;
+            }
+            return n == NULL_NODE ? null : (Node) n;
         }
 
         public byte[] branchNodeGetValue() {
+            parse();
             assert getType() == NodeType.BranchNode;
-            return (byte[]) children[16];
+            Object n = children[16];
+            if (n == null) {
+                byte[] bytes = parsedRlp.getBytes(16);
+                if (bytes.length == 0) {
+                    n = NULL_NODE;
+                } else {
+                    n = bytes;
+                }
+                children[16] = n;
+            }
+            return n == NULL_NODE ? null : (byte[]) n;
         }
 
         public Key kvNodeGetKey() {
+            parse();
             assert getType() == NodeType.KVNodeNode || getType() == NodeType.KVNodeValue;
             return (Key) children[0];
         }
 
         public Node kvNodeGetChildNode() {
+            parse();
             assert getType() == NodeType.KVNodeNode;
             return (Node) children[1];
         }
         public byte[] kvNodeGetValue() {
+            parse();
             assert getType() == NodeType.KVNodeValue;
             return (byte[]) children[1];
         }
