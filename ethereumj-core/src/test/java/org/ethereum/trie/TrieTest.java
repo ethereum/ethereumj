@@ -4,7 +4,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.util.ByteUtil;
+import org.ethereum.datasource.inmem.HashMapDBSimple;
 import org.ethereum.util.Value;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -28,7 +28,10 @@ import java.nio.file.Files;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class TrieTest {
 
@@ -45,7 +48,7 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    class NoDoubleDeleteMapDB extends HashMapDB<Value> {
+    public class NoDoubleDeleteMapDB extends HashMapDBSimple<byte[]> {
         @Override
         public synchronized void delete(byte[] key) {
             if (storage.get(key) == null) {
@@ -55,8 +58,16 @@ public class TrieTest {
         }
     };
 
-    private Source<byte[], Value> mockDb = new NoDoubleDeleteMapDB();
-    private Source<byte[], Value> mockDb_2 = new NoDoubleDeleteMapDB();
+    public class TrieCache extends SourceCodec<byte[], Value, byte[], byte[]> {
+        public TrieCache() {
+            super(new NoDoubleDeleteMapDB(), new Serializers.Identity<byte[]>(), Serializers.TrieNodeSerializer);
+        }
+
+        public NoDoubleDeleteMapDB getDb() {return (NoDoubleDeleteMapDB) getSource();}
+    }
+
+    public TrieCache mockDb = new TrieCache();
+    public TrieCache mockDb_2 = new TrieCache();
 
 //      ROOT: [ '\x16', A ]
 //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
@@ -71,18 +82,20 @@ public class TrieTest {
     public void closeMockDb() throws IOException {
     }
 
-    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
-        private static Serializer<String, byte[]> SERIALIZER = new Serializer<String, byte[]>() {
-            public byte[] serialize(String object) {return object.getBytes();}
-            public String deserialize(byte[] stream) {return new String(stream);}
-        };
+    private static Serializer<String, byte[]> STR_SERIALIZER = new Serializer<String, byte[]>() {
+        public byte[] serialize(String object) {return object == null ? null : object.getBytes();}
+        public String deserialize(byte[] stream) {return stream == null ? null : new String(stream);}
+    };
 
+
+    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
         public StringTrie(Source<byte[], Value> src) {
             this(src, null);
         }
         public StringTrie(Source<byte[], Value> src, byte[] root) {
-            super(new TrieImpl(new NoDeleteSource<>(src), root), SERIALIZER, SERIALIZER);
+            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
         }
+
         public byte[] getRootHash() {
             return ((TrieImpl) getSource()).getRootHash();
         }
@@ -152,26 +165,79 @@ public class TrieTest {
         StringTrie trie = new StringTrie(mockDb);
 
         trie.put(cat, dog);
-        assertEquals(dog, new String(trie.get(cat)));
+        assertEquals(dog, trie.get(cat));
+
+        System.out.println(trie.getTrieDump());
 
         trie.put(ca, dude);
-        assertEquals(dude, new String(trie.get(ca)));
+        assertEquals(dude, trie.get(ca));
+
+        System.out.println(trie.getTrieDump());
 
         trie.put(doge, LONG_STRING);
-        assertEquals(LONG_STRING, new String(trie.get(doge)));
+        assertEquals(LONG_STRING, trie.get(doge));
+
+        System.out.println(trie.getTrieDump());
 
         trie.put(dog, test);
-        assertEquals(test, new String(trie.get(dog)));
+        assertEquals(test, trie.get(dog));
 
         trie.put(test, LONG_STRING);
-        assertEquals(LONG_STRING, new String(trie.get(test)));
+        assertEquals(LONG_STRING, trie.get(test));
 
         // Test if everything is still there
-        assertEquals(dog, new String(trie.get(cat)));
-        assertEquals(dude, new String(trie.get(ca)));
-        assertEquals(LONG_STRING, new String(trie.get(doge)));
-        assertEquals(test, new String(trie.get(dog)));
-        assertEquals(LONG_STRING, new String(trie.get(test)));
+        assertEquals(dog, trie.get(cat));
+        assertEquals(dude, trie.get(ca));
+        assertEquals(LONG_STRING, trie.get(doge));
+        assertEquals(test, trie.get(dog));
+        assertEquals(LONG_STRING, trie.get(test));
+
+        System.out.println(trie.getTrieDump());
+
+        TrieImpl1 trieNew = new TrieImpl1(mockDb.getDb(), trie.getRootHash());
+        assertEquals(dog, new String(trieNew.get(cat.getBytes())));
+        assertEquals(dude, new String(trieNew.get(ca.getBytes())));
+        assertEquals(LONG_STRING, new String(trieNew.get(doge.getBytes())));
+        assertEquals(test, new String(trieNew.get(dog.getBytes())));
+        assertEquals(LONG_STRING, new String(trieNew.get(test.getBytes())));
+    }
+
+    @Test
+    public void newImplTest() {
+        HashMapDBSimple<byte[]> db = new HashMapDBSimple<>();
+        TrieImpl1 btrie = new TrieImpl1(db, null);
+        Source<String, String> trie = new SourceCodec<>(btrie, STR_SERIALIZER, STR_SERIALIZER);
+
+        trie.put("cat", "dog");
+        trie.put("ca", "dude");
+
+        assertEquals(trie.get("cat"), "dog");
+        assertEquals(trie.get("ca"), "dude");
+
+        trie.put(doge, LONG_STRING);
+
+        System.out.println(btrie.dumpStructure());
+        System.out.println(btrie.dumpTrie());
+
+        assertEquals(LONG_STRING, trie.get(doge));
+        assertEquals(dog, trie.get(cat));
+
+
+        trie.put(dog, test);
+        assertEquals(test, trie.get(dog));
+        assertEquals(dog, trie.get(cat));
+
+        trie.put(test, LONG_STRING);
+        assertEquals(LONG_STRING, trie.get(test));
+
+        System.out.println(btrie.dumpStructure());
+        System.out.println(btrie.dumpTrie());
+
+        assertEquals(dog, trie.get(cat));
+        assertEquals(dude, trie.get(ca));
+        assertEquals(LONG_STRING, trie.get(doge));
+        assertEquals(test, trie.get(dog));
+        assertEquals(LONG_STRING, trie.get(test));
     }
 
     @Test
@@ -408,13 +474,13 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDb);
         byte[] rootHash1 = null;
         for (int i = 0; i < 11000; i++) {
-            trie.put(HashUtil.sha3(ByteUtil.intToBytes(i)), HashUtil.sha3(ByteUtil.intToBytes(i + 1000000)));
+            trie.put(HashUtil.sha3(intToBytes(i)), HashUtil.sha3(intToBytes(i + 1000000)));
             if (i == 10000) {
                 rootHash1 = trie.getRootHash();
             }
         }
         for (int i = 10001; i < 11000; i++) {
-            trie.delete(HashUtil.sha3(ByteUtil.intToBytes(i)));
+            trie.delete(HashUtil.sha3(intToBytes(i)));
         }
 
         byte[] rootHash2 = trie.getRootHash();
@@ -948,5 +1014,69 @@ public class TrieTest {
 
         assertArrayEquals(trie.get(Hex.decode("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae")),
                 Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
+    }
+
+    @Ignore
+    @Test
+    public void perfTestGet() {
+        HashMapDBSimple<byte[]> db = new HashMapDBSimple<>();
+        TrieCache trieCache = new TrieCache();
+
+        TrieImpl trie = new TrieImpl(trieCache);
+
+        byte[][] keys = new byte[100000][];
+
+        System.out.println("Filling trie...");
+        for (int i = 0; i < 100_000; i++) {
+            byte[] k = sha3(intToBytes(i));
+            trie.put(k, k);
+            if (i < keys.length) {
+                keys[i] = k;
+            }
+        }
+
+//        Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
+//        Trie trie1 = new TrieImpl1(trieCache.getDb(), trie.getRootHash());
+
+        System.out.println("Benching...");
+        while (true) {
+            long s = System.nanoTime();
+            for (int j = 0; j < 5; j++) {
+                for (int k = 0; k < 100; k++) {
+//                    Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
+//                    Trie trie1 = new TrieImpl1(trieCache.getDb(), trie.getRootHash());
+                    for (int i = 0; i < 1000; i++) {
+                        Trie trie1 = new TrieImpl1(trieCache.getDb(), trie.getRootHash());
+//                        Trie trie1 = new TrieImpl(trieCache, trie.getRootHash());
+                        trie1.get(keys[k * 100 + i]);
+                    }
+                }
+            }
+            System.out.println((System.nanoTime() - s) / 1_000_000 + " ms");
+        }
+    }
+
+    @Ignore
+    @Test
+    public void perfTestRoot() {
+
+        while(true) {
+            HashMapDB<byte[]> db = new HashMapDB<>();
+            TrieCache trieCache = new TrieCache();
+
+//        TrieImpl trie = new TrieImpl(trieCache);
+            TrieImpl1 trie = new TrieImpl1(db, null);
+
+//            System.out.println("Filling trie...");
+            long s = System.nanoTime();
+            for (int i = 0; i < 200_000; i++) {
+                byte[] k = sha3(intToBytes(i));
+                trie.put(k, new byte[512]);
+            }
+            long s1 = System.nanoTime();
+//            System.out.println("Calculating root...");
+            System.out.println(Hex.toHexString(trie.getRootHash()));
+            System.out.println((System.nanoTime() - s) / 1_000_000 + " ms, root: " + (System.nanoTime() - s1) / 1_000_000 + " ms");
+        }
     }
 }

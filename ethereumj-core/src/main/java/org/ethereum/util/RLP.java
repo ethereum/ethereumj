@@ -48,6 +48,8 @@ public class RLP {
     private static final Logger logger = LoggerFactory.getLogger("rlp");
 
 
+    public static final byte[] EMPTY_ELEMENT_RLP = encodeElement(new byte[0]);
+
     /**
      * Allow for content up to size of 2^64 bytes *
      */
