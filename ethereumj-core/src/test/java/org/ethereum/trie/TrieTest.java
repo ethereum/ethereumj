@@ -1066,6 +1066,7 @@ public class TrieTest {
 
 //        TrieImpl trie = new TrieImpl(trieCache);
             TrieImpl1 trie = new TrieImpl1(db, null);
+            trie.setAsync(true);
 
 //            System.out.println("Filling trie...");
             long s = System.nanoTime();

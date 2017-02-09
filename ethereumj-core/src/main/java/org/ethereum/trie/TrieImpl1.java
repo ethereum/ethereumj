@@ -1,5 +1,7 @@
 package org.ethereum.trie;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrBuilder;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Source;
@@ -8,13 +10,13 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
+import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.RLP.*;
+import static org.ethereum.util.RLP.EMPTY_ELEMENT_RLP;
+import static org.ethereum.util.RLP.encodeElement;
+import static org.ethereum.util.RLP.encodeList;
 
 /**
  * Created by Anton Nashatyrev on 07.02.2017.
@@ -153,6 +155,16 @@ public class TrieImpl1 implements Trie<byte[]> {
     }
 
     private final static Object NULL_NODE = new Object();
+    private static ExecutorService executor;
+
+    public static ExecutorService getExecutor() {
+        if (executor == null) {
+            executor = Executors.newFixedThreadPool(8,
+                    new ThreadFactoryBuilder().setNameFormat("trie-calc-thread-%d").build());
+        }
+        return executor;
+    }
+
     public final class Node {
         private byte[] hash = null;
         private byte[] rlp = null;
@@ -208,14 +220,37 @@ public class TrieImpl1 implements Trie<byte[]> {
                 NodeType type = getType();
                 byte[] ret;
                 if (type == NodeType.BranchNode) {
-                    byte[][] encoded = new byte[17][];
-                    for (int i = 0; i < 16; i++) {
-                        Node child = branchNodeGetChild(i);
-                        encoded[i] = child == null ? EMPTY_ELEMENT_RLP : child.encode(depth + 1, false);
+                    if (depth == 2 && async) {
+                        // on depth 2 from one side there is a big chance to find a number of updated
+                        // trie branches to parallelize
+                        // from the other side there are not too many branches
+                        final Future[] encoded = new Future[17];
+                        for (int i = 0; i < 16; i++) {
+                            final Node child = branchNodeGetChild(i);
+                            encoded[i] = getExecutor().submit(new Callable<byte[]>() {
+                                @Override
+                                public byte[] call() throws Exception {
+                                    return child == null ? EMPTY_ELEMENT_RLP : child.encode(depth + 1, false);
+                                }
+                            });
+                        }
+                        byte[] value = branchNodeGetValue();
+                        encoded[16] = constantFuture(encodeElement(value));
+                        try {
+                            ret = encodeRlpListFutures(encoded);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        byte[][] encoded = new byte[17][];
+                        for (int i = 0; i < 16; i++) {
+                            Node child = branchNodeGetChild(i);
+                            encoded[i] = child == null ? EMPTY_ELEMENT_RLP : child.encode(depth + 1, false);
+                        }
+                        byte[] value = branchNodeGetValue();
+                        encoded[16] = encodeElement(value);
+                        ret = encodeList(encoded);
                     }
-                    byte[] value = branchNodeGetValue();
-                    encoded[16] = encodeElement(value);
-                    ret = encodeList(encoded);
                 } else if (type == NodeType.KVNodeNode) {
                     ret = encodeList(encodeElement(kvNodeGetKey().toPacked()), kvNodeGetChildNode().encode(depth + 1, false));
                 } else {
@@ -435,10 +470,15 @@ public class TrieImpl1 implements Trie<byte[]> {
 
     Source<byte[], byte[]> cache;
     Node root;
+    boolean async;
 
     public TrieImpl1(Source<byte[], byte[]> cache, byte[] root) {
         this.cache = cache;
         setRoot(root);
+    }
+
+    public void setAsync(boolean async) {
+        this.async = async;
     }
 
     private void encode() {
