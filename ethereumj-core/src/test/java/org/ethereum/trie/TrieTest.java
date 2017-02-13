@@ -117,19 +117,19 @@ public class TrieTest {
             this(src, null);
         }
         public StringTrie(Source<byte[], byte[]> src, byte[] root) {
-            super(new TrieImpl1(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
+            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
         }
 
         public byte[] getRootHash() {
-            return ((TrieImpl1) getSource()).getRootHash();
+            return ((TrieImpl) getSource()).getRootHash();
         }
 
         public String getTrieDump() {
-            return ((TrieImpl1) getSource()).dumpTrie();
+            return ((TrieImpl) getSource()).dumpTrie();
         }
 
         public String dumpStructure() {
-            return ((TrieImpl1) getSource()).dumpStructure();
+            return ((TrieImpl) getSource()).dumpStructure();
         }
 
         @Override
@@ -237,7 +237,7 @@ public class TrieTest {
 
         System.out.println(trie.getTrieDump());
 
-        TrieImpl1 trieNew = new TrieImpl1(mockDb.getDb(), trie.getRootHash());
+        TrieImpl trieNew = new TrieImpl(mockDb.getDb(), trie.getRootHash());
         assertEquals(dog, new String(trieNew.get(cat.getBytes())));
         assertEquals(dude, new String(trieNew.get(ca.getBytes())));
         assertEquals(LONG_STRING, new String(trieNew.get(doge.getBytes())));
@@ -248,7 +248,7 @@ public class TrieTest {
     @Test
     public void newImplTest() {
         HashMapDBSimple<byte[]> db = new HashMapDBSimple<>();
-        TrieImpl1 btrie = new TrieImpl1(db, null);
+        TrieImpl btrie = new TrieImpl(db, null);
         Source<String, String> trie = new SourceCodec<>(btrie, STR_SERIALIZER, STR_SERIALIZER);
 
         trie.put("cat", "dog");
@@ -435,7 +435,7 @@ public class TrieTest {
 
     @Test
     public void testDeleteCompletellyDiferentItems() {
-        TrieImpl1 trie = new TrieImpl1(mockDb);
+        TrieImpl trie = new TrieImpl(mockDb);
 
         String val_1 = "1000000000000000000000000000000000000000000000000000000000000000";
         String val_2 = "2000000000000000000000000000000000000000000000000000000000000000";
@@ -517,7 +517,7 @@ public class TrieTest {
 
     @Test
     public void testMassiveDelete() {
-        TrieImpl1 trie = new TrieImpl1(mockDb);
+        TrieImpl trie = new TrieImpl(mockDb);
         byte[] rootHash1 = null;
         for (int i = 0; i < 11000; i++) {
             trie.put(HashUtil.sha3(intToBytes(i)), HashUtil.sha3(intToBytes(i + 1000000)));
@@ -798,7 +798,7 @@ public class TrieTest {
                 Assert.assertEquals(mapWord2, treeWord2);
             }
 
-            TrieImpl1 trie2 = new TrieImpl1(mockDb, trie.getRootHash());
+            TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
 
             // Assert the result now
             keys = testerMap.keySet().iterator();
@@ -865,7 +865,7 @@ public class TrieTest {
     public void testGetFromRootNode() {
         StringTrie trie1 = new StringTrie(mockDb);
         trie1.put(cat, LONG_STRING);
-        TrieImpl1 trie2 = new TrieImpl1(mockDb, trie1.getRootHash());
+        TrieImpl trie2 = new TrieImpl(mockDb, trie1.getRootHash());
         assertEquals(LONG_STRING, new String(trie2.get(cat.getBytes())));
     }
 
@@ -935,8 +935,7 @@ public class TrieTest {
 
         // TEST: load trie out of this run up to block#33
         byte[] rootNode = Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7");
-        TrieImpl trie = new TrieImpl(
-                new SourceCodec<>(dataSource, new Serializers.Identity<byte[]>(), Serializers.TrieNodeSerializer), rootNode);
+        TrieImpl trie = new TrieImpl(dataSource, rootNode);
 
         // first key added in genesis
         byte[] val1 = trie.get(Hex.decode("51ba59315b3a95761d0863b05ccc7a7f54703d99"));
@@ -989,7 +988,7 @@ public class TrieTest {
     @Test
     public void testSecureTrie(){
 
-        Trie trie = new SecureTrie1(mockDb);
+        Trie trie = new SecureTrie(mockDb);
 
         byte[] k1 = "do".getBytes();
         byte[] v1 = "verb".getBytes();
@@ -1068,7 +1067,7 @@ public class TrieTest {
         HashMapDBSimple<byte[]> db = new HashMapDBSimple<>();
         TrieCache trieCache = new TrieCache();
 
-        TrieImpl trie = new TrieImpl(trieCache);
+        TrieImpl trie = new TrieImpl(db);
 
         byte[][] keys = new byte[100000][];
 
@@ -1082,7 +1081,7 @@ public class TrieTest {
         }
 
 //        Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
-//        Trie trie1 = new TrieImpl1(trieCache.getDb(), trie.getRootHash());
+//        Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
 
         System.out.println("Benching...");
         while (true) {
@@ -1090,9 +1089,9 @@ public class TrieTest {
             for (int j = 0; j < 5; j++) {
                 for (int k = 0; k < 100; k++) {
 //                    Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
-//                    Trie trie1 = new TrieImpl1(trieCache.getDb(), trie.getRootHash());
+//                    Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
                     for (int i = 0; i < 1000; i++) {
-                        Trie trie1 = new TrieImpl1(trieCache.getDb(), trie.getRootHash());
+                        Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
 //                        Trie trie1 = new TrieImpl(trieCache, trie.getRootHash());
                         trie1.get(keys[k * 100 + i]);
                     }
@@ -1111,7 +1110,7 @@ public class TrieTest {
             TrieCache trieCache = new TrieCache();
 
 //        TrieImpl trie = new TrieImpl(trieCache);
-            TrieImpl1 trie = new TrieImpl1(db, null);
+            TrieImpl trie = new TrieImpl(db, null);
             trie.setAsync(true);
 
 //            System.out.println("Filling trie...");

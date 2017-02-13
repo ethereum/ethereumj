@@ -32,10 +32,10 @@ public class AsyncWriteCacheTest {
             protected WriteCache<byte[], String> createCache(Source<byte[], String> source) {
                 return new WriteCache.BytesKey<String>(source, WriteCache.CacheType.SIMPLE) {
                     @Override
-                    public boolean flushImpl() {
+                    public boolean flush() {
                         flushing = true;
                         System.out.println("Flushing started");
-                        boolean ret = super.flushImpl();
+                        boolean ret = super.flush();
                         System.out.println("Flushing complete");
                         flushing = false;
                         return ret;

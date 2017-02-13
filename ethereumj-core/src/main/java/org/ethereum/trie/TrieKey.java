@@ -22,8 +22,8 @@ public final class TrieKey {
         return new TrieKey(key, ((key[0] >> 4) & ODD_OFFSET_FLAG) != 0 ? 1 : 2, ((key[0] >> 4) & TERMINATOR_FLAG) != 0);
     }
 
-    public static TrieKey emptyWithTerminal() {
-        return new TrieKey(EMPTY_BYTE_ARRAY);
+    public static TrieKey empty(boolean terminal) {
+        return new TrieKey(EMPTY_BYTE_ARRAY, 0, terminal);
     }
 
     public static TrieKey singleHex(int hex) {
@@ -49,6 +49,14 @@ public final class TrieKey {
         System.arraycopy(key, key.length - toCopy, ret, ret.length - toCopy, toCopy);
         ret[0] &= 0x0F;
         ret[0] |= flags << 4;
+        return ret;
+    }
+
+    public byte[] toNormal() {
+        if ((off & 1) != 0) throw new RuntimeException("Can't convert a key with odd number of hexes to normal: " + this);
+        int arrLen = key.length - off / 2;
+        byte[] ret = new byte[arrLen];
+        System.arraycopy(key, key.length - arrLen, ret, 0, arrLen);
         return ret;
     }
 

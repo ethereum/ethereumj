@@ -8,10 +8,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Nullable;
@@ -207,10 +204,6 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     public String dumpStateTrie() {
-        throw new RuntimeException("Not supported");
-    }
-
-    public Value getState(byte[] stateRoot) {
         throw new RuntimeException("Not supported");
     }
 
@@ -415,8 +408,4 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         throw new RuntimeException("Not supported");
     }
 
-    @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        throw new RuntimeException("Not supported");
-    }
 }

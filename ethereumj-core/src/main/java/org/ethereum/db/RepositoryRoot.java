@@ -3,10 +3,7 @@ package org.ethereum.db;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.*;
-import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.Value;
+import org.ethereum.trie.*;
 import org.ethereum.vm.DataWord;
 
 /**
@@ -14,13 +11,10 @@ import org.ethereum.vm.DataWord;
  */
 public class RepositoryRoot extends RepositoryImpl {
 
-//    private static class StorageCache extends ReadWriteCache<DataWord, DataWord> {
     private static class StorageCache extends ReadWriteCache<DataWord, DataWord> {
         Trie<byte[]> trie;
 
         public StorageCache(Trie<byte[]> trie) {
-//            super(new SourceCodec<>(trie, Serializers.StorageKeySerializer, Serializers.StorageValueSerializer),
-//                    WriteCache.CacheType.SIMPLE);
             super(new SourceCodec<>(trie, Serializers.StorageKeySerializer, Serializers.StorageValueSerializer), WriteCache.CacheType.SIMPLE);
             this.trie = trie;
         }
@@ -43,6 +37,7 @@ public class RepositoryRoot extends RepositoryImpl {
                 if (childCache != null) {
                     AccountState storageOwnerAcct = accountStateCache.get(key);
                     // need to update account storage root
+                    childCache.trie.flush();
                     byte[] rootHash = childCache.trie.getRootHash();
                     accountStateCache.put(key, storageOwnerAcct.withStateRoot(rootHash));
                     return true;
@@ -58,8 +53,8 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     private Source<byte[], byte[]> stateDS;
-    private CachedSource.BytesKey<Value> trieCache;
-    private TrieImpl stateTrie;
+    private CachedSource.BytesKey<byte[]> trieCache;
+    private Trie<byte[]> stateTrie;
 
     public RepositoryRoot(Source<byte[], byte[]> stateDS) {
         this(stateDS, null);
@@ -80,12 +75,10 @@ public class RepositoryRoot extends RepositoryImpl {
     public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root) {
         this.stateDS = stateDS;
 
-        SourceCodec.BytesKey<Value, byte[]> trieCacheCodec = new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer);
-        trieCache = new WriteCache.BytesKey<>(trieCacheCodec, WriteCache.CacheType.COUNTING);
-        stateTrie = createTrie(trieCache, root);
+        trieCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
+        stateTrie = new SecureTrie(stateDS, root);
 
         SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, Serializers.AccountStateSerializer);
-//        final CachedSource.BytesKey<AccountState> accountStateCache = new CachedSourceImpl.BytesKey<>(accountStateCodec);
         final ReadWriteCache.BytesKey<AccountState> accountStateCache = new ReadWriteCache.BytesKey<>(accountStateCodec, WriteCache.CacheType.SIMPLE);
 
         final MultiCache<StorageCache> storageCache = new MultiStorageCache();
@@ -100,6 +93,7 @@ public class RepositoryRoot extends RepositoryImpl {
     public synchronized void commit() {
         super.commit();
 
+        stateTrie.flush();
         trieCache.flush();
     }
 
@@ -123,7 +117,7 @@ public class RepositoryRoot extends RepositoryImpl {
 
     @Override
     public synchronized String dumpStateTrie() {
-        return stateTrie.getTrieDump();
+        return ((TrieImpl) stateTrie).dumpTrie();
     }
 
     @Override
@@ -131,17 +125,8 @@ public class RepositoryRoot extends RepositoryImpl {
         stateTrie.setRoot(root);
     }
 
-    @Override
-    public synchronized Value getState(byte[] stateRoot) {
-        return trieCache.get(stateRoot);
-    }
-
-    protected TrieImpl createTrie(CachedSource.BytesKey<Value> trieCache, byte[] root) {
+    protected TrieImpl createTrie(CachedSource.BytesKey<byte[]> trieCache, byte[] root) {
         return new SecureTrie(trieCache, root);
     }
 
-    @Override
-    public synchronized void addRawNode(byte[] key, byte[] value) {
-        trieCache.put(key, Value.fromRlpEncoded(value));
-    }
 }
