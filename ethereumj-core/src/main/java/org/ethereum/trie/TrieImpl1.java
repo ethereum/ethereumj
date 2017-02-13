@@ -1,10 +1,10 @@
 package org.ethereum.trie;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrBuilder;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Source;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.RLP.EMPTY_ELEMENT_RLP;
 import static org.ethereum.util.RLP.encodeElement;
@@ -22,131 +23,6 @@ import static org.ethereum.util.RLP.encodeList;
  * Created by Anton Nashatyrev on 07.02.2017.
  */
 public class TrieImpl1 implements Trie<byte[]> {
-
-    public static final class Key {
-        public static final int ODD_OFFSET_FLAG = 0x1;
-        public static final int TERMINATOR_FLAG = 0x2;
-        private final byte[] key;
-        private final int off;
-        private final boolean terminal;
-
-        public static Key fromNormal(byte[] key) {
-            return new Key(key);
-        }
-
-        public static Key fromPacked(byte[] key) {
-            return new Key(key, ((key[0] >> 4) & ODD_OFFSET_FLAG) != 0 ? 1 : 2, ((key[0] >> 4) & TERMINATOR_FLAG) != 0);
-        }
-
-        public Key(byte[] key, int off, boolean terminal) {
-            this.terminal = terminal;
-            this.off = off;
-            this.key = key;
-        }
-
-        private Key(byte[] key) {
-            this(key, 0, true);
-        }
-
-        public byte[] toPacked() {
-            int flags = ((off & 1) != 0 ? ODD_OFFSET_FLAG : 0) | (terminal ? TERMINATOR_FLAG : 0);
-            byte[] ret = new byte[getLength() / 2 + 1];
-            int toCopy = (flags & ODD_OFFSET_FLAG) != 0 ? ret.length : ret.length - 1;
-            System.arraycopy(key, key.length - toCopy, ret, ret.length - toCopy, toCopy);
-            ret[0] &= 0x0F;
-            ret[0] |= flags << 4;
-            return ret;
-        }
-
-        public boolean isTerminal() {
-            return terminal;
-        }
-
-        public boolean isEmpty() {
-            return getLength() == 0;
-        }
-
-        public Key shift(int hexCnt) {
-            return new Key(this.key, off + hexCnt, terminal);
-        }
-
-        public Key getCommonPrefix(Key k) {
-            // TODO can be optimized
-            int prefixLen = 0;
-            int thisLenght = getLength();
-            int kLength = k.getLength();
-            while(prefixLen < thisLenght && prefixLen < kLength && getHex(prefixLen) == k.getHex(prefixLen)) prefixLen++;
-            byte[] prefixKey = new byte[(prefixLen + 1) >> 1];
-            Key ret = new Key(prefixKey, (prefixLen & 1) == 0 ? 0 : 1,
-                    prefixLen == getLength() && prefixLen == k.getLength() && terminal && k.isTerminal());
-            for (int i = 0; i < prefixLen; i++) {
-                ret.setHex(i, k.getHex(i));
-            }
-            return ret;
-        }
-
-        public Key matchAndShift(Key k) {
-            int len = getLength();
-            int kLen = k.getLength();
-            if (len < kLen) return null;
-
-            if ((off & 1) == (k.off & 1)) {
-                // optimization to compare whole keys bytes
-                if ((off & 1) == 1) {
-                    if (getHex(0) != k.getHex(0)) return null;
-                }
-                int idx1 = (off   + 1) >> 1;
-                int idx2 = (k.off + 1) >> 1;
-                int l = kLen >> 1;
-                for (int i = 0; i < l; i++, idx1++, idx2++) {
-                    if (key[idx1] != k.key[idx2]) return null;
-                }
-            } else {
-                for (int i = 0; i < kLen; i++) {
-                    if (getHex(i) != k.getHex(i)) return null;
-                }
-            }
-            return shift(kLen);
-        }
-
-        public int getLength() {
-            return (key.length << 1) - off;
-        }
-
-        private void setHex(int idx, int hex) {
-            int byteIdx = (off + idx) >> 1;
-            if (((off + idx) & 1) == 0) {
-                key[byteIdx] &= 0x0F;
-                key[byteIdx] |= hex << 4;
-            } else {
-                key[byteIdx] &= 0xF0;
-                key[byteIdx] |= hex;
-            }
-        }
-
-        public int getHex(int idx) {
-            byte b = key[(off + idx) >> 1];
-            return (((off + idx) & 1) == 0 ? (b >> 4) : b) & 0xF;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            Key k = (Key) obj;
-            int len = getLength();
-
-            if (len != k.getLength()) return false;
-            // TODO can be optimized
-            for (int i = 0; i < len; i++) {
-                if (getHex(i) != k.getHex(i)) return false;
-            }
-            return isTerminal() == k.isTerminal();
-        }
-
-        @Override
-        public String toString() {
-            return Hex.toHexString(key).substring(off) + (isTerminal() ? "T" : "");
-        }
-    }
 
     public enum NodeType {
         BranchNode,
@@ -180,7 +56,7 @@ public class TrieImpl1 implements Trie<byte[]> {
         }
 
         // new KVNode with key and (value or node)
-        public Node(Key key, Object valueOrNode) {
+        public Node(TrieKey key, Object valueOrNode) {
             this(new Object[]{key, valueOrNode});
             dirty = true;
         }
@@ -273,7 +149,8 @@ public class TrieImpl1 implements Trie<byte[]> {
             }
         }
 
-        private byte[] encodeRlpListFutures(Future<byte[]> ... list) throws ExecutionException, InterruptedException {
+        @SafeVarargs
+        private final byte[] encodeRlpListFutures(Future<byte[]>... list) throws ExecutionException, InterruptedException {
             byte[][] vals = new byte[list.length][];
             for (int i = 0; i < list.length; i++) {
                 vals[i] = list[i].get();
@@ -289,7 +166,7 @@ public class TrieImpl1 implements Trie<byte[]> {
 
             if (list.size() == 2) {
                 children = new Object[2];
-                Key key = Key.fromPacked(list.getBytes(0));
+                TrieKey key = TrieKey.fromPacked(list.getBytes(0));
                 children[0] = key;
                 if (key.isTerminal()) {
                     children[1] = list.getBytes(1);
@@ -349,15 +226,40 @@ public class TrieImpl1 implements Trie<byte[]> {
         public Node branchNodeSetValue(byte[] val) {
             parse();
             assert getType() == NodeType.BranchNode;
-            children[16] = val;
+            children[16] = val == null ? NULL_NODE : val;
             dirty = true;
             return this;
         }
 
-        public Key kvNodeGetKey() {
+        public int branchNodeCompactIdx() {
             parse();
-            assert getType() == NodeType.KVNodeNode || getType() == NodeType.KVNodeValue;
-            return (Key) children[0];
+            assert getType() == NodeType.BranchNode;
+            int cnt = 0;
+            int idx = -1;
+            for (int i = 0; i < 16; i++) {
+                if (branchNodeGetChild(i) != null) {
+                    cnt++;
+                    idx = i;
+                    if (cnt > 1) return -1;
+                }
+            }
+            return cnt > 0 ? idx : (branchNodeGetValue() == null ? -1 : 16);
+        }
+        public boolean branchNodeCanCompact() {
+            parse();
+            assert getType() == NodeType.BranchNode;
+            int cnt = 0;
+            for (int i = 0; i < 16; i++) {
+                cnt += branchNodeGetChild(i) == null ? 0 : 1;
+                if (cnt > 1) return false;
+            }
+            return cnt == 0 || branchNodeGetValue() == null;
+        }
+
+        public TrieKey kvNodeGetKey() {
+            parse();
+            assert getType() != NodeType.BranchNode;
+            return (TrieKey) children[0];
         }
 
         public Node kvNodeGetChildNode() {
@@ -398,6 +300,17 @@ public class TrieImpl1 implements Trie<byte[]> {
 
             return children.length == 17 ? NodeType.BranchNode :
                     (children[1] instanceof Node ? NodeType.KVNodeNode : NodeType.KVNodeValue);
+        }
+
+        public void dispose() {
+            if (hash != null) {
+                deleteHash(hash);
+            }
+        }
+
+        public Node invalidate() {
+            dirty = true;
+            return this;
         }
 
         /***********  Dump methods  ************/
@@ -468,10 +381,76 @@ public class TrieImpl1 implements Trie<byte[]> {
         }
     }
 
+    private Node delete(Node n, TrieKey k) {
+        NodeType type = n.getType();
+        Node newKvNode;
+        if (type == NodeType.BranchNode) {
+            if (k.isEmpty())  {
+                n.branchNodeSetValue(null);
+            } else {
+                int idx = k.getHex(0);
+                Node child = n.branchNodeGetChild(idx);
+                if (child == null) return n; // no key found
+
+                Node newNode = delete(child, k.shift(1));
+                n.branchNodeSetChild(idx, newNode);
+                if (newNode != null) return n; // newNode != null thus number of children didn't decrease
+            }
+
+            // child node or value was deleted and the branch node may need to be compacted
+            int compactIdx = n.branchNodeCompactIdx();
+            if (compactIdx < 0) return n; // no compaction is required
+
+            // only value or a single child left - compact branch node to kvNode
+            n.dispose();
+           if (compactIdx == 16) { // only value left
+                return new Node(TrieKey.emptyWithTerminal(), n.branchNodeGetValue());
+            } else { // only single child left
+                newKvNode = new Node(TrieKey.singleHex(compactIdx), n.branchNodeGetChild(compactIdx));
+            }
+        } else { // n - kvNode
+            TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
+            if (k1 == null) {
+                // no key found
+                return n;
+            } else if (type == NodeType.KVNodeValue) {
+                if (k1.isEmpty()) {
+                    // delete this kvNode
+                    n.dispose();
+                    return null;
+                } else {
+                    // else no key found
+                    return n;
+                }
+            } else {
+                Node newChild = delete(n.kvNodeGetChildNode(), k1);
+                if (newChild == null) throw new RuntimeException("Shouldn't happen");
+                newKvNode = n.kvNodeSetValueOrNode(newChild);
+            }
+        }
+
+        // if we get here a new kvNode was created, now need to check
+        // if it should be compacted with child kvNode
+        Node newChild = newKvNode.kvNodeGetChildNode();
+        if (newChild.getType() != NodeType.BranchNode) {
+            // two kvNodes should be compacted into a single one
+            TrieKey newKey = newKvNode.kvNodeGetKey().concat(newChild.kvNodeGetKey());
+            Node newNode = new Node(newKey, newChild.kvNodeGetValueOrNode());
+            newChild.dispose();
+            return newNode;
+        } else {
+            // no compaction needed
+            return newKvNode;
+        }
+    }
+
     Source<byte[], byte[]> cache;
     Node root;
     boolean async;
 
+    public TrieImpl1(Source<byte[], byte[]> cache) {
+        this(cache, null);
+    }
     public TrieImpl1(Source<byte[], byte[]> cache, byte[] root) {
         this.cache = cache;
         setRoot(root);
@@ -503,20 +482,45 @@ public class TrieImpl1 implements Trie<byte[]> {
 
 
     public byte[] get(byte[] key) {
-        Key k = Key.fromNormal(key);
+        TrieKey k = TrieKey.fromNormal(key);
         return get(root, k);
     }
 
-    public void put(byte[] key, byte[] value) {
-        Key k = Key.fromNormal(key);
-        if (root == null) {
-            root = new Node(k, value);
+    private byte[] get(Node n, TrieKey k) {
+        if (n == null) return null;
+
+        NodeType type = n.getType();
+        if (type == NodeType.BranchNode) {
+            if (k.isEmpty()) return n.branchNodeGetValue();
+            Node childNode = n.branchNodeGetChild(k.getHex(0));
+            return get(childNode, k.shift(1));
         } else {
-            root = insert(root, k, value);
+            TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
+            if (k1 == null) return null;
+            if (type == NodeType.KVNodeValue) {
+                return k1.isEmpty() ? n.kvNodeGetValue() : null;
+            } else {
+                return get(n.kvNodeGetChildNode(), k1);
+            }
         }
     }
 
-    private Node insert(Node n, Key k, Object nodeOrValue) {
+    public void put(byte[] key, byte[] value) {
+        TrieKey k = TrieKey.fromNormal(key);
+        if (root == null) {
+            if (value != null && value.length > 0) {
+                root = new Node(k, value);
+            }
+        } else {
+            if (value == null || value.length == 0) {
+                root = delete(root, k);
+            } else {
+                root = insert(root, k, value);
+            }
+        }
+    }
+
+    private Node insert(Node n, TrieKey k, Object nodeOrValue) {
         NodeType type = n.getType();
         if (type == NodeType.BranchNode) {
             if (k.isEmpty()) return n.branchNodeSetValue((byte[]) nodeOrValue);
@@ -524,7 +528,7 @@ public class TrieImpl1 implements Trie<byte[]> {
             if (childNode != null) {
                 return n.branchNodeSetChild(k.getHex(0), insert(childNode, k.shift(1), nodeOrValue));
             } else {
-                Key childKey = k.shift(1);
+                TrieKey childKey = k.shift(1);
                 Node newChildNode;
                 if (!childKey.isEmpty()) {
                     newChildNode = new Node(childKey, nodeOrValue);
@@ -535,51 +539,43 @@ public class TrieImpl1 implements Trie<byte[]> {
                 return n.branchNodeSetChild(k.getHex(0), newChildNode);
             }
         } else {
-            Key commonPrefix = k.getCommonPrefix(n.kvNodeGetKey());
+            TrieKey commonPrefix = k.getCommonPrefix(n.kvNodeGetKey());
             if (commonPrefix.isEmpty()) {
                 Node newBranchNode = new Node();
                 insert(newBranchNode, n.kvNodeGetKey(), n.kvNodeGetValueOrNode());
                 insert(newBranchNode, k, nodeOrValue);
+                n.dispose();
                 return newBranchNode;
             } else if (commonPrefix.equals(k)) {
                 return n.kvNodeSetValueOrNode(nodeOrValue);
             } else if (commonPrefix.equals(n.kvNodeGetKey())) {
                 insert(n.kvNodeGetChildNode(), k.shift(commonPrefix.getLength()), nodeOrValue);
-                return n;
+                return n.invalidate();
             } else {
                 Node newBranchNode = new Node();
                 Node newKvNode = new Node(commonPrefix, newBranchNode);
                 // TODO can be optimized
                 insert(newKvNode, n.kvNodeGetKey(), n.kvNodeGetValueOrNode());
                 insert(newKvNode, k, nodeOrValue);
+                n.dispose();
                 return newKvNode;
             }
         }
     }
 
-    private byte[] get(Node n, Key k) {
-        if (n == null) return null;
-
-        NodeType type = n.getType();
-        if (type == NodeType.BranchNode) {
-            if (k.isEmpty()) return n.branchNodeGetValue();
-            Node childNode = n.branchNodeGetChild(k.getHex(0));
-            return get(childNode, k.shift(1));
-        } else {
-            Key k1 = k.matchAndShift(n.kvNodeGetKey());
-            if (k1 == null) return null;
-            if (type == NodeType.KVNodeValue) {
-                return k1.isEmpty() ? n.kvNodeGetValue() : null;
-            } else {
-                return get(n.kvNodeGetChildNode(), k1);
-            }
+    @Override
+    public void delete(byte[] key) {
+        TrieKey k = TrieKey.fromNormal(key);
+        if (root != null) {
+            root = delete(root, k);
         }
     }
+
 
     @Override
     public byte[] getRootHash() {
         encode();
-        return root.hash;
+        return root != null ? root.hash : EMPTY_TRIE_HASH;
     }
 
     @Override
@@ -588,13 +584,27 @@ public class TrieImpl1 implements Trie<byte[]> {
     }
 
     @Override
-    public void delete(byte[] key) {
-        throw new RuntimeException("Not implemented yet");
+    public boolean flush() {
+        if (root.dirty) {
+            // persist all dirty nodes to underlying Source
+            encode();
+            // release all Trie Node instances for GC
+            root = new Node(root.hash);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
-    public boolean flush() {
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TrieImpl1 trieImpl1 = (TrieImpl1) o;
+
+        return FastByteComparisons.equal(getRootHash(), trieImpl1.getRootHash());
+
     }
 
     public String dumpStructure() {

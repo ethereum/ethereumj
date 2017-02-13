@@ -56,6 +56,7 @@ public class TrieTest {
             }
             super.delete(key);
         }
+        public NoDoubleDeleteMapDB getDb() {return this;}
     };
 
     public class TrieCache extends SourceCodec<byte[], Value, byte[], byte[]> {
@@ -66,8 +67,10 @@ public class TrieTest {
         public NoDoubleDeleteMapDB getDb() {return (NoDoubleDeleteMapDB) getSource();}
     }
 
-    public TrieCache mockDb = new TrieCache();
-    public TrieCache mockDb_2 = new TrieCache();
+//    public TrieCache mockDb = new TrieCache();
+//    public TrieCache mockDb_2 = new TrieCache();
+    public NoDoubleDeleteMapDB mockDb = new NoDoubleDeleteMapDB();
+    public NoDoubleDeleteMapDB mockDb_2 = new NoDoubleDeleteMapDB();
 
 //      ROOT: [ '\x16', A ]
 //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
@@ -88,23 +91,63 @@ public class TrieTest {
     };
 
 
+//    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
+//        public StringTrie(Source<byte[], Value> src) {
+//            this(src, null);
+//        }
+//        public StringTrie(Source<byte[], Value> src, byte[] root) {
+//            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
+//        }
+//
+//        public byte[] getRootHash() {
+//            return ((TrieImpl) getSource()).getRootHash();
+//        }
+//
+//        public String getTrieDump() {
+//            return ((TrieImpl) getSource()).getTrieDump();
+//        }
+//
+//        @Override
+//        public boolean equals(Object obj) {
+//            return getSource().equals(((StringTrie) obj).getSource());
+//        }
+//    }
     private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
-        public StringTrie(Source<byte[], Value> src) {
+        public StringTrie(Source<byte[], byte[]> src) {
             this(src, null);
         }
-        public StringTrie(Source<byte[], Value> src, byte[] root) {
-            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
+        public StringTrie(Source<byte[], byte[]> src, byte[] root) {
+            super(new TrieImpl1(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
         }
 
         public byte[] getRootHash() {
-            return ((TrieImpl) getSource()).getRootHash();
+            return ((TrieImpl1) getSource()).getRootHash();
         }
 
         public String getTrieDump() {
-            return ((TrieImpl) getSource()).getTrieDump();
+            return ((TrieImpl1) getSource()).dumpTrie();
+        }
+
+        public String dumpStructure() {
+            return ((TrieImpl1) getSource()).dumpStructure();
         }
 
         @Override
+        public String get(String s) {
+            String ret = super.get(s);
+            return ret == null ? "" : ret;
+        }
+
+    @Override
+    public void put(String s, String val) {
+        if (val == null || val.isEmpty()) {
+            super.delete(s);
+        } else {
+            super.put(s, val);
+        }
+    }
+
+    @Override
         public boolean equals(Object obj) {
             return getSource().equals(((StringTrie) obj).getSource());
         }
@@ -392,7 +435,7 @@ public class TrieTest {
 
     @Test
     public void testDeleteCompletellyDiferentItems() {
-        TrieImpl trie = new TrieImpl(mockDb);
+        TrieImpl1 trie = new TrieImpl1(mockDb);
 
         String val_1 = "1000000000000000000000000000000000000000000000000000000000000000";
         String val_2 = "2000000000000000000000000000000000000000000000000000000000000000";
@@ -434,12 +477,15 @@ public class TrieTest {
         assertEquals(LONG_STRING, new String(trie.get(test)));
         assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 
+        System.out.println(trie.dumpStructure());
         trie.delete(dog);
-        assertEquals("", new String(trie.get(dog)));
+        System.out.println(trie.dumpStructure());
+        assertEquals("", trie.get(dog));
         assertEquals(ROOT_HASH_AFTER1, Hex.toHexString(trie.getRootHash()));
 
         trie.delete(test);
-        assertEquals("", new String(trie.get(test)));
+        System.out.println(trie.dumpStructure());
+        assertEquals("", trie.get(test));
         assertEquals(ROOT_HASH_AFTER2, Hex.toHexString(trie.getRootHash()));
     }
 
@@ -471,7 +517,7 @@ public class TrieTest {
 
     @Test
     public void testMassiveDelete() {
-        TrieImpl trie = new TrieImpl(mockDb);
+        TrieImpl1 trie = new TrieImpl1(mockDb);
         byte[] rootHash1 = null;
         for (int i = 0; i < 11000; i++) {
             trie.put(HashUtil.sha3(intToBytes(i)), HashUtil.sha3(intToBytes(i + 1000000)));
@@ -752,7 +798,7 @@ public class TrieTest {
                 Assert.assertEquals(mapWord2, treeWord2);
             }
 
-            TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
+            TrieImpl1 trie2 = new TrieImpl1(mockDb, trie.getRootHash());
 
             // Assert the result now
             keys = testerMap.keySet().iterator();
@@ -760,7 +806,7 @@ public class TrieTest {
 
                 String mapWord1 = keys.next();
                 String mapWord2 = testerMap.get(mapWord1);
-                String treeWord2 = new String(trie2.get(mapWord1));
+                String treeWord2 = new String(trie2.get(mapWord1.getBytes()));
 
                 Assert.assertEquals(mapWord2, treeWord2);
             }
@@ -819,8 +865,8 @@ public class TrieTest {
     public void testGetFromRootNode() {
         StringTrie trie1 = new StringTrie(mockDb);
         trie1.put(cat, LONG_STRING);
-        TrieImpl trie2 = new TrieImpl(mockDb, trie1.getRootHash());
-        assertEquals(LONG_STRING, new String(trie2.get(cat)));
+        TrieImpl1 trie2 = new TrieImpl1(mockDb, trie1.getRootHash());
+        assertEquals(LONG_STRING, new String(trie2.get(cat.getBytes())));
     }
 
 
@@ -943,7 +989,7 @@ public class TrieTest {
     @Test
     public void testSecureTrie(){
 
-        Trie trie = new SecureTrie(mockDb);
+        Trie trie = new SecureTrie1(mockDb);
 
         byte[] k1 = "do".getBytes();
         byte[] v1 = "verb".getBytes();
