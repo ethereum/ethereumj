@@ -279,12 +279,12 @@ public class RLP {
         if (pos >= payload.length)
             return -1;
 
-        if ((payload[pos] & 0xFF) >= OFFSET_LONG_LIST) {
+        if ((payload[pos] & 0xFF) > OFFSET_LONG_LIST) {
             byte lengthOfLength = (byte) (payload[pos] - OFFSET_LONG_LIST);
             return pos + lengthOfLength + 1;
         }
         if ((payload[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                && (payload[pos] & 0xFF) < OFFSET_LONG_LIST) {
+                && (payload[pos] & 0xFF) <= OFFSET_LONG_LIST) {
             return pos + 1;
         }
         if ((payload[pos] & 0xFF) >= OFFSET_LONG_ITEM
@@ -300,13 +300,13 @@ public class RLP {
         if (pos >= payload.length)
             return -1;
 
-        if ((payload[pos] & 0xFF) >= OFFSET_LONG_LIST) {
+        if ((payload[pos] & 0xFF) > OFFSET_LONG_LIST) {
             byte lengthOfLength = (byte) (payload[pos] - OFFSET_LONG_LIST);
             int length = calcLength(lengthOfLength, payload, pos);
             return pos + lengthOfLength + length + 1;
         }
         if ((payload[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                && (payload[pos] & 0xFF) < OFFSET_LONG_LIST) {
+                && (payload[pos] & 0xFF) <= OFFSET_LONG_LIST) {
 
             byte length = (byte) ((payload[pos] & 0xFF) - OFFSET_SHORT_LIST);
             return pos + 1 + length;
@@ -353,7 +353,7 @@ public class RLP {
                 // It's a list with a payload more than 55 bytes
                 // data[0] - 0xF7 = how many next bytes allocated
                 // for the length of the list
-                if ((msgData[pos] & 0xFF) >= OFFSET_LONG_LIST) {
+                if ((msgData[pos] & 0xFF) > OFFSET_LONG_LIST) {
 
                     byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_LIST);
                     int length = calcLength(lengthOfLength, msgData, pos);
@@ -370,7 +370,7 @@ public class RLP {
                 }
                 // It's a list with a payload less than 55 bytes
                 if ((msgData[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                        && (msgData[pos] & 0xFF) < OFFSET_LONG_LIST) {
+                        && (msgData[pos] & 0xFF) <= OFFSET_LONG_LIST) {
 
                     byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_LIST);
 

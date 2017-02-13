@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -115,6 +116,11 @@ public class SnapshotManifest {
 
     public void setBlockHash(byte[] blockHash) {
         this.blockHash = blockHash;
+    }
+
+    public byte[] getHash() {
+        if (encoded == null) encode();
+        return HashUtil.sha3(encoded);
     }
 
     @Override

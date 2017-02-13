@@ -149,6 +149,7 @@ public class ParStatusMessage extends ParMessage {
                 " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) +
                 " bestHash=" + Hex.toHexString(this.bestHash) +
                 " genesisHash=" + Hex.toHexString(this.genesisHash) +
+                " snapshotNumber=" + this.snapshotNumber +
                 "]";
     }
 }

@@ -254,6 +254,10 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
         resolved = messageCodesResolver.resolvePar(code);
         if (parMessageFactory != null && ParMessageCodes.inRange(resolved, parVersion)) {
+            // Parity shifts eth63 messages too
+            if (ParMessageCodes.fromByte(resolved, ParVersion.PAR1) == null) {
+                return ethMessageFactory.create(resolved, payload);
+            }
             return parMessageFactory.create(resolved, payload);
         }
 
