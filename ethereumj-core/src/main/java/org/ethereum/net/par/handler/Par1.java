@@ -124,12 +124,12 @@ public class Par1 extends ParHandler {
         }
 
         SnapshotManifest manifest = snapshotManager.getManifest();
-        byte[] snapshotBlockHash = manifest == null ? null : manifest.getBlockHash();
+        byte[] snapshotHash = manifest == null ? null : manifest.getHash();
         long snapshotBlockNumber = manifest == null ? 0 : manifest.getBlockNumber();
 
         ParStatusMessage msg = new ParStatusMessage(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash(),
-                snapshotBlockHash, snapshotBlockNumber);
+                snapshotHash, snapshotBlockNumber);
         sendMessage(msg);
     }
 
