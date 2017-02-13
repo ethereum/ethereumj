@@ -205,7 +205,7 @@ public class TrieImpl implements Trie<byte[]> {
         public Node branchNodeSetChild(int hex, Node node) {
             parse();
             assert getType() == NodeType.BranchNode;
-            children[hex] = node;
+            children[hex] = node == null ? NULL_NODE : node;
             dirty = true;
             return this;
         }
@@ -391,69 +391,6 @@ public class TrieImpl implements Trie<byte[]> {
         void doOnValue(byte[] nodeHash, Node node, byte[] key, byte[] value);
     }
 
-    private Node delete(Node n, TrieKey k) {
-        NodeType type = n.getType();
-        Node newKvNode;
-        if (type == NodeType.BranchNode) {
-            if (k.isEmpty())  {
-                n.branchNodeSetValue(null);
-            } else {
-                int idx = k.getHex(0);
-                Node child = n.branchNodeGetChild(idx);
-                if (child == null) return n; // no key found
-
-                Node newNode = delete(child, k.shift(1));
-                n.branchNodeSetChild(idx, newNode);
-                if (newNode != null) return n; // newNode != null thus number of children didn't decrease
-            }
-
-            // child node or value was deleted and the branch node may need to be compacted
-            int compactIdx = n.branchNodeCompactIdx();
-            if (compactIdx < 0) return n; // no compaction is required
-
-            // only value or a single child left - compact branch node to kvNode
-            n.dispose();
-           if (compactIdx == 16) { // only value left
-                return new Node(TrieKey.empty(true), n.branchNodeGetValue());
-            } else { // only single child left
-                newKvNode = new Node(TrieKey.singleHex(compactIdx), n.branchNodeGetChild(compactIdx));
-            }
-        } else { // n - kvNode
-            TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
-            if (k1 == null) {
-                // no key found
-                return n;
-            } else if (type == NodeType.KVNodeValue) {
-                if (k1.isEmpty()) {
-                    // delete this kvNode
-                    n.dispose();
-                    return null;
-                } else {
-                    // else no key found
-                    return n;
-                }
-            } else {
-                Node newChild = delete(n.kvNodeGetChildNode(), k1);
-                if (newChild == null) throw new RuntimeException("Shouldn't happen");
-                newKvNode = n.kvNodeSetValueOrNode(newChild);
-            }
-        }
-
-        // if we get here a new kvNode was created, now need to check
-        // if it should be compacted with child kvNode
-        Node newChild = newKvNode.kvNodeGetChildNode();
-        if (newChild.getType() != NodeType.BranchNode) {
-            // two kvNodes should be compacted into a single one
-            TrieKey newKey = newKvNode.kvNodeGetKey().concat(newChild.kvNodeGetKey());
-            Node newNode = new Node(newKey, newChild.kvNodeGetValueOrNode());
-            newChild.dispose();
-            return newNode;
-        } else {
-            // no compaction needed
-            return newKvNode;
-        }
-    }
-
     private Source<byte[], byte[]> cache;
     private Node root;
     private boolean async;
@@ -603,6 +540,68 @@ public class TrieImpl implements Trie<byte[]> {
         }
     }
 
+    private Node delete(Node n, TrieKey k) {
+        NodeType type = n.getType();
+        Node newKvNode;
+        if (type == NodeType.BranchNode) {
+            if (k.isEmpty())  {
+                n.branchNodeSetValue(null);
+            } else {
+                int idx = k.getHex(0);
+                Node child = n.branchNodeGetChild(idx);
+                if (child == null) return n; // no key found
+
+                Node newNode = delete(child, k.shift(1));
+                n.branchNodeSetChild(idx, newNode);
+                if (newNode != null) return n; // newNode != null thus number of children didn't decrease
+            }
+
+            // child node or value was deleted and the branch node may need to be compacted
+            int compactIdx = n.branchNodeCompactIdx();
+            if (compactIdx < 0) return n; // no compaction is required
+
+            // only value or a single child left - compact branch node to kvNode
+            n.dispose();
+            if (compactIdx == 16) { // only value left
+                return new Node(TrieKey.empty(true), n.branchNodeGetValue());
+            } else { // only single child left
+                newKvNode = new Node(TrieKey.singleHex(compactIdx), n.branchNodeGetChild(compactIdx));
+            }
+        } else { // n - kvNode
+            TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
+            if (k1 == null) {
+                // no key found
+                return n;
+            } else if (type == NodeType.KVNodeValue) {
+                if (k1.isEmpty()) {
+                    // delete this kvNode
+                    n.dispose();
+                    return null;
+                } else {
+                    // else no key found
+                    return n;
+                }
+            } else {
+                Node newChild = delete(n.kvNodeGetChildNode(), k1);
+                if (newChild == null) throw new RuntimeException("Shouldn't happen");
+                newKvNode = n.kvNodeSetValueOrNode(newChild);
+            }
+        }
+
+        // if we get here a new kvNode was created, now need to check
+        // if it should be compacted with child kvNode
+        Node newChild = newKvNode.kvNodeGetChildNode();
+        if (newChild.getType() != NodeType.BranchNode) {
+            // two kvNodes should be compacted into a single one
+            TrieKey newKey = newKvNode.kvNodeGetKey().concat(newChild.kvNodeGetKey());
+            Node newNode = new Node(newKey, newChild.kvNodeGetValueOrNode());
+            newChild.dispose();
+            return newNode;
+        } else {
+            // no compaction needed
+            return newKvNode;
+        }
+    }
 
     @Override
     public byte[] getRootHash() {
