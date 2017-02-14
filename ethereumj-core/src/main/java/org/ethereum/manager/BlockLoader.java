@@ -43,7 +43,7 @@ public class BlockLoader {
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
     private void blockWork(Block block) {
-        if (block.getNumber() >= blockchain.getBestBlock().getNumber() || blockchain.getBlockByHash(block.getHash()) == null) {
+        if (block.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber() || blockchain.getBlockStore().getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
@@ -72,7 +72,7 @@ public class BlockLoader {
         exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
             @Override
             public Block apply(Block b) {
-                if (b.getNumber() >= blockchain.getBestBlock().getNumber()) {
+                if (b.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber()) {
                     for (Transaction tx : b.getTransactionsList()) {
                         tx.getSender();
                     }
