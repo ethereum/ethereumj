@@ -76,7 +76,7 @@ public class RepositoryRoot extends RepositoryImpl {
         this.stateDS = stateDS;
 
         trieCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
-        stateTrie = new SecureTrie(stateDS, root);
+        stateTrie = new SecureTrie(trieCache, root);
 
         SourceCodec.BytesKey<AccountState, byte[]> accountStateCodec = new SourceCodec.BytesKey<>(stateTrie, Serializers.AccountStateSerializer);
         final ReadWriteCache.BytesKey<AccountState> accountStateCache = new ReadWriteCache.BytesKey<>(accountStateCodec, WriteCache.CacheType.SIMPLE);
