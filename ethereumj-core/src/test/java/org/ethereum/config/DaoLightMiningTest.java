@@ -31,10 +31,10 @@ public class DaoLightMiningTest {
 //            System.out.println("Created block " + b.getNumber() + " " + getData(b.getExtraData()));
         }
 
-        assertEquals("test", getData(sb, FORK_BLOCK - 1));
+        assertEquals("EthereumJ powered", getData(sb, FORK_BLOCK - 1));
         assertEquals("dao-hard-fork", getData(sb, FORK_BLOCK));
         assertEquals("dao-hard-fork", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED - 1));
-        assertEquals("test", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED));
+        assertEquals("EthereumJ powered", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED));
     }
 
     @Test
@@ -45,10 +45,10 @@ public class DaoLightMiningTest {
             Block b = sb.createBlock();
         }
 
-        assertEquals("test", getData(sb, FORK_BLOCK - 1));
+        assertEquals("EthereumJ powered", getData(sb, FORK_BLOCK - 1));
         assertEquals("", getData(sb, FORK_BLOCK));
         assertEquals("", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED - 1));
-        assertEquals("test", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED));
+        assertEquals("EthereumJ powered", getData(sb, FORK_BLOCK + FORK_BLOCK_AFFECTED));
     }
 
     private String getData(StandaloneBlockchain sb, long blockNumber) {
@@ -65,9 +65,9 @@ public class DaoLightMiningTest {
         });
         netConfig.add(0, c1);
         netConfig.add(FORK_BLOCK, proFork ? new DaoHFConfig(c1, FORK_BLOCK) : new DaoNoHFConfig(c1, FORK_BLOCK));
-        System.setProperty("mine.extraData", "test");
 
         SystemProperties.getDefault().setBlockchainConfig(netConfig);
+
 
         // create blockchain
         return new StandaloneBlockchain()
