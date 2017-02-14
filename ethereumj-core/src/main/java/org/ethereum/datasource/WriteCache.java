@@ -28,6 +28,11 @@ import java.util.concurrent.locks.Lock;
  */
 public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
+    /**
+     * Designated NULL object for differentiating the cases when cache knows that this entry is deleted
+     * as oppose to [null] when the cache just knows nothing about the entry and need
+     * to check the underlying storage
+     */
     public static final Object NULL = new Object();
 
     /**
@@ -235,6 +240,12 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         return false;
     }
 
+    /**
+     * Returns the cached value if exist.
+     * Method doesn't look into the underlying storage
+     * @return The value or {@link #NULL} object if it cached,
+     *        or null if no information in the cache for this key
+     */
     public Value getCached(Key key) {
         try (ALock l = readLock.lock()){
             CacheEntry<Value> entry = cache.get(key);
