@@ -329,6 +329,9 @@ public class SyncPool {
         }
     }
 
+    public ChannelManager getChannelManager() {
+        return channelManager;
+    }
 
     private void heartBeat() {
 //        for (Channel peer : channelManager.getActivePeers()) {

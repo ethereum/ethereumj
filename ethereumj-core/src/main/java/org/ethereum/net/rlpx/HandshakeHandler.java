@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.timeout.ReadTimeoutException;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
@@ -301,13 +302,14 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        final String causeMessage = cause != null ? cause.getMessage() : null;
         if (channel.isDiscoveryMode()) {
-            loggerNet.trace("Handshake failed: ", cause);
+            loggerNet.trace("Handshake failed: ", causeMessage);
         } else {
-            if (cause instanceof IOException) {
-                loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress(), cause);
+            if (cause instanceof IOException || cause instanceof ReadTimeoutException) {
+                loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress(), causeMessage);
             } else {
-                loggerNet.warn("Handshake failed: ", cause);
+                loggerNet.warn("Handshake failed: ", causeMessage);
             }
         }
         ctx.close();

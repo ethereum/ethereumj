@@ -20,16 +20,13 @@ public class BlockHeaderValidator extends BlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header) {
-        errors.clear();
-
+    public ValidationResult validate(BlockHeader header) {
         for (BlockHeaderRule rule : rules) {
-            if (!rule.validate(header)) {
-                errors.addAll(rule.getErrors());
-                return false;
+            ValidationResult result = rule.validate(header);
+            if (!result.success) {
+                return result;
             }
         }
-
-        return true;
+        return Success;
     }
 }

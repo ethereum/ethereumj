@@ -1,6 +1,7 @@
 package org.ethereum.datasource;
 
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
 
 import java.util.Arrays;
 
@@ -63,20 +64,20 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
      * Extracts value from the backing Source counter + value byte array
      */
     protected byte[] decodeValue(byte[] srcVal) {
-        return srcVal == null  ? null : Arrays.copyOfRange(srcVal, 4, srcVal.length);
+        return srcVal == null ? null : Arrays.copyOfRange(srcVal, RLP.decode(srcVal, 0).getPos(), srcVal.length);
     }
 
     /**
      * Extracts counter from the backing Source counter + value byte array
      */
     protected int decodeCount(byte[] srcVal) {
-        return srcVal == null ? 0 : ByteUtil.byteArrayToInt(Arrays.copyOfRange(srcVal, 0, 4));
+        return srcVal == null ? 0 : ByteUtil.byteArrayToInt((byte[]) RLP.decode(srcVal, 0).getDecoded());
     }
 
     /**
      * Composes value and counter into backing Source value
      */
     protected byte[] encodeCount(byte[] val, int count) {
-        return ByteUtil.merge(ByteUtil.intToBytes(count), val);
+        return ByteUtil.merge(RLP.encodeInt(count), val);
     }
 }

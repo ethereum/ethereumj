@@ -302,29 +302,57 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return contract;
     }
 
+    @Override
+    public SolidityContract submitNewContractFromJson(String json, Object... constructorArgs) {
+        return submitNewContractFromJson(json, null, constructorArgs);
+    }
+
+    @Override
+    public SolidityContract submitNewContractFromJson(String json, String contractName, Object... constructorArgs) {
+		SolidityContractImpl contract;
+		try {
+			contract = createContractFromJson(json, contractName);
+			CallTransaction.Function constructor = contract.contract.getConstructor();
+			if (constructor == null && constructorArgs.length > 0) {
+				throw new RuntimeException("No constructor with params found");
+			}
+			byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
+			submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
+					ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null,
+					new TransactionResult()));
+			return contract;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+    }
+
     private SolidityContractImpl createContract(String soliditySrc, String contractName) {
         try {
             SolidityCompiler.Result compileRes = SolidityCompiler.compile(soliditySrc.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
             if (compileRes.isFailed()) throw new RuntimeException("Compile result: " + compileRes.errors);
-            CompilationResult result = CompilationResult.parse(compileRes.output);
-            if (contractName == null) {
-                if (result.contracts.size() > 1) {
-                    throw new RuntimeException("Source contains more than 1 contact (" + result.contracts.keySet() + "). Please specify the contract name");
-                } else {
-                    contractName = result.contracts.keySet().iterator().next();
-                }
-            }
-
-            SolidityContractImpl contract = new SolidityContractImpl(result.contracts.get(contractName));
-
-            for (CompilationResult.ContractMetadata metadata : result.contracts.values()) {
-                contract.addRelatedContract(metadata.abi);
-            }
-            return contract;
+			return createContractFromJson(contractName, compileRes.output);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+	private SolidityContractImpl createContractFromJson(String contractName, String json) throws IOException {
+		CompilationResult result = CompilationResult.parse(json);
+		if (contractName == null) {
+		    if (result.contracts.size() > 1) {
+		        throw new RuntimeException("Source contains more than 1 contact (" + result.contracts.keySet() + "). Please specify the contract name");
+		    } else {
+		        contractName = result.contracts.keySet().iterator().next();
+		    }
+		}
+
+		SolidityContractImpl contract = new SolidityContractImpl(result.contracts.get(contractName));
+
+		for (CompilationResult.ContractMetadata metadata : result.contracts.values()) {
+		    contract.addRelatedContract(metadata.abi);
+		}
+		return contract;
+	}
 
     @Override
     public SolidityContract createExistingContractFromSrc(String soliditySrc, String contractName, byte[] contractAddress) {

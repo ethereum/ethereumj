@@ -46,11 +46,7 @@ import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
-import static org.ethereum.core.ImportResult.EXIST;
-import static org.ethereum.core.ImportResult.IMPORTED_BEST;
-import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
-import static org.ethereum.core.ImportResult.INVALID_BLOCK;
-import static org.ethereum.core.ImportResult.NO_PARENT;
+import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.BIUtil.isMoreThan;
 
@@ -463,16 +459,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+        final long blockNumber = parent.getNumber() + 1;
+
+        final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
+
         Block block = new Block(parent.getHash(),
                 EMPTY_LIST_HASH, // uncleHash
                 minerCoinbase,
                 new byte[0], // log bloom - from tx receipts
                 new byte[0], // difficulty computed right after block creation
-                parent.getNumber() + 1,
+                blockNumber,
                 parent.getGasLimit(), // (add to config ?)
                 0,  // gas used - computed after running all transactions
                 time,  // block time
-                minerExtraData,  // extra data
+                extraData,  // extra data
                 new byte[0],  // mixHash (to mine)
                 new byte[0],  // nonce   (to mine)
                 new byte[0],  // receiptsRoot - computed after running all transactions
@@ -510,7 +510,26 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //    @Override
-    public synchronized BlockSummary add(Repository repo, Block block) {
+    public synchronized BlockSummary add(Repository repo, final Block block) {
+        BlockSummary summary = addImpl(repo, block);
+
+        if (summary == null) {
+            stateLogger.warn("Trying to reimport the block for debug...");
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+            }
+            BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
+            stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
+            if (summary1 != null) {
+                stateLogger.error("Inconsistent behavior, exiting...");
+                System.exit(-1);
+            }
+        }
+        return summary;
+    }
+
+    public synchronized BlockSummary addImpl(Repository repo, final Block block) {
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
@@ -539,7 +558,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         BlockSummary summary = processBlock(repo, block);
-        List<TransactionReceipt> receipts = summary.getReceipts();
+        final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
         String receiptHash = Hex.toHexString(block.getReceiptsRoot());
@@ -549,7 +568,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
             logger.warn("Calculated receipts: " + receipts);
             repo.rollback();
-            return null;
+            summary = null;
         }
 
         String logBloomHash = Hex.toHexString(block.getLogBloom());
@@ -558,7 +577,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (!logBloomHash.equals(logBloomListHash)) {
             logger.warn("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
             repo.rollback();
-            return null;
+            summary = null;
         }
 
         String blockStateRootHash = Hex.toHexString(block.getStateRoot());
@@ -585,19 +604,26 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
                 System.exit(1);
             } else {
-                return null;
+                summary = null;
             }
         }
 
-        repo.commit();
-        updateTotalDifficulty(block);
-        summary.setTotalDifficulty(getTotalDifficulty());
+        if (summary != null) {
+            repo.commit();
+            updateTotalDifficulty(block);
+            summary.setTotalDifficulty(getTotalDifficulty());
 
-        storeBlock(block, receipts);
-
-        if (!byTest) {
-            repository.commit();
-            dbFlushManager.commit();
+            if (!byTest) {
+                dbFlushManager.commit(new Runnable() {
+                    @Override
+                    public void run() {
+                        storeBlock(block, receipts);
+                        repository.commit();
+                    }
+                });
+            } else {
+                storeBlock(block, receipts);
+            }
         }
 
         return summary;

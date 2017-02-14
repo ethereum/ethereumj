@@ -9,7 +9,7 @@ jdk: oraclejdk7
 # publish releases to http://jcenter.bintray.com/org/ethereum/ethereumj-core
 # publish coverage to https://coveralls.io/r/ethereum/ethereumj
 script:
-  - ./gradlew clean build publish jacocoTestReport coveralls --stacktrace --info
+  - ./gradlew clean build publish jacocoTestReport --stacktrace --info
 
 
 cache:
