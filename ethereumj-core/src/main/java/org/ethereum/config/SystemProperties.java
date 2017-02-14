@@ -257,7 +257,7 @@ public class SystemProperties {
                     method.invoke(this);
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Error validating config method: " + method + ". " + e.getMessage(), e);
+                throw new RuntimeException("Error validating config method: " + method, e);
             }
         }
     }
@@ -385,6 +385,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public long databaseResetBlock() {
+        return config.getLong("database.resetBlock");
+    }
+
+    @ValidateMe
     public int databasePruneDepth() {
         return config.getBoolean("database.prune.enabled") ? config.getInt("database.prune.maxDepth") : -1;
     }
@@ -455,6 +460,15 @@ public class SystemProperties {
     @ValidateMe
     public String coinbaseSecret() {
         return config.getString("coinbase.secret");
+    }
+
+    @ValidateMe
+    public Integer blockQueueSize() {
+        return config.getInt("cache.blockQueueSize") * 1024 * 1024;
+    }
+    @ValidateMe
+    public Integer headerQueueSize() {
+        return config.getInt("cache.headerQueueSize") * 1024 * 1024;
     }
 
     @ValidateMe
@@ -759,7 +773,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean isFastSyncEnabled() {
-        return this.syncEnabled == null ? config.getBoolean("sync.fast.enabled") : syncEnabled;
+        return isSyncEnabled() && config.getBoolean("sync.fast.enabled");
     }
 
     @ValidateMe

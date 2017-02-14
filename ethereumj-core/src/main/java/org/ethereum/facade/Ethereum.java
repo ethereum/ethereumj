@@ -187,7 +187,7 @@ public interface Ethereum {
      * Introduced in EIP-155
      * @return chain id or null
      */
-    Byte getChainIdForNextBlock();
+    Integer getChainIdForNextBlock();
 
     void exitOn(long number);
 }

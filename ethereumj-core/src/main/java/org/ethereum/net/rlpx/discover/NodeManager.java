@@ -142,7 +142,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private void dbRead() {
         try {
             db = mapDBFactory.createTransactionalDB("network/discovery");
-            if (config.databaseReset()) {
+            if (config.databaseReset() && config.databaseResetBlock() == 0) {
                 logger.info("Resetting DB Node statistics...");
                 db.delete("nodeStats");
             }
@@ -382,6 +382,16 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
+    }
+
+    /**
+     * @return home node if config defines it as public, otherwise null
+     */
+    Node getPublicHomeNode() {
+        if (config.isPublicHomeNode()) {
+            return homeNode;
+        }
+        return null;
     }
 
     public void close() {

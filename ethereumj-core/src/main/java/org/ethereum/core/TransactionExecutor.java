@@ -216,6 +216,7 @@ public class TransactionExecutor {
             byte[] code = track.getCode(targetAddress);
             if (isEmpty(code)) {
                 m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
+                result.spendGas(basicTxCost);
             } else {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
@@ -244,6 +245,7 @@ public class TransactionExecutor {
 
         if (isEmpty(tx.getData())) {
             m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
+            result.spendGas(basicTxCost);
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
@@ -347,7 +349,7 @@ public class TransactionExecutor {
             // Accumulate refunds for suicides
             result.addFutureRefund(result.getDeleteAccounts().size() * config.getBlockchainConfig().
                     getConfigForBlock(currentBlock.getNumber()).getGasCost().getSUICIDE_REFUND());
-            long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            long gasRefund = Math.min(result.getFutureRefund(), getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             m_endGas = m_endGas.add(BigInteger.valueOf(gasRefund));
 

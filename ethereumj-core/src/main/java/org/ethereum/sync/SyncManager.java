@@ -40,7 +40,6 @@ public class SyncManager extends BlockDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private final static AtomicLong blockQueueByteSize = new AtomicLong(0);
-    private final static long BLOCK_BYTES_LIMIT = 32 * 1024 * 1024;
     private final static int BLOCK_BYTES_ADDON = 4;
 
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
@@ -91,15 +90,22 @@ public class SyncManager extends BlockDownloader {
 
     private Thread syncQueueThread;
 
+    private long blockBytesLimit = 32 * 1024 * 1024;
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
+    public SyncManager() {
+        super(null);
+    }
+
     @Autowired
     public SyncManager(final SystemProperties config, BlockHeaderValidator validator) {
         super(validator);
         this.config = config;
+        blockBytesLimit = config.blockQueueSize();
+        setHeaderQueueLimit(config.headerQueueSize() / BlockHeader.MAX_HEADER_SIZE);
     }
 
     public void init(final ChannelManager channelManager, final SyncPool pool) {
@@ -187,7 +193,7 @@ public class SyncManager extends BlockDownloader {
         int blockQueueSize = blockQueue.size();
         long blockByteSize = blockQueueByteSize.get();
         int availableBlockSpace = Math.max(0, getBlockQueueLimit() - blockQueueSize);
-        long availableBytesSpace = Math.max(0, BLOCK_BYTES_LIMIT - blockByteSize);
+        long availableBytesSpace = Math.max(0, blockBytesLimit - blockByteSize);
 
         int bytesSpaceInBlocks;
         if (blockByteSize == 0 || blockQueueSize == 0) {

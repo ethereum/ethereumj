@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
@@ -24,10 +25,13 @@ import static org.ethereum.solidity.SolidityType.IntType.encodeInt;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 public class Abi extends ArrayList<Abi.Entry> {
+    private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 
     public static Abi fromJson(String json) {
         try {
-            return new ObjectMapper().readValue(json, Abi.class);
+            return DEFAULT_MAPPER.readValue(json, Abi.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -79,7 +83,8 @@ public class Abi extends ArrayList<Abi.Entry> {
         public enum Type {
             constructor,
             function,
-            event
+            event,
+            fallback
         }
 
         @JsonInclude(Include.NON_NULL)
@@ -112,14 +117,16 @@ public class Abi extends ArrayList<Abi.Entry> {
 
         public final Boolean anonymous;
         public final Boolean constant;
+        public final Boolean payable;
         public final String name;
         public final List<Param> inputs;
         public final List<Param> outputs;
         public final Type type;
 
-        public Entry(Boolean anonymous, Boolean constant, String name, List<Param> inputs, List<Param> outputs, Type type) {
+        public Entry(Boolean anonymous, Boolean constant, Boolean payable, String name, List<Param> inputs, List<Param> outputs, Type type) {
             this.anonymous = anonymous;
             this.constant = constant;
+            this.payable = payable;
             this.name = name;
             this.inputs = inputs;
             this.outputs = outputs;
@@ -146,6 +153,7 @@ public class Abi extends ArrayList<Abi.Entry> {
         @JsonCreator
         public static Entry create(@JsonProperty("anonymous") boolean anonymous,
                                    @JsonProperty("constant") boolean constant,
+                                   @JsonProperty("payable") boolean payable,
                                    @JsonProperty("name") String name,
                                    @JsonProperty("inputs") List<Param> inputs,
                                    @JsonProperty("outputs") List<Param> outputs,
@@ -156,7 +164,7 @@ public class Abi extends ArrayList<Abi.Entry> {
                     result = new Constructor(inputs, outputs);
                     break;
                 case function:
-                    result = new Function(constant, name, inputs, outputs);
+                    result = new Function(constant, payable, name, inputs, outputs);
                     break;
                 case event:
                     result = new Event(anonymous, name, inputs, outputs);
@@ -170,7 +178,7 @@ public class Abi extends ArrayList<Abi.Entry> {
     public static class Constructor extends Entry {
 
         public Constructor(List<Param> inputs, List<Param> outputs) {
-            super(null, null, "", inputs, outputs, Type.constructor);
+            super(null, null, null, "", inputs, outputs, Type.constructor);
         }
 
         public List<?> decode(byte[] encoded) {
@@ -186,8 +194,8 @@ public class Abi extends ArrayList<Abi.Entry> {
 
         private static final int ENCODED_SIGN_LENGTH = 4;
 
-        public Function(boolean constant, String name, List<Param> inputs, List<Param> outputs) {
-            super(null, constant, name, inputs, outputs, Type.function);
+        public Function(boolean constant, boolean payable, String name, List<Param> inputs, List<Param> outputs) {
+            super(null, constant, payable, name, inputs, outputs, Type.function);
         }
 
         public byte[] encode(Object... args) {
@@ -264,7 +272,7 @@ public class Abi extends ArrayList<Abi.Entry> {
     public static class Event extends Entry {
 
         public Event(boolean anonymous, String name, List<Param> inputs, List<Param> outputs) {
-            super(anonymous, null, name, inputs, outputs, Type.event);
+            super(anonymous, null, null, name, inputs, outputs, Type.event);
         }
 
         public List<?> decode(byte[] data, byte[][] topics) {

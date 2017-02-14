@@ -250,7 +250,7 @@ public abstract class BlockDownloader {
 
                     int reqBlocksCounter = 0;
                     for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
-                        Channel any = getGoodPeer();
+                        Channel any = getAnyPeer();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
                             break;
@@ -370,7 +370,14 @@ public abstract class BlockDownloader {
      * @return true if block is valid, false otherwise
      */
     protected boolean isValid(BlockHeader header) {
-        return headerValidator.validateAndLog(header, logger);
+
+        if (!headerValidator.validate(header)) {
+
+            headerValidator.logErrors(logger);
+            return false;
+        }
+
+        return true;
     }
 
     /**

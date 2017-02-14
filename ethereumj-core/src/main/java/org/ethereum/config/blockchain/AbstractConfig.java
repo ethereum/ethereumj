@@ -9,8 +9,6 @@ import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
-import org.ethereum.validator.BlockHeaderRule;
-import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
@@ -74,16 +72,21 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         BigInteger fromParent = pd.add(quotient.multiply(sign));
         BigInteger difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), fromParent);
 
-        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        int explosion = getExplosion(curBlock, parent);
 
-        if (periodCount > 1) {
-            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(periodCount - 2)));
+        if (explosion >= 0) {
+            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
         }
 
         return difficulty;
     }
 
     protected abstract BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent);
+
+    protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
+        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        return periodCount - 2;
+    }
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
@@ -100,12 +103,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     public void hardForkTransfers(Block block, Repository repo) {}
 
     @Override
-    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
-        return minerExtraData;
-    }
-
-    @Override
-    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
+    public List<Pair<Long, byte[]>> blockHashConstraints() {
         return Collections.emptyList();
     }
 
@@ -135,10 +133,5 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public Integer getChainId() {
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
     }
 }

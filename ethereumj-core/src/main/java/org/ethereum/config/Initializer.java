@@ -28,7 +28,7 @@ class Initializer implements BeanPostProcessor {
      * Effectively is called before any other bean is initialized
      */
     private void initConfig(SystemProperties config) {
-        logger.info("Running {},  CORE: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
+        logger.info("Running {},  core version: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
         BuildInfo.printInfo();
 
         databaseVersionHandler.process(config);
@@ -84,7 +84,7 @@ class Initializer implements BeanPostProcessor {
         }
 
         public void process(SystemProperties config) {
-            if (config.databaseReset()){
+            if (config.databaseReset() && config.databaseResetBlock() == 0){
                 FileUtil.recursiveDelete(config.databaseDir());
                 putDatabaseVersion(config, config.databaseVersion());
                 logger.info("Database reset done");
