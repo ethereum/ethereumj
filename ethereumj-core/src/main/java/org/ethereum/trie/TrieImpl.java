@@ -28,11 +28,12 @@ import static org.ethereum.util.RLP.encodeList;
  */
 public class TrieImpl implements Trie<byte[]> {
     private final static Object NULL_NODE = new Object();
+    private final static int MIN_BRANCHES_CONCURRENTLY = 3;
     private static ExecutorService executor;
 
     public static ExecutorService getExecutor() {
         if (executor == null) {
-            executor = Executors.newFixedThreadPool(8,
+            executor = Executors.newFixedThreadPool(4,
                     new ThreadFactoryBuilder().setNameFormat("trie-calc-thread-%d").build());
         }
         return executor;
@@ -94,25 +95,40 @@ public class TrieImpl implements Trie<byte[]> {
         }
         private byte[] encode(final int depth, boolean forceHash) {
             if (!dirty) {
-                return hash != null ? encodeElement(hash) : rlp; // TODO parsedRLP
+                return hash != null ? encodeElement(hash) : rlp;
             } else {
                 NodeType type = getType();
                 byte[] ret;
                 if (type == NodeType.BranchNode) {
-                    if (depth == 2 && async) {
-                        // on depth 2 from one side there is a big chance to find a number of updated
-                        // trie branches to parallelize
-                        // from the other side there are not too many branches
-                        final Future[] encoded = new Future[17];
+                    if (depth == 1 && async) {
+                        // parallelize encode() on the first trie level only and if there are at least
+                        // MIN_BRANCHES_CONCURRENTLY branches are modified
+                        final Object[] encoded = new Object[17];
+                        int encodeCnt = 0;
                         for (int i = 0; i < 16; i++) {
                             final Node child = branchNodeGetChild(i);
-                            encoded[i] = child == null ? constantFuture(EMPTY_ELEMENT_RLP) :
-                                    getExecutor().submit(new Callable<byte[]>() {
-                                @Override
-                                public byte[] call() throws Exception {
-                                    return child.encode(depth + 1, false);
+                            if (child == null) {
+                                encoded[i] = EMPTY_ELEMENT_RLP;
+                            } else if (!child.dirty) {
+                                encoded[i] = child.encode(depth + 1, false);
+                            } else {
+                                encodeCnt++;
+                            }
+                        }
+                        for (int i = 0; i < 16; i++) {
+                            if (encoded[i] == null) {
+                                final Node child = branchNodeGetChild(i);
+                                if (encodeCnt >= MIN_BRANCHES_CONCURRENTLY) {
+                                    encoded[i] = getExecutor().submit(new Callable<byte[]>() {
+                                        @Override
+                                        public byte[] call() throws Exception {
+                                            return child.encode(depth + 1, false);
+                                        }
+                                    });
+                                } else {
+                                    encoded[i] = child.encode(depth + 1, false);
                                 }
-                            });
+                            }
                         }
                         byte[] value = branchNodeGetValue();
                         encoded[16] = constantFuture(encodeElement(value));
@@ -154,10 +170,14 @@ public class TrieImpl implements Trie<byte[]> {
         }
 
         @SafeVarargs
-        private final byte[] encodeRlpListFutures(Future<byte[]>... list) throws ExecutionException, InterruptedException {
+        private final byte[] encodeRlpListFutures(Object... list) throws ExecutionException, InterruptedException {
             byte[][] vals = new byte[list.length][];
             for (int i = 0; i < list.length; i++) {
-                vals[i] = list[i].get();
+                if (list[i] instanceof Future) {
+                    vals[i] = ((Future<byte[]>) list[i]).get();
+                } else {
+                    vals[i] = (byte[]) list[i];
+                }
             }
             return encodeList(vals);
         }
