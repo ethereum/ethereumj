@@ -2,9 +2,12 @@ package org.ethereum.datasource;
 
 import com.google.common.util.concurrent.*;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.ethereum.util.ALock;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by Anton Nashatyrev on 18.01.2017.
@@ -19,6 +22,10 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
 
     private ListenableFuture<Boolean> lastFlush = Futures.immediateFuture(false);
 
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final ALock rLock = new ALock(rwLock.readLock());
+    private final ALock wLock = new ALock(rwLock.writeLock());
+
     public AsyncWriteCache(Source<Key, Value> source) {
         super(source);
         flushingCache = createCache(source);
@@ -30,27 +37,37 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
 
     @Override
     public Collection<Key> getModified() {
-        return curCache.getModified();
+        try (ALock l = rLock.lock()) {
+            return curCache.getModified();
+        }
     }
 
     @Override
     public boolean hasModified() {
-        return curCache.hasModified();
+        try (ALock l = rLock.lock()) {
+            return curCache.hasModified();
+        }
     }
 
     @Override
     public void put(Key key, Value val) {
-        curCache.put(key, val);
+        try (ALock l = rLock.lock()) {
+            curCache.put(key, val);
+        }
     }
 
     @Override
     public void delete(Key key) {
-        curCache.delete(key);
+        try (ALock l = rLock.lock()) {
+            curCache.delete(key);
+        }
     }
 
     @Override
     public Value get(Key key) {
-        return curCache.get(key);
+        try (ALock l = rLock.lock()) {
+            return curCache.get(key);
+        }
     }
 
     @Override
@@ -71,8 +88,10 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
             throw new RuntimeException(e);
         }
 
-        flushingCache.cache = curCache.cache;
-        curCache = createCache(flushingCache);
+        try (ALock l = wLock.lock()) {
+            flushingCache.cache = curCache.cache;
+            curCache = createCache(flushingCache);
+        }
 
         lastFlush = flushExecutor.submit(new Callable<Boolean>() {
             @Override

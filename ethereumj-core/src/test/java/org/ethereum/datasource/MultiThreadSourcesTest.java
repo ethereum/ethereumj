@@ -321,7 +321,7 @@ public class MultiThreadSourcesTest {
     }
 
     @Test
-    public void testAsyncWriteCache() throws InterruptedException {
+    public void testAsyncWriteCache() throws InterruptedException, TimeoutException, ExecutionException {
         Source<byte[], byte[]> src = new HashMapDB<>();
 
         AsyncWriteCache<byte[], byte[]> cache = new AsyncWriteCache<byte[], byte[]>(src) {
@@ -329,9 +329,9 @@ public class MultiThreadSourcesTest {
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 return new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.SIMPLE) {
                     @Override
-                    public boolean flushImpl() {
+                    public boolean flush() {
 //                        System.out.println("Flushing started");
-                        boolean ret = super.flushImpl();
+                        boolean ret = super.flush();
 //                        System.out.println("Flushing complete");
                         return ret;
                     }
@@ -339,8 +339,9 @@ public class MultiThreadSourcesTest {
             }
         };
 
-        TestExecutor testExecutor = new TestExecutor(cache);
-        testExecutor.run(5);
+//        TestExecutor testExecutor = new TestExecutor(cache);
+        TestExecutor1 testExecutor = new TestExecutor1(cache);
+        testExecutor.start(5);
     }
 
     @Test
