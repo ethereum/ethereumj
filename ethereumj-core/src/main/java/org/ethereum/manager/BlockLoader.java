@@ -51,9 +51,12 @@ public class BlockLoader {
 
             long s = System.currentTimeMillis();
             ImportResult result = blockchain.tryToConnect(block);
-            System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
-                    + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ") in " +
-                    (System.currentTimeMillis() - s) + " ms");
+
+            if (block.getNumber() % 10 == 0) {
+                System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
+                        + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ") in " +
+                        (System.currentTimeMillis() - s) + " ms");
+            }
 
         } else {
 
