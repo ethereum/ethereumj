@@ -51,16 +51,16 @@ public class WriteCacheTest {
         writeCache.put(intToKey(0), intToValue(12345));
         assertEquals(str(intToValue(12345)), str(writeCache.getCached(intToKey(0))));
         writeCache.delete(intToKey(0));
-        assertNull(writeCache.getCached(intToKey(0)));
+        assertTrue(WriteCache.NULL == writeCache.getCached(intToKey(0)) || null == writeCache.getCached(intToKey(0)));
         assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         writeCache.flush();
         assertNull(src.get(intToKey(0)));
 
         // Deleting key that is not currently in cache
-        assertNull(writeCache.getCached(intToKey(1)));
+        assertTrue(WriteCache.NULL == writeCache.getCached(intToKey(1)) || null == writeCache.getCached(intToKey(1)));
         assertEquals(str(intToValue(1)), str(src.get(intToKey(1))));
         writeCache.delete(intToKey(1));
-        assertNull(writeCache.getCached(intToKey(1)));
+        assertTrue(WriteCache.NULL == writeCache.getCached(intToKey(1)) || null == writeCache.getCached(intToKey(1)));
         assertEquals(str(intToValue(1)), str(src.get(intToKey(1))));
         writeCache.flush();
         assertNull(src.get(intToKey(1)));
