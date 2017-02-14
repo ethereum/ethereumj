@@ -82,10 +82,14 @@ public class TrieImpl implements Trie<byte[]> {
             this.children = children;
         }
 
-        private void resolve() {
-            if (rlp != null || parsedRlp != null) return;
+        public boolean resolveCheck() {
+            if (rlp != null || parsedRlp != null) return true;
             rlp = getHash(hash);
-            if (rlp == null) {
+            return rlp != null;
+        }
+
+        private void resolve() {
+            if (!resolveCheck()) {
                 throw new RuntimeException("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
             }
         }
@@ -445,15 +449,14 @@ public class TrieImpl implements Trie<byte[]> {
     public void setRoot(byte[] root) {
         if (root != null && !FastByteComparisons.equal(root, EMPTY_TRIE_HASH)) {
             this.root = new Node(root);
-//            try {
-//                this.root.parse();
-//            } catch (Exception e) {
-//                throw new RuntimeException("No root found: " + Hex.toHexString(root), e);
-//            }
         } else {
             this.root = null;
         }
 
+    }
+
+    private boolean hasRoot() {
+        return root != null && root.resolveCheck();
     }
 
     public Source<byte[], byte[]> getCache() {
@@ -472,6 +475,7 @@ public class TrieImpl implements Trie<byte[]> {
 
 
     public byte[] get(byte[] key) {
+        if (!hasRoot()) return null; // treating unknown root hash as empty trie
         TrieKey k = TrieKey.fromNormal(key);
         return get(root, k);
     }
