@@ -48,7 +48,7 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    public class NoDoubleDeleteMapDB extends HashMapDBSimple<byte[]> {
+    public class NoDoubleDeleteMapDB extends HashMapDB<byte[]> {
         @Override
         public synchronized void delete(byte[] key) {
             if (storage.get(key) == null) {
