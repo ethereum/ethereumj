@@ -106,10 +106,11 @@ public class TrieImpl implements Trie<byte[]> {
                         final Future[] encoded = new Future[17];
                         for (int i = 0; i < 16; i++) {
                             final Node child = branchNodeGetChild(i);
-                            encoded[i] = getExecutor().submit(new Callable<byte[]>() {
+                            encoded[i] = child == null ? constantFuture(EMPTY_ELEMENT_RLP) :
+                                    getExecutor().submit(new Callable<byte[]>() {
                                 @Override
                                 public byte[] call() throws Exception {
-                                    return child == null ? EMPTY_ELEMENT_RLP : child.encode(depth + 1, false);
+                                    return child.encode(depth + 1, false);
                                 }
                             });
                         }
@@ -393,14 +394,14 @@ public class TrieImpl implements Trie<byte[]> {
 
     private Source<byte[], byte[]> cache;
     private Node root;
-    private boolean async;
+    private boolean async = true;
 
     public TrieImpl() {
         this((byte[]) null);
     }
 
     public TrieImpl(byte[] root) {
-        this(new HashMapDBSimple<byte[]>(), root);
+        this(new HashMapDB<byte[]>(), root);
     }
 
     public TrieImpl(Source<byte[], byte[]> cache) {
