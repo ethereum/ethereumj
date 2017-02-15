@@ -83,7 +83,7 @@ public class TrieImpl implements Trie<byte[]> {
         }
 
         public boolean resolveCheck() {
-            if (rlp != null || parsedRlp != null) return true;
+            if (rlp != null || parsedRlp != null || hash == null) return true;
             rlp = getHash(hash);
             return rlp != null;
         }
