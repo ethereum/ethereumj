@@ -738,7 +738,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean isFastSyncEnabled() {
-        return this.syncEnabled == null ? config.getBoolean("sync.fast.enabled") : syncEnabled;
+        return isSyncEnabled() && config.getBoolean("sync.fast.enabled");
     }
 
     @ValidateMe
