@@ -55,6 +55,10 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     protected static abstract class CacheEntry<V> {
+        // dedicated value instance which indicates that the entry was deleted
+        // (ref counter decremented) but we don't know actual value behind it
+        static final Object UNKNOWN_VALUE = new Object();
+
         V value;
         int counter = 0;
 
@@ -166,7 +170,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
                 curVal = createCacheEntry(val);
                 CacheEntry<Value> oldVal = cache.put(key, curVal);
                 if (oldVal != null) {
-                    cacheRemoved(key, oldVal.value);
+                    cacheRemoved(key, oldVal.value == unknownValue() ? null : oldVal.value);
                 }
                 cacheAdded(key, curVal.value);
             }
@@ -185,7 +189,12 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
             if (curVal == null) {
                 return getSource() == null ? null : getSource().get(key);
             } else {
-                return curVal.getValue();
+                Value value = curVal.getValue();
+                if (value == unknownValue()) {
+                    return getSource() == null ? null : getSource().get(key);
+                } else {
+                    return value;
+                }
             }
         }
     }
@@ -196,12 +205,12 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         try (ALock l = writeLock.lock()){
             CacheEntry<Value> curVal = cache.get(key);
             if (curVal == null) {
-                curVal = createCacheEntry(getSource() == null ? null : getSource().get(key));
+                curVal = createCacheEntry(getSource() == null ? null : unknownValue());
                 CacheEntry<Value> oldVal = cache.put(key, curVal);
                 if (oldVal != null) {
                     cacheRemoved(key, oldVal.value);
                 }
-                cacheAdded(key, curVal.value);
+                cacheAdded(key, curVal.value == unknownValue() ? null : curVal.value);
             }
             curVal.deleted();
         }
@@ -240,6 +249,10 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         return false;
     }
 
+    private Value unknownValue() {
+        return (Value) CacheEntry.UNKNOWN_VALUE;
+    }
+
     /**
      * Returns the cached value if exist.
      * Method doesn't look into the underlying storage
@@ -249,7 +262,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     public Value getCached(Key key) {
         try (ALock l = readLock.lock()){
             CacheEntry<Value> entry = cache.get(key);
-            if (entry == null) {
+            if (entry == null || entry.value == unknownValue()) {
                 return null;
             }else {
                 Value value = entry.getValue();

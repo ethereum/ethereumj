@@ -89,10 +89,17 @@ public class WriteCacheTest {
 
         // Deleting key which has 1 ref
         writeCache.delete(intToKey(0));
+
         // for counting cache we return the cached value even if
         // it was deleted (once or several times) as we don't know
         // how many 'instances' are left behind
-        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
+
+        // but when we delete entry which is not in the cache we don't
+        // want to spend unnecessary time for getting the value from
+        // underlying storage, so getCached may return null.
+        // get() should work as expected
+//        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
+
         assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         writeCache.flush();
         assertNull(writeCache.getCached(intToKey(0)));
