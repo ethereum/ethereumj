@@ -103,6 +103,11 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     }
 
     @Override
+    public long estimateCacheSize() {
+        return (long) (curCache.estimateCacheSize() * 0.7);
+    }
+
+    @Override
     protected synchronized boolean flushImpl() {
         return false;
     }
