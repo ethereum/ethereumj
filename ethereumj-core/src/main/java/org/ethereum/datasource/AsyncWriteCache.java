@@ -80,6 +80,11 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
         }
     }
 
+    @Override
+    Entry<Value> getCached(Key key) {
+        return curCache.getCached(key);
+    }
+
     public synchronized ListenableFuture<Boolean> flushAsync() throws InterruptedException {
         // if previous flush still running
         try {

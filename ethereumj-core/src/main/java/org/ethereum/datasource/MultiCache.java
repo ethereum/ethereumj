@@ -26,7 +26,8 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
      */
     @Override
     public synchronized V get(byte[] key) {
-        V ownCache = getCached(key);
+        AbstractCachedSource.Entry<V> ownCacheEntry = getCached(key);
+        V ownCache = ownCacheEntry == null ? null : ownCacheEntry.value();
         if (ownCache == null) {
             V v = getSource() != null ? super.get(key) : null;
             ownCache = create(key, v);

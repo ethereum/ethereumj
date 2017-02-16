@@ -8,7 +8,6 @@ import org.ethereum.util.ByteArrayMap;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
 
 /**
  * Collects changes and propagate them to the backing Source when flush() is called
@@ -29,13 +28,6 @@ import java.util.concurrent.locks.Lock;
 public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     /**
-     * Designated NULL object for differentiating the cases when cache knows that this entry is deleted
-     * as oppose to [null] when the cache just knows nothing about the entry and need
-     * to check the underlying storage
-     */
-    public static final Object NULL = new Object();
-
-    /**
      * Type of the write cache
      */
     public enum CacheType {
@@ -54,7 +46,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         COUNTING
     }
 
-    protected static abstract class CacheEntry<V> {
+    private static abstract class CacheEntry<V> implements Entry<V>{
         // dedicated value instance which indicates that the entry was deleted
         // (ref counter decremented) but we don't know actual value behind it
         static final Object UNKNOWN_VALUE = new Object();
@@ -62,15 +54,21 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         V value;
         int counter = 0;
 
-        public CacheEntry(V value) {
+        protected CacheEntry(V value) {
             this.value = value;
         }
 
-        public abstract void deleted();
+        protected abstract void deleted();
 
-        public abstract void added();
+        protected abstract void added();
 
-        public abstract V getValue();
+        protected abstract V getValue();
+
+        @Override
+        public V value() {
+            V v = getValue();
+            return v == UNKNOWN_VALUE ? null : v;
+        }
     }
 
     private static final class SimpleCacheEntry<V> extends CacheEntry<V> {
@@ -253,20 +251,13 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         return (Value) CacheEntry.UNKNOWN_VALUE;
     }
 
-    /**
-     * Returns the cached value if exist.
-     * Method doesn't look into the underlying storage
-     * @return The value or {@link #NULL} object if it cached,
-     *        or null if no information in the cache for this key
-     */
-    public Value getCached(Key key) {
+    public Entry<Value> getCached(Key key) {
         try (ALock l = readLock.lock()){
             CacheEntry<Value> entry = cache.get(key);
             if (entry == null || entry.value == unknownValue()) {
                 return null;
             }else {
-                Value value = entry.getValue();
-                return value == null ? (Value) NULL : value;
+                return entry;
             }
         }
     }

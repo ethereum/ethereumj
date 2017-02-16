@@ -35,8 +35,8 @@ public class ReadWriteCache<Key, Value>
         return writeCache.hasModified();
     }
 
-    protected synchronized Value getCached(Key key) {
-        Value v = readCache.getCached(key);
+    protected synchronized AbstractCachedSource.Entry<Value> getCached(Key key) {
+        AbstractCachedSource.Entry<Value> v = readCache.getCached(key);
         if (v == null) {
             v = writeCache.getCached(key);
         }

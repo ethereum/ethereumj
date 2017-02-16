@@ -10,6 +10,24 @@ public abstract class AbstractCachedSource <Key, Value>
         extends AbstractChainedSource<Key, Value, Key, Value>
         implements CachedSource<Key, Value> {
 
+    /**
+     * Like the Optional interface represents either the value cached
+     * or null cached (i.e. cache knows that underlying storage contain null)
+     */
+    public interface Entry<V> {
+        V value();
+    }
+
+    static final class SimpleEntry<V> implements Entry<V> {
+        private V val;
+        public SimpleEntry(V val) {
+            this.val = val;
+        }
+        public V value() {
+            return val;
+        }
+    }
+
     private MemSizeEstimator<Key> keySizeEstimator;
     private MemSizeEstimator<Value> valueSizeEstimator;
     private int size = 0;
@@ -17,6 +35,14 @@ public abstract class AbstractCachedSource <Key, Value>
     public AbstractCachedSource(Source<Key, Value> source) {
         super(source);
     }
+
+    /**
+     * Returns the cached value if exist.
+     * Method doesn't look into the underlying storage
+     * @return The value Entry if it cached (Entry may has null value if null value is cached),
+     *        or null if no information in the cache for this key
+     */
+    abstract Entry<Value> getCached(Key key);
 
     /**
      * Needs to be called by the implementation when cache entry is added

@@ -119,8 +119,10 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         return false;
     }
 
-    public synchronized Value getCached(Key key) {
-        return cache.get(key);
+    @Override
+    public synchronized Entry<Value> getCached(Key key) {
+        Value value = cache.get(key);
+        return value == null ? null : new SimpleEntry<>(value == NULL ? null : value);
     }
 
     /**
