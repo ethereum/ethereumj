@@ -10,6 +10,8 @@ public abstract class AbstractCachedSource <Key, Value>
         extends AbstractChainedSource<Key, Value, Key, Value>
         implements CachedSource<Key, Value> {
 
+    private final Object lock = new Object();
+
     /**
      * Like the Optional interface represents either the value cached
      * or null cached (i.e. cache knows that underlying storage contain null)
@@ -50,32 +52,38 @@ public abstract class AbstractCachedSource <Key, Value>
      * If the value for the key is changed the {@link #cacheRemoved}
      * needs to be called first
      */
-    protected synchronized void cacheAdded(Key key, Value value) {
-        if (keySizeEstimator != null) {
-            size += keySizeEstimator.estimateSize(key);
-        }
-        if (valueSizeEstimator != null) {
-            size += valueSizeEstimator.estimateSize(value);
+    protected void cacheAdded(Key key, Value value) {
+        synchronized (lock) {
+            if (keySizeEstimator != null) {
+                size += keySizeEstimator.estimateSize(key);
+            }
+            if (valueSizeEstimator != null) {
+                size += valueSizeEstimator.estimateSize(value);
+            }
         }
     }
 
     /**
      * Needs to be called by the implementation when cache entry is removed
      */
-    protected synchronized void cacheRemoved(Key key, Value value) {
-        if (keySizeEstimator != null) {
-            size -= keySizeEstimator.estimateSize(key);
-        }
-        if (valueSizeEstimator != null) {
-            size -= valueSizeEstimator.estimateSize(value);
+    protected void cacheRemoved(Key key, Value value) {
+        synchronized (lock) {
+            if (keySizeEstimator != null) {
+                size -= keySizeEstimator.estimateSize(key);
+            }
+            if (valueSizeEstimator != null) {
+                size -= valueSizeEstimator.estimateSize(value);
+            }
         }
     }
 
     /**
      * Needs to be called by the implementation when cache is cleared
      */
-    protected synchronized void cacheCleared() {
-        size = 0;
+    protected void cacheCleared() {
+        synchronized (lock) {
+            size = 0;
+        }
     }
 
     /**
