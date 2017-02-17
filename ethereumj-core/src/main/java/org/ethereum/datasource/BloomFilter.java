@@ -208,7 +208,15 @@ public class BloomFilter implements Serializable {
 
     private int[] createHashes(byte[] bytes, int k) {
         int[] ret = new int[k];
-        ByteUtil.bytesToInts(bytes, ret, false);
+        if (bytes.length / 4 < k) {
+            int[] maxHashes = new int[bytes.length / 4];
+            ByteUtil.bytesToInts(bytes, maxHashes, false);
+            for (int i = 0; i < ret.length; i++) {
+                ret[i] = maxHashes[i % maxHashes.length];
+            }
+        } else {
+            ByteUtil.bytesToInts(bytes, ret, false);
+        }
         return ret;
     }
 
