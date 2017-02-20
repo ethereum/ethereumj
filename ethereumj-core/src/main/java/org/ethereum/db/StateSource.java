@@ -30,7 +30,6 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         INST = this;
         add(batchDBWriter = new BatchSourceWriter<>(src));
         add(bloomedSource = new BloomedSource<>(batchDBWriter));
-//        add(bloomedSource = new BloomedSource<>(src));
         bloomedSource.setFlushSource(true);
 //        bloomedSource.startBlooming(new BloomFilter(0.01, 1_000_000));
         add(readCache = new ReadCache.BytesKey<>(bloomedSource).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
@@ -40,24 +39,12 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         writeCache = new AsyncWriteCache<byte[], byte[]>(countingSource) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
-                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING) {
-                    @Override
-                    public boolean flush() {
-                        long s = System.currentTimeMillis();
-                        logger.info("State flush started...");
-                        boolean ret = super.flush();
-                        logger.info("State flush completed in " + (System.currentTimeMillis() - s) + " ms");
-                        return ret;
-                    }
-                };
+                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING);
                 ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
                 ret.setFlushSource(true);
                 return ret;
             }
-        };
-//        writeCache = new WriteCache.BytesKey<>(countingSource, WriteCache.CacheType.COUNTING);
-//        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
-//        writeCache.setFlushSource(false);
+        }.withName("state");
 
         add(writeCache);
 

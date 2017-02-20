@@ -94,13 +94,17 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        DbSource<byte[]> dataSource = keyValueDataSource();
-        dataSource.setName(name);
-        dataSource.init();
+        DbSource<byte[]> dataSource = keyValueDataSource(name);
         BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
-        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
-        writeCache.setFlushSource(true);
+        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(batchSourceWriter) {
+            @Override
+            protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
+                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
+                ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+                ret.setFlushSource(true);
+                return ret;
+            }
+        }.withName(name);
         dbFlushManager().addCache(writeCache);
         return writeCache;
     }
@@ -108,7 +112,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     @Primary
-    public DbSource<byte[]> keyValueDataSource() {
+    public DbSource<byte[]> keyValueDataSource(String name) {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             DbSource<byte[]> dbSource;
@@ -120,10 +124,12 @@ public class CommonConfig {
                 dataSource = "leveldb";
                 dbSource = new LevelDbDataSource();
             }
+            dbSource.setName(name);
+            dbSource.init();
             dbSources.add(dbSource);
             return dbSource;
         } finally {
-            logger.info(dataSource + " key-value data source created.");
+            logger.info(dataSource + " key-value data source created: " + name);
         }
     }
 
@@ -145,23 +151,17 @@ public class CommonConfig {
             logger.warn("Last fastsync was interrupted. Removing inconsistent DBs...");
 
             logger.warn("Removing tx data...");
-            DbSource txSource = keyValueDataSource();
-            txSource.setName("transactions");
-            txSource.init();
+            DbSource txSource = keyValueDataSource("transactions");
             resetDataSource(txSource);
             txSource.close();
 
             logger.warn("Removing block data...");
-            DbSource blockSource = keyValueDataSource();
-            blockSource.setName("block");
-            blockSource.init();
+            DbSource blockSource = keyValueDataSource("block");
             resetDataSource(blockSource);
             blockSource.close();
 
             logger.warn("Removing index data...");
-            DbSource indexSource = keyValueDataSource();
-            indexSource.setName("index");
-            indexSource.init();
+            DbSource indexSource = keyValueDataSource("index");
             resetDataSource(indexSource);
             indexSource.close();
 
@@ -181,9 +181,7 @@ public class CommonConfig {
     @Bean
     @Lazy
     public DataSourceArray<BlockHeader> headerSource() {
-        DbSource<byte[]> dataSource = keyValueDataSource();
-        dataSource.setName("headers");
-        dataSource.init();
+        DbSource<byte[]> dataSource = keyValueDataSource("headers");
         BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
         WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
         writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
@@ -219,11 +217,7 @@ public class CommonConfig {
 
     @Bean
     public DbSource<byte[]> stateDS() {
-        DbSource<byte[]> ret = keyValueDataSource();
-        ret.setName("state");
-        ret.init();
-
-        return ret;
+        return keyValueDataSource("state");
     }
 
     @Bean

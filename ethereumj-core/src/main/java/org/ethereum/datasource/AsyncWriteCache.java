@@ -3,6 +3,8 @@ package org.ethereum.datasource;
 import com.google.common.util.concurrent.*;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.ethereum.util.ALock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Created by Anton Nashatyrev on 18.01.2017.
  */
 public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<Key, Value> implements AsyncFlushable {
+    private static final Logger logger = LoggerFactory.getLogger("db");
 
     private static ListeningExecutorService flushExecutor = MoreExecutors.listeningDecorator(
             Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat("AsyncWriteCacheThread-%d").build()));
@@ -25,6 +28,8 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final ALock rLock = new ALock(rwLock.readLock());
     private final ALock wLock = new ALock(rwLock.writeLock());
+
+    private String name = "<null>";
 
     public AsyncWriteCache(Source<Key, Value> source) {
         super(source);
@@ -88,6 +93,7 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     public synchronized ListenableFuture<Boolean> flushAsync() throws InterruptedException {
         // if previous flush still running
         try {
+            if (!lastFlush.isDone()) logger.debug("AsyncWriteCache (" + name + "): waiting for previous flush to complete");
             lastFlush.get();
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
@@ -98,10 +104,15 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
             curCache = createCache(flushingCache);
         }
 
+        logger.debug("AsyncWriteCache (" + name + "): flush submitted");
         lastFlush = flushExecutor.submit(new Callable<Boolean>() {
             @Override
             public Boolean call() {
-                return flushingCache.flush();
+                logger.debug("AsyncWriteCache (" + name + "): flush started");
+                long s = System.currentTimeMillis();
+                boolean ret = flushingCache.flush();
+                logger.debug("AsyncWriteCache (" + name + "): flush completed in " + (System.currentTimeMillis() - s) + " ms");
+                return ret;
             }
         });
         return lastFlush;
@@ -115,5 +126,10 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     @Override
     protected synchronized boolean flushImpl() {
         return false;
+    }
+
+    public AsyncWriteCache<Key, Value> withName(String name) {
+        this.name = name;
+        return this;
     }
 }
