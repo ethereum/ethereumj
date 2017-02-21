@@ -78,6 +78,7 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
     @Override
     public synchronized boolean flush() {
         try {
+            flipStorage();
             flushAsync();
             return flushingCache.hasModified();
         } catch (InterruptedException e) {
