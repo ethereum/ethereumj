@@ -126,7 +126,9 @@ public class DbFlushManager {
         logger.debug("Flipping async storages");
         for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
             try {
-                ((AsyncFlushable) writeCache).flipStorage();
+                if (writeCache instanceof AsyncFlushable) {
+                    ((AsyncFlushable) writeCache).flipStorage();
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -151,8 +153,10 @@ public class DbFlushManager {
                         ret |= writeCache.flush();
                     }
                 }
-                logger.debug("Flushing to DB");
-                stateDbCache.flush();
+                if (stateDbCache != null) {
+                    logger.debug("Flushing to DB");
+                    stateDbCache.flush();
+                }
                 logger.info("Flush completed in " + (System.nanoTime() - s) / 1000000 + " ms");
 
                 return ret;
