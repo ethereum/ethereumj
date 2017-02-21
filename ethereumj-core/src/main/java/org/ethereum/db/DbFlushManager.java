@@ -3,6 +3,8 @@ package org.ethereum.db;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.JdkFutureAdapters;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.AbstractCachedSource;
 import org.ethereum.datasource.AsyncFlushable;
@@ -18,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
@@ -28,6 +30,7 @@ public class DbFlushManager {
 
     List<AbstractCachedSource<byte[], byte[]>> writeCaches = new ArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
+    AbstractCachedSource<byte[], byte[]> stateDbCache;
 
     long sizeThreshold;
     int commitsCountThreshold;
@@ -38,12 +41,18 @@ public class DbFlushManager {
 
     int commitCount = 0;
 
-    public DbFlushManager(SystemProperties config, Set<DbSource> dbSources) {
+    private final BlockingQueue<Runnable> executorQueue = new ArrayBlockingQueue<>(1);
+    private final ExecutorService flushThread = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+            executorQueue, new ThreadFactoryBuilder().setNameFormat("DbFlushManagerThread-%d").build());
+    Future<Boolean> lastFlush = Futures.immediateFuture(false);
+
+    public DbFlushManager(SystemProperties config, Set<DbSource> dbSources, AbstractCachedSource<byte[], byte[]> stateDbCache) {
         this.config = config;
         this.dbSources = dbSources;
         sizeThreshold = config.getConfig().getInt("cache.flush.writeCacheSize") * 1024 * 1024;
         commitsCountThreshold = config.getConfig().getInt("cache.flush.blocks");
         flushAfterSyncDone = config.getConfig().getBoolean("cache.flush.shortSyncFlush");
+        this.stateDbCache = stateDbCache;
     }
 
     @Autowired
@@ -105,28 +114,50 @@ public class DbFlushManager {
         }
     }
 
-    public synchronized ListenableFuture flush() {
-        long s = System.nanoTime();
-        List<ListenableFuture<Boolean>> asyncFlushes = new ArrayList<>();
-
+    public synchronized Future<Boolean> flush() {
+        if (!lastFlush.isDone()) {
+            logger.info("Waiting for previous flush to complete...");
+            try {
+                lastFlush.get();
+            } catch (Exception e) {
+                logger.error("Error during last flush", e);
+            }
+        }
+        logger.debug("Flipping async storages");
         for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
-            if (writeCache instanceof AsyncFlushable) {
-                try {
-                    asyncFlushes.add(((AsyncFlushable) writeCache).flushAsync());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            } else {
-                writeCache.flush();
+            try {
+                ((AsyncFlushable) writeCache).flipStorage();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        ListenableFuture<List<Boolean>> allFut = Futures.allAsList(asyncFlushes);
+        logger.debug("Submitting flush task");
+        return lastFlush = flushThread.submit(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                boolean ret = false;
+                long s = System.nanoTime();
+                logger.info("Flush started");
 
-        //
-        logger.debug("Flush took " + (System.nanoTime() - s) / 1000000 + " ms");
+                for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+                    if (writeCache instanceof AsyncFlushable) {
+                        try {
+                            ret |= ((AsyncFlushable) writeCache).flushAsync().get();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        ret |= writeCache.flush();
+                    }
+                }
+                logger.debug("Flushing to DB");
+                stateDbCache.flush();
+                logger.info("Flush completed in " + (System.nanoTime() - s) / 1000000 + " ms");
 
-        return allFut;
+                return ret;
+            }
+        });
     }
 
     /**

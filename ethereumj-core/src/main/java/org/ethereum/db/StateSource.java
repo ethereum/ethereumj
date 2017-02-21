@@ -23,14 +23,12 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     ReadCache<byte[], byte[]> readCache;
     AbstractCachedSource<byte[], byte[]> writeCache;
     BloomedSource<byte[]> bloomedSource;
-    BatchSourceWriter<byte[], byte[]> batchDBWriter;
 
-    public StateSource(BatchSource<byte[], byte[]> src, boolean pruningEnabled) {
+    public StateSource(Source<byte[], byte[]> src, boolean pruningEnabled) {
         super(src);
         INST = this;
-        add(batchDBWriter = new BatchSourceWriter<>(src));
-        add(bloomedSource = new BloomedSource<>(batchDBWriter));
-        bloomedSource.setFlushSource(true);
+        add(bloomedSource = new BloomedSource<>(src));
+        bloomedSource.setFlushSource(false);
 //        bloomedSource.startBlooming(new BloomFilter(0.01, 1_000_000));
         add(readCache = new ReadCache.BytesKey<>(bloomedSource).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
         readCache.setFlushSource(true);

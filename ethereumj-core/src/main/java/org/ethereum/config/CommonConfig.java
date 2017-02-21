@@ -1,6 +1,7 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
@@ -11,10 +12,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.DataWord;
-import org.ethereum.vm.VM;
-import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,9 +79,8 @@ public class CommonConfig {
 
     @Bean
     public StateSource stateSource() {
-        DbSource<byte[]> stateDS = stateDS();
         fastSyncCleanUp();
-        StateSource stateSource = new StateSource(stateDS,
+        StateSource stateSource = new StateSource(blockchainSource("state"),
                 systemProperties().databasePruneDepth() >= 0);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
@@ -94,9 +91,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        DbSource<byte[]> dataSource = keyValueDataSource(name);
-        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(batchSourceWriter) {
+        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -107,6 +102,20 @@ public class CommonConfig {
         }.withName(name);
         dbFlushManager().addCache(writeCache);
         return writeCache;
+    }
+
+    @Bean
+    @Scope("prototype")
+    public Source<byte[], byte[]> blockchainSource(String name) {
+        return new XorDataSource<>(blockchainDbCache(), HashUtil.sha3(name.getBytes()));
+    }
+
+    @Bean
+    public AbstractCachedSource<byte[], byte[]> blockchainDbCache() {
+        WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(
+                new BatchSourceWriter<>(blockchainDB()), WriteCache.CacheType.SIMPLE);
+        ret.setFlushSource(true);
+        return ret;
     }
 
     @Bean
@@ -134,11 +143,7 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
-        if (Boolean.TRUE) return;
-
-        DbSource<byte[]> state = stateDS();
-
-        byte[] fastsyncStageBytes = state.get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
+        byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
@@ -150,23 +155,8 @@ public class CommonConfig {
 
             logger.warn("Last fastsync was interrupted. Removing inconsistent DBs...");
 
-            logger.warn("Removing tx data...");
-            DbSource txSource = keyValueDataSource("transactions");
-            resetDataSource(txSource);
-            txSource.close();
-
-            logger.warn("Removing block data...");
-            DbSource blockSource = keyValueDataSource("block");
-            resetDataSource(blockSource);
-            blockSource.close();
-
-            logger.warn("Removing index data...");
-            DbSource indexSource = keyValueDataSource("index");
-            resetDataSource(indexSource);
-            indexSource.close();
-
-            logger.warn("Removing state data...");
-            resetDataSource(state);
+            DbSource bcSource = blockchainDB();
+            resetDataSource(bcSource);
         }
     }
 
@@ -216,13 +206,13 @@ public class CommonConfig {
     }
 
     @Bean
-    public DbSource<byte[]> stateDS() {
-        return keyValueDataSource("state");
+    public DbSource<byte[]> blockchainDB() {
+        return keyValueDataSource("blockchain");
     }
 
     @Bean
     public DbFlushManager dbFlushManager() {
-        return new DbFlushManager(systemProperties(), dbSources);
+        return new DbFlushManager(systemProperties(), dbSources, blockchainDbCache());
     }
 
     @Bean
