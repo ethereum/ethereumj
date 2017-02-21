@@ -405,7 +405,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                         block.getNumber());
 
             // retry of well known block
-//            return EXIST;
+            return EXIST;
         }
 
         final ImportResult ret;
@@ -843,9 +843,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    private ExecutorService rootCalcExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("TireRootCalcThread-%d").build());
-
-    private BlockSummary applyBlock(final Repository track, Block block) {
+    private BlockSummary applyBlock(Repository track, Block block) {
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
