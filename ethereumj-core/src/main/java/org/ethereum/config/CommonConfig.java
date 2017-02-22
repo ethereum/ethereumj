@@ -131,7 +131,7 @@ public class CommonConfig {
                 dbSource = new HashMapDB<>();
             } else {
                 dataSource = "leveldb";
-                dbSource = new LevelDbDataSource();
+                dbSource = levelDbDataSource();
             }
             dbSource.setName(name);
             dbSource.init();
@@ -140,6 +140,12 @@ public class CommonConfig {
         } finally {
             logger.info(dataSource + " key-value data source created: " + name);
         }
+    }
+
+    @Bean
+    @Scope("prototype")
+    protected LevelDbDataSource levelDbDataSource() {
+        return new LevelDbDataSource();
     }
 
     public void fastSyncCleanUp() {
