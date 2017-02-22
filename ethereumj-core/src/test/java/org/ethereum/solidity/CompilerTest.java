@@ -6,6 +6,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
@@ -73,6 +74,21 @@ public class CompilerTest {
         System.out.printf(contract.functions[0].toString());
     }
 
+    @Test
+    public void compileFilesTest() throws IOException {
+
+        File source = new File("src/test/resources/solidity/file1.sol");
+
+        SolidityCompiler.Result res = SolidityCompiler.compile(
+                source, true, ABI, BIN, INTERFACE, METADATA);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        CompilationResult.ContractMetadata a = result.contracts.get("test1");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.printf(contract.functions[0].toString());
+    }
 
 
     public static void main(String[] args) throws Exception {
