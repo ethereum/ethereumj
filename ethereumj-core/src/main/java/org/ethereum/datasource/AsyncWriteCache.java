@@ -124,7 +124,9 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
 
     @Override
     public long estimateCacheSize() {
-        return (long) (curCache.estimateCacheSize() * 0.7);
+        // 2.0 is upper cache size estimation to take into account there are two
+        // caches may exist simultaneously up to doubling cache size
+        return (long) (curCache.estimateCacheSize() * 2.0);
     }
 
     @Override

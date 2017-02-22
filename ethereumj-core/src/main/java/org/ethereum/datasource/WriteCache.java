@@ -276,6 +276,15 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         checked = true;
     }
 
+    public long debugCacheSize() {
+        long ret = 0;
+        for (Map.Entry<Key, CacheEntry<Value>> entry : cache.entrySet()) {
+            ret += keySizeEstimator.estimateSize(entry.getKey());
+            ret += valueSizeEstimator.estimateSize(entry.getValue().value());
+        }
+        return ret;
+    }
+
     /**
      * Shortcut for WriteCache with byte[] keys. Also prevents accidental
      * usage of regular Map implementation (non byte[])

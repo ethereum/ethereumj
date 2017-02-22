@@ -30,8 +30,8 @@ public abstract class AbstractCachedSource <Key, Value>
         }
     }
 
-    private MemSizeEstimator<Key> keySizeEstimator;
-    private MemSizeEstimator<Value> valueSizeEstimator;
+    protected MemSizeEstimator<Key> keySizeEstimator;
+    protected MemSizeEstimator<Value> valueSizeEstimator;
     private int size = 0;
 
     public AbstractCachedSource(Source<Key, Value> source) {
