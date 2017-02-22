@@ -243,14 +243,9 @@ public class SyncPool {
                 return false;
             }
 
-                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
+            if (handler.getNodeStatistics().getReputation() < 100) return false;
 
-                if (handler.getNodeStatistics().getReputation() < 100) return false;
-
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
-            }
+            return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
         }
     }
 
