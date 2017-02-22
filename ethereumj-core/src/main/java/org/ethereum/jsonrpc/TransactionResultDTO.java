@@ -20,6 +20,12 @@ public class TransactionResultDTO {
     public String gasPrice;
     public String value;
     public String input;
+    public String v;
+    public String r;
+    public String s;
+
+    public TransactionResultDTO() {
+    }
 
     public TransactionResultDTO (Block b, int index, Transaction tx) {
         hash =  TypeConverter.toJsonHex(tx.getHash());
