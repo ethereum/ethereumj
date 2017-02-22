@@ -111,7 +111,7 @@ public class SolidityCompiler {
         return getInstance().compileSrc(source, false, combinedJson, options);
     }
 
-    private Result compileSrc(File source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+    public Result compileSrc(File source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
         List<String> commandParts = prepareCommandOptions(optimize, combinedJson, options);
 
         commandParts.add(source.getAbsolutePath());
