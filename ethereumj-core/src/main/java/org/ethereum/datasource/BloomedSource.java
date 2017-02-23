@@ -50,7 +50,7 @@ public class BloomedSource<Value> extends AbstractChainedSource<byte[], Value, b
     }
 
     @Override
-    public synchronized void put(byte[] key, Value val) {
+    public void put(byte[] key, Value val) {
         if (bloom != null) {
             bloom.add(key);
         }
@@ -58,7 +58,7 @@ public class BloomedSource<Value> extends AbstractChainedSource<byte[], Value, b
     }
 
     @Override
-    public synchronized Value get(byte[] key) {
+    public Value get(byte[] key) {
         if (bloom == null) return getSource().get(key);
 
         if (!bloom.contains(key)) {

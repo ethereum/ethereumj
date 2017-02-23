@@ -20,6 +20,11 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
     Collection<Key> getModified();
 
     /**
+     * @return indicates the cache has modified entries
+     */
+    boolean hasModified();
+
+    /**
      * Estimates the size of cached entries in bytes.
      * This value shouldn't be precise size of Java objects
      * @return cache size in bytes

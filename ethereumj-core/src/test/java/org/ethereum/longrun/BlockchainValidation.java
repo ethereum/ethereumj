@@ -41,16 +41,16 @@ public class BlockchainValidation {
     private static Integer getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
                                                   byte[] ... roots) {
         final AtomicInteger ret = new AtomicInteger(0);
-        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer));
         for (byte[] root : roots) {
-            trie.scanTree(root, new TrieImpl.ScanAction() {
+            SecureTrie trie = new SecureTrie(stateDS, root);
+            trie.scanTree(new TrieImpl.ScanAction() {
                 @Override
-                public void doOnNode(byte[] hash, Value node) {
+                public void doOnNode(byte[] hash, TrieImpl.Node node) {
                     ret.incrementAndGet();
                 }
 
                 @Override
-                public void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value) {
+                public void doOnValue(byte[] nodeHash, TrieImpl.Node node, byte[] key, byte[] value) {
                     if (includeAccounts) {
                         AccountState accountState = new AccountState(value);
                         if (!FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH)) {

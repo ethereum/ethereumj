@@ -203,11 +203,6 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        throw new RuntimeException("Not supported");
-    }
-
-    @Override
     public int getStorageSize(byte[] addr) {
         return repository.getStorageSize(addr);
     }

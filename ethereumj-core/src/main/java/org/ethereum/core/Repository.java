@@ -210,10 +210,4 @@ public interface Repository extends org.ethereum.facade.Repository{
                      HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 
     Repository getSnapshotTo(byte[] root);
-
-
-    /**
-     * Adds raw Node data in state DS
-     */
-    void addRawNode(byte[] key, byte[] value);
 }

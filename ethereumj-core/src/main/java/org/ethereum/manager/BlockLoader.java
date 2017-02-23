@@ -43,15 +43,20 @@ public class BlockLoader {
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
     private void blockWork(Block block) {
-        if (block.getNumber() >= blockchain.getBestBlock().getNumber() || blockchain.getBlockByHash(block.getHash()) == null) {
+        if (block.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber() || blockchain.getBlockStore().getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
             }
 
+            long s = System.currentTimeMillis();
             ImportResult result = blockchain.tryToConnect(block);
-            System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
-                    + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ")");
+
+            if (block.getNumber() % 10 == 0) {
+                System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
+                        + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ") in " +
+                        (System.currentTimeMillis() - s) + " ms");
+            }
 
         } else {
 
@@ -67,8 +72,10 @@ public class BlockLoader {
         exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
             @Override
             public Block apply(Block b) {
-                for (Transaction tx : b.getTransactionsList()) {
-                    tx.getSender();
+                if (b.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber()) {
+                    for (Transaction tx : b.getTransactionsList()) {
+                        tx.getSender();
+                    }
                 }
                 return b;
             }

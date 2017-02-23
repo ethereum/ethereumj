@@ -221,9 +221,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
         try {
             for (Transaction tx : block.getTransactionsList()) {
-                org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor(
+                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
                         tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                        programInvokeFactory, block, worldManager.getListener(), 0);
+                        programInvokeFactory, block, worldManager.getListener(), 0)
+                        .withCommonConfig(commonConfig);
 
                 executor.setLocalCall(true);
                 executor.init();
@@ -251,9 +252,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor
+            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
                             programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                    .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
             executor.init();

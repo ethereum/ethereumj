@@ -45,7 +45,9 @@ public class DefaultConfig {
     public BlockStore blockStore(){
         commonConfig.fastSyncCleanUp();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(commonConfig.cachedDbSource("index"), commonConfig.cachedDbSource("block"));
+        Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
+        Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
+        indexedBlockStore.init(index, block);
 
         return indexedBlockStore;
     }

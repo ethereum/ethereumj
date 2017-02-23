@@ -6,26 +6,21 @@ import org.ethereum.util.ByteArrayMap;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by Anton Nashatyrev on 12.10.2016.
  */
-public class HashMapDB<V> implements DbSource<V> {
+public class HashMapDBSimple<V> implements DbSource<V> {
 
     protected final Map<byte[], V> storage;
 
-    protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    protected ALock readLock = new ALock(rwLock.readLock());
-    protected ALock writeLock = new ALock(rwLock.writeLock());
-
-    public HashMapDB() {
+    public HashMapDBSimple() {
         this(new ByteArrayMap<V>());
     }
 
-    public HashMapDB(ByteArrayMap<V> storage) {
+    public HashMapDBSimple(ByteArrayMap<V> storage) {
         this.storage = storage;
     }
 
@@ -34,24 +29,18 @@ public class HashMapDB<V> implements DbSource<V> {
         if (val == null) {
             delete(key);
         } else {
-            try (ALock l = writeLock.lock()) {
-                storage.put(key, val);
-            }
+            storage.put(key, val);
         }
     }
 
     @Override
     public V get(byte[] key) {
-        try (ALock l = readLock.lock()) {
-            return storage.get(key);
-        }
+        return storage.get(key);
     }
 
     @Override
     public void delete(byte[] key) {
-        try (ALock l = writeLock.lock()) {
-            storage.remove(key);
-        }
+        storage.remove(key);
     }
 
     @Override
@@ -80,17 +69,13 @@ public class HashMapDB<V> implements DbSource<V> {
 
     @Override
     public Set<byte[]> keys() {
-        try (ALock l = readLock.lock()) {
-            return getStorage().keySet();
-        }
+        return getStorage().keySet();
     }
 
     @Override
     public void updateBatch(Map<byte[], V> rows) {
-        try (ALock l = writeLock.lock()) {
-            for (Map.Entry<byte[], V> entry : rows.entrySet()) {
-                put(entry.getKey(), entry.getValue());
-            }
+        for (Map.Entry<byte[], V> entry : rows.entrySet()) {
+            put(entry.getKey(), entry.getValue());
         }
     }
 

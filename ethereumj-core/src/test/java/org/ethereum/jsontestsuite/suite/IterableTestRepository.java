@@ -208,11 +208,6 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        src.addRawNode(key, value);
-    }
-
-    @Override
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
         src.updateBatch(accountStates, contractDetailes);
         for (ByteArrayWrapper wrapper : accountStates.keySet()) {

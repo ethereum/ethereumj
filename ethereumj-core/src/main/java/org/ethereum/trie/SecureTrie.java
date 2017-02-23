@@ -12,11 +12,11 @@ public class SecureTrie extends TrieImpl {
         super(root);
     }
 
-    public SecureTrie(Source<byte[], Value> cache) {
-        super(cache);
+    public SecureTrie(Source<byte[], byte[]> cache) {
+        super(cache, null);
     }
 
-    public SecureTrie(Source<byte[], Value> cache, byte[] root) {
+    public SecureTrie(Source<byte[], byte[]> cache, byte[] root) {
         super(cache, root);
     }
 

@@ -35,8 +35,8 @@ public class WriteCacheTest {
             writeCache.put(intToKey(i), intToValue(i));
         }
         // Everything is cached
-        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
-        assertEquals(str(intToValue(9_999)), str(writeCache.getCached(intToKey(9_999))));
+        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0)).value()));
+        assertEquals(str(intToValue(9_999)), str(writeCache.getCached(intToKey(9_999)).value()));
 
         // Everything is flushed
         writeCache.flush();
@@ -49,18 +49,18 @@ public class WriteCacheTest {
 
         // Deleting key that is currently in cache
         writeCache.put(intToKey(0), intToValue(12345));
-        assertEquals(str(intToValue(12345)), str(writeCache.getCached(intToKey(0))));
+        assertEquals(str(intToValue(12345)), str(writeCache.getCached(intToKey(0)).value()));
         writeCache.delete(intToKey(0));
-        assertNull(writeCache.getCached(intToKey(0)));
+        assertTrue(null == writeCache.getCached(intToKey(0)) || null == writeCache.getCached(intToKey(0)).value());
         assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         writeCache.flush();
         assertNull(src.get(intToKey(0)));
 
         // Deleting key that is not currently in cache
-        assertNull(writeCache.getCached(intToKey(1)));
+        assertTrue(null == writeCache.getCached(intToKey(1)) || null == writeCache.getCached(intToKey(1)).value());
         assertEquals(str(intToValue(1)), str(src.get(intToKey(1))));
         writeCache.delete(intToKey(1));
-        assertNull(writeCache.getCached(intToKey(1)));
+        assertTrue(null == writeCache.getCached(intToKey(1)) || null == writeCache.getCached(intToKey(1)).value());
         assertEquals(str(intToValue(1)), str(src.get(intToKey(1))));
         writeCache.flush();
         assertNull(src.get(intToKey(1)));
@@ -77,8 +77,8 @@ public class WriteCacheTest {
             }
         }
         // Everything is cached
-        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
-        assertEquals(str(intToValue(99)), str(writeCache.getCached(intToKey(99))));
+        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0)).value()));
+        assertEquals(str(intToValue(99)), str(writeCache.getCached(intToKey(99)).value()));
 
         // Everything is flushed
         writeCache.flush();
@@ -89,10 +89,17 @@ public class WriteCacheTest {
 
         // Deleting key which has 1 ref
         writeCache.delete(intToKey(0));
+
         // for counting cache we return the cached value even if
         // it was deleted (once or several times) as we don't know
         // how many 'instances' are left behind
-        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
+
+        // but when we delete entry which is not in the cache we don't
+        // want to spend unnecessary time for getting the value from
+        // underlying storage, so getCached may return null.
+        // get() should work as expected
+//        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
+
         assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         writeCache.flush();
         assertNull(writeCache.getCached(intToKey(0)));
