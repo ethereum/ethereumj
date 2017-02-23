@@ -26,7 +26,7 @@ dependencies:
     # Cache gradle artifacts
     - (cd ~/ethereumj && ./gradlew compileJava)
     - (cd ~ && git clone --depth 1 -b develop https://github.com/ether-camp/ethereum-harmony.git)
-    - (cd ~/ethereum-harmony && ./gradlew compileJava)
+    - (cd ~/ethereum-harmony && ./gradlew dependencyManagement)
 
 test:
   override:
