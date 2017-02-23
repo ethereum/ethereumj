@@ -4,7 +4,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
@@ -454,10 +453,6 @@ public class SystemProperties {
     }
 
 
-    public String samplesDir() {
-        return config.getString("samples.dir");
-    }
-
     @ValidateMe
     public Integer blockQueueSize() {
         return config.getInt("cache.blockQueueSize") * 1024 * 1024;
@@ -507,7 +502,6 @@ public class SystemProperties {
         return databaseDir == null ? config.getString("database.dir") : databaseDir;
     }
 
-    @ValidateMe
     public String ethashDir() {
         return config.hasPath("ethash.dir") ? config.getString("ethash.dir") : databaseDir();
     }
@@ -529,16 +523,6 @@ public class SystemProperties {
     @ValidateMe
     public boolean blockChainOnly() {
         return config.getBoolean("blockchain.only");
-    }
-
-    @ValidateMe
-    public int maxHashesAsk() {
-        return config.getInt("sync.max.hashes.ask");
-    }
-
-    @ValidateMe
-    public int maxBlocksAsk() {
-        return config.getInt("sync.max.blocks.ask");
     }
 
     @ValidateMe
@@ -601,11 +585,6 @@ public class SystemProperties {
     @ValidateMe
     public int vmTraceInitStorageLimit() {
         return config.getInt("vm.structured.initStorageLimit");
-    }
-
-    @ValidateMe
-    public int detailsInMemoryStorageLimit() {
-        return config.getInt("details.inmemory.storage.limit");
     }
 
     @ValidateMe
@@ -751,11 +730,6 @@ public class SystemProperties {
     @ValidateMe
     public String getKeyValueDataSource() {
         return config.getString("keyvalue.datasource");
-    }
-
-    @ValidateMe
-    public boolean isRedisEnabled() {
-        return config.getBoolean("redis.enabled");
     }
 
     @ValidateMe

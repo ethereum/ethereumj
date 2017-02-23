@@ -141,12 +141,20 @@ public class SyncPool {
     }
 
     @Nullable
-    public synchronized Channel getMediocreIdle() {
-        List<Channel> worstHalf = activePeers.subList((int) Math.floor(activePeers.size() / 2), activePeers.size());
-        if (!worstHalf.isEmpty()) {
-            Collections.shuffle(worstHalf);
-            return worstHalf.get(0);
+    public synchronized Channel getNotLastIdle() {
+        ArrayList<Channel> channels = new ArrayList<>(activePeers);
+        Collections.shuffle(channels);
+        Channel candidate = null;
+        for (Channel peer : channels) {
+            if (peer.isIdle()) {
+                if (candidate == null) {
+                    candidate = peer;
+                } else {
+                    return candidate;
+                }
+            }
         }
+
         return null;
     }
 
@@ -161,6 +169,10 @@ public class SyncPool {
 
     public synchronized List<Channel> getActivePeers() {
         return new ArrayList<>(activePeers);
+    }
+
+    public synchronized int getActivePeersCount() {
+        return activePeers.size();
     }
 
     @Nullable

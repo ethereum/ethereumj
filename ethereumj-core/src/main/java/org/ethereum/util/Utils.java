@@ -206,6 +206,26 @@ public class Utils {
         return ret;
     }
 
+    /**
+     * Show std err messages in red and throw RuntimeException to stop execution.
+     */
+    public static void showErrorAndExit(String message, String... messages) {
+        LoggerFactory.getLogger("general").error(message);
+        final String ANSI_RED = "\u001B[31m";
+        final String ANSI_RESET = "\u001B[0m";
+
+        System.err.println(ANSI_RED);
+        System.err.println("");
+        System.err.println("        " + message);
+        for (String msg : messages) {
+            System.err.println("        " + msg);
+        }
+        System.err.println("");
+        System.err.println(ANSI_RESET);
+
+        throw new RuntimeException(message);
+    }
+
     public static void sleep(long ms) {
         try {
             Thread.sleep(ms);

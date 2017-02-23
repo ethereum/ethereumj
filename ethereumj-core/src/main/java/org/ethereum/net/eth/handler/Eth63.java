@@ -189,6 +189,7 @@ public class Eth63 extends Eth62 {
         requestedNodes = null;
         requestNodesFuture = null;
         processingTime += (System.currentTimeMillis() - lastReqSentTime);
+        lastReqSentTime = 0;
         peerState = PeerState.IDLE;
     }
 
@@ -212,6 +213,7 @@ public class Eth63 extends Eth62 {
         requestedReceipts = null;
         requestReceiptsFuture = null;
         processingTime += (System.currentTimeMillis() - lastReqSentTime);
+        lastReqSentTime = 0;
         peerState = PeerState.IDLE;
     }
 
