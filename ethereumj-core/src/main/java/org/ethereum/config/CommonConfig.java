@@ -222,15 +222,6 @@ public class CommonConfig {
     }
 
     @Bean
-    @Scope("prototype")
-    public TransactionExecutor transactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
-                                                   ProgramInvokeFactory programInvokeFactory, Block currentBlock,
-                                                   EthereumListener listener, long gasUsedInTheBlock) {
-        return new TransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory,
-                currentBlock, listener, gasUsedInTheBlock);
-    }
-
-    @Bean
     public BlockHeaderValidator headerValidator() {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(

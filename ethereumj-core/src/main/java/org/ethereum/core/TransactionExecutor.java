@@ -92,14 +92,14 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
-        setCommonConfig(CommonConfig.getDefault());
+        withCommonConfig(CommonConfig.getDefault());
     }
 
-    @Autowired
-    private void setCommonConfig(CommonConfig commonConfig) {
+    public TransactionExecutor withCommonConfig(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
         this.config = commonConfig.systemProperties();
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber());
+        return this;
     }
 
     private void execError(String err) {
