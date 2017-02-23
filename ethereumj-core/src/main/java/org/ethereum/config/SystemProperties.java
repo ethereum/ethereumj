@@ -459,11 +459,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public String coinbaseSecret() {
-        return config.getString("coinbase.secret");
-    }
-
-    @ValidateMe
     public Integer blockQueueSize() {
         return config.getInt("cache.blockQueueSize") * 1024 * 1024;
     }
