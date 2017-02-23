@@ -1,5 +1,6 @@
 package org.ethereum;
 
+import org.apache.commons.lang3.StringUtils;
 import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
@@ -20,7 +21,7 @@ public class Start {
 
         final SystemProperties config = SystemProperties.getDefault();
         final boolean actionBlocksLoader = !config.blocksLoader().equals("");
-        final boolean actionGenerateDag = config.getConfig().hasPath("ethash.blockNumber");
+        final boolean actionGenerateDag = !StringUtils.isEmpty(System.getProperty("ethash.blockNumber"));
 
         if (actionBlocksLoader || actionGenerateDag) {
             config.setSyncEnabled(false);
@@ -28,7 +29,7 @@ public class Start {
         }
 
         if (actionGenerateDag) {
-            new Ethash(config, config.getConfig().getLong("ethash.blockNumber")).getFullDataset();
+            new Ethash(config, Long.parseLong(System.getProperty("ethash.blockNumber"))).getFullDataset();
             // DAG file has been created, lets exit
             System.exit(0);
         } else {
