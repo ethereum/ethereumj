@@ -560,31 +560,23 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
-        String receiptHash = Hex.toHexString(block.getReceiptsRoot());
-        String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
 
-        if (!receiptHash.equals(receiptListHash)) {
-            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
+        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
             logger.warn("Calculated receipts: " + receipts);
             repo.rollback();
             summary = null;
         }
 
-        String logBloomHash = Hex.toHexString(block.getLogBloom());
-        String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
-
-        if (!logBloomHash.equals(logBloomListHash)) {
-            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
+        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
             repo.rollback();
             summary = null;
         }
 
-        String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-        String worldStateRootHash = Hex.toHexString(repo.getRoot());
+        if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
 
-        if (!blockStateRootHash.equals(worldStateRootHash)) {
-
-            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(repo.getRoot()));
             stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
 
 //            track.rollback();
