@@ -51,7 +51,6 @@ public class Eth63 extends Eth62 {
 
     private long connectedTime = System.currentTimeMillis();
     private long processingTime = 0;
-    private long lastReqSentTime;
 
     public Eth63() {
         super(version);
