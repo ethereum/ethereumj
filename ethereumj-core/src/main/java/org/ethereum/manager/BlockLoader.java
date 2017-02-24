@@ -110,9 +110,6 @@ public class BlockLoader {
                 for (RLPElement item : list) {
                     Block block = new Block(item.getRLPData());
                     exec1.push(block);
-                    if (block.getNumber() % 10000 == 0) {
-                        dbFlushManager.flushSync();
-                    }
                 }
             } else {                                        // hex string
                 FileInputStream inputStream = new FileInputStream(fileSrc);
