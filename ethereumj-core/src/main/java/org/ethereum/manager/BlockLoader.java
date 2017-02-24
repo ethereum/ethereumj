@@ -138,7 +138,7 @@ public class BlockLoader {
             throw new RuntimeException(e);
         }
 
-        dbFlushManager.flush();
+        dbFlushManager.flushSync();
 
         System.out.println(" * Done * ");
         System.exit(0);
