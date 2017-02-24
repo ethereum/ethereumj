@@ -538,12 +538,12 @@ public class Eth62 extends EthHandler {
             for (Pair<Long, BlockHeaderValidator> validator : validators) {
                 if (validator.getLeft() <= getBestKnownBlock().getNumber()) {
                     validatorMap.put(validator.getLeft(), validator.getRight());
-                    sendGetBlockHeaders(validator.getLeft(), 1, false);
                 }
             }
 
             logger.trace("Peer " + channel.getPeerIdShort() + ": Requested " + validatorMap.size() +
                     " headers for hash check: " + validatorMap.keySet());
+            requestNextHashCheck();
 
         } else {
             BlockHeaderValidator validator = validatorMap.get(blockNumber);
@@ -551,6 +551,7 @@ public class Eth62 extends EthHandler {
                 BlockHeaderRule.ValidationResult result = validator.validate(blockHeader);
                 if (result.success) {
                     validatorMap.remove(blockNumber);
+                    requestNextHashCheck();
                 } else {
                     logger.debug("Peer {}: wrong fork ({}). Drop the peer and reduce reputation.", channel.getPeerIdShort(), result.error);
                     channel.getNodeStatistics().wrongFork = true;
@@ -565,6 +566,15 @@ public class Eth62 extends EthHandler {
             logger.trace("Peer {}: all validations passed", channel.getPeerIdShort());
         }
     }
+
+    private void requestNextHashCheck() {
+       if (!validatorMap.isEmpty()) {
+            final Long checkHeader = validatorMap.keySet().iterator().next();
+            sendGetBlockHeaders(checkHeader, 1, false);
+            logger.trace("Peer {}: Requested #{} header for hash check.", channel.getPeerIdShort(), checkHeader);
+        }
+    }
+
 
     private void updateBestBlock(Block block) {
         updateBestBlock(block.getHeader());

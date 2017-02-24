@@ -42,7 +42,7 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
         this.constants = parent.getConstants();
         this.forkBlockNumber = forkBlockNumber;
         BlockHeaderRule rule = new ExtraDataPresenceRule(DAO_EXTRA_DATA, supportFork);
-        validator = Arrays.asList(Pair.of(forkBlockNumber, new BlockHeaderValidator(Arrays.asList(rule))));
+        validator = Arrays.asList(Pair.of(forkBlockNumber, new BlockHeaderValidator(rule)));
     }
 
     /**
