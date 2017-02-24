@@ -102,7 +102,7 @@ public class BlockLoader {
             final String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
             System.out.println("Loading blocks: " + fileSrc + ", format: " + blocksFormat);
 
-            if ("rlp".equalsIgnoreCase(blocksFormat)) {
+            if ("rlp".equalsIgnoreCase(blocksFormat)) {     // rlp encoded bytes
                 Path path = Paths.get(fileSrc);
                 // NOT OPTIMAL, but fine for tests
                 byte[] data = Files.readAllBytes(path);
@@ -111,10 +111,10 @@ public class BlockLoader {
                     Block block = new Block(item.getRLPData());
                     exec1.push(block);
                     if (block.getNumber() % 10000 == 0) {
-                        dbFlushManager.flush();
+                        dbFlushManager.flushSync();
                     }
                 }
-            } else {
+            } else {                                        // hex string
                 FileInputStream inputStream = new FileInputStream(fileSrc);
                 scanner = new Scanner(inputStream, "UTF-8");
 
