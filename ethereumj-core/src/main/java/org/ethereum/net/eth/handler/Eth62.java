@@ -3,6 +3,7 @@ package org.ethereum.net.eth.handler;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -14,11 +15,12 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncManager;
+import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
+import org.ethereum.validator.BlockHeaderRule;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -35,6 +37,7 @@ import static java.util.Collections.singletonList;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
+import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
@@ -88,7 +91,7 @@ public class Eth62 extends EthHandler {
 
     protected GetBlockHeadersMessageWrapper headerRequest;
 
-    private Map<Long, byte[]> blockHashCheck;
+    private Map<Long, BlockHeaderValidator> validatorMap;
     protected long lastReqSentTime;
 
     private static final EthVersion version = V62;
@@ -517,9 +520,11 @@ public class Eth62 extends EthHandler {
 
     protected synchronized void processInitHeaders(List<BlockHeader> received) {
 
-        BlockHeader first = received.get(0);
+        final BlockHeader blockHeader = received.get(0);
+        final long blockNumber = blockHeader.getNumber();
+
         if (ethState == EthState.STATUS_SENT) {
-            updateBestBlock(first);
+            updateBestBlock(blockHeader);
 
             logger.trace("Peer {}: init request succeeded, best known block {}",
                     channel.getPeerIdShort(), bestKnownBlock);
@@ -527,45 +532,37 @@ public class Eth62 extends EthHandler {
             // checking if the peer has expected block hashes
             ethState = EthState.HASH_CONSTRAINTS_CHECK;
 
-            List<Pair<Long, byte[]>> constraints = config.getBlockchainConfig().
-                    getConfigForBlock(first.getNumber()).blockHashConstraints();
-
-            blockHashCheck = Collections.synchronizedMap(new HashMap<Long, byte[]>());
-            for (Pair<Long, byte[]> constraint : constraints) {
-                if (constraint.getLeft() <= getBestKnownBlock().getNumber()) {
-                    blockHashCheck.put(constraint.getLeft(), constraint.getRight());
+            validatorMap = Collections.synchronizedMap(new HashedMap());
+            List<Pair<Long, BlockHeaderValidator>> validators = config.getBlockchainConfig().
+                    getConfigForBlock(blockNumber).headerValidators();
+            for (Pair<Long, BlockHeaderValidator> validator : validators) {
+                if (validator.getLeft() <= getBestKnownBlock().getNumber()) {
+                    validatorMap.put(validator.getLeft(), validator.getRight());
+                    sendGetBlockHeaders(validator.getLeft(), 1, false);
                 }
             }
-            requestNextHashCheck();
+
+            logger.trace("Peer " + channel.getPeerIdShort() + ": Requested " + validatorMap.size() +
+                    " headers for hash check: " + validatorMap.keySet());
 
         } else {
-            byte[] expectedHash = blockHashCheck.get(first.getNumber());
-            if (expectedHash != null) {
-                if (FastByteComparisons.equal(expectedHash, first.getHash())) {
-                    blockHashCheck.remove(first.getNumber());
-                    requestNextHashCheck();
+            BlockHeaderValidator validator = validatorMap.get(blockNumber);
+            if (validator != null) {
+                BlockHeaderRule.ValidationResult result = validator.validate(blockHeader);
+                if (result.success) {
+                    validatorMap.remove(blockNumber);
                 } else {
-                    logger.debug("Peer " + channel.getPeerIdShort() + ": wrong fork (expected block " +
-                            first.getNumber() + " hash " + Hex.toHexString(expectedHash) + ", but got " +
-                            Hex.toHexString(first.getHash()) + ". Drop the peer and reduce reputation.");
+                    logger.debug("Peer {}: wrong fork ({}). Drop the peer and reduce reputation.", channel.getPeerIdShort(), result.error);
                     channel.getNodeStatistics().wrongFork = true;
                     dropConnection();
                 }
             }
         }
 
-        if (blockHashCheck.isEmpty()) {
+        if (validatorMap.isEmpty()) {
             ethState = EthState.STATUS_SUCCEEDED;
 
             logger.trace("Peer {}: all validations passed", channel.getPeerIdShort());
-        }
-    }
-
-    private void requestNextHashCheck() {
-        if (!blockHashCheck.isEmpty()) {
-            Long checkHeader = blockHashCheck.keySet().iterator().next();
-            sendGetBlockHeaders(checkHeader, 1, false);
-            logger.trace("Peer {}: Requested #{} header for hash check.", channel.getPeerIdShort(), checkHeader);
         }
     }
 

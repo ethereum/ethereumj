@@ -1,7 +1,9 @@
 package org.ethereum.config;
 
-import com.typesafe.config.*;
-import org.ethereum.config.blockchain.FrontierConfig;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
@@ -150,7 +152,6 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig, ClassLoader classLoader) {
-        long startTime = System.currentTimeMillis();
         try {
             this.classLoader = classLoader;
 
@@ -185,8 +186,7 @@ public class SystemProperties {
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
 
-            config = javaSystemProperties.withFallback(config)
-                    .resolve();     // substitute variables in config if any
+            config = javaSystemProperties.withFallback(config);
             validateConfig();
 
             Properties props = new Properties();
@@ -500,6 +500,10 @@ public class SystemProperties {
     @ValidateMe
     public String databaseDir() {
         return databaseDir == null ? config.getString("database.dir") : databaseDir;
+    }
+
+    public String ethashDir() {
+        return config.hasPath("ethash.dir") ? config.getString("ethash.dir") : databaseDir();
     }
 
     public void setDataBaseDir(String dataBaseDir) {

@@ -12,7 +12,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -54,6 +53,10 @@ class Initializer implements BeanPostProcessor {
 
         // forcing reading private key or generating it in database directory
         config.nodeId();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Blockchain config {}", config.getBlockchainConfig().toString());
+        }
     }
 
     @Override
