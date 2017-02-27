@@ -95,8 +95,9 @@ public class GenesisLoader {
     }
 
     public static GenesisJson loadGenesisJson(InputStream genesisJsonIS) throws RuntimeException {
+        String json = null;
         try {
-            String json = new String(ByteStreams.toByteArray(genesisJsonIS));
+            json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
@@ -106,7 +107,9 @@ public class GenesisLoader {
             GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
         } catch (Exception e) {
-            e.printStackTrace();
+
+            Utils.showErrorAndExit("Problem parsing genesis: "+ e.getMessage(), json);
+
             throw new RuntimeException(e.getMessage(), e);
         }
     }
