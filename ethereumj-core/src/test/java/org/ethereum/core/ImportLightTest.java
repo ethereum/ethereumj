@@ -873,10 +873,7 @@ public class ImportLightTest {
         blockchain.setPendingState(pendingState);
 
         Repository track = repository.startTracking();
-        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            track.createAccount(key.getData());
-            track.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-        }
+        Genesis.populateRepository(track, genesis);
 
         track.commit();
         repository.commit();

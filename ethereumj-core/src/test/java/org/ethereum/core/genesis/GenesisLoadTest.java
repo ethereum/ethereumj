@@ -3,26 +3,28 @@ package org.ethereum.core.genesis;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
-import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
-import org.junit.Assert;
-import org.junit.Ignore;
+import org.ethereum.core.Genesis;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 
+import static org.ethereum.util.FastByteComparisons.equal;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+
 
 
 /**
@@ -89,6 +91,28 @@ public class GenesisLoadTest {
 
         assertThat(bnc.getConfigForBlock(450), instanceOf(Eip150HFConfig.class));
         assertThat(bnc.getConfigForBlock(10_000_000), instanceOf(Eip150HFConfig.class));
+    }
+
+    @Test
+    public void shouldLoadGenesis_withCodeAndNonceInAlloc() {
+        final Genesis genesis = GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-alloc.json"));
+        final StandaloneBlockchain bc = new StandaloneBlockchain();
+
+        bc.withGenesis(genesis);
+
+        final byte[] account = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+        byte[] expectedCode = Hex.decode("00ff00");
+        long expectedNonce = 255;       //FF
+
+        final BigInteger actualNonce = bc.getBlockchain().getRepository().getNonce(account);
+        final byte[] actualCode = bc.getBlockchain().getRepository().getCode(account);
+
+//        System.out.println("nonce: " + actualNonce);
+//        System.out.println("code: " + Hex.toHexString(actualCode));
+
+        assertEquals(BigInteger.valueOf(expectedNonce), actualNonce);
+        assertTrue(equal(expectedCode, actualCode));
     }
 
     private SystemProperties loadGenesis(String genesisFile, String genesisResource) {

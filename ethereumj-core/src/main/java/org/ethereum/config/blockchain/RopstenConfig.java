@@ -23,8 +23,7 @@ public class RopstenConfig extends Eip160HFConfig {
 
     public RopstenConfig(BlockchainConfig parent) {
         super(parent);
-        BlockHeaderRule rule = new BlockCustomHashRule(CHECK_BLOCK_HASH);
-        validator = Arrays.asList(Pair.of(CHECK_BLOCK_NUMBER, new BlockHeaderValidator(Arrays.asList(rule))));
+        validator = Arrays.asList(Pair.of(CHECK_BLOCK_NUMBER, new BlockHeaderValidator(new BlockCustomHashRule(CHECK_BLOCK_HASH))));
     }
 
     @Override
