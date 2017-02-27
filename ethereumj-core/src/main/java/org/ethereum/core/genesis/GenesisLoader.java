@@ -1,5 +1,6 @@
 package org.ethereum.core.genesis;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
@@ -100,7 +101,7 @@ public class GenesisLoader {
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
             // with line bellow we could force fail on unknown properties
-//            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
             GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
