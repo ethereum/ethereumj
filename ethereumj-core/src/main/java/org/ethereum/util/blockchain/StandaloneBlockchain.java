@@ -34,6 +34,8 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
+import static org.ethereum.util.ByteUtil.wrap;
+
 /**
  * Created by Anton Nashatyrev on 23.03.2016.
  */
@@ -124,7 +126,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     public StandaloneBlockchain withAccountBalance(byte[] address, BigInteger weis) {
         AccountState state = new AccountState(BigInteger.ZERO, weis);
-        genesis.getPremine().put(new ByteArrayWrapper(address), state);
+        genesis.addPremine(wrap(address), state);
         genesis.setStateRoot(GenesisLoader.generateRootHash(genesis.getPremine()));
 
         return this;
@@ -451,7 +453,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));
         pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
 
-        RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
+        final RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
@@ -470,13 +472,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
 
-        Repository track = repository.startTracking();
-        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            track.createAccount(key.getData());
-            track.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-        }
+        Genesis.populateRepository(repository, genesis);
 
-        track.commit();
         repository.commit();
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);

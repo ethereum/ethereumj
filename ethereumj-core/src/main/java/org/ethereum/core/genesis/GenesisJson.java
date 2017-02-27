@@ -100,4 +100,13 @@ public class GenesisJson {
     public void setConfig(Map<String, String> config) {
         this.config = config;
     }
+
+    public static class AllocatedAccount {
+
+        public Map<String, String> storage;
+        public String nonce;
+        public String code;
+        public String balance;
+
+    }
 }
