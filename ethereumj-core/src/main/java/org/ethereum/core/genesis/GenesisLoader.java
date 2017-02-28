@@ -97,6 +97,7 @@ public class GenesisLoader {
     public static GenesisJson loadGenesisJson(InputStream genesisJsonIS) throws RuntimeException {
         String json = null;
         try {
+            System.out.println("loadGenesisJson before...");
             json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
             ObjectMapper mapper = new ObjectMapper()
