@@ -137,6 +137,11 @@ public abstract class BlockDownloader {
                     if (hReq.isEmpty()) {
                         synchronized (this) {
                             hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                            String l = "##########  New header requests (" + hReq.size() + "):\n";
+                            for (SyncQueueIfc.HeadersRequest request : hReq) {
+                                l += "    " + request + "\n";
+                            }
+                            logger.debug(l);
                         }
                     }
                     if (hReq.size() == 0) {
@@ -269,7 +274,7 @@ public abstract class BlockDownloader {
                     logger.debug("blockRetrieveLoop: BlockQueue is full");
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
-                receivedBlocksLatch.await(2000, TimeUnit.MILLISECONDS);
+                receivedBlocksLatch.await(200, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {

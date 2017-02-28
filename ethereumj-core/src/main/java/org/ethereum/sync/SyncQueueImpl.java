@@ -267,7 +267,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     private boolean addHeader(BlockHeaderWrapper header) {
         long num = header.getNumber();
-        if (num <= darkZoneNum || num > maxNum + MAX_CHAIN_LEN * 2) {
+        if (num <= darkZoneNum || num > maxNum + MAX_CHAIN_LEN * 32) {
             // dropping too distant headers
             return false;
         }
@@ -293,29 +293,30 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     @Override
     public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
-        return Collections.singletonList(requestHeadersImpl(maxSize));
+        return requestHeadersImpl(maxSize, maxRequests);
     }
 
-    private HeadersRequest requestHeadersImpl(int count) {
-        long startNumber;
-        int headersCount;
-        boolean reverse = false;
+    private List<HeadersRequest> requestHeadersImpl(int count, int maxRequests) {
+        List<HeadersRequest> ret = new ArrayList<>();
 
-        if (!hasGaps()) {
-            startNumber = maxNum + 1;
-            if (endBlockNumber != null) {
-                headersCount = (int) Math.min(count, endBlockNumber - startNumber + 1);
-            } else {
-                headersCount = count;
-            }
-        } else {
+        if (hasGaps()) {
             List<HeaderElement> longestChain = getLongestChain();
-            startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
-            headersCount = MAX_CHAIN_LEN;
-            if (!rnd.nextBoolean()) reverse = true;
+            long startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
+            ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, rnd.nextBoolean()));
+            if (maxNum - startNumber > 2000) return ret;
         }
 
-        return new HeadersRequestImpl(startNumber, headersCount, reverse);
+        for (int i = 0; ret.size() <= maxRequests; i++) {
+            long startNumber = maxNum + 1 + count * i;
+            if (endBlockNumber != null && count > endBlockNumber - startNumber + 1) {
+                ret.add(new HeadersRequestImpl(startNumber, (int) (endBlockNumber - startNumber + 1), false));
+                break;
+            } else {
+                ret.add(new HeadersRequestImpl(startNumber, count, false));
+            }
+        }
+
+        return ret;
     }
 
     @Override
