@@ -100,15 +100,9 @@ public class JsonNetConfig extends BaseNetConfig {
             }
 
         } else if (EIP150_BLOCK.equals(key)) {
-            if (blockNumber == 0) {
-                throw new RuntimeException("Unexpected and untested blockchain configuration");
-            }
             return new Eip150HFConfig(prevChain);
 
         } else if (EIP_158_BLOCK.equals(key)) {
-            if (blockNumber == 0) {
-                throw new RuntimeException("Unexpected and untested blockchain configuration");
-            }
             return new Eip160HFConfig(prevChain);
         }
 
