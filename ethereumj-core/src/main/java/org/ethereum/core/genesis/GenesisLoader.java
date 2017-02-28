@@ -99,10 +99,9 @@ public class GenesisLoader {
         try {
             json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-            // with line bellow we could force fail on unknown properties
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            ObjectMapper mapper = new ObjectMapper()
+                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
 
             GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
