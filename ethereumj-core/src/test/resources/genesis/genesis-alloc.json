@@ -25,6 +25,13 @@
   "nonce"      : "0x0000000000000042",
   "mixHash"    : "0x0000000000000000000000000000000000000000000000000000000000000000",
   "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "timestamp"  : "0x00"
-
+  "timestamp"  : "0x00",
+  "config": {
+    "homesteadBlock": 2000,
+    "daoForkBlock": 2000,
+    "daoForkSupport": true,
+    "eip150Block": 2000,
+    "eip158Block": 2000,
+    "eip155Block": 2000
+  }
 }
