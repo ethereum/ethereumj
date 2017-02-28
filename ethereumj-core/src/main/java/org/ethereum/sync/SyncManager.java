@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
 import static org.ethereum.core.ImportResult.*;
+import static org.ethereum.util.Utils.longToTimePeriod;
 
 /**
  * @author Mikhail Kalinin
@@ -93,6 +94,8 @@ public class SyncManager extends BlockDownloader {
     private long blockBytesLimit = 32 * 1024 * 1024;
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
+    private AtomicLong importWaitTime = new AtomicLong();
+    private long importStart;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
@@ -114,7 +117,9 @@ public class SyncManager extends BlockDownloader {
             this.channelManager = channelManager;
             logExecutor.scheduleAtFixedRate(new Runnable() {
                 public void run() {
-                    logger.info("Sync state: " + getSyncStatus());
+                    logger.info("Sync state: " + getSyncStatus() +
+                            (isSyncDone() || importStart == 0 ? "" : "; Import wait time " +
+                            longToTimePeriod(importWaitTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
                 }
             }, 10, 10, TimeUnit.SECONDS);
         }
@@ -222,8 +227,14 @@ public class SyncManager extends BlockDownloader {
             BlockWrapper wrapper = null;
             try {
 
+                long stale = !isSyncDone() && importStart > 0 && blockQueue.isEmpty() ? System.nanoTime() : 0;
                 wrapper = blockQueue.take();
                 blockQueueByteSize.addAndGet(-estimateBlockSize(wrapper));
+
+                if (stale > 0) {
+                    importWaitTime.addAndGet((System.nanoTime() - stale) / 1_000_000);
+                }
+                if (importStart == 0) importStart = System.currentTimeMillis();
 
                 logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueue.getHeadersCount());
 
