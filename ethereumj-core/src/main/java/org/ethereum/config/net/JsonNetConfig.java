@@ -13,11 +13,11 @@ import java.util.*;
  */
 public class JsonNetConfig extends BaseNetConfig {
 
-    private final String EIP_155_BLOCK = "eip155Block".toLowerCase();
-    private final String EIP_158_BLOCK = "eip158Block".toLowerCase();
     private final String HOMESTEAD_BLOCK = "homesteadBlock".toLowerCase();
     private final String DAO_FORK_BLOCK = "daoForkBlock".toLowerCase();
     private final String EIP150_BLOCK = "eip150Block".toLowerCase();
+    private final String EIP_155_BLOCK = "eip155Block".toLowerCase();
+    private final String EIP_158_BLOCK = "eip158Block".toLowerCase();
 
     final List<String> keys = Arrays.asList(HOMESTEAD_BLOCK, DAO_FORK_BLOCK, EIP150_BLOCK, EIP_155_BLOCK, EIP_158_BLOCK);
 
