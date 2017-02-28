@@ -186,7 +186,8 @@ public class SystemProperties {
             logger.debug("Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                     setComments(false).setJson(false)));
 
-            config = javaSystemProperties.withFallback(config);
+            config = javaSystemProperties.withFallback(config)
+                    .resolve();     // substitute variables in config if any
             validateConfig();
 
             Properties props = new Properties();
