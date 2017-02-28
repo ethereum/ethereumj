@@ -66,22 +66,21 @@ public class JsonNetConfig extends BaseNetConfig {
                             key, blockNumber, lastCandidate.getRight().toString(), lastCandidate.getLeft()));
                 }
                 final BlockchainConfig candidate = getBlockchainConfigCandidate(config, key, blockNumber, lastCandidate);
-                candidates.add(Pair.of(blockNumber, candidate));
+                if (candidate != null) {
+                    candidates.add(Pair.of(blockNumber, candidate));
+                }
             }
         }
 
         {
-            // add each latest candidate per each block
+            // add candidate per each block (take last in row for same block)
             Pair<Integer, BlockchainConfig> last = candidates.remove(0);
             for (Pair<Integer, BlockchainConfig> current : candidates) {
-                System.out.println("checking current:" + current + ", last:" + last + "    " + (current.getLeft().compareTo(last.getLeft())));
                 if (current.getLeft().compareTo(last.getLeft()) > 0) {
-                    System.out.println("Adding1 " + last.getLeft() + " " + last.getRight());
                     add(last.getLeft(), last.getRight());
                 }
                 last = current;
             }
-            System.out.println("Adding2 " + last.getLeft() + " " + last.getRight());
             add(last.getLeft(), last.getRight());
         }
     }
@@ -106,7 +105,6 @@ public class JsonNetConfig extends BaseNetConfig {
             return new Eip160HFConfig(prevChain);
         }
 
-        // TODO handle other EIP configs
         LoggerFactory.getLogger("general").warn("Ignored config option from genesis {}: {}", blockNumber, key);
         return null;
     }
