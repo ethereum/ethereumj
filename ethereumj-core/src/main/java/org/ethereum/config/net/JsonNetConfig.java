@@ -67,7 +67,8 @@ public class JsonNetConfig extends BaseNetConfig {
                 }
                 final BlockchainConfig candidate = getBlockchainConfigCandidate(config, key, blockNumber, lastCandidate);
                 if (candidate != null) {
-                    candidates.add(Pair.of(blockNumber, candidate));
+                    lastCandidate = Pair.of(blockNumber, candidate);
+                    candidates.add(lastCandidate);
                 }
             }
         }

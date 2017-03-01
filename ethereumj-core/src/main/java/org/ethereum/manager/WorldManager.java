@@ -14,6 +14,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -176,8 +177,8 @@ public class WorldManager {
 
             if (!config.databaseReset() &&
                     !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
-                logger.error("*** DB is incorrect, 0 block in DB doesn't match genesis");
-                throw new RuntimeException("DB doesn't match genesis");
+                // fatal exit
+                Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
             }
 
             Block bestBlock = blockStore.getBestBlock();

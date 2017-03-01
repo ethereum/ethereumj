@@ -92,7 +92,7 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
 
     @Override
     public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
-        return minerExtraData;
+        return parent.getExtraData(minerExtraData, blockNumber);
     }
 
     @Override
