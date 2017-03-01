@@ -19,12 +19,15 @@ public class JsonNetConfig extends BaseNetConfig {
     private final String EIP_155_BLOCK = "eip155Block".toLowerCase();
     private final String EIP_158_BLOCK = "eip158Block".toLowerCase();
 
-    final List<String> keys = Arrays.asList(HOMESTEAD_BLOCK, DAO_FORK_BLOCK, EIP150_BLOCK, EIP_155_BLOCK, EIP_158_BLOCK);
+    final List<String> keys = Arrays.asList(DAO_FORK_BLOCK, EIP150_BLOCK, EIP_155_BLOCK, EIP_158_BLOCK);
 
-    final BlockchainConfig initialConfig = new FrontierConfig();
+    final BlockchainConfig initialBlockConfig = new FrontierConfig();
 
     /**
      * We convert all string keys to lowercase before processing.
+     *
+     * Homestead block is 0 if not specified.
+     * If Homestead block is specified then Frontier will be used for 0 block.
      *
      * @param configValue
      */
@@ -40,7 +43,13 @@ public class JsonNetConfig extends BaseNetConfig {
         final List<Pair<Integer, BlockchainConfig>> candidates = new ArrayList<>();
 
         {
-            Pair<Integer, BlockchainConfig> lastCandidate = Pair.of(0, initialConfig);
+            Pair<Integer, BlockchainConfig> lastCandidate = Pair.of(0, initialBlockConfig);
+            candidates.add(lastCandidate);
+
+            // homestead block assumed to be 0
+            final Integer homesteadBlockSpecified = getInteger(config, HOMESTEAD_BLOCK);
+            final int homesteadBlock = homesteadBlockSpecified == null ? 0 : homesteadBlockSpecified;
+            lastCandidate = Pair.of(0, getBlockchainConfigCandidate(config, HOMESTEAD_BLOCK, homesteadBlock, lastCandidate));
             candidates.add(lastCandidate);
 
             // preparation
