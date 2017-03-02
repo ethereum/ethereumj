@@ -176,26 +176,24 @@ public abstract class BlockDownloader {
         List<SyncQueueIfc.HeadersRequest> hReq = emptyList();
         while(!Thread.currentThread().isInterrupted()) {
             try {
-
-                if (syncQueue.getHeadersCount() < headerQueueLimit) {
                     if (hReq.isEmpty()) {
                         synchronized (this) {
-                            hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                            hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, headerQueueLimit);
+                            if (hReq == null) {
+                                logger.info("Headers download complete.");
+                                headersDownloadComplete = true;
+                                if (!blockBodiesDownload) {
+                                    finishDownload();
+                                    downloadComplete = true;
+                                }
+                                return;
+                            }
                             String l = "##########  New header requests (" + hReq.size() + "):\n";
                             for (SyncQueueIfc.HeadersRequest request : hReq) {
                                 l += "    " + request + "\n";
                             }
                             logger.debug(l);
                         }
-                    }
-                    if (hReq.isEmpty()) {
-                        logger.info("Headers download complete.");
-                        headersDownloadComplete = true;
-                        if (!blockBodiesDownload) {
-                            finishDownload();
-                            downloadComplete = true;
-                        }
-                        return;
                     }
                     int reqHeadersCounter = 0;
                     for (Iterator<SyncQueueIfc.HeadersRequest> it = hReq.iterator(); it.hasNext();) {
@@ -233,10 +231,7 @@ public abstract class BlockDownloader {
                         }
                     }
                     receivedHeadersLatch = new CountDownLatch(max(reqHeadersCounter / 2, 1));
-                }  else {
-                    receivedHeadersLatch = new CountDownLatch(1);
-                    logger.debug("headerRetrieveLoop: HeaderQueue is full");
-                }
+
                 receivedHeadersLatch.await(isSyncDone() ? 10000 : 500, TimeUnit.MILLISECONDS);
 
             } catch (InterruptedException e) {
@@ -271,7 +266,7 @@ public abstract class BlockDownloader {
         while(!Thread.currentThread().isInterrupted()) {
             try {
                 if (bReqs.isEmpty()) {
-                    bReqs = syncQueue.requestBlocks(4096).split(MAX_IN_REQUEST);
+                    bReqs = syncQueue.requestBlocks(16 * 1024).split(MAX_IN_REQUEST);
                 }
 
                 if (bReqs.isEmpty() && headersDownloadComplete) {
@@ -321,6 +316,7 @@ public abstract class BlockDownloader {
                             if (futureBlocks != null) {
                                 Futures.addCallback(futureBlocks, new BlocksCallback(any));
                                 reqBlocksCounter++;
+                                it.remove();
                             }
                         }
                     }

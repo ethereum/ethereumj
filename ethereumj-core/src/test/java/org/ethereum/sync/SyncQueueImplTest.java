@@ -23,7 +23,7 @@ public class SyncQueueImplTest {
 
         SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain.subList(0, 32));
 
-        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1).iterator().next();
+        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1, Integer.MAX_VALUE).iterator().next();
         System.out.println(headersRequest);
 
         syncQueue.addHeaders(createHeadersFromBlocks(TestUtils.getRandomChain(randomChain.get(16).getHash(), 17, 64), peer0));
@@ -75,7 +75,7 @@ public class SyncQueueImplTest {
         int cnt = 0;
         while (cnt < 1000) {
             System.out.println("Cnt: " + cnt++);
-            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5);
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5, Integer.MAX_VALUE);
             if (headersRequests.isEmpty()) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
@@ -112,7 +112,7 @@ public class SyncQueueImplTest {
         int cnt = 0;
         while (cnt < 100) {
             System.out.println("Cnt: " + cnt++);
-            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10);
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10, Integer.MAX_VALUE);
             if (headersRequests.isEmpty()) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
@@ -255,7 +255,7 @@ public class SyncQueueImplTest {
 
         int i = 0;
         for (; i < 1000; i++) {
-            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1).iterator().next();
+            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1, Integer.MAX_VALUE).iterator().next();
             List<BlockHeader> headers = peers[rnd.nextInt(peers.length)].getHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse());
             syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
             SyncQueueIfc.BlocksRequest blocksRequest = syncQueue.requestBlocks(rnd.nextInt(128 + 1));

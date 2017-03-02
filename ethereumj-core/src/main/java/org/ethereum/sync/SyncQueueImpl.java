@@ -271,7 +271,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     private boolean addHeader(BlockHeaderWrapper header) {
         long num = header.getNumber();
-        if (num <= darkZoneNum || num > maxNum + MAX_CHAIN_LEN * 32) {
+        if (num <= darkZoneNum || num > maxNum + MAX_CHAIN_LEN * 128) {
             // dropping too distant headers
             return false;
         }
@@ -296,8 +296,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
-        return requestHeadersImpl(maxSize, maxRequests, Integer.MAX_VALUE);
+    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests, int maxTotalHeaders) {
+        return requestHeadersImpl(maxSize, maxRequests, maxTotalHeaders);
     }
 
     private List<HeadersRequest> requestHeadersImpl(int count, int maxRequests, int maxTotHeaderCount) {

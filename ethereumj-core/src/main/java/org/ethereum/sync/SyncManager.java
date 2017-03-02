@@ -94,7 +94,7 @@ public class SyncManager extends BlockDownloader {
     private long blockBytesLimit = 32 * 1024 * 1024;
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
-    private AtomicLong importWaitTime = new AtomicLong();
+    private AtomicLong importIdleTime = new AtomicLong();
     private long importStart;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -119,8 +119,8 @@ public class SyncManager extends BlockDownloader {
                 public void run() {
                     try {
                         logger.info("Sync state: " + getSyncStatus() +
-                                (isSyncDone() || importStart == 0 ? "" : "; Import wait time " +
-                                longToTimePeriod(importWaitTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)) +
+                                (isSyncDone() || importStart == 0 ? "" : "; Import idle time " +
+                                longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)) +
                         " " + getStat());
                     } catch (Exception e) {
                         logger.error("Unexpected", e);
@@ -237,7 +237,7 @@ public class SyncManager extends BlockDownloader {
                 blockQueueByteSize.addAndGet(-estimateBlockSize(wrapper));
 
                 if (stale > 0) {
-                    importWaitTime.addAndGet((System.nanoTime() - stale) / 1_000_000);
+                    importIdleTime.addAndGet((System.nanoTime() - stale) / 1_000_000);
                 }
                 if (importStart == 0) importStart = System.currentTimeMillis();
 
