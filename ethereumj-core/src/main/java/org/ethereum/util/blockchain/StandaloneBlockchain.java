@@ -486,6 +486,26 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return blockchain;
     }
 
+    public class SolidityFunctionImpl implements SolidityFunction {
+        SolidityContractImpl contract;
+        CallTransaction.Function abi;
+
+        public SolidityFunctionImpl(SolidityContractImpl contract, CallTransaction.Function abi) {
+            this.contract = contract;
+            this.abi = abi;
+        }
+
+        @Override
+        public SolidityContract getContract() {
+            return contract;
+        }
+
+        @Override
+        public CallTransaction.Function getInterface() {
+            return abi;
+        }
+    }
+
     public class SolidityContractImpl implements SolidityContract {
         byte[] address;
         public CompilationResult.ContractMetadata compiled;
@@ -525,7 +545,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         @Override
         public SolidityCallResult callFunction(long value, String functionName, Object... args) {
             CallTransaction.Function function = contract.getByName(functionName);
-            byte[] data = function.encode(args);
+            byte[] data = function.encode(convertArgs(args));
             SolidityCallResult res = new SolidityCallResultImpl(this, function);
             submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
             return res;
@@ -542,7 +562,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             CallTransaction.Function func = contract.getByName(functionName);
             if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
             Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                    Hex.toHexString(getAddress()), 0, func, args);
+                    Hex.toHexString(getAddress()), 0, func, convertArgs(args));
             tx.sign(new byte[32]);
 
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
@@ -562,6 +582,19 @@ public class StandaloneBlockchain implements LocalBlockchain {
             } finally {
                 repository.rollback();
             }
+        }
+
+        private Object[] convertArgs(Object[] args) {
+            Object[] ret = new Object[args.length];
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] instanceof SolidityFunction) {
+                    SolidityFunction f = (SolidityFunction) args[i];
+                    ret[i] = ByteUtil.merge(f.getContract().getAddress(), f.getInterface().encodeSignature());
+                } else {
+                    ret[i] = args[i];
+                }
+            }
+            return ret;
         }
 
         @Override
@@ -584,6 +617,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
             // for this we need cleaner separation of EasyBlockchain to
             // Abstract and Solidity specific
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SolidityFunction getFunction(String name) {
+            return new SolidityFunctionImpl(this, contract.getByName(name));
         }
     }
 

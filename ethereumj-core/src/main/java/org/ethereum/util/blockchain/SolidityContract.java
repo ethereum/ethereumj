@@ -60,6 +60,12 @@ public interface SolidityContract extends Contract {
     Object[] callConstFunction(Block callBlock, String functionName, Object... args);
 
     /**
+     * Gets the contract function. This object can be passed as a call argument for another
+     * function with a function type parameter
+     */
+    SolidityFunction getFunction(String name);
+
+    /**
      * Returns the Solidity JSON ABI (Application Binary Interface)
      */
     String getABI();
