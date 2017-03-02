@@ -38,7 +38,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     // to avoid checking for null
     private static NodeStatistics DUMMY_STAT = new NodeStatistics(new Node(new byte[0], "dummy.node", 0));
-    private boolean PERSIST;
+    private final boolean PERSIST;
 
     private static final long LISTENER_REFRESH_RATE = 1000;
     private static final long DB_COMMIT_RATE = 1 * 60 * 1000;
@@ -398,7 +398,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         peerConnectionManager.close();
         try {
             nodeManagerTasksTimer.cancel();
-            dbWrite();
+            if (PERSIST) {
+                dbWrite();
+            }
         } catch (Exception e) {
             logger.warn("Problems canceling nodeManagerTasksTimer", e);
         }
