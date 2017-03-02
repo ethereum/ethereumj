@@ -7,6 +7,7 @@ import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.*;
 import org.ethereum.core.Genesis;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 
 import static org.ethereum.util.FastByteComparisons.equal;
@@ -119,6 +120,14 @@ public class GenesisLoadTest {
         assertThat(bnc.getConfigForBlock(1999), instanceOf(FrontierConfig.class));
         assertThat(bnc.getConfigForBlock(2000), instanceOf(Eip160HFConfig.class));
         assertThat(bnc.getConfigForBlock(10_000_000), instanceOf(Eip160HFConfig.class));
+
+        // check DAO extradata for mining
+        final byte[] SOME_EXTRA_DATA = "some-extra-data".getBytes();
+        final byte[] inDaoForkExtraData = bnc.getConfigForBlock(2000).getExtraData(SOME_EXTRA_DATA, 2000);
+        final byte[] pastDaoForkExtraData = bnc.getConfigForBlock(2200).getExtraData(SOME_EXTRA_DATA, 2200);
+
+        assertTrue(FastByteComparisons.equal(AbstractDaoConfig.DAO_EXTRA_DATA, inDaoForkExtraData));
+        assertTrue(FastByteComparisons.equal(SOME_EXTRA_DATA, pastDaoForkExtraData));
     }
 
 
