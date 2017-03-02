@@ -19,6 +19,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
 import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
+import static org.ethereum.util.Utils.longToTimePeriod;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
@@ -93,6 +95,8 @@ public class Eth62 extends EthHandler {
 
     private Map<Long, BlockHeaderValidator> validatorMap;
     protected long lastReqSentTime;
+    protected long connectedTime = System.currentTimeMillis();
+    protected long processingTime = 0;
 
     private static final EthVersion version = V62;
 
@@ -252,6 +256,7 @@ public class Eth62 extends EthHandler {
         headerRequest = messageWrapper;
 
         sendNextHeaderRequest();
+        lastReqSentTime = System.currentTimeMillis();
 
         return messageWrapper.getFutureHeaders();
     }
@@ -426,6 +431,7 @@ public class Eth62 extends EthHandler {
             request.getFutureHeaders().set(received);
         }
 
+        processingTime += lastReqSentTime > 0 ? (System.currentTimeMillis() - lastReqSentTime) : 0;
         lastReqSentTime = 0;
         peerState = IDLE;
     }
@@ -469,6 +475,7 @@ public class Eth62 extends EthHandler {
         futureBlocks.set(blocks);
         futureBlocks = null;
 
+        processingTime += (System.currentTimeMillis() - lastReqSentTime);
         lastReqSentTime = 0;
         peerState = IDLE;
     }
@@ -842,8 +849,9 @@ public class Eth62 extends EthHandler {
     @Override
     public String getSyncStats() {
         int waitResp = lastReqSentTime > 0 ? (int) (System.currentTimeMillis() - lastReqSentTime) / 1000 : 0;
+        long lifeTime = System.currentTimeMillis() - connectedTime;
         return String.format(
-                "Peer %s: [ %s, %18s, ping %6s ms, difficulty %s, best block %s%s]: %s",
+                "Peer %s: [ %s, %18s, ping %6s ms, difficulty %s, best block %s%s]: (idle %s of %s) %s",
                 getVersion(),
                 channel.getPeerIdShort(),
                 peerState,
@@ -851,6 +859,8 @@ public class Eth62 extends EthHandler {
                 getTotalDifficulty(),
                 getBestKnownBlock().getNumber(),
                 waitResp > 5 ? ", wait " + waitResp + "s" : " ",
+                longToTimePeriod(lifeTime - processingTime),
+                longToTimePeriod(lifeTime),
                 channel.getNodeStatistics().getClientId());
     }
 
