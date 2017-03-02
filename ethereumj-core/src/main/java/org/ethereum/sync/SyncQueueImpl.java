@@ -11,6 +11,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
+import static java.lang.Math.min;
+
 /**
  * Created by Anton Nashatyrev on 27.05.2016.
  */
@@ -51,7 +53,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
             List<HeadersRequest> ret = new ArrayList<>();
             int remaining = count;
             while(remaining > 0) {
-                int reqSize = Math.min(maxCount, remaining);
+                int reqSize = min(maxCount, remaining);
                 ret.add(new HeadersRequestImpl(start, reqSize, reverse));
                 remaining -= reqSize;
                 start = reverse ? start - reqSize : start + reqSize;
@@ -73,6 +75,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
         public long getStart() {
             return start;
         }
+
+        public long getEnd() { return getStart() + getCount(); }
 
         @Override
         public byte[] getHash() {
@@ -110,7 +114,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
             List<BlocksRequest> ret = new ArrayList<>();
             int start = 0;
             while(start < getBlockHeaders().size()) {
-                count = Math.min(getBlockHeaders().size() - start, count);
+                count = min(getBlockHeaders().size() - start, count);
                 ret.add(new BlocksRequestImpl(getBlockHeaders().subList(start, start + count)));
                 start += count;
             }
@@ -200,7 +204,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     private void putGenHeaders(long num, Map<ByteArrayWrapper, HeaderElement> genHeaders) {
-        minNum = Math.min(minNum, num);
+        minNum = min(minNum, num);
         maxNum = Math.max(maxNum, num);
         headers.put(num, genHeaders);
     }
@@ -293,30 +297,39 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     @Override
     public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
-        return requestHeadersImpl(maxSize, maxRequests);
+        return requestHeadersImpl(maxSize, maxRequests, Integer.MAX_VALUE);
     }
 
-    private List<HeadersRequest> requestHeadersImpl(int count, int maxRequests) {
+    private List<HeadersRequest> requestHeadersImpl(int count, int maxRequests, int maxTotHeaderCount) {
         List<HeadersRequest> ret = new ArrayList<>();
 
+        long startNumber;
         if (hasGaps()) {
             List<HeaderElement> longestChain = getLongestChain();
-            long startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
+            startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
             ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, rnd.nextBoolean()));
-            if (maxNum - startNumber > 2000) return ret;
+            startNumber += MAX_CHAIN_LEN;
+//            if (maxNum - startNumber > 2000) return ret;
+        } else {
+            startNumber = maxNum + 1;
         }
 
-        for (int i = 0; ret.size() <= maxRequests; i++) {
-            long startNumber = maxNum + 1 + count * i;
-            if (endBlockNumber != null && count > endBlockNumber - startNumber + 1) {
-                ret.add(new HeadersRequestImpl(startNumber, (int) (endBlockNumber - startNumber + 1), false));
-                break;
-            } else {
-                ret.add(new HeadersRequestImpl(startNumber, count, false));
-            }
+        while (ret.size() <= maxRequests && getHeadersCount() <= maxTotHeaderCount) {
+            HeadersRequestImpl nextReq = getNextReq(startNumber, count);
+            if (nextReq.getEnd() > minNum + maxTotHeaderCount) break;
+            ret.add(nextReq);
+            startNumber = nextReq.getEnd();
         }
 
         return ret;
+    }
+
+    private HeadersRequestImpl getNextReq(long startFrom, int maxCount) {
+        while(headers.containsKey(startFrom)) startFrom++;
+        if (endBlockNumber != null && maxCount > endBlockNumber - startFrom + 1) {
+            maxCount = (int) (endBlockNumber - startFrom + 1);
+        }
+        return new HeadersRequestImpl(startFrom, maxCount, false);
     }
 
     @Override

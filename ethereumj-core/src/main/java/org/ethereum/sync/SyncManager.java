@@ -117,9 +117,14 @@ public class SyncManager extends BlockDownloader {
             this.channelManager = channelManager;
             logExecutor.scheduleAtFixedRate(new Runnable() {
                 public void run() {
-                    logger.info("Sync state: " + getSyncStatus() +
-                            (isSyncDone() || importStart == 0 ? "" : "; Import wait time " +
-                            longToTimePeriod(importWaitTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
+                    try {
+                        logger.info("Sync state: " + getSyncStatus() +
+                                (isSyncDone() || importStart == 0 ? "" : "; Import wait time " +
+                                longToTimePeriod(importWaitTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)) +
+                        " " + getStat());
+                    } catch (Exception e) {
+                        logger.error("Unexpected", e);
+                    }
                 }
             }, 10, 10, TimeUnit.SECONDS);
         }
