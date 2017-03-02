@@ -514,12 +514,12 @@ public class FastSyncManager {
     }
 
     private void syncSecure() {
-        setSyncStage(EthereumListener.SyncState.SECURE);
         pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
         headersDownloader.init(pivot.getHash());
+        setSyncStage(EthereumListener.SyncState.SECURE);
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
@@ -533,12 +533,12 @@ public class FastSyncManager {
     }
 
     private void syncBlocksReceipts() {
-        setSyncStage(EthereumListener.SyncState.COMPLETE);
         pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
 
         blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
+        setSyncStage(EthereumListener.SyncState.COMPLETE);
         blockBodiesDownloader.startImporting();
         blockBodiesDownloader.waitForStop();
 
