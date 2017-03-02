@@ -5,11 +5,9 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.DaoHFConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.blockchain.*;
 import org.ethereum.core.Genesis;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 
 import static org.ethereum.util.FastByteComparisons.equal;
@@ -74,7 +72,7 @@ public class GenesisLoadTest {
     }
 
     @Test
-    public void shouldLoadGenesis_withBlockchainConfig() {
+    public void shouldLoadGenesis_whenManyOrderedConfigs() {
         SystemProperties properties = loadGenesis(null, "genesis-with-config.json");
         properties.getGenesis();
         BlockchainNetConfig bnc = properties.getBlockchainConfig();
@@ -82,12 +80,12 @@ public class GenesisLoadTest {
         assertThat(bnc.getConfigForBlock(0), instanceOf(FrontierConfig.class));
         assertThat(bnc.getConfigForBlock(149), instanceOf(FrontierConfig.class));
 
-        assertThat(bnc.getConfigForBlock(150), instanceOf(DaoHFConfig.class));
-        assertThat(bnc.getConfigForBlock(299), instanceOf(DaoHFConfig.class));
-        DaoHFConfig daoHFConfig = (DaoHFConfig) bnc.getConfigForBlock(200);
+        assertThat(bnc.getConfigForBlock(150), instanceOf(HomesteadConfig.class));
+        assertThat(bnc.getConfigForBlock(299), instanceOf(HomesteadConfig.class));
 
-        assertThat(bnc.getConfigForBlock(300), instanceOf(HomesteadConfig.class));
-        assertThat(bnc.getConfigForBlock(449), instanceOf(HomesteadConfig.class));
+        assertThat(bnc.getConfigForBlock(300), instanceOf(DaoHFConfig.class));
+        assertThat(bnc.getConfigForBlock(300), instanceOf(DaoHFConfig.class));
+        DaoHFConfig daoHFConfig = (DaoHFConfig) bnc.getConfigForBlock(300);
 
         assertThat(bnc.getConfigForBlock(450), instanceOf(Eip150HFConfig.class));
         assertThat(bnc.getConfigForBlock(10_000_000), instanceOf(Eip150HFConfig.class));
@@ -108,12 +106,30 @@ public class GenesisLoadTest {
         final BigInteger actualNonce = bc.getBlockchain().getRepository().getNonce(account);
         final byte[] actualCode = bc.getBlockchain().getRepository().getCode(account);
 
-//        System.out.println("nonce: " + actualNonce);
-//        System.out.println("code: " + Hex.toHexString(actualCode));
-
         assertEquals(BigInteger.valueOf(expectedNonce), actualNonce);
         assertTrue(equal(expectedCode, actualCode));
     }
+
+    @Test
+    public void shouldLoadGenesis_withSameBlockManyConfigs() {
+        SystemProperties properties = loadGenesis(null, "genesis-alloc.json");
+        properties.getGenesis();
+        BlockchainNetConfig bnc = properties.getBlockchainConfig();
+
+        assertThat(bnc.getConfigForBlock(0), instanceOf(FrontierConfig.class));
+        assertThat(bnc.getConfigForBlock(1999), instanceOf(FrontierConfig.class));
+        assertThat(bnc.getConfigForBlock(2000), instanceOf(Eip160HFConfig.class));
+        assertThat(bnc.getConfigForBlock(10_000_000), instanceOf(Eip160HFConfig.class));
+
+        // check DAO extradata for mining
+        final byte[] SOME_EXTRA_DATA = "some-extra-data".getBytes();
+        final byte[] inDaoForkExtraData = bnc.getConfigForBlock(2000).getExtraData(SOME_EXTRA_DATA, 2000);
+        final byte[] pastDaoForkExtraData = bnc.getConfigForBlock(2200).getExtraData(SOME_EXTRA_DATA, 2200);
+
+        assertTrue(FastByteComparisons.equal(AbstractDaoConfig.DAO_EXTRA_DATA, inDaoForkExtraData));
+        assertTrue(FastByteComparisons.equal(SOME_EXTRA_DATA, pastDaoForkExtraData));
+    }
+
 
     private SystemProperties loadGenesis(String genesisFile, String genesisResource) {
         Config config = ConfigFactory.empty();

@@ -1,5 +1,6 @@
 package org.ethereum.core.genesis;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
@@ -13,7 +14,6 @@ import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -94,18 +94,20 @@ public class GenesisLoader {
     }
 
     public static GenesisJson loadGenesisJson(InputStream genesisJsonIS) throws RuntimeException {
+        String json = null;
         try {
-            String json = new String(ByteStreams.toByteArray(genesisJsonIS));
+            json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-            // with line bellow we could force fail on unknown properties
-//            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            ObjectMapper mapper = new ObjectMapper()
+                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
 
             GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
         } catch (Exception e) {
-            e.printStackTrace();
+
+            Utils.showErrorAndExit("Problem parsing genesis: "+ e.getMessage(), json);
+
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -184,8 +186,9 @@ public class GenesisLoader {
             }
 
             if (alloc.code != null) {
-                accountState = accountState.withCodeHash(HashUtil.sha3(hexStringToBytes(alloc.code)));
-                state.code = Hex.decode(alloc.code);
+                final byte[] codeBytes = hexStringToBytes(alloc.code);
+                accountState = accountState.withCodeHash(HashUtil.sha3(codeBytes));
+                state.code = codeBytes;
             }
 
             state.accountState = accountState;
