@@ -112,7 +112,17 @@ public class JsonNetConfig extends BaseNetConfig {
             return new Eip150HFConfig(prevChain);
 
         } else if (EIP_158_BLOCK.equals(key)) {
-            return new Eip160HFConfig(prevChain);
+            if (config.containsKey("chainid")) {
+                final int chainId = Integer.parseInt(config.get("chainid"));
+                return new Eip160HFConfig(prevChain) {
+                    @Override
+                    public Integer getChainId() {
+                        return chainId;
+                    }
+                };
+            } else {
+                return new Eip160HFConfig(prevChain);
+            }
         }
 
         LoggerFactory.getLogger("general").warn("Ignored config option from genesis {}: {}", blockNumber, key);
