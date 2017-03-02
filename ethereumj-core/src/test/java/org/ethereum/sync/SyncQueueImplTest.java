@@ -76,7 +76,7 @@ public class SyncQueueImplTest {
         while (cnt < 1000) {
             System.out.println("Cnt: " + cnt++);
             Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5, Integer.MAX_VALUE);
-            if (headersRequests.isEmpty()) break;
+            if (headersRequests == null) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
                 List<BlockHeader> headers = rnd.nextBoolean() ? peers[peerIdx].getHeaders(request)
@@ -113,7 +113,7 @@ public class SyncQueueImplTest {
         while (cnt < 100) {
             System.out.println("Cnt: " + cnt++);
             Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10, Integer.MAX_VALUE);
-            if (headersRequests.isEmpty()) break;
+            if (headersRequests == null) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
                 List<BlockHeader> headers = peers[peerIdx].getHeaders(request);
