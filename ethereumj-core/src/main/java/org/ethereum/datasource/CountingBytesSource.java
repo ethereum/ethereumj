@@ -44,7 +44,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         synchronized (this) {
             byte[] srcVal = getSource().get(key);
             int srcCount = decodeCount(srcVal);
-            if (srcCount >= 1) moreThan2Bloom.add(key);
+            if (moreThan2Bloom != null && srcCount >= 1) moreThan2Bloom.add(key);
             getSource().put(key, encodeCount(val, srcCount + 1));
         }
     }
