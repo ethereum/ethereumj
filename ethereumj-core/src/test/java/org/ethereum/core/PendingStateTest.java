@@ -39,6 +39,11 @@ public class PendingStateTest {
         SystemProperties.getDefault().setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
     }
 
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.resetToDefault();
+    }
+
     static class PendingListener extends EthereumListenerAdapter {
         public BlockingQueue<Pair<Block, List<TransactionReceipt>>> onBlock = new LinkedBlockingQueue<>();
         public BlockingQueue<Object> onPendingStateChanged = new LinkedBlockingQueue<>();

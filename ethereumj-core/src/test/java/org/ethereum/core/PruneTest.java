@@ -28,6 +28,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class PruneTest {
 
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.resetToDefault();
+    }
 
     @Test
     public void testJournal1() throws Exception {

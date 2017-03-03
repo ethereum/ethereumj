@@ -37,6 +37,11 @@ public class IndexedBlockStoreTest {
     private List<Block> blocks = new ArrayList<>();
     private BigInteger cumDifficulty = ZERO;
 
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.resetToDefault();
+    }
+
     @Before
     public void setup() throws URISyntaxException, IOException {
 
