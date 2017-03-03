@@ -434,6 +434,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private void submitNewTx(PendingTx tx) {
+        getBlockchain();
         submittedTxes.add(tx);
         if (autoBlock) {
             createBlock();
