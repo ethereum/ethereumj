@@ -14,6 +14,7 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
+    // for debug purposes
     public static StateSource INST;
 
     JournalSource<byte[]> journalSource;
@@ -25,14 +26,18 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     BloomedSource<byte[]> bloomedSource;
 
     public StateSource(Source<byte[], byte[]> src, boolean pruningEnabled) {
+        this(src, pruningEnabled, false);
+    }
+
+    public StateSource(Source<byte[], byte[]> src, boolean pruningEnabled, boolean bloomEnabled) {
         super(src);
         INST = this;
         add(bloomedSource = new BloomedSource<>(src));
         bloomedSource.setFlushSource(false);
-//        bloomedSource.startBlooming(new BloomFilter(0.01, 1_000_000));
+        if (bloomEnabled) bloomedSource.startBlooming(new BloomFilter(0.01, 20_000_000));
         add(readCache = new ReadCache.BytesKey<>(bloomedSource).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
         readCache.setFlushSource(true);
-        add(countingSource = new CountingBytesSource(readCache));
+        add(countingSource = new CountingBytesSource(readCache, bloomEnabled));
         countingSource.setFlushSource(true);
         writeCache = new AsyncWriteCache<byte[], byte[]>(countingSource) {
             @Override

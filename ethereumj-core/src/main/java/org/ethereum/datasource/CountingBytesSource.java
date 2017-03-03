@@ -23,8 +23,15 @@ import java.util.Arrays;
 public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
+    BloomFilter moreThan2Bloom;
+
     public CountingBytesSource(Source<byte[], byte[]> src) {
+        this(src, false);
+
+    }
+    public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
+        if (bloom) moreThan2Bloom = new BloomFilter(0.01, 1_000_000);
     }
 
     @Override
@@ -37,6 +44,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         synchronized (this) {
             byte[] srcVal = getSource().get(key);
             int srcCount = decodeCount(srcVal);
+            if (srcCount >= 1) moreThan2Bloom.add(key);
             getSource().put(key, encodeCount(val, srcCount + 1));
         }
     }
@@ -49,8 +57,14 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
     @Override
     public void delete(byte[] key) {
         synchronized (this) {
-            byte[] srcVal = getSource().get(key);
-            int srcCount = decodeCount(srcVal);
+            int srcCount;
+            byte[] srcVal = null;
+            if (moreThan2Bloom == null || moreThan2Bloom.contains(key)) {
+                srcVal = getSource().get(key);
+                srcCount = decodeCount(srcVal);
+            } else {
+                srcCount = 1;
+            }
             if (srcCount > 1) {
                 getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
             } else {
