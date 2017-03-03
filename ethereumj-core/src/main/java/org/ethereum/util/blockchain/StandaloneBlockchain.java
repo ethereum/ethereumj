@@ -1,7 +1,8 @@
 package org.ethereum.util.blockchain;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -52,7 +53,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     boolean autoBlock;
     long dbDelay = 0;
     long totalDbHits = 0;
-    List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
+    BlockchainNetConfig netConfig;
+
     int blockGasIncreasePercent = 0;
 
     long time = 0;
@@ -121,6 +123,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     public StandaloneBlockchain withMinerCoinbase(byte[] coinbase) {
         this.coinbase = coinbase;
+        return this;
+    }
+
+    public StandaloneBlockchain withNetConfig(BlockchainNetConfig netConfig) {
+        this.netConfig = netConfig;
         return this;
     }
 
@@ -446,6 +453,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
+        SystemProperties.getDefault().setBlockchainConfig(netConfig != null ? netConfig : getEasyMiningConfig());
+
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
@@ -721,5 +730,15 @@ public class StandaloneBlockchain implements LocalBlockchain {
             sleep(rows.size() / 2);
             super.updateBatch(rows);
         }
+    }
+
+    // Override blockchain net config for fast mining
+    public static FrontierConfig getEasyMiningConfig() {
+        return new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        });
     }
 }

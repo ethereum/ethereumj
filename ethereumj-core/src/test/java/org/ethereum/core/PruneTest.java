@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
@@ -10,7 +9,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
@@ -20,7 +18,6 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.ByteUtil.intsToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
 import static org.junit.Assert.assertArrayEquals;
@@ -97,22 +94,6 @@ public class PruneTest {
         }
     }
 
-
-
-    @BeforeClass
-    public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
-    }
-
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.resetToDefault();
-    }
 
     @Test
     public void simpleTest() throws Exception {
