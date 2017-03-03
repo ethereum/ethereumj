@@ -36,11 +36,12 @@ package org.ethereum.crypto.cryptohash;
  * @version   $Revision: 258 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
+@Deprecated
+abstract class KeccakCore extends DigestEngine{
 
-abstract class KeccakCore extends DigestEngine {
-
-	KeccakCore()
+	KeccakCore(String alg)
 	{
+		super(alg);
 	}
 
 	private long[] A;
@@ -538,7 +539,7 @@ abstract class KeccakCore extends DigestEngine {
 		A[12] = ~A[12];
 		A[17] = ~A[17];
 		A[20] = ~A[20];
-		int dlen = getDigestLength();
+		int dlen = engineGetDigestLength();
 		for (int i = 0; i < dlen; i += 8)
 			encodeLELong(A[i >>> 3], tmpOut, i);
 		System.arraycopy(tmpOut, 0, out, off, dlen);
@@ -548,14 +549,14 @@ abstract class KeccakCore extends DigestEngine {
 	protected void doInit()
 	{
 		A = new long[25];
-		tmpOut = new byte[(getDigestLength() + 7) & ~7];
+		tmpOut = new byte[(engineGetDigestLength() + 7) & ~7];
 		doReset();
 	}
 
 	/** @see org.ethereum.crypto.cryptohash.Digest */
 	public int getBlockLength()
 	{
-		return 200 - 2 * getDigestLength();
+		return 200 - 2 * engineGetDigestLength();
 	}
 
 	private final void doReset()
@@ -580,6 +581,6 @@ abstract class KeccakCore extends DigestEngine {
 	/** @see org.ethereum.crypto.cryptohash.Digest */
 	public String toString()
 	{
-		return "Keccak-" + (getDigestLength() << 3);
+		return "Keccak-" + (engineGetDigestLength() << 3);
 	}
 }

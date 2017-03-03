@@ -2,6 +2,8 @@
 
 package org.ethereum.crypto.cryptohash;
 
+import java.security.MessageDigest;
+
 /**
  * <p>This class is a template which can be used to implement hash
  * functions. It takes care of some of the API, and also provides an
@@ -46,8 +48,8 @@ package org.ethereum.crypto.cryptohash;
  * @version   $Revision: 229 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
-
-public abstract class DigestEngine implements Digest {
+@Deprecated
+public abstract class DigestEngine extends MessageDigest implements Digest {
 
 	/**
 	 * Reset the hash algorithm state.
@@ -77,7 +79,7 @@ public abstract class DigestEngine implements Digest {
 	 * implementation should use it to perform initialization tasks.
 	 * After this method is called, the implementation should be ready
 	 * to process data or meaningfully honour calls such as
-	 * {@link #getDigestLength}
+	 * {@link #engineGetDigestLength}
 	 */
 	protected abstract void doInit();
 
@@ -88,10 +90,11 @@ public abstract class DigestEngine implements Digest {
 	/**
 	 * Instantiate the engine.
 	 */
-	public DigestEngine()
+	public DigestEngine(String alg)
 	{
+		super(alg);
 		doInit();
-		digestLen = getDigestLength();
+		digestLen = engineGetDigestLength();
 		blockLen = getInternalBlockLength();
 		inputBuf = new byte[blockLen];
 		outputBuf = new byte[digestLen];
@@ -102,7 +105,7 @@ public abstract class DigestEngine implements Digest {
 	private void adjustDigestLen()
 	{
 		if (digestLen == 0) {
-			digestLen = getDigestLength();
+			digestLen = engineGetDigestLength();
 			outputBuf = new byte[digestLen];
 		}
 	}

@@ -1,16 +1,20 @@
 package org.ethereum.crypto;
 
-import org.ethereum.crypto.cryptohash.Keccak256;
-import org.ethereum.crypto.cryptohash.Keccak512;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.crypto.jce.SpongyCastleProvider;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
-
+import org.springframework.util.StringUtils;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
 import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
@@ -18,18 +22,37 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class HashUtil {
 
-    public static final byte[] EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
-    public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList());
-    public static final byte[] EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
+	private static final Logger LOG = LoggerFactory.getLogger(HashUtil.class);
+	
+    public static final byte[] EMPTY_DATA_HASH;
+    public static final byte[] EMPTY_LIST_HASH;
+    public static final byte[] EMPTY_TRIE_HASH;
 
+    private static final Provider CRYPTO_PROVIDER;
+    private static final String HASH_256_ALGORITHM_DEFAULT_NAME = "ETH-KECCAK-256";
+    private static final String HASH_512_ALGORITHM_DEFAULT_NAME = "ETH-KECCAK-512";
+        
+    private static final String HASH_256_ALGORITHM_NAME;
+    private static final String HASH_512_ALGORITHM_NAME;
+    
     private static final MessageDigest sha256digest;
 
     static {
+    	SystemProperties props = SystemProperties.getDefault();
+    	CRYPTO_PROVIDER = (props != null && !StringUtils.isEmpty(props.getCryptoProviderName())) ?
+    			Security.getProvider(props.getCryptoProviderName()) :
+    				SpongyCastleProvider.getInstance();
+    	HASH_256_ALGORITHM_NAME = (props != null && !StringUtils.isEmpty(props.getHash256AlgName())) ? props.getHash256AlgName() : HASH_256_ALGORITHM_DEFAULT_NAME;
+    	HASH_512_ALGORITHM_NAME = (props != null && !StringUtils.isEmpty(props.getHash512AlgName())) ? props.getHash512AlgName() : HASH_512_ALGORITHM_DEFAULT_NAME;
         try {
-            sha256digest = MessageDigest.getInstance("SHA-256");
+            sha256digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
         } catch (NoSuchAlgorithmException e) {
+        	LOG.error("Can't initialize HashUtils", e);
             throw new RuntimeException(e);  // Can't happen.
         }
+        EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
+        EMPTY_LIST_HASH = sha3(RLP.encodeList());
+        EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
     }
 
     /**
@@ -41,16 +64,29 @@ public class HashUtil {
     }
 
     public static byte[] sha3(byte[] input) {
-        Keccak256 digest =  new Keccak256();
-        digest.update(input);
-        return digest.digest();
+    	MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+	        digest.update(input);
+	        return digest.digest();
+		} catch (NoSuchAlgorithmException e) {
+			LOG.error("Can't find such algorithm", e);
+			throw new RuntimeException(e);
+		}
+
     }
 
     public static byte[] sha3(byte[] input1, byte[] input2) {
-        Keccak256 digest =  new Keccak256();
-        digest.update(input1, 0, input1.length);
-        digest.update(input2, 0, input2.length);
-        return digest.digest();
+    	MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+	        digest.update(input1, 0, input1.length);
+	        digest.update(input2, 0, input2.length);
+	        return digest.digest();
+		} catch (NoSuchAlgorithmException e) {
+			LOG.error("Can't find such algorithm", e);
+			throw new RuntimeException(e);
+		}
     }
 
     /**
@@ -61,15 +97,27 @@ public class HashUtil {
      * @return - keccak hash of the chunk
      */
     public static byte[] sha3(byte[] input, int start, int length) {
-        Keccak256 digest =  new Keccak256();
-        digest.update(input, start, length);
-        return digest.digest();
+    	MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+	        digest.update(input, start, length);
+	        return digest.digest();
+		} catch (NoSuchAlgorithmException e) {
+			LOG.error("Can't find such algorithm", e);
+			throw new RuntimeException(e);
+		}
     }
 
     public static byte[] sha512(byte[] input) {
-        Keccak512 digest =  new Keccak512();
-        digest.update(input);
-        return digest.digest();
+    	MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance(HASH_512_ALGORITHM_NAME, CRYPTO_PROVIDER);
+	        digest.update(input);
+	        return digest.digest();
+		} catch (NoSuchAlgorithmException e) {
+			LOG.error("Can't find such algorithm", e);
+			throw new RuntimeException(e);
+		}   
     }
 
     /**

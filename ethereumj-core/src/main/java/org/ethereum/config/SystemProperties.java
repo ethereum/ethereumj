@@ -806,6 +806,21 @@ public class SystemProperties {
         return config.getBoolean("mine.fullDataSet");
     }
 
+    @ValidateMe
+    public String getCryptoProviderName() {
+        return config.getString("crypto.providerName");
+    }
+    
+    @ValidateMe
+    public String getHash256AlgName() {
+        return config.getString("crypto.hash.alg256");
+    }
+    
+    @ValidateMe
+    public String getHash512AlgName() {
+        return config.getString("crypto.hash.alg512");
+    }
+    
     private GenesisJson getGenesisJson() {
         if (genesisJson == null) {
             genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);
