@@ -149,8 +149,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @Override
     public void close() {
-        logger.info("Shutting down Ethereum instance...");
-        worldManager.close();
+        logger.info("### Shutdown initiated ### ");
         ((AbstractApplicationContext) getApplicationContext()).close();
     }
 
@@ -222,9 +221,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
         try {
             for (Transaction tx : block.getTransactionsList()) {
-                org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor(
+                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
                         tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                        programInvokeFactory, block, worldManager.getListener(), 0);
+                        programInvokeFactory, block, worldManager.getListener(), 0)
+                        .withCommonConfig(commonConfig);
 
                 executor.setLocalCall(true);
                 executor.init();
@@ -252,9 +252,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor
+            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
                             programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                    .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
             executor.init();
@@ -346,14 +347,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
-    public Byte getChainIdForNextBlock() {
-        Byte chainId = null;
+    public Integer getChainIdForNextBlock() {
         BlockchainConfig nextBlockConfig = config.getBlockchainConfig().getConfigForBlock(getBlockchain()
                 .getBestBlock().getNumber() + 1);
-        Integer intChainId = nextBlockConfig.getChainId();
-        if (intChainId != null) chainId = intChainId.byteValue();
-
-        return chainId;
+        return nextBlockConfig.getChainId();
     }
 
     @Override
@@ -384,8 +381,8 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
      */
     @Override
     public void stop(Runnable callback) {
-        logger.info("### Shutdown initiated ### ");
-        close();
+        logger.info("Shutting down Ethereum instance...");
+        worldManager.close();
         callback.run();
     }
 

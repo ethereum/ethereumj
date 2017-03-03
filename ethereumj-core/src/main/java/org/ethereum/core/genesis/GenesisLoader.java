@@ -1,12 +1,14 @@
 package org.ethereum.core.genesis;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.JavaType;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Genesis;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
@@ -24,6 +26,7 @@ import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.util.ByteUtil.*;
 import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
+import static org.ethereum.core.Genesis.PremineAccount;
 
 public class GenesisLoader {
 
@@ -69,10 +72,9 @@ public class GenesisLoader {
         try {
             Genesis genesis = createBlockForJson(genesisJson);
 
-            Map<ByteArrayWrapper, AccountState> premine = generatePreMine(blockchainNetConfig, genesisJson.getAlloc());
-            genesis.setPremine(premine);
+            genesis.setPremine(generatePreMine(blockchainNetConfig, genesisJson.getAlloc()));
 
-            byte[] rootHash = generateRootHash(premine);
+            byte[] rootHash = generateRootHash(genesis.getPremine());
             genesis.setStateRoot(rootHash);
 
             return genesis;
@@ -92,16 +94,20 @@ public class GenesisLoader {
     }
 
     public static GenesisJson loadGenesisJson(InputStream genesisJsonIS) throws RuntimeException {
+        String json = null;
         try {
-            String json = new String(ByteStreams.toByteArray(genesisJsonIS));
+            json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
-            ObjectMapper mapper = new ObjectMapper();
-            JavaType type = mapper.getTypeFactory().constructType(GenesisJson.class);
+            ObjectMapper mapper = new ObjectMapper()
+                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
 
-            GenesisJson genesisJson  = new ObjectMapper().readValue(json, type);
+            GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
         } catch (Exception e) {
-            e.printStackTrace();
+
+            Utils.showErrorAndExit("Problem parsing genesis: "+ e.getMessage(), json);
+
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -110,22 +116,36 @@ public class GenesisLoader {
     private static Genesis createBlockForJson(GenesisJson genesisJson) {
 
         byte[] nonce       = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
-        byte[] difficulty  = ByteUtil.hexStringToBytes(genesisJson.difficulty);
-        byte[] mixHash     = ByteUtil.hexStringToBytes(genesisJson.mixhash);
-        byte[] coinbase    = ByteUtil.hexStringToBytes(genesisJson.coinbase);
+        byte[] difficulty  = hexStringToBytesValidate(genesisJson.difficulty, 32, true);
+        byte[] mixHash     = hexStringToBytesValidate(genesisJson.mixhash, 32, false);
+        byte[] coinbase    = hexStringToBytesValidate(genesisJson.coinbase, 20, false);
 
-        byte[] timestampBytes = ByteUtil.hexStringToBytes(genesisJson.timestamp);
+        byte[] timestampBytes = hexStringToBytesValidate(genesisJson.timestamp, 8, true);
         long   timestamp         = ByteUtil.byteArrayToLong(timestampBytes);
 
-        byte[] parentHash  = ByteUtil.hexStringToBytes(genesisJson.parentHash);
-        byte[] extraData   = ByteUtil.hexStringToBytes(genesisJson.extraData);
+        byte[] parentHash  = hexStringToBytesValidate(genesisJson.parentHash, 32, false);
+        byte[] extraData   = hexStringToBytesValidate(genesisJson.extraData, 32, true);
 
-        byte[] gasLimitBytes    = ByteUtil.hexStringToBytes(genesisJson.gasLimit);
+        byte[] gasLimitBytes    = hexStringToBytesValidate(genesisJson.gasLimit, 8, true);
         long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
 
         return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
                             difficulty, 0, gasLimit, 0, timestamp, extraData,
                             mixHash, nonce);
+    }
+
+    private static byte[] hexStringToBytesValidate(String hex, int bytes, boolean notGreater) {
+        byte[] ret = ByteUtil.hexStringToBytes(hex);
+        if (notGreater) {
+            if (ret.length > bytes) {
+                throw new RuntimeException("Wrong value length: " + hex + ", expected length < " + bytes + " bytes");
+            }
+        } else {
+            if (ret.length != bytes) {
+                throw new RuntimeException("Wrong value length: " + hex + ", expected length " + bytes + " bytes");
+            }
+        }
+        return ret;
     }
 
     /**
@@ -149,35 +169,53 @@ public class GenesisLoader {
     }
 
 
-    private static Map<ByteArrayWrapper, AccountState> generatePreMine(BlockchainNetConfig blockchainNetConfig, Map<String, AllocatedAccount> alloc){
+    private static Map<ByteArrayWrapper, PremineAccount> generatePreMine(BlockchainNetConfig blockchainNetConfig, Map<String, GenesisJson.AllocatedAccount> allocs){
 
-        Map<ByteArrayWrapper, AccountState> premine = new HashMap<>();
-        for (String key : alloc.keySet()){
+        final Map<ByteArrayWrapper, PremineAccount> premine = new HashMap<>();
 
-            final String rawBalance = alloc.get(key).getBalance();
-            final BigInteger balance;
-            if (rawBalance != null && rawBalance.startsWith("0x")) {
-                // hex passed
-                balance = bytesToBigInteger(hexStringToBytes(rawBalance));
-            } else {
-                // decimal passed
-                balance = new BigInteger(rawBalance);
+        for (String key : allocs.keySet()){
+
+            final byte[] address = hexStringToBytes(key);
+            final GenesisJson.AllocatedAccount alloc = allocs.get(key);
+            final PremineAccount state = new PremineAccount();
+            AccountState accountState = new AccountState(
+                    blockchainNetConfig.getCommonConstants().getInitialNonce(), parseHexOrDec(alloc.balance));
+
+            if (alloc.nonce != null) {
+                accountState = accountState.withNonce(parseHexOrDec(alloc.nonce));
             }
-            AccountState acctState = new AccountState(
-                    blockchainNetConfig.getCommonConstants().getInitialNonce(), balance);
 
-            premine.put(wrap(hexStringToBytes(key)), acctState);
+            if (alloc.code != null) {
+                final byte[] codeBytes = hexStringToBytes(alloc.code);
+                accountState = accountState.withCodeHash(HashUtil.sha3(codeBytes));
+                state.code = codeBytes;
+            }
+
+            state.accountState = accountState;
+            premine.put(wrap(address), state);
         }
 
         return premine;
     }
 
-    public static byte[] generateRootHash(Map<ByteArrayWrapper, AccountState> premine){
+    /**
+     * @param rawValue either hex started with 0x or dec
+     * return BigInteger
+     */
+    private static BigInteger parseHexOrDec(String rawValue) {
+        if (rawValue != null) {
+            return rawValue.startsWith("0x") ? bytesToBigInteger(hexStringToBytes(rawValue)) : new BigInteger(rawValue);
+        } else {
+            return BigInteger.ZERO;
+        }
+    }
+
+    public static byte[] generateRootHash(Map<ByteArrayWrapper, PremineAccount> premine){
 
         Trie<byte[]> state = new SecureTrie((byte[]) null);
 
         for (ByteArrayWrapper key : premine.keySet()) {
-            state.put(key.getData(), premine.get(key).getEncoded());
+            state.put(key.getData(), premine.get(key).accountState.getEncoded());
         }
 
         return state.getRootHash();

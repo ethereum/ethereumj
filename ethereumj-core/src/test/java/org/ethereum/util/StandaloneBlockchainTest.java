@@ -1,15 +1,11 @@
 package org.ethereum.util;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -22,16 +18,6 @@ import static org.ethereum.util.blockchain.EtherUtil.convert;
  * Created by Anton Nashatyrev on 06.07.2016.
  */
 public class StandaloneBlockchainTest {
-
-    @BeforeClass
-    public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
-    }
 
     @AfterClass
     public static void cleanup() {

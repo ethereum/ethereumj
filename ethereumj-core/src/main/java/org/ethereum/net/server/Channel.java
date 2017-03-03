@@ -84,6 +84,9 @@ public class Channel {
     @Autowired
     private StaticMessages staticMessages;
 
+    @Autowired
+    private WireTrafficStats stats;
+
     private ChannelManager channelManager;
 
     private Eth eth = new EthAdapter();
@@ -109,6 +112,7 @@ public class Channel {
 
         pipeline.addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
+        pipeline.addLast(stats.tcp);
         pipeline.addLast("handshakeHandler", handshakeHandler);
 
         this.discoveryMode = discoveryMode;

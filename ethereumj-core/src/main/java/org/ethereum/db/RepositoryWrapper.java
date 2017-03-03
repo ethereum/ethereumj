@@ -180,11 +180,6 @@ public class RepositoryWrapper implements Repository {
     }
 
     @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        blockchain.getRepository().addRawNode(key, value);
-    }
-
-    @Override
     public int getStorageSize(byte[] addr) {
         return blockchain.getRepository().getStorageSize(addr);
     }

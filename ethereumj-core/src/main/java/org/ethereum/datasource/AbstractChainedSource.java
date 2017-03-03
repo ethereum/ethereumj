@@ -10,7 +10,7 @@ package org.ethereum.datasource;
 public abstract class AbstractChainedSource<Key, Value, SourceKey, SourceValue> implements Source<Key, Value> {
 
     private Source<SourceKey, SourceValue> source;
-    private boolean flushSource;
+    protected boolean flushSource;
 
     /**
      * Intended for subclasses which wishes to initialize the source
@@ -43,7 +43,7 @@ public abstract class AbstractChainedSource<Key, Value, SourceKey, SourceValue> 
      * @return true if this or source flush did any changes
      */
     @Override
-    public final synchronized boolean flush() {
+    public synchronized boolean flush() {
         boolean ret = flushImpl();
         if (flushSource) {
             ret |= getSource().flush();

@@ -42,6 +42,7 @@ public class JsonRpcTest {
                 "genesis = genesis-light.json \n" +
                 // two peers need to have separate database dirs
                 "database.dir = sampleDB-1 \n" +
+                "keyvalue.datasource = inmem \n" +
                 // when more than 1 miner exist on the network extraData helps to identify the block creator
                 "mine.extraDataHex = cccccccccccccccccccc \n" +
                 "mine.fullDataSet = false \n" +
@@ -70,13 +71,6 @@ public class JsonRpcTest {
         @Bean
         public TestRunner test() {
             return new TestRunner();
-        }
-
-        @Bean
-        @Scope("prototype")
-        public DbSource keyValueDataSource() {
-            System.out.println("Sample DB created");
-            return new HashMapDB<byte[]>();
         }
     }
 

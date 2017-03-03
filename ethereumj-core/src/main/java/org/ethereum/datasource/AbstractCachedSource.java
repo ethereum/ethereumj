@@ -10,13 +10,41 @@ public abstract class AbstractCachedSource <Key, Value>
         extends AbstractChainedSource<Key, Value, Key, Value>
         implements CachedSource<Key, Value> {
 
-    private MemSizeEstimator<Key> keySizeEstimator;
-    private MemSizeEstimator<Value> valueSizeEstimator;
+    private final Object lock = new Object();
+
+    /**
+     * Like the Optional interface represents either the value cached
+     * or null cached (i.e. cache knows that underlying storage contain null)
+     */
+    public interface Entry<V> {
+        V value();
+    }
+
+    static final class SimpleEntry<V> implements Entry<V> {
+        private V val;
+        public SimpleEntry(V val) {
+            this.val = val;
+        }
+        public V value() {
+            return val;
+        }
+    }
+
+    protected MemSizeEstimator<Key> keySizeEstimator;
+    protected MemSizeEstimator<Value> valueSizeEstimator;
     private int size = 0;
 
     public AbstractCachedSource(Source<Key, Value> source) {
         super(source);
     }
+
+    /**
+     * Returns the cached value if exist.
+     * Method doesn't look into the underlying storage
+     * @return The value Entry if it cached (Entry may has null value if null value is cached),
+     *        or null if no information in the cache for this key
+     */
+    abstract Entry<Value> getCached(Key key);
 
     /**
      * Needs to be called by the implementation when cache entry is added
@@ -25,11 +53,13 @@ public abstract class AbstractCachedSource <Key, Value>
      * needs to be called first
      */
     protected void cacheAdded(Key key, Value value) {
-        if (keySizeEstimator != null) {
-            size += keySizeEstimator.estimateSize(key);
-        }
-        if (valueSizeEstimator != null) {
-            size += valueSizeEstimator.estimateSize(value);
+        synchronized (lock) {
+            if (keySizeEstimator != null) {
+                size += keySizeEstimator.estimateSize(key);
+            }
+            if (valueSizeEstimator != null) {
+                size += valueSizeEstimator.estimateSize(value);
+            }
         }
     }
 
@@ -37,11 +67,13 @@ public abstract class AbstractCachedSource <Key, Value>
      * Needs to be called by the implementation when cache entry is removed
      */
     protected void cacheRemoved(Key key, Value value) {
-        if (keySizeEstimator != null) {
-            size -= keySizeEstimator.estimateSize(key);
-        }
-        if (valueSizeEstimator != null) {
-            size -= valueSizeEstimator.estimateSize(value);
+        synchronized (lock) {
+            if (keySizeEstimator != null) {
+                size -= keySizeEstimator.estimateSize(key);
+            }
+            if (valueSizeEstimator != null) {
+                size -= valueSizeEstimator.estimateSize(value);
+            }
         }
     }
 
@@ -49,7 +81,9 @@ public abstract class AbstractCachedSource <Key, Value>
      * Needs to be called by the implementation when cache is cleared
      */
     protected void cacheCleared() {
-        size = 0;
+        synchronized (lock) {
+            size = 0;
+        }
     }
 
     /**

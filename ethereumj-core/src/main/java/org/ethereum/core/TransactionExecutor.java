@@ -92,14 +92,14 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
-        setCommonConfig(CommonConfig.getDefault());
+        withCommonConfig(CommonConfig.getDefault());
     }
 
-    @Autowired
-    private void setCommonConfig(CommonConfig commonConfig) {
+    public TransactionExecutor withCommonConfig(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
         this.config = commonConfig.systemProperties();
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber());
+        return this;
     }
 
     private void execError(String err) {
@@ -221,8 +221,8 @@ public class TransactionExecutor {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-                this.vm = commonConfig.vm();
-                this.program = commonConfig.program(code, programInvoke, tx);
+                this.vm = new VM(config);
+                this.program = new Program(targetAddress, code, programInvoke, tx, config).withCommonConfig(commonConfig);
             }
         }
 
@@ -249,8 +249,8 @@ public class TransactionExecutor {
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = commonConfig.vm();
-            this.program = commonConfig.program(tx.getData(), programInvoke, tx);
+            this.vm = new VM(config);
+            this.program = new Program(tx.getData(), programInvoke, tx, config).withCommonConfig(commonConfig);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
@@ -349,7 +349,7 @@ public class TransactionExecutor {
             // Accumulate refunds for suicides
             result.addFutureRefund(result.getDeleteAccounts().size() * config.getBlockchainConfig().
                     getConfigForBlock(currentBlock.getNumber()).getGasCost().getSUICIDE_REFUND());
-            long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            long gasRefund = Math.min(result.getFutureRefund(), getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             m_endGas = m_endGas.add(BigInteger.valueOf(gasRefund));
 
