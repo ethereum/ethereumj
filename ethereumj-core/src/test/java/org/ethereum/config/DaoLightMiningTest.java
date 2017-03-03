@@ -57,20 +57,13 @@ public class DaoLightMiningTest {
 
     private StandaloneBlockchain createBlockchain(boolean proFork) {
         final BaseNetConfig netConfig = new BaseNetConfig();
-        final FrontierConfig c1 = new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        });
-        netConfig.add(0, c1);
+        final FrontierConfig c1 = StandaloneBlockchain.getEasyMiningConfig();
+        netConfig.add(0, StandaloneBlockchain.getEasyMiningConfig());
         netConfig.add(FORK_BLOCK, proFork ? new DaoHFConfig(c1, FORK_BLOCK) : new DaoNoHFConfig(c1, FORK_BLOCK));
-
-        SystemProperties.getDefault().setBlockchainConfig(netConfig);
-
 
         // create blockchain
         return new StandaloneBlockchain()
-                .withAutoblock(true);
+                .withAutoblock(true)
+                .withNetConfig(netConfig);
     }
 }
