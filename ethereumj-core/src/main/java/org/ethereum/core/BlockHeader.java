@@ -75,6 +75,8 @@ public class BlockHeader {
      * of computation has been carried out on this block */
     private byte[] nonce;
 
+    private byte[] hashCache;
+
     public BlockHeader(byte[] encoded) {
         this((RLPList) RLP.decode2(encoded).get(0));
     }
@@ -146,6 +148,7 @@ public class BlockHeader {
 
     public void setUnclesHash(byte[] unclesHash) {
         this.unclesHash = unclesHash;
+        hashCache = null;
     }
 
     public byte[] getCoinbase() {
@@ -154,6 +157,7 @@ public class BlockHeader {
 
     public void setCoinbase(byte[] coinbase) {
         this.coinbase = coinbase;
+        hashCache = null;
     }
 
     public byte[] getStateRoot() {
@@ -162,6 +166,7 @@ public class BlockHeader {
 
     public void setStateRoot(byte[] stateRoot) {
         this.stateRoot = stateRoot;
+        hashCache = null;
     }
 
     public byte[] getTxTrieRoot() {
@@ -170,6 +175,7 @@ public class BlockHeader {
 
     public void setReceiptsRoot(byte[] receiptTrieRoot) {
         this.receiptTrieRoot = receiptTrieRoot;
+        hashCache = null;
     }
 
     public byte[] getReceiptsRoot() {
@@ -178,6 +184,7 @@ public class BlockHeader {
 
     public void setTransactionsRoot(byte[] stateRoot) {
         this.txTrieRoot = stateRoot;
+        hashCache = null;
     }
 
 
@@ -196,6 +203,7 @@ public class BlockHeader {
 
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;
+        hashCache = null;
     }
 
     public long getTimestamp() {
@@ -204,6 +212,7 @@ public class BlockHeader {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+        hashCache = null;
     }
 
     public long getNumber() {
@@ -212,6 +221,7 @@ public class BlockHeader {
 
     public void setNumber(long number) {
         this.number = number;
+        hashCache = null;
     }
 
     public byte[] getGasLimit() {
@@ -220,6 +230,7 @@ public class BlockHeader {
 
     public void setGasLimit(byte[] gasLimit) {
         this.gasLimit = gasLimit;
+        hashCache = null;
     }
 
     public long getGasUsed() {
@@ -228,6 +239,7 @@ public class BlockHeader {
 
     public void setGasUsed(long gasUsed) {
         this.gasUsed = gasUsed;
+        hashCache = null;
     }
 
     public byte[] getMixHash() {
@@ -236,6 +248,7 @@ public class BlockHeader {
 
     public void setMixHash(byte[] mixHash) {
         this.mixHash = mixHash;
+        hashCache = null;
     }
 
     public byte[] getExtraData() {
@@ -248,18 +261,24 @@ public class BlockHeader {
 
     public void setNonce(byte[] nonce) {
         this.nonce = nonce;
+        hashCache = null;
     }
 
     public void setLogsBloom(byte[] logsBloom) {
         this.logsBloom = logsBloom;
+        hashCache = null;
     }
 
     public void setExtraData(byte[] extraData) {
         this.extraData = extraData;
+        hashCache = null;
     }
 
     public byte[] getHash() {
-        return HashUtil.sha3(getEncoded());
+        if (hashCache == null) {
+            hashCache = HashUtil.sha3(getEncoded());
+        }
+        return hashCache;
     }
 
     public byte[] getEncoded() {

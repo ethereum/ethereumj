@@ -42,12 +42,12 @@ public class ReadCacheTest {
             readCache.get(intToKey(i));
         }
         // Everything is cached
-        assertEquals(str(intToValue(0)), str(readCache.getCached(intToKey(0))));
-        assertEquals(str(intToValue(9_999)), str(readCache.getCached(intToKey(9_999))));
+        assertEquals(str(intToValue(0)), str(readCache.getCached(intToKey(0)).value()));
+        assertEquals(str(intToValue(9_999)), str(readCache.getCached(intToKey(9_999)).value()));
 
         // Source changes doesn't affect cache
         src.delete(intToKey(13));
-        assertEquals(str(intToValue(13)), str(readCache.getCached(intToKey(13))));
+        assertEquals(str(intToValue(13)), str(readCache.getCached(intToKey(13)).value()));
 
         // Flush is not implemented
         assertFalse(readCache.flush());
@@ -65,10 +65,10 @@ public class ReadCacheTest {
         // Only 100 latest are cached
         assertNull(readCache.getCached(intToKey(0)));
         assertEquals(str(intToValue(0)), str(readCache.get(intToKey(0))));
-        assertEquals(str(intToValue(0)), str(readCache.getCached(intToKey(0))));
-        assertEquals(str(intToValue(9_999)), str(readCache.getCached(intToKey(9_999))));
+        assertEquals(str(intToValue(0)), str(readCache.getCached(intToKey(0)).value()));
+        assertEquals(str(intToValue(9_999)), str(readCache.getCached(intToKey(9_999)).value()));
         // 99_01 - 99_99 and 0 (totally 100)
-        assertEquals(str(intToValue(9_901)), str(readCache.getCached(intToKey(9_901))));
+        assertEquals(str(intToValue(9_901)), str(readCache.getCached(intToKey(9_901)).value()));
         assertNull(readCache.getCached(intToKey(9_900)));
     }
 }

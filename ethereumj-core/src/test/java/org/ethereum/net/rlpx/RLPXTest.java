@@ -117,7 +117,7 @@ public class RLPXTest {
         logger.info("{}", findNode);
 
         byte[] wire = findNode.getPacket();
-        wire[64] = 0;
+        wire[64]++;
 
         FindNodeMessage findNode2 = (FindNodeMessage) Message.decode(wire);
         logger.info("{}", findNode2);

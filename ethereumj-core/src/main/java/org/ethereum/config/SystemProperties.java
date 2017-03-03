@@ -1,7 +1,9 @@
 package org.ethereum.config;
 
-import com.typesafe.config.*;
-import org.ethereum.config.blockchain.FrontierConfig;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
@@ -129,6 +131,7 @@ public class SystemProperties {
     private GenesisJson genesisJson;
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
+    private Boolean vmTrace;
 
     private final ClassLoader classLoader;
 
@@ -149,7 +152,6 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig, ClassLoader classLoader) {
-        long startTime = System.currentTimeMillis();
         try {
             this.classLoader = classLoader;
 
@@ -501,6 +503,10 @@ public class SystemProperties {
         return databaseDir == null ? config.getString("database.dir") : databaseDir;
     }
 
+    public String ethashDir() {
+        return config.hasPath("ethash.dir") ? config.getString("ethash.dir") : databaseDir();
+    }
+
     public void setDataBaseDir(String dataBaseDir) {
         this.databaseDir = dataBaseDir;
     }
@@ -569,7 +575,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean vmTrace() {
-        return config.getBoolean("vm.structured.trace");
+        return vmTrace == null ? (vmTrace = config.getBoolean("vm.structured.trace")) : vmTrace;
     }
 
     @ValidateMe

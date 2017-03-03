@@ -49,9 +49,6 @@ public class Eth63 extends Eth62 {
     private Set<byte[]> requestedNodes;
     private SettableFuture<List<Pair<byte[], byte[]>>> requestNodesFuture;
 
-    private long connectedTime = System.currentTimeMillis();
-    private long processingTime = 0;
-
     public Eth63() {
         super(version);
     }
@@ -228,7 +225,6 @@ public class Eth63 extends Eth62 {
         double nodesPerSec = 1000d * channel.getNodeStatistics().eth63NodesReceived.get() / channel.getNodeStatistics().eth63NodesRetrieveTime.get();
         double missNodesRatio = 1 - (double) channel.getNodeStatistics().eth63NodesReceived.get() / channel.getNodeStatistics().eth63NodesRequested.get();
         long lifeTime = System.currentTimeMillis() - connectedTime;
-        return super.getSyncStats() + String.format("\tNodes/sec: %1$.2f, miss: %2$.2f", nodesPerSec, missNodesRatio) +
-                "\tLife: " + lifeTime / 1000 + "s,\tIdle: " + (lifeTime - processingTime) + "ms";
+        return super.getSyncStats() + String.format("\tNodes/sec: %1$.2f, miss: %2$.2f", nodesPerSec, missNodesRatio);
     }
 }

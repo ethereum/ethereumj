@@ -137,6 +137,7 @@ dependencies {
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
     compile "com.typesafe:config:1.2.1"
+    compile "com.googlecode.concurrent-locks:concurrent-locks:1.0.0"
 
     compile "org.mapdb:mapdb:2.0-beta12"
 
@@ -149,7 +150,7 @@ dependencies {
 
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
-    testCompile "org.mockito:mockito-all:1.9.5"
+    testCompile "org.mockito:mockito-core:2.+"
     testCompile "com.github.briandilley.jsonrpc4j:jsonrpc4j:1.1"
 }
 

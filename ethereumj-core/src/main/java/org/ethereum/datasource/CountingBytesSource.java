@@ -23,35 +23,53 @@ import java.util.Arrays;
 public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
+    BloomFilter moreThan2Bloom;
+
     public CountingBytesSource(Source<byte[], byte[]> src) {
+        this(src, false);
+
+    }
+    public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
+        if (bloom) moreThan2Bloom = new BloomFilter(0.01, 1_000_000);
     }
 
     @Override
-    public synchronized void put(byte[] key, byte[] val) {
+    public void put(byte[] key, byte[] val) {
         if (val == null) {
             delete(key);
             return;
         }
 
-        byte[] srcVal = getSource().get(key);
-        int srcCount = decodeCount(srcVal);
-        getSource().put(key, encodeCount(val, srcCount + 1));
+        synchronized (this) {
+            byte[] srcVal = getSource().get(key);
+            int srcCount = decodeCount(srcVal);
+            if (moreThan2Bloom != null && srcCount >= 1) moreThan2Bloom.add(key);
+            getSource().put(key, encodeCount(val, srcCount + 1));
+        }
     }
 
     @Override
-    public synchronized byte[] get(byte[] key) {
+    public byte[] get(byte[] key) {
         return decodeValue(getSource().get(key));
     }
 
     @Override
-    public synchronized void delete(byte[] key) {
-        byte[] srcVal = getSource().get(key);
-        int srcCount = decodeCount(srcVal);
-        if (srcCount > 1) {
-            getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
-        } else {
-            getSource().delete(key);
+    public void delete(byte[] key) {
+        synchronized (this) {
+            int srcCount;
+            byte[] srcVal = null;
+            if (moreThan2Bloom == null || moreThan2Bloom.contains(key)) {
+                srcVal = getSource().get(key);
+                srcCount = decodeCount(srcVal);
+            } else {
+                srcCount = 1;
+            }
+            if (srcCount > 1) {
+                getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
+            } else {
+                getSource().delete(key);
+            }
         }
     }
 

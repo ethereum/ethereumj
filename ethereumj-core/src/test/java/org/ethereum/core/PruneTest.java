@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
@@ -10,7 +9,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
@@ -20,7 +18,6 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.ByteUtil.intsToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
 import static org.junit.Assert.assertArrayEquals;
@@ -97,22 +94,6 @@ public class PruneTest {
         }
     }
 
-
-
-    @BeforeClass
-    public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
-    }
-
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.resetToDefault();
-    }
 
     @Test
     public void simpleTest() throws Exception {
@@ -503,16 +484,16 @@ public class PruneTest {
     public Set<ByteArrayWrapper> getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
                                                         byte[] ... roots) {
         final Set<ByteArrayWrapper> ret = new HashSet<>();
-        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer));
         for (byte[] root : roots) {
-            trie.scanTree(root, new TrieImpl.ScanAction() {
+            SecureTrie trie = new SecureTrie(stateDS, root);
+            trie.scanTree(new TrieImpl.ScanAction() {
                 @Override
-                public void doOnNode(byte[] hash, Value node) {
+                public void doOnNode(byte[] hash, TrieImpl.Node node) {
                     ret.add(new ByteArrayWrapper(hash));
                 }
 
                 @Override
-                public void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value) {
+                public void doOnValue(byte[] nodeHash, TrieImpl.Node node, byte[] key, byte[] value) {
                     if (includeAccounts) {
                         AccountState accountState = new AccountState(value);
                         if (!FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH)) {
@@ -531,14 +512,14 @@ public class PruneTest {
     public String dumpState(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
                                                         byte[] root) {
         final StringBuilder ret = new StringBuilder();
-        SecureTrie trie = new SecureTrie(new SourceCodec.BytesKey<>(stateDS, Serializers.TrieNodeSerializer));
-        trie.scanTree(root, new TrieImpl.ScanAction() {
+        SecureTrie trie = new SecureTrie(stateDS, root);
+        trie.scanTree(new TrieImpl.ScanAction() {
             @Override
-            public void doOnNode(byte[] hash, Value node) {
+            public void doOnNode(byte[] hash, TrieImpl.Node node) {
             }
 
             @Override
-            public void doOnValue(byte[] nodeHash, Value node, byte[] key, byte[] value) {
+            public void doOnValue(byte[] nodeHash, TrieImpl.Node node, byte[] key, byte[] value) {
                 if (includeAccounts) {
                     AccountState accountState = new AccountState(value);
                     ret.append(Hex.toHexString(nodeHash) + ": Account: " + Hex.toHexString(key) + ", Nonce: " + accountState.getNonce() + ", Balance: " + accountState.getBalance() + "\n");

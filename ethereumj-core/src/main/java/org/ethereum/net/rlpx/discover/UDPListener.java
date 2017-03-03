@@ -7,6 +7,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.WireTrafficStats;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class UDPListener {
 
     @Autowired
     SystemProperties config = SystemProperties.getDefault();
+
+    @Autowired
+    WireTrafficStats stats;
 
     private Channel channel;
     private volatile boolean shutdown = false;
@@ -108,6 +112,7 @@ public class UDPListener {
                             @Override
                             public void initChannel(NioDatagramChannel ch)
                                     throws Exception {
+                                ch.pipeline().addLast(stats.udp);
                                 ch.pipeline().addLast(new PacketDecoder());
                                 MessageHandler messageHandler = new MessageHandler(ch, nodeManager);
                                 nodeManager.setMessageSender(messageHandler);

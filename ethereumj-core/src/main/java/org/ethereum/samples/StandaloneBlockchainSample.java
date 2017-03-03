@@ -1,7 +1,5 @@
 package org.ethereum.samples;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 
@@ -37,15 +35,6 @@ public class StandaloneBlockchainSample {
             "}";
 
     public static void main(String[] args) throws Exception {
-        // need to modify the default Frontier settings to keep the blocks difficulty
-        // low to not waste a lot of time for block mining
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
-
         // Creating a blockchain which generates a new block for each transaction
         // just not to call createBlock() after each call transaction
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
