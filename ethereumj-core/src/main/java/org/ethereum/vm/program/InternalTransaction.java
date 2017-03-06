@@ -7,8 +7,8 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -130,12 +130,24 @@ public class InternalTransaction extends Transaction {
         this.parsed = true;
     }
 
+
+    private static byte[] intToBytes(int value) {
+        return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .putInt(value)
+                .array();
+    }
+
+    private static int bytesToInt(byte[] bytes) {
+        return isEmpty(bytes) ? 0 : ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    }
+
     private static byte[] encodeInt(int value) {
-        return RLP.encodeElement(ByteBuffer.allocate(4).putInt(value).array());
+        return RLP.encodeElement(intToBytes(value));
     }
 
     private static int decodeInt(byte[] encoded) {
-        return isEmpty(encoded) ? 0 : new BigInteger(encoded).intValue();
+        return bytesToInt(encoded);
     }
 
     @Override
