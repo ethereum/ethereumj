@@ -27,7 +27,7 @@ http://ethereumj.io
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.4.0-RELEASE</version>
+     <version>1.4.2-RELEASE</version>
    </dependency>
 ```
 
