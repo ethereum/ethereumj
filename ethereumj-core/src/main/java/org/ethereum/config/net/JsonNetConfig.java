@@ -26,10 +26,10 @@ public class JsonNetConfig extends BaseNetConfig {
      */
     public JsonNetConfig(GenesisConfig config) throws RuntimeException {
 
-        final List<Pair<Integer, BlockchainConfig>> candidates = new ArrayList<>();
+        final List<Pair<Integer, ? extends BlockchainConfig>> candidates = new ArrayList<>();
 
         {
-            Pair<Integer, BlockchainConfig> lastCandidate = Pair.of(0, initialBlockConfig);
+            Pair<Integer, ? extends BlockchainConfig> lastCandidate = Pair.of(0, initialBlockConfig);
             candidates.add(lastCandidate);
 
             // homestead block assumed to be 0 by default
@@ -77,8 +77,8 @@ public class JsonNetConfig extends BaseNetConfig {
 
         {
             // add candidate per each block (take last in row for same block)
-            Pair<Integer, BlockchainConfig> last = candidates.remove(0);
-            for (Pair<Integer, BlockchainConfig> current : candidates) {
+            Pair<Integer, ? extends BlockchainConfig> last = candidates.remove(0);
+            for (Pair<Integer, ? extends BlockchainConfig> current : candidates) {
                 if (current.getLeft().compareTo(last.getLeft()) > 0) {
                     add(last.getLeft(), last.getRight());
                 }

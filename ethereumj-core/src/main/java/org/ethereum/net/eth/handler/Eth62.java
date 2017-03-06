@@ -538,7 +538,7 @@ public class Eth62 extends EthHandler {
             // checking if the peer has expected block hashes
             ethState = EthState.HASH_CONSTRAINTS_CHECK;
 
-            validatorMap = Collections.synchronizedMap(new HashMap<>());
+            validatorMap = Collections.synchronizedMap(new HashMap<Long, BlockHeaderValidator>());
             List<Pair<Long, BlockHeaderValidator>> validators = config.getBlockchainConfig().
                     getConfigForBlock(blockNumber).headerValidators();
             for (Pair<Long, BlockHeaderValidator> validator : validators) {

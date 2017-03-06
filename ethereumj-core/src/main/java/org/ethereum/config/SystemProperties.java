@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
@@ -16,6 +17,8 @@ import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.validator.BlockCustomHashRule;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -317,7 +320,9 @@ public class SystemProperties {
 
             if (genesisJson.getConfig() != null && genesisJson.getConfig().headerValidators != null) {
                 for (GenesisConfig.HashValidator validator : genesisJson.getConfig().headerValidators) {
-//                    blockchainConfig.
+                    BlockHeaderValidator headerValidator = new BlockHeaderValidator(new BlockCustomHashRule(ByteUtil.hexStringToBytes(validator.hash)));
+                    blockchainConfig.getConfigForBlock(validator.number).headerValidators().add(
+                            Pair.of(validator.number, headerValidator));
                 }
             }
         }
