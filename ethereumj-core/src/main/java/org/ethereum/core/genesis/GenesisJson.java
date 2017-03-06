@@ -15,7 +15,7 @@ public class GenesisJson {
 
     Map<String, AllocatedAccount> alloc;
 
-    Map<String, String> config;
+    GenesisConfig config;
 
     public GenesisJson() {
     }
@@ -93,11 +93,11 @@ public class GenesisJson {
         this.alloc = alloc;
     }
 
-    public Map<String, String> getConfig() {
+    public GenesisConfig getConfig() {
         return config;
     }
 
-    public void setConfig(Map<String, String> config) {
+    public void setConfig(GenesisConfig config) {
         this.config = config;
     }
 

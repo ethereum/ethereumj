@@ -3,7 +3,6 @@ package org.ethereum.net.eth.handler;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
-import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
@@ -539,7 +538,7 @@ public class Eth62 extends EthHandler {
             // checking if the peer has expected block hashes
             ethState = EthState.HASH_CONSTRAINTS_CHECK;
 
-            validatorMap = Collections.synchronizedMap(new HashedMap());
+            validatorMap = Collections.synchronizedMap(new HashMap<Long, BlockHeaderValidator>());
             List<Pair<Long, BlockHeaderValidator>> validators = config.getBlockchainConfig().
                     getConfigForBlock(blockNumber).headerValidators();
             for (Pair<Long, BlockHeaderValidator> validator : validators) {

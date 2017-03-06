@@ -19,16 +19,9 @@ public class RopstenConfig extends Eip160HFConfig {
     private static final long CHECK_BLOCK_NUMBER = 10;
     private static final byte[] CHECK_BLOCK_HASH = Hex.decode("b3074f936815a0425e674890d7db7b5e94f3a06dca5b22d291b55dcd02dde93e");
 
-    protected final List<Pair<Long, BlockHeaderValidator>> validator;
-
     public RopstenConfig(BlockchainConfig parent) {
         super(parent);
-        validator = Arrays.asList(Pair.of(CHECK_BLOCK_NUMBER, new BlockHeaderValidator(new BlockCustomHashRule(CHECK_BLOCK_HASH))));
-    }
-
-    @Override
-    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
-        return validator;
+        headerValidators().add(Pair.of(CHECK_BLOCK_NUMBER, new BlockHeaderValidator(new BlockCustomHashRule(CHECK_BLOCK_HASH))));
     }
 
     @Override

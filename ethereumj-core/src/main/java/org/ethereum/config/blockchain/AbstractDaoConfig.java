@@ -33,8 +33,6 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
     // set in child classes
     protected boolean supportFork;
 
-    private List<Pair<Long, BlockHeaderValidator>> validator;
-
     private BlockchainConfig parent;
 
     protected void initDaoConfig(BlockchainConfig parent, long forkBlockNumber) {
@@ -42,7 +40,7 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
         this.constants = parent.getConstants();
         this.forkBlockNumber = forkBlockNumber;
         BlockHeaderRule rule = new ExtraDataPresenceRule(DAO_EXTRA_DATA, supportFork);
-        validator = Arrays.asList(Pair.of(forkBlockNumber, new BlockHeaderValidator(rule)));
+        headerValidators().add(Pair.of(forkBlockNumber, new BlockHeaderValidator(rule)));
     }
 
     /**
@@ -59,11 +57,6 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
 
         }
         return minerExtraData;
-    }
-
-    @Override
-    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
-        return validator;
     }
 
     @Override
