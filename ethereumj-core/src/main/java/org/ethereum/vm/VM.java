@@ -1238,15 +1238,15 @@ public class VM {
                 this.step(program);
             }
 
-            if (vmHook != null) {
-                vmHook.stopPlay(program);
-            }
-
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         } catch (StackOverflowError soe){
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M !!!\n", soe);
             System.exit(-1);
+        } finally {
+            if (vmHook != null) {
+                vmHook.stopPlay(program);
+            }
         }
     }
 
