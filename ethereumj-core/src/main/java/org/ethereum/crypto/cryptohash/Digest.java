@@ -55,7 +55,7 @@ package org.ethereum.crypto.cryptohash;
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
 
-public interface Digest {
+public interface Digest{
 
 	/**
 	 * Insert one more input data byte.
