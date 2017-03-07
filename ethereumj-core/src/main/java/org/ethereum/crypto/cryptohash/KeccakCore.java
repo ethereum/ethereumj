@@ -36,7 +36,7 @@ package org.ethereum.crypto.cryptohash;
  * @version   $Revision: 258 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
-@Deprecated
+
 abstract class KeccakCore extends DigestEngine{
 
 	KeccakCore(String alg)

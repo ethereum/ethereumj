@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.util.StringUtils;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -22,33 +21,30 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class HashUtil {
 
-	private static final Logger LOG = LoggerFactory.getLogger(HashUtil.class);
-	
+    private static final Logger LOG = LoggerFactory.getLogger(HashUtil.class);
+
     public static final byte[] EMPTY_DATA_HASH;
     public static final byte[] EMPTY_LIST_HASH;
     public static final byte[] EMPTY_TRIE_HASH;
 
     private static final Provider CRYPTO_PROVIDER;
-    private static final String HASH_256_ALGORITHM_DEFAULT_NAME = "ETH-KECCAK-256";
-    private static final String HASH_512_ALGORITHM_DEFAULT_NAME = "ETH-KECCAK-512";
-        
+
     private static final String HASH_256_ALGORITHM_NAME;
     private static final String HASH_512_ALGORITHM_NAME;
-    
+
     private static final MessageDigest sha256digest;
 
     static {
-    	SystemProperties props = SystemProperties.getDefault();
-    	CRYPTO_PROVIDER = (props != null && !StringUtils.isEmpty(props.getCryptoProviderName())) ?
-    			Security.getProvider(props.getCryptoProviderName()) :
-    				SpongyCastleProvider.getInstance();
-    	HASH_256_ALGORITHM_NAME = (props != null && !StringUtils.isEmpty(props.getHash256AlgName())) ? props.getHash256AlgName() : HASH_256_ALGORITHM_DEFAULT_NAME;
-    	HASH_512_ALGORITHM_NAME = (props != null && !StringUtils.isEmpty(props.getHash512AlgName())) ? props.getHash512AlgName() : HASH_512_ALGORITHM_DEFAULT_NAME;
+        SystemProperties props = SystemProperties.getDefault();
+        Security.addProvider(SpongyCastleProvider.getInstance());
+        CRYPTO_PROVIDER = Security.getProvider(props.getCryptoProviderName());
+        HASH_256_ALGORITHM_NAME = props.getHash256AlgName();
+        HASH_512_ALGORITHM_NAME = props.getHash512AlgName();
         try {
-            sha256digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+            sha256digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
-        	LOG.error("Can't initialize HashUtils", e);
-            throw new RuntimeException(e);  // Can't happen.
+            LOG.error("Can't initialize HashUtils", e);
+            throw new RuntimeException(e); // Can't happen.
         }
         EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
         EMPTY_LIST_HASH = sha3(RLP.encodeList());
@@ -56,7 +52,8 @@ public class HashUtil {
     }
 
     /**
-     * @param input - data for hashing
+     * @param input
+     *            - data for hashing
      * @return - sha256 hash of the data
      */
     public static byte[] sha256(byte[] input) {
@@ -64,64 +61,69 @@ public class HashUtil {
     }
 
     public static byte[] sha3(byte[] input) {
-    	MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
-	        digest.update(input);
-	        return digest.digest();
-		} catch (NoSuchAlgorithmException e) {
-			LOG.error("Can't find such algorithm", e);
-			throw new RuntimeException(e);
-		}
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+            digest.update(input);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error("Can't find such algorithm", e);
+            throw new RuntimeException(e);
+        }
 
     }
 
     public static byte[] sha3(byte[] input1, byte[] input2) {
-    	MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
-	        digest.update(input1, 0, input1.length);
-	        digest.update(input2, 0, input2.length);
-	        return digest.digest();
-		} catch (NoSuchAlgorithmException e) {
-			LOG.error("Can't find such algorithm", e);
-			throw new RuntimeException(e);
-		}
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+            digest.update(input1, 0, input1.length);
+            digest.update(input2, 0, input2.length);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error("Can't find such algorithm", e);
+            throw new RuntimeException(e);
+        }
     }
 
     /**
      * hashing chunk of the data
-     * @param input - data for hash
-     * @param start - start of hashing chunk
-     * @param length - length of hashing chunk
+     * 
+     * @param input
+     *            - data for hash
+     * @param start
+     *            - start of hashing chunk
+     * @param length
+     *            - length of hashing chunk
      * @return - keccak hash of the chunk
      */
     public static byte[] sha3(byte[] input, int start, int length) {
-    	MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
-	        digest.update(input, start, length);
-	        return digest.digest();
-		} catch (NoSuchAlgorithmException e) {
-			LOG.error("Can't find such algorithm", e);
-			throw new RuntimeException(e);
-		}
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+            digest.update(input, start, length);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error("Can't find such algorithm", e);
+            throw new RuntimeException(e);
+        }
     }
 
     public static byte[] sha512(byte[] input) {
-    	MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance(HASH_512_ALGORITHM_NAME, CRYPTO_PROVIDER);
-	        digest.update(input);
-	        return digest.digest();
-		} catch (NoSuchAlgorithmException e) {
-			LOG.error("Can't find such algorithm", e);
-			throw new RuntimeException(e);
-		}   
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(HASH_512_ALGORITHM_NAME, CRYPTO_PROVIDER);
+            digest.update(input);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error("Can't find such algorithm", e);
+            throw new RuntimeException(e);
+        }
     }
 
     /**
-     * @param data - message to hash
+     * @param data
+     *            - message to hash
      * @return - reipmd160 hash of the message
      */
     public static byte[] ripemd160(byte[] data) {
@@ -136,9 +138,11 @@ public class HashUtil {
     }
 
     /**
-     * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.
-     * *
-     * @param input - data
+     * Calculates RIGTMOST160(SHA3(input)). This is used in address
+     * calculations. *
+     * 
+     * @param input
+     *            - data
      * @return - 20 right bytes of the hash keccak of the data
      */
     public static byte[] sha3omit12(byte[] input) {
@@ -149,8 +153,10 @@ public class HashUtil {
     /**
      * The way to calculate new address inside ethereum
      *
-     * @param addr - creating addres
-     * @param nonce - nonce of creating address
+     * @param addr
+     *            - creating addres
+     * @param nonce
+     *            - nonce of creating address
      * @return new address
      */
     public static byte[] calcNewAddr(byte[] addr, byte[] nonce) {
@@ -164,7 +170,8 @@ public class HashUtil {
     /**
      * @see #doubleDigest(byte[], int, int)
      *
-     * @param input -
+     * @param input
+     *            -
      * @return -
      */
     public static byte[] doubleDigest(byte[] input) {
@@ -172,12 +179,16 @@ public class HashUtil {
     }
 
     /**
-     * Calculates the SHA-256 hash of the given byte range, and then hashes the resulting hash again. This is
-     * standard procedure in Bitcoin. The resulting hash is in big endian form.
+     * Calculates the SHA-256 hash of the given byte range, and then hashes the
+     * resulting hash again. This is standard procedure in Bitcoin. The
+     * resulting hash is in big endian form.
      *
-     * @param input -
-     * @param offset -
-     * @param length -
+     * @param input
+     *            -
+     * @param offset
+     *            -
+     * @param length
+     *            -
      * @return -
      */
     public static byte[] doubleDigest(byte[] input, int offset, int length) {
@@ -208,7 +219,7 @@ public class HashUtil {
     /**
      * @return - generate random 32 byte hash
      */
-    public static byte[] randomHash(){
+    public static byte[] randomHash() {
 
         byte[] randomHash = new byte[32];
         Random random = new Random();
@@ -216,7 +227,7 @@ public class HashUtil {
         return randomHash;
     }
 
-    public static String shortHash(byte[] hash){
+    public static String shortHash(byte[] hash) {
         return Hex.toHexString(hash).substring(0, 6);
     }
 }

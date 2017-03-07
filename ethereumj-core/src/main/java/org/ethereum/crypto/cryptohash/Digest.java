@@ -54,7 +54,7 @@ package org.ethereum.crypto.cryptohash;
  * @version   $Revision: 232 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
-@Deprecated
+
 public interface Digest{
 
 	/**

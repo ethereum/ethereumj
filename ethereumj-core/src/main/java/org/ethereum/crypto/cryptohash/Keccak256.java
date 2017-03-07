@@ -36,7 +36,7 @@ package org.ethereum.crypto.cryptohash;
  * @version   $Revision: 189 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
-@Deprecated
+
 public class Keccak256 extends KeccakCore {
 
 	/**

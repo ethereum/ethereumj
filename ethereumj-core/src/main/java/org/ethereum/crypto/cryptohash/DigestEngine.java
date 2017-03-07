@@ -48,7 +48,7 @@ import java.security.MessageDigest;
  * @version   $Revision: 229 $
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
-@Deprecated
+
 public abstract class DigestEngine extends MessageDigest implements Digest {
 
 	/**
