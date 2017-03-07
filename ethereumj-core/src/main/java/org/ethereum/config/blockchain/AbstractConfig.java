@@ -16,7 +16,7 @@ import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.Program;
 
 import java.math.BigInteger;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,6 +33,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     protected Constants constants;
     protected MinerIfc miner;
+    private List<Pair<Long, BlockHeaderValidator>> headerValidators = new ArrayList<>();
 
     public AbstractConfig() {
         this(new Constants());
@@ -110,7 +111,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
-        return Collections.emptyList();
+        return headerValidators;
     }
 
 
