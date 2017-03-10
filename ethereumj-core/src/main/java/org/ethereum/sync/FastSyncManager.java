@@ -198,6 +198,10 @@ public class FastSyncManager {
         CODE
     }
 
+    int stateNodesCnt = 0;
+    int codeNodesCnt = 0;
+    int storageNodesCnt = 0;
+
     private class TrieNodeRequest {
         TrieNodeType type;
         byte[] nodeHash;
@@ -207,6 +211,12 @@ public class FastSyncManager {
         TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
             this.type = type;
             this.nodeHash = nodeHash;
+
+            switch (type) {
+                case STATE: stateNodesCnt++; break;
+                case CODE: codeNodesCnt++; break;
+                case STORAGE: storageNodesCnt++; break;
+            }
         }
 
         List<TrieNodeRequest> createChildRequests() {
@@ -469,14 +479,9 @@ public class FastSyncManager {
 
         setSyncStage(UNSECURE);
 
-        // this bloom takes ~ 25Mb of Heap
-        stateSource.getBloomedSource().startBlooming(new BloomFilter(0.01, 20_000_000));
-
         retrieveLoop();
 
-        stateSource.getBloomedSource().stopBlooming();
-
-        logger.info("FastSync: state trie download complete!");
+        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " +storageNodesCnt + ", code: " +codeNodesCnt + ")");
         last = 0;
         logStat();
 
