@@ -397,7 +397,13 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         try {
             nodeManagerTasksTimer.cancel();
             if (PERSIST) {
-                dbWrite();
+                try {
+                    dbWrite();
+                } catch (Throwable e) {     // IllegalAccessError is expected
+                    // NOTE: logback stops context right after shutdown initiated. It is problematic to see log output
+                    // System out could help
+                    logger.warn("Problem during NodeManager persist in close: " + e.getMessage());
+                }
             }
         } catch (Exception e) {
             logger.warn("Problems canceling nodeManagerTasksTimer", e);

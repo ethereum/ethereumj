@@ -107,6 +107,11 @@ public class LongSyncTest {
         return blocks;
     }
 
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.resetToDefault();
+    }
+
     @Before
     public void setupTest() throws InterruptedException {
         testDbA = "test_db_" + new BigInteger(32, new Random());
