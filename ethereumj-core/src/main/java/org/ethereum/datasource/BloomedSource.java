@@ -99,7 +99,7 @@ public class BloomedSource extends AbstractChainedSource<byte[], byte[], byte[],
 
     @Override
     public void delete(byte[] key) {
-        filter.remove(key);
+        if (filter != null) filter.remove(key);
         getSource().delete(key);
     }
 
