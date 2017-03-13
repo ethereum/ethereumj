@@ -120,8 +120,7 @@ public class SyncManager extends BlockDownloader {
                     try {
                         logger.info("Sync state: " + getSyncStatus() +
                                 (isSyncDone() || importStart == 0 ? "" : "; Import idle time " +
-                                longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)) +
-                        " " + getStat());
+                                longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
                     } catch (Exception e) {
                         logger.error("Unexpected", e);
                     }
