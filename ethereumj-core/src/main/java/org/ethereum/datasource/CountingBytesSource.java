@@ -35,10 +35,12 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
     public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
         byte[] filterBytes = src.get(filterKey);
-        if (filterBytes != null) {
-            filter = QuotientFilter.deserialize(filterBytes);
-        } else {
-            filter = QuotientFilter.create(5_000_000, 10_000);
+        if (bloom) {
+            if (filterBytes != null) {
+                filter = QuotientFilter.deserialize(filterBytes);
+            } else {
+                filter = QuotientFilter.create(5_000_000, 10_000);
+            }
         }
     }
 
@@ -53,7 +55,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
             byte[] srcVal = getSource().get(key);
             int srcCount = decodeCount(srcVal);
             if (srcCount >= 1) {
-                filter.insert(key);
+                if (filter != null) filter.insert(key);
                 dirty = true;
             }
             getSource().put(key, encodeCount(val, srcCount + 1));
@@ -70,7 +72,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         synchronized (this) {
             int srcCount;
             byte[] srcVal = null;
-            if (filter.maybeContains(key)) {
+            if (filter == null || filter.maybeContains(key)) {
                 srcVal = getSource().get(key);
                 srcCount = decodeCount(srcVal);
             } else {
@@ -86,7 +88,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
 
     @Override
     protected boolean flushImpl() {
-        if (dirty) {
+        if (filter != null && dirty) {
             byte[] filterBytes;
             synchronized (this) {
                 filterBytes = filter.serialize();
