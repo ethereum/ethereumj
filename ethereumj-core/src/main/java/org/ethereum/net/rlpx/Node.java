@@ -22,31 +22,6 @@ import static org.ethereum.util.ByteUtil.hostToBytes;
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
 
-    public static final Serializer<Node> MapDBSerializer = new Serializer<Node>() {
-        @Override
-        public void serialize(DataOutput out, Node value) throws IOException {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(value);
-            oos.close();
-            Serializers.BYTE_ARRAY_WRAPPER.serialize(out, new ByteArrayWrapper(baos.toByteArray()));
-        }
-
-        @Override
-        public Node deserialize(DataInput in, int available) throws IOException {
-            ByteArrayWrapper bytes = Serializers.BYTE_ARRAY_WRAPPER.deserialize(in, available);
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes.getData());
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            try {
-                return (Node) ois.readObject();
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            } finally {
-                ois.close();
-            }
-        }
-    };
-
     byte[] id;
     String host;
     int port;
@@ -156,6 +131,10 @@ public class Node implements Serializable {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setDiscoveryNode(boolean isDiscoveryNode) {
+        isFakeNodeId = isDiscoveryNode;
     }
 
     /**

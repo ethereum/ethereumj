@@ -252,4 +252,12 @@ public class CommonConfig {
     public MapDBFactory mapDBFactory() {
         return new MapDBFactoryImpl();
     }
+
+    @Bean
+    @Lazy
+    public PeerSource peerSource() {
+        DbSource<byte[]> dbSource = keyValueDataSource("peers");
+        dbSources.add(dbSource);
+        return new PeerSource(dbSource);
+    }
 }
