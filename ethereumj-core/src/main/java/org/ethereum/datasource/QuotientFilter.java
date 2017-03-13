@@ -425,7 +425,6 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     private void selfResizeDouble() {
-        System.out.printf("%d resizing from %d to %d, load factor %.2f%n", System.identityHashCode(this), MAX_INSERTIONS, MAX_INSERTIONS * 2, entries / (double)MAX_SIZE);
         QuotientFilter qf = resize(MAX_INSERTIONS * 2);
         QUOTIENT_BITS = qf.QUOTIENT_BITS;
         REMAINDER_BITS = qf.REMAINDER_BITS;
