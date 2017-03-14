@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 
@@ -23,7 +24,9 @@ import java.util.Arrays;
 public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
-    BloomFilter moreThan2Bloom;
+    QuotientFilter filter;
+    boolean dirty = false;
+    private byte[] filterKey = HashUtil.sha3("countingStateFilter".getBytes());
 
     public CountingBytesSource(Source<byte[], byte[]> src) {
         this(src, false);
@@ -31,7 +34,14 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
     }
     public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
-        if (bloom) moreThan2Bloom = new BloomFilter(0.01, 1_000_000);
+        byte[] filterBytes = src.get(filterKey);
+        if (bloom) {
+            if (filterBytes != null) {
+                filter = QuotientFilter.deserialize(filterBytes);
+            } else {
+                filter = QuotientFilter.create(5_000_000, 10_000);
+            }
+        }
     }
 
     @Override
@@ -44,7 +54,10 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         synchronized (this) {
             byte[] srcVal = getSource().get(key);
             int srcCount = decodeCount(srcVal);
-            if (moreThan2Bloom != null && srcCount >= 1) moreThan2Bloom.add(key);
+            if (srcCount >= 1) {
+                if (filter != null) filter.insert(key);
+                dirty = true;
+            }
             getSource().put(key, encodeCount(val, srcCount + 1));
         }
     }
@@ -59,7 +72,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         synchronized (this) {
             int srcCount;
             byte[] srcVal = null;
-            if (moreThan2Bloom == null || moreThan2Bloom.contains(key)) {
+            if (filter == null || filter.maybeContains(key)) {
                 srcVal = getSource().get(key);
                 srcCount = decodeCount(srcVal);
             } else {
@@ -75,7 +88,17 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
 
     @Override
     protected boolean flushImpl() {
-        return false;
+        if (filter != null && dirty) {
+            byte[] filterBytes;
+            synchronized (this) {
+                filterBytes = filter.serialize();
+            }
+            getSource().put(filterKey, filterBytes);
+            dirty = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
