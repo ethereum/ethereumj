@@ -1,9 +1,6 @@
 package org.ethereum.db;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.QuotientFilter;
-import org.ethereum.util.ByteUtil;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -14,7 +11,6 @@ import static org.ethereum.util.ByteUtil.intToBytes;
  */
 public class QuotientFilterTest {
 
-    @Ignore
     @Test
     public void perfTest() {
         QuotientFilter f = QuotientFilter.create(50_000_000, 100_000);
@@ -35,7 +31,6 @@ public class QuotientFilterTest {
         }
     }
 
-    @Ignore
     @Test
     public void doubleInsertTest() {
         QuotientFilter f = QuotientFilter.create(50_000_000, 1000);

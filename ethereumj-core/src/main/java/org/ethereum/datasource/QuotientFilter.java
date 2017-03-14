@@ -70,6 +70,7 @@ public class QuotientFilter implements Iterable<Long> {
     long ELEMENT_MASK;
     long MAX_SIZE;
     long MAX_INSERTIONS;
+    int MAX_DUPLICATES = 2;
     long[] table;
 
     boolean overflowed = false;
@@ -357,6 +358,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     public synchronized void insert(long hash) {
+        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) return;
         if (entries >= MAX_INSERTIONS | overflowed) {
             //Can't safely process an after overflow
             //Only a buggy program would attempt it
@@ -475,6 +477,38 @@ public class QuotientFilter implements Iterable<Long> {
         return false;
     }
 
+    public synchronized boolean maybeContainsXTimes(long hash, int num) {
+        if (overflowed) {
+            //Can't check for existence after overflow occurred
+            //and things are missing
+            throw new OverflowedError();
+        }
+
+        long fq = hashToQuotient(hash);
+        long fr = hashToRemainder(hash);
+        long T_fq = getElement(fq);
+
+        /* If this quotient has no run, give up. */
+        if (!isElementOccupied(T_fq)) {
+            return false;
+        }
+
+        /* Scan the sorted run for the target remainder. */
+        long s = findRunIndex(fq);
+        int counter = 0;
+        do {
+            long rem = getElementRemainder(getElement(s));
+            if (rem == fr) {
+                counter++;
+            } else if (rem > fr) {
+                break;
+            }
+            s = incrementIndex(s);
+        }
+        while (isElementContinuation(getElement(s)));
+        return counter >= num;
+    }
+
     /* Remove the entry in QF[s] and slide the rest of the cluster forward. */
     void deleteEntry(long s, long quot) {
         long next;
@@ -521,6 +555,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     public synchronized void remove(long hash) {
+        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) return;
         //Can't safely process a remove after overflow
         //Only a buggy program would attempt it
         if (overflowed) {
