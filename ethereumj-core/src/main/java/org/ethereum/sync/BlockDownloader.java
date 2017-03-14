@@ -382,15 +382,6 @@ public abstract class BlockDownloader {
         return headerValidator.validateAndLog(header, logger);
     }
 
-    /**
-     * When sync is not done, we are working with several peers, so we have enough randomness.
-     * When we switch to short sync, we usually need only one peer, so if choosing
-     * the best one, we will get the same one all the time (but we need some randomness)
-     */
-    private Channel getGoodPeer() {
-        return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
-    }
-
     Channel getAnyPeer() {
         return pool.getAnyIdle();
     }
