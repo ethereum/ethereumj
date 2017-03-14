@@ -307,8 +307,9 @@ public class SyncQueueImpl implements SyncQueueIfc {
         if (hasGaps()) {
             List<HeaderElement> longestChain = getLongestChain();
             startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
-            ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, rnd.nextBoolean()));
-            startNumber += MAX_CHAIN_LEN;
+            boolean reverse = rnd.nextBoolean();
+            ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, reverse));
+            startNumber += reverse ? 1 : MAX_CHAIN_LEN;
 //            if (maxNum - startNumber > 2000) return ret;
         } else {
             startNumber = maxNum + 1;
