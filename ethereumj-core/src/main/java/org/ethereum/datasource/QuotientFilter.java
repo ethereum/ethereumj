@@ -181,6 +181,11 @@ public class QuotientFilter implements Iterable<Long> {
         entries = 0;
     }
 
+    public QuotientFilter withMaxDuplicates(int maxDuplicates) {
+        MAX_DUPLICATES = maxDuplicates;
+        return this;
+    }
+
     /* Return QF[idx] in the lower bits. */
     long getElement(long idx) {
         long elt = 0;

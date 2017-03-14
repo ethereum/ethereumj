@@ -1,6 +1,8 @@
 package org.ethereum.db;
 
 import org.ethereum.datasource.QuotientFilter;
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -11,6 +13,7 @@ import static org.ethereum.util.ByteUtil.intToBytes;
  */
 public class QuotientFilterTest {
 
+    @Ignore
     @Test
     public void perfTest() {
         QuotientFilter f = QuotientFilter.create(50_000_000, 100_000);
@@ -32,15 +35,29 @@ public class QuotientFilterTest {
     }
 
     @Test
-    public void doubleInsertTest() {
-        QuotientFilter f = QuotientFilter.create(50_000_000, 1000);
+    public void maxDuplicatesTest() {
+        QuotientFilter f = QuotientFilter.create(50_000_000, 1000).withMaxDuplicates(2);
+        f.insert(1);
+        Assert.assertTrue(f.maybeContains(1));
+        f.remove(1);
+        Assert.assertFalse(f.maybeContains(1));
+
         f.insert(1);
         f.insert(1);
-        f.insert(1);
+        f.insert(2);
+        Assert.assertTrue(f.maybeContains(2));
+        f.remove(2);
+        Assert.assertFalse(f.maybeContains(2));
 
         f.remove(1);
         f.remove(1);
-        f.remove(1);
+        Assert.assertTrue(f.maybeContains(1));
 
+        f.insert(3);
+        f.insert(3);
+        Assert.assertTrue(f.maybeContains(3));
+        f.remove(3);
+        f.remove(3);
+        Assert.assertTrue(f.maybeContains(3));
     }
 }
