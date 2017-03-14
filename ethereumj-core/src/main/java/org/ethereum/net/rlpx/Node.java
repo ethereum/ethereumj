@@ -1,12 +1,9 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.mapdb.Serializers;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
-import org.mapdb.Serializer;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;

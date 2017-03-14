@@ -5,8 +5,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
-import org.ethereum.datasource.mapdb.MapDBFactory;
-import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
@@ -125,9 +123,7 @@ public class CommonConfig {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             DbSource<byte[]> dbSource;
-            if ("mapdb".equals(dataSource)) {
-                dbSource = mapDBFactory().createDataSource();
-            } else if ("inmem".equals(dataSource)) {
+            if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
             } else {
                 dataSource = "leveldb";
@@ -245,12 +241,6 @@ public class CommonConfig {
         ));
 
         return new ParentBlockHeaderValidator(rules);
-    }
-
-    @Bean
-    @Lazy
-    public MapDBFactory mapDBFactory() {
-        return new MapDBFactoryImpl();
     }
 
     @Bean
