@@ -1,20 +1,19 @@
 package org.ethereum.net.rlpx.discover;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.db.PeerSource;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
-import org.mapdb.DB;
-import org.mapdb.HTreeMap;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -44,7 +43,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     static final int NODES_TRIM_THRESHOLD = 3000;
 
     PeerConnectionTester peerConnectionManager;
-    MapDBFactory mapDBFactory;
+    PeerSource peerSource;
     EthereumListener ethereumListener;
     SystemProperties config = SystemProperties.getDefault();
 
@@ -63,21 +62,20 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     private Map<DiscoverListener, ListenerHandler> listeners = new IdentityHashMap<>();
 
-    private DB db;
-    private HTreeMap<Node, NodeStatistics.Persistent> nodeStatsDB;
     private boolean inited = false;
     private Timer logStatsTimer = new Timer();
     private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
     private ScheduledExecutorService pongTimer;
 
     @Autowired
-    public NodeManager(SystemProperties config, EthereumListener ethereumListener, MapDBFactory mapDBFactory, PeerConnectionTester peerConnectionManager) {
+    public NodeManager(SystemProperties config, EthereumListener ethereumListener,
+                       ApplicationContext ctx, PeerConnectionTester peerConnectionManager) {
         this.config = config;
         this.ethereumListener = ethereumListener;
-        this.mapDBFactory = mapDBFactory;
         this.peerConnectionManager = peerConnectionManager;
 
         PERSIST = config.peerDiscoveryPersist();
+        if (PERSIST) peerSource = ctx.getBean(PeerSource.class);
         discoveryEnabled = config.peerDiscovery();
 
         key = config.getMyKey();
@@ -138,45 +136,25 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     private void dbRead() {
-        try {
-            db = mapDBFactory.createTransactionalDB("network/discovery");
-            if (config.databaseReset() && config.databaseResetBlock() == 0) {
-                logger.info("Resetting DB Node statistics...");
-                db.delete("nodeStats");
-            }
-            nodeStatsDB = db.hashMapCreate("nodeStats")
-                    .keySerializer(Node.MapDBSerializer)
-                    .valueSerializer(NodeStatistics.Persistent.MapDBSerializer)
-                    .makeOrGet();
-
-            logger.info("Reading Node statistics from DB: " + nodeStatsDB.size() + " nodes.");
-            for (Map.Entry<Node, NodeStatistics.Persistent> entry : nodeStatsDB.entrySet()) {
-                getNodeHandler(entry.getKey()).getNodeStatistics().setPersistedData(entry.getValue());
-            }
-        } catch (Exception e) {
-            try {
-                logger.warn("Error reading db. Recreating from scratch...");
-                logger.debug("Error reading db. Recreating from scratch:", e);
-
-                db.delete("nodeStats");
-                nodeStatsDB = db.hashMap("nodeStats");
-            } catch (Exception e1) {
-                logger.error("DB recreation has been failed. Node statistics persistence disabled. The problem needs to be fixed manually.", e1);
-            }
+        logger.info("Reading Node statistics from DB: " + peerSource.getNodes().size() + " nodes.");
+        for (Pair<Node, Integer> nodeElement : peerSource.getNodes()) {
+            getNodeHandler(nodeElement.getLeft()).getNodeStatistics().setPersistedReputation(nodeElement.getRight());
         }
     }
 
     private void dbWrite() {
-        Map<Node, NodeStatistics.Persistent> batch = new HashMap<>();
+        List<Pair<Node, Integer>> batch = new ArrayList<>();
         synchronized (this) {
             for (NodeHandler handler : nodeHandlerMap.values()) {
-                batch.put(handler.getNode(), handler.getNodeStatistics().getPersistent());
+                batch.add(Pair.of(handler.getNode(), handler.getNodeStatistics().getPersistedReputation()));
             }
         }
-        nodeStatsDB.clear();
-        nodeStatsDB.putAll(batch);
-        db.commit();
-        logger.info("Write Node statistics to DB: " + nodeStatsDB.size() + " nodes.");
+        peerSource.clear();
+        for (Pair<Node, Integer> nodeElement : batch) {
+            peerSource.getNodes().add(nodeElement);
+        }
+        peerSource.getNodes().flush();
+        logger.info("Write Node statistics to DB: " + peerSource.getNodes().size() + " nodes.");
     }
 
     public void setMessageSender(Functional.Consumer<DiscoveryEvent> messageSender) {
@@ -418,15 +396,6 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             logStatsTimer.cancel();
         } catch (Exception e) {
             logger.warn("Problems canceling logStatsTimer", e);
-        }
-        // if persistence is disabled, then don't try to close the db
-        if (db != null && !db.isClosed()) {
-            try {
-                logger.info("Closing discovery DB...");
-                db.close();
-            } catch (Throwable e) {
-                logger.warn("Problems closing db", e);
-            }
         }
     }
 

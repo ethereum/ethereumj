@@ -139,8 +139,6 @@ dependencies {
     compile "com.typesafe:config:1.2.1"
     compile "com.googlecode.concurrent-locks:concurrent-locks:1.0.0"
 
-    compile "org.mapdb:mapdb:2.0-beta12"
-
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
     }
