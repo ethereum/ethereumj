@@ -125,6 +125,11 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
+    public byte[] getCodeHash(byte[] addr) {
+        return src.getCodeHash(addr);
+    }
+
+    @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
         addStorageKey(addr, key);
         src.addStorageRow(addr, key, value);

@@ -90,6 +90,11 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
+    public byte[] getCodeHash(byte[] addr) {
+        return repository.getCodeHash(addr);
+    }
+
+    @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
         if (canListenTrace(addr)) programListener.onStoragePut(key, value);
         repository.addStorageRow(addr, key, value);

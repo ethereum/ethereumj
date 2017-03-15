@@ -98,6 +98,14 @@ public interface Repository extends org.ethereum.facade.Repository{
     byte[] getCode(byte[] addr);
 
     /**
+     * Retrieve the code hash associated with an account
+     *
+     * @param addr of the account
+     * @return code hash
+     */
+    byte[] getCodeHash(byte[] addr);
+
+    /**
      * Put a value in storage of an account at a given key
      *
      * @param addr of the account

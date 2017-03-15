@@ -117,14 +117,15 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public synchronized byte[] getCode(byte[] addr) {
+        byte[] codeHash = getCodeHash(addr);
+        return FastByteComparisons.equal(codeHash, HashUtil.EMPTY_DATA_HASH) ?
+                ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeHash);
+    }
+
+    @Override
+    public byte[] getCodeHash(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        if (accountState != null) {
-            byte[] codeHash = accountState.getCodeHash();
-            return FastByteComparisons.equal(codeHash, HashUtil.EMPTY_DATA_HASH) ?
-                    ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeHash);
-        } else {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
-        }
+        return accountState != null ? accountState.getCodeHash() : HashUtil.EMPTY_DATA_HASH;
     }
 
     @Override

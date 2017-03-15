@@ -570,7 +570,7 @@ public class Program {
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
             VM vm = new VM(config);
-            Program program = new Program(codeAddress, programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            Program program = new Program(getStorage().getCode(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 
