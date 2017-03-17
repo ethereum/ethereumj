@@ -5,6 +5,7 @@ import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 
+import javax.xml.crypto.Data;
 import java.util.*;
 
 import static java.util.Collections.unmodifiableMap;
@@ -39,13 +40,14 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     @Override
     public DataWord get(DataWord key) {
 
+        DataWord dataWord = new DataWord();
         DataWord value = storage.get(key);
         if (value != null)
             value = value.clone();
         else{
             if (origContract == null) return null;
             value = origContract.get(key);
-            storage.put(key.clone(), value == null ? DataWord.ZERO.clone() : value.clone());
+            storage.put(key.clone(), value == null ? dataWord.getZero().clone() : value.clone());
         }
 
         if (value == null || value.isZero())

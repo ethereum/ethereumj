@@ -13,11 +13,12 @@ public class InternalTransactionTest {
     @Test
     public void testRlpEncoding() {
         byte[] parentHash = randomBytes(32);
+        final DataWord dataWord = new DataWord();
         int deep = Integer.MAX_VALUE;
         int index = Integer.MAX_VALUE;
         byte[] nonce = randomBytes(2);
-        DataWord gasPrice = DataWord.ZERO;
-        DataWord gasLimit = DataWord.ZERO;
+        DataWord gasPrice = dataWord.getZero();
+        DataWord gasLimit = dataWord.getZero();
         byte[] sendAddress = randomBytes(20);
         byte[] receiveAddress = randomBytes(20);
         byte[] value = randomBytes(2);
