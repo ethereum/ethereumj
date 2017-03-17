@@ -18,13 +18,13 @@ import java.nio.ByteBuffer;
  * @author Roman Mandeleil
  * @since 01.06.2014
  */
-public class DataWord implements Comparable<DataWord> {
+final public class DataWord implements Comparable<DataWord> {
 
     /* Maximum value of the DataWord */
-    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
-    public static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
-    public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
-    public static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
+    private static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
+    private static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
+    private static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
+    private static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
 
     private byte[] data = new byte[32];
 
@@ -69,6 +69,8 @@ public class DataWord implements Comparable<DataWord> {
     public byte[] getData() {
         return data;
     }
+
+    public DataWord getZero() {return ZERO;}
 
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);

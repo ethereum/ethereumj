@@ -7,6 +7,7 @@ public class ProgramTraceListener extends ProgramListenerAdaptor {
 
     private final boolean enabled;
     private OpActions actions = new OpActions();
+    private final DataWord dataWord = new DataWord();
 
     public ProgramTraceListener(boolean enabled) {
         this.enabled = enabled;
@@ -40,7 +41,7 @@ public class ProgramTraceListener extends ProgramListenerAdaptor {
     @Override
     public void onStoragePut(DataWord key, DataWord value) {
         if (enabled) {
-            if (value.equals(DataWord.ZERO)) {
+            if (value.equals(dataWord.getZero())) {
                 actions.addStorageRemove(key);
             } else {
                 actions.addStoragePut(key, value);

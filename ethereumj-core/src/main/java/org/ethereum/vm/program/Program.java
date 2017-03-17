@@ -83,6 +83,7 @@ public class Program {
     private ByteArraySet touchedAccounts = new ByteArraySet();
 
     private ProgramPrecompile programPrecompile;
+    private final DataWord dataWord = new DataWord();
 
     CommonConfig commonConfig = CommonConfig.getDefault();
 
@@ -678,7 +679,7 @@ public class Program {
     public DataWord getBlockHash(int index) {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
                 new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())).clone() :
-                DataWord.ZERO.clone();
+                dataWord.getZero().clone();
     }
 
     public DataWord getBalance(DataWord address) {
@@ -857,7 +858,7 @@ public class Program {
 
             // sophisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
-            byte[] txData = invoke.getDataCopy(DataWord.ZERO, getDataSize());
+            byte[] txData = invoke.getDataCopy(dataWord.getZero(), getDataSize());
             if (!Arrays.equals(txData, ops))
                 globalOutput.append("\n  msg.data: ").append(Hex.toHexString(txData));
             globalOutput.append("\n\n  Spent Gas: ").append(getResult().getGasUsed());
