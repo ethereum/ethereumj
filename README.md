@@ -96,5 +96,5 @@ Note that don’t need to put all the options to your custom config, just those 
 Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj)
 
 # License
-ethereumj is released under the [MIT license](LICENSE).
+ethereumj is released under the [LGPL-V3 license](LICENSE).
 
