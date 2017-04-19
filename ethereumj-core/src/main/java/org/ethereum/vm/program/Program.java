@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.vm.program;
 
 import org.ethereum.config.BlockchainConfig;
@@ -107,7 +124,7 @@ public class Program {
         this.invoke = programInvoke;
         this.transaction = transaction;
 
-        this.codeHash = codeHash;
+        this.codeHash = codeHash == null || FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, codeHash) ? null : codeHash;
         this.ops = nullToEmpty(ops);
 
         traceListener = new ProgramTraceListener(config.vmTrace());
@@ -570,7 +587,7 @@ public class Program {
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
             VM vm = new VM(config);
-            Program program = new Program(codeAddress, programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 

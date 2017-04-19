@@ -1,4 +1,21 @@
 /*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
+/*
  *      Copyright (C) 2016 DataStax Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,6 +87,7 @@ public class QuotientFilter implements Iterable<Long> {
     long ELEMENT_MASK;
     long MAX_SIZE;
     long MAX_INSERTIONS;
+    int MAX_DUPLICATES = 2;
     long[] table;
 
     boolean overflowed = false;
@@ -178,6 +196,11 @@ public class QuotientFilter implements Iterable<Long> {
         MAX_INSERTIONS = (long) (MAX_SIZE * .75);
         table = new long[TABLE_SIZE(QUOTIENT_BITS, REMAINDER_BITS)];
         entries = 0;
+    }
+
+    public QuotientFilter withMaxDuplicates(int maxDuplicates) {
+        MAX_DUPLICATES = maxDuplicates;
+        return this;
     }
 
     /* Return QF[idx] in the lower bits. */
@@ -357,6 +380,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     public synchronized void insert(long hash) {
+        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) return;
         if (entries >= MAX_INSERTIONS | overflowed) {
             //Can't safely process an after overflow
             //Only a buggy program would attempt it
@@ -425,7 +449,6 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     private void selfResizeDouble() {
-        System.out.printf("%d resizing from %d to %d, load factor %.2f%n", System.identityHashCode(this), MAX_INSERTIONS, MAX_INSERTIONS * 2, entries / (double)MAX_SIZE);
         QuotientFilter qf = resize(MAX_INSERTIONS * 2);
         QUOTIENT_BITS = qf.QUOTIENT_BITS;
         REMAINDER_BITS = qf.REMAINDER_BITS;
@@ -476,6 +499,38 @@ public class QuotientFilter implements Iterable<Long> {
         return false;
     }
 
+    public synchronized boolean maybeContainsXTimes(long hash, int num) {
+        if (overflowed) {
+            //Can't check for existence after overflow occurred
+            //and things are missing
+            throw new OverflowedError();
+        }
+
+        long fq = hashToQuotient(hash);
+        long fr = hashToRemainder(hash);
+        long T_fq = getElement(fq);
+
+        /* If this quotient has no run, give up. */
+        if (!isElementOccupied(T_fq)) {
+            return false;
+        }
+
+        /* Scan the sorted run for the target remainder. */
+        long s = findRunIndex(fq);
+        int counter = 0;
+        do {
+            long rem = getElementRemainder(getElement(s));
+            if (rem == fr) {
+                counter++;
+            } else if (rem > fr) {
+                break;
+            }
+            s = incrementIndex(s);
+        }
+        while (isElementContinuation(getElement(s)));
+        return counter >= num;
+    }
+
     /* Remove the entry in QF[s] and slide the rest of the cluster forward. */
     void deleteEntry(long s, long quot) {
         long next;
@@ -522,6 +577,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     public synchronized void remove(long hash) {
+        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) return;
         //Can't safely process a remove after overflow
         //Only a buggy program would attempt it
         if (overflowed) {

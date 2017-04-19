@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.datasource;
 
 import org.ethereum.crypto.HashUtil;
@@ -35,10 +52,12 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
     public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
         byte[] filterBytes = src.get(filterKey);
-        if (filterBytes != null) {
-            filter = QuotientFilter.deserialize(filterBytes);
-        } else {
-            filter = QuotientFilter.create(5_000_000, 10_000);
+        if (bloom) {
+            if (filterBytes != null) {
+                filter = QuotientFilter.deserialize(filterBytes);
+            } else {
+                filter = QuotientFilter.create(5_000_000, 10_000);
+            }
         }
     }
 
@@ -53,7 +72,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
             byte[] srcVal = getSource().get(key);
             int srcCount = decodeCount(srcVal);
             if (srcCount >= 1) {
-                filter.insert(key);
+                if (filter != null) filter.insert(key);
                 dirty = true;
             }
             getSource().put(key, encodeCount(val, srcCount + 1));
@@ -70,7 +89,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         synchronized (this) {
             int srcCount;
             byte[] srcVal = null;
-            if (filter.maybeContains(key)) {
+            if (filter == null || filter.maybeContains(key)) {
                 srcVal = getSource().get(key);
                 srcCount = decodeCount(srcVal);
             } else {
@@ -86,7 +105,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
 
     @Override
     protected boolean flushImpl() {
-        if (dirty) {
+        if (filter != null && dirty) {
             byte[] filterBytes;
             synchronized (this) {
                 filterBytes = filter.serialize();

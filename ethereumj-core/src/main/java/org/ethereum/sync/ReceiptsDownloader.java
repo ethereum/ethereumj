@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -138,7 +155,7 @@ public class ReceiptsDownloader {
                     toDownload = getToDownload(100, 20);
                 }
 
-                Channel idle = syncPool.getAnyIdle();
+                Channel idle = getAnyPeer();
                 if (idle != null) {
                     final List<byte[]> list = toDownload.remove(0);
                     ListenableFuture<List<List<TransactionReceipt>>> future =
@@ -166,6 +183,15 @@ public class ReceiptsDownloader {
                 logger.warn("Unexpected during receipts downloading", e);
             }
         }
+    }
+
+    /**
+     * Download could block chain synchronization occupying all peers
+     * Prevents this by leaving one peer without work
+     * Fallbacks to any peer when low number of active peers available
+     */
+    Channel getAnyPeer() {
+        return syncPool.getActivePeersCount() > 2 ? syncPool.getNotLastIdle() : syncPool.getAnyIdle();
     }
 
     public int getDownloadedBlocksCount() {

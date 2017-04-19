@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.config;
 
 import org.ethereum.core.*;
@@ -5,8 +22,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
-import org.ethereum.datasource.mapdb.MapDBFactory;
-import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
@@ -125,9 +140,7 @@ public class CommonConfig {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             DbSource<byte[]> dbSource;
-            if ("mapdb".equals(dataSource)) {
-                dbSource = mapDBFactory().createDataSource();
-            } else if ("inmem".equals(dataSource)) {
+            if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
             } else {
                 dataSource = "leveldb";
@@ -249,7 +262,9 @@ public class CommonConfig {
 
     @Bean
     @Lazy
-    public MapDBFactory mapDBFactory() {
-        return new MapDBFactoryImpl();
+    public PeerSource peerSource() {
+        DbSource<byte[]> dbSource = keyValueDataSource("peers");
+        dbSources.add(dbSource);
+        return new PeerSource(dbSource);
     }
 }

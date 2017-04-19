@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import org.ethereum.core.Block;
@@ -307,8 +324,9 @@ public class SyncQueueImpl implements SyncQueueIfc {
         if (hasGaps()) {
             List<HeaderElement> longestChain = getLongestChain();
             startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
-            ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, rnd.nextBoolean()));
-            startNumber += MAX_CHAIN_LEN;
+            boolean reverse = rnd.nextBoolean();
+            ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, reverse));
+            startNumber += reverse ? 1 : MAX_CHAIN_LEN;
 //            if (maxNum - startNumber > 2000) return ret;
         } else {
             startNumber = maxNum + 1;

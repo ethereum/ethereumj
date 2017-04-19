@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -127,51 +144,6 @@ public abstract class BlockDownloader {
         this.blockQueueLimit = blockQueueLimit;
     }
 
-//    class PoolTaskManager {
-//        public <V> ListenableFuture<V> addTask(PoolTask<V> task) {
-//
-//        }
-//    }
-//
-//    abstract class PoolTask<V> {
-//        abstract ListenableFuture<V> execute(Channel peer);
-//    }
-
-    Map<Integer, Integer> headersCnt = new HashMap<>();
-    ByteArrayMap<Integer> blocksCnt = new ByteArrayMap<>();
-
-    int totHeadCnt = 0;
-    int dupHeadCnt = 0;
-    private synchronized void addStat(SyncQueueIfc.HeadersRequest req) {
-        for (long i = 0; i < req.getCount(); i++) {
-            int idx = req.isReverse ()? (int) (req.getStart() - i) : (int) (req.getStart() + i);
-            Integer cnt = headersCnt.get(idx);
-            cnt = cnt == null ? 0 : cnt;
-            totHeadCnt++;
-            dupHeadCnt += cnt == 0 ? 0 : 1;
-            headersCnt.put(idx, cnt + 1);
-        }
-    }
-
-    int totBlockCnt = 0;
-    int dupBlockCnt = 0;
-    private synchronized void addStat(SyncQueueIfc.BlocksRequest req) {
-        for (BlockHeaderWrapper header : req.getBlockHeaders()) {
-            Integer cnt = blocksCnt.get(header.getHash());
-            cnt = cnt == null ? 0 : cnt;
-            totBlockCnt++;
-            dupBlockCnt += cnt == 0 ? 0 : 1;
-            blocksCnt.put(header.getHash(), cnt + 1);
-
-        }
-    }
-
-    String getStat() {
-        String ret = "Requests: header: " + totHeadCnt + " (dup " + dupHeadCnt + ") ";
-        ret += "block: " + totBlockCnt + " (dup " + dupBlockCnt + ")";
-        return ret;
-    }
-
     private void headerRetrieveLoop() {
         List<SyncQueueIfc.HeadersRequest> hReq = emptyList();
         while(!Thread.currentThread().isInterrupted()) {
@@ -206,7 +178,6 @@ public abstract class BlockDownloader {
                             break;
                         } else {
                             logger.debug("headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode());
-                            addStat(headersRequest);
                             ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse()) :
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), headersRequest.getStep(), headersRequest.isReverse());
@@ -312,7 +283,6 @@ public abstract class BlockDownloader {
                             ListenableFuture<List<Block>> futureBlocks =
                                     any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
                             blocksRequested += blocksRequest.getBlockHeaders().size();
-                            addStat(blocksRequest);
                             if (futureBlocks != null) {
                                 Futures.addCallback(futureBlocks, new BlocksCallback(any));
                                 reqBlocksCounter++;
@@ -427,15 +397,6 @@ public abstract class BlockDownloader {
      */
     protected boolean isValid(BlockHeader header) {
         return headerValidator.validateAndLog(header, logger);
-    }
-
-    /**
-     * When sync is not done, we are working with several peers, so we have enough randomness.
-     * When we switch to short sync, we usually need only one peer, so if choosing
-     * the best one, we will get the same one all the time (but we need some randomness)
-     */
-    private Channel getGoodPeer() {
-        return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
     }
 
     Channel getAnyPeer() {
