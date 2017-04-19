@@ -111,7 +111,6 @@ public class Memory implements ProgramListenerAware {
     }
 
     public void extend(int address, int size) {
-        if (size <= 0) return;
 
         final int newSize = address + size;
 
