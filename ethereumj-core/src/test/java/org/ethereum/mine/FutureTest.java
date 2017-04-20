@@ -58,7 +58,7 @@ public class FutureTest {
                     throw new RuntimeException(e);
                 }
             }
-        }, MoreExecutors.sameThreadExecutor());
+        }, MoreExecutors.directExecutor());
 
         Thread.sleep(1000);
         future.cancel(true);

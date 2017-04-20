@@ -129,6 +129,7 @@ dependencies {
     compile "ch.qos.logback:logback-classic:1.1.7"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
+    compile "com.google.guava:guava:21.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
     compile "org.apache.commons:commons-collections4:4.0"
     compile "org.apache.commons:commons-lang3:3.4"
