@@ -49,7 +49,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
     boolean autoBlock;
     long dbDelay = 0;
     long totalDbHits = 0;
-    List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
 
     long time = 0;
@@ -108,7 +107,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         withGasLimit(5_000_000L);
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
         setSender(ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")));
-//        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
     }
 
     public StandaloneBlockchain withGenesis(Genesis genesis) {
@@ -425,6 +423,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
+        //initialize blockchain
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
