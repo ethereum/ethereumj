@@ -57,44 +57,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private HashMapDB<byte[]> stateDS;
     JournalSource<byte[]> pruningStateDS;
     PruneManager pruneManager;
-
     private BlockSummary lastSummary;
-
-    class PendingTx {
-        ECKey sender;
-        byte[] toAddress;
-        BigInteger value;
-        byte[] data;
-
-        SolidityContractImpl createdContract;
-        SolidityContractImpl targetContract;
-
-        Transaction customTx;
-
-        TransactionResult txResult = new TransactionResult();
-
-        public PendingTx(byte[] toAddress, BigInteger value, byte[] data) {
-            this.sender = txSender;
-            this.toAddress = toAddress;
-            this.value = value;
-            this.data = data;
-        }
-
-        public PendingTx(byte[] toAddress, BigInteger value, byte[] data,
-                         SolidityContractImpl createdContract, SolidityContractImpl targetContract, TransactionResult res) {
-            this.sender = txSender;
-            this.toAddress = toAddress;
-            this.value = value;
-            this.data = data;
-            this.createdContract = createdContract;
-            this.targetContract = targetContract;
-            this.txResult = res;
-        }
-
-        public PendingTx(Transaction customTx) {
-            this.customTx = customTx;
-        }
-    }
 
     List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
 
@@ -234,7 +197,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
                 pendingTxes.get(i).txResult.executionSummary = getTxSummary(lastSummary, i);
             }
-
+            //Clear all the transactions in the block with every new block (just a safety check)
             submittedTxes.clear();
             return b;
         } catch (InterruptedException|ExecutionException e) {
@@ -287,7 +250,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     @Override
     public void sendEther(byte[] toAddress, BigInteger weis) {
-        submitNewTx(new PendingTx(toAddress, weis, new byte[0]));
+        submitNewTx(new PendingTx(txSender, toAddress, weis, new byte[0]));
     }
 
     public void submitTransaction(Transaction tx) {
@@ -307,7 +270,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             throw new RuntimeException("No constructor with params found");
         }
         byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
-        submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
+        submitNewTx(new PendingTx(txSender, new byte[0], BigInteger.ZERO,
                 ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null, new TransactionResult()));
         return contract;
     }
@@ -327,7 +290,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 				throw new RuntimeException("No constructor with params found");
 			}
 			byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
-			submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
+			submitNewTx(new PendingTx(txSender, new byte[0], BigInteger.ZERO,
 					ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null,
 					new TransactionResult()));
 			return contract;
@@ -510,7 +473,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             CallTransaction.Function function = contract.getByName(functionName);
             byte[] data = function.encode(args);
             SolidityCallResult res = new SolidityCallResultImpl(this, function);
-            submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
+            submitNewTx(new PendingTx(txSender, null, BigInteger.valueOf(value), data, null, this, res));
             return res;
         }
 
