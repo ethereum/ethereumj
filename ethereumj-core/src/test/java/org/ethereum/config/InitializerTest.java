@@ -44,9 +44,9 @@ public class InitializerTest {
     public void helper_shouldAllowCleanWorkspace() {
         SystemProperties props = withConfig(2, null);
 
-        resetHelper.process(props);
+        resetHelper.resetDatabaseProcess(props);
         assertEquals(new Integer(2), resetHelper.getDatabaseVersion(versionFile));
-        resetHelper.process(props);
+        resetHelper.resetDatabaseProcess(props);
     }
 
     @Test
@@ -58,14 +58,14 @@ public class InitializerTest {
         assertTrue(!resetHelper.isDatabaseDirectoryExists(props));
 
         // create database version file
-        resetHelper.process(props);
+        resetHelper.resetDatabaseProcess(props);
 
         // state with just created database
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
         assertTrue(resetHelper.isDatabaseDirectoryExists(props));
 
-        // running process for a second time should change nothing
-        resetHelper.process(props);
+        // running resetDatabaseProcess for a second time should change nothing
+        resetHelper.resetDatabaseProcess(props);
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
         assertTrue(resetHelper.isDatabaseDirectoryExists(props));
     }
@@ -74,11 +74,11 @@ public class InitializerTest {
     public void helper_shouldCreateVersionFile_whenOldVersion() {
         // create database without version
         SystemProperties props1 = withConfig(1, null);
-        resetHelper.process(props1);
+        resetHelper.resetDatabaseProcess(props1);
         versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
 
         SystemProperties props2 = withConfig(2, IGNORE);
-        resetHelper.process(props2);
+        resetHelper.resetDatabaseProcess(props2);
 
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
         assertTrue(resetHelper.isDatabaseDirectoryExists(props2));
@@ -87,22 +87,22 @@ public class InitializerTest {
     @Test(expected = RuntimeException.class)
     public void helper_shouldStop_whenNoVersionFileAndNotFirstVersion() throws IOException {
         SystemProperties props = withConfig(2, EXIT);
-        resetHelper.process(props);
+        resetHelper.resetDatabaseProcess(props);
 
         // database is assumed to exist if dir is not empty
         versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
 
-        resetHelper.process(props);
+        resetHelper.resetDatabaseProcess(props);
     }
 
     @Test
     public void helper_shouldReset_whenDifferentVersionAndFlag() {
         SystemProperties props1 = withConfig(1, null);
-        resetHelper.process(props1);
+        resetHelper.resetDatabaseProcess(props1);
 
         final File testFile = createFile();
         SystemProperties props2 = withConfig(2, RESET);
-        resetHelper.process(props2);
+        resetHelper.resetDatabaseProcess(props2);
         assertFalse(testFile.exists());
         assertEquals(new Integer(2), resetHelper.getDatabaseVersion(versionFile));
     }
@@ -110,29 +110,29 @@ public class InitializerTest {
     @Test(expected = RuntimeException.class)
     public void helper_shouldExit_whenDifferentVersionAndFlag() {
         final SystemProperties props1 = withConfig(1, null);
-        resetHelper.process(props1);
+        resetHelper.resetDatabaseProcess(props1);
 
         final SystemProperties props2 = withConfig(2, EXIT);
-        resetHelper.process(props2);
+        resetHelper.resetDatabaseProcess(props2);
     }
 
     @Test(expected = RuntimeException.class)
     public void helper_shouldExit_byDefault() {
         final SystemProperties props1 = withConfig(1, null);
-        resetHelper.process(props1);
+        resetHelper.resetDatabaseProcess(props1);
 
         final SystemProperties props2 = withConfig(2, null);
-        resetHelper.process(props2);
+        resetHelper.resetDatabaseProcess(props2);
     }
 
     @Test
     public void helper_shouldIgnore_whenDifferentVersionAndFlag() {
         final SystemProperties props1 = withConfig(1, EXIT);
-        resetHelper.process(props1);
+        resetHelper.resetDatabaseProcess(props1);
         final File testFile = createFile();
 
         final SystemProperties props2 = withConfig(2, IGNORE);
-        resetHelper.process(props2);
+        resetHelper.resetDatabaseProcess(props2);
         assertTrue(testFile.exists());
         assertEquals(new Integer(1), resetHelper.getDatabaseVersion(versionFile));
     }
@@ -148,7 +148,7 @@ public class InitializerTest {
         final File testFile = createFile();
 
         assertTrue(testFile.exists());
-        resetHelper.process(systemProperties);
+        resetHelper.resetDatabaseProcess(systemProperties);
         assertEquals(new Integer(33), resetHelper.getDatabaseVersion(versionFile));
 
         assertFalse(testFile.exists()); // reset should have cleared file
