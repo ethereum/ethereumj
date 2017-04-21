@@ -30,7 +30,7 @@ public interface SolidityContract extends Contract {
      * with corresponding arguments
      *
      * TODO: either return pending transaction execution result
-     * or return Future which is available upon block including trnasaction
+     * or return Future which is available upon block including transaction
      * or combine both approaches
      */
     SolidityCallResult callFunction(String functionName, Object ... args);
