@@ -14,8 +14,8 @@ class PendingTx {
     BigInteger value;
     byte[] data;
 
-    StandaloneBlockchain.SolidityContractImpl createdContract;
-    StandaloneBlockchain.SolidityContractImpl targetContract;
+    SolidityContractImpl createdContract;
+    SolidityContractImpl targetContract;
 
     Transaction customTx;
 
@@ -29,7 +29,7 @@ class PendingTx {
     }
 
     public PendingTx(ECKey txSender, byte[] toAddress, BigInteger value, byte[] data,
-                     StandaloneBlockchain.SolidityContractImpl createdContract, StandaloneBlockchain.SolidityContractImpl targetContract, TransactionResult res) {
+                     SolidityContractImpl createdContract, SolidityContractImpl targetContract, TransactionResult res) {
         this.sender = txSender;
         this.toAddress = toAddress;
         this.value = value;
