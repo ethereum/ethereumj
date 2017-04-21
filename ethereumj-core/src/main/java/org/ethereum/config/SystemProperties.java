@@ -87,15 +87,6 @@ public class SystemProperties {
         CONFIG = null;
     }
 
-    /**
-     * Used mostly for testing purposes to ensure the application
-     * refers only to the config passed as a Spring bean.
-     * If this property is set to true {@link #getDefault()} returns null
-     */
-    public static void setUseOnlySpringConfig(boolean useOnlySpringConfig) {
-        SystemProperties.useOnlySpringConfig = useOnlySpringConfig;
-    }
-
     static boolean isUseOnlySpringConfig() {
         return useOnlySpringConfig;
     }
