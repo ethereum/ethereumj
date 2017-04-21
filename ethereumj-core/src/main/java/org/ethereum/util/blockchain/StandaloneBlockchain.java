@@ -60,6 +60,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private BlockSummary lastSummary;
 
     List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
+//    SolidityContractImpl contract;
 
     public StandaloneBlockchain() {
         Genesis genesis = GenesisLoader.loadGenesis(
@@ -366,7 +367,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         this.listener.addListener(listener);
     }
 
-    private void submitNewTx(PendingTx tx) {
+    protected void submitNewTx(PendingTx tx) {
         submittedTxes.add(tx);
         if (autoBlock) {
             createBlock();
@@ -431,167 +432,4 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         return blockchain;
     }
-
-    public class SolidityContractImpl implements SolidityContract {
-        byte[] address;
-        public CompilationResult.ContractMetadata compiled;
-        public CallTransaction.Contract contract;
-        public List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
-
-        public SolidityContractImpl(String abi) {
-            contract = new CallTransaction.Contract(abi);
-        }
-        public SolidityContractImpl(CompilationResult.ContractMetadata result) {
-            this(result.abi);
-            compiled = result;
-        }
-
-        public void addRelatedContract(String abi) {
-            CallTransaction.Contract c = new CallTransaction.Contract(abi);
-            relatedContracts.add(c);
-        }
-
-        void setAddress(byte[] address) {
-            this.address = address;
-        }
-
-        @Override
-        public byte[] getAddress() {
-            if (address == null) {
-                throw new RuntimeException("Contract address will be assigned only after block inclusion. Call createBlock() first.");
-            }
-            return address;
-        }
-
-        @Override
-        public SolidityCallResult callFunction(String functionName, Object... args) {
-            return callFunction(0, functionName, args);
-        }
-
-        @Override
-        public SolidityCallResult callFunction(long value, String functionName, Object... args) {
-            CallTransaction.Function function = contract.getByName(functionName);
-            byte[] data = function.encode(args);
-            SolidityCallResult res = new SolidityCallResultImpl(this, function);
-            submitNewTx(new PendingTx(txSender, null, BigInteger.valueOf(value), data, null, this, res));
-            return res;
-        }
-
-        @Override
-        public Object[] callConstFunction(String functionName, Object... args) {
-            return callConstFunction(getBlockchain().getBestBlock(), functionName, args);
-        }
-
-        @Override
-        public Object[] callConstFunction(Block callBlock, String functionName, Object... args) {
-
-            CallTransaction.Function func = contract.getByName(functionName);
-            if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
-            Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                    Hex.toHexString(getAddress()), 0, func, args);
-            tx.sign(new byte[32]);
-
-            Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
-
-            try {
-                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                        (tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
-                                getBlockchain().getProgramInvokeFactory(), callBlock)
-                        .setLocalCall(true);
-
-                executor.init();
-                executor.execute();
-                executor.go();
-                executor.finalization();
-
-                return func.decodeResult(executor.getResult().getHReturn());
-            } finally {
-                repository.rollback();
-            }
-        }
-
-        @Override
-        public SolidityStorage getStorage() {
-            return new SolidityStorageImpl(getAddress());
-        }
-
-        @Override
-        public String getABI() {
-            return compiled.abi;
-        }
-
-        @Override
-        public String getBinary() {
-            return compiled.bin;
-        }
-
-        @Override
-        public void call(byte[] callData) {
-            // for this we need cleaner separation of EasyBlockchain to
-            // Abstract and Solidity specific
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    public class SolidityCallResultImpl extends SolidityCallResult {
-        SolidityContractImpl contract;
-        CallTransaction.Function function;
-
-        SolidityCallResultImpl(SolidityContractImpl contract, CallTransaction.Function function) {
-            this.contract = contract;
-            this.function = function;
-        }
-
-        @Override
-        public CallTransaction.Function getFunction() {
-            return function;
-        }
-
-        public List<CallTransaction.Invocation> getEvents() {
-            List<CallTransaction.Invocation> ret = new ArrayList<>();
-            for (LogInfo logInfo : getReceipt().getLogInfoList()) {
-                for (CallTransaction.Contract c : contract.relatedContracts) {
-                    CallTransaction.Invocation event = c.parseEvent(logInfo);
-                    if (event != null) ret.add(event);
-                }
-            }
-            return ret;
-        }
-
-        @Override
-        public String toString() {
-            String ret = "SolidityCallResult{" +
-                    function + ": " +
-                    (isIncluded() ? "EXECUTED" : "PENDING") + ", ";
-            if (isIncluded()) {
-                ret += isSuccessful() ? "SUCCESS" : ("ERR (" + getReceipt().getError() + ")");
-                ret += ", ";
-                if (isSuccessful()) {
-                    ret += "Ret: " + Arrays.toString(getReturnValues()) + ", ";
-                    ret += "Events: " + getEvents() + ", ";
-                }
-            }
-            return ret + "}";
-        }
-    }
-
-    class SolidityStorageImpl implements SolidityStorage {
-        byte[] contractAddr;
-
-        public SolidityStorageImpl(byte[] contractAddr) {
-            this.contractAddr = contractAddr;
-        }
-
-        @Override
-        public byte[] getStorageSlot(long slot) {
-            return getStorageSlot(new DataWord(slot).getData());
-        }
-
-        @Override
-        public byte[] getStorageSlot(byte[] slot) {
-            DataWord ret = getBlockchain().getRepository().getContractDetails(contractAddr).get(new DataWord(slot));
-            return ret.getData();
-        }
-    }
-
 }
