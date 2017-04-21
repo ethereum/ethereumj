@@ -575,7 +575,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-
     class SolidityStorageImpl implements SolidityStorage {
         byte[] contractAddr;
 
@@ -595,39 +594,4 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
     }
 
-     class SlowHashMapDB extends HashMapDB<byte[]> {
-        private void sleep(int cnt) {
-            totalDbHits += cnt;
-            if (dbDelay == 0) return;
-            try {
-                Thread.sleep(dbDelay * cnt);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public synchronized void delete(byte[] arg0) throws DBException {
-            super.delete(arg0);
-            sleep(1);
-        }
-
-        @Override
-        public synchronized byte[] get(byte[] arg0) throws DBException {
-            sleep(1);
-            return super.get(arg0);
-        }
-
-        @Override
-        public synchronized void put(byte[] key, byte[] value) throws DBException {
-            sleep(1);
-            super.put(key, value);
-        }
-
-        @Override
-        public synchronized void updateBatch(Map<byte[], byte[]> rows) {
-            sleep(rows.size() / 2);
-            super.updateBatch(rows);
-        }
-    }
 }
