@@ -1,7 +1,6 @@
 package org.ethereum.config;
 
 import com.typesafe.config.*;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
@@ -16,6 +15,9 @@ import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
@@ -46,6 +48,9 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @author Roman Mandeleil
  * @since 22.05.2014
  */
+
+@Configuration
+@PropertySource("classpath:config.properties")
 public class SystemProperties {
     private static Logger logger = LoggerFactory.getLogger("general");
 
@@ -58,10 +63,12 @@ public class SystemProperties {
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
     private final static String DEFAULT_BLOCKS_LOADER = "";
-
     private static SystemProperties CONFIG;
     private static boolean useOnlySpringConfig = false;
     private String generatedNodePrivateKey;
+
+    @Value("${blockchain.database.dir}")
+    private static String blockchainDatabaseDirConfigProperties;
 
     /**
      * Returns the static config instance. If the config is passed
@@ -89,6 +96,16 @@ public class SystemProperties {
 
     static boolean isUseOnlySpringConfig() {
         return useOnlySpringConfig;
+    }
+
+    protected  static boolean setDatabaseDirFromConfigProperties() {
+        if (blockchainDatabaseDirConfigProperties != null) {
+            CONFIG.databaseDir = blockchainDatabaseDirConfigProperties;
+            return true;
+        }
+        else
+            CONFIG.databaseDir = System.getProperty("user.home");
+        return false;
     }
 
     /**
@@ -148,18 +165,22 @@ public class SystemProperties {
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
             String res = System.getProperty("ethereumj.conf.res");
+
             Config cmdLineConfigRes = res != null ? ConfigFactory.parseResources(res) : ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.res resource '" + res + "'");
             Config userConfig = ConfigFactory.parseResources("user.conf");
             logger.info("Config (" + (userConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from resource 'user.conf'");
             File userDirFile = new File(System.getProperty("user.dir"), "/config/ethereumj.conf");
+
             Config userDirConfig = ConfigFactory.parseFile(userDirFile);
             logger.info("Config (" + (userDirConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from file '" + userDirFile + "'");
             Config testConfig = ConfigFactory.parseResources("test-ethereumj.conf");
             logger.info("Config (" + (testConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-ethereumj.conf'");
+
             Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
             logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
+
             Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
@@ -488,6 +509,7 @@ public class SystemProperties {
     }
 
     public void setDataBaseDir(String dataBaseDir) {
+        setDatabaseDirFromConfigProperties();
         this.databaseDir = dataBaseDir;
     }
 

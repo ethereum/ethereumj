@@ -169,6 +169,7 @@ class Initializer implements BeanPostProcessor {
         }
 
         private File getDatabaseVersionFile(SystemProperties config) {
+            SystemProperties.setDatabaseDirFromConfigProperties();
             return new File(config.databaseDir() + "/version.properties");
         }
     }
