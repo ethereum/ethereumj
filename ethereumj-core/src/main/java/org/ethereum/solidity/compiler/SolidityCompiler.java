@@ -47,7 +47,8 @@ public class SolidityCompiler {
         BIN("bin"),
         INTERFACE("interface"),
         ABI("abi"),
-        METADATA("metadata");
+        METADATA("metadata"), 
+        ASTJSON("ast-json");
 
         private String name;
 
