@@ -28,6 +28,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
+import static java.lang.Math.min;
+
 /**
  * Created by Anton Nashatyrev on 27.05.2016.
  */
@@ -68,7 +70,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
             List<HeadersRequest> ret = new ArrayList<>();
             int remaining = count;
             while(remaining > 0) {
-                int reqSize = Math.min(maxCount, remaining);
+                int reqSize = min(maxCount, remaining);
                 ret.add(new HeadersRequestImpl(start, reqSize, reverse));
                 remaining -= reqSize;
                 start = reverse ? start - reqSize : start + reqSize;
@@ -90,6 +92,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
         public long getStart() {
             return start;
         }
+
+        public long getEnd() { return getStart() + getCount(); }
 
         @Override
         public byte[] getHash() {
@@ -127,7 +131,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
             List<BlocksRequest> ret = new ArrayList<>();
             int start = 0;
             while(start < getBlockHeaders().size()) {
-                count = Math.min(getBlockHeaders().size() - start, count);
+                count = min(getBlockHeaders().size() - start, count);
                 ret.add(new BlocksRequestImpl(getBlockHeaders().subList(start, start + count)));
                 start += count;
             }
@@ -217,7 +221,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     private void putGenHeaders(long num, Map<ByteArrayWrapper, HeaderElement> genHeaders) {
-        minNum = Math.min(minNum, num);
+        minNum = min(minNum, num);
         maxNum = Math.max(maxNum, num);
         headers.put(num, genHeaders);
     }
@@ -284,7 +288,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     private boolean addHeader(BlockHeaderWrapper header) {
         long num = header.getNumber();
-        if (num <= darkZoneNum || num > maxNum + MAX_CHAIN_LEN * 2) {
+        if (num <= darkZoneNum || num > maxNum + MAX_CHAIN_LEN * 128) {
             // dropping too distant headers
             return false;
         }
@@ -309,30 +313,41 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
-        return Collections.singletonList(requestHeadersImpl(maxSize));
+    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests, int maxTotalHeaders) {
+        return requestHeadersImpl(maxSize, maxRequests, maxTotalHeaders);
     }
 
-    private HeadersRequest requestHeadersImpl(int count) {
-        long startNumber;
-        int headersCount;
-        boolean reverse = false;
+    private List<HeadersRequest> requestHeadersImpl(int count, int maxRequests, int maxTotHeaderCount) {
+        List<HeadersRequest> ret = new ArrayList<>();
 
-        if (!hasGaps()) {
-            startNumber = maxNum + 1;
-            if (endBlockNumber != null) {
-                headersCount = (int) Math.min(count, endBlockNumber - startNumber + 1);
-            } else {
-                headersCount = count;
-            }
-        } else {
+        long startNumber;
+        if (hasGaps()) {
             List<HeaderElement> longestChain = getLongestChain();
             startNumber = longestChain.get(longestChain.size() - 1).header.getNumber();
-            headersCount = MAX_CHAIN_LEN;
-            if (!rnd.nextBoolean()) reverse = true;
+            boolean reverse = rnd.nextBoolean();
+            ret.add(new HeadersRequestImpl(startNumber, MAX_CHAIN_LEN, reverse));
+            startNumber += reverse ? 1 : MAX_CHAIN_LEN;
+//            if (maxNum - startNumber > 2000) return ret;
+        } else {
+            startNumber = maxNum + 1;
         }
 
-        return new HeadersRequestImpl(startNumber, headersCount, reverse);
+        while (ret.size() <= maxRequests && getHeadersCount() <= maxTotHeaderCount) {
+            HeadersRequestImpl nextReq = getNextReq(startNumber, count);
+            if (nextReq.getEnd() > minNum + maxTotHeaderCount) break;
+            ret.add(nextReq);
+            startNumber = nextReq.getEnd();
+        }
+
+        return ret;
+    }
+
+    private HeadersRequestImpl getNextReq(long startFrom, int maxCount) {
+        while(headers.containsKey(startFrom)) startFrom++;
+        if (endBlockNumber != null && maxCount > endBlockNumber - startFrom + 1) {
+            maxCount = (int) (endBlockNumber - startFrom + 1);
+        }
+        return new HeadersRequestImpl(startFrom, maxCount, false);
     }
 
     @Override

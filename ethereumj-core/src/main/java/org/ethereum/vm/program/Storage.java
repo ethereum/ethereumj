@@ -107,6 +107,11 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
+    public byte[] getCodeHash(byte[] addr) {
+        return repository.getCodeHash(addr);
+    }
+
+    @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
         if (canListenTrace(addr)) programListener.onStoragePut(key, value);
         repository.addStorageRow(addr, key, value);
@@ -217,11 +222,6 @@ public class Storage implements Repository, ProgramListenerAware {
     @Override
     public Repository getSnapshotTo(byte[] root) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        throw new RuntimeException("Not supported");
     }
 
     @Override

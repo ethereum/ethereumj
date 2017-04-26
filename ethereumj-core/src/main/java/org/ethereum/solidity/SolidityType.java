@@ -61,6 +61,7 @@ public abstract class SolidityType {
         if ("address".equals(typeName)) return new AddressType();
         if ("string".equals(typeName)) return new StringType();
         if ("bytes".equals(typeName)) return new BytesType();
+        if ("function".equals(typeName)) return new FunctionType();
         if (typeName.startsWith("bytes")) return new Bytes32Type(typeName);
         throw new RuntimeException("Unknown type: " + typeName);
     }
@@ -421,4 +422,16 @@ public abstract class SolidityType {
         }
     }
 
+    public static class FunctionType extends Bytes32Type {
+        public FunctionType() {
+            super("function");
+        }
+
+        @Override
+        public byte[] encode(Object value) {
+            if (!(value instanceof byte[])) throw new RuntimeException("Expected byte[] value for FunctionType");
+            if (((byte[]) value).length != 24) throw new RuntimeException("Expected byte[24] for FunctionType");
+            return super.encode(ByteUtil.merge((byte[]) value, new byte[8]));
+        }
+    }
 }

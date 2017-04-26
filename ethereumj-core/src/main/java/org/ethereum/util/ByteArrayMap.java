@@ -94,11 +94,7 @@ public class ByteArrayMap<V> implements Map<byte[], V> {
 
     @Override
     public Set<Entry<byte[], V>> entrySet() {
-        Set<Entry<byte[], V>> ret = new HashSet<>();
-        for (Entry<ByteArrayWrapper, V> entry : delegate.entrySet()) {
-            ret.add(new AbstractMap.SimpleImmutableEntry<byte[], V>(entry.getKey().getData(), entry.getValue()));
-        }
-        return ret;
+        return new MapEntrySet(delegate.entrySet());
     }
 
     @Override
@@ -114,5 +110,97 @@ public class ByteArrayMap<V> implements Map<byte[], V> {
     @Override
     public String toString() {
         return delegate.toString();
+    }
+
+    private class MapEntrySet implements Set<Map.Entry<byte[], V>> {
+        private final Set<Map.Entry<ByteArrayWrapper, V>> delegate;
+
+        private MapEntrySet(Set<Entry<ByteArrayWrapper, V>> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public int size() {
+            return delegate.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return delegate.isEmpty();
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public Iterator<Entry<byte[], V>> iterator() {
+            final Iterator<Entry<ByteArrayWrapper, V>> it = delegate.iterator();
+            return new Iterator<Entry<byte[], V>>() {
+
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext();
+                }
+
+                @Override
+                public Entry<byte[], V> next() {
+                    Entry<ByteArrayWrapper, V> next = it.next();
+                    return new AbstractMap.SimpleImmutableEntry(next.getKey().getData(), next.getValue());
+                }
+
+                @Override
+                public void remove() {
+                    it.remove();
+                }
+            };
+        }
+
+        @Override
+        public Object[] toArray() {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public <T> T[] toArray(T[] a) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public boolean add(Entry<byte[], V> vEntry) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> c) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends Entry<byte[], V>> c) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            throw new RuntimeException("Not implemented");
+        }
+
+        @Override
+        public void clear() {
+            throw new RuntimeException("Not implemented");
+
+        }
     }
 }

@@ -133,7 +133,7 @@ public class StateTest {
         Trie<byte[]> trie = new TrieImpl();
         Genesis genesis = (Genesis)Genesis.getInstance();
         for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            trie.put(key.getData(), genesis.getPremine().get(key).getEncoded());
+            trie.put(key.getData(), genesis.getPremine().get(key).accountState.getEncoded());
         }
 
         return trie;

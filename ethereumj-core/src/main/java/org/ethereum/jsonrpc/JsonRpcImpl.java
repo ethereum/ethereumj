@@ -627,9 +627,10 @@ public class JsonRpcImpl implements JsonRpc {
         }
 
         try {
-            TransactionExecutor executor = commonConfig.transactionExecutor
+            TransactionExecutor executor = new TransactionExecutor
                     (tx, block.getCoinbase(), repository, blockStore,
                             programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                    .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
             executor.init();

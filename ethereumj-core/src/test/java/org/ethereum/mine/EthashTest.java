@@ -20,15 +20,13 @@ package org.ethereum.mine;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.TestUtils;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -44,12 +42,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class EthashTest {
     @BeforeClass
     public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
+        SystemProperties.getDefault().setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
     }
 
     @AfterClass

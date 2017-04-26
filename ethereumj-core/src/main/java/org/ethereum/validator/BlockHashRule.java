@@ -21,8 +21,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.util.FastByteComparisons;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
@@ -38,20 +36,17 @@ public class BlockHashRule extends BlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header) {
-        errors.clear();
-
-        List<Pair<Long, byte[]>> hashes = blockchainConfig.getConfigForBlock(header.getNumber()).blockHashConstraints();
-
-        for (Pair<Long, byte[]> hash : hashes) {
-            if (header.getNumber() == hash.getLeft() &&
-                    !FastByteComparisons.equal(header.getHash(), hash.getRight())) {
-                errors.add("Block " + header.getNumber() + " hash constraint violated. Expected:" +
-                        Hex.toHexString(hash.getRight()) + ", got: " + Hex.toHexString(header.getHash()));
-                return false;
+    public ValidationResult validate(BlockHeader header) {
+        List<Pair<Long, BlockHeaderValidator>> validators = blockchainConfig.getConfigForBlock(header.getNumber()).headerValidators();
+        for (Pair<Long, BlockHeaderValidator> pair : validators) {
+            if (header.getNumber() == pair.getLeft()) {
+                ValidationResult result = pair.getRight().validate(header);
+                if (!result.success) {
+                    return fault("Block " + header.getNumber() + " header constraint violated. " + result.error);
+                }
             }
         }
 
-        return true;
+        return Success;
     }
 }

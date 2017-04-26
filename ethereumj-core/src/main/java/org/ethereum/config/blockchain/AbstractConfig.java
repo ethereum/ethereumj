@@ -26,13 +26,14 @@ import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.Program;
 
 import java.math.BigInteger;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,6 +50,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     protected Constants constants;
     protected MinerIfc miner;
+    private List<Pair<Long, BlockHeaderValidator>> headerValidators = new ArrayList<>();
 
     public AbstractConfig() {
         this(new Constants());
@@ -120,9 +122,15 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     public void hardForkTransfers(Block block, Repository repo) {}
 
     @Override
-    public List<Pair<Long, byte[]>> blockHashConstraints() {
-        return Collections.emptyList();
+    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
+        return minerExtraData;
     }
+
+    @Override
+    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
+        return headerValidators;
+    }
+
 
     @Override
     public GasCost getGasCost() {
@@ -151,4 +159,10 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     public Integer getChainId() {
         return null;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
+
 }

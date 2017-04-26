@@ -61,6 +61,7 @@ public class Keccak256 extends KeccakCore {
 	 */
 	public Keccak256()
 	{
+		super("eth-keccak-256");
 	}
 
 	/** @see org.ethereum.crypto.cryptohash.Digest */
@@ -70,8 +71,21 @@ public class Keccak256 extends KeccakCore {
 	}
 
 	/** @see org.ethereum.crypto.cryptohash.Digest */
-	public int getDigestLength()
+	public int engineGetDigestLength()
 	{
 		return 32;
+	}
+
+	@Override
+	protected byte[] engineDigest() {
+		return null;
+	}
+
+	@Override
+	protected void engineUpdate(byte arg0) {
+	}
+
+	@Override
+	protected void engineUpdate(byte[] arg0, int arg1, int arg2) {
 	}
 }

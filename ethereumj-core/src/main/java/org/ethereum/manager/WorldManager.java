@@ -31,6 +31,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -168,18 +169,15 @@ public class WorldManager {
 
     public void loadBlockchain() {
 
-        if (!config.databaseReset())
+        if (!config.databaseReset() || config.databaseResetBlock() != 0)
             blockStore.load();
 
-        Block bestBlock = blockStore.getBestBlock();
-        if (bestBlock == null) {
+        if (blockStore.getBestBlock() == null) {
             logger.info("DB is empty - adding Genesis");
 
-            Genesis genesis = (Genesis)Genesis.getInstance(config);
-            for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-                repository.createAccount(key.getData());
-                repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-            }
+            Genesis genesis = Genesis.getInstance(config);
+            Genesis.populateRepository(repository, genesis);
+
 //            repository.commitBlock(genesis.getHeader());
             repository.commit();
 
@@ -196,13 +194,29 @@ public class WorldManager {
 
             if (!config.databaseReset() &&
                     !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
-                logger.error("*** DB is incorrect, 0 block in DB doesn't match genesis");
-                throw new RuntimeException("DB doesn't match genesis");
+                // fatal exit
+                Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
+            }
+
+            Block bestBlock = blockStore.getBestBlock();
+            if (config.databaseReset() && config.databaseResetBlock() > 0) {
+                if (config.databaseResetBlock() > bestBlock.getNumber()) {
+                    logger.error("*** Can't reset to block [{}] since block store is at block [{}].", config.databaseResetBlock(), bestBlock);
+                    throw new RuntimeException("Reset block ahead of block store.");
+                }
+                bestBlock = blockStore.getChainBlockByNumber(config.databaseResetBlock());
+
+                Repository snapshot = repository.getSnapshotTo(bestBlock.getStateRoot());
+                if (false) { // TODO: some way to tell if the snapshot hasn't been pruned
+                    logger.error("*** Could not reset database to block [{}] with stateRoot [{}], since state information is " +
+                            "unavailable.  It might have been pruned from the database.");
+                    throw new RuntimeException("State unavailable for reset block.");
+                }
             }
 
             blockchain.setBestBlock(bestBlock);
 
-            BigInteger totalDifficulty = blockStore.getTotalDifficulty();
+            BigInteger totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
             blockchain.setTotalDifficulty(totalDifficulty);
 
             logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",

@@ -19,6 +19,7 @@ package org.ethereum.datasource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Clue class between Source and BatchSource
@@ -48,7 +49,7 @@ public class BatchSourceWriter<Key, Value> extends AbstractChainedSource<Key, Va
     }
 
     @Override
-    public synchronized Value get(Key key) {
+    public Value get(Key key) {
         return getSource().get(key);
     }
 

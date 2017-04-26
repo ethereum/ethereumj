@@ -194,7 +194,7 @@ public class InternalTransaction extends Transaction {
                 ", nonce=" + toHexString(getNonce()) +
                 ", gasPrice=" + toHexString(getGasPrice()) +
                 ", gas=" + toHexString(getGasLimit()) +
-                ", receiveAddress=" + toHexString(getSender()) +
+                ", sendAddress=" + toHexString(getSender()) +
                 ", receiveAddress=" + toHexString(getReceiveAddress()) +
                 ", value=" + toHexString(getValue()) +
                 ", data=" + toHexString(getData()) +

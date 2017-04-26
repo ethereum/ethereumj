@@ -142,7 +142,7 @@ public class BlockTest {
     @Test
     public void testGenesisPremineData() {
         Genesis genesis = GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/olympic.json"));
-        Collection<AccountState> accounts = genesis.getPremine().values();
+        Collection<Genesis.PremineAccount> accounts = genesis.getPremine().values();
         assertTrue(accounts.size() == 12);
     }
 

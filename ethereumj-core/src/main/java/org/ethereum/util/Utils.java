@@ -74,6 +74,20 @@ public class Utils {
         return formatter.format(date);
     }
 
+    public static String longToTimePeriod(long msec) {
+        if (msec < 1000) return msec + "ms";
+        if (msec < 3000) return String.format("%.2f", msec / 1000d);
+        if (msec < 60 * 1000) return (msec / 1000) + "s";
+        long sec = msec / 1000;
+        if (sec < 5 * 60) return (sec / 60) +  "m" + (sec % 60) + "s";
+        long min = sec / 60;
+        if (min < 60) return min + "m";
+        long hour = min / 60;
+        if (min < 24 * 60) return hour + "h" + (min % 60) + "m";
+        long day = hour / 24;
+        return day + "d" + (day % 24) + "h";
+    }
+
     public static ImageIcon getImageIcon(String resource) {
         URL imageURL = ClassLoader.getSystemResource(resource);
         ImageIcon image = new ImageIcon(imageURL);
@@ -241,5 +255,20 @@ public class Utils {
         System.err.println(ANSI_RESET);
 
         throw new RuntimeException(message);
+    }
+
+    public static String sizeToStr(long size) {
+        if (size < 2 * (1L << 10)) return size + "b";
+        if (size < 2 * (1L << 20)) return String.format("%dKb", size / (1L << 10));
+        if (size < 2 * (1L << 30)) return String.format("%dMb", size / (1L << 20));
+        return String.format("%dGb", size / (1L << 30));
+    }
+
+    public static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

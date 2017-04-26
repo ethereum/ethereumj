@@ -22,6 +22,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.net.server.Channel;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -159,6 +160,16 @@ public class BlockBodiesDownloader extends BlockDownloader {
                 logger.info("FastSync: downloaded blocks. Last: " + blockWrappers.get(blockWrappers.size() - 1).getBlock().getShortDescr());
             }
         }
+    }
+
+    /**
+     * Download could block chain synchronization occupying all peers
+     * Prevents this by leaving one peer without work
+     * Fallbacks to any peer when low number of active peers available
+     */
+    @Override
+    Channel getAnyPeer() {
+        return syncPool.getActivePeersCount() > 2 ? syncPool.getNotLastIdle() : syncPool.getAnyIdle();
     }
 
     @Override

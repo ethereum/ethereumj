@@ -232,6 +232,40 @@ public class SyncPool {
         }
     }
 
+    class NodeSelector implements Functional.Predicate<NodeHandler> {
+        BigInteger lowerDifficulty;
+        Set<String> nodesInUse;
+
+        public NodeSelector(BigInteger lowerDifficulty) {
+            this.lowerDifficulty = lowerDifficulty;
+        }
+
+        public NodeSelector(BigInteger lowerDifficulty, Set<String> nodesInUse) {
+            this.lowerDifficulty = lowerDifficulty;
+            this.nodesInUse = nodesInUse;
+        }
+
+        @Override
+        public boolean test(NodeHandler handler) {
+            if (nodesInUse != null && nodesInUse.contains(handler.getNode().getHexId())) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().isPredefined()) return true;
+
+            if (nodesSelector != null && !nodesSelector.test(handler)) return false;
+
+            if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 &&
+                    handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().getReputation() < 100) return false;
+
+            return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
+        }
+    }
+
     private void fillUp() {
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         if(lackSize <= 0) return;
@@ -239,37 +273,10 @@ public class SyncPool {
         final Set<String> nodesInUse = nodesInUse();
         nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
-        class NodeSelector implements Functional.Predicate<NodeHandler> {
-            BigInteger lowerDifficulty;
-
-            public NodeSelector(BigInteger lowerDifficulty) {
-                this.lowerDifficulty = lowerDifficulty;
-            }
-
-            @Override
-            public boolean test(NodeHandler handler) {
-                if (nodesInUse.contains(handler.getNode().getHexId())) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().isPredefined()) return true;
-
-                if (nodesSelector != null && !nodesSelector.test(handler)) return false;
-
-                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().getReputation() < 100) return false;
-
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
-            }
-        }
-
         List<NodeHandler> newNodes;
-        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty), lackSize);
+        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty, nodesInUse), lackSize);
         if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO), lackSize);
+            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO, nodesInUse), lackSize);
         }
 
         if (logger.isTraceEnabled()) {
@@ -282,7 +289,16 @@ public class SyncPool {
     }
 
     private synchronized void prepareActive() {
-        List<Channel> active = new ArrayList<>(channelManager.getActivePeers());
+        List<Channel> managerActive = new ArrayList<>(channelManager.getActivePeers());
+
+        // Filtering out with nodeSelector because server-connected nodes were not tested
+        NodeSelector nodeSelector = new NodeSelector(BigInteger.ZERO);
+        List<Channel> active = new ArrayList<>();
+        for (Channel channel : managerActive) {
+            if (nodeSelector.test(nodeManager.getNodeHandler(channel.getNode()))) {
+                active.add(channel);
+            }
+        }
 
         if (active.isEmpty()) return;
 

@@ -59,8 +59,11 @@ public interface SyncQueueIfc {
      * Returns wanted headers requests
      * @param maxSize Maximum number of headers in a singles request
      * @param maxRequests Maximum number of requests
+     * @param maxTotalHeaders The total maximum of cached headers in the implementation
+     * @return null if the end of headers reached (e.g. when download is limited with a block number)
+     *   empty list if no headers for now (e.g. max allowed number of cached headers reached)
      */
-    List<HeadersRequest> requestHeaders(int maxSize, int maxRequests);
+    List<HeadersRequest> requestHeaders(int maxSize, int maxRequests, int maxTotalHeaders);
 
     /**
      * Adds received headers.

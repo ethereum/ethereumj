@@ -24,6 +24,7 @@ import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.PruneManager;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -55,12 +56,7 @@ public class MineBlock {
 
     @BeforeClass
     public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
+        SystemProperties.getDefault().setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
     }
 
     @AfterClass

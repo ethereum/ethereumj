@@ -435,10 +435,7 @@ public class RepositoryTest {
         Repository track = repository.startTracking();
 
         Genesis genesis = (Genesis)Genesis.getInstance();
-        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            repository.createAccount(key.getData());
-            repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-        }
+        Genesis.populateRepository(track, genesis);
 
         track.commit();
 

@@ -92,8 +92,8 @@ public class FastSyncManager {
     private SyncManager syncManager;
 
     @Autowired
-    @Qualifier("stateDS")
-    DbSource<byte[]> stateDS;
+    @Qualifier("blockchainDB")
+    DbSource<byte[]> blockchainDB;
 
     @Autowired
     private StateSource stateSource;
@@ -215,6 +215,10 @@ public class FastSyncManager {
         CODE
     }
 
+    int stateNodesCnt = 0;
+    int codeNodesCnt = 0;
+    int storageNodesCnt = 0;
+
     private class TrieNodeRequest {
         TrieNodeType type;
         byte[] nodeHash;
@@ -224,6 +228,12 @@ public class FastSyncManager {
         TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
             this.type = type;
             this.nodeHash = nodeHash;
+
+            switch (type) {
+                case STATE: stateNodesCnt++; break;
+                case CODE: codeNodesCnt++; break;
+                case STORAGE: storageNodesCnt++; break;
+            }
         }
 
         List<TrieNodeRequest> createChildRequests() {
@@ -465,14 +475,14 @@ public class FastSyncManager {
 
     private void setSyncStage(EthereumListener.SyncState stage) {
         if (stage == null) {
-            stateDS.delete(FASTSYNC_DB_KEY_SYNC_STAGE);
+            blockchainDB.delete(FASTSYNC_DB_KEY_SYNC_STAGE);
         } else {
-            stateDS.put(FASTSYNC_DB_KEY_SYNC_STAGE, new byte[]{(byte) stage.ordinal()});
+            blockchainDB.put(FASTSYNC_DB_KEY_SYNC_STAGE, new byte[]{(byte) stage.ordinal()});
         }
     }
 
     private EthereumListener.SyncState getSyncStage() {
-        byte[] bytes = stateDS.get(FASTSYNC_DB_KEY_SYNC_STAGE);
+        byte[] bytes = blockchainDB.get(FASTSYNC_DB_KEY_SYNC_STAGE);
         if (bytes == null) return UNSECURE;
         return EthereumListener.SyncState.values()[bytes[0]];
     }
@@ -486,14 +496,9 @@ public class FastSyncManager {
 
         setSyncStage(UNSECURE);
 
-        // this bloom takes ~ 25Mb of Heap
-        stateSource.getBloomedSource().startBlooming(new BloomFilter(0.01, 20_000_000));
-
         retrieveLoop();
 
-        stateSource.getBloomedSource().stopBlooming();
-
-        logger.info("FastSync: state trie download complete!");
+        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " +storageNodesCnt + ", code: " +codeNodesCnt + ")");
         last = 0;
         logStat();
 
@@ -517,13 +522,13 @@ public class FastSyncManager {
         syncManager.initRegularSync(UNSECURE);
         logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
 
-        try {
-            syncDoneLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            syncDoneLatch.await();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
 
-        stateDS.put(FASTSYNC_DB_KEY_PIVOT, pivot.getEncoded());
+        blockchainDB.put(FASTSYNC_DB_KEY_PIVOT, pivot.getEncoded());
         dbFlushManager.commit();
         dbFlushManager.flush();
 
@@ -531,12 +536,12 @@ public class FastSyncManager {
     }
 
     private void syncSecure() {
-        setSyncStage(EthereumListener.SyncState.SECURE);
-        pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
         headersDownloader.init(pivot.getHash());
+        setSyncStage(EthereumListener.SyncState.SECURE);
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
@@ -550,12 +555,12 @@ public class FastSyncManager {
     }
 
     private void syncBlocksReceipts() {
-        setSyncStage(EthereumListener.SyncState.COMPLETE);
-        pivot = new BlockHeader(stateDS.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
 
         blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
+        setSyncStage(EthereumListener.SyncState.COMPLETE);
         blockBodiesDownloader.startImporting();
         blockBodiesDownloader.waitForStop();
 
@@ -578,7 +583,7 @@ public class FastSyncManager {
             logger.info("FastSync: totDifficulties updated: bestBlock: " + bestBlock.getShortDescr() + ", totDiff: " + totalDifficulty);
         }
         setSyncStage(null);
-        stateDS.delete(FASTSYNC_DB_KEY_PIVOT);
+        blockchainDB.delete(FASTSYNC_DB_KEY_PIVOT);
         dbFlushManager.commit();
         dbFlushManager.flush();
     }
@@ -827,7 +832,7 @@ public class FastSyncManager {
             fastSyncInProgress = false;
             dbWriterThread.interrupt();
             dbFlushManager.commit();
-            dbFlushManager.flush();
+            dbFlushManager.flushSync();
             fastSyncThread.join(10 * 1000);
             dbWriterThread.join(10 * 1000);
         } catch (Exception e) {

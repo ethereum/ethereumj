@@ -155,6 +155,10 @@ class BasicNode implements Runnable {
         logger.info("Monitoring new blocks in real-time...");
     }
 
+    public void onSyncDoneImpl(EthereumListener.SyncState state) {
+        logger.info("onSyncDone: " + state);
+    }
+
     protected Map<Node, StatusMessage> ethNodes = new Hashtable<>();
     protected List<Node> syncPeers = new Vector<>();
 
@@ -171,6 +175,7 @@ class BasicNode implements Runnable {
         public void onSyncDone(SyncState state) {
             syncState = state;
             if (state.equals(SyncState.COMPLETE)) syncComplete = true;
+            onSyncDoneImpl(state);
         }
 
         @Override

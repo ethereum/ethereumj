@@ -1,20 +1,3 @@
-/*
- * Copyright (c) [2016] [ <ether.camp> ]
- * This file is part of the ethereumJ library.
- *
- * The ethereumJ library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The ethereumJ library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
- */
 package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
@@ -53,12 +36,7 @@ public class ImportLightTest {
 
     @BeforeClass
     public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
+        SystemProperties.getDefault().setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
     }
 
     @AfterClass
@@ -858,14 +836,42 @@ public class ImportLightTest {
                 ByteUtil.bigIntegerToBytes(signature.r, 32),
                 ByteUtil.bigIntegerToBytes(signature.s, 32));
 
-        Assert.assertArrayEquals(key.getAddress(), (byte[])ret[0]);
+        Assert.assertArrayEquals(key.getAddress(), (byte[]) ret[0]);
 
         ret = a.callConstFunction("f", hash,
                 ByteUtil.merge(new byte[] {1}, new byte[30], new byte[]{signature.v}),
                 ByteUtil.bigIntegerToBytes(signature.r, 32),
                 ByteUtil.bigIntegerToBytes(signature.s, 32));
 
-        Assert.assertArrayEquals(new byte[20], (byte[])ret[0]);
+        Assert.assertArrayEquals(new byte[20], (byte[]) ret[0]);
+    }
+
+    @Test
+    public void functionTypeTest() throws IOException, InterruptedException {
+        String contractA =
+                "contract A {" +
+                        "  int public res;" +
+                        "  function calc(int b, function (int a) external returns (int) f) external returns (int) {" +
+                        "    return f(b);" +
+                        "  }" +
+                        "  function fInc(int a) external returns (int) { return a + 1;}" +
+                        "  function fDec(int a) external returns (int) { return a - 1;}" +
+                        "  function test() {" +
+                        "    res = this.calc(111, this.fInc);" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain();
+        SolidityContract a = bc.submitNewContract(contractA);
+        bc.createBlock();
+        a.callFunction("test");
+        bc.createBlock();
+        Assert.assertEquals(a.callConstFunction("res")[0], BigInteger.valueOf(112));
+
+        BigInteger r1 = (BigInteger) a.callConstFunction("calc", 222, a.getFunction("fInc"))[0];
+        Assert.assertEquals(223, r1.intValue());
+        BigInteger r2 = (BigInteger) a.callConstFunction("calc", 222, a.getFunction("fDec"))[0];
+        Assert.assertEquals(221, r2.intValue());
     }
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
@@ -890,10 +896,7 @@ public class ImportLightTest {
         blockchain.setPendingState(pendingState);
 
         Repository track = repository.startTracking();
-        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            track.createAccount(key.getData());
-            track.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-        }
+        Genesis.populateRepository(track, genesis);
 
         track.commit();
         repository.commit();

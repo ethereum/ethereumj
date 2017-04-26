@@ -14,29 +14,23 @@ http://ethereumj.io
 
 # Running EthereumJ
 
-##### Adding as maven artifact to your project: 
+##### Adding as a dependency to your Maven project: 
+
 ```
-   <repositories>
-     <repository>
-       <id>oss.jfrog.org</id>
-       <name>Repository from Bintray</name>
-       <url>http://dl.bintray.com/ethereum/maven</url>
-     </repository>
-   </repositories>
- 
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.4.2-RELEASE</version>
+     <version>1.4.1-RELEASE</version>
    </dependency>
 ```
 
-or gradle: 
+##### or your Gradle project: 
+
 ```
    repositories {
-       maven {url "http://dl.bintray.com/ethereum/maven"}
+       mavenCentral()
    }
-   compile ("org.ethereum:ethereumj-core:1.4.+")
+   compile "org.ethereum:ethereumj-core:1.4.+"
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
@@ -96,5 +90,5 @@ Note that don’t need to put all the options to your custom config, just those 
 Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj)
 
 # License
-ethereumj is released under the [LGPL-V3 license](LICENSE).
+ethereumj is released under the [MIT license](LICENSE).
 

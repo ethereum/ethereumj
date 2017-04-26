@@ -1,0 +1,38 @@
+{
+  "alloc"      : {
+    "dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6": {
+      "balance": "1606938044258990275541962092341162602522202993782792835301376"
+    },
+    "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b": {
+      "balance" : "0x09184e72a000",
+      "code"    : "0x00ff00"
+    },
+    "cd2a3d9f938e13cd947ec05abc7fe734df8dd826": {
+      "balance": "0x09184e72a000",
+      "nonce"   : "0xff",
+      "code"    : "00ff00",
+      "storage" : {
+        "0x00"  : "0x02391d38c9b4f03e9225ae5b28230284fa397a0a"
+      }
+    }
+  },
+  "unknownProp": "undefined",
+  "receiptTrie": "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+  "uncleHash": "1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+  "coinbase"   : "0x0000000000000000000000000000000000000000",
+  "difficulty" : "0x20000",
+  "extraData"  : "",
+  "gasLimit"   : "0x2fefd8",
+  "nonce"      : "0x0000000000000042",
+  "mixHash"    : "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "timestamp"  : "0x00",
+  "config": {
+    "homesteadBlock": 2000,
+    "daoForkBlock": 2000,
+    "daoForkSupport": true,
+    "eip150Block": 2000,
+    "eip158Block": 2000,
+    "eip155Block": 2000
+  }
+}

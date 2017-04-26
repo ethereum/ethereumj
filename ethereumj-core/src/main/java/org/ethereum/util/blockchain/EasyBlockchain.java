@@ -19,6 +19,7 @@ package org.ethereum.util.blockchain;
 
 import org.ethereum.core.Blockchain;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
 
 import java.math.BigInteger;
 
@@ -66,6 +67,11 @@ public interface EasyBlockchain {
      * The contract name is specified when the soliditySrc has more than one contract
      */
     SolidityContract submitNewContractFromJson(String json, String contractName, Object... constructorArgs);
+
+    /**
+     * Creates and sends the transaction with the Solidity contract creation code from the contractMetaData.
+     */
+	SolidityContract submitNewContract(ContractMetadata contractMetaData, Object... constructorArgs);
 
     /**
      * Creates an interface to the Solidity contract already existing on the blockchain.

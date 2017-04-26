@@ -29,6 +29,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.Utils;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
@@ -107,8 +108,13 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public List<Pair<Long, byte[]>> blockHashConstraints() {
-        return parent.blockHashConstraints();
+    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
+        return parent.getExtraData(minerExtraData, blockNumber);
+    }
+
+    @Override
+    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
+        return parent.headerValidators();
     }
 
     @Override

@@ -39,6 +39,7 @@ public class ReadWriteCache<Key, Value>
         super(src);
         add(writeCache = new WriteCache<>(src, cacheType));
         add(readCache = new ReadCache<>(writeCache));
+        readCache.setFlushSource(true);
     }
 
     @Override
@@ -46,8 +47,13 @@ public class ReadWriteCache<Key, Value>
         return writeCache.getModified();
     }
 
-    protected synchronized Value getCached(Key key) {
-        Value v = readCache.getCached(key);
+    @Override
+    public boolean hasModified() {
+        return writeCache.hasModified();
+    }
+
+    protected synchronized AbstractCachedSource.Entry<Value> getCached(Key key) {
+        AbstractCachedSource.Entry<Value> v = readCache.getCached(key);
         if (v == null) {
             v = writeCache.getCached(key);
         }
@@ -64,6 +70,7 @@ public class ReadWriteCache<Key, Value>
             super(src);
             add(this.writeCache = new WriteCache.BytesKey<>(src, cacheType));
             add(this.readCache = new ReadCache.BytesKey<>(writeCache));
+            readCache.setFlushSource(true);
         }
     }
 }

@@ -176,7 +176,7 @@ public class FrameCodec {
             updateMac(ingressMac, headBuffer, 0, headBuffer, 16, false);
 
             dec.processBytes(headBuffer, 0, 16, headBuffer, 0);
-            totalBodySize = headBuffer[0];
+            totalBodySize = headBuffer[0] & 0xFF;
             totalBodySize = (totalBodySize << 8) + (headBuffer[1] & 0xFF);
             totalBodySize = (totalBodySize << 8) + (headBuffer[2] & 0xFF);
 

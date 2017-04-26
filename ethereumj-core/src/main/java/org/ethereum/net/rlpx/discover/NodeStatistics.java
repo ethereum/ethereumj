@@ -23,18 +23,11 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Statter;
 import org.ethereum.util.ByteUtil;
-import org.mapdb.Serializer;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 /**
@@ -59,29 +52,11 @@ public class NodeStatistics {
         public String toString() {return count.toString();}
     }
 
-    static class Persistent  implements Serializable {
-        private static final long serialVersionUID = -1246930309060559921L;
-        static final Serializer<Persistent> MapDBSerializer = new Serializer<Persistent>() {
-            @Override
-            public void serialize(DataOutput out, Persistent value) throws IOException {
-                out.writeInt(value.reputation);
-            }
-
-            @Override
-            public Persistent deserialize(DataInput in, int available) throws IOException {
-                Persistent persistent = new Persistent();
-                persistent.reputation = in.readInt();
-                return persistent;
-            }
-        };
-        int reputation;
-    }
-
     private final Node node;
 
     private boolean isPredefined = false;
 
-    private int savedReputation = 0;
+    private int persistedReputation = 0;
 
     // discovery stat
     public final StatHandler discoverOutPing = new StatHandler();
@@ -167,7 +142,7 @@ public class NodeStatistics {
     }
 
     public int getReputation() {
-        return isReputationPenalized() ? 0 : savedReputation / 2 + getSessionReputation();
+        return isReputationPenalized() ? 0 : persistedReputation / 2 + getSessionReputation();
     }
 
     private boolean isReputationPenalized() {
@@ -245,19 +220,17 @@ public class NodeStatistics {
         return "ethj.discover.nodes." + node.getHost() + ":" + node.getPort();
     }
 
-    Persistent getPersistent() {
-        Persistent persistent = new Persistent();
-        persistent.reputation = isReputationPenalized() ? 0 : (savedReputation + getSessionFairReputation()) / 2;
-        return persistent;
+    public int getPersistedReputation() {
+        return isReputationPenalized() ? 0 : (persistedReputation + getSessionFairReputation()) / 2;
     }
 
-    void setPersistedData(Persistent persistedData) {
-        savedReputation = persistedData.reputation;
+    public void setPersistedReputation(int persistedReputation) {
+        this.persistedReputation = persistedReputation;
     }
 
     @Override
     public String toString() {
-        return "NodeStat[reput: " + getReputation() + "(" + savedReputation + "), discover: " +
+        return "NodeStat[reput: " + getReputation() + "(" + persistedReputation + "), discover: " +
                 discoverInPong + "/" + discoverOutPing + " " +
                 discoverOutPong + "/" + discoverInPing + " " +
                 discoverInNeighbours + "/" + discoverOutFind + " " +

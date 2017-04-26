@@ -86,6 +86,11 @@ public class CreateContractSample extends TestNetSample {
         logger.info("Sending contract to net and waiting for inclusion");
         TransactionReceipt receipt = sendTxAndWait(new byte[0], Hex.decode(metadata.bin));
 
+        if (!receipt.isSuccessful()) {
+            logger.error("Some troubles creating a contract: " + receipt.getError());
+            return;
+        }
+
         byte[] contractAddress = receipt.getTransaction().getContractAddress();
         logger.info("Contract created: " + Hex.toHexString(contractAddress));
 
@@ -94,6 +99,10 @@ public class CreateContractSample extends TestNetSample {
         CallTransaction.Function inc = contract.getByName("inc");
         byte[] functionCallBytes = inc.encode(777);
         TransactionReceipt receipt1 = sendTxAndWait(contractAddress, functionCallBytes);
+        if (!receipt1.isSuccessful()) {
+            logger.error("Some troubles invoking the contract: " + receipt.getError());
+            return;
+        }
         logger.info("Contract modified!");
 
         ProgramResult r = ethereum.callConstantFunction(Hex.toHexString(contractAddress),
@@ -109,7 +118,7 @@ public class CreateContractSample extends TestNetSample {
                 ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
                 ByteUtil.longToBytesNoLeadZeroes(3_000_000),
                 receiveAddress,
-                ByteUtil.longToBytesNoLeadZeroes(1),
+                ByteUtil.longToBytesNoLeadZeroes(0),
                 data,
                 ethereum.getChainIdForNextBlock());
         tx.sign(ECKey.fromPrivate(senderPrivateKey));

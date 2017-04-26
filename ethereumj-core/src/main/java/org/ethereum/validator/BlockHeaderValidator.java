@@ -19,6 +19,7 @@ package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,17 +37,18 @@ public class BlockHeaderValidator extends BlockHeaderRule {
         this.rules = rules;
     }
 
-    @Override
-    public boolean validate(BlockHeader header) {
-        errors.clear();
+    public BlockHeaderValidator(BlockHeaderRule ...rules) {
+        this.rules = Arrays.asList(rules);
+    }
 
+    @Override
+    public ValidationResult validate(BlockHeader header) {
         for (BlockHeaderRule rule : rules) {
-            if (!rule.validate(header)) {
-                errors.addAll(rule.getErrors());
-                return false;
+            ValidationResult result = rule.validate(header);
+            if (!result.success) {
+                return result;
             }
         }
-
-        return true;
+        return Success;
     }
 }

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
@@ -81,10 +82,15 @@ public interface BlockchainConfig {
     void hardForkTransfers(Block block, Repository repo);
 
     /**
-     * Hardcode the block hashes. I.e. if the block #1920000 should have the hash 0x1111
-     * the this method should return [{1920000, 0x1111}]
+     * DAO hard fork marker
      */
-    List<Pair<Long, byte[]>> blockHashConstraints();
+    byte[] getExtraData(byte[] minerExtraData, long blockNumber);
+
+    /**
+     * Fork related validators. Ensure that connected peer operates on the same fork with us
+     * For example: DAO config will have validator that checks presence of extra data in specific block
+     */
+    List<Pair<Long, BlockHeaderValidator>> headerValidators();
 
     /**
      * EVM operations costs

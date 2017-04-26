@@ -91,6 +91,7 @@ public class Program {
     private ProgramResult result = new ProgramResult();
     private ProgramTrace trace = new ProgramTrace();
 
+    private byte[] codeHash;
     private byte[] ops;
     private int pc;
     private byte lastOp;
@@ -98,9 +99,8 @@ public class Program {
     private boolean stopped;
     private ByteArraySet touchedAccounts = new ByteArraySet();
 
-    private Set<Integer> jumpdest = new HashSet<>();
+    private ProgramPrecompile programPrecompile;
 
-    @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
     private final SystemProperties config;
@@ -116,10 +116,15 @@ public class Program {
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+        this(null, ops, programInvoke, transaction, config);
+    }
+
+    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
         this.config = config;
         this.invoke = programInvoke;
         this.transaction = transaction;
 
+        this.codeHash = codeHash == null || FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, codeHash) ? null : codeHash;
         this.ops = nullToEmpty(ops);
 
         traceListener = new ProgramTraceListener(config.vmTrace());
@@ -128,8 +133,27 @@ public class Program {
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
+    }
 
-        precompile();
+    public ProgramPrecompile getProgramPrecompile() {
+        if (programPrecompile == null) {
+            if (codeHash != null && commonConfig.precompileSource() != null) {
+                programPrecompile = commonConfig.precompileSource().get(codeHash);
+            }
+            if (programPrecompile == null) {
+                programPrecompile = ProgramPrecompile.compile(ops);
+
+                if (codeHash != null && commonConfig.precompileSource() != null) {
+                    commonConfig.precompileSource().put(codeHash, programPrecompile);
+                }
+            }
+        }
+        return programPrecompile;
+    }
+
+    public Program withCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+        return this;
     }
 
     public int getCallDeep() {
@@ -438,8 +462,8 @@ public class Program {
         ProgramResult result = ProgramResult.empty();
         if (isNotEmpty(programCode)) {
 
-            VM vm = commonConfig.vm();
-            Program program = commonConfig.program(programCode, programInvoke, internalTx);
+            VM vm = new VM(config);
+            Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 
@@ -562,8 +586,8 @@ public class Program {
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            VM vm = commonConfig.vm();
-            Program program = commonConfig.program(programCode, programInvoke, internalTx);
+            VM vm = new VM(config);
+            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 
@@ -670,7 +694,7 @@ public class Program {
 
     public DataWord getBlockHash(int index) {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
-                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())) :
+                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())).clone() :
                 DataWord.ZERO.clone();
     }
 
@@ -870,20 +894,6 @@ public class Program {
         return trace;
     }
 
-    public void precompile() {
-        for (int i = 0; i < ops.length; ++i) {
-
-            OpCode op = OpCode.code(ops[i]);
-            if (op == null) continue;
-
-            if (op.equals(OpCode.JUMPDEST)) jumpdest.add(i);
-
-            if (op.asInt() >= OpCode.PUSH1.asInt() && op.asInt() <= OpCode.PUSH32.asInt()) {
-                i += op.asInt() - OpCode.PUSH1.asInt() + 1;
-            }
-        }
-    }
-
     static String formatBinData(byte[] binData, int startPC) {
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < binData.length; i += 16) {
@@ -1068,7 +1078,7 @@ public class Program {
             throw Program.Exception.badJumpDestination(-1);
         }
         int ret = nextPC.intValue();
-        if (!jumpdest.contains(ret)) {
+        if (!getProgramPrecompile().hasJumpDest(ret)) {
             throw Program.Exception.badJumpDestination(ret);
         }
         return ret;

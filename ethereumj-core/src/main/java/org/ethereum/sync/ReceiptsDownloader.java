@@ -155,7 +155,7 @@ public class ReceiptsDownloader {
                     toDownload = getToDownload(100, 20);
                 }
 
-                Channel idle = syncPool.getAnyIdle();
+                Channel idle = getAnyPeer();
                 if (idle != null) {
                     final List<byte[]> list = toDownload.remove(0);
                     ListenableFuture<List<List<TransactionReceipt>>> future =
@@ -183,6 +183,15 @@ public class ReceiptsDownloader {
                 logger.warn("Unexpected during receipts downloading", e);
             }
         }
+    }
+
+    /**
+     * Download could block chain synchronization occupying all peers
+     * Prevents this by leaving one peer without work
+     * Fallbacks to any peer when low number of active peers available
+     */
+    Channel getAnyPeer() {
+        return syncPool.getActivePeersCount() > 2 ? syncPool.getNotLastIdle() : syncPool.getAnyIdle();
     }
 
     public int getDownloadedBlocksCount() {

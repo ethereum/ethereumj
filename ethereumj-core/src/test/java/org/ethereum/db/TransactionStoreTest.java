@@ -40,19 +40,9 @@ import java.util.Arrays;
  */
 public class TransactionStoreTest {
 
-    @BeforeClass
-    public static void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
-    }
-
     @AfterClass
     public static void cleanup() {
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.resetToDefault();
     }
 
     @Test

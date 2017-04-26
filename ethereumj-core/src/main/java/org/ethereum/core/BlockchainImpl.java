@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
@@ -28,10 +29,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
+import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -56,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.*;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -480,16 +479,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+        final long blockNumber = parent.getNumber() + 1;
+
+        final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
+
         Block block = new Block(parent.getHash(),
                 EMPTY_LIST_HASH, // uncleHash
                 minerCoinbase,
                 new byte[0], // log bloom - from tx receipts
                 new byte[0], // difficulty computed right after block creation
-                parent.getNumber() + 1,
+                blockNumber,
                 parent.getGasLimit(), // (add to config ?)
                 0,  // gas used - computed after running all transactions
                 time,  // block time
-                minerExtraData,  // extra data
+                extraData,  // extra data
                 new byte[0],  // mixHash (to mine)
                 new byte[0],  // nonce   (to mine)
                 new byte[0],  // receiptsRoot - computed after running all transactions
@@ -550,7 +553,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + bestBlock.getNumber());
-            dbFlushManager.flush();
+            dbFlushManager.flushSync();
             System.exit(-1);
         }
 
@@ -578,31 +581,23 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
-        String receiptHash = Hex.toHexString(block.getReceiptsRoot());
-        String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
 
-        if (!receiptHash.equals(receiptListHash)) {
-            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
+        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
             logger.warn("Calculated receipts: " + receipts);
             repo.rollback();
             summary = null;
         }
 
-        String logBloomHash = Hex.toHexString(block.getLogBloom());
-        String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
-
-        if (!logBloomHash.equals(logBloomListHash)) {
-            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
+        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
             repo.rollback();
             summary = null;
         }
 
-        String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-        String worldStateRootHash = Hex.toHexString(repo.getRoot());
+        if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
 
-        if (!blockStateRootHash.equals(worldStateRootHash)) {
-
-            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(repo.getRoot()));
             stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
 
 //            track.rollback();
@@ -877,8 +872,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = commonConfig.transactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed);
+            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
+                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
+                    .withCommonConfig(commonConfig);
 
             executor.init();
             executor.execute();
@@ -888,7 +884,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             totalGasUsed += executor.getGasUsed();
 
             txTrack.commit();
-            TransactionReceipt receipt = executor.getReceipt();
+            final TransactionReceipt receipt = executor.getReceipt();
+
             receipt.setPostTxState(track.getRoot());
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
@@ -910,8 +907,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         Map<byte[], BigInteger> rewards = addReward(track, block, summaries);
-
-//        track.commit();
 
         stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
                 block.getNumber(),

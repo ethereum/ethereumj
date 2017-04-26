@@ -203,7 +203,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         // FIXME: clone is not working now !!!
         // FIXME: should be fixed
 
-        storageTrie.getRoot();
+//        storageTrie.getRoot();
 
         return new ContractDetailsImpl(address, null, getCodes());
     }
@@ -211,7 +211,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Override
     public ContractDetails getSnapshotTo(byte[] hash){
 
-        Source<byte[], Value> cache = this.storageTrie.getCache();
+        Source<byte[], byte[]> cache = this.storageTrie.getCache();
 
         SecureTrie snapStorage = wrap(hash).equals(wrap(EMPTY_TRIE_HASH)) ?
             new SecureTrie(cache, "".getBytes()):

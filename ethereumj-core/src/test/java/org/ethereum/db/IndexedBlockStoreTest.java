@@ -54,6 +54,11 @@ public class IndexedBlockStoreTest {
     private List<Block> blocks = new ArrayList<>();
     private BigInteger cumDifficulty = ZERO;
 
+    @AfterClass
+    public static void cleanup() {
+        SystemProperties.resetToDefault();
+    }
+
     @Before
     public void setup() throws URISyntaxException, IOException {
 
@@ -83,20 +88,7 @@ public class IndexedBlockStoreTest {
 
         logger.info("total difficulty: {}", cumDifficulty);
         logger.info("total blocks loaded: {}", blocks.size());
-
-        SystemProperties.getDefault().setBlockchainConfig(new FrontierConfig(new FrontierConfig.FrontierConstants() {
-            @Override
-            public BigInteger getMINIMUM_DIFFICULTY() {
-                return BigInteger.ONE;
-            }
-        }));
     }
-
-    @AfterClass
-    public static void cleanup() {
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
-    }
-
 
     @Test // no cache, save some load, and check it exist
     public void test1(){

@@ -49,12 +49,13 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
+    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests, int maxTotalHeaders) {
         List<HeadersRequest> ret = new ArrayList<>();
         if (minValidated < 0) {
             ret.add(new SyncQueueImpl.HeadersRequestImpl(curHeaderHash, maxSize, true, maxSize - 1));
         } else if (minValidated == 0) {
             // genesis reached
+            return null;
         } else {
             if (minValidated - headers.getMin() < maxSize * maxSize && minValidated > maxSize) {
                 ret.add(new SyncQueueImpl.HeadersRequestImpl(

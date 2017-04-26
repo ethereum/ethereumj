@@ -43,7 +43,8 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
      */
     @Override
     public synchronized V get(byte[] key) {
-        V ownCache = getCached(key);
+        AbstractCachedSource.Entry<V> ownCacheEntry = getCached(key);
+        V ownCache = ownCacheEntry == null ? null : ownCacheEntry.value();
         if (ownCache == null) {
             V v = getSource() != null ? super.get(key) : null;
             ownCache = create(key, v);
@@ -61,8 +62,14 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
         boolean ret = false;
         for (byte[] key: writeCache.getModified()) {
             V value = super.get(key);
-            if (value.getSource() != null) {
-                ret |= flushChild(value);
+            if (value == null) {
+                // cache was deleted
+                ret |= flushChild(key, value);
+                if (getSource() != null) {
+                    getSource().delete(key);
+                }
+            } else if (value.getSource() != null){
+                ret |= flushChild(key, value);
             } else {
                 getSource().put(key, value);
                 ret = true;
@@ -75,8 +82,8 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
      * Is invoked to flush child cache if it has backing Source
      * Some additional tasks may be performed by subclasses here
      */
-    protected boolean flushChild(V childCache) {
-        return childCache.flush();
+    protected boolean flushChild(byte[] key, V childCache) {
+        return childCache != null ? childCache.flush() : true;
     }
 
     /**
