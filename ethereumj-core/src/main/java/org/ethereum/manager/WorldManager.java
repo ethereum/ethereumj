@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
@@ -14,6 +31,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -157,11 +175,9 @@ public class WorldManager {
         if (blockStore.getBestBlock() == null) {
             logger.info("DB is empty - adding Genesis");
 
-            Genesis genesis = (Genesis)Genesis.getInstance(config);
-            for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-                repository.createAccount(key.getData());
-                repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-            }
+            Genesis genesis = Genesis.getInstance(config);
+            Genesis.populateRepository(repository, genesis);
+
 //            repository.commitBlock(genesis.getHeader());
             repository.commit();
 
@@ -178,8 +194,8 @@ public class WorldManager {
 
             if (!config.databaseReset() &&
                     !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
-                logger.error("*** DB is incorrect, 0 block in DB doesn't match genesis");
-                throw new RuntimeException("DB doesn't match genesis");
+                // fatal exit
+                Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
             }
 
             Block bestBlock = blockStore.getBestBlock();

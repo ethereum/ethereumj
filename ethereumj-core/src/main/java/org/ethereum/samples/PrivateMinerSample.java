@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.samples;
 
 import com.typesafe.config.ConfigFactory;
@@ -211,6 +228,11 @@ public class PrivateMinerSample {
      *  Creating two EthereumJ instances with different config classes
      */
     public static void main(String[] args) throws Exception {
+        if (Runtime.getRuntime().maxMemory() < (1250L << 20)) {
+            MinerNode.sLogger.error("Not enough JVM heap (" + (Runtime.getRuntime().maxMemory() >> 20) + "Mb) to generate DAG for mining (DAG requires min 1G). For this sample it is recommended to set -Xmx2G JVM option");
+            return;
+        }
+
         BasicSample.sLogger.info("Starting EthtereumJ miner instance!");
         EthereumFactory.createEthereum(MinerConfig.class);
 

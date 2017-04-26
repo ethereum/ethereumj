@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.core.genesis;
 
 import java.util.Map;
@@ -15,7 +32,7 @@ public class GenesisJson {
 
     Map<String, AllocatedAccount> alloc;
 
-    Map<String, String> config;
+    GenesisConfig config;
 
     public GenesisJson() {
     }
@@ -93,11 +110,20 @@ public class GenesisJson {
         this.alloc = alloc;
     }
 
-    public Map<String, String> getConfig() {
+    public GenesisConfig getConfig() {
         return config;
     }
 
-    public void setConfig(Map<String, String> config) {
+    public void setConfig(GenesisConfig config) {
         this.config = config;
+    }
+
+    public static class AllocatedAccount {
+
+        public Map<String, String> storage;
+        public String nonce;
+        public String code;
+        public String balance;
+
     }
 }

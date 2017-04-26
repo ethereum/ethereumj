@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.vm.program;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -14,6 +31,12 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+import static org.apache.commons.lang3.ArrayUtils.*;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class InternalTransaction extends Transaction {
 
@@ -133,12 +156,24 @@ public class InternalTransaction extends Transaction {
         this.parsed = true;
     }
 
+
+    private static byte[] intToBytes(int value) {
+        return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .putInt(value)
+                .array();
+    }
+
+    private static int bytesToInt(byte[] bytes) {
+        return isEmpty(bytes) ? 0 : ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    }
+
     private static byte[] encodeInt(int value) {
-        return RLP.encodeElement(ByteBuffer.allocate(4).putInt(value).array());
+        return RLP.encodeElement(intToBytes(value));
     }
 
     private static int decodeInt(byte[] encoded) {
-        return isEmpty(encoded) ? 0 : new BigInteger(encoded).intValue();
+        return bytesToInt(encoded);
     }
 
     @Override
@@ -159,7 +194,7 @@ public class InternalTransaction extends Transaction {
                 ", nonce=" + toHexString(getNonce()) +
                 ", gasPrice=" + toHexString(getGasPrice()) +
                 ", gas=" + toHexString(getGasLimit()) +
-                ", receiveAddress=" + toHexString(getSender()) +
+                ", sendAddress=" + toHexString(getSender()) +
                 ", receiveAddress=" + toHexString(getReceiveAddress()) +
                 ", value=" + toHexString(getValue()) +
                 ", data=" + toHexString(getData()) +

@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import org.ethereum.TestUtils;
@@ -23,7 +40,7 @@ public class SyncQueueImplTest {
 
         SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain.subList(0, 32));
 
-        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1).iterator().next();
+        SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1, Integer.MAX_VALUE).iterator().next();
         System.out.println(headersRequest);
 
         syncQueue.addHeaders(createHeadersFromBlocks(TestUtils.getRandomChain(randomChain.get(16).getHash(), 17, 64), peer0));
@@ -75,8 +92,8 @@ public class SyncQueueImplTest {
         int cnt = 0;
         while (cnt < 1000) {
             System.out.println("Cnt: " + cnt++);
-            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5);
-            if (headersRequests.isEmpty()) break;
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(20, 5, Integer.MAX_VALUE);
+            if (headersRequests == null) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
                 List<BlockHeader> headers = rnd.nextBoolean() ? peers[peerIdx].getHeaders(request)
@@ -112,8 +129,8 @@ public class SyncQueueImplTest {
         int cnt = 0;
         while (cnt < 100) {
             System.out.println("Cnt: " + cnt++);
-            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10);
-            if (headersRequests.isEmpty()) break;
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10, Integer.MAX_VALUE);
+            if (headersRequests == null) break;
             for (SyncQueueIfc.HeadersRequest request : headersRequests) {
                 System.out.println("Req: " + request);
                 List<BlockHeader> headers = peers[peerIdx].getHeaders(request);
@@ -255,7 +272,7 @@ public class SyncQueueImplTest {
 
         int i = 0;
         for (; i < 1000; i++) {
-            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1).iterator().next();
+            SyncQueueIfc.HeadersRequest headersRequest = syncQueue.requestHeaders(DEFAULT_REQUEST_LEN, 1, Integer.MAX_VALUE).iterator().next();
             List<BlockHeader> headers = peers[rnd.nextInt(peers.length)].getHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse());
             syncQueue.addHeaders(createHeadersFromHeaders(headers, peer0));
             SyncQueueIfc.BlocksRequest blocksRequest = syncQueue.requestBlocks(rnd.nextInt(128 + 1));

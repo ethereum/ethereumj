@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 // $Id: KeccakCore.java 258 2011-07-15 22:16:50Z tp $
 
 package org.ethereum.crypto.cryptohash;
@@ -37,10 +54,11 @@ package org.ethereum.crypto.cryptohash;
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
 
-abstract class KeccakCore extends DigestEngine {
+abstract class KeccakCore extends DigestEngine{
 
-	KeccakCore()
+	KeccakCore(String alg)
 	{
+		super(alg);
 	}
 
 	private long[] A;
@@ -538,7 +556,7 @@ abstract class KeccakCore extends DigestEngine {
 		A[12] = ~A[12];
 		A[17] = ~A[17];
 		A[20] = ~A[20];
-		int dlen = getDigestLength();
+		int dlen = engineGetDigestLength();
 		for (int i = 0; i < dlen; i += 8)
 			encodeLELong(A[i >>> 3], tmpOut, i);
 		System.arraycopy(tmpOut, 0, out, off, dlen);
@@ -548,14 +566,14 @@ abstract class KeccakCore extends DigestEngine {
 	protected void doInit()
 	{
 		A = new long[25];
-		tmpOut = new byte[(getDigestLength() + 7) & ~7];
+		tmpOut = new byte[(engineGetDigestLength() + 7) & ~7];
 		doReset();
 	}
 
 	/** @see org.ethereum.crypto.cryptohash.Digest */
 	public int getBlockLength()
 	{
-		return 200 - 2 * getDigestLength();
+		return 200 - 2 * engineGetDigestLength();
 	}
 
 	private final void doReset()
@@ -580,6 +598,6 @@ abstract class KeccakCore extends DigestEngine {
 	/** @see org.ethereum.crypto.cryptohash.Digest */
 	public String toString()
 	{
-		return "Keccak-" + (getDigestLength() << 3);
+		return "Keccak-" + (engineGetDigestLength() << 3);
 	}
 }

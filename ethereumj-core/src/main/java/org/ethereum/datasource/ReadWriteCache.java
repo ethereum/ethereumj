@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.datasource;
 
 import java.util.Collection;
@@ -22,6 +39,7 @@ public class ReadWriteCache<Key, Value>
         super(src);
         add(writeCache = new WriteCache<>(src, cacheType));
         add(readCache = new ReadCache<>(writeCache));
+        readCache.setFlushSource(true);
     }
 
     @Override
@@ -29,8 +47,13 @@ public class ReadWriteCache<Key, Value>
         return writeCache.getModified();
     }
 
-    protected synchronized Value getCached(Key key) {
-        Value v = readCache.getCached(key);
+    @Override
+    public boolean hasModified() {
+        return writeCache.hasModified();
+    }
+
+    protected synchronized AbstractCachedSource.Entry<Value> getCached(Key key) {
+        AbstractCachedSource.Entry<Value> v = readCache.getCached(key);
         if (v == null) {
             v = writeCache.getCached(key);
         }
@@ -47,6 +70,7 @@ public class ReadWriteCache<Key, Value>
             super(src);
             add(this.writeCache = new WriteCache.BytesKey<>(src, cacheType));
             add(this.readCache = new ReadCache.BytesKey<>(writeCache));
+            readCache.setFlushSource(true);
         }
     }
 }

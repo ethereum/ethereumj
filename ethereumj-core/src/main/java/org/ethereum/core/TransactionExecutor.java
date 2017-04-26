@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.core;
 
 import org.ethereum.config.BlockchainConfig;
@@ -92,14 +109,14 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
-        setCommonConfig(CommonConfig.getDefault());
+        withCommonConfig(CommonConfig.getDefault());
     }
 
-    @Autowired
-    private void setCommonConfig(CommonConfig commonConfig) {
+    public TransactionExecutor withCommonConfig(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
         this.config = commonConfig.systemProperties();
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(currentBlock.getNumber());
+        return this;
     }
 
     private void execError(String err) {
@@ -221,8 +238,8 @@ public class TransactionExecutor {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-                this.vm = commonConfig.vm();
-                this.program = commonConfig.program(code, programInvoke, tx);
+                this.vm = new VM(config);
+                this.program = new Program(track.getCodeHash(targetAddress), code, programInvoke, tx, config).withCommonConfig(commonConfig);
             }
         }
 
@@ -249,8 +266,8 @@ public class TransactionExecutor {
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = commonConfig.vm();
-            this.program = commonConfig.program(tx.getData(), programInvoke, tx);
+            this.vm = new VM(config);
+            this.program = new Program(tx.getData(), programInvoke, tx, config).withCommonConfig(commonConfig);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
@@ -349,7 +366,7 @@ public class TransactionExecutor {
             // Accumulate refunds for suicides
             result.addFutureRefund(result.getDeleteAccounts().size() * config.getBlockchainConfig().
                     getConfigForBlock(currentBlock.getNumber()).getGasCost().getSUICIDE_REFUND());
-            long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            long gasRefund = Math.min(result.getFutureRefund(), getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             m_endGas = m_endGas.add(BigInteger.valueOf(gasRefund));
 

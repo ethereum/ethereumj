@@ -1,7 +1,25 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.util.blockchain;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -34,6 +52,8 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
+import static org.ethereum.util.ByteUtil.wrap;
+
 /**
  * Created by Anton Nashatyrev on 23.03.2016.
  */
@@ -50,7 +70,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     boolean autoBlock;
     long dbDelay = 0;
     long totalDbHits = 0;
-    List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
+    BlockchainNetConfig netConfig;
+
     int blockGasIncreasePercent = 0;
 
     long time = 0;
@@ -122,9 +143,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
+    public StandaloneBlockchain withNetConfig(BlockchainNetConfig netConfig) {
+        this.netConfig = netConfig;
+        return this;
+    }
+
     public StandaloneBlockchain withAccountBalance(byte[] address, BigInteger weis) {
         AccountState state = new AccountState(BigInteger.ZERO, weis);
-        genesis.getPremine().put(new ByteArrayWrapper(address), state);
+        genesis.addPremine(wrap(address), state);
         genesis.setStateRoot(GenesisLoader.generateRootHash(genesis.getPremine()));
 
         return this;
@@ -425,6 +451,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private void submitNewTx(PendingTx tx) {
+        getBlockchain();
         submittedTxes.add(tx);
         if (autoBlock) {
             createBlock();
@@ -444,6 +471,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
+        SystemProperties.getDefault().setBlockchainConfig(netConfig != null ? netConfig : getEasyMiningConfig());
+
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
@@ -451,7 +480,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));
         pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
 
-        RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
+        final RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
@@ -470,13 +499,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
 
-        Repository track = repository.startTracking();
-        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
-            track.createAccount(key.getData());
-            track.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-        }
+        Genesis.populateRepository(repository, genesis);
 
-        track.commit();
         repository.commit();
 
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
@@ -487,6 +511,26 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pruneManager.blockCommitted(genesis.getHeader());
 
         return blockchain;
+    }
+
+    public class SolidityFunctionImpl implements SolidityFunction {
+        SolidityContractImpl contract;
+        CallTransaction.Function abi;
+
+        public SolidityFunctionImpl(SolidityContractImpl contract, CallTransaction.Function abi) {
+            this.contract = contract;
+            this.abi = abi;
+        }
+
+        @Override
+        public SolidityContract getContract() {
+            return contract;
+        }
+
+        @Override
+        public CallTransaction.Function getInterface() {
+            return abi;
+        }
     }
 
     public class SolidityContractImpl implements SolidityContract {
@@ -528,7 +572,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         @Override
         public SolidityCallResult callFunction(long value, String functionName, Object... args) {
             CallTransaction.Function function = contract.getByName(functionName);
-            byte[] data = function.encode(args);
+            byte[] data = function.encode(convertArgs(args));
             SolidityCallResult res = new SolidityCallResultImpl(this, function);
             submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
             return res;
@@ -545,7 +589,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             CallTransaction.Function func = contract.getByName(functionName);
             if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
             Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                    Hex.toHexString(getAddress()), 0, func, args);
+                    Hex.toHexString(getAddress()), 0, func, convertArgs(args));
             tx.sign(new byte[32]);
 
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
@@ -565,6 +609,19 @@ public class StandaloneBlockchain implements LocalBlockchain {
             } finally {
                 repository.rollback();
             }
+        }
+
+        private Object[] convertArgs(Object[] args) {
+            Object[] ret = new Object[args.length];
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] instanceof SolidityFunction) {
+                    SolidityFunction f = (SolidityFunction) args[i];
+                    ret[i] = ByteUtil.merge(f.getContract().getAddress(), f.getInterface().encodeSignature());
+                } else {
+                    ret[i] = args[i];
+                }
+            }
+            return ret;
         }
 
         @Override
@@ -587,6 +644,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
             // for this we need cleaner separation of EasyBlockchain to
             // Abstract and Solidity specific
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SolidityFunction getFunction(String name) {
+            return new SolidityFunctionImpl(this, contract.getByName(name));
         }
     }
 
@@ -686,5 +748,15 @@ public class StandaloneBlockchain implements LocalBlockchain {
             sleep(rows.size() / 2);
             super.updateBatch(rows);
         }
+    }
+
+    // Override blockchain net config for fast mining
+    public static FrontierConfig getEasyMiningConfig() {
+        return new FrontierConfig(new FrontierConfig.FrontierConstants() {
+            @Override
+            public BigInteger getMINIMUM_DIFFICULTY() {
+                return BigInteger.ONE;
+            }
+        });
     }
 }

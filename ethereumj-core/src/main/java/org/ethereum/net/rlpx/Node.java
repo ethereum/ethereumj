@@ -1,12 +1,26 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.net.rlpx;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.datasource.mapdb.Serializers;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
-import org.mapdb.Serializer;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
@@ -21,31 +35,6 @@ import static org.ethereum.util.ByteUtil.hostToBytes;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
-
-    public static final Serializer<Node> MapDBSerializer = new Serializer<Node>() {
-        @Override
-        public void serialize(DataOutput out, Node value) throws IOException {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(value);
-            oos.close();
-            Serializers.BYTE_ARRAY_WRAPPER.serialize(out, new ByteArrayWrapper(baos.toByteArray()));
-        }
-
-        @Override
-        public Node deserialize(DataInput in, int available) throws IOException {
-            ByteArrayWrapper bytes = Serializers.BYTE_ARRAY_WRAPPER.deserialize(in, available);
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes.getData());
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            try {
-                return (Node) ois.readObject();
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            } finally {
-                ois.close();
-            }
-        }
-    };
 
     byte[] id;
     String host;
@@ -156,6 +145,10 @@ public class Node implements Serializable {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setDiscoveryNode(boolean isDiscoveryNode) {
+        isFakeNodeId = isDiscoveryNode;
     }
 
     /**

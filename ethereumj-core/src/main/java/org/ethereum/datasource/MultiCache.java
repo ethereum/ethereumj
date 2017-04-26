@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.datasource;
 
 /**
@@ -26,7 +43,8 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
      */
     @Override
     public synchronized V get(byte[] key) {
-        V ownCache = getCached(key);
+        AbstractCachedSource.Entry<V> ownCacheEntry = getCached(key);
+        V ownCache = ownCacheEntry == null ? null : ownCacheEntry.value();
         if (ownCache == null) {
             V v = getSource() != null ? super.get(key) : null;
             ownCache = create(key, v);
@@ -44,8 +62,14 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
         boolean ret = false;
         for (byte[] key: writeCache.getModified()) {
             V value = super.get(key);
-            if (value.getSource() != null) {
-                ret |= flushChild(value);
+            if (value == null) {
+                // cache was deleted
+                ret |= flushChild(key, value);
+                if (getSource() != null) {
+                    getSource().delete(key);
+                }
+            } else if (value.getSource() != null){
+                ret |= flushChild(key, value);
             } else {
                 getSource().put(key, value);
                 ret = true;
@@ -58,8 +82,8 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
      * Is invoked to flush child cache if it has backing Source
      * Some additional tasks may be performed by subclasses here
      */
-    protected boolean flushChild(V childCache) {
-        return childCache.flush();
+    protected boolean flushChild(byte[] key, V childCache) {
+        return childCache != null ? childCache.flush() : true;
     }
 
     /**

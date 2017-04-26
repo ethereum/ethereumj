@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.util;
 
 import org.ethereum.datasource.DbSource;
@@ -55,6 +72,20 @@ public class Utils {
         Date date = new Date(timestamp * 1000);
         DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
         return formatter.format(date);
+    }
+
+    public static String longToTimePeriod(long msec) {
+        if (msec < 1000) return msec + "ms";
+        if (msec < 3000) return String.format("%.2f", msec / 1000d);
+        if (msec < 60 * 1000) return (msec / 1000) + "s";
+        long sec = msec / 1000;
+        if (sec < 5 * 60) return (sec / 60) +  "m" + (sec % 60) + "s";
+        long min = sec / 60;
+        if (min < 60) return min + "m";
+        long hour = min / 60;
+        if (min < 24 * 60) return hour + "h" + (min % 60) + "m";
+        long day = hour / 24;
+        return day + "d" + (day % 24) + "h";
     }
 
     public static ImageIcon getImageIcon(String resource) {
@@ -224,5 +255,20 @@ public class Utils {
         System.err.println(ANSI_RESET);
 
         throw new RuntimeException(message);
+    }
+
+    public static String sizeToStr(long size) {
+        if (size < 2 * (1L << 10)) return size + "b";
+        if (size < 2 * (1L << 20)) return String.format("%dKb", size / (1L << 10));
+        if (size < 2 * (1L << 30)) return String.format("%dMb", size / (1L << 20));
+        return String.format("%dGb", size / (1L << 30));
+    }
+
+    public static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

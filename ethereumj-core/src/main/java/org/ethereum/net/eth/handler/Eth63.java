@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.net.eth.handler;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -48,9 +65,6 @@ public class Eth63 extends Eth62 {
     private SettableFuture<List<List<TransactionReceipt>>> requestReceiptsFuture;
     private Set<byte[]> requestedNodes;
     private SettableFuture<List<Pair<byte[], byte[]>>> requestNodesFuture;
-
-    private long connectedTime = System.currentTimeMillis();
-    private long processingTime = 0;
 
     public Eth63() {
         super(version);
@@ -228,7 +242,6 @@ public class Eth63 extends Eth62 {
         double nodesPerSec = 1000d * channel.getNodeStatistics().eth63NodesReceived.get() / channel.getNodeStatistics().eth63NodesRetrieveTime.get();
         double missNodesRatio = 1 - (double) channel.getNodeStatistics().eth63NodesReceived.get() / channel.getNodeStatistics().eth63NodesRequested.get();
         long lifeTime = System.currentTimeMillis() - connectedTime;
-        return super.getSyncStats() + String.format("\tNodes/sec: %1$.2f, miss: %2$.2f", nodesPerSec, missNodesRatio) +
-                "\tLife: " + lifeTime / 1000 + "s,\tIdle: " + (lifeTime - processingTime) + "ms";
+        return super.getSyncStats() + String.format("\tNodes/sec: %1$.2f, miss: %2$.2f", nodesPerSec, missNodesRatio);
     }
 }

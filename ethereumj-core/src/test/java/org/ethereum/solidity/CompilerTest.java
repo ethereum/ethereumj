@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.solidity;
 
 import org.ethereum.core.CallTransaction;
@@ -6,6 +23,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
@@ -73,6 +91,21 @@ public class CompilerTest {
         System.out.printf(contract.functions[0].toString());
     }
 
+    @Test
+    public void compileFilesTest() throws IOException {
+
+        File source = new File("src/test/resources/solidity/file1.sol");
+
+        SolidityCompiler.Result res = SolidityCompiler.compile(
+                source, true, ABI, BIN, INTERFACE, METADATA);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        CompilationResult.ContractMetadata a = result.contracts.get("test1");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.printf(contract.functions[0].toString());
+    }
 
 
     public static void main(String[] args) throws Exception {

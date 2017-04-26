@@ -1,6 +1,25 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 // $Id: DigestEngine.java 229 2010-06-16 20:22:27Z tp $
 
 package org.ethereum.crypto.cryptohash;
+
+import java.security.MessageDigest;
 
 /**
  * <p>This class is a template which can be used to implement hash
@@ -47,7 +66,7 @@ package org.ethereum.crypto.cryptohash;
  * @author    Thomas Pornin &lt;thomas.pornin@cryptolog.com&gt;
  */
 
-public abstract class DigestEngine implements Digest {
+public abstract class DigestEngine extends MessageDigest implements Digest {
 
 	/**
 	 * Reset the hash algorithm state.
@@ -77,7 +96,7 @@ public abstract class DigestEngine implements Digest {
 	 * implementation should use it to perform initialization tasks.
 	 * After this method is called, the implementation should be ready
 	 * to process data or meaningfully honour calls such as
-	 * {@link #getDigestLength}
+	 * {@link #engineGetDigestLength}
 	 */
 	protected abstract void doInit();
 
@@ -88,10 +107,11 @@ public abstract class DigestEngine implements Digest {
 	/**
 	 * Instantiate the engine.
 	 */
-	public DigestEngine()
+	public DigestEngine(String alg)
 	{
+		super(alg);
 		doInit();
-		digestLen = getDigestLength();
+		digestLen = engineGetDigestLength();
 		blockLen = getInternalBlockLength();
 		inputBuf = new byte[blockLen];
 		outputBuf = new byte[digestLen];
@@ -102,7 +122,7 @@ public abstract class DigestEngine implements Digest {
 	private void adjustDigestLen()
 	{
 		if (digestLen == 0) {
-			digestLen = getDigestLength();
+			digestLen = engineGetDigestLength();
 			outputBuf = new byte[digestLen];
 		}
 	}

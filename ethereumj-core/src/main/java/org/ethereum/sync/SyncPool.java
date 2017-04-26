@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
@@ -215,6 +232,40 @@ public class SyncPool {
         }
     }
 
+    class NodeSelector implements Functional.Predicate<NodeHandler> {
+        BigInteger lowerDifficulty;
+        Set<String> nodesInUse;
+
+        public NodeSelector(BigInteger lowerDifficulty) {
+            this.lowerDifficulty = lowerDifficulty;
+        }
+
+        public NodeSelector(BigInteger lowerDifficulty, Set<String> nodesInUse) {
+            this.lowerDifficulty = lowerDifficulty;
+            this.nodesInUse = nodesInUse;
+        }
+
+        @Override
+        public boolean test(NodeHandler handler) {
+            if (nodesInUse != null && nodesInUse.contains(handler.getNode().getHexId())) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().isPredefined()) return true;
+
+            if (nodesSelector != null && !nodesSelector.test(handler)) return false;
+
+            if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 &&
+                    handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().getReputation() < 100) return false;
+
+            return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
+        }
+    }
+
     private void fillUp() {
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         if(lackSize <= 0) return;
@@ -222,37 +273,10 @@ public class SyncPool {
         final Set<String> nodesInUse = nodesInUse();
         nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
 
-        class NodeSelector implements Functional.Predicate<NodeHandler> {
-            BigInteger lowerDifficulty;
-
-            public NodeSelector(BigInteger lowerDifficulty) {
-                this.lowerDifficulty = lowerDifficulty;
-            }
-
-            @Override
-            public boolean test(NodeHandler handler) {
-                if (nodesInUse.contains(handler.getNode().getHexId())) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().isPredefined()) return true;
-
-                if (nodesSelector != null && !nodesSelector.test(handler)) return false;
-
-                if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 && handler.getNodeStatistics().getEthTotalDifficulty() == null) {
-                    return false;
-                }
-
-                if (handler.getNodeStatistics().getReputation() < 100) return false;
-
-                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
-            }
-        }
-
         List<NodeHandler> newNodes;
-        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty), lackSize);
+        newNodes = nodeManager.getNodes(new NodeSelector(lowerUsefulDifficulty, nodesInUse), lackSize);
         if (lackSize > 0 && newNodes.isEmpty()) {
-            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO), lackSize);
+            newNodes = nodeManager.getNodes(new NodeSelector(BigInteger.ZERO, nodesInUse), lackSize);
         }
 
         if (logger.isTraceEnabled()) {
@@ -265,7 +289,16 @@ public class SyncPool {
     }
 
     private synchronized void prepareActive() {
-        List<Channel> active = new ArrayList<>(channelManager.getActivePeers());
+        List<Channel> managerActive = new ArrayList<>(channelManager.getActivePeers());
+
+        // Filtering out with nodeSelector because server-connected nodes were not tested
+        NodeSelector nodeSelector = new NodeSelector(BigInteger.ZERO);
+        List<Channel> active = new ArrayList<>();
+        for (Channel channel : managerActive) {
+            if (nodeSelector.test(nodeManager.getNodeHandler(channel.getNode()))) {
+                active.add(channel);
+            }
+        }
 
         if (active.isEmpty()) return;
 

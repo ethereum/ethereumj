@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.util;
 
 import org.ethereum.db.ByteArrayWrapper;
@@ -47,6 +64,8 @@ public class RLP {
 
     private static final Logger logger = LoggerFactory.getLogger("rlp");
 
+
+    public static final byte[] EMPTY_ELEMENT_RLP = encodeElement(new byte[0]);
 
     /**
      * Allow for content up to size of 2^64 bytes *
@@ -642,6 +661,88 @@ public class RLP {
             throw new RuntimeException("Only byte values between 0x00 and 0xFF are supported, but got: " + prefix);
         }
     }
+
+    public static final class LList {
+        private final byte[] rlp;
+        private final int[] offsets = new int[32];
+        private final int[] lens = new int[32];
+        private int cnt;
+
+        public LList(byte[] rlp) {
+            this.rlp = rlp;
+        }
+
+        public void add(int off, int len, boolean isList) {
+            offsets[cnt] = off;
+            lens[cnt] = isList ? (-1 - len) : len;
+            cnt++;
+        }
+
+        public byte[] getBytes(int idx) {
+            int len = lens[idx];
+            len = len < 0 ? (-len - 1) : len;
+            byte[] ret = new byte[len];
+            System.arraycopy(rlp, offsets[idx], ret, 0, len);
+            return ret;
+        }
+
+        public LList getList(int idx) {
+            return decodeLazyList(rlp, offsets[idx], -lens[idx] - 1);
+        }
+
+        public boolean isList(int idx) {
+            return lens[idx] < 0;
+        }
+
+        public int size() {
+            return cnt;
+        }
+    }
+
+    public static LList decodeLazyList(byte[] data) {
+        return decodeLazyList(data, 0, data.length).getList(0);
+    }
+
+    public static LList decodeLazyList(byte[] data, int pos, int length) {
+        if (data == null || data.length < 1) {
+            return null;
+        }
+        LList ret = new LList(data);
+        int end = pos + length;
+
+        while(pos < end) {
+            int prefix = data[pos] & 0xFF;
+            if (prefix == OFFSET_SHORT_ITEM) {  // 0x80
+                ret.add(pos, 0, false); // means no length or 0
+                pos++;
+            } else if (prefix < OFFSET_SHORT_ITEM) {  // [0x00, 0x7f]
+                ret.add(pos, 1, false); // means no length or 0
+                pos++;
+            } else if (prefix <= OFFSET_LONG_ITEM) {  // [0x81, 0xb7]
+                int len = prefix - OFFSET_SHORT_ITEM; // length of the encoded bytes
+                ret.add(pos + 1, len, false);
+                pos += len + 1;
+            } else if (prefix < OFFSET_SHORT_LIST) {  // [0xb8, 0xbf]
+                int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
+                int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+                ret.add(pos + 1 + lenlen, lenbytes, false);
+                pos += 1 + lenlen + lenbytes;
+            } else if (prefix <= OFFSET_LONG_LIST) {  // [0xc0, 0xf7]
+                int len = prefix - OFFSET_SHORT_LIST; // length of the encoded list
+                ret.add(pos + 1, len, true);
+                pos += 1 + len;
+            } else if (prefix <= 0xFF) {  // [0xf8, 0xff]
+                int lenlen = prefix - OFFSET_LONG_LIST; // length of length the encoded list
+                int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+                ret.add(pos + 1 + lenlen, lenlist, true);
+                pos += 1 + lenlen + lenlist; // start at position of first element in list
+            } else {
+                throw new RuntimeException("Only byte values between 0x00 and 0xFF are supported, but got: " + prefix);
+            }
+        }
+        return ret;
+    }
+
 
     private static DecodeResult decodeList(byte[] data, int pos, int prevPos, int len) {
         List<Object> slice = new ArrayList<>();

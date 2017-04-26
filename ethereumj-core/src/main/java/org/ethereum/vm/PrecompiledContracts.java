@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.vm;
 
 import org.ethereum.crypto.ECKey;
@@ -12,19 +29,24 @@ import java.math.BigInteger;
  */
 public class PrecompiledContracts {
 
-    private static ECRecover ecRecover = new ECRecover();
-    private static Sha256 sha256 = new Sha256();
-    private static Ripempd160 ripempd160 = new Ripempd160();
-    private static Identity identity = new Identity();
+    private static final ECRecover ecRecover = new ECRecover();
+    private static final Sha256 sha256 = new Sha256();
+    private static final Ripempd160 ripempd160 = new Ripempd160();
+    private static final Identity identity = new Identity();
+
+    private static final DataWord ecRecoverAddr =   new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
+    private static final DataWord sha256Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
+    private static final DataWord ripempd160Addr =  new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
+    private static final DataWord identityAddr =    new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
 
 
     public static PrecompiledContract getContractForAddress(DataWord address) {
 
         if (address == null) return identity;
-        if (address.isHex("0000000000000000000000000000000000000000000000000000000000000001")) return ecRecover;
-        if (address.isHex("0000000000000000000000000000000000000000000000000000000000000002")) return sha256;
-        if (address.isHex("0000000000000000000000000000000000000000000000000000000000000003")) return ripempd160;
-        if (address.isHex("0000000000000000000000000000000000000000000000000000000000000004")) return identity;
+        if (address.equals(ecRecoverAddr)) return ecRecover;
+        if (address.equals(sha256Addr)) return sha256;
+        if (address.equals(ripempd160Addr)) return ripempd160;
+        if (address.equals(identityAddr)) return identity;
 
         return null;
     }

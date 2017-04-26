@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.datasource;
 
 import org.apache.commons.collections4.map.LRUMap;
@@ -25,17 +42,22 @@ import java.util.Map;
  */
 public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
-    private Map<Key, Value> cache = new HashMap<>();
+    private final Value NULL = (Value) new Object();
+
+    private Map<Key, Value> cache;
+    private boolean byteKeyMap;
 
     public ReadCache(Source<Key, Value> src) {
         super(src);
+        withCache(new HashMap<Key, Value>());
     }
 
     /**
      * Installs the specific cache Map implementation
      */
     public ReadCache<Key, Value> withCache(Map<Key, Value> cache) {
-        this.cache = cache;
+        byteKeyMap = cache instanceof ByteArrayMap;
+        this.cache = Collections.synchronizedMap(cache);
         return this;
     }
 
@@ -58,7 +80,7 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         if (checked) return;
 
         if (key instanceof byte[]) {
-            if (!(cache instanceof ByteArrayMap)) {
+            if (!byteKeyMap) {
                 throw new RuntimeException("Wrong map/set for byte[] key");
             }
         }
@@ -66,7 +88,7 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized void put(Key key, Value val) {
+    public void put(Key key, Value val) {
         checkByteArrKey(key);
         if (val == null) {
             delete(key);
@@ -78,23 +100,22 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
     }
 
     @Override
-    public synchronized Value get(Key key) {
+    public Value get(Key key) {
         checkByteArrKey(key);
         Value ret = cache.get(key);
+        if (ret == NULL) {
+            return null;
+        }
         if (ret == null) {
-            if (cache.containsKey(key)) {
-                ret = null;
-            } else {
-                ret = getSource().get(key);
-                cache.put(key, ret);
-                cacheAdded(key, ret);
-            }
+            ret = getSource().get(key);
+            cache.put(key, ret == null ? NULL : ret);
+            cacheAdded(key, ret);
         }
         return ret;
     }
 
     @Override
-    public synchronized void delete(Key key) {
+    public void delete(Key key) {
         checkByteArrKey(key);
         Value value = cache.remove(key);
         cacheRemoved(key, value);
@@ -110,8 +131,15 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         return Collections.emptyList();
     }
 
-    public synchronized Value getCached(Key key) {
-        return cache.get(key);
+    @Override
+    public boolean hasModified() {
+        return false;
+    }
+
+    @Override
+    public synchronized Entry<Value> getCached(Key key) {
+        Value value = cache.get(key);
+        return value == null ? null : new SimpleEntry<>(value == NULL ? null : value);
     }
 
     /**

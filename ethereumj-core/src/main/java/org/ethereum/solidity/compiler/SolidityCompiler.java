@@ -1,7 +1,23 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.solidity.compiler;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import org.ethereum.config.SystemProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,8 +25,6 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Component
 public class SolidityCompiler {
@@ -24,12 +38,17 @@ public class SolidityCompiler {
         solc = new Solc(config);
     }
 
+    public static Result compile(File sourceDirectory, boolean combinedJson, Options... options) throws IOException {
+        return getInstance().compileSrc(sourceDirectory, false, combinedJson, options);
+    }
+
     public enum Options {
         AST("ast"),
         BIN("bin"),
         INTERFACE("interface"),
         ABI("abi"),
-        METADATA("metadata");
+        METADATA("metadata"), 
+        ASTJSON("ast-json");
 
         private String name;
 
@@ -110,7 +129,34 @@ public class SolidityCompiler {
         return getInstance().compileSrc(source, false, combinedJson, options);
     }
 
-    public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+    public Result compileSrc(File source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+        List<String> commandParts = prepareCommandOptions(optimize, combinedJson, options);
+
+        commandParts.add(source.getAbsolutePath());
+
+        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
+                .directory(solc.getExecutable().getParentFile());
+        processBuilder.environment().put("LD_LIBRARY_PATH",
+                solc.getExecutable().getParentFile().getCanonicalPath());
+
+        Process process = processBuilder.start();
+
+        ParallelReader error = new ParallelReader(process.getErrorStream());
+        ParallelReader output = new ParallelReader(process.getInputStream());
+        error.start();
+        output.start();
+
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        boolean success = process.exitValue() == 0;
+
+        return new Result(error.getContent(), output.getContent(), success);
+    }
+
+    private List<String> prepareCommandOptions(boolean optimize, boolean combinedJson, Options[] options) throws IOException {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(solc.getExecutable().getCanonicalPath());
         if (optimize) {
@@ -124,6 +170,11 @@ public class SolidityCompiler {
                 commandParts.add("--" + option.getName());
             }
         }
+        return commandParts;
+    }
+
+    public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+        List<String> commandParts = prepareCommandOptions(optimize, combinedJson, options);
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
                 .directory(solc.getExecutable().getParentFile());

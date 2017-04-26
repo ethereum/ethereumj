@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.facade;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -221,9 +238,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
         try {
             for (Transaction tx : block.getTransactionsList()) {
-                org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor(
+                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
                         tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                        programInvokeFactory, block, worldManager.getListener(), 0);
+                        programInvokeFactory, block, worldManager.getListener(), 0)
+                        .withCommonConfig(commonConfig);
 
                 executor.setLocalCall(true);
                 executor.init();
@@ -251,9 +269,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor
+            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
                             programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                    .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
             executor.init();

@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.samples;
 
 import org.ethereum.core.Block;
@@ -69,6 +86,11 @@ public class CreateContractSample extends TestNetSample {
         logger.info("Sending contract to net and waiting for inclusion");
         TransactionReceipt receipt = sendTxAndWait(new byte[0], Hex.decode(metadata.bin));
 
+        if (!receipt.isSuccessful()) {
+            logger.error("Some troubles creating a contract: " + receipt.getError());
+            return;
+        }
+
         byte[] contractAddress = receipt.getTransaction().getContractAddress();
         logger.info("Contract created: " + Hex.toHexString(contractAddress));
 
@@ -77,6 +99,10 @@ public class CreateContractSample extends TestNetSample {
         CallTransaction.Function inc = contract.getByName("inc");
         byte[] functionCallBytes = inc.encode(777);
         TransactionReceipt receipt1 = sendTxAndWait(contractAddress, functionCallBytes);
+        if (!receipt1.isSuccessful()) {
+            logger.error("Some troubles invoking the contract: " + receipt.getError());
+            return;
+        }
         logger.info("Contract modified!");
 
         ProgramResult r = ethereum.callConstantFunction(Hex.toHexString(contractAddress),
@@ -92,7 +118,7 @@ public class CreateContractSample extends TestNetSample {
                 ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
                 ByteUtil.longToBytesNoLeadZeroes(3_000_000),
                 receiveAddress,
-                ByteUtil.longToBytesNoLeadZeroes(1),
+                ByteUtil.longToBytesNoLeadZeroes(0),
                 data,
                 ethereum.getChainIdForNextBlock());
         tx.sign(ECKey.fromPrivate(senderPrivateKey));

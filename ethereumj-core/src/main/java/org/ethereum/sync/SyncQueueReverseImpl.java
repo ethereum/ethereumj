@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import org.ethereum.core.Block;
@@ -32,12 +49,13 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     }
 
     @Override
-    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests) {
+    public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests, int maxTotalHeaders) {
         List<HeadersRequest> ret = new ArrayList<>();
         if (minValidated < 0) {
             ret.add(new SyncQueueImpl.HeadersRequestImpl(curHeaderHash, maxSize, true, maxSize - 1));
         } else if (minValidated == 0) {
             // genesis reached
+            return null;
         } else {
             if (minValidated - headers.getMin() < maxSize * maxSize && minValidated > maxSize) {
                 ret.add(new SyncQueueImpl.HeadersRequestImpl(

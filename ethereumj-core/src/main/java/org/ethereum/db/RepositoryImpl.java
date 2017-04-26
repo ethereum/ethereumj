@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
@@ -8,8 +25,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -75,6 +90,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     @Override
     public synchronized void delete(byte[] addr) {
         accountStateCache.delete(addr);
+        storageCache.delete(addr);
     }
 
     @Override
@@ -118,14 +134,15 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
 
     @Override
     public synchronized byte[] getCode(byte[] addr) {
+        byte[] codeHash = getCodeHash(addr);
+        return FastByteComparisons.equal(codeHash, HashUtil.EMPTY_DATA_HASH) ?
+                ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeHash);
+    }
+
+    @Override
+    public byte[] getCodeHash(byte[] addr) {
         AccountState accountState = getAccountState(addr);
-        if (accountState != null) {
-            byte[] codeHash = accountState.getCodeHash();
-            return FastByteComparisons.equal(codeHash, HashUtil.EMPTY_DATA_HASH) ?
-                    ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeHash);
-        } else {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
-        }
+        return accountState != null ? accountState.getCodeHash() : HashUtil.EMPTY_DATA_HASH;
     }
 
     @Override
@@ -205,10 +222,6 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     }
 
     public String dumpStateTrie() {
-        throw new RuntimeException("Not supported");
-    }
-
-    public Value getState(byte[] stateRoot) {
         throw new RuntimeException("Not supported");
     }
 
@@ -413,8 +426,4 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         throw new RuntimeException("Not supported");
     }
 
-    @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        throw new RuntimeException("Not supported");
-    }
 }

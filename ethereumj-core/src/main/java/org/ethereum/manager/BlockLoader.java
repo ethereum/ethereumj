@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.manager;
 
 
@@ -43,15 +60,20 @@ public class BlockLoader {
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
     private void blockWork(Block block) {
-        if (block.getNumber() >= blockchain.getBestBlock().getNumber() || blockchain.getBlockByHash(block.getHash()) == null) {
+        if (block.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber() || blockchain.getBlockStore().getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
             }
 
+            long s = System.currentTimeMillis();
             ImportResult result = blockchain.tryToConnect(block);
-            System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
-                    + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ")");
+
+            if (block.getNumber() % 10 == 0) {
+                System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
+                        + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ") in " +
+                        (System.currentTimeMillis() - s) + " ms");
+            }
 
         } else {
 
@@ -67,8 +89,10 @@ public class BlockLoader {
         exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
             @Override
             public Block apply(Block b) {
-                for (Transaction tx : b.getTransactionsList()) {
-                    tx.getSender();
+                if (b.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber()) {
+                    for (Transaction tx : b.getTransactionsList()) {
+                        tx.getSender();
+                    }
                 }
                 return b;
             }
@@ -92,10 +116,10 @@ public class BlockLoader {
 
         String fileSrc = config.blocksLoader();
         try {
-            System.out.println("Loading blocks: " + fileSrc);
+            final String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
+            System.out.println("Loading blocks: " + fileSrc + ", format: " + blocksFormat);
 
-            String blocksFormat = config.getConfig().hasPath("blocks.format") ? config.getConfig().getString("blocks.format") : null;
-            if ("rlp".equalsIgnoreCase(blocksFormat)) {
+            if ("rlp".equalsIgnoreCase(blocksFormat)) {     // rlp encoded bytes
                 Path path = Paths.get(fileSrc);
                 // NOT OPTIMAL, but fine for tests
                 byte[] data = Files.readAllBytes(path);
@@ -104,7 +128,7 @@ public class BlockLoader {
                     Block block = new Block(item.getRLPData());
                     exec1.push(block);
                 }
-            } else {
+            } else {                                        // hex string
                 FileInputStream inputStream = new FileInputStream(fileSrc);
                 scanner = new Scanner(inputStream, "UTF-8");
 
@@ -116,7 +140,7 @@ public class BlockLoader {
                     exec1.push(block);
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -128,22 +152,13 @@ public class BlockLoader {
             throw new RuntimeException(e);
         }
 
-        dbFlushManager.flush();
+        dbFlushManager.flushSync();
 
         System.out.println(" * Done * ");
         System.exit(0);
     }
 
     private boolean isValid(BlockHeader header) {
-
-        if (!headerValidator.validate(header)) {
-
-            if (logger.isErrorEnabled())
-                headerValidator.logErrors(logger);
-
-            return false;
-        }
-
-        return true;
+        return headerValidator.validateAndLog(header, logger);
     }
 }

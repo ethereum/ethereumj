@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.datasource;
 
 import java.util.ArrayList;
@@ -26,32 +43,37 @@ public class SourceChainBox<Key, Value, SourceKey, SourceValue>
      * All calls to the SourceChainBox will be delegated to the last added
      * Source
      */
-    public synchronized void add(Source src) {
+    public void add(Source src) {
         chain.add(src);
         lastSource = src;
     }
 
     @Override
-    public synchronized void put(Key key, Value val) {
+    public void put(Key key, Value val) {
         lastSource.put(key, val);
     }
 
     @Override
-    public synchronized Value get(Key key) {
+    public Value get(Key key) {
         return lastSource.get(key);
     }
 
     @Override
-    public synchronized void delete(Key key) {
+    public void delete(Key key) {
         lastSource.delete(key);
     }
 
+//    @Override
+//    public boolean flush() {
+////        boolean ret = false;
+////        for (int i = chain.size() - 1; i >= 0 ; i--) {
+////            ret |= chain.get(i).flush();
+////        }
+//        return lastSource.flush();
+//    }
+
     @Override
-    public synchronized boolean flushImpl() {
-        boolean ret = false;
-        for (int i = chain.size() - 1; i >= 0 ; i--) {
-            ret |= chain.get(i).flush();
-        }
-        return ret;
+    protected boolean flushImpl() {
+        return lastSource.flush();
     }
 }

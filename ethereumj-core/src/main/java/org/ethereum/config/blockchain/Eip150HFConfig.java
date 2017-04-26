@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.config.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -12,6 +29,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.Utils;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
@@ -90,8 +108,13 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public List<Pair<Long, byte[]>> blockHashConstraints() {
-        return parent.blockHashConstraints();
+    public byte[] getExtraData(byte[] minerExtraData, long blockNumber) {
+        return parent.getExtraData(minerExtraData, blockNumber);
+    }
+
+    @Override
+    public List<Pair<Long, BlockHeaderValidator>> headerValidators() {
+        return parent.headerValidators();
     }
 
     @Override

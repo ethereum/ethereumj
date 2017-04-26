@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.vm;
 
 import java.util.HashMap;
@@ -581,12 +598,12 @@ public enum OpCode {
     private final Tier tier;
     private final int ret;
 
-    private static final Map<Byte, OpCode> intToTypeMap = new HashMap<>();
+    private static final OpCode[] intToTypeMap = new OpCode[256];
     private static final Map<String, Byte> stringToByteMap = new HashMap<>();
 
     static {
         for (OpCode type : OpCode.values()) {
-            intToTypeMap.put(type.opcode, type);
+            intToTypeMap[type.opcode & 0xFF] = type;
             stringToByteMap.put(type.name(), type.opcode);
         }
     }
@@ -630,7 +647,7 @@ public enum OpCode {
     }
 
     public static OpCode code(byte code) {
-        return intToTypeMap.get(code);
+        return intToTypeMap[code & 0xFF];
     }
 
     public Tier getTier() {

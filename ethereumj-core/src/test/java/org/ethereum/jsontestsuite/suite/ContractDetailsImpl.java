@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.config.CommonConfig;
@@ -186,7 +203,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         // FIXME: clone is not working now !!!
         // FIXME: should be fixed
 
-        storageTrie.getRoot();
+//        storageTrie.getRoot();
 
         return new ContractDetailsImpl(address, null, getCodes());
     }
@@ -194,7 +211,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     @Override
     public ContractDetails getSnapshotTo(byte[] hash){
 
-        Source<byte[], Value> cache = this.storageTrie.getCache();
+        Source<byte[], byte[]> cache = this.storageTrie.getCache();
 
         SecureTrie snapStorage = wrap(hash).equals(wrap(EMPTY_TRIE_HASH)) ?
             new SecureTrie(cache, "".getBytes()):

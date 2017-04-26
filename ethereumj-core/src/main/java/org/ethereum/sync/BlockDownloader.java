@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.sync;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -5,14 +22,13 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.ByteArrayMap;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static java.lang.Math.max;
@@ -132,21 +148,24 @@ public abstract class BlockDownloader {
         List<SyncQueueIfc.HeadersRequest> hReq = emptyList();
         while(!Thread.currentThread().isInterrupted()) {
             try {
-
-                if (syncQueue.getHeadersCount() < headerQueueLimit) {
                     if (hReq.isEmpty()) {
                         synchronized (this) {
-                            hReq = new ArrayList<>(syncQueue.requestHeaders(MAX_IN_REQUEST, REQUESTS));
+                            hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, headerQueueLimit);
+                            if (hReq == null) {
+                                logger.info("Headers download complete.");
+                                headersDownloadComplete = true;
+                                if (!blockBodiesDownload) {
+                                    finishDownload();
+                                    downloadComplete = true;
+                                }
+                                return;
+                            }
+                            String l = "##########  New header requests (" + hReq.size() + "):\n";
+                            for (SyncQueueIfc.HeadersRequest request : hReq) {
+                                l += "    " + request + "\n";
+                            }
+                            logger.debug(l);
                         }
-                    }
-                    if (hReq.size() == 0) {
-                        logger.info("Headers download complete.");
-                        headersDownloadComplete = true;
-                        if (!blockBodiesDownload) {
-                            finishDownload();
-                            downloadComplete = true;
-                        }
-                        return;
                     }
                     int reqHeadersCounter = 0;
                     for (Iterator<SyncQueueIfc.HeadersRequest> it = hReq.iterator(); it.hasNext();) {
@@ -182,12 +201,9 @@ public abstract class BlockDownloader {
                             }
                         }
                     }
-                    receivedHeadersLatch = new CountDownLatch(max(reqHeadersCounter / 4, 1));
-                }  else {
-                    receivedHeadersLatch = new CountDownLatch(1);
-                    logger.debug("headerRetrieveLoop: HeaderQueue is full");
-                }
-                receivedHeadersLatch.await(isSyncDone() ? 10000 : 2000, TimeUnit.MILLISECONDS);
+                    receivedHeadersLatch = new CountDownLatch(max(reqHeadersCounter / 2, 1));
+
+                receivedHeadersLatch.await(isSyncDone() ? 10000 : 500, TimeUnit.MILLISECONDS);
 
             } catch (InterruptedException e) {
                 break;
@@ -217,26 +233,28 @@ public abstract class BlockDownloader {
             }
         }
 
+        List<SyncQueueIfc.BlocksRequest> bReqs = emptyList();
         while(!Thread.currentThread().isInterrupted()) {
             try {
+                if (bReqs.isEmpty()) {
+                    bReqs = syncQueue.requestBlocks(16 * 1024).split(MAX_IN_REQUEST);
+                }
+
+                if (bReqs.isEmpty() && headersDownloadComplete) {
+                    logger.info("Block download complete.");
+                    finishDownload();
+                    downloadComplete = true;
+                    return;
+                }
 
                 int blocksToAsk = getBlockQueueFreeSize();
                 if (blocksToAsk > MAX_IN_REQUEST) {
-                    int maxRequests = blocksToAsk / MAX_IN_REQUEST;
-                    int maxBlocks = MAX_IN_REQUEST * Math.min(maxRequests, REQUESTS);
-                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
+//                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
 
-                    if (bReq.getBlockHeaders().size() == 0 && headersDownloadComplete) {
-                        logger.info("Block download complete.");
-                        finishDownload();
-                        downloadComplete = true;
-                        return;
-                    }
-
-                    if (bReq.getBlockHeaders().size() <= 3) {
+                    if (bReqs.size() == 1 && bReqs.get(0).getBlockHeaders().size() <= 3) {
                         // new blocks are better to request from the header senders first
                         // to get more chances to receive block body promptly
-                        for (BlockHeaderWrapper blockHeaderWrapper : bReq.getBlockHeaders()) {
+                        for (BlockHeaderWrapper blockHeaderWrapper : bReqs.get(0).getBlockHeaders()) {
                             Channel channel = pool.getByNodeId(blockHeaderWrapper.getNodeId());
                             if (channel != null) {
                                 ListenableFuture<List<Block>> futureBlocks =
@@ -248,8 +266,14 @@ public abstract class BlockDownloader {
                         }
                     }
 
+                    int maxRequests = blocksToAsk / MAX_IN_REQUEST;
+                    int maxBlocks = MAX_IN_REQUEST * Math.min(maxRequests, REQUESTS);
                     int reqBlocksCounter = 0;
-                    for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
+                    int blocksRequested = 0;
+                    Iterator<SyncQueueIfc.BlocksRequest> it = bReqs.iterator();
+                    while (it.hasNext() && blocksRequested < maxBlocks) {
+//                    for (SyncQueueIfc.BlocksRequest blocksRequest : bReq.split(MAX_IN_REQUEST)) {
+                        SyncQueueIfc.BlocksRequest blocksRequest = it.next();
                         Channel any = getAnyPeer();
                         if (any == null) {
                             logger.debug("blockRetrieveLoop: No IDLE peers found");
@@ -258,18 +282,20 @@ public abstract class BlockDownloader {
                             logger.debug("blockRetrieveLoop: Requesting " + blocksRequest.getBlockHeaders().size() + " blocks from " + any.getNode());
                             ListenableFuture<List<Block>> futureBlocks =
                                     any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
+                            blocksRequested += blocksRequest.getBlockHeaders().size();
                             if (futureBlocks != null) {
                                 Futures.addCallback(futureBlocks, new BlocksCallback(any));
                                 reqBlocksCounter++;
+                                it.remove();
                             }
                         }
                     }
-                    receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter, 1));
+                    receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter - 2, 1));
                 } else {
                     logger.debug("blockRetrieveLoop: BlockQueue is full");
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
-                receivedBlocksLatch.await(2000, TimeUnit.MILLISECONDS);
+                receivedBlocksLatch.await(200, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
@@ -370,23 +396,7 @@ public abstract class BlockDownloader {
      * @return true if block is valid, false otherwise
      */
     protected boolean isValid(BlockHeader header) {
-
-        if (!headerValidator.validate(header)) {
-
-            headerValidator.logErrors(logger);
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * When sync is not done, we are working with several peers, so we have enough randomness.
-     * When we switch to short sync, we usually need only one peer, so if choosing
-     * the best one, we will get the same one all the time (but we need some randomness)
-     */
-    private Channel getGoodPeer() {
-        return isSyncDone() ? pool.getAnyIdle() : pool.getBestIdle();
+        return headerValidator.validateAndLog(header, logger);
     }
 
     Channel getAnyPeer() {
