@@ -38,7 +38,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks) {
         indexDS = index;
         this.index = new DataSourceArray<>(
-                new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER, 256));
+                new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER, 512));
         this.blocksDS = blocks;
         this.blocks = new ObjectDataSource<>(blocks, new Serializer<Block, byte[]>() {
             @Override
@@ -50,7 +50,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
             public Block deserialize(byte[] bytes) {
                 return bytes == null ? null : new Block(bytes);
             }
-        }, 256);
+        }, 512);
     }
 
     public synchronized Block getBestBlock(){

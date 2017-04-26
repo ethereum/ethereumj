@@ -121,7 +121,6 @@ public class Abi extends ArrayList<Abi.Entry> {
         public final List<Param> inputs;
         public final List<Param> outputs;
         public final Type type;
-        public final Boolean payable;
 
 
         public Entry(Boolean anonymous, Boolean constant, String name, List<Param> inputs, List<Param> outputs, Type type, Boolean payable) {
@@ -131,7 +130,6 @@ public class Abi extends ArrayList<Abi.Entry> {
             this.inputs = inputs;
             this.outputs = outputs;
             this.type = type;
-            this.payable = payable;
         }
 
         public String formatSignature() {

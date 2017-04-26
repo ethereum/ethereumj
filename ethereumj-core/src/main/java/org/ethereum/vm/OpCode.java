@@ -581,12 +581,12 @@ public enum OpCode {
     private final Tier tier;
     private final int ret;
 
-    private static final Map<Byte, OpCode> intToTypeMap = new HashMap<>();
+    private static final OpCode[] intToTypeMap = new OpCode[256];
     private static final Map<String, Byte> stringToByteMap = new HashMap<>();
 
     static {
         for (OpCode type : OpCode.values()) {
-            intToTypeMap.put(type.opcode, type);
+            intToTypeMap[type.opcode & 0xFF] = type;
             stringToByteMap.put(type.name(), type.opcode);
         }
     }
@@ -630,7 +630,7 @@ public enum OpCode {
     }
 
     public static OpCode code(byte code) {
-        return intToTypeMap.get(code);
+        return intToTypeMap[code & 0xFF];
     }
 
     public Tier getTier() {

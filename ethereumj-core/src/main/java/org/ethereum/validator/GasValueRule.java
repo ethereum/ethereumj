@@ -3,7 +3,6 @@ package org.ethereum.validator;
 import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
-import java.util.List;
 
 /**
  * Checks {@link BlockHeader#gasUsed} against {@link BlockHeader#gasLimit}
@@ -14,15 +13,11 @@ import java.util.List;
 public class GasValueRule extends BlockHeaderRule {
 
     @Override
-    public boolean validate(BlockHeader header) {
-
-        errors.clear();
-
+    public ValidationResult validate(BlockHeader header) {
         if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(header.getGasUsed())) < 0) {
-            errors.add("header.getGasLimit() < header.getGasUsed()");
-            return false;
+            return fault("header.getGasLimit() < header.getGasUsed()");
         }
 
-        return true;
+        return Success;
     }
 }

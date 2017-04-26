@@ -9,6 +9,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Testing {@link ReadWriteCache}
@@ -38,8 +39,8 @@ public class ReadWriteCacheTest {
         }
 
         // Everything is cached
-        assertEquals(str(intToValue(0)), str(cache.getCached(intToKey(0))));
-        assertEquals(str(intToValue(9_999)), str(cache.getCached(intToKey(9_999))));
+        assertEquals(str(intToValue(0)), str(cache.getCached(intToKey(0)).value()));
+        assertEquals(str(intToValue(9_999)), str(cache.getCached(intToKey(9_999)).value()));
 
         // Source is empty
         assertNull(src.get(intToKey(0)));
@@ -52,9 +53,9 @@ public class ReadWriteCacheTest {
 
         // Deleting key that is currently in cache
         cache.put(intToKey(0), intToValue(12345));
-        assertEquals(str(intToValue(12345)), str(cache.getCached(intToKey(0))));
+        assertEquals(str(intToValue(12345)), str(cache.getCached(intToKey(0)).value()));
         cache.delete(intToKey(0));
-        assertNull(cache.getCached(intToKey(0)));
+        assertTrue(null == cache.getCached(intToKey(0)) || null == cache.getCached(intToKey(0)).value());
         assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         cache.flush();
         assertNull(src.get(intToKey(0)));

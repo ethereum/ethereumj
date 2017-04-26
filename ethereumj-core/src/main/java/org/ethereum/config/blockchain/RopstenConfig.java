@@ -2,9 +2,12 @@ package org.ethereum.config.blockchain;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
+import org.ethereum.validator.BlockCustomHashRule;
+import org.ethereum.validator.BlockHeaderRule;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -18,11 +21,7 @@ public class RopstenConfig extends Eip160HFConfig {
 
     public RopstenConfig(BlockchainConfig parent) {
         super(parent);
-    }
-
-    @Override
-    public List<Pair<Long, byte[]>> blockHashConstraints() {
-        return Collections.singletonList(Pair.of(CHECK_BLOCK_NUMBER, CHECK_BLOCK_HASH));
+        headerValidators().add(Pair.of(CHECK_BLOCK_NUMBER, new BlockHeaderValidator(new BlockCustomHashRule(CHECK_BLOCK_HASH))));
     }
 
     @Override

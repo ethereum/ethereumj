@@ -1,10 +1,14 @@
 package org.ethereum.config;
 
-import com.typesafe.config.*;
-import org.ethereum.config.blockchain.FrontierConfig;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigRenderOptions;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.genesis.GenesisConfig;
 import org.ethereum.core.genesis.GenesisJson;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -13,6 +17,8 @@ import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.validator.BlockCustomHashRule;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -129,6 +135,7 @@ public class SystemProperties {
     private GenesisJson genesisJson;
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
+    private Boolean vmTrace;
 
     private final ClassLoader classLoader;
 
@@ -149,7 +156,6 @@ public class SystemProperties {
     }
 
     public SystemProperties(Config apiConfig, ClassLoader classLoader) {
-        long startTime = System.currentTimeMillis();
         try {
             this.classLoader = classLoader;
 
@@ -270,45 +276,53 @@ public class SystemProperties {
 
     public BlockchainNetConfig getBlockchainConfig() {
         if (blockchainConfig == null) {
-            if (getGenesisJson().getConfig() != null && getGenesisJson().getConfig().size() > 0) {
-                blockchainConfig = new JsonNetConfig(getGenesisJson().getConfig());
-                return blockchainConfig;
+            GenesisJson genesisJson = getGenesisJson();
+            if (genesisJson.getConfig() != null && genesisJson.getConfig().isCustomConfig()) {
+                blockchainConfig = new JsonNetConfig(genesisJson.getConfig());
+            } else {
+                if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
+                    throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
+                }
+                if (config.hasPath("blockchain.config.name")) {
+                    switch (config.getString("blockchain.config.name")) {
+                        case "main":
+                            blockchainConfig = new MainNetConfig();
+                            break;
+                        case "olympic":
+                            blockchainConfig = new OlympicConfig();
+                            break;
+                        case "morden":
+                            blockchainConfig = new MordenNetConfig();
+                            break;
+                        case "ropsten":
+                            blockchainConfig = new RopstenNetConfig();
+                            break;
+                        case "testnet":
+                            blockchainConfig = new TestNetConfig();
+                            break;
+                        default:
+                            throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
+                    }
+                } else {
+                    String className = config.getString("blockchain.config.class");
+                    try {
+                        Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
+                        blockchainConfig = aClass.newInstance();
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found", e);
+                    } catch (ClassCastException e) {
+                        throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' is not instance of org.ethereum.config.BlockchainForkConfig", e);
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' couldn't be instantiated (check for default constructor and its accessibility)", e);
+                    }
+                }
             }
 
-            if (config.hasPath("blockchain.config.name") && config.hasPath("blockchain.config.class")) {
-                throw new RuntimeException("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'");
-            }
-            if (config.hasPath("blockchain.config.name")) {
-                switch(config.getString("blockchain.config.name")) {
-                    case "main":
-                        blockchainConfig = new MainNetConfig();
-                        break;
-                    case "olympic":
-                        blockchainConfig = new OlympicConfig();
-                        break;
-                    case "morden":
-                        blockchainConfig = new MordenNetConfig();
-                        break;
-                    case "ropsten":
-                        blockchainConfig = new RopstenNetConfig();
-                        break;
-                    case "testnet":
-                        blockchainConfig = new TestNetConfig();
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
-                }
-            } else {
-                String className = config.getString("blockchain.config.class");
-                try {
-                    Class<? extends BlockchainNetConfig> aClass = (Class<? extends BlockchainNetConfig>) classLoader.loadClass(className);
-                    blockchainConfig = aClass.newInstance();
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' not found" , e);
-                } catch (ClassCastException e) {
-                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' is not instance of org.ethereum.config.BlockchainForkConfig" , e);
-                } catch (InstantiationException|IllegalAccessException e) {
-                    throw new RuntimeException("The class specified via blockchain.config.class '" + className + "' couldn't be instantiated (check for default constructor and its accessibility)" , e);
+            if (genesisJson.getConfig() != null && genesisJson.getConfig().headerValidators != null) {
+                for (GenesisConfig.HashValidator validator : genesisJson.getConfig().headerValidators) {
+                    BlockHeaderValidator headerValidator = new BlockHeaderValidator(new BlockCustomHashRule(ByteUtil.hexStringToBytes(validator.hash)));
+                    blockchainConfig.getConfigForBlock(validator.number).headerValidators().add(
+                            Pair.of(validator.number, headerValidator));
                 }
             }
         }
@@ -381,6 +395,11 @@ public class SystemProperties {
 
     public void setDatabaseReset(Boolean reset) {
         databaseReset = reset;
+    }
+
+    @ValidateMe
+    public long databaseResetBlock() {
+        return config.getLong("database.resetBlock");
     }
 
     @ValidateMe
@@ -496,6 +515,10 @@ public class SystemProperties {
         return databaseDir == null ? config.getString("database.dir") : databaseDir;
     }
 
+    public String ethashDir() {
+        return config.hasPath("ethash.dir") ? config.getString("ethash.dir") : databaseDir();
+    }
+
     public void setDataBaseDir(String dataBaseDir) {
         this.databaseDir = dataBaseDir;
     }
@@ -564,7 +587,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean vmTrace() {
-        return config.getBoolean("vm.structured.trace");
+        return vmTrace == null ? (vmTrace = config.getBoolean("vm.structured.trace")) : vmTrace;
     }
 
     @ValidateMe
@@ -733,7 +756,7 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean isFastSyncEnabled() {
-        return this.syncEnabled == null ? config.getBoolean("sync.fast.enabled") : syncEnabled;
+        return isSyncEnabled() && config.getBoolean("sync.fast.enabled");
     }
 
     @ValidateMe
@@ -806,6 +829,21 @@ public class SystemProperties {
         return config.getBoolean("mine.fullDataSet");
     }
 
+    @ValidateMe
+    public String getCryptoProviderName() {
+        return config.getString("crypto.providerName");
+    }
+    
+    @ValidateMe
+    public String getHash256AlgName() {
+        return config.getString("crypto.hash.alg256");
+    }
+    
+    @ValidateMe
+    public String getHash512AlgName() {
+        return config.getString("crypto.hash.alg512");
+    }
+    
     private GenesisJson getGenesisJson() {
         if (genesisJson == null) {
             genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);

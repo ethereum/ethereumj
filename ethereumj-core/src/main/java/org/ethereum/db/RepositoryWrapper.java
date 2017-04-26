@@ -85,6 +85,11 @@ public class RepositoryWrapper implements Repository {
     }
 
     @Override
+    public byte[] getCodeHash(byte[] addr) {
+        return blockchain.getRepository().getCodeHash(addr);
+    }
+
+    @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
         blockchain.getRepository().addStorageRow(addr, key, value);
     }
@@ -177,11 +182,6 @@ public class RepositoryWrapper implements Repository {
     @Override
     public Repository getSnapshotTo(byte[] root) {
         return blockchain.getRepository().getSnapshotTo(root);
-    }
-
-    @Override
-    public void addRawNode(byte[] key, byte[] value) {
-        blockchain.getRepository().addRawNode(key, value);
     }
 
     @Override

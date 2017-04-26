@@ -30,7 +30,7 @@ public class FlushDbManagerTest {
         final WriteCache<byte[], byte[]> cache2 = new WriteCache.BytesKey<>(db2, WriteCache.CacheType.SIMPLE);
         cache2.withSizeEstimators(ByteArrayEstimator, ByteArrayEstimator);
 
-        final DbFlushManager dbFlushManager = new DbFlushManager(SystemProperties.getDefault(), Collections.<DbSource>emptySet());
+        final DbFlushManager dbFlushManager = new DbFlushManager(SystemProperties.getDefault(), Collections.<DbSource>emptySet(), null);
         dbFlushManager.addCache(cache1);
         dbFlushManager.addCache(cache2);
         dbFlushManager.setSizeThreshold(1);

@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 
@@ -23,41 +24,81 @@ import java.util.Arrays;
 public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
 
+    QuotientFilter filter;
+    boolean dirty = false;
+    private byte[] filterKey = HashUtil.sha3("countingStateFilter".getBytes());
+
     public CountingBytesSource(Source<byte[], byte[]> src) {
+        this(src, false);
+
+    }
+    public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
+        byte[] filterBytes = src.get(filterKey);
+        if (bloom) {
+            if (filterBytes != null) {
+                filter = QuotientFilter.deserialize(filterBytes);
+            } else {
+                filter = QuotientFilter.create(5_000_000, 10_000);
+            }
+        }
     }
 
     @Override
-    public synchronized void put(byte[] key, byte[] val) {
+    public void put(byte[] key, byte[] val) {
         if (val == null) {
             delete(key);
             return;
         }
 
-        byte[] srcVal = getSource().get(key);
-        int srcCount = decodeCount(srcVal);
-        getSource().put(key, encodeCount(val, srcCount + 1));
+        synchronized (this) {
+            byte[] srcVal = getSource().get(key);
+            int srcCount = decodeCount(srcVal);
+            if (srcCount >= 1) {
+                if (filter != null) filter.insert(key);
+                dirty = true;
+            }
+            getSource().put(key, encodeCount(val, srcCount + 1));
+        }
     }
 
     @Override
-    public synchronized byte[] get(byte[] key) {
+    public byte[] get(byte[] key) {
         return decodeValue(getSource().get(key));
     }
 
     @Override
-    public synchronized void delete(byte[] key) {
-        byte[] srcVal = getSource().get(key);
-        int srcCount = decodeCount(srcVal);
-        if (srcCount > 1) {
-            getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
-        } else {
-            getSource().delete(key);
+    public void delete(byte[] key) {
+        synchronized (this) {
+            int srcCount;
+            byte[] srcVal = null;
+            if (filter == null || filter.maybeContains(key)) {
+                srcVal = getSource().get(key);
+                srcCount = decodeCount(srcVal);
+            } else {
+                srcCount = 1;
+            }
+            if (srcCount > 1) {
+                getSource().put(key, encodeCount(decodeValue(srcVal), srcCount - 1));
+            } else {
+                getSource().delete(key);
+            }
         }
     }
 
     @Override
     protected boolean flushImpl() {
-        return false;
+        if (filter != null && dirty) {
+            byte[] filterBytes;
+            synchronized (this) {
+                filterBytes = filter.serialize();
+            }
+            getSource().put(filterKey, filterBytes);
+            dirty = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

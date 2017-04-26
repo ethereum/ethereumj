@@ -1,8 +1,12 @@
 package org.ethereum.config.net;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.blockchain.*;
+import org.ethereum.core.genesis.GenesisConfig;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Convert JSON config from genesis to Java blockchain net config.
@@ -10,57 +14,77 @@ import java.util.*;
  */
 public class JsonNetConfig extends BaseNetConfig {
 
-    public JsonNetConfig(Map<String, String> config) throws RuntimeException {
-        final List<String> keys = Arrays.asList("homesteadBlock", "daoForkBlock", "EIP150Block", "EIP155Block", "EIP158Block");
-        final ArrayList<Integer> orderedBlocks = new ArrayList<>();
-        final HashMap<Integer, String> blockToKey = new HashMap<>();
+    final BlockchainConfig initialBlockConfig = new FrontierConfig();
 
-        // #1 create block number to config map
-        for (String key : keys) {
-            Integer blockNumber = getInteger(config, key);
-            if (blockNumber != null) {
-                if (orderedBlocks.contains(blockNumber)) {
-                    throw new RuntimeException("Genesis net config contains duplicate blocks");
-                }
-                orderedBlocks.add(blockNumber);
-                blockToKey.put(blockNumber, key);
+    /**
+     * We convert all string keys to lowercase before processing.
+     *
+     * Homestead block is 0 if not specified.
+     * If Homestead block is specified then Frontier will be used for 0 block.
+     *
+     * @param config
+     */
+    public JsonNetConfig(GenesisConfig config) throws RuntimeException {
+
+        final List<Pair<Integer, ? extends BlockchainConfig>> candidates = new ArrayList<>();
+
+        {
+            Pair<Integer, ? extends BlockchainConfig> lastCandidate = Pair.of(0, initialBlockConfig);
+            candidates.add(lastCandidate);
+
+            // homestead block assumed to be 0 by default
+            lastCandidate = Pair.of(config.homesteadBlock == null ? 0 : config.homesteadBlock, new HomesteadConfig());
+            candidates.add(lastCandidate);
+
+            if (config.daoForkBlock != null) {
+                AbstractDaoConfig daoConfig = config.daoForkSupport ?
+                        new DaoHFConfig(lastCandidate.getRight(), config.daoForkBlock) :
+                        new DaoNoHFConfig(lastCandidate.getRight(), config.daoForkBlock);
+                lastCandidate = Pair.of(config.daoForkBlock, daoConfig);
+                candidates.add(lastCandidate);
             }
-        }
 
-        // #2 sort block numbers before adding configs
-        Collections.sort(orderedBlocks);
+            if (config.eip150Block != null) {
+                lastCandidate = Pair.of(config.eip150Block, new Eip150HFConfig(lastCandidate.getRight()));
+                candidates.add(lastCandidate);
+            }
 
-        // hardcoded initial config
-        Integer prevBlockNumber = 0;    // frontier block
-        add(0, new FrontierConfig());
-
-        // #3 fill configs in proper order
-        for (Integer blockNumber : orderedBlocks) {
-            String key = blockToKey.get(blockNumber);
-            switch (key) {
-                case "homesteadBlock":
-                    add(blockNumber, new HomesteadConfig());
-                    break;
-                case "daoForkBlock":
-                    if ("true".equalsIgnoreCase(config.get("daoForkSupport"))) {
-                        add(blockNumber, new DaoHFConfig().withForkBlock(blockNumber));
-                    } else {
-                        add(blockNumber, new DaoNoHFConfig().withForkBlock(blockNumber));
+            if (config.eip155Block != null || config.eip158Block != null) {
+                int block;
+                if (config.eip155Block != null) {
+                    if (config.eip158Block != null && !config.eip155Block.equals(config.eip158Block)) {
+                        throw new RuntimeException("Unable to build config with different blocks for EIP155 (" + config.eip155Block + ") and EIP158 (" + config.eip158Block + ")");
                     }
-                    break;
-                case "EIP150Block":
-                    add(blockNumber, new Eip150HFConfig(getConfigForBlock(prevBlockNumber)));
-                    break;
-                // TODO handle other EIP configs
-                default:
-                    continue;
+                    block = config.eip155Block;
+                } else {
+                    block = config.eip158Block;
+                }
+
+                if (config.chainId != null) {
+                    final int chainId = config.chainId;
+                    lastCandidate = Pair.of(block, new Eip160HFConfig(lastCandidate.getRight()) {
+                        @Override
+                        public Integer getChainId() {
+                            return chainId;
+                        }
+                    });
+                } else {
+                    lastCandidate = Pair.of(block, new Eip160HFConfig(lastCandidate.getRight()));
+                }
+                candidates.add(lastCandidate);
             }
-            prevBlockNumber = blockNumber;
+        }
+
+        {
+            // add candidate per each block (take last in row for same block)
+            Pair<Integer, ? extends BlockchainConfig> last = candidates.remove(0);
+            for (Pair<Integer, ? extends BlockchainConfig> current : candidates) {
+                if (current.getLeft().compareTo(last.getLeft()) > 0) {
+                    add(last.getLeft(), last.getRight());
+                }
+                last = current;
+            }
+            add(last.getLeft(), last.getRight());
         }
     }
-
-    private static Integer getInteger(Map<String, String> config, String key) {
-        return config.containsKey(key) ? Integer.parseInt(config.get(key)) : null;
-    }
-
 }
