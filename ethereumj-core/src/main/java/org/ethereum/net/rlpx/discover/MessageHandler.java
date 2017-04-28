@@ -54,7 +54,7 @@ public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, DiscoveryEvent event) throws Exception {
+    public void messageReceived(ChannelHandlerContext ctx, DiscoveryEvent event) throws Exception {
         nodeManager.handleInbound(event);
     }
 

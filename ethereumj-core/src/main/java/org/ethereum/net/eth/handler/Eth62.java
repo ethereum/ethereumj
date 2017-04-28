@@ -137,9 +137,9 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+    public void messageReceived(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
-        super.channelRead0(ctx, msg);
+        super.messageReceived(ctx, msg);
 
         switch (msg.getCommand()) {
             case STATUS:

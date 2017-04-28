@@ -62,14 +62,9 @@ public class PeerClient {
 
     private EventLoopGroup workerGroup;
 
-    public PeerClient() {
-        workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
             AtomicInteger cnt = new AtomicInteger(0);
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "EthJClientWorker-" + cnt.getAndIncrement());
-            }
-        });
+    public PeerClient() {
+        workerGroup = new NioEventLoopGroup(0, (Runnable command) ->  new Thread(command, "EthJClientWorker-" + cnt.getAndIncrement()));
     }
 
     public void connect(String host, int port, String remoteId) {

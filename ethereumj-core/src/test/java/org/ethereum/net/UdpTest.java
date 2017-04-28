@@ -84,7 +84,7 @@ public class UdpTest {
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, DiscoveryEvent msg) throws Exception {
+        protected void messageReceived(ChannelHandlerContext ctx, DiscoveryEvent msg) throws Exception {
             InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
             System.out.printf("Message received on %s:%s%n", localAddress.getHostString(), localAddress.getPort());
             nodeManager.handleInbound(msg);

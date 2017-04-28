@@ -60,7 +60,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
     }
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, BzzMessage msg) throws InterruptedException {
+    public void messageReceived(final ChannelHandlerContext ctx, BzzMessage msg) throws InterruptedException {
 
         if (!isActive()) return;
 
