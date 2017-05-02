@@ -27,7 +27,7 @@ import java.math.BigInteger;
  */
 public class FrontierConfig extends OlympicConfig {
 
-    public static class FrontierConstants extends Constants {
+    public static class FrontierConstants implements Constants {
         private static final BigInteger BLOCK_REWARD = new BigInteger("5000000000000000000");
 
         @Override

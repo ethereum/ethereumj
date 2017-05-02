@@ -53,7 +53,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     private List<Pair<Long, BlockHeaderValidator>> headerValidators = new ArrayList<>();
 
     public AbstractConfig() {
-        this(new Constants());
+        this(new Constants(){});
     }
 
     public AbstractConfig(Constants constants) {

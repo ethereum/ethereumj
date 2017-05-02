@@ -75,15 +75,6 @@ public class GitHubTransactionTest {
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
     }
 
-    @Ignore
-    @Test
-    public void runsingleTest() throws Exception {
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/ttTransactionTest.json", shacommit);
-        TransactionTestSuite testSuite = new TransactionTestSuite(json);
-        List<String> res = TransactionTestRunner.run(testSuite.getTestCases().get("V_overflow64bitPlus28"));
-        System.out.println(res);
-    }
-
     @Test
     public void testHomesteadTestsFromGitHub() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -116,15 +107,6 @@ public class GitHubTransactionTest {
 
         String json2 = JSONReader.loadJSONFromCommit("TransactionTests/ttTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonTransactionTest(json2, excluded);
-    }
-
-    @Ignore // Few tests fails, RLPWrongByteEncoding and RLPLength preceding 0s errors left
-    @Test
-    public void testWrongRLPTestsFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/ttWrongRLPTransaction.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
     }
 
     @Test

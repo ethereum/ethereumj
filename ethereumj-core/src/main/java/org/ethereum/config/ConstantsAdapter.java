@@ -22,7 +22,7 @@ import java.math.BigInteger;
 /**
  * Created by Anton Nashatyrev on 15.11.2016.
  */
-public class ConstantsAdapter extends Constants {
+public class ConstantsAdapter implements Constants {
     private final Constants delegate;
 
     public ConstantsAdapter(Constants delegate) {

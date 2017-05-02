@@ -61,13 +61,6 @@ public class GitHubStateTest {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
     }
 
-    @Ignore
-    @Test // this method is mostly for hands-on convenient testing
-    public void stSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/Homestead/stSystemOperationsTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "CreateHashCollision");
-    }
-
     @Test
     public void stExample() throws ParseException, IOException {
 
@@ -216,18 +209,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
-    @Test
-    @Ignore
-    public void stMemoryStressTest() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
-        excluded.add("mload32bitBound_return"); // The test extends memory to 4Gb which can't be handled with Java arrays
-        excluded.add("mload32bitBound_Msize"); // The test extends memory to 4Gb which can't be handled with Java arrays
-        String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, excluded);
-        json = JSONReader.loadJSONFromCommit("StateTests/Homestead/stMemoryStressTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, excluded);
-    }
 
     @Test
     public void stMemoryTest() throws ParseException, IOException {
@@ -461,28 +442,6 @@ public class GitHubStateTest {
 
         String json = JSONReader.loadJSONFromCommit("StateTests/EIP158/stCodeSizeLimit.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
-    }
-
-    @Test // testing full suite
-    public void testRandomStateGitHub() throws ParseException, IOException {
-
-        String sha = "99db6f4f5fea3aa5cfbe8436feba8e213d06d1e8";
-        List<String> fileNames = getFileNamesForTreeSha(sha);
-        List<String> includedFiles =
-                Arrays.asList(
-                        "st201504081841JAVA.json",
-                        "st201504081842JAVA.json",
-                        "st201504081843JAVA.json"
-                );
-
-        for (String fileName : fileNames) {
-            if (includedFiles.contains(fileName)) {
-              System.out.println("Running: " + fileName);
-              String json = JSONReader.loadJSON("StateTests//RandomTests/" + fileName);
-              GitHubJSONTestSuite.runStateTest(json);
-            }
-        }
-
     }
 }
 

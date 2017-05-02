@@ -27,6 +27,7 @@ import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.json.simple.parser.ParseException;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,15 +42,6 @@ public class GitHubBlockTest {
     //SHACOMMIT of tested commit, ethereum/tests.git
     public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
 
-    @Ignore // test for conveniently running a single test
-    @Test
-    public void runSingleTest() throws ParseException, IOException {
-        SystemProperties.getDefault().setGenesisInfo("frontier.json");
-        SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
-
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/Homestead/bcTotalDifficultyTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
-    }
 
     private void runFrontier(String name) throws IOException, ParseException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/" + name + ".json", shacommit);
@@ -158,24 +150,5 @@ public class GitHubBlockTest {
     @Test
     public void runBCMultiChainTest() throws ParseException, IOException {
         run("bcMultiChainTest", true, true, true);
-    }
-
-
-    @Test
-    public void runDaoHardForkTest() throws Exception {
-        String json = JSONReader.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/hardfork/BlockchainTests/TestNetwork/bcTheDaoTest.json");
-
-        BlockchainNetConfig testConfig = new BaseNetConfig() {
-            {
-                add(0, new FrontierConfig());
-                add(5, new HomesteadConfig());
-                add(8, new DaoHFConfig(new HomesteadConfig(), 8));
-            }
-        };
-
-        SystemProperties.getDefault().setGenesisInfo("frontier.json");
-        SystemProperties.getDefault().setBlockchainConfig(testConfig);
-
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
     }
 }

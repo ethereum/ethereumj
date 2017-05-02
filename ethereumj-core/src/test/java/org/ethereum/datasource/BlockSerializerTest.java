@@ -67,22 +67,6 @@ public class BlockSerializerTest {
         }
     }
 
-    @Test
-    @Ignore
-    public void testTime() {
-        int BLOCKS = 100;
-        int PASSES = 10_000;
-        List<BlockInfo> blockInfoList = generateBlockInfos(BLOCKS);
-
-        long s = System.currentTimeMillis();
-        for (int i = 0; i < PASSES; i++) {
-            byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(blockInfoList);
-            List<BlockInfo> blockInfoList2 = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
-        }
-        long e = System.currentTimeMillis();
-
-        System.out.printf("Serialize/deserialize blocks per 1 ms: %s%n", PASSES * BLOCKS / (e - s));
-    }
 
     @Test(expected = RuntimeException.class)
     public void testNullCummDifficulty() {

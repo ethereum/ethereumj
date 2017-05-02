@@ -407,8 +407,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 	}
 
 	private SolidityContractImpl createContract(ContractMetadata contractData) {
-		SolidityContractImpl contract = new SolidityContractImpl(contractData);
-		return contract;
+        return new SolidityContractImpl(contractData);
 	}
 
     @Override

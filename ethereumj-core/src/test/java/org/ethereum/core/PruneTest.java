@@ -440,39 +440,6 @@ public class PruneTest {
     }
 
 
-    @Ignore
-    @Test
-    public void rewriteSameTrieNode() throws Exception {
-        final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
-
-        StandaloneBlockchain bc = new StandaloneBlockchain();
-        byte[] receiver = Hex.decode("0000000000000000000000000000000000000000");
-        bc.sendEther(receiver, BigInteger.valueOf(0x77777777));
-        bc.createBlock();
-
-        for (int i = 0; i < 100; i++) {
-            bc.sendEther(new ECKey().getAddress(), BigInteger.valueOf(i));
-        }
-
-        SolidityContract contr = bc.submitNewContract(
-                "contract Stupid {" +
-                        "  function wrongAddress() { " +
-                        "    address addr = 0x0000000000000000000000000000000000000000; " +
-                        "    addr.call();" +
-                        "  } " +
-                        "}");
-        Block b1 = bc.createBlock();
-        contr.callFunction("wrongAddress");
-        Block b2 = bc.createBlock();
-        contr.callFunction("wrongAddress");
-        Block b3 = bc.createBlock();
-
-        Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
-    }
-
     public void checkPruning(final HashMapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS, byte[] ... roots) {
         System.out.println("Pruned storage size: " + stateDS.getStorage().size());
 
