@@ -17,10 +17,9 @@
  */
 package org.ethereum.config.blockchain;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.core.Transaction;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -28,8 +27,6 @@ import org.ethereum.validator.ExtraDataPresenceRule;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by Stan Reshetnyk on 26.12.16.
@@ -77,7 +74,7 @@ public abstract class AbstractDaoConfig extends FrontierConfig {
     }
 
     @Override
-    public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
+    public BigInteger calcDifficulty(IBlockHeader curBlock, IBlockHeader parent) {
         return this.parent.calcDifficulty(curBlock, parent);
     }
 

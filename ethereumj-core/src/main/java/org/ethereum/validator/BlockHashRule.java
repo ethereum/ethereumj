@@ -20,7 +20,7 @@ package org.ethereum.validator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class BlockHashRule extends BlockHeaderRule {
     }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
+    public ValidationResult validate(IBlockHeader header) {
         List<Pair<Long, BlockHeaderValidator>> validators = blockchainConfig.getConfigForBlock(header.getNumber()).headerValidators();
         for (Pair<Long, BlockHeaderValidator> pair : validators) {
             if (header.getNumber() == pair.getLeft()) {

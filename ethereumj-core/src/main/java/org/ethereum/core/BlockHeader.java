@@ -22,25 +22,19 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Block header is a value object containing
  * the basic information of a block
  */
-final public class BlockHeader {
-
-    public static final int NONCE_LENGTH = 8;
-    public static final int MAX_HEADER_SIZE = 592;
+final public class BlockHeader implements IBlockHeader {
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     private byte[] parentHash;
@@ -164,146 +158,178 @@ final public class BlockHeader {
         return new BlockHeader(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, mixHash, nonce, extraData);
     }
 
+    @Override
     public boolean isGenesis() {
         return this.getNumber() == Genesis.NUMBER;
     }
 
+    @Override
     public byte[] getParentHash() {
         return parentHash;
     }
 
+    @Override
     public byte[] getUnclesHash() {
         return unclesHash;
     }
 
+    @Override
     public void setUnclesHash(byte[] unclesHash) {
         this.unclesHash = unclesHash;
         hashCache = null;
     }
 
+    @Override
     public byte[] getCoinbase() {
         return coinbase;
     }
 
+    @Override
     public void setCoinbase(byte[] coinbase) {
         this.coinbase = coinbase;
         hashCache = null;
     }
 
+    @Override
     public byte[] getStateRoot() {
         return stateRoot;
     }
 
+    @Override
     public void setStateRoot(byte[] stateRoot) {
         this.stateRoot = stateRoot;
         hashCache = null;
     }
 
+    @Override
     public byte[] getTxTrieRoot() {
         return txTrieRoot;
     }
 
+    @Override
     public void setReceiptsRoot(byte[] receiptTrieRoot) {
         this.setReceiptTrieRoot(receiptTrieRoot);
         hashCache = null;
     }
 
+    @Override
     public byte[] getReceiptsRoot() {
         return getReceiptTrieRoot();
     }
 
+    @Override
     public void setTransactionsRoot(byte[] stateRoot) {
         this.setTxTrieRoot(stateRoot);
         hashCache = null;
     }
 
 
+    @Override
     public byte[] getLogsBloom() {
         return logsBloom;
     }
 
+    @Override
     public byte[] getDifficulty() {
         return difficulty;
     }
 
+    @Override
     public BigInteger getDifficultyBI() {
         return new BigInteger(1, getDifficulty());
     }
 
 
+    @Override
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;
         hashCache = null;
     }
 
+    @Override
     public long getTimestamp() {
         return timestamp;
     }
 
+    @Override
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
         hashCache = null;
     }
 
+    @Override
     public long getNumber() {
         return number;
     }
 
+    @Override
     public void setNumber(long number) {
         this.number = number;
         hashCache = null;
     }
 
+    @Override
     public byte[] getGasLimit() {
         return gasLimit;
     }
 
+    @Override
     public void setGasLimit(byte[] gasLimit) {
         this.gasLimit = gasLimit;
         hashCache = null;
     }
 
+    @Override
     public long getGasUsed() {
         return gasUsed;
     }
 
+    @Override
     public void setGasUsed(long gasUsed) {
         this.gasUsed = gasUsed;
         hashCache = null;
     }
 
+    @Override
     public byte[] getMixHash() {
         return mixHash;
     }
 
+    @Override
     public void setMixHash(byte[] mixHash) {
         this.mixHash = mixHash;
         hashCache = null;
     }
 
+    @Override
     public byte[] getExtraData() {
         return extraData;
     }
 
+    @Override
     public byte[] getNonce() {
         return nonce;
     }
 
+    @Override
     public void setNonce(byte[] nonce) {
         this.nonce = nonce;
         hashCache = null;
     }
 
+    @Override
     public void setLogsBloom(byte[] logsBloom) {
         this.logsBloom = logsBloom;
         hashCache = null;
     }
 
+    @Override
     public void setExtraData(byte[] extraData) {
         this.extraData = extraData;
         hashCache = null;
     }
 
+    @Override
     public byte[] getHash() {
         if (hashCache == null) {
             hashCache = HashUtil.sha3(getEncoded());
@@ -311,14 +337,17 @@ final public class BlockHeader {
         return hashCache;
     }
 
+    @Override
     public byte[] getEncoded() {
         return this.getEncoded(true); // with nonce
     }
 
+    @Override
     public byte[] getEncodedWithoutNonce() {
         return this.getEncoded(false);
     }
 
+    @Override
     public byte[] getEncoded(boolean withNonce) {
         byte[] parentHash = RLP.encodeElement(this.getParentHash());
 
@@ -354,33 +383,23 @@ final public class BlockHeader {
         }
     }
 
-    public byte[] getUnclesEncoded(List<BlockHeader> uncleList) {
+    @Override
+    public byte[] getUnclesEncoded(List<IBlockHeader> uncleList) {
 
         byte[][] unclesEncoded = new byte[uncleList.size()][];
         int i = 0;
-        for (BlockHeader uncle : uncleList) {
+        for (IBlockHeader uncle : uncleList) {
             unclesEncoded[i] = uncle.getEncoded();
             ++i;
         }
         return RLP.encodeList(unclesEncoded);
     }
 
+    @Override
     public byte[] getPowBoundary() {
         return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
-    public byte[] calcPowValue() {
-
-        // nonce bytes are expected in Little Endian order, reverting
-        byte[] nonceReverted = Arrays.reverse(getNonce());
-        byte[] hashWithoutNonce = HashUtil.sha3(getEncodedWithoutNonce());
-
-        byte[] seed = Arrays.concatenate(hashWithoutNonce, nonceReverted);
-        byte[] seedHash = HashUtil.sha512(seed);
-
-        byte[] concat = Arrays.concatenate(seedHash, getMixHash());
-        return HashUtil.sha3(concat);
-    }
 
     public BigInteger calcDifficulty(BlockchainNetConfig config, BlockHeader parent) {
         return config.getConfigForBlock(getNumber()).
@@ -388,42 +407,15 @@ final public class BlockHeader {
     }
 
     public String toString() {
-        return toStringWithSuffix("\n");
+        return View.toStringWithSuffix(this, "\n");
     }
 
-    private String toStringWithSuffix(final String suffix) {
-
-        return "  hash=" + toHexString(getHash()) + suffix +
-                "  parentHash=" + toHexString(getParentHash()) + suffix +
-                "  unclesHash=" + toHexString(getUnclesHash()) + suffix +
-                "  coinbase=" + toHexString(getCoinbase()) + suffix +
-                "  stateRoot=" + toHexString(getStateRoot()) + suffix +
-                "  txTrieHash=" + toHexString(getTxTrieRoot()) + suffix +
-                "  receiptsTrieHash=" + toHexString(getReceiptTrieRoot()) + suffix +
-                "  difficulty=" + toHexString(getDifficulty()) + suffix +
-                "  number=" + getNumber() + suffix +
-                "  gasLimit=" + toHexString(getGasLimit()) + suffix +
-                "  gasUsed=" + getGasUsed() + suffix +
-                "  timestamp=" + getTimestamp() + " (" + Utils.longToDateTime(getTimestamp()) + ")" + suffix +
-                "  extraData=" + toHexString(getExtraData()) + suffix +
-                "  mixHash=" + toHexString(getMixHash()) + suffix +
-                "  nonce=" + toHexString(getNonce()) + suffix;
-    }
-
-    public String toFlatString() {
-        return toStringWithSuffix("");
-    }
-
-    public String getShortDescr() {
-        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
-                + Hex.toHexString(getParentHash()).substring(0,6) + ")";
-    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BlockHeader that = (BlockHeader) o;
+        IBlockHeader that = (IBlockHeader) o;
         return FastByteComparisons.equal(getHash(), that.getHash());
     }
 
@@ -432,19 +424,24 @@ final public class BlockHeader {
         return Arrays.hashCode(getHash());
     }
 
+    @Override
     public void setParentHash(byte[] parentHash) {
         this.parentHash = parentHash;
     }
 
+    @Override
     public void setTxTrieRoot(byte[] txTrieRoot) {
         this.txTrieRoot = txTrieRoot;
     }
 
+    @Override
     public byte[] getReceiptTrieRoot() {
         return receiptTrieRoot;
     }
 
+    @Override
     public void setReceiptTrieRoot(byte[] receiptTrieRoot) {
         this.receiptTrieRoot = receiptTrieRoot;
     }
+
 }

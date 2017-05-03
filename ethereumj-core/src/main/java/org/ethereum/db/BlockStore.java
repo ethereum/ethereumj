@@ -18,7 +18,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -45,7 +45,7 @@ public interface BlockStore {
 
     List<byte[]> getListHashesEndWith(byte[] hash, long qty);
 
-    List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty);
+    List<IBlockHeader> getListHeadersEndWith(byte[] hash, long qty);
 
     List<Block> getListBlocksEndWith(byte[] hash, long qty);
 

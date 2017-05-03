@@ -17,7 +17,7 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.encoders.Hex;
 
@@ -33,7 +33,7 @@ public class BlockCustomHashRule extends BlockHeaderRule {
     }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
+    public ValidationResult validate(IBlockHeader header) {
         if (!FastByteComparisons.equal(header.getHash(), blockHash)) {
             return fault("Block " + header.getNumber() + " hash constraint violated. Expected:" +
                     Hex.toHexString(blockHash) + ", got: " + Hex.toHexString(header.getHash()));

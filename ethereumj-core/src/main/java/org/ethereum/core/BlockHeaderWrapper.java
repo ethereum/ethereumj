@@ -34,10 +34,10 @@ import java.util.List;
  */
 public class BlockHeaderWrapper {
 
-    private BlockHeader header;
+    private IBlockHeader header;
     private byte[] nodeId;
 
-    public BlockHeaderWrapper(BlockHeader header, byte[] nodeId) {
+    public BlockHeaderWrapper(IBlockHeader header, byte[] nodeId) {
         this.header = header;
         this.nodeId = nodeId;
     }
@@ -74,7 +74,7 @@ public class BlockHeaderWrapper {
         return header.getNumber();
     }
 
-    public BlockHeader getHeader() {
+    public IBlockHeader getHeader() {
         return header;
     }
 

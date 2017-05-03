@@ -18,6 +18,7 @@
 package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class ParentBlockHeaderValidator extends DependentBlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader parent) {
+    public boolean validate(IBlockHeader header, IBlockHeader parent) {
         errors.clear();
 
         for (DependentBlockHeaderRule rule : rules) {

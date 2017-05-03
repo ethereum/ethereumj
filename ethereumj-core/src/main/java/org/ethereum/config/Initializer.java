@@ -38,7 +38,7 @@ class Initializer implements BeanPostProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-    // Util to ensure database directory is compatible with code
+    // View to ensure database directory is compatible with code
     private DatabaseVersionHandler databaseVersionHandler = new DatabaseVersionHandler();
 
     /**

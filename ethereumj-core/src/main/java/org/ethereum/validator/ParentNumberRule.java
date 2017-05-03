@@ -18,6 +18,7 @@
 package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 /**
  * Checks if {@link BlockHeader#number} == {@link BlockHeader#number} + 1 of parent's block
@@ -28,7 +29,7 @@ import org.ethereum.core.BlockHeader;
 public class ParentNumberRule extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader parent) {
+    public boolean validate(IBlockHeader header, IBlockHeader parent) {
 
         errors.clear();
 

@@ -24,7 +24,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class Ethash {
     private static long cachedBlockEpoch = 0;
     //    private static ExecutorService executor = Executors.newSingleThreadExecutor();
     private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-            new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+            new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
             new ThreadFactoryBuilder().setNameFormat("ethash-pool-%d").build()));
 
     public static boolean fileCacheEnabled = true;
@@ -174,11 +174,11 @@ public class Ethash {
     /**
      *  See {@link EthashAlgo#hashimotoLight}
      */
-    public Pair<byte[], byte[]> hashimotoLight(BlockHeader header, long nonce) {
+    public Pair<byte[], byte[]> hashimotoLight(IBlockHeader header, long nonce) {
         return hashimotoLight(header, longToBytes(nonce));
     }
 
-    private  Pair<byte[], byte[]> hashimotoLight(BlockHeader header, byte[] nonce) {
+    private  Pair<byte[], byte[]> hashimotoLight(IBlockHeader header, byte[] nonce) {
         return getEthashAlgo().hashimotoLight(getFullSize(), getCacheLight(),
                 sha3(header.getEncodedWithoutNonce()), nonce);
     }
@@ -186,7 +186,7 @@ public class Ethash {
     /**
      *  See {@link EthashAlgo#hashimotoFull}
      */
-    public Pair<byte[], byte[]> hashimotoFull(BlockHeader header, long nonce) {
+    public Pair<byte[], byte[]> hashimotoFull(IBlockHeader header, long nonce) {
         return getEthashAlgo().hashimotoFull(getFullSize(), getFullDataset(), sha3(header.getEncodedWithoutNonce()),
                 longToBytes(nonce));
     }
@@ -254,7 +254,7 @@ public class Ethash {
     /**
      *  Validates the BlockHeader against its getDifficulty() and getNonce()
      */
-    public boolean validate(BlockHeader header) {
+    public boolean validate(IBlockHeader header) {
         byte[] boundary = header.getPowBoundary();
         byte[] hash = hashimotoLight(header, header.getNonce()).getRight();
 

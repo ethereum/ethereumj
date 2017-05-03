@@ -19,6 +19,7 @@ package org.ethereum.datasource;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
 import org.ethereum.vm.DataWord;
@@ -108,14 +109,14 @@ public class Serializers {
     /**
      * Trie node serializer (part of Ethereum spec)
      */
-    public final static Serializer<BlockHeader, byte[]> BlockHeaderSerializer = new Serializer<BlockHeader, byte[]>() {
+    public final static Serializer<IBlockHeader, byte[]> BlockHeaderSerializer = new Serializer<IBlockHeader, byte[]>() {
         @Override
-        public byte[] serialize(BlockHeader object) {
+        public byte[] serialize(IBlockHeader object) {
             return object == null ? null : object.getEncoded();
         }
 
         @Override
-        public BlockHeader deserialize(byte[] stream) {
+        public IBlockHeader deserialize(byte[] stream) {
             return stream == null ? null : BlockHeader.createBlockHeader(stream);
         }
     };

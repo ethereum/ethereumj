@@ -28,7 +28,7 @@ public class ByteArrayMap<V> implements Map<byte[], V> {
     private final Map<ByteArrayWrapper, V> delegate;
 
     public ByteArrayMap() {
-        this(new HashMap<ByteArrayWrapper, V>());
+        this(new HashMap<>());
     }
 
     public ByteArrayMap(Map<ByteArrayWrapper, V> delegate) {

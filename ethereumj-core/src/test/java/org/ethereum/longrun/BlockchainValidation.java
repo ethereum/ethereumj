@@ -18,25 +18,15 @@
 package org.ethereum.longrun;
 
 import org.ethereum.config.CommonConfig;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.Bloom;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionInfo;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
-import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
-import org.ethereum.datasource.SourceCodec;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,14 +110,14 @@ public class BlockchainValidation {
     }
 
     public static void checkFastHeaders(Ethereum ethereum, CommonConfig commonConfig, AtomicInteger fatalErrors) {
-        DataSourceArray<BlockHeader> headerStore = commonConfig.headerSource();
+        DataSourceArray<IBlockHeader> headerStore = commonConfig.headerSource();
         int blockNumber = headerStore.size() - 1;
         byte[] lastParentHash = null;
 
         try {
             testLogger.info("Checking fast headers from best block: {}", blockNumber);
             while (blockNumber > 0) {
-                BlockHeader header = headerStore.get(blockNumber);
+                IBlockHeader header = headerStore.get(blockNumber);
                 if (lastParentHash != null) {
                     assert FastByteComparisons.equal(header.getHash(), lastParentHash);
                 }

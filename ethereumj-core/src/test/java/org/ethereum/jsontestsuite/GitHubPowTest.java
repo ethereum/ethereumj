@@ -18,6 +18,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.jsontestsuite.suite.EthashTestCase;
 import org.ethereum.jsontestsuite.suite.EthashTestSuite;
 import org.ethereum.jsontestsuite.suite.JSONReader;
@@ -51,7 +52,7 @@ public class GitHubPowTest {
 
             BlockHeader header = testCase.getBlockHeader();
 
-            assertArrayEquals(testCase.getResultBytes(), header.calcPowValue());
+            assertArrayEquals(testCase.getResultBytes(), IBlockHeader.View.calcPowValue(header));
         }
 
     }

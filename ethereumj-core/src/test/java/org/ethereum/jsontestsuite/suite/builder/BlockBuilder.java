@@ -18,7 +18,7 @@
 package org.ethereum.jsontestsuite.suite.builder;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.core.Transaction;
 import org.ethereum.jsontestsuite.suite.Env;
 import org.ethereum.jsontestsuite.suite.model.BlockHeaderTck;
@@ -40,7 +40,7 @@ public class BlockBuilder {
 
         if (header == null) return null;
 
-        List<BlockHeader> uncles = new ArrayList<>();
+        List<IBlockHeader> uncles = new ArrayList<>();
         if (unclesTck != null) for (BlockHeaderTck uncle : unclesTck)
             uncles.add(BlockHeaderBuilder.build(uncle));
 
@@ -48,9 +48,9 @@ public class BlockBuilder {
         if (transactionsTck != null) for (TransactionTck tx : transactionsTck)
             transactions.add(TransactionBuilder.build(tx));
 
-        BlockHeader blockHeader = BlockHeaderBuilder.build(header);
+        IBlockHeader IBlockHeader = BlockHeaderBuilder.build(header);
         Block block = new Block(
-                blockHeader,
+                IBlockHeader,
                 transactions, uncles);
 
         return block;

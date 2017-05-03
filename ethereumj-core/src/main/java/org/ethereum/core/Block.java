@@ -48,13 +48,13 @@ public class Block {
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
 
-    private BlockHeader header;
+    private IBlockHeader header;
 
     /* Transactions */
     private List<Transaction> transactionsList = new CopyOnWriteArrayList<>();
 
     /* Uncles */
-    private List<BlockHeader> uncleList = new CopyOnWriteArrayList<>();
+    private List<IBlockHeader> uncleList = new CopyOnWriteArrayList<>();
 
     /* Private */
 
@@ -71,7 +71,7 @@ public class Block {
         this.rlpEncoded = rawData;
     }
 
-    public Block(BlockHeader header, List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+    public Block(IBlockHeader header, List<Transaction> transactionsList, List<IBlockHeader> uncleList) {
 
         this(header.getParentHash(),
                 header.getUnclesHash(),
@@ -97,7 +97,7 @@ public class Block {
                  long gasUsed, long timestamp, byte[] extraData,
                  byte[] mixHash, byte[] nonce, byte[] receiptsRoot,
                  byte[] transactionsRoot, byte[] stateRoot,
-                 List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+                 List<Transaction> transactionsList, List<IBlockHeader> uncleList) {
 
         this(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit,
                 gasUsed, timestamp, extraData, mixHash, nonce, transactionsList, uncleList);
@@ -116,7 +116,7 @@ public class Block {
                  byte[] difficulty, long number, byte[] gasLimit,
                  long gasUsed, long timestamp,
                  byte[] extraData, byte[] mixHash, byte[] nonce,
-                 List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+                 List<Transaction> transactionsList, List<IBlockHeader> uncleList) {
         this.header = BlockHeader.assembleBlockHeader(parentHash, unclesHash, coinbase, logsBloom,
                 difficulty, number, gasLimit, gasUsed,
                 timestamp, mixHash, nonce, extraData);
@@ -153,13 +153,13 @@ public class Block {
         for (RLPElement rawUncle : uncleBlocks) {
 
             RLPList uncleHeader = (RLPList) rawUncle;
-            BlockHeader blockData = BlockHeader.decodeBlockHeader(uncleHeader);
+            IBlockHeader blockData = BlockHeader.decodeBlockHeader(uncleHeader);
             this.uncleList.add(blockData);
         }
         this.parsed = true;
     }
 
-    public BlockHeader getHeader() {
+    public IBlockHeader getHeader() {
         parseRLP();
         return this.header;
     }
@@ -224,7 +224,7 @@ public class Block {
     public BigInteger getCumulativeDifficulty() {
         parseRLP();
         BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
-        for (BlockHeader uncle : uncleList) {
+        for (IBlockHeader uncle : uncleList) {
             calcDifficulty = calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
         }
         return calcDifficulty;
@@ -287,7 +287,7 @@ public class Block {
         return transactionsList;
     }
 
-    public List<BlockHeader> getUncleList() {
+    public List<IBlockHeader> getUncleList() {
         parseRLP();
         return uncleList;
     }
@@ -309,7 +309,7 @@ public class Block {
 
         if (!getUncleList().isEmpty()) {
             toStringBuff.append("Uncles [\n");
-            for (BlockHeader uncle : getUncleList()) {
+            for (IBlockHeader uncle : getUncleList()) {
                 toStringBuff.append(uncle.toString());
                 toStringBuff.append("\n");
             }
@@ -338,7 +338,7 @@ public class Block {
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
         toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash()));
-        toStringBuff.append(header.toFlatString());
+        toStringBuff.append(IBlockHeader.View.toFlatString(header));
 
         for (Transaction tx : getTransactionsList()) {
             toStringBuff.append("\n");
@@ -408,14 +408,14 @@ public class Block {
 
         byte[][] unclesEncoded = new byte[uncleList.size()][];
         int i = 0;
-        for (BlockHeader uncle : uncleList) {
+        for (IBlockHeader uncle : uncleList) {
             unclesEncoded[i] = uncle.getEncoded();
             ++i;
         }
         return RLP.encodeList(unclesEncoded);
     }
 
-    public void addUncle(BlockHeader uncle) {
+    public void addUncle(IBlockHeader uncle) {
         uncleList.add(uncle);
         this.getHeader().setUnclesHash(sha3(getUnclesEncoded()));
         rlpEncoded = null;
@@ -471,10 +471,10 @@ public class Block {
 
     public static class Builder {
 
-        private BlockHeader header;
+        private IBlockHeader header;
         private byte[] body;
 
-        public Builder withHeader(BlockHeader header) {
+        public Builder withHeader(IBlockHeader header) {
             this.header = header;
             return this;
         }
@@ -510,7 +510,7 @@ public class Block {
             for (RLPElement rawUncle : uncles) {
 
                 RLPList uncleHeader = (RLPList) rawUncle;
-                BlockHeader blockData = BlockHeader.decodeBlockHeader(uncleHeader);
+                IBlockHeader blockData = BlockHeader.decodeBlockHeader(uncleHeader);
                 block.uncleList.add(blockData);
             }
 

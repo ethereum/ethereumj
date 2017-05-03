@@ -20,10 +20,7 @@ package org.ethereum.sync;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -579,7 +576,7 @@ public class ShortSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = new ArrayList<>();
+                List<IBlockHeader> headers = new ArrayList<>();
                 for (int i = 7; i < mainB1B10.size(); i++) {
                     headers.add(mainB1B10.get(i).getHeader());
                 }
@@ -686,7 +683,7 @@ public class ShortSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = new ArrayList<>();
+                List<IBlockHeader> headers = new ArrayList<>();
                 for (int i = 0; i < forkB1B5B8_.size() - 1; i++) {
                     headers.add(forkB1B5B8_.get(i).getHeader());
                 }
@@ -908,7 +905,7 @@ public class ShortSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<IBlockHeader> headers = Arrays.asList(
                         forkB1B5B8_.get(7).getHeader(),
                         forkB1B5B8_.get(6).getHeader(),
                         forkB1B5B8_.get(4).getHeader(),
@@ -973,7 +970,7 @@ public class ShortSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<IBlockHeader> headers = Arrays.asList(
                         forkB1B5B8_.get(7).getHeader(),
                         forkB1B5B8_.get(6).getHeader(),
                         BlockHeader.assembleBlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],

@@ -39,7 +39,7 @@ public class HashMapDB<V> implements DbSource<V> {
     protected ALock writeLock = new ALock(rwLock.writeLock());
 
     public HashMapDB() {
-        this(new ByteArrayMap<V>());
+        this(new ByteArrayMap<>());
     }
 
     public HashMapDB(ByteArrayMap<V> storage) {

@@ -310,7 +310,7 @@ public class WriteCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
         public BytesKey(Source<byte[], V> src, CacheType cacheType) {
             super(src, cacheType);
-            withCache(new ByteArrayMap<CacheEntry<V>>());
+            withCache(new ByteArrayMap<>());
         }
     }
 }

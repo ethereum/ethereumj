@@ -19,6 +19,7 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.math.BigInteger;
 
@@ -97,7 +98,7 @@ public class DifficultyTestCase {
         );
     }
 
-    public BlockHeader getParent() {
+    public IBlockHeader getParent() {
         return BlockHeader.assembleBlockHeader(
                 EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Utils.parseNumericData(parentDifficulty),

@@ -69,7 +69,7 @@ public class FutureTest {
 //        ListeningExecutorService executor = MoreExecutors.listeningDecorator(
 //                new ThreadPoolExecutor(2, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
         ExecutorService executor =
-                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
+                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1));
         Future<Object> future = null;
         for (int i = 0; i < 4; i++) {
             final int ii = i;
@@ -94,7 +94,7 @@ public class FutureTest {
     @Test
     public void anyFutureTest() throws ExecutionException, InterruptedException {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
+                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>()));
         AnyFuture<Integer> anyFuture = new AnyFuture<Integer>() {
             @Override
             protected void postProcess(Integer integer) {

@@ -40,10 +40,10 @@ public class BlockchainGetHeadersTest {
             byte [] recentHash = emptyArray;
 
             for (long i = 0; i < 10; ++i) {
-                BlockHeader blockHeader = BlockHeader.assembleBlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
+                IBlockHeader IBlockHeader = BlockHeader.assembleBlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
                         i, emptyArray, 0L, 0L, emptyArray, emptyArray, emptyArray);
-                recentHash = blockHeader.getHash();
-                Block block = new Block(blockHeader, new ArrayList<Transaction>(), new ArrayList<BlockHeader>());
+                recentHash = IBlockHeader.getHash();
+                Block block = new Block(IBlockHeader, new ArrayList<>(), new ArrayList<>());
                 dummyBlocks.add(block);
             }
         }
@@ -65,8 +65,8 @@ public class BlockchainGetHeadersTest {
         }
 
         @Override
-        public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
-            List<BlockHeader> headers = new ArrayList<>();
+        public List<IBlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+            List<IBlockHeader> headers = new ArrayList<>();
             Block start = getBlockByHash(hash);
             if (start != null) {
                 long i = start.getNumber();
@@ -90,7 +90,7 @@ public class BlockchainGetHeadersTest {
 
         public BlockchainImplTester() {
             blockStore = new BlockStoreMock();
-            setRepository(new RepositoryRoot(new HashMapDB<byte[]>()));
+            setRepository(new RepositoryRoot(new HashMapDB<>()));
             setBestBlock(blockStore.getChainBlockByNumber(9));
         }
     }
@@ -107,7 +107,7 @@ public class BlockchainGetHeadersTest {
         // Get by number
         long blockNumber = 2L;
         BlockIdentifier identifier = new BlockIdentifier(null, blockNumber);
-        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(identifier, 0, 1, false);
+        List<IBlockHeader> headers = blockchain.getListOfHeadersStartFrom(identifier, 0, 1, false);
 
         assert headers.size() == 1;
         assert headers.get(0).getNumber() == blockNumber;
@@ -115,18 +115,18 @@ public class BlockchainGetHeadersTest {
         // Get by hash
         byte[] hash = headers.get(0).getHash();
         BlockIdentifier hashIdentifier = new BlockIdentifier(hash, 0L);
-        List<BlockHeader> headersByHash = blockchain.getListOfHeadersStartFrom(hashIdentifier, 0, 1, false);
+        List<IBlockHeader> headersByHash = blockchain.getListOfHeadersStartFrom(hashIdentifier, 0, 1, false);
 
         assert headersByHash.size() == 1;
         assert headersByHash.get(0).getNumber() == blockNumber;
 
         // Reverse doesn't matter for single block
-        List<BlockHeader> headersReverse = blockchain.getListOfHeadersStartFrom(hashIdentifier, 0, 1, true);
+        List<IBlockHeader> headersReverse = blockchain.getListOfHeadersStartFrom(hashIdentifier, 0, 1, true);
         assert headersReverse.size() == 1;
         assert headersReverse.get(0).getNumber() == blockNumber;
 
         // Skip doesn't matter for single block
-        List<BlockHeader> headersSkip = blockchain.getListOfHeadersStartFrom(hashIdentifier, 15, 1, false);
+        List<IBlockHeader> headersSkip = blockchain.getListOfHeadersStartFrom(hashIdentifier, 15, 1, false);
         assert headersReverse.size() == 1;
         assert headersReverse.get(0).getNumber() == blockNumber;
     }
@@ -136,14 +136,14 @@ public class BlockchainGetHeadersTest {
         // Get by number
         long blockNumber = 2L;
         BlockIdentifier identifier = new BlockIdentifier(null, blockNumber);
-        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(identifier, 0, 3, false);
+        List<IBlockHeader> headers = blockchain.getListOfHeadersStartFrom(identifier, 0, 3, false);
 
         assert headers.size() == 3;
         assert headers.get(0).getNumber() == blockNumber;
         assert headers.get(1).getNumber() == blockNumber + 1;
         assert headers.get(2).getNumber() == blockNumber + 2;
 
-        List<BlockHeader> headersReverse = blockchain.getListOfHeadersStartFrom(identifier, 0, 3, true);
+        List<IBlockHeader> headersReverse = blockchain.getListOfHeadersStartFrom(identifier, 0, 3, true);
         assert headersReverse.size() == 3;
         assert headersReverse.get(0).getNumber() == blockNumber;
         assert headersReverse.get(1).getNumber() == blockNumber - 1;
@@ -151,7 +151,7 @@ public class BlockchainGetHeadersTest {
 
         // Requesting more than we have
         BlockIdentifier identifierMore = new BlockIdentifier(null, 8L);
-        List<BlockHeader> headersMore = blockchain.getListOfHeadersStartFrom(identifierMore, 0, 3, false);
+        List<IBlockHeader> headersMore = blockchain.getListOfHeadersStartFrom(identifierMore, 0, 3, false);
         assert headersMore.size() == 2;
         assert headersMore.get(0).getNumber() == 8L;
         assert headersMore.get(1).getNumber() == 9L;
@@ -161,7 +161,7 @@ public class BlockchainGetHeadersTest {
     public void gapedHeaders() {
         int skip = 2;
         BlockIdentifier identifier = new BlockIdentifier(null, 2L);
-        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(identifier, skip, 3, false);
+        List<IBlockHeader> headers = blockchain.getListOfHeadersStartFrom(identifier, skip, 3, false);
 
         assert headers.size() == 3;
         assert headers.get(0).getNumber() == 2L;
@@ -170,7 +170,7 @@ public class BlockchainGetHeadersTest {
 
         // Same for reverse
         BlockIdentifier identifierReverse = new BlockIdentifier(null, 8L);
-        List<BlockHeader> headersReverse = blockchain.getListOfHeadersStartFrom(identifierReverse, skip, 3, true);
+        List<IBlockHeader> headersReverse = blockchain.getListOfHeadersStartFrom(identifierReverse, skip, 3, true);
         assert headersReverse.size() == 3;
         assert headersReverse.get(0).getNumber() == 8L;
         assert headersReverse.get(1).getNumber() == 5L;
@@ -178,7 +178,7 @@ public class BlockchainGetHeadersTest {
 
         // Requesting more than we have
         BlockIdentifier identifierMore = new BlockIdentifier(null, 8L);
-        List<BlockHeader> headersMore = blockchain.getListOfHeadersStartFrom(identifierMore, skip, 3, false);
+        List<IBlockHeader> headersMore = blockchain.getListOfHeadersStartFrom(identifierMore, skip, 3, false);
         assert headersMore.size() == 1;
         assert headersMore.get(0).getNumber() == 8L;
     }

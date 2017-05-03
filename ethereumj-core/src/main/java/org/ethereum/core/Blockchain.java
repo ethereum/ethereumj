@@ -72,9 +72,9 @@ public interface Blockchain {
 
     boolean isBlockExist(byte[] hash);
 
-    List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
+    List<IBlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 
-    Block createNewBlock(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);
+    Block createNewBlock(Block parent, List<Transaction> transactions, List<IBlockHeader> uncles);
 }

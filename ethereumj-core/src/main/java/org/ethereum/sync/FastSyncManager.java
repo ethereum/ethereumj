@@ -118,7 +118,7 @@ public class FastSyncManager {
     private Thread fastSyncThread;
     private int dbQueueSizeMonitor = -1;
 
-    private BlockHeader pivot;
+    private IBlockHeader pivot;
     private HeadersDownloader headersDownloader;
     private BlockBodiesDownloader blockBodiesDownloader;
     private ReceiptsDownloader receiptsDownloader;
@@ -273,7 +273,7 @@ public class FastSyncManager {
 
         public Set<Long> requestIdsSnapshot() {
             synchronized (FastSyncManager.this) {
-                return new HashSet<Long>(requestSent.keySet());
+                return new HashSet<>(requestSent.keySet());
             }
         }
 
@@ -487,11 +487,11 @@ public class FastSyncManager {
     }
 
 
-    private void syncUnsecure(BlockHeader pivot) {
+    private void syncUnsecure(IBlockHeader pivot) {
         byte[] pivotStateRoot = pivot.getStateRoot();
         TrieNodeRequest request = new TrieNodeRequest(TrieNodeType.STATE, pivotStateRoot);
         nodesQueue.add(request);
-        logger.info("FastSync: downloading state trie at pivot block: " + pivot.getShortDescr());
+        logger.info("FastSync: downloading state trie at pivot block: " + IBlockHeader.View.getShortDescr(pivot));
 
         setSyncStage(UNSECURE);
 
@@ -501,11 +501,11 @@ public class FastSyncManager {
         last = 0;
         logStat();
 
-        logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
+        logger.info("FastSync: downloading 256 blocks prior to pivot block (" + IBlockHeader.View.getShortDescr(pivot) + ")");
         downloader.startImporting(pivot.getHash(), 260);
         downloader.waitForStop();
 
-        logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
+        logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + IBlockHeader.View.getShortDescr(pivot) + ")");
 
         blockchain.setBestBlock(blockStore.getBlockByHash(pivot.getHash()));
 
@@ -537,14 +537,14 @@ public class FastSyncManager {
     private void syncSecure() {
         pivot = BlockHeader.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
-        logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
+        logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + IBlockHeader.View.getShortDescr(pivot) + ") is secure...");
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
         headersDownloader.init(pivot.getHash());
         setSyncStage(EthereumListener.SyncState.SECURE);
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
-                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
+                    IBlockHeader.View.getShortDescr(pivot) + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
             logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
             System.exit(-666);
         }
@@ -556,7 +556,7 @@ public class FastSyncManager {
     private void syncBlocksReceipts() {
         pivot = BlockHeader.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
-        logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
+        logger.info("FastSync: Downloading Block bodies up to pivot block (" + IBlockHeader.View.getShortDescr(pivot) + ")...");
 
         blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
         setSyncStage(EthereumListener.SyncState.COMPLETE);
@@ -597,9 +597,7 @@ public class FastSyncManager {
             pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
                 @Override
                 public boolean test(NodeHandler handler) {
-                    if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
-                        return false;
-                    return true;
+                    return handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY);
                 }
             });
 
@@ -655,7 +653,7 @@ public class FastSyncManager {
         return fastSyncInProgress;
     }
 
-    private BlockHeader getPivotBlock() throws InterruptedException {
+    private IBlockHeader getPivotBlock() throws InterruptedException {
         byte[] pivotBlockHash = config.getFastSyncPivotBlockHash();
         long pivotBlockNumber = 0;
 
@@ -703,23 +701,19 @@ public class FastSyncManager {
 
         try {
             while (true) {
-                BlockHeader result = null;
 
-                if (pivotBlockHash != null) {
-                    result = getPivotHeaderByHash(pivotBlockHash);
-                } else {
-                    Pair<BlockHeader, Long> pivotResult = getPivotHeaderByNumber(pivotBlockNumber);
+                IBlockHeader result = null;
+                if (pivotBlockHash == null) {
+                    Pair<IBlockHeader, Long> pivotResult = getPivotHeaderByNumber(pivotBlockNumber);
                     if (pivotResult != null) {
                         if (pivotResult.getRight() != null) {
                             pivotBlockNumber = pivotResult.getRight();
                             if (pivotBlockNumber == 0) {
                                 throw new RuntimeException("Cannot fastsync with current set of peers");
                             }
-                        } else {
-                            result = pivotResult.getLeft();
-                        }
+                        } else result = pivotResult.getLeft();
                     }
-                }
+                } else result = getPivotHeaderByHash(pivotBlockHash);
 
                 if (result != null) return result;
 
@@ -739,17 +733,17 @@ public class FastSyncManager {
         }
     }
 
-    private BlockHeader getPivotHeaderByHash(byte[] pivotBlockHash) throws Exception {
+    private IBlockHeader getPivotHeaderByHash(byte[] pivotBlockHash) throws Exception {
         Channel bestIdle = pool.getAnyIdle();
         if (bestIdle != null) {
             try {
-                ListenableFuture<List<BlockHeader>> future =
+                ListenableFuture<List<IBlockHeader>> future =
                         bestIdle.getEthHandler().sendGetBlockHeaders(pivotBlockHash, 1, 0, false);
-                List<BlockHeader> blockHeaders = future.get(3, TimeUnit.SECONDS);
-                if (!blockHeaders.isEmpty()) {
-                    BlockHeader ret = blockHeaders.get(0);
+                List<IBlockHeader> IBlockHeaders = future.get(3, TimeUnit.SECONDS);
+                if (!IBlockHeaders.isEmpty()) {
+                    IBlockHeader ret = IBlockHeaders.get(0);
                     if (FastByteComparisons.equal(pivotBlockHash, ret.getHash())) {
-                        logger.info("Pivot header fetched: " + ret.getShortDescr());
+                        logger.info("Pivot header fetched: " + IBlockHeader.View.getShortDescr(ret));
                         return ret;
                     }
                     logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
@@ -777,24 +771,24 @@ public class FastSyncManager {
      *             null, newPivotBlockNumber - if it's better to try other pivot block number
      *             BlockHeader, null - if pivot successfully fetched and verified by majority of peers
      */
-    private Pair<BlockHeader, Long> getPivotHeaderByNumber(long pivotBlockNumber) throws Exception {
+    private Pair<IBlockHeader, Long> getPivotHeaderByNumber(long pivotBlockNumber) throws Exception {
         List<Channel> allIdle = pool.getAllIdle();
         if (!allIdle.isEmpty()) {
             try {
-                List<ListenableFuture<List<BlockHeader>>> result = new ArrayList<>();
+                List<ListenableFuture<List<IBlockHeader>>> result = new ArrayList<>();
 
                 for (Channel channel : allIdle) {
-                    ListenableFuture<List<BlockHeader>> future =
+                    ListenableFuture<List<IBlockHeader>> future =
                             channel.getEthHandler().sendGetBlockHeaders(pivotBlockNumber, 1, false);
                     result.add(future);
                 }
-                ListenableFuture<List<List<BlockHeader>>> successfulRequests = Futures.successfulAsList(result);
-                List<List<BlockHeader>> results = successfulRequests.get(3, TimeUnit.SECONDS);
+                ListenableFuture<List<List<IBlockHeader>>> successfulRequests = Futures.successfulAsList(result);
+                List<List<IBlockHeader>> results = successfulRequests.get(3, TimeUnit.SECONDS);
 
-                Map<BlockHeader, Integer> pivotMap = new HashMap<>();
-                for (List<BlockHeader> blockHeaders : results) {
-                    if (!blockHeaders.isEmpty()) {
-                        BlockHeader currentHeader = blockHeaders.get(0);
+                Map<IBlockHeader, Integer> pivotMap = new HashMap<>();
+                for (List<IBlockHeader> IBlockHeaders : results) {
+                    if (!IBlockHeaders.isEmpty()) {
+                        IBlockHeader currentHeader = IBlockHeaders.get(0);
                         if (pivotMap.containsKey(currentHeader)) {
                             pivotMap.put(currentHeader, pivotMap.get(currentHeader) + 1);
                         } else {
@@ -804,10 +798,10 @@ public class FastSyncManager {
                 }
 
                 int peerCount = allIdle.size();
-                for (Map.Entry<BlockHeader, Integer> pivotEntry : pivotMap.entrySet()) {
+                for (Map.Entry<IBlockHeader, Integer> pivotEntry : pivotMap.entrySet()) {
                     // Require 50% + 1 peer to trust pivot
                     if (pivotEntry.getValue() * 2 > peerCount) {
-                        logger.info("Pivot header fetched: " + pivotEntry.getKey().getShortDescr());
+                        logger.info("Pivot header fetched: " + IBlockHeader.View.getShortDescr(pivotEntry.getKey()));
                         return Pair.of(pivotEntry.getKey(), null);
                     }
                 }

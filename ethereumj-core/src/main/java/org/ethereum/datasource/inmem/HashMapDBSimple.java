@@ -34,7 +34,7 @@ public class HashMapDBSimple<V> implements DbSource<V> {
     protected final Map<byte[], V> storage;
 
     public HashMapDBSimple() {
-        this(new ByteArrayMap<V>());
+        this(new ByteArrayMap<>());
     }
 
     public HashMapDBSimple(ByteArrayMap<V> storage) {

@@ -58,7 +58,7 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         writeCache = new AsyncWriteCache<byte[], byte[]>(countingSource) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
-                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING);
+                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.COUNTING);
                 ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
                 ret.setFlushSource(true);
                 return ret;

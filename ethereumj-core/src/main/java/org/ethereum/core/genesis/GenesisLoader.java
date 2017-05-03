@@ -42,7 +42,7 @@ import java.util.Map;
 import static org.ethereum.core.Genesis.ZERO_HASH_2048;
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.util.ByteUtil.*;
-import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
+import static org.ethereum.core.IBlockHeader.NONCE_LENGTH;
 import static org.ethereum.core.Genesis.PremineAccount;
 
 public class GenesisLoader {

@@ -19,7 +19,7 @@ package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.datasource.JournalSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -53,7 +53,7 @@ public class PruneManager {
         journal = stateSource.getJournalSource();
     }
 
-    public void blockCommitted(BlockHeader block) {
+    public void blockCommitted(IBlockHeader block) {
         if (pruneBlocksCnt < 0) return; // pruning disabled
 
         journal.commitUpdates(block.getHash());

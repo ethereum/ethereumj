@@ -216,7 +216,7 @@ public class GitHubJSONTestSuite {
 
 
     public static void runStateTest(String jsonSuite) throws IOException {
-        runStateTest(jsonSuite, new HashSet<String>());
+        runStateTest(jsonSuite, new HashSet<>());
     }
 
 

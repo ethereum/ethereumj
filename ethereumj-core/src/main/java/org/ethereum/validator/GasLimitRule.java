@@ -20,6 +20,7 @@ package org.ethereum.validator;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.math.BigInteger;
 
@@ -41,7 +42,7 @@ public class GasLimitRule extends BlockHeaderRule {
     }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
+    public ValidationResult validate(IBlockHeader header) {
 
         if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(MIN_GAS_LIMIT)) < 0) {
             return fault("header.getGasLimit() < MIN_GAS_LIMIT");

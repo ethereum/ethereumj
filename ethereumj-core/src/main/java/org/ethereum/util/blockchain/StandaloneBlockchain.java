@@ -473,7 +473,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         SystemProperties.getDefault().setBlockchainConfig(netConfig != null ? netConfig : getEasyMiningConfig());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
+        blockStore.init(new HashMapDB<>(), new HashMapDB<>());
 
         stateDS = new HashMapDB<>();
         pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));

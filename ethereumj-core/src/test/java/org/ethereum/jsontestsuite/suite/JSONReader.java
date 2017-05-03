@@ -107,7 +107,7 @@ public class JSONReader {
         JSONParser parser = new JSONParser();
         JSONObject testSuiteObj = null;
 
-        List<String> fileNames = new ArrayList<String>();
+        List<String> fileNames = new ArrayList<>();
         try {
             testSuiteObj = (JSONObject) parser.parse(result);
             JSONArray tree = (JSONArray)testSuiteObj.get("tree");
@@ -137,7 +137,7 @@ public class JSONReader {
         JSONParser parser = new JSONParser();
         JSONObject testSuiteObj = null;
 
-        List<String> fileNames = new ArrayList<String>();
+        List<String> fileNames = new ArrayList<>();
         try {
             testSuiteObj = (JSONObject) parser.parse(result);
             JSONArray tree = (JSONArray)testSuiteObj.get("tree");

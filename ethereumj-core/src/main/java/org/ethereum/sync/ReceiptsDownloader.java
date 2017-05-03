@@ -60,7 +60,7 @@ public class ReceiptsDownloader {
     TransactionStore txStore;
 
     @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
+    DataSourceArray<IBlockHeader> headerStore;
 
     long fromBlock, toBlock;
     Set<Long> completedBlocks = new HashSet<>();
@@ -99,7 +99,7 @@ public class ReceiptsDownloader {
         List<byte[]> ret = new ArrayList<>();
         for (long i = fromBlock; i < toBlock && maxSize > 0; i++) {
             if (!completedBlocks.contains(i)) {
-                BlockHeader header = headerStore.get((int) i);
+                IBlockHeader header = headerStore.get((int) i);
 
                 // Skipping download for blocks with no transactions
                 if (FastByteComparisons.equal(header.getReceiptsRoot(), HashUtil.EMPTY_TRIE_HASH)) {

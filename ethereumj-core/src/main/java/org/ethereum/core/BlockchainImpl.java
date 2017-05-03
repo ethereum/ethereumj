@@ -17,7 +17,6 @@
  */
 package org.ethereum.core;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
@@ -54,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.*;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -470,7 +468,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return ret;
     }
 
-    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
+    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<IBlockHeader> uncles) {
         long time = System.currentTimeMillis() / 1000;
         // adjust time to parent block this may happen due to system clocks difference
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
@@ -478,7 +476,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return createNewBlock(parent, txs, uncles, time);
     }
 
-    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<IBlockHeader> uncles, long time) {
         final long blockNumber = parent.getNumber() + 1;
 
         final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
@@ -501,12 +499,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 txs,
                 null);  // uncle list
 
-        for (BlockHeader uncle : uncles) {
+        for (IBlockHeader uncle : uncles) {
             block.addUncle(uncle);
         }
 
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().
-                calcDifficulty(config.getBlockchainConfig(), parent.getHeader())));
+        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(IBlockHeader.View.calcDifficulty(config.getBlockchainConfig(), parent.getHeader(), block.getHeader())));
 
         Repository track = repository.getSnapshotTo(parent.getStateRoot());
         BlockSummary summary = applyBlock(track, block);
@@ -685,13 +682,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return retBloomFilter.getData();
     }
 
-    public Block getParent(BlockHeader header) {
+    public Block getParent(IBlockHeader header) {
 
         return blockStore.getBlockByHash(header.getParentHash());
     }
 
 
-    public boolean isValid(BlockHeader header) {
+    public boolean isValid(IBlockHeader header) {
         if (parentHeaderValidator == null) return true;
 
         Block parentBlock = getParent(header);
@@ -782,7 +779,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         Set<ByteArrayWrapper> ancestors = getAncestors(blockStore, block, UNCLE_GENERATION_LIMIT + 1, false);
         Set<ByteArrayWrapper> usedUncles = getUsedUncles(blockStore, block, false);
 
-        for (BlockHeader uncle : block.getUncleList()) {
+        for (IBlockHeader uncle : block.getUncleList()) {
 
             // - They are valid headers (not necessarily valid blocks)
             if (!isValid(uncle)) return false;
@@ -838,7 +835,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             it = blockStore.getBlockByHash(it.getParentHash());
         }
         while(it.getNumber() > limitNum) {
-            for (BlockHeader uncle : it.getUncleList()) {
+            for (IBlockHeader uncle : it.getUncleList()) {
                 ret.add(new ByteArrayWrapper(uncle.getHash()));
             }
             it = blockStore.getBlockByHash(it.getParentHash());
@@ -852,7 +849,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return applyBlock(track, block);
         }
         else {
-            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
+            return new BlockSummary(block, new HashMap<>(), new ArrayList<>(), new ArrayList<>());
         }
     }
 
@@ -936,7 +933,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
-            for (BlockHeader uncle : block.getUncleList()) {
+            for (IBlockHeader uncle : block.getUncleList()) {
                 BigInteger uncleReward = BLOCK_REWARD
                         .multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber()))
                         .divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET));
@@ -1147,7 +1144,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      * @return  {@link BlockHeader}'s list or empty list if none found
      */
     @Override
-    public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+    public List<IBlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
 
         // Identifying block we'll move from
         Block startBlock;
@@ -1166,7 +1163,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (!startBlock.equals(mainChainBlock)) return emptyList();
         }
 
-        List<BlockHeader> headers;
+        List<IBlockHeader> headers;
         if (skip == 0) {
             long bestNumber = blockStore.getBestBlock().getNumber();
             headers = getContinuousHeaders(bestNumber, startBlock.getNumber(), limit, reverse);
@@ -1185,7 +1182,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      * @param reverse           Order of search
      * @return  headers found by query or empty list if none
      */
-    private List<BlockHeader> getContinuousHeaders(long bestNumber, long blockNumber, int limit, boolean reverse) {
+    private List<IBlockHeader> getContinuousHeaders(long bestNumber, long blockNumber, int limit, boolean reverse) {
         int qty = getQty(blockNumber, bestNumber, limit, reverse);
 
         byte[] startHash = getStartHash(blockNumber, qty, reverse);
@@ -1194,7 +1191,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return emptyList();
         }
 
-        List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
+        List<IBlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
 
         // blocks come with falling numbers
         if (!reverse) {
@@ -1212,8 +1209,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      * @param reverse           Order of search
      * @return  headers found by query or empty list if none
      */
-    private List<BlockHeader> getGapedHeaders(Block startBlock, int skip, int limit, boolean reverse) {
-        List<BlockHeader> headers = new ArrayList<>();
+    private List<IBlockHeader> getGapedHeaders(Block startBlock, int skip, int limit, boolean reverse) {
+        List<IBlockHeader> headers = new ArrayList<>();
         headers.add(startBlock.getHeader());
         int offset = skip + 1;
         if (reverse) offset = -offset;

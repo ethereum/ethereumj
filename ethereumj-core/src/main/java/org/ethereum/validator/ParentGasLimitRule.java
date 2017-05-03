@@ -19,6 +19,7 @@ package org.ethereum.validator;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.math.BigInteger;
 
@@ -40,7 +41,7 @@ public class ParentGasLimitRule extends DependentBlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader parent) {
+    public boolean validate(IBlockHeader header, IBlockHeader parent) {
 
         errors.clear();
         BigInteger headerGasLimit = new BigInteger(1, header.getGasLimit());

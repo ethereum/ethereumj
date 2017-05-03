@@ -64,7 +64,7 @@ public class LogInfo {
 
     public LogInfo(byte[] address, List<DataWord> topics, byte[] data) {
         this.address = (address != null) ? address : new byte[]{};
-        this.topics = (topics != null) ? topics : new ArrayList<DataWord>();
+        this.topics = (topics != null) ? topics : new ArrayList<>();
         this.data = (data != null) ? data : new byte[]{};
     }
 

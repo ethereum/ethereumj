@@ -105,7 +105,7 @@ public class PeerConnectionTester {
         ReconnectMaxPeers = config.peerDiscoveryTouchMaxNodes();
         peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
                 ConnectThreads, 0L, TimeUnit.SECONDS,
-                new MutablePriorityQueue<Runnable, ConnectTask>(new Comparator<ConnectTask>() {
+                new MutablePriorityQueue<>(new Comparator<ConnectTask>() {
                     @Override
                     public int compare(ConnectTask h1, ConnectTask h2) {
                         return h2.nodeHandler.getNodeStatistics().getReputation() -

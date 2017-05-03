@@ -184,7 +184,7 @@ public class RepoNewTest {
 
     @Test
     public void testStorage2() throws Exception {
-        RepositoryRoot repo = new RepositoryRoot(new HashMapDB<byte[]>());
+        RepositoryRoot repo = new RepositoryRoot(new HashMapDB<>());
 
         Repository repo1 = repo.startTracking();
         byte[] addr2 = decode("bbbb");

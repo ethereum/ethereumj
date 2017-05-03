@@ -17,10 +17,7 @@
  */
 package org.ethereum.sync;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockHeaderWrapper;
-import org.ethereum.core.Blockchain;
+import org.ethereum.core.*;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.Functional;
@@ -383,7 +380,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
         return ret;
     }
 
-    HeaderElement findHeaderElement(BlockHeader bh) {
+    HeaderElement findHeaderElement(IBlockHeader bh) {
         Map<ByteArrayWrapper, HeaderElement> genHeaders = headers.get(bh.getNumber());
         if (genHeaders == null) return null;
         return genHeaders.get(new ByteArrayWrapper(bh.getHash()));

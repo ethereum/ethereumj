@@ -442,7 +442,7 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     public TrieImpl(byte[] root) {
-        this(new HashMapDB<byte[]>(), root);
+        this(new HashMapDB<>(), root);
     }
 
     public TrieImpl(Source<byte[], byte[]> cache) {

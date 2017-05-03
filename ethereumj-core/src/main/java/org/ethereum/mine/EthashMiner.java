@@ -20,7 +20,7 @@ package org.ethereum.mine;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 /**
  * The adapter of Ethash for MinerIfc
@@ -48,7 +48,7 @@ public class EthashMiner implements MinerIfc {
     }
 
     @Override
-    public boolean validate(BlockHeader blockHeader) {
-        return Ethash.getForBlock(config, blockHeader.getNumber()).validate(blockHeader);
+    public boolean validate(IBlockHeader IBlockHeader) {
+        return Ethash.getForBlock(config, IBlockHeader.getNumber()).validate(IBlockHeader);
     }
 }

@@ -17,7 +17,7 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public class BlockHeaderValidator {
 
 
-    public static ArrayList<String> valid(BlockHeader orig, BlockHeader valid) {
+    public static ArrayList<String> valid(IBlockHeader orig, IBlockHeader valid) {
 
         ArrayList<String> outputSummary = new ArrayList<>();
 

@@ -19,7 +19,7 @@ package org.ethereum.config.blockchain;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.Constants;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
@@ -37,7 +37,7 @@ public class OlympicConfig extends AbstractConfig {
     }
 
     @Override
-    protected BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+    protected BigInteger getCalcDifficultyMultiplier(IBlockHeader curBlock, IBlockHeader parent) {
         return BigInteger.valueOf(curBlock.getTimestamp() >= parent.getTimestamp() +
                 getConstants().getDURATION_LIMIT() ? -1 : 1);
     }

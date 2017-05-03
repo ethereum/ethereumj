@@ -66,7 +66,8 @@ public class TwoPeerTest {
 //            return new Eth62();
         }
 
-        static SystemProperties props = new SystemProperties();;
+        static SystemProperties props = new SystemProperties();
+
         @Bean
         public SystemProperties systemProperties() {
             return props;
@@ -90,7 +91,7 @@ public class TwoPeerTest {
                 parent.getReceiptsRoot(), parent.getTxTrieRoot(),
                 Hex.decode(stateRoot),
 //                    Hex.decode("7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a"),
-                Collections.<Transaction>emptyList(), Collections.<BlockHeader>emptyList());
+                Collections.emptyList(), Collections. emptyList());
         //        b.getHeader().setDifficulty(b.getHeader().calcDifficulty(bestBlock.getHeader()).toByteArray());
         if (extraData != null) {
             b.getHeader().setExtraData(extraData.getBytes());
@@ -148,7 +149,7 @@ public class TwoPeerTest {
                                 endIdx = min(alternativeFork.size() - 1, i + msg.getMaxHeaders());
                             }
 
-                            List<BlockHeader> headers = new ArrayList<>();
+                            List<IBlockHeader> headers = new ArrayList<>();
                             for (int j = startIdx; j <= endIdx; j++) {
                                 headers.add(alternativeFork.get(j).getHeader());
                             }
@@ -197,7 +198,7 @@ public class TwoPeerTest {
         Block b3 = addNextBlock(blockchain, b2, null);
         Block b4 = addNextBlock(blockchain, b3, null);
 
-        List<BlockHeader> listOfHeadersStartFrom = blockchain.getListOfHeadersStartFrom(new BlockIdentifier(null, 3), 0, 100, true);
+        List<IBlockHeader> listOfHeadersStartFrom = blockchain.getListOfHeadersStartFrom(new BlockIdentifier(null, 3), 0, 100, true);
 
 //        Block b1b = addNextBlock(blockchain, bGen, "chain B");
         Block b1b = createNextBlock(bGen, "7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a", "chain B");

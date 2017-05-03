@@ -225,7 +225,7 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<IBlockHeader> headers = Arrays.asList(
                         mainB1B10.get(0).getHeader(),
                         mainB1B10.get(1).getHeader(),
                         mainB1B10.get(2).getHeader(),
@@ -275,7 +275,7 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Collections.emptyList();
+                List<IBlockHeader> headers = Collections.emptyList();
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -320,7 +320,7 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<IBlockHeader> headers = Arrays.asList(
                         mainB1B10.get(1).getHeader(),
                         mainB1B10.get(2).getHeader(),
                         mainB1B10.get(3).getHeader()
@@ -364,7 +364,7 @@ public class LongSyncTest {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
 
-                List<BlockHeader> headers = Collections.singletonList(
+                List<IBlockHeader> headers = Collections.singletonList(
                         mainB1B10.get(1).getHeader()
                 );
 
@@ -422,7 +422,7 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<IBlockHeader> headers = Arrays.asList(
                         mainB1B10.get(0).getHeader(),
                         mainB1B10.get(2).getHeader(),
                         mainB1B10.get(1).getHeader()
@@ -471,7 +471,7 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
+                List<IBlockHeader> headers = Arrays.asList(
                         mainB1B10.get(0).getHeader(),
                         BlockHeader.assembleBlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
                                 2, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),

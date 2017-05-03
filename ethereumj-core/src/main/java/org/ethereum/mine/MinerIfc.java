@@ -19,9 +19,7 @@ package org.ethereum.mine;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-
-import static org.ethereum.util.ByteUtil.longToBytes;
+import org.ethereum.core.IBlockHeader;
 
 /**
  * Mine algorithm interface
@@ -40,7 +38,7 @@ public interface MinerIfc {
     /**
      * Validates the Proof of Work for the block
      */
-    boolean validate(BlockHeader blockHeader);
+    boolean validate(IBlockHeader IBlockHeader);
 
     final class MiningResult {
 

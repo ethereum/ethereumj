@@ -22,10 +22,7 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.Utils;
@@ -83,7 +80,7 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
+    public BigInteger calcDifficulty(IBlockHeader curBlock, IBlockHeader parent) {
         return this.parent.calcDifficulty(curBlock, parent);
     }
 

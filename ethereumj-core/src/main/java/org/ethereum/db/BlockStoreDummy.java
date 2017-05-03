@@ -18,7 +18,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.crypto.HashUtil;
 
 import java.math.BigInteger;
@@ -64,7 +64,7 @@ public class BlockStoreDummy implements BlockStore {
     }
 
     @Override
-    public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+    public List<IBlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
         return null;
     }
 
