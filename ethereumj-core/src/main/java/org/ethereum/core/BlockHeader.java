@@ -37,11 +37,9 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * Block header is a value object containing
  * the basic information of a block
  */
-public class BlockHeader {
+final public class BlockHeader {
 
     public static final int NONCE_LENGTH = 8;
-    public static final int HASH_LENGTH = 32;
-    public static final int ADDRESS_LENGTH = 20;
     public static final int MAX_HEADER_SIZE = 592;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
@@ -379,24 +377,22 @@ public class BlockHeader {
     }
 
     private String toStringWithSuffix(final String suffix) {
-        StringBuilder toStringBuff = new StringBuilder();
-        toStringBuff.append("  hash=").append(toHexString(getHash())).append(suffix);
-        toStringBuff.append("  parentHash=").append(toHexString(parentHash)).append(suffix);
-        toStringBuff.append("  unclesHash=").append(toHexString(unclesHash)).append(suffix);
-        toStringBuff.append("  coinbase=").append(toHexString(coinbase)).append(suffix);
-        toStringBuff.append("  stateRoot=").append(toHexString(stateRoot)).append(suffix);
-        toStringBuff.append("  txTrieHash=").append(toHexString(txTrieRoot)).append(suffix);
-        toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot)).append(suffix);
-        toStringBuff.append("  difficulty=").append(toHexString(difficulty)).append(suffix);
-        toStringBuff.append("  number=").append(number).append(suffix);
-//        toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
-        toStringBuff.append("  gasLimit=").append(toHexString(gasLimit)).append(suffix);
-        toStringBuff.append("  gasUsed=").append(gasUsed).append(suffix);
-        toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp)).append(")").append(suffix);
-        toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
-        toStringBuff.append("  mixHash=").append(toHexString(mixHash)).append(suffix);
-        toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
-        return toStringBuff.toString();
+
+        return "  hash=" + toHexString(getHash()) + suffix +
+                "  parentHash=" + toHexString(parentHash) + suffix +
+                "  unclesHash=" + toHexString(unclesHash) + suffix +
+                "  coinbase=" + toHexString(coinbase) + suffix +
+                "  stateRoot=" + toHexString(stateRoot) + suffix +
+                "  txTrieHash=" + toHexString(txTrieRoot) + suffix +
+                "  receiptsTrieHash=" + toHexString(receiptTrieRoot) + suffix +
+                "  difficulty=" + toHexString(difficulty) + suffix +
+                "  number=" + number + suffix +
+                "  gasLimit=" + toHexString(gasLimit) + suffix +
+                "  gasUsed=" + gasUsed + suffix +
+                "  timestamp=" + timestamp + " (" + Utils.longToDateTime(timestamp) + ")" + suffix +
+                "  extraData=" + toHexString(extraData) + suffix +
+                "  mixHash=" + toHexString(mixHash) + suffix +
+                "  nonce=" + toHexString(nonce) + suffix;
     }
 
     public String toFlatString() {

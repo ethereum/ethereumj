@@ -5,6 +5,18 @@
     <groupId>org.ethereum</groupId>
     <artifactId>ethereumj-core</artifactId>
     <version>1.4.1-JUMPOFF</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <packaging>jar</packaging>
 
     <name>ethereumj-core</name>
@@ -242,7 +254,7 @@
             <artifactId>antlr4-runtime</artifactId>
             <scope>compile</scope>
         </dependency>
-        <dependency>
+  <!--      <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-maven-plugin</artifactId>
             <exclusions>
@@ -258,8 +270,12 @@
                     <artifactId>maven-artifact</artifactId>
                     <groupId>org.apache.maven</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>sisu-inject-bean</artifactId>
+                    <groupId>org.sonatype.sisu</groupId>
+                </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
