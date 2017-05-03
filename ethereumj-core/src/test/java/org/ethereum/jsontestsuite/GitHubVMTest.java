@@ -45,12 +45,6 @@ public class GitHubVMTest {
         SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
     }
 
-    @Ignore
-    @Test
-    public void runSingle() throws ParseException {
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "ExtCodeSizeAddressInputTooBigRightMyAddress");
-    }
 
     @Test
     public void testArithmeticFromGitHub() throws ParseException {
@@ -75,13 +69,8 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore
-    @Test // testing full suite
-    public void testEnvironmentalInfoFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
+
+
 
     @Test // testing full suite
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
@@ -89,31 +78,6 @@ public class GitHubVMTest {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmIOandFlowOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
-
-    @Ignore  //FIXME - 60M - need new fast downloader
-    @Test
-    public void testvmInputLimitsTest1FromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmInputLimits1.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
-    @Ignore //FIXME - 50M - need to handle large filesizes
-    @Test
-    public void testvmInputLimitsTest2FromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmInputLimits2.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
-    @Ignore //FIXME - 20M - possibly provide percentage indicator
-    @Test
-    public void testvmInputLimitsLightTestFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmInputLimitsLight.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
     @Test // testing full suite
     public void testVMLogGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();

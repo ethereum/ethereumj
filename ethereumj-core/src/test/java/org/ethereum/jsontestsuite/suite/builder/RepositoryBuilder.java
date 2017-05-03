@@ -56,7 +56,7 @@ public class RepositoryBuilder {
             detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
-        Repository repositoryDummy = new IterableTestRepository(new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<byte[]>())));
+        Repository repositoryDummy = new IterableTestRepository(new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<>())));
         Repository track = repositoryDummy.startTracking();
 
         track.updateBatch(stateBatch, detailsBatch);

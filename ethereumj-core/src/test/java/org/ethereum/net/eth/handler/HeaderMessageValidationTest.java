@@ -17,7 +17,7 @@
  */
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.junit.Test;
@@ -50,13 +50,13 @@ public class HeaderMessageValidationTest {
     @Test
     public void testSingleBlockResponse() {
         long blockNumber = 0L;
-        BlockHeader blockHeader = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader = org.ethereum.core.IBlockHeader.Factory.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
-        List<BlockHeader> blockHeaders = new ArrayList<>();
-        blockHeaders.add(blockHeader);
-        BlockHeadersMessage msg = new BlockHeadersMessage(blockHeaders);
+        List<IBlockHeader> IBlockHeaders = new ArrayList<>();
+        IBlockHeaders.add(IBlockHeader);
+        BlockHeadersMessage msg = new BlockHeadersMessage(IBlockHeaders);
 
-        byte[] hash = blockHeader.getHash();
+        byte[] hash = IBlockHeader.getHash();
         // Block number doesn't matter when hash is provided in request
         GetBlockHeadersMessage requestHash = new GetBlockHeadersMessage(123L, hash, 1, 0, false);
         GetBlockHeadersMessageWrapper wrapperHash = new GetBlockHeadersMessageWrapper(requestHash);
@@ -80,21 +80,21 @@ public class HeaderMessageValidationTest {
 
     @Test
     public void testFewBlocksNoSkip() {
-        List<BlockHeader> blockHeaders = new ArrayList<>();
+        List<IBlockHeader> IBlockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        BlockHeader blockHeader1 = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader1 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
-        byte[] hash1 = blockHeader1.getHash();
-        blockHeaders.add(blockHeader1);
+        byte[] hash1 = IBlockHeader1.getHash();
+        IBlockHeaders.add(IBlockHeader1);
 
         long blockNumber2 = 1L;
-        BlockHeader blockHeader2 = new BlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader2 = IBlockHeader.Factory.assembleBlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
-        byte[] hash2 = blockHeader2.getHash();
-        blockHeaders.add(blockHeader2);
+        byte[] hash2 = IBlockHeader2.getHash();
+        IBlockHeaders.add(IBlockHeader2);
 
-        BlockHeadersMessage msg = new BlockHeadersMessage(blockHeaders);
+        BlockHeadersMessage msg = new BlockHeadersMessage(IBlockHeaders);
 
         // Block number doesn't matter when hash is provided in request
         GetBlockHeadersMessage requestHash = new GetBlockHeadersMessage(123L, hash1, 2, 0, false);
@@ -107,7 +107,7 @@ public class HeaderMessageValidationTest {
         assert ethHandler.blockHeaderMessageValid(msg, wrapperNumber);
 
         // Reverse list
-        Collections.reverse(blockHeaders);
+        Collections.reverse(IBlockHeaders);
         GetBlockHeadersMessage requestReverse = new GetBlockHeadersMessage(blockNumber2, null, 2, 0, true);
         GetBlockHeadersMessageWrapper wrapperReverse = new GetBlockHeadersMessageWrapper(requestReverse);
         assert ethHandler.blockHeaderMessageValid(msg, wrapperReverse);
@@ -115,24 +115,24 @@ public class HeaderMessageValidationTest {
 
     @Test
     public void testFewBlocksWithSkip() {
-        List<BlockHeader> blockHeaders = new ArrayList<>();
+        List<IBlockHeader> IBlockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        BlockHeader blockHeader1 = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader1 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
-        blockHeaders.add(blockHeader1);
+        IBlockHeaders.add(IBlockHeader1);
 
         long blockNumber2 = 16L;
-        BlockHeader blockHeader2 = new BlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader2 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
-        blockHeaders.add(blockHeader2);
+        IBlockHeaders.add(IBlockHeader2);
 
         long blockNumber3 = 32L;
-        BlockHeader blockHeader3 = new BlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader3 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber3, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
-        blockHeaders.add(blockHeader3);
+        IBlockHeaders.add(IBlockHeader3);
 
-        BlockHeadersMessage msg = new BlockHeadersMessage(blockHeaders);
+        BlockHeadersMessage msg = new BlockHeadersMessage(IBlockHeaders);
 
         GetBlockHeadersMessage requestNumber = new GetBlockHeadersMessage(blockNumber1, null, 3, 15, false);
         GetBlockHeadersMessageWrapper wrapperNumber = new GetBlockHeadersMessageWrapper(requestNumber);
@@ -144,7 +144,7 @@ public class HeaderMessageValidationTest {
         assert ethHandler.blockHeaderMessageValid(msg, wrapperMore);
 
         // Reverse list
-        Collections.reverse(blockHeaders);
+        Collections.reverse(IBlockHeaders);
         GetBlockHeadersMessage requestReverse = new GetBlockHeadersMessage(blockNumber3, null, 3, 15, true);
         GetBlockHeadersMessageWrapper wrapperReverse = new GetBlockHeadersMessageWrapper(requestReverse);
         assert ethHandler.blockHeaderMessageValid(msg, wrapperReverse);

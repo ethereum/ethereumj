@@ -57,8 +57,8 @@ public class Genesis extends Block {
                    long gasUsed, long timestamp,
                    byte[] extraData, byte[] mixHash, byte[] nonce){
         super(parentHash, unclesHash, coinbase, logsBloom, difficulty,
-                number, ByteUtil.longToBytesNoLeadZeroes(gasLimit), gasUsed, timestamp, extraData,
-                mixHash, nonce, null, null);
+                number, ByteUtil.longToBytesNoLeadZeroes(gasLimit), gasUsed, timestamp, mixHash, nonce, null, null, extraData
+        );
     }
 
     public static Block getInstance() {

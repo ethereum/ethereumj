@@ -59,7 +59,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     }
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
+    public void messageReceived(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
 
         if (!isActive()) return;
 

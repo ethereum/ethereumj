@@ -54,7 +54,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
     IndexedBlockStore blockStore;
 
     @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
+    DataSourceArray<IBlockHeader> headerStore;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -94,9 +94,9 @@ public class BlockBodiesDownloader extends BlockDownloader {
     private void headerLoop() {
         while (curBlockIdx < headerStore.size() && !Thread.currentThread().isInterrupted()) {
             List<BlockHeaderWrapper> wrappers = new ArrayList<>();
-            List<BlockHeader> emptyBodyHeaders =  new ArrayList<>();
+            List<IBlockHeader> emptyBodyHeaders =  new ArrayList<>();
             for (int i = 0; i < 10000 - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
-                BlockHeader header = headerStore.get(curBlockIdx++);
+                IBlockHeader header = headerStore.get(curBlockIdx++);
                 wrappers.add(new BlockHeaderWrapper(header, new byte[0]));
 
                 // Skip bodies download for blocks with empty body
@@ -121,12 +121,12 @@ public class BlockBodiesDownloader extends BlockDownloader {
         headersDownloadComplete = true;
     }
 
-    private void addEmptyBodyBlocks(List<BlockHeader> blockHeaders) {
-        logger.debug("Adding {} empty body blocks to sync queue: {} ... {}", blockHeaders.size(),
-                blockHeaders.get(0).getShortDescr(), blockHeaders.get(blockHeaders.size() - 1).getShortDescr());
+    private void addEmptyBodyBlocks(List<IBlockHeader> IBlockHeaders) {
+        logger.debug("Adding {} empty body blocks to sync queue: {} ... {}", IBlockHeaders.size(),
+                IBlockHeader.View.getShortDescr(IBlockHeaders.get(0)), IBlockHeader.View.getShortDescr(IBlockHeaders.get(IBlockHeaders.size() - 1)));
 
         List<Block> finishedBlocks = new ArrayList<>();
-        for (BlockHeader header : blockHeaders) {
+        for (IBlockHeader header : IBlockHeaders) {
             Block block = new Block.Builder()
                     .withHeader(header)
                     .withBody(EMPTY_BODY)

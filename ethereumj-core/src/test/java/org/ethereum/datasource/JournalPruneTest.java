@@ -35,7 +35,7 @@ public class JournalPruneTest {
         final Source<byte[], byte[]> db;
 
         public StringJDS() {
-            this(new HashMapDB<byte[]>());
+            this(new HashMapDB<>());
         }
 
         private StringJDS(HashMapDB<byte[]> mapDB) {

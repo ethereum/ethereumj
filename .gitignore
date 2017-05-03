@@ -31,6 +31,7 @@ logs
 test_db*
 testnetSampleDb
 sampleDB*
+.staging
 
 # Mac
 .DS_Store

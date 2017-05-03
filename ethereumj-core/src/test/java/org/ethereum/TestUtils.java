@@ -61,8 +61,8 @@ public final class TestUtils {
             byte[] difficulty = BigIntegers.asUnsignedByteArray(new BigInteger(8, new Random()));
             byte[] newHash = randomHash();
 
-            Block block = new Block(lastHash, newHash,  null, null, difficulty, lastIndex, new byte[] {0}, 0, 0, null, null,
-                    null, null, EMPTY_TRIE_HASH, randomHash(), null, null);
+            Block block = new Block(lastHash, newHash,  null, null, difficulty, lastIndex, new byte[] {0}, 0, 0, null, null, null, EMPTY_TRIE_HASH, randomHash(), null, null, null
+            );
 
             ++lastIndex;
             lastHash = block.getHash();
@@ -92,8 +92,8 @@ public final class TestUtils {
                 byte[] difficulty = BigIntegers.asUnsignedByteArray(new BigInteger(8, new Random()));
                 byte[] newHash = randomHash();
 
-                Block block = new Block(parentHash, newHash, null, null, difficulty, lastIndex, new byte[]{0}, 0, 0, null, null,
-                        null, null, EMPTY_TRIE_HASH, randomHash(), null, null);
+                Block block = new Block(parentHash, newHash, null, null, difficulty, lastIndex, new byte[]{0}, 0, 0, null, null, null, EMPTY_TRIE_HASH, randomHash(), null, null, null
+                );
                 currentHashes.add(block.getHash());
                 result.add(block);
             }

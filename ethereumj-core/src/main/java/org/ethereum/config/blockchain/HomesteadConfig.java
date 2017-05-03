@@ -19,7 +19,7 @@ package org.ethereum.config.blockchain;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.Constants;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
@@ -52,7 +52,7 @@ public class HomesteadConfig extends FrontierConfig {
     }
 
     @Override
-    protected BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+    protected BigInteger getCalcDifficultyMultiplier(IBlockHeader curBlock, IBlockHeader parent) {
         return BigInteger.valueOf(Math.max(1 - (curBlock.getTimestamp() - parent.getTimestamp()) / 10, -99));
     }
 

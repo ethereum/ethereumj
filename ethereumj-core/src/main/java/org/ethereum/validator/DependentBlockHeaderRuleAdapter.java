@@ -17,7 +17,7 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 /**
  * @author Mikhail Kalinin
@@ -26,7 +26,7 @@ import org.ethereum.core.BlockHeader;
 public class DependentBlockHeaderRuleAdapter extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader dependency) {
+    public boolean validate(IBlockHeader header, IBlockHeader dependency) {
         return true;
     }
 }

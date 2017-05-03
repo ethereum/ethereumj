@@ -18,7 +18,7 @@
 package org.ethereum.validator;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 import java.math.BigInteger;
 
@@ -39,11 +39,11 @@ public class DifficultyRule extends DependentBlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader parent) {
+    public boolean validate(IBlockHeader header, IBlockHeader parent) {
 
         errors.clear();
 
-        BigInteger calcDifficulty = header.calcDifficulty(config.getBlockchainConfig(), parent);
+        BigInteger calcDifficulty = IBlockHeader.View.calcDifficulty(config.getBlockchainConfig(), parent, header);
         BigInteger difficulty = header.getDifficultyBI();
 
         if (!isEqual(difficulty, calcDifficulty)) {

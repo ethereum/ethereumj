@@ -50,15 +50,13 @@ public class Utils {
      */
     public static BigInteger unifiedNumericToBigInteger(String number) {
 
-        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", number);
-        if (!match)
-            return (new BigInteger(number));
-        else{
+        if (Pattern.matches("0[xX][0-9a-fA-F]+", number)) {
             number = number.substring(2);
             number = number.length() % 2 != 0 ? "0".concat(number) : number;
             byte[] numberBytes = Hex.decode(number);
             return (new BigInteger(1, numberBytes));
         }
+        return (new BigInteger(number));
     }
 
     /**
@@ -162,7 +160,7 @@ public class Utils {
         for (; pos < version.length() && count < 2; pos++) {
             if (version.charAt(pos) == '.') count++;
         }
-        return Double.parseDouble(version.substring(0, pos - 1));
+        return Double.parseDouble(version.replaceAll("(\\d+).*","$1") );
     }
 
     public static String getHashListShort(List<byte[]> blockHashes) {

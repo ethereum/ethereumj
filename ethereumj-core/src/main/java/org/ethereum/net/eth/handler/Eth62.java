@@ -35,7 +35,6 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -137,9 +136,9 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+    public void messageReceived(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
-        super.channelRead0(ctx, msg);
+        super.messageReceived(ctx, msg);
 
         switch (msg.getCommand()) {
             case STATUS:
@@ -219,7 +218,7 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    public synchronized ListenableFuture<List<IBlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
 
         if (ethState == EthState.STATUS_SUCCEEDED && peerState != IDLE) return null;
 
@@ -244,7 +243,7 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    public synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+    public synchronized ListenableFuture<List<IBlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
         return sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, false);
     }
 
@@ -252,7 +251,7 @@ public class Eth62 extends EthHandler {
         sendGetBlockHeaders(blockHash, maxBlocksAsk, skip, reverse, true);
     }
 
-    protected synchronized ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
+    protected synchronized ListenableFuture<List<IBlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse, boolean newHashes) {
 
         if (peerState != IDLE) return null;
 
@@ -410,7 +409,7 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {
-        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(
+        List<IBlockHeader> headers = blockchain.getListOfHeadersStartFrom(
                 msg.getBlockIdentifier(),
                 msg.getSkipBlocks(),
                 min(msg.getMaxHeaders(), MAX_HASHES_TO_SEND),
@@ -438,7 +437,7 @@ public class Eth62 extends EthHandler {
             return;
         }
 
-        List<BlockHeader> received = msg.getBlockHeaders();
+        List<IBlockHeader> received = msg.getBlockHeaders();
 
         if (ethState == EthState.STATUS_SENT || ethState == EthState.HASH_CONSTRAINTS_CHECK)
             processInitHeaders(received);
@@ -541,9 +540,9 @@ public class Eth62 extends EthHandler {
         lastReqSentTime = System.currentTimeMillis();
     }
 
-    protected synchronized void processInitHeaders(List<BlockHeader> received) {
+    protected synchronized void processInitHeaders(List<IBlockHeader> received) {
 
-        final BlockHeader blockHeader = received.get(0);
+        final IBlockHeader blockHeader = received.get(0);
         final long blockNumber = blockHeader.getNumber();
 
         if (ethState == EthState.STATUS_SENT) {
@@ -603,7 +602,7 @@ public class Eth62 extends EthHandler {
         updateBestBlock(block.getHeader());
     }
 
-    private void updateBestBlock(BlockHeader header) {
+    private void updateBestBlock(IBlockHeader header) {
         if (bestKnownBlock == null || header.getNumber() > bestKnownBlock.getNumber()) {
             bestKnownBlock = new BlockIdentifier(header.getHash(), header.getNumber());
         }
@@ -745,7 +744,7 @@ public class Eth62 extends EthHandler {
     protected boolean isValid(BlockHeadersMessage response, GetBlockHeadersMessageWrapper requestWrapper) {
 
         GetBlockHeadersMessage request = requestWrapper.getMessage();
-        List<BlockHeader> headers = response.getBlockHeaders();
+        List<IBlockHeader> headers = response.getBlockHeaders();
 
         // max headers
         if (headers.size() > request.getMaxHeaders()) {
@@ -783,7 +782,7 @@ public class Eth62 extends EthHandler {
         }
 
         // first header
-        BlockHeader first = headers.get(0);
+        IBlockHeader first = headers.get(0);
 
         if (request.getBlockHash() != null) {
             if (!Arrays.equals(request.getBlockHash(), first.getHash())) {
@@ -814,8 +813,8 @@ public class Eth62 extends EthHandler {
 
         for (int i = 1; i < headers.size(); i++) {
 
-            BlockHeader cur = headers.get(i);
-            BlockHeader prev = headers.get(i - 1);
+            IBlockHeader cur = headers.get(i);
+            IBlockHeader prev = headers.get(i - 1);
 
             long num = cur.getNumber();
             long expectedNum = prev.getNumber() + offset;
@@ -829,8 +828,8 @@ public class Eth62 extends EthHandler {
             }
 
             if (request.getSkipBlocks() == 0) {
-                BlockHeader parent;
-                BlockHeader child;
+                IBlockHeader parent;
+                IBlockHeader child;
                 if (request.isReverse()) {
                     parent = cur;
                     child = prev;

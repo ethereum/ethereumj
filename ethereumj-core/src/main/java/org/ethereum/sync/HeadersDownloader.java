@@ -17,9 +17,9 @@
  */
 package org.ethereum.sync;
 
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -54,7 +54,7 @@ public class HeadersDownloader extends BlockDownloader {
     IndexedBlockStore blockStore;
 
     @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
+    DataSourceArray<IBlockHeader> headerStore;
 
     @Autowired
     DbFlushManager dbFlushManager;

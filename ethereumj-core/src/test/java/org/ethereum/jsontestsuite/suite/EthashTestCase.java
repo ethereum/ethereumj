@@ -20,6 +20,7 @@ package org.ethereum.jsontestsuite.suite;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -136,7 +137,7 @@ public class EthashTestCase {
 
     public BlockHeader getBlockHeader() {
         RLPList rlp = RLP.decode2(decode(header));
-        return new BlockHeader((RLPList) rlp.get(0));
+        return IBlockHeader.Factory.decodeBlockHeader((RLPList) rlp.get(0));
     }
 
     public byte[] getResultBytes() {

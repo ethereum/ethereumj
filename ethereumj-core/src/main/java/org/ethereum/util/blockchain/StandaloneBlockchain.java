@@ -407,8 +407,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 	}
 
 	private SolidityContractImpl createContract(ContractMetadata contractData) {
-		SolidityContractImpl contract = new SolidityContractImpl(contractData);
-		return contract;
+        return new SolidityContractImpl(contractData);
 	}
 
     @Override
@@ -474,7 +473,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         SystemProperties.getDefault().setBlockchainConfig(netConfig != null ? netConfig : getEasyMiningConfig());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
+        blockStore.init(new HashMapDB<>(), new HashMapDB<>());
 
         stateDS = new HashMapDB<>();
         pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));

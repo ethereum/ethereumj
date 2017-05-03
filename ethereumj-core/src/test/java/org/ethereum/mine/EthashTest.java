@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.TestUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
@@ -81,7 +82,7 @@ public class EthashTest {
         System.out.println(Hex.toHexString(pair.getRight()));
 
         byte[] boundary = b.getHeader().getPowBoundary();
-        byte[] pow = b.getHeader().calcPowValue();
+        byte[] pow = IBlockHeader.View.calcPowValue(b.getHeader());
 
         assertArrayEquals(Hex.decode("0000000000bd59a74a8619f14c3d793747f1989a29ed6c83a5a488bac185679b"), boundary);
         assertArrayEquals(Hex.decode("000000000017f78925469f2f18fe7866ef6d3ed28d36fb013bc93d081e05809c"), pow);

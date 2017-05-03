@@ -94,7 +94,7 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
+        blockStore.init(new HashMapDB<>(), new HashMapDB<>());
         blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
@@ -139,7 +139,7 @@ public class TestRunner {
 
                 blockTraffic.add(tBlock);
             } catch (Exception e) {
-                System.out.println("*** Exception");
+                e.printStackTrace();
             }
         }
 
@@ -183,7 +183,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        IterableTestRepository testRepository = new IterableTestRepository(new RepositoryRoot(new HashMapDB<byte[]>()));
+        IterableTestRepository testRepository = new IterableTestRepository(new RepositoryRoot(new HashMapDB<>()));
         testRepository.environmental = true;
         Repository repository = loadRepository(testRepository, testCase.getPre());
 
@@ -364,7 +364,7 @@ public class TestRunner {
 
                             if (foundLogInfo == null) {
                                 String output =
-                                        String.format("Expected log [ %s ]", expectedLogInfo.toString());
+                                        String.format("Expected logging [ %s ]", expectedLogInfo.toString());
                                 logger.info(output);
                                 results.add(output);
                             } else {

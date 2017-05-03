@@ -50,7 +50,7 @@ public interface BlockchainConfig {
     /**
      * Calculates the difficulty for the block depending on the parent
      */
-    BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent);
+    BigInteger calcDifficulty(IBlockHeader curBlock, IBlockHeader parent);
 
     /**
      * Calculates transaction gas fee

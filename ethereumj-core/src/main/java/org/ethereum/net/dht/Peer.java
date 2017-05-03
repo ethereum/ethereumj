@@ -50,16 +50,6 @@ public class Peer {
             return 0;
     }
 
-    public byte[] calcDistance(Peer toPeer) {
-
-        BigInteger aPeer = new BigInteger(getId());
-        BigInteger bPeer = new BigInteger(toPeer.getId());
-
-        BigInteger distance = aPeer.xor(bPeer);
-        return BigIntegers.asUnsignedByteArray(distance);
-    }
-
-
     public byte[] getId() {
         return id;
     }

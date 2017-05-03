@@ -17,13 +17,9 @@
  */
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -32,7 +28,6 @@ import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.sync.SyncManager;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
@@ -74,7 +69,7 @@ public class LockBlockchainTest {
             }
 
             @Override
-            public synchronized List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+            public synchronized List<IBlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
                 return super.getListHeadersEndWith(hash, qty);
             }
 

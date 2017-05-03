@@ -204,8 +204,8 @@ public class BlockMiner {
         }
     }
 
-    protected List<BlockHeader> getUncles(Block mineBest) {
-        List<BlockHeader> ret = new ArrayList<>();
+    protected List<IBlockHeader> getUncles(Block mineBest) {
+        List<IBlockHeader> ret = new ArrayList<>();
         long miningNum = mineBest.getNumber() + 1;
         Block mineChain = mineBest;
 

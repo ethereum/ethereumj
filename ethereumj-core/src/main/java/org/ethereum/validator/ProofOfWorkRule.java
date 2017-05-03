@@ -17,7 +17,7 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.FastByteComparisons;
 
 /**
@@ -29,8 +29,8 @@ import org.ethereum.util.FastByteComparisons;
 public class ProofOfWorkRule extends BlockHeaderRule {
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
-        byte[] proof = header.calcPowValue();
+    public ValidationResult validate(IBlockHeader header) {
+        byte[] proof = IBlockHeader.View.calcPowValue(header);
         byte[] boundary = header.getPowBoundary();
 
         if (!header.isGenesis() && FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) > 0) {

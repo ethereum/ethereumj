@@ -43,9 +43,9 @@ import com.google.common.primitives.UnsignedBytes;
  * class to be able to compare arrays that start at non-zero offsets.
  */
 @SuppressWarnings("restriction")
-public abstract class FastByteComparisons {
+public interface FastByteComparisons {
 
-    public static boolean equal(byte[] b1, byte[] b2) {
+     static boolean equal(byte[] b1, byte[] b2) {
         return b1.length == b2.length && compareTo(b1, 0, b1.length, b2, 0, b2.length) == 0;
     }
     /**
@@ -59,17 +59,17 @@ public abstract class FastByteComparisons {
      * @param l2 length2
      * @return int
      */
-    public static int compareTo(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+     static int compareTo(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
         return LexicographicalComparerHolder.BEST_COMPARER.compareTo(
                 b1, s1, l1, b2, s2, l2);
     }
 
-    private interface Comparer<T> {
+      interface Comparer<T> {
         int compareTo(T buffer1, int offset1, int length1,
                       T buffer2, int offset2, int length2);
     }
 
-    private static Comparer<byte[]> lexicographicalComparerJavaImpl() {
+     static Comparer<byte[]> lexicographicalComparerJavaImpl() {
         return LexicographicalComparerHolder.PureJavaComparer.INSTANCE;
     }
 
@@ -79,12 +79,11 @@ public abstract class FastByteComparisons {
      * <p>Uses reflection to gracefully fall back to the Java implementation if
      * {@code Unsafe} isn't available.
      */
-    private static class LexicographicalComparerHolder {
+      class LexicographicalComparerHolder {
         static final String UNSAFE_COMPARER_NAME =
                 LexicographicalComparerHolder.class.getName() + "$UnsafeComparer";
 
         static final Comparer<byte[]> BEST_COMPARER = getBestComparer();
-
         /**
          * Returns the Unsafe-using Comparer, or falls back to the pure-Java
          * implementation if unable to do so.
@@ -92,12 +91,8 @@ public abstract class FastByteComparisons {
         static Comparer<byte[]> getBestComparer() {
             try {
                 Class<?> theClass = Class.forName(UNSAFE_COMPARER_NAME);
-
                 // yes, UnsafeComparer does implement Comparer<byte[]>
-                @SuppressWarnings("unchecked")
-                Comparer<byte[]> comparer =
-                        (Comparer<byte[]>) theClass.getEnumConstants()[0];
-                return comparer;
+                return (Comparer<byte[]>) theClass.getEnumConstants()[0];
             } catch (Throwable t) { // ensure we really catch *everything*
                 return lexicographicalComparerJavaImpl();
             }

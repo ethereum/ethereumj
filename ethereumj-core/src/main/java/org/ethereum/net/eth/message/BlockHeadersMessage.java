@@ -17,7 +17,7 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
@@ -38,14 +38,14 @@ public class BlockHeadersMessage extends EthMessage {
     /**
      * List of block headers from the peer
      */
-    private List<BlockHeader> blockHeaders;
+    private List<IBlockHeader> IBlockHeaders;
 
     public BlockHeadersMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public BlockHeadersMessage(List<BlockHeader> headers) {
-        this.blockHeaders = headers;
+    public BlockHeadersMessage(List<IBlockHeader> headers) {
+        this.IBlockHeaders = headers;
         parsed = true;
     }
 
@@ -53,18 +53,18 @@ public class BlockHeadersMessage extends EthMessage {
         if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        blockHeaders = new ArrayList<>();
+        IBlockHeaders = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
             RLPList rlpData = ((RLPList) paramsList.get(i));
-            blockHeaders.add(new BlockHeader(rlpData));
+            IBlockHeaders.add(IBlockHeader.Factory.decodeBlockHeader(rlpData));
         }
         parsed = true;
     }
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (BlockHeader blockHeader : blockHeaders)
-            encodedElements.add(blockHeader.getEncoded());
+        for (IBlockHeader IBlockHeader : IBlockHeaders)
+            encodedElements.add(IBlockHeader.getEncoded());
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
@@ -81,9 +81,9 @@ public class BlockHeadersMessage extends EthMessage {
         return null;
     }
 
-    public List<BlockHeader> getBlockHeaders() {
+    public List<IBlockHeader> getBlockHeaders() {
         parse();
-        return blockHeaders;
+        return IBlockHeaders;
     }
 
     @Override
@@ -97,24 +97,24 @@ public class BlockHeadersMessage extends EthMessage {
 
         StringBuilder payload = new StringBuilder();
 
-        payload.append("count( ").append(blockHeaders.size()).append(" )");
+        payload.append("count( ").append(IBlockHeaders.size()).append(" )");
 
         if (logger.isTraceEnabled()) {
             payload.append(" ");
-            for (BlockHeader header : blockHeaders) {
+            for (IBlockHeader header : IBlockHeaders) {
                 payload.append(Hex.toHexString(header.getHash()).substring(0, 6)).append(" | ");
             }
-            if (!blockHeaders.isEmpty()) {
+            if (!IBlockHeaders.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());
             }
         } else {
-            if (blockHeaders.size() > 0) {
-                payload.append("#").append(blockHeaders.get(0).getNumber()).append(" (")
-                        .append(Hex.toHexString(blockHeaders.get(0).getHash()).substring(0, 8)).append(")");
+            if (IBlockHeaders.size() > 0) {
+                payload.append("#").append(IBlockHeaders.get(0).getNumber()).append(" (")
+                        .append(Hex.toHexString(IBlockHeaders.get(0).getHash()).substring(0, 8)).append(")");
             }
-            if (blockHeaders.size() > 1) {
-                payload.append(" ... #").append(blockHeaders.get(blockHeaders.size() - 1).getNumber()).append(" (")
-                        .append(Hex.toHexString(blockHeaders.get(blockHeaders.size() - 1).getHash()).substring(0, 8)).append(")");
+            if (IBlockHeaders.size() > 1) {
+                payload.append(" ... #").append(IBlockHeaders.get(IBlockHeaders.size() - 1).getNumber()).append(" (")
+                        .append(Hex.toHexString(IBlockHeaders.get(IBlockHeaders.size() - 1).getHash()).substring(0, 8)).append(")");
             }
         }
 

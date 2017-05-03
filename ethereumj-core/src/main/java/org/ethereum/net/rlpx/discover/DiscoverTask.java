@@ -48,7 +48,7 @@ public class DiscoverTask implements Runnable {
 
     @Override
     public void run() {
-        discover(nodeId, 0, new ArrayList<Node>());
+        discover(nodeId, 0, new ArrayList<>());
     }
 
     public synchronized void discover(byte[] nodeId, int round, List<Node> prevTried) {

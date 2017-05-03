@@ -53,7 +53,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     private List<Pair<Long, BlockHeaderValidator>> headerValidators = new ArrayList<>();
 
     public AbstractConfig() {
-        this(new Constants());
+        this(new Constants(){});
     }
 
     public AbstractConfig(Constants constants) {
@@ -82,7 +82,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
-    public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
+    public BigInteger calcDifficulty(IBlockHeader curBlock, IBlockHeader parent) {
         BigInteger pd = parent.getDifficultyBI();
         BigInteger quotient = pd.divide(getConstants().getDIFFICULTY_BOUND_DIVISOR());
 
@@ -100,9 +100,9 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         return difficulty;
     }
 
-    protected abstract BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent);
+    protected abstract BigInteger getCalcDifficultyMultiplier(IBlockHeader curBlock, IBlockHeader parent);
 
-    protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
+    protected int getExplosion(IBlockHeader curBlock, IBlockHeader parent) {
         int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
         return periodCount - 2;
     }

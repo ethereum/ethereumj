@@ -20,6 +20,7 @@ package org.ethereum.validator;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 /**
  * Checks {@link BlockHeader#extraData} size against {@link Constants#getMAXIMUM_EXTRA_DATA_SIZE}
@@ -37,7 +38,7 @@ public class ExtraDataRule extends BlockHeaderRule {
     }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
+    public ValidationResult validate(IBlockHeader header) {
         if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
             return fault(String.format(
                     "#%d: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE",

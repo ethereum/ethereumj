@@ -38,7 +38,7 @@ public class ObjectDataSource<V> extends SourceChainBox<byte[], V, byte[], byte[
     public ObjectDataSource(Source<byte[], byte[]> byteSource, Serializer<V, byte[]> serializer, int readCacheEntries) {
         super(byteSource);
         this.byteSource = byteSource;
-        add(codec = new SourceCodec<>(byteSource, new Serializers.Identity<byte[]>(), serializer));
+        add(codec = new SourceCodec<>(byteSource, new Serializers.Identity<>(), serializer));
         if (readCacheEntries > 0) {
             add(cache = new ReadCache.BytesKey<>(codec).withMaxCapacity(readCacheEntries));
         }

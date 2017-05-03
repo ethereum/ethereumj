@@ -618,15 +618,12 @@ public class ECKey implements Serializable {
 
         public static boolean validateComponents(BigInteger r, BigInteger s, byte v) {
 
-            if (v != 27 && v != 28) return false;
+            return !(v != 27 && v != 28)
+                    && !isLessThan(r, BigInteger.ONE)
+                    && !isLessThan(s, BigInteger.ONE)
+                    && isLessThan(r, Constants.getSECP256K1N())
+                    && isLessThan(s, Constants.getSECP256K1N());
 
-            if (isLessThan(r, BigInteger.ONE)) return false;
-            if (isLessThan(s, BigInteger.ONE)) return false;
-
-            if (!isLessThan(r, Constants.getSECP256K1N())) return false;
-            if (!isLessThan(s, Constants.getSECP256K1N())) return false;
-
-            return true;
         }
 
         public static ECDSASignature decodeFromDER(byte[] bytes) {

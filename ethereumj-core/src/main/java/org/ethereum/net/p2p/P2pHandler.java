@@ -134,7 +134,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
+    public void messageReceived(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
 
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.trace("P2PHandler invoke: [{}]", msg.getCommand());

@@ -31,22 +31,6 @@ import static org.junit.Assert.*;
 
 public class KademliaTest {
 
-    @Ignore
-    @Test
-    public void test1() {
-        //init table with one home node
-        NodeTable t = getTestNodeTable(0);
-        Node homeNode = t.getNode();
-
-        //table should contain the home node only
-        assertEquals(t.getAllNodes().size(), 1);
-
-        Node bucketNode = t.getAllNodes().get(0).getNode();
-
-        assertEquals(homeNode, bucketNode);
-
-    }
-
     @Test
     public void test2() {
         NodeTable t = getTestNodeTable(0);

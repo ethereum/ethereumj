@@ -56,6 +56,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.jsonrpc.TypeConverter.*;
 import static org.ethereum.jsonrpc.TypeConverter.StringHexToByteArray;
@@ -71,7 +72,6 @@ public class JsonRpcImpl implements JsonRpc {
     private static final Logger logger = LoggerFactory.getLogger("jsonrpc");
 
 
-
     public class BinaryCallArguments {
         public long nonce;
         public long gasPrice;
@@ -79,30 +79,31 @@ public class JsonRpcImpl implements JsonRpc {
         public String toAddress;
         public long value;
         public byte[] data;
+
         public void setArguments(CallArguments args) throws Exception {
             nonce = 0;
             if (args.nonce != null && args.nonce.length() != 0)
                 nonce = JSonHexToLong(args.nonce);
 
             gasPrice = 0;
-            if (args.gasPrice != null && args.gasPrice.length()!=0)
+            if (args.gasPrice != null && args.gasPrice.length() != 0)
                 gasPrice = JSonHexToLong(args.gasPrice);
 
             gasLimit = 4_000_000;
-            if (args.gas != null && args.gas.length()!=0)
+            if (args.gas != null && args.gas.length() != 0)
                 gasLimit = JSonHexToLong(args.gas);
 
             toAddress = null;
             if (args.to != null && !args.to.isEmpty())
                 toAddress = JSonHexToHex(args.to);
 
-            value=0;
-            if (args.value != null && args.value.length()!=0)
+            value = 0;
+            if (args.value != null && args.value.length() != 0)
                 value = JSonHexToLong(args.value);
 
             data = null;
 
-            if (args.data != null && args.data.length()!=0)
+            if (args.data != null && args.data.length() != 0)
                 data = TypeConverter.StringHexToByteArray(args.data);
         }
     }
@@ -221,7 +222,7 @@ public class JsonRpcImpl implements JsonRpc {
         return x;
     }
 
-    public Block getBlockByJSonHash(String blockHash) throws Exception  {
+    public Block getBlockByJSonHash(String blockHash) throws Exception {
         byte[] bhash = TypeConverter.StringHexToByteArray(blockHash);
         return worldManager.getBlockchain().getBlockByHash(bhash);
     }
@@ -278,9 +279,9 @@ public class JsonRpcImpl implements JsonRpc {
                 System.getProperty("os.name") + "/Java1.7/" + config.projectVersionModifier() + "-" + BuildInfo.buildHash;
         if (logger.isDebugEnabled()) logger.debug("web3_clientVersion(): " + s);
         return s;
-    };
+    }
 
-    public String  web3_sha3(String data) throws Exception {
+    public String web3_sha3(String data) throws Exception {
         String s = null;
         try {
             byte[] result = HashUtil.sha3(TypeConverter.StringHexToByteArray(data));
@@ -299,7 +300,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public String net_peerCount(){
+    public String net_peerCount() {
         String s = null;
         try {
             int n = channelManager.getActivePeers().size();
@@ -313,12 +314,12 @@ public class JsonRpcImpl implements JsonRpc {
         Boolean s = null;
         try {
             return s = peerServer.isListening();
-        }finally {
+        } finally {
             if (logger.isDebugEnabled()) logger.debug("net_listening(): " + s);
         }
     }
 
-    public String eth_protocolVersion(){
+    public String eth_protocolVersion() {
         String s = null;
         try {
             int version = 0;
@@ -333,7 +334,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public SyncingResult eth_syncing(){
+    public SyncingResult eth_syncing() {
         SyncingResult s = new SyncingResult();
         try {
             s.startingBlock = TypeConverter.toJsonHex(initialBlockNumber);
@@ -341,10 +342,10 @@ public class JsonRpcImpl implements JsonRpc {
             s.highestBlock = TypeConverter.toJsonHex(syncManager.getLastKnownBlockNumber());
 
             return s;
-        }finally {
+        } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_syncing(): " + s);
         }
-    };
+    }
 
     public String eth_coinbase() {
         String s = null;
@@ -374,7 +375,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public String eth_gasPrice(){
+    public String eth_gasPrice() {
         String s = null;
         try {
             return s = TypeConverter.toJsonHex(eth.getGasPrice());
@@ -392,7 +393,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public String eth_blockNumber(){
+    public String eth_blockNumber() {
         String s = null;
         try {
             Block bestBlock = blockchain.getBestBlock();
@@ -436,7 +437,8 @@ public class JsonRpcImpl implements JsonRpc {
                     getStorageValue(addressAsByteArray, new DataWord(StringHexToByteArray(storageIdx)));
             return s = TypeConverter.toJsonHex(storageValue.getData());
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getStorageAt(" + address + ", " + storageIdx + ", " + blockId + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getStorageAt(" + address + ", " + storageIdx + ", " + blockId + "): " + s);
         }
     }
 
@@ -448,7 +450,8 @@ public class JsonRpcImpl implements JsonRpc {
             BigInteger nonce = getRepoByJsonBlockId(blockId).getNonce(addressAsByteArray);
             return s = TypeConverter.toJsonHex(nonce);
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getTransactionCount(" + address + ", " + blockId + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getTransactionCount(" + address + ", " + blockId + "): " + s);
         }
     }
 
@@ -511,17 +514,17 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public String eth_sign(String addr,String data) throws Exception {
+    public String eth_sign(String addr, String data) throws Exception {
         String s = null;
         try {
             String ha = JSonHexToHex(addr);
             Account account = getAccount(ha);
 
-            if (account==null)
+            if (account == null)
                 throw new Exception("Inexistent account");
 
             // Todo: is not clear from the spec what hash function must be used to sign
-            byte[] masgHash= HashUtil.sha3(TypeConverter.StringHexToByteArray(data));
+            byte[] masgHash = HashUtil.sha3(TypeConverter.StringHexToByteArray(data));
             ECKey.ECDSASignature signature = account.getEcKey().sign(masgHash);
             // Todo: is not clear if result should be RlpEncoded or serialized by other means
             byte[] rlpSig = RLP.encode(signature);
@@ -562,7 +565,7 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     public String eth_sendTransaction(String from, String to, String gas,
-                                      String gasPrice, String value,String data,String nonce) throws Exception {
+                                      String gasPrice, String value, String data, String nonce) throws Exception {
         String s = null;
         try {
             Transaction tx = new Transaction(
@@ -650,7 +653,7 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             TransactionReceipt res;
             if ("pending".equals(bnOrId)) {
-                Block pendingBlock = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.<BlockHeader>emptyList());
+                Block pendingBlock = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), emptyList());
                 res = createCallTxAndExecute(args, pendingBlock, pendingState.getRepository(), worldManager.getBlockStore());
             } else {
                 res = createCallTxAndExecute(args, getByJsonBlockId(bnOrId));
@@ -673,7 +676,7 @@ public class JsonRpcImpl implements JsonRpc {
 
 
     public BlockResult getBlockResult(Block b, boolean fullTx) {
-        if (b==null)
+        if (b == null)
             return null;
         boolean isPending = ByteUtil.byteArrayToLong(b.getNonce()) == 0;
         BlockResult br = new BlockResult();
@@ -681,20 +684,20 @@ public class JsonRpcImpl implements JsonRpc {
         br.hash = isPending ? null : TypeConverter.toJsonHex(b.getHash());
         br.parentHash = TypeConverter.toJsonHex(b.getParentHash());
         br.nonce = isPending ? null : TypeConverter.toJsonHex(b.getNonce());
-        br.sha3Uncles= TypeConverter.toJsonHex(b.getUnclesHash());
+        br.sha3Uncles = TypeConverter.toJsonHex(b.getUnclesHash());
         br.logsBloom = isPending ? null : TypeConverter.toJsonHex(b.getLogBloom());
-        br.transactionsRoot =TypeConverter.toJsonHex(b.getTxTrieRoot());
+        br.transactionsRoot = TypeConverter.toJsonHex(b.getTxTrieRoot());
         br.stateRoot = TypeConverter.toJsonHex(b.getStateRoot());
-        br.receiptsRoot =TypeConverter.toJsonHex(b.getReceiptsRoot());
+        br.receiptsRoot = TypeConverter.toJsonHex(b.getReceiptsRoot());
         br.miner = isPending ? null : TypeConverter.toJsonHex(b.getCoinbase());
         br.difficulty = TypeConverter.toJsonHex(b.getDifficulty());
         br.totalDifficulty = TypeConverter.toJsonHex(blockchain.getTotalDifficulty());
         if (b.getExtraData() != null)
-            br.extraData =TypeConverter.toJsonHex(b.getExtraData());
+            br.extraData = TypeConverter.toJsonHex(b.getExtraData());
         br.size = TypeConverter.toJsonHex(b.getEncoded().length);
-        br.gasLimit =TypeConverter.toJsonHex(b.getGasLimit());
-        br.gasUsed =TypeConverter.toJsonHex(b.getGasUsed());
-        br.timestamp =TypeConverter.toJsonHex(b.getTimestamp());
+        br.gasLimit = TypeConverter.toJsonHex(b.getGasLimit());
+        br.gasUsed = TypeConverter.toJsonHex(b.getGasUsed());
+        br.timestamp = TypeConverter.toJsonHex(b.getTimestamp());
 
         List<Object> txes = new ArrayList<>();
         if (fullTx) {
@@ -709,7 +712,7 @@ public class JsonRpcImpl implements JsonRpc {
         br.transactions = txes.toArray();
 
         List<String> ul = new ArrayList<>();
-        for (BlockHeader header : b.getUncleList()) {
+        for (IBlockHeader header : b.getUncleList()) {
             ul.add(toJsonHex(header.getHash()));
         }
         br.uncles = ul.toArray(new String[ul.size()]);
@@ -717,28 +720,30 @@ public class JsonRpcImpl implements JsonRpc {
         return br;
     }
 
-    public BlockResult eth_getBlockByHash(String blockHash,Boolean fullTransactionObjects) throws Exception {
+    public BlockResult eth_getBlockByHash(String blockHash, Boolean fullTransactionObjects) throws Exception {
         BlockResult s = null;
         try {
             Block b = getBlockByJSonHash(blockHash);
             return getBlockResult(b, fullTransactionObjects);
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getBlockByHash(" +  blockHash + ", " + fullTransactionObjects + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getBlockByHash(" + blockHash + ", " + fullTransactionObjects + "): " + s);
         }
     }
 
-    public BlockResult eth_getBlockByNumber(String bnOrId,Boolean fullTransactionObjects) throws Exception {
+    public BlockResult eth_getBlockByNumber(String bnOrId, Boolean fullTransactionObjects) throws Exception {
         BlockResult s = null;
         try {
             Block b;
             if ("pending".equalsIgnoreCase(bnOrId)) {
-                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.<BlockHeader>emptyList());
+                b = blockchain.createNewBlock(blockchain.getBestBlock(), pendingState.getPendingTransactions(), Collections.emptyList());
             } else {
                 b = getByJsonBlockId(bnOrId);
             }
             return s = (b == null ? null : getBlockResult(b, fullTransactionObjects));
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getBlockByNumber(" +  bnOrId + ", " + fullTransactionObjects + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getBlockByNumber(" + bnOrId + ", " + fullTransactionObjects + "): " + s);
         }
     }
 
@@ -773,7 +778,7 @@ public class JsonRpcImpl implements JsonRpc {
         }
     }
 
-    public TransactionResultDTO eth_getTransactionByBlockHashAndIndex(String blockHash,String index) throws Exception {
+    public TransactionResultDTO eth_getTransactionByBlockHashAndIndex(String blockHash, String index) throws Exception {
         TransactionResultDTO s = null;
         try {
             Block b = getBlockByJSonHash(blockHash);
@@ -783,7 +788,8 @@ public class JsonRpcImpl implements JsonRpc {
             Transaction tx = b.getTransactionsList().get(idx);
             return s = new TransactionResultDTO(b, idx, tx);
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getTransactionByBlockHashAndIndex(" + blockHash + ", " + index + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getTransactionByBlockHashAndIndex(" + blockHash + ", " + index + "): " + s);
         }
     }
 
@@ -798,7 +804,8 @@ public class JsonRpcImpl implements JsonRpc {
             Transaction tx = txs.get(idx);
             return s = new TransactionResultDTO(b, idx, tx);
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getTransactionByBlockNumberAndIndex(" + bnOrId + ", " + index + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getTransactionByBlockNumberAndIndex(" + bnOrId + ", " + index + "): " + s);
         }
     }
 
@@ -879,14 +886,14 @@ public class JsonRpcImpl implements JsonRpc {
             if (block == null) return null;
             int idx = JSonHexToInt(uncleIdx);
             if (idx >= block.getUncleList().size()) return null;
-            BlockHeader uncleHeader = block.getUncleList().get(idx);
+            IBlockHeader uncleHeader = block.getUncleList().get(idx);
             Block uncle = blockchain.getBlockByHash(uncleHeader.getHash());
-            if (uncle == null) {
-                uncle = new Block(uncleHeader, Collections.<Transaction>emptyList(), Collections.<BlockHeader>emptyList());
-            }
+            if (uncle == null)
+                uncle = new Block(uncleHeader, emptyList(), emptyList());
             return s = getBlockResult(uncle, false);
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getUncleByBlockHashAndIndex(" + blockHash + ", " + uncleIdx + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getUncleByBlockHashAndIndex(" + blockHash + ", " + uncleIdx + "): " + s);
         }
     }
 
@@ -898,7 +905,8 @@ public class JsonRpcImpl implements JsonRpc {
             return s = block == null ? null :
                     eth_getUncleByBlockHashAndIndex(toJsonHex(block.getHash()), uncleIdx);
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("eth_getUncleByBlockNumberAndIndex(" + blockId + ", " + uncleIdx + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("eth_getUncleByBlockNumberAndIndex(" + blockId + ", " + uncleIdx + "): " + s);
         }
     }
 
@@ -906,7 +914,7 @@ public class JsonRpcImpl implements JsonRpc {
     public String[] eth_getCompilers() {
         String[] s = null;
         try {
-            return s = new String[] {"solidity"};
+            return s = new String[]{"solidity"};
         } finally {
             if (logger.isDebugEnabled()) logger.debug("eth_getCompilers(): " + Arrays.toString(s));
         }
@@ -943,7 +951,7 @@ public class JsonRpcImpl implements JsonRpc {
     }
 
     @Override
-    public CompilationResult eth_compileSerpent(String contract){
+    public CompilationResult eth_compileSerpent(String contract) {
         throw new UnsupportedOperationException("Serpent compiler not supported");
     }
 
@@ -959,12 +967,16 @@ public class JsonRpcImpl implements JsonRpc {
 
     static class Filter {
         static final int MAX_EVENT_COUNT = 1024; // prevent OOM when Filers are forgotten
+
         static abstract class FilterEvent {
             public abstract Object getJsonEventObject();
         }
+
         List<FilterEvent> events = new LinkedList<>();
 
-        public synchronized boolean hasNew() { return !events.isEmpty();}
+        public synchronized boolean hasNew() {
+            return !events.isEmpty();
+        }
 
         public synchronized Object[] poll() {
             Object[] ret = new Object[events.size()];
@@ -980,14 +992,20 @@ public class JsonRpcImpl implements JsonRpc {
             if (events.size() > MAX_EVENT_COUNT) events.remove(0);
         }
 
-        public void newBlockReceived(Block b) {}
-        public void newPendingTx(Transaction tx) {}
+        public void newBlockReceived(Block b) {
+        }
+
+        public void newPendingTx(Transaction tx) {
+        }
     }
 
     static class NewBlockFilter extends Filter {
         class NewBlockFilterEvent extends FilterEvent {
             public final Block b;
-            NewBlockFilterEvent(Block b) {this.b = b;}
+
+            NewBlockFilterEvent(Block b) {
+                this.b = b;
+            }
 
             @Override
             public String getJsonEventObject() {
@@ -1004,7 +1022,9 @@ public class JsonRpcImpl implements JsonRpc {
         class PendingTransactionFilterEvent extends FilterEvent {
             private final Transaction tx;
 
-            PendingTransactionFilterEvent(Transaction tx) {this.tx = tx;}
+            PendingTransactionFilterEvent(Transaction tx) {
+                this.tx = tx;
+            }
 
             @Override
             public String getJsonEventObject() {
@@ -1504,7 +1524,8 @@ public class JsonRpcImpl implements JsonRpc {
         try {
             return true;
         } finally {
-            if (logger.isDebugEnabled()) logger.debug("personal_unlockAccount(" + addr + ", ***, " + duration + "): " + s);
+            if (logger.isDebugEnabled())
+                logger.debug("personal_unlockAccount(" + addr + ", ***, " + duration + "): " + s);
         }
     }
 

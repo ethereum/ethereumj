@@ -18,6 +18,7 @@
 package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.slf4j.Logger;
 
 import java.util.LinkedList;
@@ -57,6 +58,6 @@ public abstract class DependentBlockHeaderRule extends AbstractValidationRule {
      * @param dependency header of the dependency block
      * @return true if validation passed, false otherwise
      */
-    abstract public boolean validate(BlockHeader header, BlockHeader dependency);
+    abstract public boolean validate(IBlockHeader header, IBlockHeader dependency);
 
 }

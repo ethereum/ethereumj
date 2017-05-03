@@ -21,6 +21,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.jsontestsuite.suite.DifficultyTestCase;
 import org.ethereum.jsontestsuite.suite.DifficultyTestSuite;
 import org.ethereum.jsontestsuite.suite.JSONReader;
@@ -65,10 +66,10 @@ public class GitHubBasicTest {
             logger.info("Running {}\n", testCase.getName());
 
             BlockHeader current = testCase.getCurrent();
-            BlockHeader parent = testCase.getParent();
+            IBlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty
-                    (SystemProperties.getDefault().getBlockchainConfig(), parent));
+            assertEquals(testCase.getExpectedDifficulty(), IBlockHeader.View.calcDifficulty
+                    (SystemProperties.getDefault().getBlockchainConfig(), parent, current));
         }
     }
 
@@ -86,10 +87,10 @@ public class GitHubBasicTest {
             logger.info("Running {}\n", testCase.getName());
 
             BlockHeader current = testCase.getCurrent();
-            BlockHeader parent = testCase.getParent();
+            IBlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(
-                    SystemProperties.getDefault().getBlockchainConfig(), parent));
+            assertEquals(testCase.getExpectedDifficulty(), IBlockHeader.View.calcDifficulty(
+                    SystemProperties.getDefault().getBlockchainConfig(), parent, current));
         }
     }
 
@@ -107,10 +108,10 @@ public class GitHubBasicTest {
             logger.info("Running {}\n", testCase.getName());
 
             BlockHeader current = testCase.getCurrent();
-            BlockHeader parent = testCase.getParent();
+            IBlockHeader parent = testCase.getParent();
 
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(
-                    SystemProperties.getDefault().getBlockchainConfig(), parent));
+            assertEquals(testCase.getExpectedDifficulty(), IBlockHeader.View.calcDifficulty(
+                    SystemProperties.getDefault().getBlockchainConfig(), parent, current));
         }
     }
 }

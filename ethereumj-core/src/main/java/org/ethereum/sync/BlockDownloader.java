@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.ByteArrayMap;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,13 +177,13 @@ public abstract class BlockDownloader {
                             break;
                         } else {
                             logger.debug("headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode());
-                            ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
+                            ListenableFuture<List<IBlockHeader>> futureHeaders = headersRequest.getHash() == null ?
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse()) :
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), headersRequest.getStep(), headersRequest.isReverse());
                             if (futureHeaders != null) {
-                                Futures.addCallback(futureHeaders, new FutureCallback<List<BlockHeader>>() {
+                                Futures.addCallback(futureHeaders, new FutureCallback<List<IBlockHeader>>() {
                                     @Override
-                                    public void onSuccess(List<BlockHeader> result) {
+                                    public void onSuccess(List<IBlockHeader> result) {
                                         if (!validateAndAddHeaders(result, any.getNodeId())) {
                                             onFailure(new RuntimeException("Received headers validation failed"));
                                         }
@@ -353,13 +352,13 @@ public abstract class BlockDownloader {
      * @return true if blocks passed validation and were added to the queue,
      *          otherwise it returns false
      */
-    private boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
+    private boolean validateAndAddHeaders(List<IBlockHeader> headers, byte[] nodeId) {
 
         if (headers.isEmpty()) return true;
 
         List<BlockHeaderWrapper> wrappers = new ArrayList<>(headers.size());
 
-        for (BlockHeader header : headers) {
+        for (IBlockHeader header : headers) {
 
             if (!isValid(header)) {
 
@@ -390,12 +389,12 @@ public abstract class BlockDownloader {
     /**
      * Runs checks against block's header. <br>
      * All these checks make sense before block is added to queue
-     * in front of checks running by {@link BlockchainImpl#isValid(BlockHeader)}
+     * in front of checks running by {@link BlockchainImpl#isValid(IBlockHeader)}
      *
      * @param header block header
      * @return true if block is valid, false otherwise
      */
-    protected boolean isValid(BlockHeader header) {
+    protected boolean isValid(IBlockHeader header) {
         return headerValidator.validateAndLog(header, logger);
     }
 

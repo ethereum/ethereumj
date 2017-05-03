@@ -74,204 +74,18 @@ public class TransactionTest {
         System.out.println(signature);
     }
 
-    @Ignore
-    @Test  /* achieve public key of the sender */
-    public void test2() throws Exception {
 
-        // cat --> 79b08ad8787060333663d19704909ee7b1903e58
-        // cow --> cd2a3d9f938e13cd947ec05abc7fe734df8dd826
-
-        BigInteger value = new BigInteger("1000000000000000000000");
-
-        byte[] privKey = HashUtil.sha3("cat".getBytes());
-        ECKey ecKey = ECKey.fromPrivate(privKey);
-
-        byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
-
-        byte[] gasPrice = Hex.decode("09184e72a000");
-        byte[] gas = Hex.decode("4255");
-
-        // Tn (nonce); Tp(pgas); Tg(gaslimi); Tt(value); Tv(value); Ti(sender);  Tw; Tr; Ts
-        Transaction tx = new Transaction(null, gasPrice, gas, ecKey.getAddress(),
-                value.toByteArray(),
-                null);
-
-        tx.sign(ECKey.fromPrivate(senderPrivKey));
-
-        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[]{tx.getSignature().v}));
-        System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
-        System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
-
-        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString(tx.getEncoded()));
-
-        // retrieve the signer/sender of the transaction
-        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature());
-
-        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString(tx.getEncodedRaw()));
-        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString(tx.getEncoded()));
-
-        System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
-        System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
-
-        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826",
-                Hex.toHexString(key.getAddress()));
-
-        System.out.println(tx.toString());
-    }
-
-
-    @Ignore
-    @Test  /* achieve public key of the sender nonce: 01 */
-    public void test3() throws Exception {
-
-        // cat --> 79b08ad8787060333663d19704909ee7b1903e58
-        // cow --> cd2a3d9f938e13cd947ec05abc7fe734df8dd826
-
-        ECKey ecKey = ECKey.fromPrivate(HashUtil.sha3("cat".getBytes()));
-        byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
-
-        byte[] nonce = {0x01};
-        byte[] gasPrice = Hex.decode("09184e72a000");
-        byte[] gasLimit = Hex.decode("4255");
-        BigInteger value = new BigInteger("1000000000000000000000000");
-
-        Transaction tx = new Transaction(nonce, gasPrice, gasLimit,
-                ecKey.getAddress(), value.toByteArray(), null);
-
-        tx.sign(ECKey.fromPrivate(senderPrivKey));
-
-        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[]{tx.getSignature().v}));
-        System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
-        System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
-
-        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString(tx.getEncoded()));
-
-        // retrieve the signer/sender of the transaction
-        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature());
-
-        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString(tx.getEncodedRaw()));
-        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString(tx.getEncoded()));
-
-        System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
-        System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
-
-        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826",
-                Hex.toHexString(key.getAddress()));
-    }
-
-    // Testdata from: https://github.com/ethereum/tests/blob/master/txtest.json
-    String RLP_ENCODED_RAW_TX = "e88085e8d4a510008227109413978aee95f38490e9769c39b2773ed763d9cd5f872386f26fc1000080";
-    String RLP_ENCODED_UNSIGNED_TX = "eb8085e8d4a510008227109413978aee95f38490e9769c39b2773ed763d9cd5f872386f26fc1000080808080";
     String HASH_TX = "328ea6d24659dec48adea1aced9a136e5ebdf40258db30d1b1d97ed2b74be34e";
     String RLP_ENCODED_SIGNED_TX = "f86b8085e8d4a510008227109413978aee95f38490e9769c39b2773ed763d9cd5f872386f26fc10000801ba0eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4a014a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1";
-    String KEY = "c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4";
-    byte[] testNonce = Hex.decode("");
+
     byte[] testGasPrice = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(1000000000000L));
     byte[] testGasLimit = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(10000));
     byte[] testReceiveAddress = Hex.decode("13978aee95f38490e9769c39b2773ed763d9cd5f");
     byte[] testValue = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(10000000000000000L));
-    byte[] testData = Hex.decode("");
-    byte[] testInit = Hex.decode("");
 
-    @Ignore
-    @Test
-    public void testTransactionFromSignedRLP() throws Exception {
-        Transaction txSigned = new Transaction(Hex.decode(RLP_ENCODED_SIGNED_TX));
-
-        assertEquals(HASH_TX, Hex.toHexString(txSigned.getHash()));
-        assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txSigned.getEncoded()));
-
-        assertEquals(BigInteger.ZERO, new BigInteger(1, txSigned.getNonce()));
-        assertEquals(new BigInteger(1, testGasPrice), new BigInteger(1, txSigned.getGasPrice()));
-        assertEquals(new BigInteger(1, testGasLimit), new BigInteger(1, txSigned.getGasLimit()));
-        assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txSigned.getReceiveAddress()));
-        assertEquals(new BigInteger(1, testValue), new BigInteger(1, txSigned.getValue()));
-        assertNull(txSigned.getData());
-        assertEquals(27, txSigned.getSignature().v);
-        assertEquals("eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4", Hex.toHexString(BigIntegers.asUnsignedByteArray(txSigned.getSignature().r)));
-        assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txSigned.getSignature().s)));
-    }
-
-    @Ignore
-    @Test
-    public void testTransactionFromUnsignedRLP() throws Exception {
-        Transaction txUnsigned = new Transaction(Hex.decode(RLP_ENCODED_UNSIGNED_TX));
-
-        assertEquals(HASH_TX, Hex.toHexString(txUnsigned.getHash()));
-        assertEquals(RLP_ENCODED_UNSIGNED_TX, Hex.toHexString(txUnsigned.getEncoded()));
-        txUnsigned.sign(ECKey.fromPrivate(Hex.decode(KEY)));
-        assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txUnsigned.getEncoded()));
-
-        assertEquals(BigInteger.ZERO, new BigInteger(1, txUnsigned.getNonce()));
-        assertEquals(new BigInteger(1, testGasPrice), new BigInteger(1, txUnsigned.getGasPrice()));
-        assertEquals(new BigInteger(1, testGasLimit), new BigInteger(1, txUnsigned.getGasLimit()));
-        assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txUnsigned.getReceiveAddress()));
-        assertEquals(new BigInteger(1, testValue), new BigInteger(1, txUnsigned.getValue()));
-        assertNull(txUnsigned.getData());
-        assertEquals(27, txUnsigned.getSignature().v);
-        assertEquals("eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4", Hex.toHexString(BigIntegers.asUnsignedByteArray(txUnsigned.getSignature().r)));
-        assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txUnsigned.getSignature().s)));
-    }
-
-    @Ignore
-    @Test
-    public void testTransactionFromNew1() throws MissingPrivateKeyException {
-        Transaction txNew = new Transaction(testNonce, testGasPrice, testGasLimit, testReceiveAddress, testValue, testData);
-
-        assertEquals("", Hex.toHexString(txNew.getNonce()));
-        assertEquals(new BigInteger(1, testGasPrice), new BigInteger(1, txNew.getGasPrice()));
-        assertEquals(new BigInteger(1, testGasLimit), new BigInteger(1, txNew.getGasLimit()));
-        assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txNew.getReceiveAddress()));
-        assertEquals(new BigInteger(1, testValue), new BigInteger(1, txNew.getValue()));
-        assertEquals("", Hex.toHexString(txNew.getData()));
-        assertNull(txNew.getSignature());
-
-        assertEquals(RLP_ENCODED_RAW_TX, Hex.toHexString(txNew.getEncodedRaw()));
-        assertEquals(HASH_TX, Hex.toHexString(txNew.getHash()));
-        assertEquals(RLP_ENCODED_UNSIGNED_TX, Hex.toHexString(txNew.getEncoded()));
-        txNew.sign(ECKey.fromPrivate(Hex.decode(KEY)));
-        assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txNew.getEncoded()));
-
-        assertEquals(27, txNew.getSignature().v);
-        assertEquals("eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4", Hex.toHexString(BigIntegers.asUnsignedByteArray(txNew.getSignature().r)));
-        assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txNew.getSignature().s)));
-    }
-
-    @Ignore
-    @Test
-    public void testTransactionFromNew2() throws MissingPrivateKeyException {
-        byte[] privKeyBytes = Hex.decode("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4");
-
-        String RLP_TX_UNSIGNED = "eb8085e8d4a510008227109413978aee95f38490e9769c39b2773ed763d9cd5f872386f26fc1000080808080";
-        String RLP_TX_SIGNED = "f86b8085e8d4a510008227109413978aee95f38490e9769c39b2773ed763d9cd5f872386f26fc10000801ba0eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4a014a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1";
-        String HASH_TX_UNSIGNED = "328ea6d24659dec48adea1aced9a136e5ebdf40258db30d1b1d97ed2b74be34e";
-
-        byte[] nonce = BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
-        byte[] gasPrice = Hex.decode("e8d4a51000");     // 1000000000000
-        byte[] gas = Hex.decode("2710");           // 10000
-        byte[] recieveAddress = Hex.decode("13978aee95f38490e9769c39b2773ed763d9cd5f");
-        byte[] value = Hex.decode("2386f26fc10000"); //10000000000000000"
-        byte[] data = new byte[0];
-
-        Transaction tx = new Transaction(nonce, gasPrice, gas, recieveAddress, value, data);
-
-        // Testing unsigned
-        String encodedUnsigned = Hex.toHexString(tx.getEncoded());
-        assertEquals(RLP_TX_UNSIGNED, encodedUnsigned);
-        assertEquals(HASH_TX_UNSIGNED, Hex.toHexString(tx.getHash()));
-
-        // Testing signed
-        tx.sign(ECKey.fromPrivate(privKeyBytes));
-        String encodedSigned = Hex.toHexString(tx.getEncoded());
-        assertEquals(RLP_TX_SIGNED, encodedSigned);
-        assertEquals(HASH_TX_UNSIGNED, Hex.toHexString(tx.getHash()));
-    }
 
     @Test
     public void testTransactionCreateContract() {
-
-//        String rlp =
-// "f89f808609184e72a0008203e8808203e8b84b4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b5860056060541ca0ddc901d83110ea50bc40803f42083afea1bbd420548f6392a679af8e24b21345a06620b3b512bea5f0a272703e8d6933177c23afc79516fd0ca4a204aa6e34c7e9";
 
         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
@@ -309,32 +123,6 @@ public class TransactionTest {
         System.out.println(Hex.toHexString(tx2.getSender()));
     }
 
-
-    @Ignore
-    @Test
-    public void encodeReceiptTest() {
-
-        String data = "f90244a0f5ff3fbd159773816a7c707a9b8cb6bb778b934a8f6466c7830ed970498f4b688301e848b902000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dbda94cd2a3d9f938e13cd947ec05abc7fe734df8dd826c083a1a1a1";
-
-        byte[] stateRoot = Hex.decode("f5ff3fbd159773816a7c707a9b8cb6bb778b934a8f6466c7830ed970498f4b68");
-        byte[] gasUsed = Hex.decode("01E848");
-        Bloom bloom = new Bloom(Hex.decode("0000000000000000800000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
-
-        LogInfo logInfo1 = new LogInfo(
-                Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"),
-                null,
-                Hex.decode("a1a1a1")
-        );
-
-        List<LogInfo> logs = new ArrayList<>();
-        logs.add(logInfo1);
-
-        // TODO calculate cumulative gas
-        TransactionReceipt receipt = new TransactionReceipt(stateRoot, gasUsed, bloom, logs);
-
-        assertEquals(data,
-                Hex.toHexString(receipt.getEncoded()));
-    }
 
     @Test
     public void constantCallConflictTest() throws Exception {
@@ -548,7 +336,8 @@ public class TransactionTest {
         }
     }
 
-    @Test
+//todo: mavenize the harmony git repo interactions or externalize these tests
+ /*   @Test
     public void multiSuicideTest() throws IOException, InterruptedException {
         String contract =
                 "pragma solidity ^0.4.3;" +
@@ -576,24 +365,22 @@ public class TransactionTest {
         ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")).compress();
         System.out.println("address: " + Hex.toHexString(sender.getAddress()));
 
-        if (cres.contracts.get("PsychoKiller") != null) {
-            Transaction tx = createTx(blockchain, sender, new byte[0],
-                    Hex.decode(cres.contracts.get("PsychoKiller").bin));
-            executeTransaction(blockchain, tx);
+        Assert.assertNotNull(cres.contracts.get("PsychoKiller")  );
 
-            byte[] contractAddress = tx.getContractAddress();
+        Transaction tx = createTx(blockchain, sender, new byte[0],
+                Hex.decode(cres.contracts.get("PsychoKiller").bin));
+        executeTransaction(blockchain, tx);
 
-            CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
-            byte[] callData = contract1.getByName("multipleHomocide").encode();
+        byte[] contractAddress = tx.getContractAddress();
 
-            Transaction tx1 = createTx(blockchain, sender, contractAddress, callData, 0l);
-            ProgramResult programResult = executeTransaction(blockchain, tx1).getResult();
+        CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
+        byte[] callData = contract1.getByName("multipleHomocide").encode();
 
-            // suicide of a single account should be counted only once
-            Assert.assertEquals(24000, programResult.getFutureRefund());
-        } else {
-            Assert.fail();
-        }
+        Transaction tx1 = createTx(blockchain, sender, contractAddress, callData, 0l);
+        ProgramResult programResult = executeTransaction(blockchain, tx1).getResult();
+
+        // suicide of a single account should be counted only once
+        Assert.assertEquals(24000, programResult.getFutureRefund());
     }
 
     @Test
@@ -671,7 +458,7 @@ public class TransactionTest {
             Assert.assertTrue(receipt.getError().contains("Not enough gas"));
         }
     }
-
+*/
     protected Transaction createTx(BlockchainImpl blockchain, ECKey sender, byte[] receiveAddress, byte[] data) {
         return createTx(blockchain, sender, receiveAddress, data, 0);
     }

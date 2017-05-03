@@ -125,7 +125,7 @@ public class SyncManager extends BlockDownloader {
         super(validator);
         this.config = config;
         blockBytesLimit = config.blockQueueSize();
-        setHeaderQueueLimit(config.headerQueueSize() / BlockHeader.MAX_HEADER_SIZE);
+        setHeaderQueueLimit(config.headerQueueSize() / IBlockHeader.MAX_HEADER_SIZE);
     }
 
     public void init(final ChannelManager channelManager, final SyncPool pool) {

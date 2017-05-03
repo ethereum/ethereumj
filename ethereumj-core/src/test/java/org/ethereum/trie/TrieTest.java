@@ -78,7 +78,7 @@ public class TrieTest {
 
     public class TrieCache extends SourceCodec<byte[], Value, byte[], byte[]> {
         public TrieCache() {
-            super(new NoDoubleDeleteMapDB(), new Serializers.Identity<byte[]>(), Serializers.TrieNodeSerializer);
+            super(new NoDoubleDeleteMapDB(), new Serializers.Identity<>(), Serializers.TrieNodeSerializer);
         }
 
         public NoDoubleDeleteMapDB getDb() {return (NoDoubleDeleteMapDB) getSource();}

@@ -54,7 +54,7 @@ public class RLPXTest {
         assertEquals(ping.toString(), ping2.toString());
 
         String key2 = ping2.getKey().toString();
-        assertEquals(key.toString(), key2.toString());
+        assertEquals(key.toString(), key2);
     }
 
     @Test // pong test

@@ -57,7 +57,7 @@ public class Utils {
     public static byte[] parseNumericData(String data){
 
         if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
-        byte[] dataB = unifiedNumericToBigInteger(data).toByteArray();
+        byte[] dataB = unifiedNumericToBigInteger(data ).toByteArray();
         return ByteUtil.stripLeadingZeroes(dataB);
     }
 

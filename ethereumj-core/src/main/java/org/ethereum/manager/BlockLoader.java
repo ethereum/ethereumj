@@ -30,14 +30,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.*;
 
 @Component
 public class BlockLoader {
@@ -158,7 +156,7 @@ public class BlockLoader {
         System.exit(0);
     }
 
-    private boolean isValid(BlockHeader header) {
+    private boolean isValid(IBlockHeader header) {
         return headerValidator.validateAndLog(header, logger);
     }
 }

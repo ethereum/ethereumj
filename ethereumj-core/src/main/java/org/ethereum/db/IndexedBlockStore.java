@@ -18,7 +18,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
@@ -113,7 +113,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
     private void addInternalBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
 
         List<BlockInfo> blockInfos = block.getNumber() >= index.size() ?  null : index.get((int) block.getNumber());
-        blockInfos = blockInfos == null ? new ArrayList<BlockInfo>() : blockInfos;
+        blockInfos = blockInfos == null ? new ArrayList<>() : blockInfos;
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
@@ -273,10 +273,10 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     @Override
-    public synchronized List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+    public synchronized List<IBlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
 
         List<Block> blocks = getListBlocksEndWith(hash, qty);
-        List<BlockHeader> headers = new ArrayList<>(blocks.size());
+        List<IBlockHeader> headers = new ArrayList<>(blocks.size());
 
         for (Block b : blocks) {
             headers.add(b.getHeader());

@@ -19,7 +19,7 @@ package org.ethereum.validator;
 
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.IBlockHeader;
 
 /**
  * Checks diff between number of some block and number of our best block. <br>
@@ -38,7 +38,7 @@ public class BestNumberRule extends DependentBlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader bestHeader) {
+    public boolean validate(IBlockHeader header, IBlockHeader bestHeader) {
 
         errors.clear();
 

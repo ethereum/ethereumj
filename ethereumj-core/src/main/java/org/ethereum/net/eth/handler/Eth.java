@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
@@ -102,9 +101,9 @@ public interface Eth {
     /**
      *  Send GET_BLOCK_HEADERS message to the peer
      */
-    ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
+    ListenableFuture<List<IBlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
 
-    ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse);
+    ListenableFuture<List<IBlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse);
 
     /**
      *  Send GET_BLOCK_BODIES message to the peer
