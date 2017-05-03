@@ -70,10 +70,8 @@ public class BlockBuilder {
                 env.getCurrentGasLimit(),
                 0L,
                 byteArrayToLong(env.getCurrentTimestamp()),
-                new byte[32],
-                ByteUtil.ZERO_BYTE_ARRAY,
-                ByteUtil.ZERO_BYTE_ARRAY,
-                null, null);
+                ByteUtil.ZERO_BYTE_ARRAY, ByteUtil.ZERO_BYTE_ARRAY, null, null, new byte[32]
+        );
 
         return block;
     }

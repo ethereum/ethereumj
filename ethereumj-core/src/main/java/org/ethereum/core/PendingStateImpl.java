@@ -24,7 +24,6 @@ import static org.ethereum.listener.EthereumListener.PendingTransactionState.PEN
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -431,14 +430,14 @@ public class PendingStateImpl implements PendingState {
                 ByteUtil.longToBytesNoLeadZeroes(Long.MAX_VALUE), // max Gas Limit
                 0,  // gas used
                 best.getTimestamp() + 1,  // block time
-                new byte[0],  // extra data
-                new byte[0],  // mixHash (to mine)
-                new byte[0],  // nonce   (to mine)
-                new byte[32],  // receiptsRoot
-                new byte[32],    // TransactionsRoot
-                new byte[32], // stateRoot
-                Collections.emptyList(), // tx list
-                Collections.emptyList());  // uncle list
+                new byte[0], new byte[0], new byte[32], new byte[32], new byte[32], Collections.emptyList(), Collections.emptyList(), new byte[0]  // extra data
+                // mixHash (to mine)
+                // nonce   (to mine)
+                // receiptsRoot
+                // TransactionsRoot
+                // stateRoot
+                // tx list
+        );  // uncle list
         return block;
     }
 

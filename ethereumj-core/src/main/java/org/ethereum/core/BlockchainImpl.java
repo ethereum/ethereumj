@@ -490,14 +490,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 parent.getGasLimit(), // (add to config ?)
                 0,  // gas used - computed after running all transactions
                 time,  // block time
-                extraData,  // extra data
-                new byte[0],  // mixHash (to mine)
-                new byte[0],  // nonce   (to mine)
-                new byte[0],  // receiptsRoot - computed after running all transactions
-                calcTxTrie(txs),    // TransactionsRoot - computed after running all transactions
-                new byte[] {0}, // stateRoot - computed after running all transactions
-                txs,
-                null);  // uncle list
+                new byte[0], new byte[0], new byte[0], calcTxTrie(txs), new byte[] {0}, txs, null, extraData  // extra data
+                // mixHash (to mine)
+                // nonce   (to mine)
+                // receiptsRoot - computed after running all transactions
+                // TransactionsRoot - computed after running all transactions
+                // stateRoot - computed after running all transactions
+        );  // uncle list
 
         for (IBlockHeader uncle : uncles) {
             block.addUncle(uncle);
