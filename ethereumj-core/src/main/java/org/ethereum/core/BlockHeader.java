@@ -36,22 +36,22 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
  */
 final public class BlockHeader implements IBlockHeader {
 
-    /* The SHA3 256-bit hash of the parent block, in its entirety */
+    /** The SHA3 256-bit hash of the parent block, in its entirety */
     private byte[] parentHash;
     /* The SHA3 256-bit hash of the uncles list portion of this block */
     private byte[] unclesHash;
-    /* The 160-bit address to which all fees collected from the
+    /** The 160-bit address to which all fees collected from the
      * successful mining of this block be transferred; formally */
     private byte[] coinbase;
-    /* The SHA3 256-bit hash of the root node of the state trie,
+    /** The SHA3 256-bit hash of the root node of the state trie,
      * after all transactions are executed and finalisations applied */
     private byte[] stateRoot;
-    /* The SHA3 256-bit hash of the root node of the trie structure
+    /** The SHA3 256-bit hash of the root node of the trie structure
      * populated with each transaction in the transaction
      * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_recipe)]
      * of the block */
     private byte[] txTrieRoot;
-    /* The SHA3 256-bit hash of the root node of the trie structure
+    /** The SHA3 256-bit hash of the root node of the trie structure
      * populated with each transaction recipe in the transaction recipes
      * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_recipe)]
      * of the block */
@@ -59,38 +59,38 @@ final public class BlockHeader implements IBlockHeader {
 
     /*todo: comment it when you know what the fuck it is*/
     private byte[] logsBloom;
-    /* A scalar value corresponding to the difficulty level of this block.
+    /** A scalar value corresponding to the difficulty level of this block.
      * This can be calculated from the previous block’s difficulty level
      * and the timestamp */
     private byte[] difficulty;
-    /* A scalar value equal to the reasonable output of Unix's time()
+    /** A scalar value equal to the reasonable output of Unix's time()
      * at this block's inception */
     private long timestamp;
-    /* A scalar value equal to the number of ancestor blocks.
+    /** A scalar value equal to the number of ancestor blocks.
      * The genesis block has a number of zero */
     private long number;
-    /* A scalar value equal to the current limit of gas expenditure per block */
+    /** A scalar value equal to the current limit of gas expenditure per block */
     private byte[] gasLimit;
-    /* A scalar value equal to the total gas used in transactions in this block */
+    /** A scalar value equal to the total gas used in transactions in this block */
     private long gasUsed;
 
 
     private byte[] mixHash;
 
-    /* An arbitrary byte array containing data relevant to this block.
+    /** An arbitrary byte array containing data relevant to this block.
      * With the exception of the genesis block, this must be 32 bytes or fewer */
     private byte[] extraData;
-    /* A 256-bit hash which proves that a sufficient amount
+    /** A 256-bit hash which proves that a sufficient amount
      * of computation has been carried out on this block */
     private byte[] nonce;
 
     private byte[] hashCache;
 
-    private BlockHeader(byte... encoded) {
+    BlockHeader(byte... encoded) {
         this((RLPList) RLP.decode2(encoded).get(0));
     }
 
-    private BlockHeader(RLPList rlpHeader) {
+    BlockHeader(RLPList rlpHeader) {
 
         this.setParentHash(rlpHeader.get(0).getRLPData());
         this.setUnclesHash(rlpHeader.get(1).getRLPData());
@@ -124,10 +124,10 @@ final public class BlockHeader implements IBlockHeader {
         this.setNonce(rlpHeader.get(14).getRLPData());
     }
 
-    private BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
-                        byte[] logsBloom, byte[] difficulty, long number,
-                        byte[] gasLimit, long gasUsed, long timestamp,
-                        byte[] mixHash, byte[] nonce, byte... extraData) {
+    BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
+                byte[] logsBloom, byte[] difficulty, long number,
+                byte[] gasLimit, long gasUsed, long timestamp,
+                byte[] mixHash, byte[] nonce, byte... extraData) {
         this.setParentHash(parentHash);
         this.setUnclesHash(unclesHash);
         this.setCoinbase(coinbase);
@@ -143,21 +143,6 @@ final public class BlockHeader implements IBlockHeader {
         this.setStateRoot(HashUtil.EMPTY_TRIE_HASH);
     }
 
-    public static BlockHeader createBlockHeader(byte... encoded) {
-        return new BlockHeader(encoded);
-    }
-
-    public static BlockHeader decodeBlockHeader(RLPList rlpHeader) {
-        return new BlockHeader(rlpHeader);
-    }
-
-    public static BlockHeader assembleBlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
-                                                  byte[] logsBloom, byte[] difficulty, long number,
-                                                  byte[] gasLimit, long gasUsed, long timestamp,
-                                                  byte[] mixHash, byte[] nonce, byte... extraData) {
-        return new BlockHeader(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, mixHash, nonce, extraData);
-    }
-
     @Override
     public boolean isGenesis() {
         return this.getNumber() == Genesis.NUMBER;
@@ -166,6 +151,11 @@ final public class BlockHeader implements IBlockHeader {
     @Override
     public byte[] getParentHash() {
         return parentHash;
+    }
+
+    @Override
+    public void setParentHash(byte[] parentHash) {
+        this.parentHash = parentHash;
     }
 
     @Override
@@ -207,9 +197,8 @@ final public class BlockHeader implements IBlockHeader {
     }
 
     @Override
-    public void setReceiptsRoot(byte[] receiptTrieRoot) {
-        this.setReceiptTrieRoot(receiptTrieRoot);
-        hashCache = null;
+    public void setTxTrieRoot(byte[] txTrieRoot) {
+        this.txTrieRoot = txTrieRoot;
     }
 
     @Override
@@ -218,15 +207,26 @@ final public class BlockHeader implements IBlockHeader {
     }
 
     @Override
+    public void setReceiptsRoot(byte[] receiptTrieRoot) {
+        this.setReceiptTrieRoot(receiptTrieRoot);
+        hashCache = null;
+    }
+
+    @Override
     public void setTransactionsRoot(byte[] stateRoot) {
         this.setTxTrieRoot(stateRoot);
         hashCache = null;
     }
 
-
     @Override
     public byte[] getLogsBloom() {
         return logsBloom;
+    }
+
+    @Override
+    public void setLogsBloom(byte[] logsBloom) {
+        this.logsBloom = logsBloom;
+        hashCache = null;
     }
 
     @Override
@@ -235,15 +235,14 @@ final public class BlockHeader implements IBlockHeader {
     }
 
     @Override
-    public BigInteger getDifficultyBI() {
-        return new BigInteger(1, getDifficulty());
-    }
-
-
-    @Override
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;
         hashCache = null;
+    }
+
+    @Override
+    public BigInteger getDifficultyBI() {
+        return new BigInteger(1, getDifficulty());
     }
 
     @Override
@@ -307,6 +306,12 @@ final public class BlockHeader implements IBlockHeader {
     }
 
     @Override
+    public void setExtraData(byte[] extraData) {
+        this.extraData = extraData;
+        hashCache = null;
+    }
+
+    @Override
     public byte[] getNonce() {
         return nonce;
     }
@@ -314,18 +319,6 @@ final public class BlockHeader implements IBlockHeader {
     @Override
     public void setNonce(byte[] nonce) {
         this.nonce = nonce;
-        hashCache = null;
-    }
-
-    @Override
-    public void setLogsBloom(byte[] logsBloom) {
-        this.logsBloom = logsBloom;
-        hashCache = null;
-    }
-
-    @Override
-    public void setExtraData(byte[] extraData) {
-        this.extraData = extraData;
         hashCache = null;
     }
 
@@ -400,7 +393,6 @@ final public class BlockHeader implements IBlockHeader {
         return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
-
     public BigInteger calcDifficulty(BlockchainNetConfig config, BlockHeader parent) {
         return config.getConfigForBlock(getNumber()).
                 calcDifficulty(this, parent);
@@ -409,7 +401,6 @@ final public class BlockHeader implements IBlockHeader {
     public String toString() {
         return View.toStringWithSuffix(this, "\n");
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -422,16 +413,6 @@ final public class BlockHeader implements IBlockHeader {
     @Override
     public int hashCode() {
         return Arrays.hashCode(getHash());
-    }
-
-    @Override
-    public void setParentHash(byte[] parentHash) {
-        this.parentHash = parentHash;
-    }
-
-    @Override
-    public void setTxTrieRoot(byte[] txTrieRoot) {
-        this.txTrieRoot = txTrieRoot;
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
@@ -112,7 +113,6 @@ public interface IBlockHeader {
         }
 
         static String toStringWithSuffix(IBlockHeader blockHeader, final String suffix) {
-
             return "  hash=" + toHexString(blockHeader.getHash()) + suffix +
                     "  parentHash=" + toHexString(blockHeader.getParentHash()) + suffix +
                     "  unclesHash=" + toHexString(blockHeader.getUnclesHash()) + suffix +
@@ -150,4 +150,20 @@ public interface IBlockHeader {
     }
 
 
+    interface Factory {
+        static BlockHeader createBlockHeader(byte... encoded) {
+            return new BlockHeader(encoded);
+        }
+
+        static BlockHeader decodeBlockHeader(RLPList rlpHeader) {
+            return new BlockHeader(rlpHeader);
+        }
+
+        static BlockHeader assembleBlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
+                                               byte[] logsBloom, byte[] difficulty, long number,
+                                               byte[] gasLimit, long gasUsed, long timestamp,
+                                               byte[] mixHash, byte[] nonce, byte... extraData) {
+            return new BlockHeader(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, mixHash, nonce, extraData);
+        }
+    }
 }

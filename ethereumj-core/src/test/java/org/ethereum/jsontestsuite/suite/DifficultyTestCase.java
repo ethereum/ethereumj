@@ -90,7 +90,7 @@ public class DifficultyTestCase {
     }
 
     public BlockHeader getCurrent() {
-        return BlockHeader.assembleBlockHeader(
+        return IBlockHeader.Factory.assembleBlockHeader(
                 EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Utils.parseLong(currentBlockNumber), new byte[] {0}, 0,
                 Utils.parseLong(currentTimestamp),
@@ -99,7 +99,7 @@ public class DifficultyTestCase {
     }
 
     public IBlockHeader getParent() {
-        return BlockHeader.assembleBlockHeader(
+        return IBlockHeader.Factory.assembleBlockHeader(
                 EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Utils.parseNumericData(parentDifficulty),
                 Utils.parseLong(currentBlockNumber) - 1, new byte[] {0}, 0,

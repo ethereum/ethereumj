@@ -17,7 +17,6 @@
  */
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.IBlockHeader;
 import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
@@ -51,7 +50,7 @@ public class HeaderMessageValidationTest {
     @Test
     public void testSingleBlockResponse() {
         long blockNumber = 0L;
-        IBlockHeader IBlockHeader = BlockHeader.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader = org.ethereum.core.IBlockHeader.Factory.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         List<IBlockHeader> IBlockHeaders = new ArrayList<>();
         IBlockHeaders.add(IBlockHeader);
@@ -84,13 +83,13 @@ public class HeaderMessageValidationTest {
         List<IBlockHeader> IBlockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        IBlockHeader IBlockHeader1 = BlockHeader.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader1 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         byte[] hash1 = IBlockHeader1.getHash();
         IBlockHeaders.add(IBlockHeader1);
 
         long blockNumber2 = 1L;
-        IBlockHeader IBlockHeader2 = BlockHeader.assembleBlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader2 = IBlockHeader.Factory.assembleBlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         byte[] hash2 = IBlockHeader2.getHash();
         IBlockHeaders.add(IBlockHeader2);
@@ -119,17 +118,17 @@ public class HeaderMessageValidationTest {
         List<IBlockHeader> IBlockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        IBlockHeader IBlockHeader1 = BlockHeader.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader1 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         IBlockHeaders.add(IBlockHeader1);
 
         long blockNumber2 = 16L;
-        IBlockHeader IBlockHeader2 = BlockHeader.assembleBlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader2 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         IBlockHeaders.add(IBlockHeader2);
 
         long blockNumber3 = 32L;
-        IBlockHeader IBlockHeader3 = BlockHeader.assembleBlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        IBlockHeader IBlockHeader3 = IBlockHeader.Factory.assembleBlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber3, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         IBlockHeaders.add(IBlockHeader3);
 

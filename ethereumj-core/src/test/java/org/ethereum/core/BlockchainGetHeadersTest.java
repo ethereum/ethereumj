@@ -40,7 +40,7 @@ public class BlockchainGetHeadersTest {
             byte [] recentHash = emptyArray;
 
             for (long i = 0; i < 10; ++i) {
-                IBlockHeader IBlockHeader = BlockHeader.assembleBlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
+                IBlockHeader IBlockHeader = org.ethereum.core.IBlockHeader.Factory.assembleBlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
                         i, emptyArray, 0L, 0L, emptyArray, emptyArray, emptyArray);
                 recentHash = IBlockHeader.getHash();
                 Block block = new Block(IBlockHeader, new ArrayList<>(), new ArrayList<>());

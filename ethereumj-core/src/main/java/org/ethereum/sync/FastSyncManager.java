@@ -535,7 +535,7 @@ public class FastSyncManager {
     }
 
     private void syncSecure() {
-        pivot = BlockHeader.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = IBlockHeader.Factory.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + IBlockHeader.View.getShortDescr(pivot) + ") is secure...");
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
@@ -554,7 +554,7 @@ public class FastSyncManager {
     }
 
     private void syncBlocksReceipts() {
-        pivot = BlockHeader.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = IBlockHeader.Factory.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: Downloading Block bodies up to pivot block (" + IBlockHeader.View.getShortDescr(pivot) + ")...");
 

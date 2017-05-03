@@ -17,7 +17,6 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.IBlockHeader;
 import org.ethereum.jsontestsuite.suite.Utils;
 import org.ethereum.jsontestsuite.suite.model.BlockHeaderTck;
@@ -29,7 +28,7 @@ public class BlockHeaderBuilder {
 
     public static IBlockHeader build(BlockHeaderTck headerTck){
 
-        IBlockHeader header = BlockHeader.assembleBlockHeader(
+        IBlockHeader header = IBlockHeader.Factory.assembleBlockHeader(
                 Utils.parseData(headerTck.getParentHash()),
                 Utils.parseData(headerTck.getUncleHash()),
                 Utils.parseData(headerTck.getCoinbase()),

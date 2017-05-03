@@ -58,7 +58,7 @@ public class BlockHeaderWrapper {
 
         byte[] headerBytes = wrapper.get(0).getRLPData();
 
-        this.header= BlockHeader.createBlockHeader(headerBytes);
+        this.header= IBlockHeader.Factory.createBlockHeader(headerBytes);
         this.nodeId = wrapper.get(1).getRLPData();
     }
 

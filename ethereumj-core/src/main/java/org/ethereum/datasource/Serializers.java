@@ -18,7 +18,6 @@
 package org.ethereum.datasource;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
@@ -117,7 +116,7 @@ public class Serializers {
 
         @Override
         public IBlockHeader deserialize(byte[] stream) {
-            return stream == null ? null : BlockHeader.createBlockHeader(stream);
+            return stream == null ? null : IBlockHeader.Factory.createBlockHeader(stream);
         }
     };
 }

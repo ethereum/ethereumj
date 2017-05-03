@@ -17,7 +17,6 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.IBlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -57,7 +56,7 @@ public class BlockHeadersMessage extends EthMessage {
         IBlockHeaders = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
             RLPList rlpData = ((RLPList) paramsList.get(i));
-            IBlockHeaders.add(BlockHeader.decodeBlockHeader(rlpData));
+            IBlockHeaders.add(IBlockHeader.Factory.decodeBlockHeader(rlpData));
         }
         parsed = true;
     }
