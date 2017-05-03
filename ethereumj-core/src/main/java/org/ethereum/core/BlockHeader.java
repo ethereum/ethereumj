@@ -92,61 +92,76 @@ final public class BlockHeader {
 
     private byte[] hashCache;
 
-    public BlockHeader(byte[] encoded) {
+    private BlockHeader(byte... encoded) {
         this((RLPList) RLP.decode2(encoded).get(0));
     }
 
-    public BlockHeader(RLPList rlpHeader) {
+    private BlockHeader(RLPList rlpHeader) {
 
-        this.parentHash = rlpHeader.get(0).getRLPData();
-        this.unclesHash = rlpHeader.get(1).getRLPData();
-        this.coinbase = rlpHeader.get(2).getRLPData();
-        this.stateRoot = rlpHeader.get(3).getRLPData();
+        this.setParentHash(rlpHeader.get(0).getRLPData());
+        this.setUnclesHash(rlpHeader.get(1).getRLPData());
+        this.setCoinbase(rlpHeader.get(2).getRLPData());
+        this.setStateRoot(rlpHeader.get(3).getRLPData());
 
-        this.txTrieRoot = rlpHeader.get(4).getRLPData();
-        if (this.txTrieRoot == null)
-            this.txTrieRoot = EMPTY_TRIE_HASH;
+        this.setTxTrieRoot(rlpHeader.get(4).getRLPData());
+        if (this.getTxTrieRoot() == null)
+            this.setTxTrieRoot(EMPTY_TRIE_HASH);
 
-        this.receiptTrieRoot = rlpHeader.get(5).getRLPData();
-        if (this.receiptTrieRoot == null)
-            this.receiptTrieRoot = EMPTY_TRIE_HASH;
+        this.setReceiptTrieRoot(rlpHeader.get(5).getRLPData());
+        if (this.getReceiptTrieRoot() == null)
+            this.setReceiptTrieRoot(EMPTY_TRIE_HASH);
 
-        this.logsBloom = rlpHeader.get(6).getRLPData();
-        this.difficulty = rlpHeader.get(7).getRLPData();
+        this.setLogsBloom(rlpHeader.get(6).getRLPData());
+        this.setDifficulty(rlpHeader.get(7).getRLPData());
 
         byte[] nrBytes = rlpHeader.get(8).getRLPData();
         byte[] glBytes = rlpHeader.get(9).getRLPData();
         byte[] guBytes = rlpHeader.get(10).getRLPData();
         byte[] tsBytes = rlpHeader.get(11).getRLPData();
 
-        this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
+        this.setNumber(nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue());
 
-        this.gasLimit = glBytes;
-        this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
-        this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
+        this.setGasLimit(glBytes);
+        this.setGasUsed(guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue());
+        this.setTimestamp(tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue());
 
-        this.extraData = rlpHeader.get(12).getRLPData();
-        this.mixHash = rlpHeader.get(13).getRLPData();
-        this.nonce = rlpHeader.get(14).getRLPData();
+        this.setExtraData(rlpHeader.get(12).getRLPData());
+        this.setMixHash(rlpHeader.get(13).getRLPData());
+        this.setNonce(rlpHeader.get(14).getRLPData());
     }
 
-    public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
-                       byte[] logsBloom, byte[] difficulty, long number,
-                       byte[] gasLimit, long gasUsed, long timestamp,
-                       byte[] extraData, byte[] mixHash, byte[] nonce) {
-        this.parentHash = parentHash;
-        this.unclesHash = unclesHash;
-        this.coinbase = coinbase;
-        this.logsBloom = logsBloom;
-        this.difficulty = difficulty;
-        this.number = number;
-        this.gasLimit = gasLimit;
-        this.gasUsed = gasUsed;
-        this.timestamp = timestamp;
-        this.extraData = extraData;
-        this.mixHash = mixHash;
-        this.nonce = nonce;
-        this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
+    private BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
+                        byte[] logsBloom, byte[] difficulty, long number,
+                        byte[] gasLimit, long gasUsed, long timestamp,
+                        byte[] mixHash, byte[] nonce, byte... extraData) {
+        this.setParentHash(parentHash);
+        this.setUnclesHash(unclesHash);
+        this.setCoinbase(coinbase);
+        this.setLogsBloom(logsBloom);
+        this.setDifficulty(difficulty);
+        this.setNumber(number);
+        this.setGasLimit(gasLimit);
+        this.setGasUsed(gasUsed);
+        this.setTimestamp(timestamp);
+        this.setExtraData(extraData);
+        this.setMixHash(mixHash);
+        this.setNonce(nonce);
+        this.setStateRoot(HashUtil.EMPTY_TRIE_HASH);
+    }
+
+    public static BlockHeader createBlockHeader(byte... encoded) {
+        return new BlockHeader(encoded);
+    }
+
+    public static BlockHeader decodeBlockHeader(RLPList rlpHeader) {
+        return new BlockHeader(rlpHeader);
+    }
+
+    public static BlockHeader assembleBlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
+                                                  byte[] logsBloom, byte[] difficulty, long number,
+                                                  byte[] gasLimit, long gasUsed, long timestamp,
+                                                  byte[] mixHash, byte[] nonce, byte... extraData) {
+        return new BlockHeader(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, mixHash, nonce, extraData);
     }
 
     public boolean isGenesis() {
@@ -189,16 +204,16 @@ final public class BlockHeader {
     }
 
     public void setReceiptsRoot(byte[] receiptTrieRoot) {
-        this.receiptTrieRoot = receiptTrieRoot;
+        this.setReceiptTrieRoot(receiptTrieRoot);
         hashCache = null;
     }
 
     public byte[] getReceiptsRoot() {
-        return receiptTrieRoot;
+        return getReceiptTrieRoot();
     }
 
     public void setTransactionsRoot(byte[] stateRoot) {
-        this.txTrieRoot = stateRoot;
+        this.setTxTrieRoot(stateRoot);
         hashCache = null;
     }
 
@@ -212,7 +227,7 @@ final public class BlockHeader {
     }
 
     public BigInteger getDifficultyBI() {
-        return new BigInteger(1, difficulty);
+        return new BigInteger(1, getDifficulty());
     }
 
 
@@ -305,30 +320,30 @@ final public class BlockHeader {
     }
 
     public byte[] getEncoded(boolean withNonce) {
-        byte[] parentHash = RLP.encodeElement(this.parentHash);
+        byte[] parentHash = RLP.encodeElement(this.getParentHash());
 
-        byte[] unclesHash = RLP.encodeElement(this.unclesHash);
-        byte[] coinbase = RLP.encodeElement(this.coinbase);
+        byte[] unclesHash = RLP.encodeElement(this.getUnclesHash());
+        byte[] coinbase = RLP.encodeElement(this.getCoinbase());
 
-        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
+        byte[] stateRoot = RLP.encodeElement(this.getStateRoot());
 
-        if (txTrieRoot == null) this.txTrieRoot = EMPTY_TRIE_HASH;
-        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
+        if (getTxTrieRoot() == null) this.setTxTrieRoot(EMPTY_TRIE_HASH);
+        byte[] txTrieRoot = RLP.encodeElement(this.getTxTrieRoot());
 
-        if (receiptTrieRoot == null) this.receiptTrieRoot = EMPTY_TRIE_HASH;
-        byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
+        if (getReceiptTrieRoot() == null) this.setReceiptTrieRoot(EMPTY_TRIE_HASH);
+        byte[] receiptTrieRoot = RLP.encodeElement(this.getReceiptTrieRoot());
 
-        byte[] logsBloom = RLP.encodeElement(this.logsBloom);
-        byte[] difficulty = RLP.encodeBigInteger(new BigInteger(1, this.difficulty));
-        byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
-        byte[] gasLimit = RLP.encodeElement(this.gasLimit);
-        byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
-        byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
+        byte[] logsBloom = RLP.encodeElement(this.getLogsBloom());
+        byte[] difficulty = RLP.encodeBigInteger(new BigInteger(1, this.getDifficulty()));
+        byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.getNumber()));
+        byte[] gasLimit = RLP.encodeElement(this.getGasLimit());
+        byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.getGasUsed()));
+        byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.getTimestamp()));
 
-        byte[] extraData = RLP.encodeElement(this.extraData);
+        byte[] extraData = RLP.encodeElement(this.getExtraData());
         if (withNonce) {
-            byte[] mixHash = RLP.encodeElement(this.mixHash);
-            byte[] nonce = RLP.encodeElement(this.nonce);
+            byte[] mixHash = RLP.encodeElement(this.getMixHash());
+            byte[] nonce = RLP.encodeElement(this.getNonce());
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
                     gasLimit, gasUsed, timestamp, extraData, mixHash, nonce);
@@ -357,13 +372,13 @@ final public class BlockHeader {
     public byte[] calcPowValue() {
 
         // nonce bytes are expected in Little Endian order, reverting
-        byte[] nonceReverted = Arrays.reverse(nonce);
+        byte[] nonceReverted = Arrays.reverse(getNonce());
         byte[] hashWithoutNonce = HashUtil.sha3(getEncodedWithoutNonce());
 
         byte[] seed = Arrays.concatenate(hashWithoutNonce, nonceReverted);
         byte[] seedHash = HashUtil.sha512(seed);
 
-        byte[] concat = Arrays.concatenate(seedHash, mixHash);
+        byte[] concat = Arrays.concatenate(seedHash, getMixHash());
         return HashUtil.sha3(concat);
     }
 
@@ -379,20 +394,20 @@ final public class BlockHeader {
     private String toStringWithSuffix(final String suffix) {
 
         return "  hash=" + toHexString(getHash()) + suffix +
-                "  parentHash=" + toHexString(parentHash) + suffix +
-                "  unclesHash=" + toHexString(unclesHash) + suffix +
-                "  coinbase=" + toHexString(coinbase) + suffix +
-                "  stateRoot=" + toHexString(stateRoot) + suffix +
-                "  txTrieHash=" + toHexString(txTrieRoot) + suffix +
-                "  receiptsTrieHash=" + toHexString(receiptTrieRoot) + suffix +
-                "  difficulty=" + toHexString(difficulty) + suffix +
-                "  number=" + number + suffix +
-                "  gasLimit=" + toHexString(gasLimit) + suffix +
-                "  gasUsed=" + gasUsed + suffix +
-                "  timestamp=" + timestamp + " (" + Utils.longToDateTime(timestamp) + ")" + suffix +
-                "  extraData=" + toHexString(extraData) + suffix +
-                "  mixHash=" + toHexString(mixHash) + suffix +
-                "  nonce=" + toHexString(nonce) + suffix;
+                "  parentHash=" + toHexString(getParentHash()) + suffix +
+                "  unclesHash=" + toHexString(getUnclesHash()) + suffix +
+                "  coinbase=" + toHexString(getCoinbase()) + suffix +
+                "  stateRoot=" + toHexString(getStateRoot()) + suffix +
+                "  txTrieHash=" + toHexString(getTxTrieRoot()) + suffix +
+                "  receiptsTrieHash=" + toHexString(getReceiptTrieRoot()) + suffix +
+                "  difficulty=" + toHexString(getDifficulty()) + suffix +
+                "  number=" + getNumber() + suffix +
+                "  gasLimit=" + toHexString(getGasLimit()) + suffix +
+                "  gasUsed=" + getGasUsed() + suffix +
+                "  timestamp=" + getTimestamp() + " (" + Utils.longToDateTime(getTimestamp()) + ")" + suffix +
+                "  extraData=" + toHexString(getExtraData()) + suffix +
+                "  mixHash=" + toHexString(getMixHash()) + suffix +
+                "  nonce=" + toHexString(getNonce()) + suffix;
     }
 
     public String toFlatString() {
@@ -415,5 +430,21 @@ final public class BlockHeader {
     @Override
     public int hashCode() {
         return Arrays.hashCode(getHash());
+    }
+
+    public void setParentHash(byte[] parentHash) {
+        this.parentHash = parentHash;
+    }
+
+    public void setTxTrieRoot(byte[] txTrieRoot) {
+        this.txTrieRoot = txTrieRoot;
+    }
+
+    public byte[] getReceiptTrieRoot() {
+        return receiptTrieRoot;
+    }
+
+    public void setReceiptTrieRoot(byte[] receiptTrieRoot) {
+        this.receiptTrieRoot = receiptTrieRoot;
     }
 }

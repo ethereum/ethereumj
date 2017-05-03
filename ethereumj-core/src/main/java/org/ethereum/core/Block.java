@@ -117,9 +117,9 @@ public class Block {
                  long gasUsed, long timestamp,
                  byte[] extraData, byte[] mixHash, byte[] nonce,
                  List<Transaction> transactionsList, List<BlockHeader> uncleList) {
-        this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
+        this.header = BlockHeader.assembleBlockHeader(parentHash, unclesHash, coinbase, logsBloom,
                 difficulty, number, gasLimit, gasUsed,
-                timestamp, extraData, mixHash, nonce);
+                timestamp, mixHash, nonce, extraData);
 
         this.transactionsList = transactionsList;
         if (this.transactionsList == null) {
@@ -142,7 +142,7 @@ public class Block {
 
         // Parse Header
         RLPList header = (RLPList) block.get(0);
-        this.header = new BlockHeader(header);
+        this.header = BlockHeader.decodeBlockHeader(header);
 
         // Parse Transactions
         RLPList txTransactions = (RLPList) block.get(1);
@@ -153,7 +153,7 @@ public class Block {
         for (RLPElement rawUncle : uncleBlocks) {
 
             RLPList uncleHeader = (RLPList) rawUncle;
-            BlockHeader blockData = new BlockHeader(uncleHeader);
+            BlockHeader blockData = BlockHeader.decodeBlockHeader(uncleHeader);
             this.uncleList.add(blockData);
         }
         this.parsed = true;
@@ -510,7 +510,7 @@ public class Block {
             for (RLPElement rawUncle : uncles) {
 
                 RLPList uncleHeader = (RLPList) rawUncle;
-                BlockHeader blockData = new BlockHeader(uncleHeader);
+                BlockHeader blockData = BlockHeader.decodeBlockHeader(uncleHeader);
                 block.uncleList.add(blockData);
             }
 

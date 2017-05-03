@@ -50,7 +50,7 @@ public class HeaderMessageValidationTest {
     @Test
     public void testSingleBlockResponse() {
         long blockNumber = 0L;
-        BlockHeader blockHeader = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        BlockHeader blockHeader = BlockHeader.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         List<BlockHeader> blockHeaders = new ArrayList<>();
         blockHeaders.add(blockHeader);
@@ -83,13 +83,13 @@ public class HeaderMessageValidationTest {
         List<BlockHeader> blockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        BlockHeader blockHeader1 = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        BlockHeader blockHeader1 = BlockHeader.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         byte[] hash1 = blockHeader1.getHash();
         blockHeaders.add(blockHeader1);
 
         long blockNumber2 = 1L;
-        BlockHeader blockHeader2 = new BlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        BlockHeader blockHeader2 = BlockHeader.assembleBlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         byte[] hash2 = blockHeader2.getHash();
         blockHeaders.add(blockHeader2);
@@ -118,17 +118,17 @@ public class HeaderMessageValidationTest {
         List<BlockHeader> blockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        BlockHeader blockHeader1 = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        BlockHeader blockHeader1 = BlockHeader.assembleBlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         blockHeaders.add(blockHeader1);
 
         long blockNumber2 = 16L;
-        BlockHeader blockHeader2 = new BlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        BlockHeader blockHeader2 = BlockHeader.assembleBlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         blockHeaders.add(blockHeader2);
 
         long blockNumber3 = 32L;
-        BlockHeader blockHeader3 = new BlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+        BlockHeader blockHeader3 = BlockHeader.assembleBlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
                 EMPTY_ARRAY, blockNumber3, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
         blockHeaders.add(blockHeader3);
 

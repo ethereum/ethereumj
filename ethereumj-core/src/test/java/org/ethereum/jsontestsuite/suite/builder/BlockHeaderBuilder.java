@@ -28,7 +28,7 @@ public class BlockHeaderBuilder {
 
     public static BlockHeader  build(BlockHeaderTck headerTck){
 
-        BlockHeader header = new BlockHeader(
+        BlockHeader header = BlockHeader.assembleBlockHeader(
                 Utils.parseData(headerTck.getParentHash()),
                 Utils.parseData(headerTck.getUncleHash()),
                 Utils.parseData(headerTck.getCoinbase()),
@@ -38,9 +38,7 @@ public class BlockHeaderBuilder {
                 Utils.parseData(headerTck.getGasLimit()),
                 new BigInteger(1, Utils.parseData(headerTck.getGasUsed())).longValue(),
                 new BigInteger(1, Utils.parseData(headerTck.getTimestamp())).longValue(),
-                Utils.parseData(headerTck.getExtraData()),
-                Utils.parseData(headerTck.getMixHash()),
-                Utils.parseData(headerTck.getNonce())
+                Utils.parseData(headerTck.getMixHash()), Utils.parseData(headerTck.getNonce()), Utils.parseData(headerTck.getExtraData())
         );
 
         header.setReceiptsRoot(Utils.parseData(headerTck.getReceiptTrie()));

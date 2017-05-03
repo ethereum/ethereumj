@@ -116,7 +116,7 @@ public class Serializers {
 
         @Override
         public BlockHeader deserialize(byte[] stream) {
-            return stream == null ? null : new BlockHeader(stream);
+            return stream == null ? null : BlockHeader.createBlockHeader(stream);
         }
     };
 }

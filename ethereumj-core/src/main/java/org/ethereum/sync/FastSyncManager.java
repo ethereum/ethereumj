@@ -24,7 +24,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.BloomFilter;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -536,7 +535,7 @@ public class FastSyncManager {
     }
 
     private void syncSecure() {
-        pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = BlockHeader.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
@@ -555,7 +554,7 @@ public class FastSyncManager {
     }
 
     private void syncBlocksReceipts() {
-        pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
+        pivot = BlockHeader.createBlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
         logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
 

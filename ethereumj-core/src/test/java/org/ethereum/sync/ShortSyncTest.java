@@ -19,7 +19,6 @@ package org.ethereum.sync;
 
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
@@ -977,7 +976,7 @@ public class ShortSyncTest {
                 List<BlockHeader> headers = Arrays.asList(
                         forkB1B5B8_.get(7).getHeader(),
                         forkB1B5B8_.get(6).getHeader(),
-                        new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
+                        BlockHeader.assembleBlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
                                 6, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
                         forkB1B5B8_.get(4).getHeader()
                 );

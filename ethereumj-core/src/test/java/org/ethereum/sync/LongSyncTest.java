@@ -19,8 +19,6 @@ package org.ethereum.sync;
 
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.*;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
@@ -475,7 +473,7 @@ public class LongSyncTest {
 
                 List<BlockHeader> headers = Arrays.asList(
                         mainB1B10.get(0).getHeader(),
-                        new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
+                        BlockHeader.assembleBlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
                                 2, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
                         mainB1B10.get(2).getHeader()
                 );

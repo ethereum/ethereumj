@@ -136,7 +136,7 @@ public class EthashTestCase {
 
     public BlockHeader getBlockHeader() {
         RLPList rlp = RLP.decode2(decode(header));
-        return new BlockHeader((RLPList) rlp.get(0));
+        return BlockHeader.decodeBlockHeader((RLPList) rlp.get(0));
     }
 
     public byte[] getResultBytes() {

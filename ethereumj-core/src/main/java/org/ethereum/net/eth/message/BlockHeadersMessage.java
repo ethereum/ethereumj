@@ -56,7 +56,7 @@ public class BlockHeadersMessage extends EthMessage {
         blockHeaders = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
             RLPList rlpData = ((RLPList) paramsList.get(i));
-            blockHeaders.add(new BlockHeader(rlpData));
+            blockHeaders.add(BlockHeader.decodeBlockHeader(rlpData));
         }
         parsed = true;
     }

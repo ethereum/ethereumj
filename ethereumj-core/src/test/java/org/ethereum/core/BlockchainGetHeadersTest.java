@@ -40,7 +40,7 @@ public class BlockchainGetHeadersTest {
             byte [] recentHash = emptyArray;
 
             for (long i = 0; i < 10; ++i) {
-                BlockHeader blockHeader = new BlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
+                BlockHeader blockHeader = BlockHeader.assembleBlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
                         i, emptyArray, 0L, 0L, emptyArray, emptyArray, emptyArray);
                 recentHash = blockHeader.getHash();
                 Block block = new Block(blockHeader, new ArrayList<Transaction>(), new ArrayList<BlockHeader>());
