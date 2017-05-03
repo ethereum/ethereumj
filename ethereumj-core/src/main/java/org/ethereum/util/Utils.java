@@ -160,7 +160,7 @@ public class Utils {
         for (; pos < version.length() && count < 2; pos++) {
             if (version.charAt(pos) == '.') count++;
         }
-        return Double.parseDouble(version.substring(0, pos - 1));
+        return Double.parseDouble(version.replaceAll("(\\d+).*","$1") );
     }
 
     public static String getHashListShort(List<byte[]> blockHashes) {
