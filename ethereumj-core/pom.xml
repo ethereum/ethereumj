@@ -4,15 +4,15 @@
 
     <groupId>org.ethereum</groupId>
     <artifactId>ethereumj-core</artifactId>
-    <version>1.4.1-JUMPOFF</version>
+    <version>1.5.0-JUMPOFF</version>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>1.9</source>
+                    <target>1.9</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -23,8 +23,10 @@
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <!--intellij prefers to read the plugin.-->
+        <!--<maven.compiler.source>1.9</maven.compiler.source>-->
+        <!--<maven.compiler.target>1.9</maven.compiler.target>-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <generated.sourceDirectory>gen</generated.sourceDirectory>
         <github.global.server>github</github.global.server>
