@@ -139,7 +139,7 @@ public class TestRunner {
 
                 blockTraffic.add(tBlock);
             } catch (Exception e) {
-                System.out.println("*** Exception");
+                e.printStackTrace();
             }
         }
 
@@ -364,7 +364,7 @@ public class TestRunner {
 
                             if (foundLogInfo == null) {
                                 String output =
-                                        String.format("Expected log [ %s ]", expectedLogInfo.toString());
+                                        String.format("Expected logging [ %s ]", expectedLogInfo.toString());
                                 logger.info(output);
                                 results.add(output);
                             } else {
