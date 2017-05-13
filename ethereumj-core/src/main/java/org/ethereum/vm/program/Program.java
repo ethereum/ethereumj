@@ -689,13 +689,13 @@ public class Program {
     }
 
     public DataWord getOwnerAddress() {
-        return invoke.getOwnerAddress().clone();
+        return invoke.getOwnerAddress();
     }
 
     public DataWord getBlockHash(int index) {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
-                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())).clone() :
-                DataWord.ZERO.clone();
+                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())) :
+                DataWord.ZERO;
     }
 
     public DataWord getBalance(DataWord address) {
@@ -704,15 +704,15 @@ public class Program {
     }
 
     public DataWord getOriginAddress() {
-        return invoke.getOriginAddress().clone();
+        return invoke.getOriginAddress();
     }
 
     public DataWord getCallerAddress() {
-        return invoke.getCallerAddress().clone();
+        return invoke.getCallerAddress();
     }
 
     public DataWord getGasPrice() {
-        return invoke.getMinGasPrice().clone();
+        return invoke.getMinGasPrice();
     }
 
     public long getGasLong() {
@@ -724,11 +724,11 @@ public class Program {
     }
 
     public DataWord getCallValue() {
-        return invoke.getCallValue().clone();
+        return invoke.getCallValue();
     }
 
     public DataWord getDataSize() {
-        return invoke.getDataSize().clone();
+        return invoke.getDataSize();
     }
 
     public DataWord getDataValue(DataWord index) {
@@ -740,24 +740,24 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key.clone());
-        return ret == null ? null : ret.clone();
+        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+        return ret == null ? null : ret;
     }
 
     public DataWord getPrevHash() {
-        return invoke.getPrevHash().clone();
+        return invoke.getPrevHash();
     }
 
     public DataWord getCoinbase() {
-        return invoke.getCoinbase().clone();
+        return invoke.getCoinbase();
     }
 
     public DataWord getTimestamp() {
-        return invoke.getTimestamp().clone();
+        return invoke.getTimestamp();
     }
 
     public DataWord getNumber() {
-        return invoke.getNumber().clone();
+        return invoke.getNumber();
     }
 
     public BlockchainConfig getBlockchainConfig() {
@@ -765,11 +765,11 @@ public class Program {
     }
 
     public DataWord getDifficulty() {
-        return invoke.getDifficulty().clone();
+        return invoke.getDifficulty();
     }
 
     public DataWord getGasLimit() {
-        return invoke.getGaslimit().clone();
+        return invoke.getGaslimit();
     }
 
     public ProgramResult getResult() {

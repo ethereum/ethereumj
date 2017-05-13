@@ -31,6 +31,7 @@ logs
 test_db*
 testnetSampleDb
 sampleDB*
+out
 
 # Mac
 .DS_Store
