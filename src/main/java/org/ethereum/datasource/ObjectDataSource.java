@@ -32,7 +32,7 @@ public class ObjectDataSource<V> extends SourceChainBox<byte[], V, byte[], byte[
     /**
      * Creates new instance
      * @param byteSource baking store
-     * @param serializer for encode/decode byte[] <=> V
+     * @param serializer for encode/decode byte[] / V
      * @param readCacheEntries number of entries to cache
      */
     public ObjectDataSource(Source<byte[], byte[]> byteSource, Serializer<V, byte[]> serializer, int readCacheEntries) {

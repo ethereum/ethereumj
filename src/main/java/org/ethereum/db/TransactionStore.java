@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Storage (tx hash) => List of (block idx, tx idx, TransactionReceipt)
+ * Storage (tx hash) =&gt; List of (block idx, tx idx, TransactionReceipt)
  *
  * Since a transaction could be included into blocks from different forks and
  * have different receipts the class stores all of them (the same manner fork blocks are stored)

@@ -33,8 +33,8 @@ public class SourceCodec<Key, Value, SourceKey, SourceValue>
     /**
      * Instantiates class
      * @param src  Backing Source
-     * @param keySerializer  Key codec Key <=> SourceKey
-     * @param valSerializer  Value codec Value <=> SourceValue
+     * @param keySerializer  Key codec Key / SourceKey
+     * @param valSerializer  Value codec Value / SourceValue
      */
     public SourceCodec(Source<SourceKey, SourceValue> src, Serializer<Key, SourceKey> keySerializer, Serializer<Value, SourceValue> valSerializer) {
         super(src);

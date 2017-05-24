@@ -36,7 +36,7 @@ import java.util.BitSet;
  * were proposed in comments in his blog:
  * http://blog.locut.us/2008/01/12/a-decent-stand-alone-java-bloom-filter-implementation/
  *
- * @author Magnus Skjegstad <magnus@skjegstad.com>
+ * @author Magnus Skjegstad &lt;magnus@skjegstad.com&gt;
  */
 public class BloomFilter implements Serializable {
     private BitSet bitset;

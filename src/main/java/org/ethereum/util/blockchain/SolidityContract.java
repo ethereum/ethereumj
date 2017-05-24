@@ -27,7 +27,7 @@ import org.ethereum.core.Block;
  * Below is Java / Solidity types mapping:
  *
  *  Input arguments Java -&gt; Solidity mapping is the following:
- *    Number, BigInteger, String (hex) -> any integer type
+ *    Number, BigInteger, String (hex) -&gt; any integer type
  *    byte[], String (hex) -&gt; bytesN, byte[]
  *    String -&gt; string
  *    Java array of the above types -&gt; Solidity dynamic array of the corresponding type

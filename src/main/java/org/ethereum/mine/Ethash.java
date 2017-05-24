@@ -198,7 +198,7 @@ public class Ethash {
     /**
      *  Mines the nonce for the specified Block with difficulty BlockHeader.getDifficulty()
      *  When mined the Block 'nonce' and 'mixHash' fields are updated
-     *  Uses the full dataset i.e. it faster but takes > 1Gb of memory and may
+     *  Uses the full dataset i.e. it faster but takes &gt; 1Gb of memory and may
      *  take up to 10 mins for starting up (depending on whether the dataset was cached)
      *
      *  @param block The block to mine. The difficulty is taken from the block header

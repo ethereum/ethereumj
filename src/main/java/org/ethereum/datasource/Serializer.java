@@ -24,12 +24,12 @@ package org.ethereum.datasource;
  */
 public interface Serializer<T, S> {
     /**
-     * Converts T ==> S
+     * Converts T ==&gt; S
      * Should correctly handle null parameter
      */
     S serialize(T object);
     /**
-     * Converts S ==> T
+     * Converts S ==&gt; T
      * Should correctly handle null parameter
      */
     T deserialize(S stream);
