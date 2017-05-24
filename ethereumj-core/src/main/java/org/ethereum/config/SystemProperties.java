@@ -215,9 +215,11 @@ public class SystemProperties {
             InputStream is = getClass().getResourceAsStream("/version.properties");
             props.load(is);
             this.projectVersion = props.getProperty("versionNumber");
-            this.projectVersion = this.projectVersion.replaceAll("'", "");
-
-            if (this.projectVersion == null) this.projectVersion = "-.-.-";
+            if (this.projectVersion == null){
+                this.projectVersion = "-.-.-";
+            } else {
+                this.projectVersion = this.projectVersion.replaceAll("'", "");
+            }
 
             this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 

@@ -41,7 +41,7 @@ public class AnyFuture<V> extends AbstractFuture<V> {
             public void run() {
                 futureCompleted(f);
             }
-        },  MoreExecutors.sameThreadExecutor());
+        },  MoreExecutors.directExecutor());
         futures.add(f);
     }
 
@@ -51,7 +51,7 @@ public class AnyFuture<V> extends AbstractFuture<V> {
 
         try {
             cancelOthers(f);
-            
+
             V v = f.get();
             postProcess(v);
             set(v);

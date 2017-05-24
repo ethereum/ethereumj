@@ -18,6 +18,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.jfrog.bintray' version '1.0'
+    id 'net.researchgate.release' version '2.4.0'
+
 }
 
 apply plugin: 'propdeps-maven'
@@ -105,10 +107,9 @@ test {
 
 ext {
     slf4jVersion = '1.7.7'
-    leveldbVersion = '0.7'
+    leveldbVersion = '0.9'
     scastleVersion = '1.53.0.0'
     springVersion = '4.2.0.RELEASE'
-    hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
 }
 
@@ -129,6 +130,7 @@ dependencies {
     compile "ch.qos.logback:logback-classic:1.1.7"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
+    compile "com.google.guava:guava:21.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
     compile "org.apache.commons:commons-collections4:4.0"
     compile "org.apache.commons:commons-lang3:3.4"
@@ -190,7 +192,7 @@ jacocoTestReport {
 def bintrayUsername = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
 def bintrayPassword = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
 def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
-def branchName = System.getenv('TRAVIS_BRANCH')
+def branchName = gitCurBranch()
 
 artifactory {
     contextUrl = 'http://oss.jfrog.org/artifactory'
@@ -229,7 +231,7 @@ bintray {
     pkg {
         userOrg = 'ethereum' //An optional organization name when the repo belongs to one of the user's orgs
         repo = 'maven'
-        name = 'org.ethereum'
+        name = 'org.adridadou'
     }
 }
 
@@ -254,11 +256,10 @@ tasks.processResources.doLast(){
 
 task publish {
 
-    println "publishing if master || develop current branch: " + branchName
+    println "publishing if master || develop current branch: " + gitCurBranch()
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
-
 
 def customizePom(pom, gradleProject) {
     pom.whenConfigured { generatedPom ->
@@ -276,7 +277,7 @@ def customizePom(pom, gradleProject) {
         generatedPom.project {
             name = "ethereumj"
             description = "Java implementation of the Ethereum protocol"
-            url = "https://github.com/ethereum/ethereumj"
+            url = "https://github.com/adridadou/ethereumj"
             organization {
                 name = "Ethereum"
                 url = "https://ethereum.org"
@@ -290,19 +291,18 @@ def customizePom(pom, gradleProject) {
             }
             scm {
                 url = "https://github.com/ethereum/ethereumj"
-                connection = "scm:git:git://github.com/ethereum/ethereumj"
-                developerConnection = "scm:git:git://github.com/ethereum/ethereumj"
+                connection = "scm:git:git://github.com/adridadou/ethereumj"
+                developerConnection = "scm:git:git://github.com/adridadou/ethereumj"
             }
             developers {
                 developer {
-                    id = "rmandeleil"
-                    name = "Roman Mandeleil"
-                    email = "roman.mandeleil@gmail.com"
+                    id = "adridadou"
+                    name = "David Roon"
                 }
             }
             issueManagement {
                 system = "GitHub Issues"
-                url = "https://github.com/ethereum/ethereumj/issues"
+                url = "https://github.com/ethereum/adridadou/issues"
             }
         }
     }
