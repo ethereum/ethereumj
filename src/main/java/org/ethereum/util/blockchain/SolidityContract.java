@@ -24,19 +24,19 @@ import org.ethereum.core.Block;
  * respect to language function signatures encoding and
  * storage layout
  *
- * Below is Java <=> Solidity types mapping:
+ * Below is Java / Solidity types mapping:
  *
- *  Input arguments Java -> Solidity mapping is the following:
- *    Number, BigInteger, String (hex) -> any integer type
- *    byte[], String (hex) -> bytesN, byte[]
- *    String -> string
- *    Java array of the above types -> Solidity dynamic array of the corresponding type
+ *  Input arguments Java -&gt; Solidity mapping is the following:
+ *    Number, BigInteger, String (hex) -&gt; any integer type
+ *    byte[], String (hex) -&gt; bytesN, byte[]
+ *    String -&gt; string
+ *    Java array of the above types -&gt; Solidity dynamic array of the corresponding type
  *
- *  Output arguments Solidity -> Java mapping:
- *    any integer type -> BigInteger
- *    string -> String
- *    bytesN, byte[] -> byte[]
- *    Solidity dynamic array -> Java array
+ *  Output arguments Solidity -&gt; Java mapping:
+ *    any integer type -&gt; BigInteger
+ *    string -&gt; String
+ *    bytesN, byte[] -&gt; byte[]
+ *    Solidity dynamic array -&gt; Java array
  *
  * Created by Anton Nashatyrev on 23.03.2016.
  */
@@ -49,12 +49,19 @@ public interface SolidityContract extends Contract {
      * TODO: either return pending transaction execution result
      * or return Future which is available upon block including trnasaction
      * or combine both approaches
+     * @param functionName the function name
+     * @param args the arguments
+     * @return The call result
      */
     SolidityCallResult callFunction(String functionName, Object ... args);
 
     /**
      * Submits the transaction which invokes the specified contract function
      * with corresponding arguments and sends the specified value to the contract
+     * @param value the value in wei
+     * @param functionName the function name
+     * @param args the arguments
+     * @return The call result
      */
     SolidityCallResult callFunction(long value, String functionName, Object ... args);
 
@@ -63,6 +70,9 @@ public interface SolidityContract extends Contract {
      * modifying the contract state.
      * Synchronously returns function execution result
      * (see output argument mapping in class doc)
+     * @param functionName the function name
+     * @param args the arguments
+     * @return The call result
      */
     Object[] callConstFunction(String functionName, Object ... args);
 
@@ -73,17 +83,24 @@ public interface SolidityContract extends Contract {
      *
      * Synchronously returns function execution result
      * (see output argument mapping in class doc)
+     * @param callBlock The block to call on
+     * @param functionName the function name
+     * @param args arguments
+     * @return the converted results
      */
     Object[] callConstFunction(Block callBlock, String functionName, Object... args);
 
     /**
      * Gets the contract function. This object can be passed as a call argument for another
      * function with a function type parameter
+     * @param name the function name
+     * @return the function
      */
     SolidityFunction getFunction(String name);
 
     /**
      * Returns the Solidity JSON ABI (Application Binary Interface)
+     * @return the ABI json
      */
     String getABI();
 }

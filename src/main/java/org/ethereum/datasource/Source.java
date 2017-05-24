@@ -31,7 +31,7 @@ public interface Source<K, V> {
 
     /**
      * Gets a value by its key
-     * @return value or <null/> if no such key in the source
+     * @return value or null if no such key in the source
      */
     V get(K key);
 

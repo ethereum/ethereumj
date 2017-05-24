@@ -77,18 +77,6 @@ public class RepositoryRoot extends RepositoryImpl {
         this(stateDS, null);
     }
 
-    /**
-     * Building the following structure for snapshot Repository:
-     *
-     * stateDS --> trieCacheCodec --> trieCache --> stateTrie --> accountStateCodec --> accountStateCache
-     *  \                               \
-     *   \                               \-->>>  contractStorageTrie --> storageCodec --> StorageCache
-     *    \--> codeCache
-     *
-     *
-     * @param stateDS
-     * @param root
-     */
     public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root) {
         this.stateDS = stateDS;
 
