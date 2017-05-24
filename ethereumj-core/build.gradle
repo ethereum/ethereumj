@@ -230,7 +230,7 @@ bintray {
     pkg {
         userOrg = 'ethereum' //An optional organization name when the repo belongs to one of the user's orgs
         repo = 'maven'
-        name = 'org.ethereum'
+        name = 'org.adridadou'
     }
 }
 
@@ -277,7 +277,7 @@ def customizePom(pom, gradleProject) {
         generatedPom.project {
             name = "ethereumj"
             description = "Java implementation of the Ethereum protocol"
-            url = "https://github.com/ethereum/ethereumj"
+            url = "https://github.com/adridadou/ethereumj"
             organization {
                 name = "Ethereum"
                 url = "https://ethereum.org"
@@ -291,19 +291,18 @@ def customizePom(pom, gradleProject) {
             }
             scm {
                 url = "https://github.com/ethereum/ethereumj"
-                connection = "scm:git:git://github.com/ethereum/ethereumj"
-                developerConnection = "scm:git:git://github.com/ethereum/ethereumj"
+                connection = "scm:git:git://github.com/adridadou/ethereumj"
+                developerConnection = "scm:git:git://github.com/adridadou/ethereumj"
             }
             developers {
                 developer {
-                    id = "rmandeleil"
-                    name = "Roman Mandeleil"
-                    email = "roman.mandeleil@gmail.com"
+                    id = "adridadou"
+                    name = "David Roon"
                 }
             }
             issueManagement {
                 system = "GitHub Issues"
-                url = "https://github.com/ethereum/ethereumj/issues"
+                url = "https://github.com/ethereum/adridadou/issues"
             }
         }
     }
