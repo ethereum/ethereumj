@@ -22,11 +22,11 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
 
-    def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
+    def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/ethj_version.properties").toURI().toURL())
 
     group = 'org.ethereum'
 
-    version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
+    version = config.versionNumber
 
     println("Building version: " + version + " (from branch " + gitCurBranch() + ")")
 

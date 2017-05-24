@@ -18,6 +18,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.jfrog.bintray' version '1.0'
+    id 'net.researchgate.release' version '2.4.0'
+
 }
 
 apply plugin: 'propdeps-maven'
@@ -105,10 +107,9 @@ test {
 
 ext {
     slf4jVersion = '1.7.7'
-    leveldbVersion = '0.7'
+    leveldbVersion = '0.9'
     scastleVersion = '1.53.0.0'
     springVersion = '4.2.0.RELEASE'
-    hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
 }
 
@@ -191,7 +192,7 @@ jacocoTestReport {
 def bintrayUsername = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
 def bintrayPassword = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
 def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
-def branchName = System.getenv('TRAVIS_BRANCH')
+def branchName = gitCurBranch()
 
 artifactory {
     contextUrl = 'http://oss.jfrog.org/artifactory'
@@ -255,11 +256,10 @@ tasks.processResources.doLast(){
 
 task publish {
 
-    println "publishing if master || develop current branch: " + branchName
+    println "publishing if master || develop current branch: " + gitCurBranch()
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
-
 
 def customizePom(pom, gradleProject) {
     pom.whenConfigured { generatedPom ->
