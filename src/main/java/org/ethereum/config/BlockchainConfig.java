@@ -44,11 +44,16 @@ public interface BlockchainConfig {
 
     /**
      * Returns the mining algorithm
+     * @param config the config
+     * @return get the mine algorithm
      */
     MinerIfc getMineAlgorithm(SystemProperties config);
 
     /**
      * Calculates the difficulty for the block depending on the parent
+     * @param curBlock the current block header
+     * @param parent the parent block header
+     * @return the total difficulty
      */
     BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent);
 
