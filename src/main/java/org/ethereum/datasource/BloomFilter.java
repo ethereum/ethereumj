@@ -152,7 +152,6 @@ public class BloomFilter implements Serializable {
     /**
      * Calculates the expected probability of false positives based on
      * the number of expected filter elements and the size of the Bloom filter.
-     * <br /><br />
      * The value returned by this method is the <i>expected</i> rate of false
      * positives, assuming the number of inserted elements equals the number of
      * expected elements. If the number of elements in the Bloom filter is less
@@ -190,8 +189,7 @@ public class BloomFilter implements Serializable {
 
 
     /**
-     * Returns the value chosen for K.<br />
-     * <br />
+     * Returns the value chosen for K.
      * K is the optimal number of hash functions based on the size
      * of the Bloom filter and the expected number of inserted elements.
      *
