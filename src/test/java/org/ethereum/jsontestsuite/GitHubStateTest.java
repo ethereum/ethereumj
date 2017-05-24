@@ -35,6 +35,7 @@ import java.util.Set;
 import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Ignore
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
