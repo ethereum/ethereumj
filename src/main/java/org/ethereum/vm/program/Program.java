@@ -522,7 +522,6 @@ public class Program {
 
     /**
      * That method is for internal code invocations
-     * <p/>
      * - Normal calls invoke a specified contract which updates itself
      * - Stateless calls invoke code from another contract, within the context of the caller
      *

@@ -53,7 +53,7 @@ import static org.ethereum.util.ByteUtil.bigEndianToShort;
  * (when either we initiating connection or remote peer initiates)
  *
  * The initial handshake includes:
- * - first AuthInitiate -> AuthResponse messages when peers exchange with secrets
+ * - first AuthInitiate -&gt; AuthResponse messages when peers exchange with secrets
  * - second P2P Hello messages when P2P protocol and subprotocol capabilities are negotiated
  *
  * After the handshake is done this handler reports secrets and other data to the Channel

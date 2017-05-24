@@ -19,7 +19,7 @@ package org.ethereum.util.blockchain;
 
 /**
  * Represents the contract storage which is effectively the
- * mapping( uint256 => uint256 )
+ * mapping( uint256 =&gt; uint256 )
  *
  * Created by Anton Nashatyrev on 23.03.2016.
  */

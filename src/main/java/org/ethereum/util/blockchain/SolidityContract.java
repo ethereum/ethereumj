@@ -24,19 +24,19 @@ import org.ethereum.core.Block;
  * respect to language function signatures encoding and
  * storage layout
  *
- * Below is Java <=> Solidity types mapping:
+ * Below is Java / Solidity types mapping:
  *
- *  Input arguments Java -> Solidity mapping is the following:
+ *  Input arguments Java -&gt; Solidity mapping is the following:
  *    Number, BigInteger, String (hex) -> any integer type
- *    byte[], String (hex) -> bytesN, byte[]
- *    String -> string
- *    Java array of the above types -> Solidity dynamic array of the corresponding type
+ *    byte[], String (hex) -&gt; bytesN, byte[]
+ *    String -&gt; string
+ *    Java array of the above types -&gt; Solidity dynamic array of the corresponding type
  *
- *  Output arguments Solidity -> Java mapping:
- *    any integer type -> BigInteger
- *    string -> String
- *    bytesN, byte[] -> byte[]
- *    Solidity dynamic array -> Java array
+ *  Output arguments Solidity -&gt; Java mapping:
+ *    any integer type -&gt; BigInteger
+ *    string -&gt; String
+ *    bytesN, byte[] -&gt; byte[]
+ *    Solidity dynamic array -&gt; Java array
  *
  * Created by Anton Nashatyrev on 23.03.2016.
  */
