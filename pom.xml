@@ -4,7 +4,7 @@
 
     <groupId>org.adridadou</groupId>
     <artifactId>ethereumj</artifactId>
-    <version>1.5.2-SNAPSHOT</version>
+    <version>1.5.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
