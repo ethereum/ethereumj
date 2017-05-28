@@ -29,6 +29,8 @@ http://ethereumj.io
 ```
    repositories {
        mavenCentral()
+       jcenter()
+       maven { url "https://dl.bintray.com/ethereum/maven/" }
    }
    compile "org.ethereum:ethereumj-core:1.5.+"
 ```
