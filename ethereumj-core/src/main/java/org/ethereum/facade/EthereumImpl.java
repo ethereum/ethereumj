@@ -228,6 +228,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         return callConstantImpl(tx, block).getReceipt();
     }
 
+    @Override
     public BlockSummary replayBlock(Block block) {
         List<TransactionReceipt> receipts = new ArrayList<>();
         List<TransactionExecutionSummary> summaries = new ArrayList<>();
