@@ -215,30 +215,39 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         List<TransactionReceipt> receipts = new ArrayList<>();
         List<TransactionExecutionSummary> summaries = new ArrayList<>();
 
-        Repository repository = ((Repository) worldManager.getRepository())
-                .getSnapshotTo(block.getStateRoot())
-                .startTracking();
+        Block parent = worldManager.getBlockchain().getBlockByHash(block.getParentHash());
+
+        if (parent == null) {
+            logger.info("Failed to replay block #{}, its ancestor is not presented in the db", block.getNumber());
+            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), receipts, summaries);
+        }
+
+        Repository track = ((Repository) worldManager.getRepository())
+                .getSnapshotTo(parent.getStateRoot());
 
         try {
             for (Transaction tx : block.getTransactionsList()) {
-                org.ethereum.core.TransactionExecutor executor = commonConfig.transactionExecutor(
-                        tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
+
+                Repository txTrack = track.startTracking();
+                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
+                        tx, block.getCoinbase(), txTrack, worldManager.getBlockStore(),
                         programInvokeFactory, block, worldManager.getListener(), 0);
 
-                executor.setLocalCall(true);
                 executor.init();
                 executor.execute();
                 executor.go();
 
                 TransactionExecutionSummary summary = executor.finalization();
+
+                txTrack.commit();
+
                 TransactionReceipt receipt = executor.getReceipt();
-                // TODO: change to repository.getRoot() after RepositoryTrack implementation
-                receipt.setPostTxState(ArrayUtils.EMPTY_BYTE_ARRAY);
+                receipt.setPostTxState(track.getRoot());
                 receipts.add(receipt);
                 summaries.add(summary);
             }
         } finally {
-            repository.rollback();
+            track.rollback();
         }
 
         return new BlockSummary(block, new HashMap<byte[], BigInteger>(), receipts, summaries);
