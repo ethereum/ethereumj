@@ -2,7 +2,7 @@ sudo: required
 dist: trusty
 
 language: java
-jdk: oraclejdk7
+jdk: oraclejdk8
 
 # publish snapshots to https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core
 # publish releases to http://jcenter.bintray.com/org/ethereum/ethereumj-core
