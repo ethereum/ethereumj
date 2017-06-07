@@ -93,7 +93,7 @@ test {
         logger.lifecycle("Running test: ${descriptor}")
     }
 
-    jvmArgs '-Xss2m', '-Xmx3G'
+    jvmArgs '-Xss4m', '-Xmx3G'
 
     testLogging {
         events "failed"
