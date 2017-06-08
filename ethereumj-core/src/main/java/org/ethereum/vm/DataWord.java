@@ -29,10 +29,14 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 /**
- * DataWord is the 32-byte array representation of a 256-bit number
- * Calculations can be done on this word with other DataWords
+ * DataWord is the 32-byte array representation of a 256-bit number.
+ * Calculations can be done on this word with other DataWords.
+ *
+ * It is immutable, calling methods on it will not change the internal
+ * data structure, but instead return new DataWord instances.
  *
  * @author Roman Mandeleil
+ * @author Vetle Leinonen-Roeim
  * @since 01.06.2014
  */
 public class DataWord implements Comparable<DataWord> {
@@ -43,9 +47,10 @@ public class DataWord implements Comparable<DataWord> {
     public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
     public static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
 
-    private byte[] data = new byte[32];
+    private final byte[] data;
 
     public DataWord() {
+        this.data = new byte[32];
     }
 
     public DataWord(int num) {
@@ -77,14 +82,16 @@ public class DataWord implements Comparable<DataWord> {
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
         else if (data.length == 32)
             this.data = data;
-        else if (data.length <= 32)
+        else if (data.length <= 32) {
+            this.data = new byte[32];
             System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
+        }
         else
             throw new RuntimeException("Data word can't exceed 32 bytes: " + data);
     }
 
     public byte[] getData() {
-        return data;
+        return copyData();
     }
 
     public byte[] getNoLeadZeroesData() {
@@ -183,157 +190,166 @@ public class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord and(DataWord w2) {
-
+        byte[] dataCopy = copyData();
         for (int i = 0; i < this.data.length; ++i) {
-            this.data[i] &= w2.data[i];
+            dataCopy[i] &= w2.data[i];
         }
-        return this;
+        return new DataWord(dataCopy);
     }
 
     public DataWord or(DataWord w2) {
+        byte[] dataCopy = copyData();
 
         for (int i = 0; i < this.data.length; ++i) {
-            this.data[i] |= w2.data[i];
+            dataCopy[i] |= w2.data[i];
         }
-        return this;
+        return new DataWord(dataCopy);
     }
 
     public DataWord xor(DataWord w2) {
+        byte[] dataCopy = copyData();
 
         for (int i = 0; i < this.data.length; ++i) {
-            this.data[i] ^= w2.data[i];
+            dataCopy[i] ^= w2.data[i];
         }
-        return this;
+        return new DataWord(dataCopy);
     }
 
-    public void negate() {
+    public DataWord negate() {
 
-        if (this.isZero()) return;
+        if (this.isZero()) return this;
+        byte[] dataCopy = copyData();
 
         for (int i = 0; i < this.data.length; ++i) {
-            this.data[i] = (byte) ~this.data[i];
+            dataCopy[i] = (byte) ~dataCopy[i];
         }
 
         for (int i = this.data.length - 1; i >= 0; --i) {
-            this.data[i] = (byte) (1 + this.data[i] & 0xFF);
-            if (this.data[i] != 0) break;
+            dataCopy[i] = (byte) (1 + dataCopy[i] & 0xFF);
+            if (dataCopy[i] != 0) break;
         }
+
+        return new DataWord(dataCopy);
     }
 
-    public void bnot() {
+    public DataWord bnot() {
+        byte[] dataCopy = copyData();
+
         if (this.isZero()) {
-            this.data = ByteUtil.copyToArray(MAX_VALUE);
-            return;
+            dataCopy = ByteUtil.copyToArray(MAX_VALUE);
+            return new DataWord(dataCopy);
         }
-        this.data = ByteUtil.copyToArray(MAX_VALUE.subtract(this.value()));
+        return new DataWord(ByteUtil.copyToArray(MAX_VALUE.subtract(this.value())));
+    }
+
+    private byte[] copyData() {
+        return Arrays.copyOf(data, this.data.length);
     }
 
     // By   : Holger
     // From : http://stackoverflow.com/a/24023466/459349
-    public void add(DataWord word) {
+    public DataWord add(DataWord word) {
         byte[] result = new byte[32];
         for (int i = 31, overflow = 0; i >= 0; i--) {
             int v = (this.data[i] & 0xff) + (word.data[i] & 0xff) + overflow;
             result[i] = (byte) v;
             overflow = v >>> 8;
         }
-        this.data = result;
+        return new DataWord(result);
     }
 
     // old add-method with BigInteger quick hack
-    public void add2(DataWord word) {
+    public DataWord add2(DataWord word) {
         BigInteger result = value().add(word.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
     // TODO: mul can be done in more efficient way
     // TODO:     with shift left shift right trick
     // TODO      without BigInteger quick hack
-    public void mul(DataWord word) {
+    public DataWord mul(DataWord word) {
         BigInteger result = value().multiply(word.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
     // TODO: improve with no BigInteger
-    public void div(DataWord word) {
+    public DataWord div(DataWord word) {
 
         if (word.isZero()) {
             this.and(ZERO);
-            return;
+            return word;
         }
 
         BigInteger result = value().divide(word.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
     // TODO: improve with no BigInteger
-    public void sDiv(DataWord word) {
+    public DataWord sDiv(DataWord word) {
 
         if (word.isZero()) {
             this.and(ZERO);
-            return;
+            return word;
         }
 
         BigInteger result = sValue().divide(word.sValue());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
     // TODO: improve with no BigInteger
-    public void sub(DataWord word) {
+    public DataWord sub(DataWord word) {
         BigInteger result = value().subtract(word.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
     // TODO: improve with no BigInteger
-    public void exp(DataWord word) {
+    public DataWord exp(DataWord word) {
         BigInteger result = value().modPow(word.value(), _2_256);
-        this.data = ByteUtil.copyToArray(result);
+        return new DataWord(ByteUtil.copyToArray(result));
     }
 
     // TODO: improve with no BigInteger
-    public void mod(DataWord word) {
+    public DataWord mod(DataWord word) {
 
         if (word.isZero()) {
             this.and(ZERO);
-            return;
+            return word;
         }
 
         BigInteger result = value().mod(word.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
-    public void sMod(DataWord word) {
+    public DataWord sMod(DataWord word) {
 
         if (word.isZero()) {
             this.and(ZERO);
-            return;
+            return word;
         }
 
         BigInteger result = sValue().abs().mod(word.sValue().abs());
         result = (sValue().signum() == -1) ? result.negate() : result;
 
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
-    public void addmod(DataWord word1, DataWord word2) {
+    public DataWord addmod(DataWord word1, DataWord word2) {
         if (word2.isZero()) {
-            this.data = new byte[32];
-            return;
+            return new DataWord(new byte[32]);
         }
 
         BigInteger result = value().add(word1.value()).mod(word2.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
-    public void mulmod(DataWord word1, DataWord word2) {
+    public DataWord mulmod(DataWord word1, DataWord word2) {
 
         if (this.isZero() || word1.isZero() || word2.isZero()) {
-            this.data = new byte[32];
-            return;
+            return new DataWord(new byte[32]);
         }
 
         BigInteger result = value().multiply(word1.value()).mod(word2.value());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
     @JsonValue
@@ -388,13 +404,16 @@ public class DataWord implements Comparable<DataWord> {
         return (int) Math.signum(result);
     }
 
-    public void signExtend(byte k) {
+    public DataWord signExtend(byte k) {
+        byte[] dataCopy = copyData();
         if (0 > k || k > 31)
             throw new IndexOutOfBoundsException();
         byte mask = this.sValue().testBit((k * 8) + 7) ? (byte) 0xff : 0;
         for (int i = 31; i > k; i--) {
-            this.data[31 - i] = mask;
+            dataCopy[31 - i] = mask;
         }
+
+        return new DataWord(dataCopy);
     }
 
     public int bytesOccupied() {
@@ -409,5 +428,11 @@ public class DataWord implements Comparable<DataWord> {
 
     public String asString(){
         return new String(getNoLeadZeroesData());
+    }
+
+    public DataWord set(int index, byte value) {
+        byte[] dataCopy = copyData();
+        dataCopy[index] = value;
+        return new DataWord(dataCopy);
     }
 }
