@@ -107,7 +107,7 @@ ext {
     slf4jVersion = '1.7.7'
     leveldbVersion = '0.7'
     scastleVersion = '1.53.0.0'
-    springVersion = '4.2.0.RELEASE'
+    springVersion = '4.3.0.RELEASE'
     hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
 }
@@ -136,6 +136,7 @@ dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
+    compile "org.springframework:spring-beans:${springVersion}"
     compile "com.typesafe:config:1.2.1"
 
     compile "org.mapdb:mapdb:2.0-beta12"
