@@ -29,7 +29,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -50,7 +49,7 @@ class Initializer implements BeanPostProcessor {
         logger.info("Running {},  core version: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
         BuildInfo.printInfo();
 
-        databaseVersionHandler.process(config);
+        databaseVersionHandler.resetDatabaseProcess(config);
 
         if (logger.isInfoEnabled()) {
             StringBuilder versions = new StringBuilder();
@@ -98,7 +97,7 @@ class Initializer implements BeanPostProcessor {
             EXIT, RESET, IGNORE
         }
 
-        public void process(SystemProperties config) {
+        public void resetDatabaseProcess(SystemProperties config) {
             if (config.databaseReset()){
                 FileUtil.recursiveDelete(config.databaseDir());
                 putDatabaseVersion(config, config.databaseVersion());
@@ -187,6 +186,7 @@ class Initializer implements BeanPostProcessor {
         }
 
         private File getDatabaseVersionFile(SystemProperties config) {
+            SystemProperties.setDatabaseDirFromConfigProperties();
             return new File(config.databaseDir() + "/version.properties");
         }
     }
