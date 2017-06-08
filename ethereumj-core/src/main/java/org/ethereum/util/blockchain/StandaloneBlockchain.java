@@ -66,7 +66,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
     boolean autoBlock;
     long dbDelay = 0;
     long totalDbHits = 0;
-    List<Pair<byte[], BigInteger>> initialBallances = new ArrayList<>();
     int blockGasIncreasePercent = 0;
 
     long time = 0;
@@ -75,46 +74,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private HashMapDB<byte[]> stateDS;
     JournalSource<byte[]> pruningStateDS;
     PruneManager pruneManager;
-
     private BlockSummary lastSummary;
 
-    class PendingTx {
-        ECKey sender;
-        byte[] toAddress;
-        BigInteger value;
-        byte[] data;
-
-        SolidityContractImpl createdContract;
-        SolidityContractImpl targetContract;
-
-        Transaction customTx;
-
-        TransactionResult txResult = new TransactionResult();
-
-        public PendingTx(byte[] toAddress, BigInteger value, byte[] data) {
-            this.sender = txSender;
-            this.toAddress = toAddress;
-            this.value = value;
-            this.data = data;
-        }
-
-        public PendingTx(byte[] toAddress, BigInteger value, byte[] data,
-                         SolidityContractImpl createdContract, SolidityContractImpl targetContract, TransactionResult res) {
-            this.sender = txSender;
-            this.toAddress = toAddress;
-            this.value = value;
-            this.data = data;
-            this.createdContract = createdContract;
-            this.targetContract = targetContract;
-            this.txResult = res;
-        }
-
-        public PendingTx(Transaction customTx) {
-            this.customTx = customTx;
-        }
-    }
-
     List<PendingTx> submittedTxes = new CopyOnWriteArrayList<>();
+//    SolidityContractImpl contract;
 
     public StandaloneBlockchain() {
         Genesis genesis = GenesisLoader.loadGenesis(
@@ -125,7 +88,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         withGasLimit(5_000_000L);
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
         setSender(ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")));
-//        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
     }
 
     public StandaloneBlockchain withGenesis(Genesis genesis) {
@@ -253,7 +215,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
                 pendingTxes.get(i).txResult.executionSummary = getTxSummary(lastSummary, i);
             }
-
+            //Clear all the transactions in the block with every new block (just a safety check)
             submittedTxes.clear();
             return b;
         } catch (InterruptedException|ExecutionException e) {
@@ -306,7 +268,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     @Override
     public void sendEther(byte[] toAddress, BigInteger weis) {
-        submitNewTx(new PendingTx(toAddress, weis, new byte[0]));
+        submitNewTx(new PendingTx(txSender, toAddress, weis, new byte[0]));
     }
 
     public void submitTransaction(Transaction tx) {
@@ -326,7 +288,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             throw new RuntimeException("No constructor with params found");
         }
         byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
-        submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
+        submitNewTx(new PendingTx(txSender, new byte[0], BigInteger.ZERO,
                 ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null, new TransactionResult()));
         return contract;
     }
@@ -346,7 +308,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 				throw new RuntimeException("No constructor with params found");
 			}
 			byte[] argsEncoded = constructor == null ? new byte[0] : constructor.encodeArguments(constructorArgs);
-			submitNewTx(new PendingTx(new byte[0], BigInteger.ZERO,
+			submitNewTx(new PendingTx(txSender, new byte[0], BigInteger.ZERO,
 					ByteUtil.merge(Hex.decode(contract.getBinary()), argsEncoded), contract, null,
 					new TransactionResult()));
 			return contract;
@@ -422,7 +384,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         this.listener.addListener(listener);
     }
 
-    private void submitNewTx(PendingTx tx) {
+    protected void submitNewTx(PendingTx tx) {
         submittedTxes.add(tx);
         if (autoBlock) {
             createBlock();
@@ -442,6 +404,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     private BlockchainImpl createBlockchain(Genesis genesis) {
+        //initialize blockchain
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
@@ -485,204 +448,5 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pruneManager.blockCommitted(genesis.getHeader());
 
         return blockchain;
-    }
-
-    public class SolidityContractImpl implements SolidityContract {
-        byte[] address;
-        public CompilationResult.ContractMetadata compiled;
-        public CallTransaction.Contract contract;
-        public List<CallTransaction.Contract> relatedContracts = new ArrayList<>();
-
-        public SolidityContractImpl(String abi) {
-            contract = new CallTransaction.Contract(abi);
-        }
-        public SolidityContractImpl(CompilationResult.ContractMetadata result) {
-            this(result.abi);
-            compiled = result;
-        }
-
-        public void addRelatedContract(String abi) {
-            CallTransaction.Contract c = new CallTransaction.Contract(abi);
-            relatedContracts.add(c);
-        }
-
-        void setAddress(byte[] address) {
-            this.address = address;
-        }
-
-        @Override
-        public byte[] getAddress() {
-            if (address == null) {
-                throw new RuntimeException("Contract address will be assigned only after block inclusion. Call createBlock() first.");
-            }
-            return address;
-        }
-
-        @Override
-        public SolidityCallResult callFunction(String functionName, Object... args) {
-            return callFunction(0, functionName, args);
-        }
-
-        @Override
-        public SolidityCallResult callFunction(long value, String functionName, Object... args) {
-            CallTransaction.Function function = contract.getByName(functionName);
-            byte[] data = function.encode(args);
-            SolidityCallResult res = new SolidityCallResultImpl(this, function);
-            submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
-            return res;
-        }
-
-        @Override
-        public Object[] callConstFunction(String functionName, Object... args) {
-            return callConstFunction(getBlockchain().getBestBlock(), functionName, args);
-        }
-
-        @Override
-        public Object[] callConstFunction(Block callBlock, String functionName, Object... args) {
-
-            CallTransaction.Function func = contract.getByName(functionName);
-            if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
-            Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
-                    Hex.toHexString(getAddress()), 0, func, args);
-            tx.sign(new byte[32]);
-
-            Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
-
-            try {
-                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                        (tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
-                                getBlockchain().getProgramInvokeFactory(), callBlock)
-                        .setLocalCall(true);
-
-                executor.init();
-                executor.execute();
-                executor.go();
-                executor.finalization();
-
-                return func.decodeResult(executor.getResult().getHReturn());
-            } finally {
-                repository.rollback();
-            }
-        }
-
-        @Override
-        public SolidityStorage getStorage() {
-            return new SolidityStorageImpl(getAddress());
-        }
-
-        @Override
-        public String getABI() {
-            return compiled.abi;
-        }
-
-        @Override
-        public String getBinary() {
-            return compiled.bin;
-        }
-
-        @Override
-        public void call(byte[] callData) {
-            // for this we need cleaner separation of EasyBlockchain to
-            // Abstract and Solidity specific
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    public class SolidityCallResultImpl extends SolidityCallResult {
-        SolidityContractImpl contract;
-        CallTransaction.Function function;
-
-        SolidityCallResultImpl(SolidityContractImpl contract, CallTransaction.Function function) {
-            this.contract = contract;
-            this.function = function;
-        }
-
-        @Override
-        public CallTransaction.Function getFunction() {
-            return function;
-        }
-
-        public List<CallTransaction.Invocation> getEvents() {
-            List<CallTransaction.Invocation> ret = new ArrayList<>();
-            for (LogInfo logInfo : getReceipt().getLogInfoList()) {
-                for (CallTransaction.Contract c : contract.relatedContracts) {
-                    CallTransaction.Invocation event = c.parseEvent(logInfo);
-                    if (event != null) ret.add(event);
-                }
-            }
-            return ret;
-        }
-
-        @Override
-        public String toString() {
-            String ret = "SolidityCallResult{" +
-                    function + ": " +
-                    (isIncluded() ? "EXECUTED" : "PENDING") + ", ";
-            if (isIncluded()) {
-                ret += isSuccessful() ? "SUCCESS" : ("ERR (" + getReceipt().getError() + ")");
-                ret += ", ";
-                if (isSuccessful()) {
-                    ret += "Ret: " + Arrays.toString(getReturnValues()) + ", ";
-                    ret += "Events: " + getEvents() + ", ";
-                }
-            }
-            return ret + "}";
-        }
-    }
-
-
-    class SolidityStorageImpl implements SolidityStorage {
-        byte[] contractAddr;
-
-        public SolidityStorageImpl(byte[] contractAddr) {
-            this.contractAddr = contractAddr;
-        }
-
-        @Override
-        public byte[] getStorageSlot(long slot) {
-            return getStorageSlot(new DataWord(slot).getData());
-        }
-
-        @Override
-        public byte[] getStorageSlot(byte[] slot) {
-            DataWord ret = getBlockchain().getRepository().getContractDetails(contractAddr).get(new DataWord(slot));
-            return ret.getData();
-        }
-    }
-
-     class SlowHashMapDB extends HashMapDB<byte[]> {
-        private void sleep(int cnt) {
-            totalDbHits += cnt;
-            if (dbDelay == 0) return;
-            try {
-                Thread.sleep(dbDelay * cnt);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public synchronized void delete(byte[] arg0) throws DBException {
-            super.delete(arg0);
-            sleep(1);
-        }
-
-        @Override
-        public synchronized byte[] get(byte[] arg0) throws DBException {
-            sleep(1);
-            return super.get(arg0);
-        }
-
-        @Override
-        public synchronized void put(byte[] key, byte[] value) throws DBException {
-            sleep(1);
-            super.put(key, value);
-        }
-
-        @Override
-        public synchronized void updateBatch(Map<byte[], byte[]> rows) {
-            sleep(rows.size() / 2);
-            super.updateBatch(rows);
-        }
     }
 }
