@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
@@ -539,8 +540,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
             stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
             if (summary1 != null) {
-                stateLogger.error("Inconsistent behavior, exiting...");
-                System.exit(-1);
+                if (config.exitOnBlockConflict()) {
+                    stateLogger.error("Inconsistent behavior, exiting...");
+                    System.exit(-1);
+                } else {
+                    return summary1;
+                }
             }
         }
         return summary;
