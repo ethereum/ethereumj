@@ -86,7 +86,7 @@ public class BlockLoader {
     ExecutorPipeline<Block, ?> exec2;
 
     public void loadBlocks() {
-        exec1 = new ExecutorPipeline(8, 1000, true, new Functional.Function<Block, Block>() {
+        exec1 = new ExecutorPipeline<>(8, 1000, true, new Functional.Function<Block, Block>() {
             @Override
             public Block apply(Block b) {
                 if (b.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber()) {
