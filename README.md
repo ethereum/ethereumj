@@ -63,6 +63,12 @@ java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 ./gradlew run -PmainClass=org.ethereum.samples.TransactionBomb
 ```
 
+##### Run your node on ropsten or morden testnet
+```
+./gradlew runRopsten
+./gradlew runMorden
+```
+
 ##### Importing project to IntelliJ IDEA: 
 ```
 > git clone https://github.com/ethereum/ethereumj
