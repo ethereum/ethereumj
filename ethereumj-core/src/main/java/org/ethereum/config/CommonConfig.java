@@ -28,7 +28,6 @@ import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -208,8 +207,8 @@ public class CommonConfig {
                 new Serializer<byte[], byte[]>() {
                     public byte[] serialize(byte[] object) {
                         DataWord ret = new DataWord(object);
-                        ret.add(new DataWord(1));
-                        return ret.getLast20Bytes();
+                        DataWord addResult = ret.add(new DataWord(1));
+                        return addResult.getLast20Bytes();
                     }
                     public byte[] deserialize(byte[] stream) {
                         throw new RuntimeException("Shouldn't be called");
