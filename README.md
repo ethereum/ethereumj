@@ -1,7 +1,7 @@
 # Welcome to ethereumj
 
 [![Slack Status](http://harmony-slack-ether-camp.herokuapp.com/badge.svg)](http://ether.camp) 
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/ethereum/ethereumj?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/ethereumj?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/ethereum/ethereumj.svg?branch=master)](https://travis-ci.org/ethereum/ethereumj)
 [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
 
@@ -11,6 +11,9 @@ ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level
 
 # Check our blog 
 http://ethereumj.io
+
+# Important note about this library
+ethereumj is intended to be the core library implementation in Java. It does not support RPC intentionally and you should use [ethereum harmony](https://github.com/ether-camp/ethereum-harmony) if you want an ethereum client in Java which includes JSON RPC support.
 
 # Running EthereumJ
 
