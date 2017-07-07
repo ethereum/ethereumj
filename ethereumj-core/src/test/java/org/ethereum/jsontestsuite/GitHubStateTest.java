@@ -463,6 +463,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     @Ignore // test data files are not presented in the repository
     public void testRandomStateGitHub() throws ParseException, IOException {
