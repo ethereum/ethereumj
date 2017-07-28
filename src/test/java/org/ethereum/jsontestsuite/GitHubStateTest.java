@@ -35,7 +35,6 @@ import java.util.Set;
 import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@Ignore
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
@@ -465,7 +464,7 @@ public class GitHubStateTest {
     }
 
     @Test // testing full suite
-    @Ignore
+    @Ignore // test data files are not presented in the repository
     public void testRandomStateGitHub() throws ParseException, IOException {
 
         String sha = "99db6f4f5fea3aa5cfbe8436feba8e213d06d1e8";

@@ -17,10 +17,7 @@
  */
 package org.ethereum.facade;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.CallTransaction;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -108,6 +105,19 @@ public interface Ethereum {
      * @return       receipt of the executed transaction
      */
     TransactionReceipt callConstant(Transaction tx, Block block);
+
+    /**
+     * Executes Txes of the block in the same order and from the same state root
+     * as they were executed during regular block import
+     * This method doesn't make changes in blockchain state
+     *
+     * <b>Note:</b> requires block's ancestor to be presented in the database
+     *
+     * @param block block to be replayed
+     * @return block summary with receipts and execution summaries
+     *         <b>Note:</b> it doesn't include block rewards info
+     */
+    BlockSummary replayBlock(Block block);
 
     /**
      * Call a contract function locally without sending transaction to the network
