@@ -44,7 +44,7 @@ public class FrontierConfig extends OlympicConfig {
         public int getMIN_GAS_LIMIT() {
             return 5000;
         }
-    };
+    }
 
     public FrontierConfig() {
         this(new FrontierConstants());
@@ -57,8 +57,7 @@ public class FrontierConfig extends OlympicConfig {
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        if (!super.acceptTransactionSignature(tx)) return false;
-        return tx.getSignature().validateComponents();
+        return super.acceptTransactionSignature(tx) && tx.getSignature().validateComponents();
     }
 
 }
