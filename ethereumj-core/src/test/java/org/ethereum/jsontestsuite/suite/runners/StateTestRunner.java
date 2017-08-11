@@ -17,6 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite.runners;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.suite.Env;
@@ -45,7 +47,12 @@ public class StateTestRunner {
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public static List<String> run(StateTestCase stateTestCase2) {
-        return new StateTestRunner(stateTestCase2).runImpl();
+        try {
+            SystemProperties.getDefault().setBlockchainConfig(stateTestCase2.getConfig());
+            return new StateTestRunner(stateTestCase2).runImpl();
+        } finally {
+            SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        }
     }
 
     protected StateTestCase stateTestCase;
@@ -108,20 +115,31 @@ public class StateTestRunner {
         List<LogInfo> origLogs = programResult.getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase.getLogs());
 
+        List<String> results = new ArrayList<>();
+
         List<String> logsResult = LogsValidator.valid(origLogs, postLogs);
 
-        Repository postRepository = RepositoryBuilder.build(stateTestCase.getPost());
-        List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
+        if (stateTestCase.getPost() != null) {
+            Repository postRepository = RepositoryBuilder.build(stateTestCase.getPost());
+            List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
+
+            results.addAll(repoResults);
+        } else if (stateTestCase.getPostStateRoot() != null) {
+            results.addAll(RepositoryValidator.validRoot(
+                    Hex.toHexString(repository.getRoot()),
+                    stateTestCase.getPostStateRoot()
+            ));
+        }
+
+        if (stateTestCase.getOut() != null) {
+            List<String> outputResults =
+                    OutputValidator.valid(Hex.toHexString(programResult.getHReturn()), stateTestCase.getOut());
+            results.addAll(outputResults);
+        }
+
+        results.addAll(logsResult);
 
         logger.info("--------- POST Validation---------");
-        List<String> outputResults =
-                OutputValidator.valid(Hex.toHexString(programResult.getHReturn()), stateTestCase.getOut());
-
-        List<String> results = new ArrayList<>();
-        results.addAll(repoResults);
-        results.addAll(logsResult);
-        results.addAll(outputResults);
-
         for (String result : results) {
             logger.error(result);
         }

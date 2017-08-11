@@ -23,11 +23,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -150,5 +146,34 @@ public class JSONReader {
         } catch (ParseException e) {e.printStackTrace();}
 
         return fileNames;
+    }
+
+    public static List<String> listJsonBlobsForTreeSha(String sha) {
+
+        String result = getFromUrl("https://api.github.com/repos/ethereum/tests/git/trees/" + sha + "?recursive=1");
+
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = null;
+
+        List<String> blobs = new ArrayList<>();
+        try {
+            testSuiteObj = (JSONObject) parser.parse(result);
+            JSONArray tree = (JSONArray)testSuiteObj.get("tree");
+
+            for (Object oEntry : tree) {
+                JSONObject entry = (JSONObject) oEntry;
+                String type = (String) entry.get("type");
+                String path = (String) entry.get("path");
+
+                if (!type.equals("blob")) continue;
+                if (!path.endsWith(".json")) continue;
+
+                blobs.add((String) entry.get("path"));
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return blobs;
     }
 }

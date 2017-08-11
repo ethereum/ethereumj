@@ -73,9 +73,17 @@ public class RepositoryValidator {
         }
 
         // Compare roots
-        String postRoot = Hex.toHexString(postRepository.getRoot());
-        String currRoot = Hex.toHexString(currentRepository.getRoot());
+        results.addAll(validRoot(
+                Hex.toHexString(currentRepository.getRoot()),
+                Hex.toHexString(postRepository.getRoot()))
+        );
 
+        return results;
+    }
+
+    public static List<String> validRoot(String currRoot, String postRoot) {
+
+        List<String> results = new ArrayList<>();
         if (!postRoot.equals(currRoot)){
 
             String formattedString = String.format("Root hash don't much: expected: %s current: %s",

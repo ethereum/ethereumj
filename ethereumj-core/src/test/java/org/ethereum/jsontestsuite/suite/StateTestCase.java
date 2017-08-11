@@ -17,6 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.EnvTck;
@@ -35,6 +37,8 @@ public class StateTestCase {
     private String postStateRoot;
     private Map<String, AccountTck> post;
     private TransactionTck transaction;
+    private GitHubJSONTestSuite.Network network;
+    private String name;
 
 
     public StateTestCase() {
@@ -94,5 +98,25 @@ public class StateTestCase {
 
     public void setTransaction(TransactionTck transaction) {
         this.transaction = transaction;
+    }
+
+    public GitHubJSONTestSuite.Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(GitHubJSONTestSuite.Network network) {
+        this.network = network;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public BlockchainNetConfig getConfig() {
+        return network.getConfig();
     }
 }

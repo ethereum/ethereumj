@@ -17,16 +17,9 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.jsontestsuite.suite.BlockTestCase;
-import org.ethereum.jsontestsuite.suite.BlockTestSuite;
-import org.ethereum.jsontestsuite.suite.StateTestCase;
-import org.ethereum.jsontestsuite.suite.StateTestSuite;
-import org.ethereum.jsontestsuite.suite.TestCase;
-import org.ethereum.jsontestsuite.suite.TestRunner;
-import org.ethereum.jsontestsuite.suite.TestSuite;
-import org.ethereum.jsontestsuite.suite.TransactionTestCase;
-import org.ethereum.jsontestsuite.suite.TransactionTestSuite;
-import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.blockchain.*;
+import org.ethereum.jsontestsuite.suite.*;
 import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -40,8 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test file specific for tests maintained in the GitHub repository
@@ -214,91 +205,6 @@ public class GitHubJSONTestSuite {
         return result;
     }
 
-
-    public static void runStateTest(String jsonSuite) throws IOException {
-        runStateTest(jsonSuite, new HashSet<String>());
-    }
-
-
-    public static void runStateTest(String jsonSuite, String testName) throws IOException {
-
-        StateTestSuite stateTestSuite = new StateTestSuite(jsonSuite);
-        Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
-
-        for (String testCase : testCases.keySet()) {
-            if (testCase.equals(testName))
-                logger.info("  => " + testCase);
-            else
-                logger.info("     " + testCase);
-        }
-
-        StateTestCase testCase = testCases.get(testName);
-        if (testCase != null){
-            String output = String.format("*  running: %s  *", testName);
-            String line = output.replaceAll(".", "*");
-
-            logger.info(line);
-            logger.info(output);
-            logger.info(line);
-            List<String> fails = StateTestRunner.run(testCases.get(testName));
-
-            Assert.assertTrue(fails.isEmpty());
-
-        } else {
-            logger.error("Sorry test case doesn't exist: {}", testName);
-        }
-    }
-
-    public static void runStateTest(String jsonSuite, Set<String> excluded) throws IOException {
-
-        StateTestSuite stateTestSuite = new StateTestSuite(jsonSuite);
-        Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
-        Map<String, Boolean> summary = new HashMap<>();
-
-
-        for (String testCase : testCases.keySet()) {
-            if ( excluded.contains(testCase))
-                logger.info(" [X] " + testCase);
-            else
-                logger.info("     " + testCase);
-        }
-
-        Set<String> testNames = stateTestSuite.getTestCases().keySet();
-        for (String testName : testNames){
-
-            if (excluded.contains(testName)) continue;
-            String output = String.format("*  running: %s  *", testName);
-            String line = output.replaceAll(".", "*");
-
-            logger.info(line);
-            logger.info(output);
-            logger.info(line);
-
-            List<String> result = StateTestRunner.run(testCases.get(testName));
-            if (!result.isEmpty())
-                summary.put(testName, false);
-            else
-                summary.put(testName, true);
-        }
-
-        logger.info("Summary: ");
-        logger.info("=========");
-
-        int fails = 0; int pass = 0;
-        for (String key : summary.keySet()){
-
-            if (summary.get(key)) ++pass; else ++fails;
-            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
-                    replace(' ', '.').
-                    replace("^", " ");
-            logger.info(sumTest);
-        }
-
-        logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
-
-        Assert.assertTrue(fails == 0);
-    }
-
     public static void runGitHubJsonTransactionTest(String json, Set<String> excluded) throws IOException, ParseException {
 
         TransactionTestSuite transactionTestSuite = new TransactionTestSuite(json);
@@ -350,4 +256,21 @@ public class GitHubJSONTestSuite {
         Assert.assertTrue(fails == 0);
     }
 
+    public enum Network {
+
+        Frontier,
+        Homestead,
+        EIP150,
+        EIP158;
+
+        public BlockchainNetConfig getConfig() {
+            switch (this) {
+                case Frontier:  return new FrontierConfig();
+                case Homestead: return new HomesteadConfig();
+                case EIP150:    return new Eip150HFConfig(new DaoHFConfig());
+                case EIP158:    return new Eip160HFConfig(new DaoHFConfig());
+                default: throw new IllegalArgumentException("Unknown network value: " + this.name());
+            }
+        }
+    }
 }
