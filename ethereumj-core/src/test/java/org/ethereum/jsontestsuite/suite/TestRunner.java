@@ -157,7 +157,8 @@ public class TestRunner {
         List<String> results = new ArrayList<>();
         String currRoot = Hex.toHexString(repository.getRoot());
 
-        byte[] bestHash = Hex.decode(testCase.getLastblockhash());
+        byte[] bestHash = Hex.decode(testCase.getLastblockhash().startsWith("0x") ?
+                testCase.getLastblockhash().substring(2) : testCase.getLastblockhash());
         String finalRoot = Hex.toHexString(blockStore.getBlockByHash(bestHash).getStateRoot());
 
         if (!finalRoot.equals(currRoot)){

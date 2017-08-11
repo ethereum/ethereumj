@@ -17,6 +17,9 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.BlockHeaderTck;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
@@ -24,6 +27,7 @@ import org.ethereum.jsontestsuite.suite.model.BlockTck;
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockTestCase {
 
     private String acomment;
@@ -34,6 +38,7 @@ public class BlockTestCase {
     private Map<String, AccountTck> postState;
     private String lastblockhash;
     private int noBlockChainHistory;
+    private GitHubJSONTestSuite.Network network;
 
     public BlockTestCase() {
     }
@@ -96,6 +101,18 @@ public class BlockTestCase {
 
     public void setAcomment(String acomment) {
         this.acomment = acomment;
+    }
+
+    public GitHubJSONTestSuite.Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(GitHubJSONTestSuite.Network network) {
+        this.network = network;
+    }
+
+    public BlockchainNetConfig getConfig() {
+        return network.getConfig();
     }
 
     @Override

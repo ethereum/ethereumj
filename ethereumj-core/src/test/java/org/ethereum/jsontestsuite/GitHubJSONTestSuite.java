@@ -261,7 +261,9 @@ public class GitHubJSONTestSuite {
         Frontier,
         Homestead,
         EIP150,
-        EIP158;
+        EIP158,
+        Byzantium,
+        Constantinople;
 
         public BlockchainNetConfig getConfig() {
             switch (this) {
