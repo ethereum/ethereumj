@@ -128,5 +128,8 @@ public interface BlockchainConfig {
      */
     Integer getChainId();
 
-    boolean eip140();
+    /**
+     * EIP206: https://github.com/ethereum/EIPs/pull/206
+     */
+    boolean eip206();
 }

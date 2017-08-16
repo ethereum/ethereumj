@@ -153,7 +153,7 @@ public class VM {
                 }
             } else if (op == REVERT) {
                 // opcode since Bizantium HF only
-                if (!blockchainConfig.eip140()) {
+                if (!blockchainConfig.eip206()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
             }
