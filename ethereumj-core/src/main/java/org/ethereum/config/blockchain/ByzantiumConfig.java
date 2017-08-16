@@ -61,6 +61,7 @@ public class ByzantiumConfig extends Eip160HFConfig {
     public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
         long unclesAdj = parent.hasUncles() ? 2 : 1;
         return BigInteger.valueOf(Math.max(unclesAdj - (curBlock.getTimestamp() - parent.getTimestamp()) / 9, -99));
+    }
 
     @Override
     public boolean eip140() {
