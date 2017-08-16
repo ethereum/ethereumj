@@ -161,6 +161,11 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
+    public boolean eip140() {
+        return false;
+    }
+
+    @Override
     public String toString() {
         return getClass().getSimpleName();
     }

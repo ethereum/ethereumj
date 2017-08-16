@@ -588,6 +588,12 @@ public enum OpCode {
      */
     DELEGATECALL(0xf4, 6, 1, SpecialTier),
     /**
+     * (0xfd) The `REVERT` instruction will stop execution, roll back all state changes done so far
+     * and provide a pointer to a memory section, which can be interpreted as an error code or message.
+     * While doing so, it will not consume all the remaining gas.
+     */
+    REVERT(0xfd, 2, 0, ZeroTier),
+    /**
      * (0xff) Halt execution and register account for
      * later deletion
      */

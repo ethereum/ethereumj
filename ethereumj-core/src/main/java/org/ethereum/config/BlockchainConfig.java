@@ -122,4 +122,6 @@ public interface BlockchainConfig {
      * EIP155: https://github.com/ethereum/EIPs/issues/155
      */
     Integer getChainId();
+
+    boolean eip140();
 }

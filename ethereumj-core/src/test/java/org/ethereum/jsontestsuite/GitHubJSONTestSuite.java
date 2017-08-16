@@ -271,6 +271,7 @@ public class GitHubJSONTestSuite {
                 case Homestead: return new HomesteadConfig();
                 case EIP150:    return new Eip150HFConfig(new DaoHFConfig());
                 case EIP158:    return new Eip160HFConfig(new DaoHFConfig());
+                case Byzantium:    return new ByzantiumConfig(new DaoHFConfig());
                 default: throw new IllegalArgumentException("Unknown network value: " + this.name());
             }
         }
