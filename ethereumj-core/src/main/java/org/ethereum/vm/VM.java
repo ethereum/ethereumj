@@ -146,16 +146,26 @@ public class VM {
             OpCode op = OpCode.code(program.getCurrentOp());
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
-            } else if (op == DELEGATECALL) {
-                // opcode since Homestead release only
-                if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
-                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                }
-            } else if (op == REVERT) {
-                // opcode since Bizantium HF only
-                if (!blockchainConfig.eip140()) {
-                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                }
+            }
+
+            switch (op) {
+                case DELEGATECALL:
+                    if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
+                        // opcode since Homestead release only
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case REVERT:
+                    if (!blockchainConfig.eip140()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case RETURNDATACOPY:
+                case RETURNDATASIZE:
+                    if (!blockchainConfig.eip211()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
             }
 
             program.setLastOp(op.val());
@@ -247,6 +257,7 @@ public class VM {
                     gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
+                case RETURNDATACOPY:
                     gasCost += calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.peek(), stack.get(stack.size() - 3)),
                             stack.get(stack.size() - 3).longValueSafe());
@@ -767,6 +778,34 @@ public class VM {
                     DataWord lengthData = program.stackPop();
 
                     byte[] msgData = program.getDataCopy(dataOffsetData, lengthData);
+
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + Hex.toHexString(msgData);
+
+                    program.memorySave(memOffsetData.intValueSafe(), msgData);
+                    program.step();
+                }
+                break;
+                case RETURNDATASIZE: {
+                    DataWord dataSize = program.getReturnDataBufferSize();
+
+                    if (logger.isInfoEnabled())
+                        hint = "size: " + dataSize.value();
+
+                    program.stackPush(dataSize);
+                    program.step();
+                }
+                break;
+                case RETURNDATACOPY: {
+                    DataWord memOffsetData = program.stackPop();
+                    DataWord dataOffsetData = program.stackPop();
+                    DataWord lengthData = program.stackPop();
+
+                    byte[] msgData = program.getReturnDataBufferData(dataOffsetData, lengthData);
+
+                    if (msgData == null) {
+                        throw new Program.ReturnDataCopyIllegalBoundsException(dataOffsetData, lengthData, program.getReturnDataBufferSize().longValueSafe());
+                    }
 
                     if (logger.isInfoEnabled())
                         hint = "data: " + Hex.toHexString(msgData);

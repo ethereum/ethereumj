@@ -42,7 +42,6 @@ import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -87,6 +86,7 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private Storage storage;
+    private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
     private ProgramTrace trace = new ProgramTrace();
@@ -460,8 +460,9 @@ public class Program {
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
-        if (isNotEmpty(programCode)) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
+        if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
@@ -483,6 +484,8 @@ public class Program {
 
             if (result.getException() != null) {
                 return;
+            } else {
+                returnDataBuffer = result.getHReturn();
             }
         } else {
             // 4. CREATE THE CONTRACT OUT OF RETURN
@@ -583,6 +586,8 @@ public class Program {
 
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
+            returnDataBuffer = null; // reset return buffer right before the call
+
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                     this, new DataWord(contextAddress),
                     msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
@@ -635,6 +640,8 @@ public class Program {
             int size = msg.getOutDataSize().intValue();
 
             memorySaveLimited(offset, buffer, size);
+
+            returnDataBuffer = buffer;
         }
 
         // 5. REFUND THE REMAIN GAS
@@ -749,6 +756,20 @@ public class Program {
 
     public byte[] getDataCopy(DataWord offset, DataWord length) {
         return invoke.getDataCopy(offset, length);
+    }
+
+    public DataWord getReturnDataBufferSize() {
+        return new DataWord(getReturnDataBufferSizeI());
+    }
+
+    private int getReturnDataBufferSizeI() {
+        return returnDataBuffer == null ? 0 : returnDataBuffer.length;
+    }
+
+    public byte[] getReturnDataBufferData(DataWord off, DataWord size) {
+        if ((long) off.intValueSafe() + size.intValueSafe() > getReturnDataBufferSizeI()) return null;
+        return returnDataBuffer == null ? new byte[0] :
+                Arrays.copyOfRange(returnDataBuffer, off.intValueSafe(), off.intValueSafe() + size.intValueSafe());
     }
 
     public DataWord storageLoad(DataWord key) {
@@ -1205,6 +1226,14 @@ public class Program {
             super(format(message, args));
         }
     }
+
+    @SuppressWarnings("serial")
+    public static class ReturnDataCopyIllegalBoundsException extends BytecodeExecutionException {
+        public ReturnDataCopyIllegalBoundsException(DataWord off, DataWord size, long returnDataSize) {
+            super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)", off, size, returnDataSize));
+        }
+    }
+
 
     public static class Exception {
 

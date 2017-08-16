@@ -129,4 +129,6 @@ public interface BlockchainConfig {
     Integer getChainId();
 
     boolean eip140();
+
+    boolean eip211();
 }
