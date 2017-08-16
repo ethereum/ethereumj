@@ -9,6 +9,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.BIUtil.max;
+
 /**
  * EIPs included in the Hard Fork:
  * <ul>
@@ -29,6 +31,30 @@ public class ByzantiumConfig extends Eip160HFConfig {
 
     public ByzantiumConfig(BlockchainConfig parent) {
         super(parent);
+    }
+
+    @Override
+    public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
+        BigInteger pd = parent.getDifficultyBI();
+        BigInteger quotient = pd.divide(getConstants().getDIFFICULTY_BOUND_DIVISOR());
+
+        BigInteger sign = getCalcDifficultyMultiplier(curBlock, parent);
+
+        BigInteger fromParent = pd.add(quotient.multiply(sign));
+        BigInteger difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), fromParent);
+
+        int explosion = getExplosion(curBlock, parent);
+
+        if (explosion >= 0) {
+            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
+        }
+
+        return difficulty;
+    }
+
+    protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
+        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        return periodCount - 2;
     }
 
     @Override
