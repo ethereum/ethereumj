@@ -37,7 +37,7 @@ public class OlympicConfig extends AbstractConfig {
     }
 
     @Override
-    protected BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+    public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
         return BigInteger.valueOf(curBlock.getTimestamp() >= parent.getTimestamp() +
                 getConstants().getDURATION_LIMIT() ? -1 : 1);
     }

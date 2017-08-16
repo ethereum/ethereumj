@@ -148,7 +148,7 @@ public class BlockHeader {
         this.extraData = extraData;
         this.mixHash = mixHash;
         this.nonce = nonce;
-        this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
+        this.stateRoot = EMPTY_TRIE_HASH;
     }
 
     public boolean isGenesis() {
@@ -372,6 +372,10 @@ public class BlockHeader {
     public BigInteger calcDifficulty(BlockchainNetConfig config, BlockHeader parent) {
         return config.getConfigForBlock(getNumber()).
                 calcDifficulty(this, parent);
+    }
+
+    public boolean hasUncles() {
+        return !FastByteComparisons.equal(unclesHash, EMPTY_TRIE_HASH);
     }
 
     public String toString() {

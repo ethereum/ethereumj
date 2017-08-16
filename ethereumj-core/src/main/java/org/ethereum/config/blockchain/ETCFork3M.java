@@ -66,7 +66,8 @@ public class ETCFork3M extends Eip160HFConfig {
         return difficulty;
     }
 
-    protected BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+    @Override
+    public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
         return BigInteger.valueOf(Math.max(1 - (curBlock.getTimestamp() - parent.getTimestamp()) / 10, -99));
     }
 
