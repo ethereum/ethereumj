@@ -122,4 +122,9 @@ public interface BlockchainConfig {
      * EIP155: https://github.com/ethereum/EIPs/issues/155
      */
     Integer getChainId();
+
+    /**
+     * EIP96: https://github.com/ethereum/EIPs/blob/0fee5457ab66cadf50343833359a9db0b7a656b8/EIPS/blockhash_refactoring.md
+     */
+    boolean eip96();
 }

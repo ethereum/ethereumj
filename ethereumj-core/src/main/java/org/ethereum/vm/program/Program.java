@@ -20,9 +20,11 @@ package org.ethereum.vm.program;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.ByteUtil;
@@ -34,6 +36,7 @@ import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
 import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 import org.ethereum.vm.program.listener.ProgramStorageChangeListener;
@@ -1144,6 +1147,144 @@ public class Program {
 
     public boolean byTestingSuite() {
         return invoke.byTestingSuite();
+    }
+
+    /**
+     * Low level code invocation
+     * Updates storage and balances as a regular call does
+     * But unlike Transaction this invocation does not increment caller's nonce
+     */
+    public static class CodeInvocation {
+
+        private byte[] code;
+        private byte[] address;
+        private byte[] origin;
+        private byte[] caller;
+        private byte[] gasPrice;
+        private byte[] gas;
+        private byte[] gasLimit;
+        private byte[] callValue;
+        private byte[] data;
+        private byte[] lastHash;
+        private byte[] coinbase;
+        private long timestamp;
+        private long number;
+        private byte[] difficulty;
+        private SystemProperties config = SystemProperties.getDefault();
+        private Repository repo;
+        private BlockStore blockStore;
+
+        private CodeInvocation() {}
+
+        public ProgramResult invoke() {
+
+            byte[] balance = repo.getBalance(address).toByteArray();
+
+            ProgramInvoke programInvoke = new ProgramInvokeImpl(
+                    address, origin, caller, balance, gasPrice, gas, callValue, data,
+                    lastHash, coinbase, timestamp, number, difficulty, gasLimit,
+                    repo, blockStore);
+
+            Program program = new Program(repo.getCodeHash(address),
+                    code, programInvoke, null, config);
+
+            VM vm = new VM(config);
+            vm.play(program);
+
+            return program.getResult();
+        }
+
+        public CodeInvocation on(Repository repo) {
+            this.repo = repo;
+            return this;
+        }
+
+        public CodeInvocation with(BlockStore blockStore) {
+            this.blockStore = blockStore;
+            return this;
+        }
+
+        public CodeInvocation address(byte[] address) {
+            this.address = address;
+            return this;
+        }
+
+        public CodeInvocation caller(byte[] caller) {
+            this.caller = caller;
+            return this;
+        }
+
+        public CodeInvocation gasPrice(long gasPrice) {
+            this.gasPrice = BigInteger.valueOf(gasPrice).toByteArray();
+            return this;
+        }
+
+        public CodeInvocation gas(long gas) {
+            this.gas = BigInteger.valueOf(gas).toByteArray();
+            return this;
+        }
+
+        public CodeInvocation gasLimit(long gasLimit) {
+            this.gasLimit = BigInteger.valueOf(gasLimit).toByteArray();
+            return this;
+        }
+
+        public CodeInvocation value(long value) {
+            this.callValue = BigInteger.valueOf(value).toByteArray();
+            return this;
+        }
+
+        public CodeInvocation data(byte[] data) {
+            this.data = data;
+            return this;
+        }
+
+        public CodeInvocation with(SystemProperties config) {
+            this.config = config;
+            return this;
+        }
+
+        public CodeInvocation origin(byte[] origin) {
+            this.origin = origin;
+            return this;
+        }
+
+        public CodeInvocation from(Block block) {
+
+            this.gasLimit = block.getGasLimit();
+            this.lastHash = block.getParentHash();
+            this.coinbase = block.getCoinbase();
+            this.timestamp = block.getTimestamp();
+            this.number = block.getNumber();
+            this.difficulty = block.getDifficulty();
+
+            return this;
+        }
+
+        public CodeInvocation from(Program program) {
+
+            this.gasLimit = program.getGasLimit().getData();
+            this.lastHash = program.getPrevHash().getData();
+            this.coinbase = program.getCoinbase().getData();
+            this.timestamp = program.getTimestamp().longValueSafe();
+            this.number = program.getNumber().longValueSafe();
+            this.difficulty = program.getDifficulty().getData();
+            this.origin = program.getOriginAddress().getData();
+            this.caller = program.getCallerAddress().getData();
+            this.config = program.config;
+
+            this.blockStore = program.invoke.getBlockStore();
+            this.repo = program.getStorage();
+
+            return this;
+        }
+    }
+
+    public static CodeInvocation createInvocation(byte[] code) {
+
+        CodeInvocation inv = new CodeInvocation();
+        inv.code = code;
+        return inv;
     }
 
     public interface ProgramOutListener {

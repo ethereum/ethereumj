@@ -18,10 +18,12 @@
 package org.ethereum.vm;
 
 import org.ethereum.config.BlockchainConfig;
+import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -262,6 +264,9 @@ public class VM {
                     gasCost = gasCosts.getEXT_CODE_COPY() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 4)),
                             stack.get(stack.size() - 4).longValueSafe());
+                    break;
+                case BLOCKHASH:
+                    gasCost = gasCosts.getBLOCKHASH();
                     break;
                 case CALL:
                 case CALLCODE:
@@ -842,9 +847,33 @@ public class VM {
                  */
                 case BLOCKHASH: {
 
-                    int blockIndex = program.stackPop().intValueSafe();
+                    DataWord blockHash;
 
-                    DataWord blockHash = program.getBlockHash(blockIndex);
+                    // call to Blockhash contract if EIP 96 has been enabled
+                    if (blockchainConfig.eip96()) {
+
+                        DataWord blockIndex = program.stackPop();
+
+                        byte[] code = program.getStorage().getCode(Constants.getBLOCKHASH_CONTRACT_ADDR());
+
+                        ProgramResult result = Program.createInvocation(code)
+                                .from(program)
+                                .address(Constants.getBLOCKHASH_CONTRACT_ADDR())
+                                .gas(Constants.getBLOCKHASH_CONTRACT_CALL_GAS())
+                                .gasLimit(Constants.getBLOCKHASH_CONTRACT_CALL_GAS())
+                                .gasPrice(0)
+                                .value(0)
+                                .data(blockIndex.getData())
+                                .invoke();
+
+                        blockHash = new DataWord(result.getHReturn());
+
+                    } else {
+
+                        int blockIndex = program.stackPop().intValueSafe();
+
+                        blockHash = program.getBlockHash(blockIndex);
+                    }
 
                     if (logger.isInfoEnabled())
                         hint = "blockHash: " + blockHash;

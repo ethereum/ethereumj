@@ -17,6 +17,8 @@
  */
 package org.ethereum.config;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
 
 /**
@@ -40,6 +42,10 @@ public class Constants {
     private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
 
     private static final BigInteger SECP256K1N = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+
+    private static final byte[] BLOCKHASH_CONTRACT_ADDR = Hex.decode("f0");
+    private static final byte[] SYSTEM_ADDR = Hex.decode("fffffffffffffffffffffffffffffffffffffffe");
+    private static final int BLOCKHASH_CONTRACT_CALL_GAS = 1_000_000;
 
     public int getDURATION_LIMIT() {
         return 8;
@@ -109,5 +115,26 @@ public class Constants {
      */
     public static BigInteger getSECP256K1N() {
         return SECP256K1N;
+    }
+
+    /**
+     * Introduced in EIP 96
+     */
+    public static byte[] getBLOCKHASH_CONTRACT_ADDR() {
+        return BLOCKHASH_CONTRACT_ADDR;
+    }
+
+    /**
+     * Introduced in EIP 96 as a sender in Blockhash contract calls
+     */
+    public static byte[] getSYSTEM_ADDR() {
+        return SYSTEM_ADDR;
+    }
+
+    /**
+     * Gas used in Blockhash contract calls
+     */
+    public static int getBLOCKHASH_CONTRACT_CALL_GAS() {
+        return BLOCKHASH_CONTRACT_CALL_GAS;
     }
 }

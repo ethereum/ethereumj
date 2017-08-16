@@ -83,6 +83,7 @@ public class GasCost {
     private final int EXT_CODE_SIZE = 20;
     private final int EXT_CODE_COPY = 20;
     private final int NEW_ACCT_SUICIDE = 0;
+    private final int BLOCKHASH = 20;
 
     public int getSTEP() {
         return STEP;
@@ -290,5 +291,9 @@ public class GasCost {
 
     public int getEXT_CODE_COPY() {
         return EXT_CODE_COPY;
+    }
+
+    public int getBLOCKHASH() {
+        return BLOCKHASH;
     }
 }

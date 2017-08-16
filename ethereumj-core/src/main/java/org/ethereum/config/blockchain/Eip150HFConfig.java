@@ -141,4 +141,9 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     public Integer getChainId() {
         return null;
     }
+
+    @Override
+    public boolean eip96() {
+        return parent.eip96();
+    }
 }

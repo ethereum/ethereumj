@@ -18,7 +18,9 @@
 package org.ethereum.core;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
@@ -32,6 +34,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -865,7 +868,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
-        config.getBlockchainConfig().getConfigForBlock(block.getNumber()).hardForkTransfers(block, track);
+
+        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(block.getNumber());
+
+        blockchainConfig.hardForkTransfers(block, track);
+
+        // call to Blockhash contract
+        if (blockchainConfig.eip96()) {
+            storeBlockHash(track, block);
+        }
 
         long saveTime = System.nanoTime();
         int i = 1;
@@ -927,6 +938,34 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
         return new BlockSummary(block, rewards, receipts, summaries);
+    }
+
+    /**
+     * Implements a call to Blockhash contract introduced in EIP 96
+     * By this call the contract stores a hash of provided block
+     */
+    private void storeBlockHash(Repository rep, Block block) {
+
+        Repository track = rep.startTracking();
+
+        byte[] code = track.getCode(Constants.getBLOCKHASH_CONTRACT_ADDR());
+
+        Program.createInvocation(code)
+                .from(block)
+                .address(Constants.getBLOCKHASH_CONTRACT_ADDR())
+                .origin(Constants.getSYSTEM_ADDR())
+                .caller(Constants.getSYSTEM_ADDR())
+                .gas(Constants.getBLOCKHASH_CONTRACT_CALL_GAS())
+                .gasLimit(Constants.getBLOCKHASH_CONTRACT_CALL_GAS())
+                .gasPrice(0)
+                .value(0)
+                .data(block.getParentHash())
+                .with(config)
+                .with(blockStore)
+                .on(track)
+                .invoke();
+
+        track.commit();
     }
 
     /**
