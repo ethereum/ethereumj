@@ -100,8 +100,6 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         return difficulty;
     }
 
-    protected abstract BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent);
-
     protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
         int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
         return periodCount - 2;

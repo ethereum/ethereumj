@@ -33,6 +33,10 @@ public class BlockchainTestSuite {
         this.networks = networks;
     }
 
+    public BlockchainTestSuite(String treeSHA, String commitSHA) {
+        this(treeSHA, commitSHA, GitHubJSONTestSuite.Network.values());
+    }
+
     private static void run(List<String> checkFiles,
                             String commitSHA,
                             GitHubJSONTestSuite.Network[] networks) throws IOException {
@@ -141,5 +145,10 @@ public class BlockchainTestSuite {
                                  GitHubJSONTestSuite.Network network) throws IOException {
         logger.info("     " + testFile);
         run(Collections.singletonList(testFile), commitSHA, new GitHubJSONTestSuite.Network[] { network });
+    }
+
+    public static void runSingle(String testFile, String commitSHA) throws IOException {
+        logger.info("     " + testFile);
+        run(Collections.singletonList(testFile), commitSHA, GitHubJSONTestSuite.Network.values());
     }
 }

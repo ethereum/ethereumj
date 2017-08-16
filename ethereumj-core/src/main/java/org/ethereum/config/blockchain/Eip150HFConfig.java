@@ -88,6 +88,11 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
+    public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+        return this.parent.getCalcDifficultyMultiplier(curBlock, parent);
+    }
+
+    @Override
     public long getTransactionCost(Transaction tx) {
         return parent.getTransactionCost(tx);
     }

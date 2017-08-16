@@ -53,6 +53,11 @@ public interface BlockchainConfig {
     BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent);
 
     /**
+     * Calculates difficulty adjustment to target mean block time
+     */
+    BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent);
+
+    /**
      * Calculates transaction gas fee
      */
     long getTransactionCost(Transaction tx);

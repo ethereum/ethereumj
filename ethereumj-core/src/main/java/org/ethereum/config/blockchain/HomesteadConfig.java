@@ -52,7 +52,7 @@ public class HomesteadConfig extends FrontierConfig {
     }
 
     @Override
-    protected BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+    public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
         return BigInteger.valueOf(Math.max(1 - (curBlock.getTimestamp() - parent.getTimestamp()) / 10, -99));
     }
 

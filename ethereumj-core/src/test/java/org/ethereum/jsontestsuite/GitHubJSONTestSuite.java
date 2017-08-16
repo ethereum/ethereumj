@@ -19,6 +19,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.blockchain.*;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.jsontestsuite.suite.*;
 import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.JSONObject;
@@ -263,15 +264,37 @@ public class GitHubJSONTestSuite {
         EIP150,
         EIP158,
         Byzantium,
-        Constantinople;
+        Constantinople,
+
+        // Transition networks
+        FrontierToHomesteadAt5,
+        HomesteadToDaoAt5,
+        HomesteadToEIP150At5;
 
         public BlockchainNetConfig getConfig() {
             switch (this) {
+
                 case Frontier:  return new FrontierConfig();
                 case Homestead: return new HomesteadConfig();
                 case EIP150:    return new Eip150HFConfig(new DaoHFConfig());
                 case EIP158:    return new Eip160HFConfig(new DaoHFConfig());
                 case Byzantium:    return new ByzantiumConfig(new DaoHFConfig());
+
+                case FrontierToHomesteadAt5: return new BaseNetConfig() {{
+                    add(0, new FrontierConfig());
+                    add(5, new HomesteadConfig());
+                }};
+
+                case HomesteadToDaoAt5: return new BaseNetConfig() {{
+                    add(0, new HomesteadConfig());
+                    add(5, new DaoHFConfig(new HomesteadConfig(), 5));
+                }};
+
+                case HomesteadToEIP150At5: return new BaseNetConfig() {{
+                    add(0, new HomesteadConfig());
+                    add(5, new Eip150HFConfig(new HomesteadConfig()));
+                }};
+
                 default: throw new IllegalArgumentException("Unknown network value: " + this.name());
             }
         }
