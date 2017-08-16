@@ -146,16 +146,6 @@ public class VM {
             OpCode op = OpCode.code(program.getCurrentOp());
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
-            } else if (op == DELEGATECALL) {
-                // opcode since Homestead release only
-                if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
-                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                }
-            } else if (op == REVERT) {
-                // opcode since Bizantium HF only
-                if (!blockchainConfig.eip140()) {
-                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                }
             }
 
             switch (op) {
