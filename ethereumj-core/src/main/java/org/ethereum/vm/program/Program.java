@@ -470,27 +470,7 @@ public class Program {
             getResult().merge(result);
         }
 
-        // 4. CREATE THE CONTRACT OUT OF RETURN
-        byte[] code = result.getHReturn();
-
-        long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
-        long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
-        if (afterSpend < 0) {
-            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
-                result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                        storageCost, this));
-            } else {
-                track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
-            }
-        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
-            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
-                    storageCost, this));
-        } else {
-            result.spendGas(storageCost);
-            track.saveCode(newAddress, code);
-        }
-
-        if (result.getException() != null) {
+        if (result.getException() != null || result.isRevert()) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
                     result.getException());
@@ -500,14 +480,37 @@ public class Program {
 
             track.rollback();
             stackPushZero();
-            return;
+
+            if (result.getException() != null) {
+                return;
+            }
+        } else {
+            // 4. CREATE THE CONTRACT OUT OF RETURN
+            byte[] code = result.getHReturn();
+
+            long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
+            long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
+            if (afterSpend < 0) {
+                if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+                    result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                            storageCost, this));
+                } else {
+                    track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+                }
+            } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+                result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                        storageCost, this));
+            } else {
+                result.spendGas(storageCost);
+                track.saveCode(newAddress, code);
+            }
+
+            if (!byTestingSuite())
+                track.commit();
+
+            // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
+            stackPush(new DataWord(newAddress));
         }
-
-        if (!byTestingSuite())
-            track.commit();
-
-        // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
-        stackPush(new DataWord(newAddress));
 
         // 5. REFUND THE REMAIN GAS
         long refundGas = gasLimit.longValue() - result.getGasUsed();
@@ -594,7 +597,7 @@ public class Program {
             getTrace().merge(program.getTrace());
             getResult().merge(result);
 
-            if (result.getException() != null) {
+            if (result.getException() != null || result.isRevert()) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                         Hex.toHexString(contextAddress),
                         result.getException());
@@ -604,12 +607,25 @@ public class Program {
 
                 track.rollback();
                 stackPushZero();
-                return;
-            } else if (byTestingSuite()) {
+
+                if (result.getException() != null) {
+                    return;
+                }
+            } else {
+                // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+                track.commit();
+                stackPushOne();
+            }
+
+            if (byTestingSuite()) {
                 logger.info("Testing run, skipping storage diff listener");
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
+        } else {
+            // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+            track.commit();
+            stackPushOne();
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
@@ -620,10 +636,6 @@ public class Program {
 
             memorySaveLimited(offset, buffer, size);
         }
-
-        // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        track.commit();
-        stackPushOne();
 
         // 5. REFUND THE REMAIN GAS
         if (result != null) {

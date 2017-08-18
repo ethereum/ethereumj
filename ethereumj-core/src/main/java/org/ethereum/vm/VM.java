@@ -35,11 +35,7 @@ import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.OpCode.CALL;
-import static org.ethereum.vm.OpCode.CALLCODE;
-import static org.ethereum.vm.OpCode.CREATE;
-import static org.ethereum.vm.OpCode.DELEGATECALL;
-import static org.ethereum.vm.OpCode.PUSH1;
+import static org.ethereum.vm.OpCode.*;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -150,10 +146,14 @@ public class VM {
             OpCode op = OpCode.code(program.getCurrentOp());
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
-            }
-            if (op == DELEGATECALL) {
+            } else if (op == DELEGATECALL) {
                 // opcode since Homestead release only
                 if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
+                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                }
+            } else if (op == REVERT) {
+                // opcode since Bizantium HF only
+                if (!blockchainConfig.eip140()) {
                     throw Program.Exception.invalidOpCode(program.getCurrentOp());
                 }
             }
@@ -236,6 +236,7 @@ public class VM {
                     gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
                     break;
                 case RETURN:
+                case REVERT:
                     gasCost = gasCosts.getSTOP() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     break;
@@ -1190,7 +1191,8 @@ public class VM {
                     program.step();
                 }
                 break;
-                case RETURN: {
+                case RETURN:
+                case REVERT: {
                     DataWord offset = program.stackPop();
                     DataWord size = program.stackPop();
 
@@ -1204,6 +1206,10 @@ public class VM {
 
                     program.step();
                     program.stop();
+
+                    if (op == REVERT) {
+                        program.getResult().setRevert();
+                    }
                 }
                 break;
                 case SUICIDE: {
