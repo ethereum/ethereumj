@@ -62,4 +62,9 @@ public class ByzantiumConfig extends Eip160HFConfig {
         long unclesAdj = parent.hasUncles() ? 2 : 1;
         return BigInteger.valueOf(Math.max(unclesAdj - (curBlock.getTimestamp() - parent.getTimestamp()) / 9, -99));
     }
+
+    @Override
+    public boolean eip198() {
+        return true;
+    }
 }

@@ -17,11 +17,20 @@
  */
 package org.ethereum.vm;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
 
 import java.math.BigInteger;
+
+import static org.ethereum.util.BIUtil.addSafely;
+import static org.ethereum.util.BIUtil.isLessThan;
+import static org.ethereum.util.BIUtil.isZero;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.ethereum.util.ByteUtil.numberOfLeadingZeros;
+import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
 
 /**
  * @author Roman Mandeleil
@@ -33,20 +42,25 @@ public class PrecompiledContracts {
     private static final Sha256 sha256 = new Sha256();
     private static final Ripempd160 ripempd160 = new Ripempd160();
     private static final Identity identity = new Identity();
+    private static final ModExp modExp = new ModExp();
 
     private static final DataWord ecRecoverAddr =   new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
     private static final DataWord sha256Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
     private static final DataWord ripempd160Addr =  new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
     private static final DataWord identityAddr =    new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
+    private static final DataWord modExpAddr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000005");
 
 
-    public static PrecompiledContract getContractForAddress(DataWord address) {
+    public static PrecompiledContract getContractForAddress(DataWord address, BlockchainConfig config) {
 
         if (address == null) return identity;
         if (address.equals(ecRecoverAddr)) return ecRecover;
         if (address.equals(sha256Addr)) return sha256;
         if (address.equals(ripempd160Addr)) return ripempd160;
         if (address.equals(identityAddr)) return identity;
+
+        // Byzantium precompiles
+        if (address.equals(modExpAddr) && config.eip198()) return modExp;
 
         return null;
     }
@@ -171,5 +185,116 @@ public class PrecompiledContracts {
         }
     }
 
+    /**
+     * Computes modular exponentiation on big numbers
+     *
+     * format of data[] array:
+     * [length_of_BASE] [length_of_EXPONENT] [length_of_MODULUS] [BASE] [EXPONENT] [MODULUS]
+     * where every length is a 32-byte left-padded integer representing the number of bytes.
+     * Call data is assumed to be infinitely right-padded with zero bytes.
+     *
+     * Returns an output as a byte array with the same length as the modulus
+     */
+    public static class ModExp extends PrecompiledContract {
 
+        private static final BigInteger GQUAD_DIVISOR = BigInteger.valueOf(100);
+
+        private static final int ARGS_OFFSET = 32 * 3; // addresses length part
+
+        @Override
+        public long getGasForData(byte[] data) {
+
+            int baseLen = parseLen(data, 0);
+            int expLen  = parseLen(data, 1);
+            int modLen  = parseLen(data, 2);
+
+            byte[] expHighBytes = parseBytes(data, addSafely(ARGS_OFFSET, baseLen), Math.min(expLen, 32));
+
+            long multComplexity = getMultComplexity(Math.max(baseLen, modLen));
+            long adjExpLen = getAdjustedExponentLength(expHighBytes, expLen);
+
+            // use big numbers to stay safe in case of overflow
+            BigInteger gas = BigInteger.valueOf(multComplexity)
+                    .multiply(BigInteger.valueOf(Math.max(adjExpLen, 1)))
+                    .divide(GQUAD_DIVISOR);
+
+            return isLessThan(gas, BigInteger.valueOf(Long.MAX_VALUE)) ? gas.longValue() : Long.MAX_VALUE;
+        }
+
+        @Override
+        public byte[] execute(byte[] data) {
+
+            int baseLen = parseLen(data, 0);
+            int expLen  = parseLen(data, 1);
+            int modLen  = parseLen(data, 2);
+
+            BigInteger base = parseArg(data, ARGS_OFFSET, baseLen);
+            BigInteger exp  = parseArg(data, addSafely(ARGS_OFFSET, baseLen), expLen);
+            BigInteger mod  = parseArg(data, addSafely(addSafely(ARGS_OFFSET, baseLen), expLen), modLen);
+
+            // check if modulus is zero
+            if (isZero(mod))
+                return new byte[modLen];
+
+            byte[] res = stripLeadingZeroes(base.modPow(exp, mod).toByteArray());
+
+            // adjust result to the same length as the modulus has
+            if (res.length < modLen) {
+
+                byte[] adjRes = new byte[modLen];
+                System.arraycopy(res, 0, adjRes, modLen - res.length, res.length);
+
+                return adjRes;
+
+            } else {
+                return res;
+            }
+        }
+
+        private long getMultComplexity(long x) {
+
+            long x2 = (long) Math.pow(x, 2);
+
+            if (x <= 64)    return x2;
+            if (x <= 1024)  return x2 / 4 + 96 * x - 3072;
+
+            return x2 / 16 + 480 * x - 199680;
+        }
+
+        private long getAdjustedExponentLength(byte[] expHighBytes, long expLen) {
+
+            int leadingZeros = numberOfLeadingZeros(expHighBytes);
+            int highestBit = 8 * expHighBytes.length - leadingZeros;
+
+            // set index basement to zero
+            if (highestBit > 0) highestBit--;
+
+            if (expLen <= 32) {
+                return highestBit;
+            } else {
+                return 8 * (expLen - 32) + highestBit;
+            }
+        }
+
+        private int parseLen(byte[] data, int idx) {
+            byte[] bytes = parseBytes(data, 32 * idx, 32);
+            return new DataWord(bytes).intValueSafe();
+        }
+
+        private BigInteger parseArg(byte[] data, int offset, int len) {
+            byte[] bytes = parseBytes(data, offset, len);
+            return bytesToBigInteger(bytes);
+        }
+
+        private byte[] parseBytes(byte[] data, int offset, int len) {
+
+            if (offset >= data.length || len == 0)
+                return new byte[0];
+
+            byte[] bytes = new byte[len];
+            System.arraycopy(data, offset, bytes, 0, Math.min(data.length - offset, len));
+            return bytes;
+        }
+
+    }
 }

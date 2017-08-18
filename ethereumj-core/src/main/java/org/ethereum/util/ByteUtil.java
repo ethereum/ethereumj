@@ -551,7 +551,7 @@ public class ByteUtil {
 
     public static byte[] intsToBytes(int[] arr, boolean bigEndian) {
         byte[] ret = new byte[arr.length * 4];
-        intsToBytes(arr,ret, bigEndian);
+        intsToBytes(arr, ret, bigEndian);
         return ret;
     }
 
@@ -666,4 +666,21 @@ public class ByteUtil {
         String ip = sb.toString();
         return ip;
     }
+
+    /**
+     * Returns a number of zero bits preceding the highest-order ("leftmost") one-bit
+     * interpreting input array as a big-endian integer value
+     */
+    public static int numberOfLeadingZeros(byte[] bytes) {
+
+        int i = firstNonZeroByte(bytes);
+
+        if (i == -1) {
+            return bytes.length * 8;
+        } else {
+            int byteLeadingZeros = Integer.numberOfLeadingZeros((int)bytes[i] & 0xff) - 24;
+            return i * 8 + byteLeadingZeros;
+        }
+    }
+
 }
