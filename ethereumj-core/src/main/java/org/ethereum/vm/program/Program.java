@@ -457,7 +457,7 @@ public class Program {
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
-                newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
+                newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
         returnDataBuffer = null; // reset return buffer right before the call
@@ -592,7 +592,8 @@ public class Program {
                     this, new DataWord(contextAddress),
                     msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
                     msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
-                    msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
+                    msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
+                    msg.getType() == MsgType.STATICCALL || isStaticCall(), byTestingSuite());
 
             VM vm = new VM(config);
             Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
@@ -803,6 +804,10 @@ public class Program {
 
     public DataWord getGasLimit() {
         return invoke.getGaslimit().clone();
+    }
+
+    public boolean isStaticCall() {
+        return invoke.isStaticCall();
     }
 
     public ProgramResult getResult() {
@@ -1231,6 +1236,13 @@ public class Program {
     public static class ReturnDataCopyIllegalBoundsException extends BytecodeExecutionException {
         public ReturnDataCopyIllegalBoundsException(DataWord off, DataWord size, long returnDataSize) {
             super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)", off, size, returnDataSize));
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public static class StaticCallModificationException extends BytecodeExecutionException {
+        public StaticCallModificationException() {
+            super("Attempt to call a state modifying opcode inside STATICCALL");
         }
     }
 

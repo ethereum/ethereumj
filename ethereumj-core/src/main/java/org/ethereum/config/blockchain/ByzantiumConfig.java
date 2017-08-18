@@ -72,4 +72,9 @@ public class ByzantiumConfig extends Eip160HFConfig {
     public boolean eip211() {
         return true;
     }
+
+    @Override
+    public boolean eip214() {
+        return true;
+    }
 }

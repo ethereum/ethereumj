@@ -71,4 +71,5 @@ public interface ProgramInvoke {
 
     BlockStore getBlockStore();
 
+    boolean isStaticCall();
 }

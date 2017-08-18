@@ -591,6 +591,15 @@ public enum OpCode {
      *  also the Value parameter is omitted for this opCode
      */
     DELEGATECALL(0xf4, 6, 1, SpecialTier),
+
+    /**
+     *  opcode that can be used to call another contract (or itself) while disallowing any
+     *  modifications to the state during the call (and its subcalls, if present).
+     *  Any opcode that attempts to perform such a modification (see below for details)
+     *  will result in an exception instead of performing the modification.
+     */
+    STATICCALL(0xfa, 6, 1, SpecialTier),
+
     /**
      * (0xfd) The `REVERT` instruction will stop execution, roll back all state changes done so far
      * and provide a pointer to a memory section, which can be interpreted as an error code or message.

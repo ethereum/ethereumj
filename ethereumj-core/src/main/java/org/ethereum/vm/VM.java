@@ -166,6 +166,11 @@ public class VM {
                         throw Program.Exception.invalidOpCode(program.getCurrentOp());
                     }
                     break;
+                case STATICCALL:
+                    if (!blockchainConfig.eip214()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
             }
 
             program.setLastOp(op.val());
@@ -278,6 +283,7 @@ public class VM {
                 case CALL:
                 case CALLCODE:
                 case DELEGATECALL:
+                case STATICCALL:
 
                     gasCost = gasCosts.getCALL();
                     DataWord callGasWord = stack.get(stack.size() - 1);
@@ -303,7 +309,7 @@ public class VM {
                     if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )
                         gasCost += gasCosts.getVT_CALL();
 
-                    int opOff = op == DELEGATECALL ? 3 : 4;
+                    int opOff = (op == DELEGATECALL || op == STATICCALL) ? 3 : 4;
                     BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
                     gasCost += calcMemGas(gasCosts, oldMemSize, in.max(out), 0);
@@ -968,11 +974,13 @@ public class VM {
                     program.step();
                 }
                 break;
-                case LOG0:
                 case LOG1:
                 case LOG2:
                 case LOG3:
-                case LOG4: {
+                case LOG4:
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
+                case LOG0: {
 
                     DataWord address = program.getOwnerAddress();
 
@@ -1044,6 +1052,8 @@ public class VM {
                 }
                 break;
                 case SSTORE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord addr = program.stackPop();
                     DataWord value = program.stackPop();
 
@@ -1163,6 +1173,8 @@ public class VM {
                 }
                 break;
                 case CREATE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord value = program.stackPop();
                     DataWord inOffset = program.stackPop();
                     DataWord inSize = program.stackPop();
@@ -1180,11 +1192,15 @@ public class VM {
                 break;
                 case CALL:
                 case CALLCODE:
-                case DELEGATECALL: {
+                case DELEGATECALL:
+                case STATICCALL: {
                     program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
-                    DataWord value = !op.equals(DELEGATECALL) ?
+                    DataWord value = !(op == DELEGATECALL || op == STATICCALL)  ?
                             program.stackPop() : DataWord.ZERO;
+
+                    if (program.isStaticCall() && op == CALL && !value.isZero())
+                        throw new Program.StaticCallModificationException();
 
                     if( !value.isZero()) {
                         adjustedCallGas.add(new DataWord(gasCosts.getSTIPEND_CALL()));
@@ -1252,6 +1268,8 @@ public class VM {
                 }
                 break;
                 case SUICIDE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord address = program.stackPop();
                     program.suicide(address);
                     program.getResult().addTouchAccount(address.getLast20Bytes());
@@ -1286,6 +1304,10 @@ public class VM {
         } finally {
             program.fullTrace();
         }
+    }
+
+    private void checkStatic(Program program) {
+        if (program.isStaticCall()) throw new Program.StaticCallModificationException();
     }
 
     public void play(Program program) {
