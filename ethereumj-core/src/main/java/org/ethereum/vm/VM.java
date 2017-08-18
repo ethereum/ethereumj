@@ -35,11 +35,7 @@ import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.OpCode.CALL;
-import static org.ethereum.vm.OpCode.CALLCODE;
-import static org.ethereum.vm.OpCode.CREATE;
-import static org.ethereum.vm.OpCode.DELEGATECALL;
-import static org.ethereum.vm.OpCode.PUSH1;
+import static org.ethereum.vm.OpCode.*;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -151,11 +147,25 @@ public class VM {
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
             }
-            if (op == DELEGATECALL) {
-                // opcode since Homestead release only
-                if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
-                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                }
+
+            switch (op) {
+                case DELEGATECALL:
+                    if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
+                        // opcode since Homestead release only
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case REVERT:
+                    if (!blockchainConfig.eip206()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case RETURNDATACOPY:
+                case RETURNDATASIZE:
+                    if (!blockchainConfig.eip211()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
             }
 
             program.setLastOp(op.val());
@@ -236,6 +246,7 @@ public class VM {
                     gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
                     break;
                 case RETURN:
+                case REVERT:
                     gasCost = gasCosts.getSTOP() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     break;
@@ -246,6 +257,7 @@ public class VM {
                     gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
+                case RETURNDATACOPY:
                     gasCost += calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.peek(), stack.get(stack.size() - 3)),
                             stack.get(stack.size() - 3).longValueSafe());
@@ -774,6 +786,34 @@ public class VM {
                     program.step();
                 }
                 break;
+                case RETURNDATASIZE: {
+                    DataWord dataSize = program.getReturnDataBufferSize();
+
+                    if (logger.isInfoEnabled())
+                        hint = "size: " + dataSize.value();
+
+                    program.stackPush(dataSize);
+                    program.step();
+                }
+                break;
+                case RETURNDATACOPY: {
+                    DataWord memOffsetData = program.stackPop();
+                    DataWord dataOffsetData = program.stackPop();
+                    DataWord lengthData = program.stackPop();
+
+                    byte[] msgData = program.getReturnDataBufferData(dataOffsetData, lengthData);
+
+                    if (msgData == null) {
+                        throw new Program.ReturnDataCopyIllegalBoundsException(dataOffsetData, lengthData, program.getReturnDataBufferSize().longValueSafe());
+                    }
+
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + Hex.toHexString(msgData);
+
+                    program.memorySave(memOffsetData.intValueSafe(), msgData);
+                    program.step();
+                }
+                break;
                 case CODESIZE:
                 case EXTCODESIZE: {
 
@@ -1190,7 +1230,8 @@ public class VM {
                     program.step();
                 }
                 break;
-                case RETURN: {
+                case RETURN:
+                case REVERT: {
                     DataWord offset = program.stackPop();
                     DataWord size = program.stackPop();
 
@@ -1204,6 +1245,10 @@ public class VM {
 
                     program.step();
                     program.stop();
+
+                    if (op == REVERT) {
+                        program.getResult().setRevert();
+                    }
                 }
                 break;
                 case SUICIDE: {

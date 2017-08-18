@@ -188,6 +188,10 @@ public enum OpCode {
      * environment to memory
      */
     CODECOPY(0x39, 3, 0, VeryLowTier), // [len code_start mem_start CODECOPY]
+
+    RETURNDATASIZE(0x3d, 0, 1, BaseTier),
+
+    RETURNDATACOPY(0x3e, 3, 0, VeryLowTier),
     /**
      * (0x3a) Get price of gas in current
      * environment
@@ -587,6 +591,12 @@ public enum OpCode {
      *  also the Value parameter is omitted for this opCode
      */
     DELEGATECALL(0xf4, 6, 1, SpecialTier),
+    /**
+     * (0xfd) The `REVERT` instruction will stop execution, roll back all state changes done so far
+     * and provide a pointer to a memory section, which can be interpreted as an error code or message.
+     * While doing so, it will not consume all the remaining gas.
+     */
+    REVERT(0xfd, 2, 0, ZeroTier),
     /**
      * (0xff) Halt execution and register account for
      * later deletion

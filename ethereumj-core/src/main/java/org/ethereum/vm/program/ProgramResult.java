@@ -40,6 +40,7 @@ public class ProgramResult {
     private long gasUsed;
     private byte[] hReturn = EMPTY_BYTE_ARRAY;
     private RuntimeException exception;
+    private boolean revert;
 
     private Set<DataWord> deleteAccounts;
     private ByteArraySet touchedAccounts = new ByteArraySet();
@@ -56,6 +57,14 @@ public class ProgramResult {
 
     public void spendGas(long gas) {
         gasUsed += gas;
+    }
+
+    public void setRevert() {
+        this.revert = true;
+    }
+
+    public boolean isRevert() {
+        return revert;
     }
 
     public void refundGas(long gas) {
@@ -180,7 +189,7 @@ public class ProgramResult {
 
     public void merge(ProgramResult another) {
         addInternalTransactions(another.getInternalTransactions());
-        if (another.getException() == null) {
+        if (another.getException() == null && !isRevert()) {
             addDeleteAccounts(another.getDeleteAccounts());
             addLogInfos(another.getLogInfoList());
             addFutureRefund(another.getFutureRefund());

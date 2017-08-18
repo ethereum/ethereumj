@@ -300,7 +300,7 @@ public class TransactionExecutor {
                 result = program.getResult();
                 m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed()));
 
-                if (tx.isContractCreation()) {
+                if (tx.isContractCreation() && !result.isRevert()) {
                     int returnDataGasValue = getLength(program.getResult().getHReturn()) *
                             blockchainConfig.getGasCost().getCREATE_DATA();
                     if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) < 0) {
@@ -331,18 +331,23 @@ public class TransactionExecutor {
                 }
 
 
-                if (result.getException() != null) {
+                if (result.getException() != null || result.isRevert()) {
                     result.getDeleteAccounts().clear();
                     result.getLogInfoList().clear();
                     result.resetFutureRefund();
+                    cacheTrack.rollback();
 
-                    throw result.getException();
+                    if (result.getException() != null) {
+                        throw result.getException();
+                    }
+                } else {
+                    touchedAccounts.addAll(result.getTouchedAccounts());
+                    cacheTrack.commit();
                 }
 
-                touchedAccounts.addAll(result.getTouchedAccounts());
+            } else {
+                cacheTrack.commit();
             }
-
-            cacheTrack.commit();
 
         } catch (Throwable e) {
 

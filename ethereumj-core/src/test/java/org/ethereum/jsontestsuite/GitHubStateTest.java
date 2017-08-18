@@ -35,7 +35,9 @@ public class GitHubStateTest {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
-            GitHubJSONTestSuite.Network.EIP158
+            GitHubJSONTestSuite.Network.EIP158,
+//            GitHubJSONTestSuite.Network.Byzantium
+
     };
 
     static GeneralStateTestSuite suite;
@@ -56,7 +58,7 @@ public class GitHubStateTest {
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
         GeneralStateTestSuite.runSingle(
-                "stTransactionTest/zeroSigTransacrionCreate.json", commitSHA, GitHubJSONTestSuite.Network.Frontier);
+                "stRevertTest/RevertOpcodeInCreateReturns.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test

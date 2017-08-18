@@ -42,7 +42,6 @@ import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -87,6 +86,7 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private Storage storage;
+    private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
     private ProgramTrace trace = new ProgramTrace();
@@ -460,8 +460,9 @@ public class Program {
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
-        if (isNotEmpty(programCode)) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
+        if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
@@ -470,27 +471,7 @@ public class Program {
             getResult().merge(result);
         }
 
-        // 4. CREATE THE CONTRACT OUT OF RETURN
-        byte[] code = result.getHReturn();
-
-        long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
-        long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
-        if (afterSpend < 0) {
-            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
-                result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                        storageCost, this));
-            } else {
-                track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
-            }
-        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
-            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
-                    storageCost, this));
-        } else {
-            result.spendGas(storageCost);
-            track.saveCode(newAddress, code);
-        }
-
-        if (result.getException() != null) {
+        if (result.getException() != null || result.isRevert()) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
                     result.getException());
@@ -500,14 +481,39 @@ public class Program {
 
             track.rollback();
             stackPushZero();
-            return;
+
+            if (result.getException() != null) {
+                return;
+            } else {
+                returnDataBuffer = result.getHReturn();
+            }
+        } else {
+            // 4. CREATE THE CONTRACT OUT OF RETURN
+            byte[] code = result.getHReturn();
+
+            long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
+            long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
+            if (afterSpend < 0) {
+                if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+                    result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                            storageCost, this));
+                } else {
+                    track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+                }
+            } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+                result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                        storageCost, this));
+            } else {
+                result.spendGas(storageCost);
+                track.saveCode(newAddress, code);
+            }
+
+            if (!byTestingSuite())
+                track.commit();
+
+            // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
+            stackPush(new DataWord(newAddress));
         }
-
-        if (!byTestingSuite())
-            track.commit();
-
-        // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
-        stackPush(new DataWord(newAddress));
 
         // 5. REFUND THE REMAIN GAS
         long refundGas = gasLimit.longValue() - result.getGasUsed();
@@ -580,6 +586,8 @@ public class Program {
 
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
+            returnDataBuffer = null; // reset return buffer right before the call
+
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                     this, new DataWord(contextAddress),
                     msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
@@ -594,7 +602,7 @@ public class Program {
             getTrace().merge(program.getTrace());
             getResult().merge(result);
 
-            if (result.getException() != null) {
+            if (result.getException() != null || result.isRevert()) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                         Hex.toHexString(contextAddress),
                         result.getException());
@@ -604,12 +612,25 @@ public class Program {
 
                 track.rollback();
                 stackPushZero();
-                return;
-            } else if (byTestingSuite()) {
+
+                if (result.getException() != null) {
+                    return;
+                }
+            } else {
+                // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+                track.commit();
+                stackPushOne();
+            }
+
+            if (byTestingSuite()) {
                 logger.info("Testing run, skipping storage diff listener");
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
+        } else {
+            // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+            track.commit();
+            stackPushOne();
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
@@ -619,11 +640,9 @@ public class Program {
             int size = msg.getOutDataSize().intValue();
 
             memorySaveLimited(offset, buffer, size);
-        }
 
-        // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        track.commit();
-        stackPushOne();
+            returnDataBuffer = buffer;
+        }
 
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
@@ -737,6 +756,20 @@ public class Program {
 
     public byte[] getDataCopy(DataWord offset, DataWord length) {
         return invoke.getDataCopy(offset, length);
+    }
+
+    public DataWord getReturnDataBufferSize() {
+        return new DataWord(getReturnDataBufferSizeI());
+    }
+
+    private int getReturnDataBufferSizeI() {
+        return returnDataBuffer == null ? 0 : returnDataBuffer.length;
+    }
+
+    public byte[] getReturnDataBufferData(DataWord off, DataWord size) {
+        if ((long) off.intValueSafe() + size.intValueSafe() > getReturnDataBufferSizeI()) return null;
+        return returnDataBuffer == null ? new byte[0] :
+                Arrays.copyOfRange(returnDataBuffer, off.intValueSafe(), off.intValueSafe() + size.intValueSafe());
     }
 
     public DataWord storageLoad(DataWord key) {
@@ -1193,6 +1226,14 @@ public class Program {
             super(format(message, args));
         }
     }
+
+    @SuppressWarnings("serial")
+    public static class ReturnDataCopyIllegalBoundsException extends BytecodeExecutionException {
+        public ReturnDataCopyIllegalBoundsException(DataWord off, DataWord size, long returnDataSize) {
+            super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)", off, size, returnDataSize));
+        }
+    }
+
 
     public static class Exception {
 
