@@ -188,6 +188,10 @@ public enum OpCode {
      * environment to memory
      */
     CODECOPY(0x39, 3, 0, VeryLowTier), // [len code_start mem_start CODECOPY]
+
+    RETURNDATASIZE(0x3d, 0, 1, BaseTier),
+
+    RETURNDATACOPY(0x3e, 3, 0, VeryLowTier),
     /**
      * (0x3a) Get price of gas in current
      * environment
