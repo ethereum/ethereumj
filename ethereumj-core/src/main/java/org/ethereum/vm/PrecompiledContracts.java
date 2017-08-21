@@ -20,17 +20,13 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.BIUtil;
-import org.ethereum.util.ByteUtil;
 
 import java.math.BigInteger;
 
 import static org.ethereum.util.BIUtil.addSafely;
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.ethereum.util.BIUtil.isZero;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
-import static org.ethereum.util.ByteUtil.numberOfLeadingZeros;
-import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
+import static org.ethereum.util.ByteUtil.*;
 
 /**
  * @author Roman Mandeleil
@@ -107,7 +103,7 @@ public class PrecompiledContracts {
         @Override
         public byte[] execute(byte[] data) {
 
-            if (data == null) return HashUtil.sha256(ByteUtil.EMPTY_BYTE_ARRAY);
+            if (data == null) return HashUtil.sha256(EMPTY_BYTE_ARRAY);
             return HashUtil.sha256(data);
         }
     }
@@ -130,7 +126,7 @@ public class PrecompiledContracts {
         public byte[] execute(byte[] data) {
 
             byte[] result = null;
-            if (data == null) result = HashUtil.ripemd160(ByteUtil.EMPTY_BYTE_ARRAY);
+            if (data == null) result = HashUtil.ripemd160(EMPTY_BYTE_ARRAY);
             else result = HashUtil.ripemd160(data);
 
             return new DataWord(result).getData();
@@ -204,6 +200,8 @@ public class PrecompiledContracts {
         @Override
         public long getGasForData(byte[] data) {
 
+            if (data == null) return 0;
+
             int baseLen = parseLen(data, 0);
             int expLen  = parseLen(data, 1);
             int modLen  = parseLen(data, 2);
@@ -223,6 +221,9 @@ public class PrecompiledContracts {
 
         @Override
         public byte[] execute(byte[] data) {
+
+            if (data == null)
+                return EMPTY_BYTE_ARRAY;
 
             int baseLen = parseLen(data, 0);
             int expLen  = parseLen(data, 1);
@@ -289,7 +290,7 @@ public class PrecompiledContracts {
         private byte[] parseBytes(byte[] data, int offset, int len) {
 
             if (offset >= data.length || len == 0)
-                return new byte[0];
+                return EMPTY_BYTE_ARRAY;
 
             byte[] bytes = new byte[len];
             System.arraycopy(data, offset, bytes, 0, Math.min(data.length - offset, len));

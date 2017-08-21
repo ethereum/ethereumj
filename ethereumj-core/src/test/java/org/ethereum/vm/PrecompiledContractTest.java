@@ -32,6 +32,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.junit.Assert.*;
 
@@ -224,6 +225,17 @@ public class PrecompiledContractTest {
                 "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
 
         assertEquals(Long.MAX_VALUE, contract.getGasForData(data7));
+
+        // check empty data
+        byte[] data8 = new byte[0];
+
+        assertEquals(0, contract.getGasForData(data8));
+
+        byte[] res8 = contract.execute(data8);
+        assertArrayEquals(EMPTY_BYTE_ARRAY, res8);
+
+        assertEquals(0, contract.getGasForData(null));
+        assertArrayEquals(EMPTY_BYTE_ARRAY, contract.execute(null));
     }
 
 }
