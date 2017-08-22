@@ -254,7 +254,7 @@ public class PrecompiledContracts {
 
         private long getMultComplexity(long x) {
 
-            long x2 = (long) Math.pow(x, 2);
+            long x2 = x * x;
 
             if (x <= 64)    return x2;
             if (x <= 1024)  return x2 / 4 + 96 * x - 3072;
