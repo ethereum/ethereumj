@@ -39,6 +39,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     private final DataWord origin, caller,
             balance, gas, gasPrice, callValue;
     private final long gasLong;
+    private final DataWord dataWord = new DataWord();
 
     byte[] msgData;
 
@@ -196,7 +197,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  CALLDATASIZE */
     public DataWord getDataSize() {
 
-        if (msgData == null || msgData.length == 0) return DataWord.ZERO;
+        if (msgData == null || msgData.length == 0) return dataWord.getZero();
         int size = msgData.length;
         return new DataWord(size);
     }

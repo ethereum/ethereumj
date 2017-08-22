@@ -22,6 +22,7 @@ import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
 import org.junit.Test;
 
+import javax.xml.crypto.Data;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -154,7 +155,8 @@ public class TransactionExecutionSummaryTest {
     }
 
     private static InternalTransaction randomInternalTransaction(Transaction parent, int deep, int index) {
-        return new InternalTransaction(parent.getHash(), deep, index, randomBytes(1), DataWord.ZERO, DataWord.ZERO,
+        final DataWord dataWord = new DataWord();
+        return new InternalTransaction(parent.getHash(), deep, index, randomBytes(1), dataWord.getZero(), dataWord.getZero(),
                 parent.getReceiveAddress(), randomBytes(20), randomBytes(2), randomBytes(64), "test note");
     }
 

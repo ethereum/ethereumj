@@ -90,6 +90,7 @@ public class VM {
     private static VMHook vmHook;
     private boolean vmTrace;
     private long dumpBlock;
+    private final DataWord dataWord = new DataWord();
 
     private final SystemProperties config;
 
@@ -502,10 +503,10 @@ public class VM {
                         hint = word1.value() + " < " + word2.value();
 
                     if (word1.value().compareTo(word2.value()) == -1) {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                         word1.getData()[31] = 1;
                     } else {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                     }
                     program.stackPush(word1);
                     program.step();
@@ -520,10 +521,10 @@ public class VM {
                         hint = word1.sValue() + " < " + word2.sValue();
 
                     if (word1.sValue().compareTo(word2.sValue()) == -1) {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                         word1.getData()[31] = 1;
                     } else {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                     }
                     program.stackPush(word1);
                     program.step();
@@ -538,10 +539,10 @@ public class VM {
                         hint = word1.sValue() + " > " + word2.sValue();
 
                     if (word1.sValue().compareTo(word2.sValue()) == 1) {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                         word1.getData()[31] = 1;
                     } else {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                     }
                     program.stackPush(word1);
                     program.step();
@@ -556,10 +557,10 @@ public class VM {
                         hint = word1.value() + " > " + word2.value();
 
                     if (word1.value().compareTo(word2.value()) == 1) {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                         word1.getData()[31] = 1;
                     } else {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                     }
                     program.stackPush(word1);
                     program.step();
@@ -573,10 +574,10 @@ public class VM {
                         hint = word1.value() + " == " + word2.value();
 
                     if (word1.xor(word2).isZero()) {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                         word1.getData()[31] = 1;
                     } else {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                     }
                     program.stackPush(word1);
                     program.step();
@@ -587,7 +588,7 @@ public class VM {
                     if (word1.isZero()) {
                         word1.getData()[31] = 1;
                     } else {
-                        word1.and(DataWord.ZERO);
+                        word1.and(dataWord.getZero());
                     }
 
                     if (logger.isInfoEnabled())
@@ -643,7 +644,7 @@ public class VM {
                     final DataWord result;
                     if (word1.value().compareTo(_32_) == -1) {
                         byte tmp = word2.getData()[word1.intValue()];
-                        word2.and(DataWord.ZERO);
+                        word2.and(dataWord.getZero());
                         word2.getData()[31] = tmp;
                         result = word2;
                     } else {
@@ -1037,7 +1038,7 @@ public class VM {
                         hint = "key: " + key + " value: " + val;
 
                     if (val == null)
-                        val = key.and(DataWord.ZERO);
+                        val = key.and(dataWord.getZero());
 
                     program.stackPush(val);
                     program.step();
@@ -1184,7 +1185,7 @@ public class VM {
                     program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
                     DataWord value = !op.equals(DELEGATECALL) ?
-                            program.stackPop() : DataWord.ZERO;
+                            program.stackPop() : dataWord.getZero();
 
                     if( !value.isZero()) {
                         adjustedCallGas.add(new DataWord(gasCosts.getSTIPEND_CALL()));

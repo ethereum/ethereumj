@@ -80,7 +80,8 @@ public class ContractDetailsImpl extends AbstractContractDetails {
 
     @Override
     public void put(DataWord key, DataWord value) {
-        if (value.equals(DataWord.ZERO)) {
+        final DataWord dataWord = new DataWord();
+        if (value.equals(dataWord.getZero())) {
             storageTrie.delete(key.getData());
             removeKey(key.getData());
         } else {
