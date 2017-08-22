@@ -62,7 +62,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         else{
             if (origContract == null) return null;
             value = origContract.get(key);
-            storage.put(key.clone(), value == null ? DataWord.ZERO.clone() : value.clone());
+            storage.put(key.clone(), value == null ? DataWord.zero() : value.clone());
         }
 
         if (value == null || value.isZero())
