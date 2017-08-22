@@ -1215,7 +1215,7 @@ public class VM {
                             outDataOffs, outDataSize);
 
                     PrecompiledContracts.PrecompiledContract contract =
-                            PrecompiledContracts.getContractForAddress(codeAddress);
+                            PrecompiledContracts.getContractForAddress(codeAddress, blockchainConfig);
 
                     if (op.equals(CALL)) {
                         program.getResult().addTouchAccount(codeAddress.getLast20Bytes());

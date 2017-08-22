@@ -148,6 +148,11 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
+    public boolean eip198() {
+        return parent.eip198();
+    }
+
+    @Override
     public boolean eip206() {
         return false;
     }
