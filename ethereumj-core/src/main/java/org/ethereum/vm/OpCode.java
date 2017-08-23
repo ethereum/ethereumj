@@ -17,6 +17,8 @@
  */
 package org.ethereum.vm;
 
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -572,13 +574,14 @@ public enum OpCode {
     /**
      * (cxf1) Message-call into an account
      */
-    CALL(0xf1, 7, 1, SpecialTier),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr]
+    CALL(0xf1, 7, 1, SpecialTier, CallFlags.Call, CallFlags.HasValue),
+    //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr]
     // [gas] CALL
     /**
      * (0xf2) Calls self, but grabbing the code from the
      * TO argument instead of from one's own address
      */
-    CALLCODE(0xf2, 7, 1, SpecialTier),
+    CALLCODE(0xf2, 7, 1, SpecialTier, CallFlags.Call, CallFlags.HasValue, CallFlags.Stateless),
     /**
      * (0xf3) Halt execution returning output data
      */
@@ -590,7 +593,7 @@ public enum OpCode {
      *  and value as the original call.
      *  also the Value parameter is omitted for this opCode
      */
-    DELEGATECALL(0xf4, 6, 1, SpecialTier),
+    DELEGATECALL(0xf4, 6, 1, SpecialTier, CallFlags.Call, CallFlags.Stateless, CallFlags.Delegate),
 
     /**
      *  opcode that can be used to call another contract (or itself) while disallowing any
@@ -598,7 +601,7 @@ public enum OpCode {
      *  Any opcode that attempts to perform such a modification (see below for details)
      *  will result in an exception instead of performing the modification.
      */
-    STATICCALL(0xfa, 6, 1, SpecialTier),
+    STATICCALL(0xfa, 6, 1, SpecialTier, CallFlags.Call, CallFlags.Static),
 
     /**
      * (0xfd) The `REVERT` instruction will stop execution, roll back all state changes done so far
@@ -616,6 +619,7 @@ public enum OpCode {
     private final int require;
     private final Tier tier;
     private final int ret;
+    private final EnumSet<CallFlags> callFlags;
 
     private static final OpCode[] intToTypeMap = new OpCode[256];
     private static final Map<String, Byte> stringToByteMap = new HashMap<>();
@@ -629,12 +633,15 @@ public enum OpCode {
 
     //require = required args
     //return = required return
-    private OpCode(int op, int require, int ret, Tier tier) {
+    private OpCode(int op, int require, int ret, Tier tier, CallFlags ... callFlags) {
         this.opcode = (byte) op;
         this.require = require;
         this.tier = tier;
         this.ret = ret;
+        this.callFlags = callFlags.length == 0 ? EnumSet.noneOf(CallFlags.class) :
+                EnumSet.copyOf(Arrays.asList(callFlags));
     }
+
 
     public byte val() {
         return opcode;
@@ -673,6 +680,10 @@ public enum OpCode {
         return this.tier;
     }
 
+    public EnumSet<CallFlags> getCallFlags() {
+        return callFlags;
+    }
+
     public enum Tier {
         ZeroTier(0),
         BaseTier(2),
@@ -696,7 +707,32 @@ public enum OpCode {
         }
     }
 
-    ;
+    public enum CallFlags {
+        /**
+         * Indicates that opcode is a call
+         */
+        Call,
+
+        /**
+         *  Indicates that the opcode has value parameter (3rd on stack)
+         */
+        Stateless,
+
+        /**
+         *  Indicates that the opcode has value parameter (3rd on stack)
+         */
+        HasValue,
+
+        /**
+         *  Indicates that any state modifications are disallowed during the call
+         */
+        Static,
+
+        /**
+         *  Indicates that value and message sender are propagated from parent to child scope
+         */
+        Delegate
+    }
 
 }
 

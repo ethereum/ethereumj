@@ -23,36 +23,10 @@ package org.ethereum.vm;
  */
 public class MessageCall {
 
-    public enum MsgType {
-        CALL,
-        CALLCODE,
-        DELEGATECALL,
-        STATICCALL,
-        POST;
-
-        /**
-         *  Indicates that the code is executed in the context of the caller
-         */
-        public boolean isStateless() {
-            return this == CALLCODE || this == DELEGATECALL;
-        }
-
-        public static MsgType fromOpcode(OpCode opCode) {
-            switch (opCode) {
-                case CALL: return CALL;
-                case CALLCODE: return CALLCODE;
-                case DELEGATECALL: return DELEGATECALL;
-                case STATICCALL: return STATICCALL;
-                default:
-                    throw new RuntimeException("Invalid call opCode: " + opCode);
-            }
-        }
-    }
-
     /**
      * Type of internal call. Either CALL, CALLCODE or POST
      */
-    private final MsgType type;
+    private final OpCode type;
 
     /**
      * gas to pay for the call, remaining gas will be refunded to the caller
@@ -83,7 +57,7 @@ public class MessageCall {
      */
     private DataWord outDataSize;
 
-    public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
+    public MessageCall(OpCode type, DataWord gas, DataWord codeAddress,
                        DataWord endowment, DataWord inDataOffs, DataWord inDataSize) {
         this.type = type;
         this.gas = gas;
@@ -93,7 +67,7 @@ public class MessageCall {
         this.inDataSize = inDataSize;
     }
 
-    public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
+    public MessageCall(OpCode type, DataWord gas, DataWord codeAddress,
                        DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
                        DataWord outDataOffs, DataWord outDataSize) {
         this(type, gas, codeAddress, endowment, inDataOffs, inDataSize);
@@ -101,7 +75,7 @@ public class MessageCall {
         this.outDataSize = outDataSize;
     }
 
-    public MsgType getType() {
+    public OpCode getType() {
         return type;
     }
 

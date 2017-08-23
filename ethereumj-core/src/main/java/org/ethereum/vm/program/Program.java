@@ -29,7 +29,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
-import org.ethereum.vm.MessageCall.MsgType;
+import org.ethereum.vm.OpCode.CallFlags;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -548,7 +548,7 @@ public class Program {
         // FETCH THE SAVED STORAGE
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         byte[] senderAddress = getOwnerAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().getCallFlags().contains(CallFlags.Stateless) ? senderAddress : codeAddress;
 
         if (logger.isInfoEnabled())
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
@@ -588,12 +588,13 @@ public class Program {
         if (isNotEmpty(programCode)) {
             returnDataBuffer = null; // reset return buffer right before the call
 
+            EnumSet<CallFlags> callFlags = msg.getType().getCallFlags();
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                     this, new DataWord(contextAddress),
-                    msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
-                    msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
+                    callFlags.contains(CallFlags.Delegate) ? getCallerAddress() : getOwnerAddress(),
+                    callFlags.contains(CallFlags.Delegate) ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
-                    msg.getType() == MsgType.STATICCALL || isStaticCall(), byTestingSuite());
+                    callFlags.contains(CallFlags.Static) || isStaticCall(), byTestingSuite());
 
             VM vm = new VM(config);
             Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
@@ -1134,7 +1135,7 @@ public class Program {
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().getCallFlags().contains(CallFlags.Stateless) ? senderAddress : codeAddress;
 
 
         BigInteger endowment = msg.getEndowment().value();
