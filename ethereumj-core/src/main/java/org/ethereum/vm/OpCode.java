@@ -714,7 +714,7 @@ public enum OpCode {
         Call,
 
         /**
-         *  Indicates that the opcode has value parameter (3rd on stack)
+         *  Indicates that the code is executed in the context of the caller
          */
         Stateless,
 
