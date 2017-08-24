@@ -1302,10 +1302,6 @@ public class VM {
         }
     }
 
-    private void checkStatic(Program program) {
-        if (program.isStaticCall()) throw new Program.StaticCallModificationException();
-    }
-
     public void play(Program program) {
         try {
             if (vmHook != null) {
