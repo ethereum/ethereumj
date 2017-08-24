@@ -20,7 +20,6 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
@@ -166,6 +165,11 @@ public class VM {
                         throw Program.Exception.invalidOpCode(program.getCurrentOp());
                     }
                     break;
+                case STATICCALL:
+                    if (!blockchainConfig.eip214()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
             }
 
             program.setLastOp(op.val());
@@ -278,16 +282,18 @@ public class VM {
                 case CALL:
                 case CALLCODE:
                 case DELEGATECALL:
+                case STATICCALL:
 
                     gasCost = gasCosts.getCALL();
                     DataWord callGasWord = stack.get(stack.size() - 1);
 
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
-                    //check to see if account does not exist and is not a precompiled contract
+                    DataWord value = op.callHasValue() ?
+                            stack.get(stack.size() - 3) : DataWord.ZERO;
 
+                    //check to see if account does not exist and is not a precompiled contract
                     if (op == CALL) {
-                        DataWord value = stack.get(stack.size() - 3);
                         if (blockchainConfig.eip161()) {
                             if (isDeadAccount(program, callAddressWord.getLast20Bytes()) && !value.isZero()) {
                                 gasCost += gasCosts.getNEW_ACCT_CALL();
@@ -300,10 +306,10 @@ public class VM {
                     }
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
-                    if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )
+                    if (!value.isZero() )
                         gasCost += gasCosts.getVT_CALL();
 
-                    int opOff = op == DELEGATECALL ? 3 : 4;
+                    int opOff = op.callHasValue() ? 4 : 3;
                     BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
                     gasCost += calcMemGas(gasCosts, oldMemSize, in.max(out), 0);
@@ -974,6 +980,7 @@ public class VM {
                 case LOG3:
                 case LOG4: {
 
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
                     DataWord address = program.getOwnerAddress();
 
                     DataWord memStart = stack.pop();
@@ -1044,6 +1051,8 @@ public class VM {
                 }
                 break;
                 case SSTORE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord addr = program.stackPop();
                     DataWord value = program.stackPop();
 
@@ -1163,6 +1172,8 @@ public class VM {
                 }
                 break;
                 case CREATE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord value = program.stackPop();
                     DataWord inOffset = program.stackPop();
                     DataWord inSize = program.stackPop();
@@ -1180,11 +1191,15 @@ public class VM {
                 break;
                 case CALL:
                 case CALLCODE:
-                case DELEGATECALL: {
+                case DELEGATECALL:
+                case STATICCALL: {
                     program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
-                    DataWord value = !op.equals(DELEGATECALL) ?
+                    DataWord value = op.callHasValue() ?
                             program.stackPop() : DataWord.ZERO;
+
+                    if (program.isStaticCall() && op == CALL && !value.isZero())
+                        throw new Program.StaticCallModificationException();
 
                     if( !value.isZero()) {
                         adjustedCallGas.add(new DataWord(gasCosts.getSTIPEND_CALL()));
@@ -1210,14 +1225,13 @@ public class VM {
                     program.memoryExpand(outDataOffs, outDataSize);
 
                     MessageCall msg = new MessageCall(
-                            MsgType.fromOpcode(op),
-                            adjustedCallGas, codeAddress, value, inDataOffs, inDataSize,
+                            op, adjustedCallGas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
 
                     PrecompiledContracts.PrecompiledContract contract =
                             PrecompiledContracts.getContractForAddress(codeAddress, blockchainConfig);
 
-                    if (op.equals(CALL)) {
+                    if (!op.callIsStateless()) {
                         program.getResult().addTouchAccount(codeAddress.getLast20Bytes());
                     }
 
@@ -1252,6 +1266,8 @@ public class VM {
                 }
                 break;
                 case SUICIDE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord address = program.stackPop();
                     program.suicide(address);
                     program.getResult().addTouchAccount(address.getLast20Bytes());
@@ -1268,9 +1284,7 @@ public class VM {
 
             program.setPreviouslyExecutedOp(op.val());
 
-            if (logger.isInfoEnabled() && !op.equals(CALL)
-                    && !op.equals(CALLCODE)
-                    && !op.equals(CREATE))
+            if (logger.isInfoEnabled() && !op.isCall())
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                         String.format("%-12s",
                                 op.name()), program.getGas().value(),
