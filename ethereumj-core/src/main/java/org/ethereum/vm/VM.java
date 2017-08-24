@@ -289,7 +289,7 @@ public class VM {
 
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
-                    DataWord value = op.getCallFlags().contains(CallFlags.HasValue)  ?
+                    DataWord value = op.callHasValue() ?
                             stack.get(stack.size() - 3) : DataWord.ZERO;
 
                     //check to see if account does not exist and is not a precompiled contract
@@ -309,7 +309,7 @@ public class VM {
                     if (!value.isZero() )
                         gasCost += gasCosts.getVT_CALL();
 
-                    int opOff = op.getCallFlags().contains(CallFlags.HasValue) ? 4 : 3;
+                    int opOff = op.callHasValue() ? 4 : 3;
                     BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
                     gasCost += calcMemGas(gasCosts, oldMemSize, in.max(out), 0);
@@ -1195,7 +1195,7 @@ public class VM {
                 case STATICCALL: {
                     program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
-                    DataWord value = op.getCallFlags().contains(CallFlags.HasValue)  ?
+                    DataWord value = op.callHasValue() ?
                             program.stackPop() : DataWord.ZERO;
 
                     if (program.isStaticCall() && op == CALL && !value.isZero())
@@ -1231,7 +1231,7 @@ public class VM {
                     PrecompiledContracts.PrecompiledContract contract =
                             PrecompiledContracts.getContractForAddress(codeAddress);
 
-                    if (!op.getCallFlags().contains(CallFlags.Stateless)) {
+                    if (!op.callIsStateless()) {
                         program.getResult().addTouchAccount(codeAddress.getLast20Bytes());
                     }
 
@@ -1284,7 +1284,7 @@ public class VM {
 
             program.setPreviouslyExecutedOp(op.val());
 
-            if (logger.isInfoEnabled() && !op.getCallFlags().contains(CallFlags.Call))
+            if (logger.isInfoEnabled() && !op.isCall())
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                         String.format("%-12s",
                                 op.name()), program.getGas().value(),

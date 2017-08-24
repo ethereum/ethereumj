@@ -676,12 +676,55 @@ public enum OpCode {
         return intToTypeMap[code & 0xFF];
     }
 
-    public Tier getTier() {
-        return this.tier;
+    private EnumSet<CallFlags> getCallFlags() {
+        return callFlags;
     }
 
-    public EnumSet<CallFlags> getCallFlags() {
-        return callFlags;
+    /**
+     * Indicates that opcode is a call
+     */
+    public boolean isCall() {
+        return getCallFlags().contains(CallFlags.Call);
+    }
+
+    private void checkCall() {
+        if (!isCall()) throw new RuntimeException("Opcode is not a call: " + this);
+    }
+
+    /**
+     *  Indicates that the code is executed in the context of the caller
+     */
+    public boolean callIsStateless() {
+        checkCall();
+        return getCallFlags().contains(CallFlags.Stateless);
+    }
+
+    /**
+     *  Indicates that the opcode has value parameter (3rd on stack)
+     */
+    public boolean callHasValue() {
+        checkCall();
+        return getCallFlags().contains(CallFlags.HasValue);
+    }
+
+    /**
+     *  Indicates that any state modifications are disallowed during the call
+     */
+    public boolean callIsStatic() {
+        checkCall();
+        return getCallFlags().contains(CallFlags.Static);
+    }
+
+    /**
+     *  Indicates that value and message sender are propagated from parent to child scope
+     */
+    public boolean callIsDelegate() {
+        checkCall();
+        return getCallFlags().contains(CallFlags.Delegate);
+    }
+
+    public Tier getTier() {
+        return this.tier;
     }
 
     public enum Tier {
@@ -707,7 +750,7 @@ public enum OpCode {
         }
     }
 
-    public enum CallFlags {
+    private enum CallFlags {
         /**
          * Indicates that opcode is a call
          */
@@ -733,7 +776,6 @@ public enum OpCode {
          */
         Delegate
     }
-
 }
 
 
