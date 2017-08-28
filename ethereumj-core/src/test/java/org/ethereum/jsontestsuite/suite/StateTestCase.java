@@ -17,21 +17,21 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.EnvTck;
-import org.ethereum.jsontestsuite.suite.model.LogTck;
 
-import java.util.List;
 import java.util.Map;
 
 public class StateTestCase {
 
 
     private EnvTck env;
-    private List<LogTck> logs;
+    @JsonDeserialize(using = Logs.Deserializer.class)
+    private Logs logs;
     private String out;
     private Map<String, AccountTck> pre;
     private String postStateRoot;
@@ -39,7 +39,6 @@ public class StateTestCase {
     private TransactionTck transaction;
     private GitHubJSONTestSuite.Network network;
     private String name;
-
 
     public StateTestCase() {
     }
@@ -52,11 +51,11 @@ public class StateTestCase {
         this.env = env;
     }
 
-    public List<LogTck> getLogs() {
+    public Logs getLogs() {
         return logs;
     }
 
-    public void setLogs(List<LogTck> logs) {
+    public void setLogs(Logs logs) {
         this.logs = logs;
     }
 
