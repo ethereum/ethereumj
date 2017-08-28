@@ -52,7 +52,7 @@ public class PrecompiledContractTest {
         byte[] data = Hex.decode("112233445566");
         byte[] expected = Hex.decode("112233445566");
 
-        byte[] result = contract.execute(data);
+        byte[] result = contract.execute(data).getRight();
 
         assertArrayEquals(expected, result);
     }
@@ -66,7 +66,7 @@ public class PrecompiledContractTest {
         byte[] data = null;
         String expected = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-        byte[] result = contract.execute(data);
+        byte[] result = contract.execute(data).getRight();
 
         assertEquals(expected, Hex.toHexString(result));
     }
@@ -79,7 +79,7 @@ public class PrecompiledContractTest {
         byte[] data = ByteUtil.EMPTY_BYTE_ARRAY;
         String expected = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-        byte[] result = contract.execute(data);
+        byte[] result = contract.execute(data).getRight();
 
         assertEquals(expected, Hex.toHexString(result));
     }
@@ -92,7 +92,7 @@ public class PrecompiledContractTest {
         byte[] data = Hex.decode("112233");
         String expected = "49ee2bf93aac3b1fb4117e59095e07abe555c3383b38d608da37680a406096e8";
 
-        byte[] result = contract.execute(data);
+        byte[] result = contract.execute(data).getRight();
 
         assertEquals(expected, Hex.toHexString(result));
     }
@@ -106,7 +106,7 @@ public class PrecompiledContractTest {
         byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000000001");
         String expected = "000000000000000000000000ae387fcfeb723c3f5964509af111cf5a67f30661";
 
-        byte[] result = contract.execute(data);
+        byte[] result = contract.execute(data).getRight();
 
         assertEquals(expected, Hex.toHexString(result));
     }
@@ -119,7 +119,7 @@ public class PrecompiledContractTest {
         PrecompiledContract contract = PrecompiledContracts.getContractForAddress(addr, eip160Config);
         String expected = "000000000000000000000000ae387fcfeb723c3f5964509af111cf5a67f30661";
 
-        byte[] result = contract.execute(data);
+        byte[] result = contract.execute(data).getRight();
 
         System.out.println(Hex.toHexString(result));
 
@@ -147,7 +147,7 @@ public class PrecompiledContractTest {
 
         assertEquals(2611, contract.getGasForData(data1));
 
-        byte[] res1 = contract.execute(data1);
+        byte[] res1 = contract.execute(data1).getRight();
         assertEquals(32, res1.length);
         assertEquals(BigInteger.ONE, bytesToBigInteger(res1));
 
@@ -160,7 +160,7 @@ public class PrecompiledContractTest {
 
         assertEquals(2611, contract.getGasForData(data2));
 
-        byte[] res2 = contract.execute(data2);
+        byte[] res2 = contract.execute(data2).getRight();
         assertEquals(32, res2.length);
         assertEquals(BigInteger.ZERO, bytesToBigInteger(res2));
 
@@ -185,7 +185,7 @@ public class PrecompiledContractTest {
 
         assertEquals(153, contract.getGasForData(data4));
 
-        byte[] res4 = contract.execute(data4);
+        byte[] res4 = contract.execute(data4).getRight();
         assertEquals(32, res4.length);
         assertEquals(new BigInteger("26689440342447178617115869845918039756797228267049433585260346420242739014315"), bytesToBigInteger(res4));
 
@@ -200,7 +200,7 @@ public class PrecompiledContractTest {
 
         assertEquals(153, contract.getGasForData(data5));
 
-        byte[] res5 = contract.execute(data5);
+        byte[] res5 = contract.execute(data5).getRight();
         assertEquals(32, res5.length);
         assertEquals(new BigInteger("26689440342447178617115869845918039756797228267049433585260346420242739014315"), bytesToBigInteger(res5));
 
@@ -231,11 +231,11 @@ public class PrecompiledContractTest {
 
         assertEquals(0, contract.getGasForData(data8));
 
-        byte[] res8 = contract.execute(data8);
+        byte[] res8 = contract.execute(data8).getRight();
         assertArrayEquals(EMPTY_BYTE_ARRAY, res8);
 
         assertEquals(0, contract.getGasForData(null));
-        assertArrayEquals(EMPTY_BYTE_ARRAY, contract.execute(null));
+        assertArrayEquals(EMPTY_BYTE_ARRAY, contract.execute(null).getRight());
     }
 
 }

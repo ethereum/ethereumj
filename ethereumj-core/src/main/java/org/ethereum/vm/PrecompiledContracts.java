@@ -17,6 +17,7 @@
  */
 package org.ethereum.vm;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
@@ -84,7 +85,7 @@ public class PrecompiledContracts {
     public static abstract class PrecompiledContract {
         public abstract long getGasForData(byte[] data);
 
-        public abstract byte[] execute(byte[] data);
+        public abstract Pair<Boolean, byte[]> execute(byte[] data);
     }
 
     public static class Identity extends PrecompiledContract {
@@ -102,8 +103,8 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
-            return data;
+        public Pair<Boolean, byte[]> execute(byte[] data) {
+            return Pair.of(true, data);
         }
     }
 
@@ -120,10 +121,10 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
-            if (data == null) return HashUtil.sha256(EMPTY_BYTE_ARRAY);
-            return HashUtil.sha256(data);
+            if (data == null) return Pair.of(true, HashUtil.sha256(EMPTY_BYTE_ARRAY));
+            return Pair.of(true, HashUtil.sha256(data));
         }
     }
 
@@ -142,13 +143,13 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             byte[] result = null;
             if (data == null) result = HashUtil.ripemd160(EMPTY_BYTE_ARRAY);
             else result = HashUtil.ripemd160(data);
 
-            return new DataWord(result).getData();
+            return Pair.of(true, new DataWord(result).getData());
         }
     }
 
@@ -161,7 +162,7 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             byte[] h = new byte[32];
             byte[] v = new byte[32];
@@ -186,9 +187,9 @@ public class PrecompiledContracts {
             }
 
             if (out == null) {
-                return new byte[0];
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
             } else {
-                return out.getData();
+                return Pair.of(true, out.getData());
             }
         }
 
@@ -239,10 +240,10 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
 
             int baseLen = parseLen(data, 0);
             int expLen  = parseLen(data, 1);
@@ -254,7 +255,7 @@ public class PrecompiledContracts {
 
             // check if modulus is zero
             if (isZero(mod))
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
 
             byte[] res = stripLeadingZeroes(base.modPow(exp, mod).toByteArray());
 
@@ -264,10 +265,10 @@ public class PrecompiledContracts {
                 byte[] adjRes = new byte[modLen];
                 System.arraycopy(res, 0, adjRes, modLen - res.length, res.length);
 
-                return adjRes;
+                return Pair.of(true, adjRes);
 
             } else {
-                return res;
+                return Pair.of(true, res);
             }
         }
 
@@ -334,10 +335,10 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
 
             byte[] x1 = parseWord(data, 0);
             byte[] y1 = parseWord(data, 1);
@@ -347,15 +348,15 @@ public class PrecompiledContracts {
 
             BN128 p1 = BN128.create(x1, y1);
             if (p1 == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
 
             BN128 p2 = BN128.create(x2, y2);
             if (p2 == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
 
             BN128 res = p1.add(p2);
 
-            return encodeRes(res.xBytes(), res.yBytes());
+            return Pair.of(true, encodeRes(res.xBytes(), res.yBytes()));
         }
     }
 
@@ -386,10 +387,10 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
 
             byte[] x = parseWord(data, 0);
             byte[] y = parseWord(data, 1);
@@ -398,11 +399,11 @@ public class PrecompiledContracts {
 
             BN128 p = BN128.create(x, y);
             if (p == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
 
             BN128 res = p.mul(BIUtil.toBI(s));
 
-            return encodeRes(res.xBytes(), res.yBytes());
+            return Pair.of(true, encodeRes(res.xBytes(), res.yBytes()));
         }
     }
 }
