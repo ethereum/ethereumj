@@ -1176,15 +1176,15 @@ public class Program {
             if (out.getLeft()) { // success
                 this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
                 this.stackPushOne();
+                track.commit();
             } else {
-                // spend all gas on failure and push zero
+                // spend all gas on failure, push zero and revert state changes
                 this.refundGas(0, "call pre-compiled");
                 this.stackPushZero();
+                track.rollback();
             }
 
             this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
-
-            track.commit();
         }
     }
 
