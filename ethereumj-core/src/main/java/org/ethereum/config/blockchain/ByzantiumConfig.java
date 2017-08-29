@@ -2,6 +2,7 @@ package org.ethereum.config.blockchain;
 
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
+import org.ethereum.config.ConstantsAdapter;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
@@ -29,8 +30,18 @@ import static org.ethereum.util.BIUtil.max;
  */
 public class ByzantiumConfig extends Eip160HFConfig {
 
+    private final Constants constants;
+
     public ByzantiumConfig(BlockchainConfig parent) {
         super(parent);
+        constants = new ConstantsAdapter(parent.getConstants()) {
+            private final BigInteger BLOCK_REWARD = new BigInteger("3000000000000000000");
+
+            @Override
+            public BigInteger getBLOCK_REWARD() {
+                return BLOCK_REWARD;
+            }
+        };
     }
 
     @Override
