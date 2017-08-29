@@ -394,6 +394,7 @@ public class Program {
 
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         if (getCallDeep() == MAX_DEPTH) {
             stackPushZero();
@@ -460,7 +461,6 @@ public class Program {
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
-        returnDataBuffer = null; // reset return buffer right before the call
 
         if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
@@ -536,6 +536,7 @@ public class Program {
      * @param msg is the message call object
      */
     public void callToAddress(MessageCall msg) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         if (getCallDeep() == MAX_DEPTH) {
             stackPushZero();
@@ -586,8 +587,6 @@ public class Program {
 
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
-            returnDataBuffer = null; // reset return buffer right before the call
-
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                     this, new DataWord(contextAddress),
                     msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
@@ -1118,6 +1117,7 @@ public class Program {
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         if (getCallDeep() == MAX_DEPTH) {
             stackPushZero();
@@ -1171,6 +1171,7 @@ public class Program {
 
             this.memorySave(msg.getOutDataOffs().intValue(), out);
             this.stackPushOne();
+            returnDataBuffer = out;
             track.commit();
         }
     }
