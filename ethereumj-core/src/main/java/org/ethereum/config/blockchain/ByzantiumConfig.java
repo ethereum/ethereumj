@@ -64,7 +64,7 @@ public class ByzantiumConfig extends Eip160HFConfig {
     }
 
     protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
-        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        int periodCount = (int) (curBlock.getNumber() - 3_000_000 / getConstants().getEXP_DIFFICULTY_PERIOD());
         return periodCount - 2;
     }
 
