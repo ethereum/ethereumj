@@ -45,6 +45,11 @@ public class ByzantiumConfig extends Eip160HFConfig {
     }
 
     @Override
+    public Constants getConstants() {
+        return constants;
+    }
+
+    @Override
     public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
         BigInteger pd = parent.getDifficultyBI();
         BigInteger quotient = pd.divide(getConstants().getDIFFICULTY_BOUND_DIVISOR());
