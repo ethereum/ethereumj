@@ -17,6 +17,7 @@
  */
 package org.ethereum.vm.program;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -1170,13 +1171,21 @@ public class Program {
             track.rollback();
         } else {
 
-            this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
-            byte[] out = contract.execute(data);
+            Pair<Boolean, byte[]> out = contract.execute(data);
 
-            this.memorySave(msg.getOutDataOffs().intValue(), out);
-            this.stackPushOne();
-            returnDataBuffer = out;
-            track.commit();
+            if (out.getLeft()) { // success
+                this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
+                this.stackPushOne();
+                returnDataBuffer = out.getRight();
+                track.commit();
+            } else {
+                // spend all gas on failure, push zero and revert state changes
+                this.refundGas(0, "call pre-compiled");
+                this.stackPushZero();
+                track.rollback();
+            }
+
+            this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
         }
     }
 

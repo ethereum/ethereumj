@@ -17,9 +17,12 @@
  */
 package org.ethereum.vm;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.bn.BN128;
+import org.ethereum.util.BIUtil;
 
 import java.math.BigInteger;
 
@@ -39,13 +42,16 @@ public class PrecompiledContracts {
     private static final Ripempd160 ripempd160 = new Ripempd160();
     private static final Identity identity = new Identity();
     private static final ModExp modExp = new ModExp();
+    private static final BN128Addition altBN128Add = new BN128Addition();
+    private static final BN128Multiplication altBN128Mul = new BN128Multiplication();
 
     private static final DataWord ecRecoverAddr =   new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
     private static final DataWord sha256Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
     private static final DataWord ripempd160Addr =  new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
     private static final DataWord identityAddr =    new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
     private static final DataWord modExpAddr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000005");
-
+    private static final DataWord altBN128AddAddr = new DataWord("0000000000000000000000000000000000000000000000000000000000000006");
+    private static final DataWord altBN128MulAddr = new DataWord("0000000000000000000000000000000000000000000000000000000000000007");
 
     public static PrecompiledContract getContractForAddress(DataWord address, BlockchainConfig config) {
 
@@ -57,15 +63,29 @@ public class PrecompiledContracts {
 
         // Byzantium precompiles
         if (address.equals(modExpAddr) && config.eip198()) return modExp;
+        if (address.equals(altBN128AddAddr) && config.eip213()) return altBN128Add;
+        if (address.equals(altBN128MulAddr) && config.eip213()) return altBN128Mul;
 
         return null;
     }
 
+    private static byte[] encodeRes(byte[] w1, byte[] w2) {
+
+        byte[] res = new byte[64];
+
+        w1 = stripLeadingZeroes(w1);
+        w2 = stripLeadingZeroes(w2);
+
+        System.arraycopy(w1, 0, res, 32 - w1.length, w1.length);
+        System.arraycopy(w2, 0, res, 64 - w2.length, w2.length);
+
+        return res;
+    }
 
     public static abstract class PrecompiledContract {
         public abstract long getGasForData(byte[] data);
 
-        public abstract byte[] execute(byte[] data);
+        public abstract Pair<Boolean, byte[]> execute(byte[] data);
     }
 
     public static class Identity extends PrecompiledContract {
@@ -83,8 +103,8 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
-            return data;
+        public Pair<Boolean, byte[]> execute(byte[] data) {
+            return Pair.of(true, data);
         }
     }
 
@@ -101,10 +121,10 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
-            if (data == null) return HashUtil.sha256(EMPTY_BYTE_ARRAY);
-            return HashUtil.sha256(data);
+            if (data == null) return Pair.of(true, HashUtil.sha256(EMPTY_BYTE_ARRAY));
+            return Pair.of(true, HashUtil.sha256(data));
         }
     }
 
@@ -123,13 +143,13 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             byte[] result = null;
             if (data == null) result = HashUtil.ripemd160(EMPTY_BYTE_ARRAY);
             else result = HashUtil.ripemd160(data);
 
-            return new DataWord(result).getData();
+            return Pair.of(true, new DataWord(result).getData());
         }
     }
 
@@ -142,7 +162,7 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             byte[] h = new byte[32];
             byte[] v = new byte[32];
@@ -167,9 +187,9 @@ public class PrecompiledContracts {
             }
 
             if (out == null) {
-                return new byte[0];
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
             } else {
-                return out.getData();
+                return Pair.of(true, out.getData());
             }
         }
 
@@ -220,10 +240,10 @@ public class PrecompiledContracts {
         }
 
         @Override
-        public byte[] execute(byte[] data) {
+        public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
 
             int baseLen = parseLen(data, 0);
             int expLen  = parseLen(data, 1);
@@ -235,7 +255,7 @@ public class PrecompiledContracts {
 
             // check if modulus is zero
             if (isZero(mod))
-                return EMPTY_BYTE_ARRAY;
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
 
             byte[] res = stripLeadingZeroes(base.modPow(exp, mod).toByteArray());
 
@@ -245,10 +265,10 @@ public class PrecompiledContracts {
                 byte[] adjRes = new byte[modLen];
                 System.arraycopy(res, 0, adjRes, modLen - res.length, res.length);
 
-                return adjRes;
+                return Pair.of(true, adjRes);
 
             } else {
-                return res;
+                return Pair.of(true, res);
             }
         }
 
@@ -286,16 +306,104 @@ public class PrecompiledContracts {
             byte[] bytes = parseBytes(data, offset, len);
             return bytesToBigInteger(bytes);
         }
+    }
 
-        private byte[] parseBytes(byte[] data, int offset, int len) {
+    /**
+     * Computes point addition on Barreto–Naehrig curve.
+     * See {@link BN128} for details<br/>
+     * <br/>
+     *
+     * input data[]:<br/>
+     * two points encoded as (x, y), where x and y are 32-byte left-padded integers,<br/>
+     * if input is shorter than expected, it's assumed to be right-padded with zero bytes<br/>
+     * <br/>
+     *
+     * output:<br/>
+     * resulting point (x', y'), where x and y encoded as 32-byte left-padded integers<br/>
+     * <br/>
+     *
+     * throws exception if coordinates are invalid or one of input points does not belong to the curve
+     */
+    public static class BN128Addition extends PrecompiledContract {
 
-            if (offset >= data.length || len == 0)
-                return EMPTY_BYTE_ARRAY;
+        @Override
+        public long getGasForData(byte[] data) {
 
-            byte[] bytes = new byte[len];
-            System.arraycopy(data, offset, bytes, 0, Math.min(data.length - offset, len));
-            return bytes;
+            if (data == null) return 0;
+
+            return 500;
         }
 
+        @Override
+        public Pair<Boolean, byte[]> execute(byte[] data) {
+
+            if (data == null)
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
+
+            byte[] x1 = parseWord(data, 0);
+            byte[] y1 = parseWord(data, 1);
+
+            byte[] x2 = parseWord(data, 2);
+            byte[] y2 = parseWord(data, 3);
+
+            BN128 p1 = BN128.create(x1, y1);
+            if (p1 == null)
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
+
+            BN128 p2 = BN128.create(x2, y2);
+            if (p2 == null)
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
+
+            BN128 res = p1.add(p2);
+
+            return Pair.of(true, encodeRes(res.xBytes(), res.yBytes()));
+        }
+    }
+
+    /**
+     * Computes multiplication of scalar value on a point belonging to Barreto–Naehrig curve.
+     * See {@link BN128} for details<br/>
+     * <br/>
+     *
+     * input data[]:<br/>
+     * point encoded as (x, y) and scalar s, where x, y and s are 32-byte left-padded integers,<br/>
+     * if input is shorter than expected, it's assumed to be right-padded with zero bytes<br/>
+     * <br/>
+     *
+     * output:<br/>
+     * resulting point (x', y'), where x and y encoded as 32-byte left-padded integers<br/>
+     * <br/>
+     *
+     * throws exception if coordinates are invalid or point does not belong to the curve
+     */
+    public static class BN128Multiplication extends PrecompiledContract {
+
+        @Override
+        public long getGasForData(byte[] data) {
+
+            if (data == null) return 0;
+
+            return 2000;
+        }
+
+        @Override
+        public Pair<Boolean, byte[]> execute(byte[] data) {
+
+            if (data == null)
+                return Pair.of(true, EMPTY_BYTE_ARRAY);
+
+            byte[] x = parseWord(data, 0);
+            byte[] y = parseWord(data, 1);
+
+            byte[] s = parseWord(data, 2);
+
+            BN128 p = BN128.create(x, y);
+            if (p == null)
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
+
+            BN128 res = p.mul(BIUtil.toBI(s));
+
+            return Pair.of(true, encodeRes(res.xBytes(), res.yBytes()));
+        }
     }
 }

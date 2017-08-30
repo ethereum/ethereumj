@@ -683,4 +683,29 @@ public class ByteUtil {
         }
     }
 
+    /**
+     * Parses fixed number of bytes starting from {@code offset} in {@code input} array.
+     * If {@code input} has not enough bytes return array will be right padded with zero bytes.
+     * I.e. if {@code offset} is higher than {@code input.length} then zero byte array of length {@code len} will be returned
+     */
+    public static byte[] parseBytes(byte[] input, int offset, int len) {
+
+        if (offset >= input.length || len == 0)
+            return EMPTY_BYTE_ARRAY;
+
+        byte[] bytes = new byte[len];
+        System.arraycopy(input, offset, bytes, 0, Math.min(input.length - offset, len));
+        return bytes;
+    }
+
+    /**
+     * Parses 32-bytes word from given input.
+     * Uses {@link #parseBytes(byte[], int, int)} method,
+     * thus, result will be right-padded with zero bytes if there is not enough bytes in {@code input}
+     *
+     * @param idx an index of the word starting from {@code 0}
+     */
+    public static byte[] parseWord(byte[] input, int idx) {
+        return parseBytes(input, 32 * idx, 32);
+    }
 }

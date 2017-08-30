@@ -17,6 +17,10 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.JsonDeserializer;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -29,6 +33,7 @@ import org.json.simple.JSONObject;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -38,11 +43,21 @@ public class Logs {
     List<LogInfo> logs;
     byte[] logsHash;
 
+    @SuppressWarnings("unchecked")
     public Logs(Object logs) {
         if (logs instanceof JSONArray) {
             init((JSONArray) logs);
+        } else if (logs instanceof List) {
+            this.logs = (List<LogInfo>) logs;
         } else {
             init((String) logs);
+        }
+    }
+
+    public static class Deserializer extends JsonDeserializer<Logs> {
+        @Override
+        public Logs deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+            return new Logs(jp.readValueAs(Object.class));
         }
     }
 
