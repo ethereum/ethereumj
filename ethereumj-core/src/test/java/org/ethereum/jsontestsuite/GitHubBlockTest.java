@@ -31,7 +31,7 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
-    static String commitSHA = "74431cab7b8e8a0ccf457ad2fbc4b25f6c3e1f7f";
+    static String commitSHA = "d098a00a4e7108f7965d1ca81e2fd51fc5b1e11b";
     static String treeSHA = "f957bebb5d163da11656e7a18d0b95ee025e4ca2"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
@@ -53,7 +53,7 @@ public class GitHubBlockTest {
     // do not initialize BlockchainTestSuite to avoid unnecessary GitHub API hits
     public void bcSingleTest() throws IOException {
         BlockchainTestSuite.runSingle(
-                "bcBlockGasLimitTest/BlockGasLimit2p63m1.json", commitSHA, GitHubJSONTestSuite.Network.Frontier);
+                "bcWalletTest/wallet2outOf3txs2.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
 
