@@ -166,8 +166,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private byte[] minerCoinbase;
     private byte[] minerExtraData;
-//    private BigInteger BLOCK_REWARD;
-//    private BigInteger INCLUSION_REWARD;
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
@@ -225,8 +223,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void initConst(SystemProperties config) {
         minerCoinbase = config.getMinerCoinbase();
         minerExtraData = config.getMineExtraData();
-//        BLOCK_REWARD = config.getBlockchainConfig().getCommonConstants().getBLOCK_REWARD();
-//        INCLUSION_REWARD = BLOCK_REWARD.divide(BigInteger.valueOf(32));
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
     }
