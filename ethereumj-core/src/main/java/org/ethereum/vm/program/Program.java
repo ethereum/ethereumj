@@ -1176,7 +1176,7 @@ public class Program {
             if (out.getLeft()) { // success
                 this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
                 this.stackPushOne();
-                returnDataBuffer = out;
+                returnDataBuffer = out.getRight();
                 track.commit();
             } else {
                 // spend all gas on failure, push zero and revert state changes
