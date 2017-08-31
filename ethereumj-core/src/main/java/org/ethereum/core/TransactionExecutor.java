@@ -340,6 +340,8 @@ public class TransactionExecutor {
 
                     if (result.getException() != null) {
                         throw result.getException();
+                    } else {
+                        execError("REVERT opcode executed");
                     }
                 } else {
                     touchedAccounts.addAll(result.getTouchedAccounts());
