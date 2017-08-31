@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
@@ -861,7 +862,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
-        config.getBlockchainConfig().getConfigForBlock(block.getNumber()).hardForkTransfers(block, track);
+        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(block.getNumber());
+        blockchainConfig.hardForkTransfers(block, track);
 
         long saveTime = System.nanoTime();
         int i = 1;
@@ -887,7 +889,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             txTrack.commit();
             final TransactionReceipt receipt = executor.getReceipt();
 
-            receipt.setPostTxState(track.getRoot());
+            if (blockchainConfig.eip658()) {
+                receipt.setTxStatus(receipt.isSuccessful());
+            } else {
+                receipt.setPostTxState(track.getRoot());
+            }
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(track.getRoot()));
