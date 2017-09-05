@@ -113,11 +113,9 @@ public class StateTestRunner {
         repository.commit();
 
         List<LogInfo> origLogs = programResult.getLogInfoList();
-        List<LogInfo> postLogs = LogBuilder.build(stateTestCase.getLogs());
+        List<String> logsResult = stateTestCase.getLogs().compareToReal(origLogs);
 
         List<String> results = new ArrayList<>();
-
-        List<String> logsResult = LogsValidator.valid(origLogs, postLogs);
 
         if (stateTestCase.getPost() != null) {
             Repository postRepository = RepositoryBuilder.build(stateTestCase.getPost());

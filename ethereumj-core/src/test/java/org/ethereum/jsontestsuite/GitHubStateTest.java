@@ -29,15 +29,14 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
-    static String commitSHA = "400b1a86d4b13b46e8f13ca65dd206bc46120495";
-    static String treeSHA = "8fb6cc05cadb1432e532b7492fc5e5b771ffea58"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
+    static String commitSHA = "f17609b3c2fc7404addf3d228955b16ae8e0cfb4";
+    static String treeSHA = "fdcc301d8fdd65e6f1b56ffca9a786aa337c7bb8"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
             GitHubJSONTestSuite.Network.EIP158,
 //            GitHubJSONTestSuite.Network.Byzantium
-
     };
 
     static GeneralStateTestSuite suite;
@@ -58,7 +57,7 @@ public class GitHubStateTest {
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
         GeneralStateTestSuite.runSingle(
-                "stRevertTest/RevertOpcodeInCreateReturns.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+                "stZeroKnowledge/pointAdd.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
@@ -220,7 +219,8 @@ public class GitHubStateTest {
     public void stTransactionTest() throws IOException {
         // TODO enable when zero sig Txes comes in
         suite.runAll("stTransactionTest", new HashSet<>(Arrays.asList(
-                "zeroSigTransacrionCreate",
+                "zeroSigTransactionCreate",
+                "zeroSigTransactionCreatePrice0",
                 "zeroSigTransacrionCreatePrice0",
                 "zeroSigTransaction",
                 "zeroSigTransaction0Price",

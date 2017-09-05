@@ -204,6 +204,19 @@ public class TransactionReceipt {
         rlpEncoded = null;
     }
 
+    public void setTxStatus(boolean success) {
+        this.postTxState = success ? new byte[]{1} : new byte[0];
+        rlpEncoded = null;
+    }
+
+    public boolean hasTxStatus() {
+        return postTxState != null && postTxState.length <= 1;
+    }
+
+    public boolean isTxStatusOK() {
+        return postTxState != null && postTxState.length == 1 && postTxState[0] == 1;
+    }
+
     public void setCumulativeGas(long cumulativeGas) {
         this.cumulativeGas = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(cumulativeGas));
         rlpEncoded = null;
@@ -258,7 +271,8 @@ public class TransactionReceipt {
         // todo: fix that
 
         return "TransactionReceipt[" +
-                "\n  , postTxState=" + Hex.toHexString(postTxState) +
+                "\n  , " + (hasTxStatus() ? ("txStatus=" + (isTxStatusOK() ? "OK" : "FAILED"))
+                                        : ("postTxState=" + Hex.toHexString(postTxState))) +
                 "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
                 "\n  , gasUsed=" + Hex.toHexString(gasUsed) +
                 "\n  , error=" + error +

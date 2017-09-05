@@ -1,6 +1,8 @@
 package org.ethereum.jsontestsuite.suite.model;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import org.ethereum.jsontestsuite.suite.Logs;
 
 import java.util.List;
 
@@ -12,7 +14,8 @@ import java.util.List;
 public class PostDataTck {
 
     String hash;
-    List<LogTck> logs;
+    @JsonDeserialize(using = Logs.Deserializer.class)
+    Logs logs;
     Indexes indexes;
 
     public String getHash() {
@@ -23,11 +26,11 @@ public class PostDataTck {
         this.hash = hash;
     }
 
-    public List<LogTck> getLogs() {
+    public Logs getLogs() {
         return logs;
     }
 
-    public void setLogs(List<LogTck> logs) {
+    public void setLogs(Logs logs) {
         this.logs = logs;
     }
 

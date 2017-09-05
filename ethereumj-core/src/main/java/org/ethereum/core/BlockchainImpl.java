@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
@@ -166,8 +167,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private byte[] minerCoinbase;
     private byte[] minerExtraData;
-    private BigInteger BLOCK_REWARD;
-    private BigInteger INCLUSION_REWARD;
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
@@ -225,8 +224,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void initConst(SystemProperties config) {
         minerCoinbase = config.getMinerCoinbase();
         minerExtraData = config.getMineExtraData();
-        BLOCK_REWARD = config.getBlockchainConfig().getCommonConstants().getBLOCK_REWARD();
-        INCLUSION_REWARD = BLOCK_REWARD.divide(BigInteger.valueOf(32));
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
     }
@@ -865,7 +862,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
-        config.getBlockchainConfig().getConfigForBlock(block.getNumber()).hardForkTransfers(block, track);
+        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(block.getNumber());
+        blockchainConfig.hardForkTransfers(block, track);
 
         long saveTime = System.nanoTime();
         int i = 1;
@@ -891,7 +889,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             txTrack.commit();
             final TransactionReceipt receipt = executor.getReceipt();
 
-            receipt.setPostTxState(track.getRoot());
+            if (blockchainConfig.eip658()) {
+                receipt.setTxStatus(receipt.isSuccessful());
+            } else {
+                receipt.setPostTxState(track.getRoot());
+            }
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(track.getRoot()));
@@ -939,10 +941,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Map<byte[], BigInteger> rewards = new HashMap<>();
 
+        BigInteger blockReward = config.getBlockchainConfig().getConfigForBlock(block.getNumber()).getConstants().getBLOCK_REWARD();
+        BigInteger inclusionReward = blockReward.divide(BigInteger.valueOf(32));
+
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                BigInteger uncleReward = BLOCK_REWARD
+                BigInteger uncleReward = blockReward
                         .multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber()))
                         .divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET));
 
@@ -956,7 +961,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
         }
 
-        BigInteger minerReward = BLOCK_REWARD.add(INCLUSION_REWARD.multiply(BigInteger.valueOf(block.getUncleList().size())));
+        BigInteger minerReward = blockReward.add(inclusionReward.multiply(BigInteger.valueOf(block.getUncleList().size())));
 
         BigInteger totalFees = BigInteger.ZERO;
         for (TransactionExecutionSummary summary : summaries) {

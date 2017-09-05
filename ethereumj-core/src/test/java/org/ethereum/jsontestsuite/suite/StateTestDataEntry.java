@@ -64,7 +64,7 @@ public class StateTestDataEntry {
             if (data.getLogs() != null) {
                 testCase.setLogs(data.getLogs());
             } else {
-                testCase.setLogs(Collections.<LogTck>emptyList());
+                testCase.setLogs(new Logs("0x"));
             }
             if (data.getHash() != null) {
                 testCase.setPostStateRoot(data.getHash().startsWith("0x") ? data.getHash().substring(2) : data.getHash());

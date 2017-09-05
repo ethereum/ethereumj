@@ -2,6 +2,7 @@ package org.ethereum.config.blockchain;
 
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
+import org.ethereum.config.ConstantsAdapter;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
@@ -29,8 +30,23 @@ import static org.ethereum.util.BIUtil.max;
  */
 public class ByzantiumConfig extends Eip160HFConfig {
 
+    private final Constants constants;
+
     public ByzantiumConfig(BlockchainConfig parent) {
         super(parent);
+        constants = new ConstantsAdapter(parent.getConstants()) {
+            private final BigInteger BLOCK_REWARD = new BigInteger("3000000000000000000");
+
+            @Override
+            public BigInteger getBLOCK_REWARD() {
+                return BLOCK_REWARD;
+            }
+        };
+    }
+
+    @Override
+    public Constants getConstants() {
+        return constants;
     }
 
     @Override
@@ -53,7 +69,7 @@ public class ByzantiumConfig extends Eip160HFConfig {
     }
 
     protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
-        int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
+        int periodCount = (int) (curBlock.getNumber() - 3_000_000 / getConstants().getEXP_DIFFICULTY_PERIOD());
         return periodCount - 2;
     }
 
@@ -79,7 +95,17 @@ public class ByzantiumConfig extends Eip160HFConfig {
     }
 
     @Override
+    public boolean eip213() {
+        return true;
+    }
+
+    @Override
     public boolean eip214() {
+        return true;
+    }
+
+    @Override
+    public boolean eip658() {
         return true;
     }
 }

@@ -144,7 +144,18 @@ public interface BlockchainConfig {
     boolean eip211();
 
     /**
+     * EIP213: https://github.com/ethereum/EIPs/pull/213
+     */
+    boolean eip213();
+
+    /**
      * EIP214: https://github.com/ethereum/EIPs/pull/214
      */
     boolean eip214();
+
+    /**
+     * EIP658: https://github.com/ethereum/EIPs/pull/658
+     * Replaces the intermediate state root field of the receipt with the status
+     */
+    boolean eip658();
 }

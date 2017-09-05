@@ -36,7 +36,7 @@ public class StateTestData {
             for (int i = 0; i < testCases.size(); i++) {
                 StateTestCase testCase = testCases.get(i);
                 testCase.setName(String.format("%s_%s%s", e.getKey(), network.name(),
-                        testCases.size() > 1 ? " " + String.valueOf(i + 1) : ""));
+                        testCases.size() > 1 ? "_" + String.valueOf(i + 1) : ""));
             }
             cases.addAll(testCases);
         }

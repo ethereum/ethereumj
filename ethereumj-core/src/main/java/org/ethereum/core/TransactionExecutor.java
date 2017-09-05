@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -225,7 +226,7 @@ public class TransactionExecutor {
                 m_endGas = m_endGas.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
 
                 // FIXME: save return for vm trace
-                byte[] out = precompiledContract.execute(tx.getData());
+                Pair<Boolean, byte[]> out = precompiledContract.execute(tx.getData());
             }
 
         } else {
@@ -339,6 +340,8 @@ public class TransactionExecutor {
 
                     if (result.getException() != null) {
                         throw result.getException();
+                    } else {
+                        execError("REVERT opcode executed");
                     }
                 } else {
                     touchedAccounts.addAll(result.getTouchedAccounts());
