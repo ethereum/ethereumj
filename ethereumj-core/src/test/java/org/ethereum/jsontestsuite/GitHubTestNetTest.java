@@ -26,7 +26,7 @@ import java.io.IOException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTestNetTest {
 
-    static String commitSHA = "85f6d7cc01b6bd04e071f5ba579fc675cfd2043b";
+    static String commitSHA = "d098a00a4e7108f7965d1ca81e2fd51fc5b1e11b";
     static String treeSHA = "0af522c09e8a264f651f5a4715301381c14784d7"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
 
     static BlockchainTestSuite suite;
@@ -34,6 +34,7 @@ public class GitHubTestNetTest {
     @BeforeClass
     public static void setup() {
         suite = new BlockchainTestSuite(treeSHA, commitSHA);
+        suite.setSubDir("TransitionTests/");
     }
 
     @Test
@@ -47,17 +48,22 @@ public class GitHubTestNetTest {
 
     @Test
     public void bcFrontierToHomestead() throws IOException {
-        suite.runAll("TransitionTests/bcFrontierToHomestead", GitHubJSONTestSuite.Network.FrontierToHomesteadAt5);
+        suite.runAll("bcFrontierToHomestead", GitHubJSONTestSuite.Network.FrontierToHomesteadAt5);
     }
 
     @Test
     @Ignore // TODO fix it
     public void bcHomesteadToDao() throws IOException {
-        suite.runAll("TransitionTests/bcHomesteadToDao", GitHubJSONTestSuite.Network.HomesteadToDaoAt5);
+        suite.runAll("bcHomesteadToDao", GitHubJSONTestSuite.Network.HomesteadToDaoAt5);
     }
 
     @Test
     public void bcHomesteadToEIP150() throws IOException {
-        suite.runAll("TransitionTests/bcHomesteadToEIP150", GitHubJSONTestSuite.Network.HomesteadToEIP150At5);
+        suite.runAll("bcHomesteadToEIP150", GitHubJSONTestSuite.Network.HomesteadToEIP150At5);
+    }
+
+    @Test
+    public void bcEIP158ToByzantium() throws IOException {
+        suite.runAll("bcEIP158ToByzantium", GitHubJSONTestSuite.Network.EIP158ToByzantiumAt5);
     }
 }

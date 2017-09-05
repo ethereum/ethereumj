@@ -269,7 +269,8 @@ public class GitHubJSONTestSuite {
         // Transition networks
         FrontierToHomesteadAt5,
         HomesteadToDaoAt5,
-        HomesteadToEIP150At5;
+        HomesteadToEIP150At5,
+        EIP158ToByzantiumAt5;
 
         public BlockchainNetConfig getConfig() {
             switch (this) {
@@ -293,6 +294,11 @@ public class GitHubJSONTestSuite {
                 case HomesteadToEIP150At5: return new BaseNetConfig() {{
                     add(0, new HomesteadConfig());
                     add(5, new Eip150HFConfig(new HomesteadConfig()));
+                }};
+
+                case EIP158ToByzantiumAt5: return new BaseNetConfig() {{
+                    add(0, new Eip160HFConfig(new HomesteadConfig()));
+                    add(5, new ByzantiumConfig(new HomesteadConfig()));
                 }};
 
                 default: throw new IllegalArgumentException("Unknown network value: " + this.name());

@@ -24,6 +24,7 @@ public class BlockchainTestSuite {
     private static final String TEST_ROOT = "BlockchainTests/";
 
     String commitSHA;
+    String subDir = "";
     List<String> files;
     GitHubJSONTestSuite.Network[] networks;
 
@@ -35,6 +36,10 @@ public class BlockchainTestSuite {
 
     public BlockchainTestSuite(String treeSHA, String commitSHA) {
         this(treeSHA, commitSHA, GitHubJSONTestSuite.Network.values());
+    }
+
+    public void setSubDir(String subDir) {
+        this.subDir = subDir;
     }
 
     private static void run(List<String> checkFiles,
@@ -110,7 +115,7 @@ public class BlockchainTestSuite {
 
         List<String> testCaseFiles = new ArrayList<>();
         for (String file : files) {
-            if (file.startsWith(testCaseRoot + "/")) testCaseFiles.add(file);
+            if (file.startsWith(testCaseRoot + "/")) testCaseFiles.add(subDir + file);
         }
 
         Set<String> toExclude = new HashSet<>();
