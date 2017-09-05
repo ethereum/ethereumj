@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -423,6 +424,9 @@ public class Program {
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         byte[] newAddress = HashUtil.calcNewAddr(getOwnerAddress().getLast20Bytes(), nonce);
 
+        AccountState existingAddr = getStorage().getAccountState(newAddress);
+        boolean contractAlreadyExists = existingAddr != null && existingAddr.isContractExist();
+
         if (byTestingSuite()) {
             // This keeps track of the contracts created for a test
             getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY,
@@ -460,9 +464,11 @@ public class Program {
                 this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
 
-        ProgramResult result = ProgramResult.empty();
+        ProgramResult result = ProgramResult.createEmpty();
 
-        if (isNotEmpty(programCode)) {
+        if (contractAlreadyExists) {
+            result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newAddress)));
+        } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);

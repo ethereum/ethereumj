@@ -136,6 +136,10 @@ public class AccountState {
         return rlpEncoded;
     }
 
+    public boolean isContractExist() {
+        return !FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) || !BigInteger.ZERO.equals(nonce);
+    }
+
     public boolean isEmpty() {
         return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) &&
                 BigInteger.ZERO.equals(balance) &&

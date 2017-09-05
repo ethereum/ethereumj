@@ -253,6 +253,13 @@ public class TransactionExecutor {
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
 
+        AccountState existingAddr = cacheTrack.getAccountState(newContractAddress);
+        if (existingAddr != null && existingAddr.isContractExist()) {
+            execError("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newContractAddress));
+            m_endGas = BigInteger.ZERO;
+            return;
+        }
+
         //In case of hashing collisions (for TCK tests only), check for any balance before createAccount()
         BigInteger oldBalance = track.getBalance(newContractAddress);
         cacheTrack.createAccount(tx.getContractAddress());
