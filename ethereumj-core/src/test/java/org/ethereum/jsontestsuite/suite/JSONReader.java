@@ -31,6 +31,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -39,6 +40,31 @@ import org.slf4j.LoggerFactory;
 public class JSONReader {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
+
+    public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit, int threads) {
+        ExecutorService threadPool = Executors.newFixedThreadPool(threads);
+        List<Future<String>> retF = new ArrayList<>();
+        for (final String filename : filenames) {
+            Future<String> f = threadPool.submit(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return loadJSONFromCommit(filename, shacommit);
+                }
+            });
+            retF.add(f);
+        }
+
+        List<String> ret = new ArrayList<>();
+        for (Future<String> f : retF) {
+            try {
+                ret.add(f.get());
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return ret;
+    }
 
     public static String loadJSON(String filename) {
         String json = "";
