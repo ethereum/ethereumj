@@ -34,7 +34,7 @@ public class ByzantiumConfig extends Eip160HFConfig {
 
     public ByzantiumConfig(BlockchainConfig parent) {
         super(parent);
-        constants = new ConstantsAdapter(parent.getConstants()) {
+        constants = new ConstantsAdapter(super.getConstants()) {
             private final BigInteger BLOCK_REWARD = new BigInteger("3000000000000000000");
 
             @Override
