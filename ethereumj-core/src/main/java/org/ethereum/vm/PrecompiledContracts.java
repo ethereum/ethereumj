@@ -21,7 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.bn.BN128;
+import org.ethereum.crypto.zksnark.*;
 import org.ethereum.util.BIUtil;
 
 import java.math.BigInteger;
@@ -44,14 +44,16 @@ public class PrecompiledContracts {
     private static final ModExp modExp = new ModExp();
     private static final BN128Addition altBN128Add = new BN128Addition();
     private static final BN128Multiplication altBN128Mul = new BN128Multiplication();
+    private static final BN128Pairing altBN128Pairing = new BN128Pairing();
 
-    private static final DataWord ecRecoverAddr =   new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
-    private static final DataWord sha256Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
-    private static final DataWord ripempd160Addr =  new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
-    private static final DataWord identityAddr =    new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
-    private static final DataWord modExpAddr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000005");
-    private static final DataWord altBN128AddAddr = new DataWord("0000000000000000000000000000000000000000000000000000000000000006");
-    private static final DataWord altBN128MulAddr = new DataWord("0000000000000000000000000000000000000000000000000000000000000007");
+    private static final DataWord ecRecoverAddr =       new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
+    private static final DataWord sha256Addr =          new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
+    private static final DataWord ripempd160Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
+    private static final DataWord identityAddr =        new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
+    private static final DataWord modExpAddr =          new DataWord("0000000000000000000000000000000000000000000000000000000000000005");
+    private static final DataWord altBN128AddAddr =     new DataWord("0000000000000000000000000000000000000000000000000000000000000006");
+    private static final DataWord altBN128MulAddr =     new DataWord("0000000000000000000000000000000000000000000000000000000000000007");
+    private static final DataWord altBN128PairingAddr = new DataWord("0000000000000000000000000000000000000000000000000000000000000008");
 
     public static PrecompiledContract getContractForAddress(DataWord address, BlockchainConfig config) {
 
@@ -65,6 +67,7 @@ public class PrecompiledContracts {
         if (address.equals(modExpAddr) && config.eip198()) return modExp;
         if (address.equals(altBN128AddAddr) && config.eip213()) return altBN128Add;
         if (address.equals(altBN128MulAddr) && config.eip213()) return altBN128Mul;
+        if (address.equals(altBN128PairingAddr) && config.eip212()) return altBN128Pairing;
 
         return null;
     }
@@ -310,7 +313,7 @@ public class PrecompiledContracts {
 
     /**
      * Computes point addition on Barreto–Naehrig curve.
-     * See {@link BN128} for details<br/>
+     * See {@link BN128Fp} for details<br/>
      * <br/>
      *
      * input data[]:<br/>
@@ -320,9 +323,7 @@ public class PrecompiledContracts {
      *
      * output:<br/>
      * resulting point (x', y'), where x and y encoded as 32-byte left-padded integers<br/>
-     * <br/>
      *
-     * throws exception if coordinates are invalid or one of input points does not belong to the curve
      */
     public static class BN128Addition extends PrecompiledContract {
 
@@ -338,7 +339,7 @@ public class PrecompiledContracts {
         public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return Pair.of(true, EMPTY_BYTE_ARRAY);
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
 
             byte[] x1 = parseWord(data, 0);
             byte[] y1 = parseWord(data, 1);
@@ -346,35 +347,33 @@ public class PrecompiledContracts {
             byte[] x2 = parseWord(data, 2);
             byte[] y2 = parseWord(data, 3);
 
-            BN128 p1 = BN128.create(x1, y1);
+            BN128<Fp> p1 = BN128Fp.create(x1, y1);
             if (p1 == null)
                 return Pair.of(false, EMPTY_BYTE_ARRAY);
 
-            BN128 p2 = BN128.create(x2, y2);
+            BN128<Fp> p2 = BN128Fp.create(x2, y2);
             if (p2 == null)
                 return Pair.of(false, EMPTY_BYTE_ARRAY);
 
-            BN128 res = p1.add(p2);
+            BN128<Fp> res = p1.add(p2).toEthNotation();
 
-            return Pair.of(true, encodeRes(res.xBytes(), res.yBytes()));
+            return Pair.of(true, encodeRes(res.x().bytes(), res.y().bytes()));
         }
     }
 
     /**
      * Computes multiplication of scalar value on a point belonging to Barreto–Naehrig curve.
-     * See {@link BN128} for details<br/>
+     * See {@link BN128Fp} for details<br/>
      * <br/>
      *
      * input data[]:<br/>
-     * point encoded as (x, y) and scalar s, where x, y and s are 32-byte left-padded integers,<br/>
+     * point encoded as (x, y) is followed by scalar s, where x, y and s are 32-byte left-padded integers,<br/>
      * if input is shorter than expected, it's assumed to be right-padded with zero bytes<br/>
      * <br/>
      *
      * output:<br/>
      * resulting point (x', y'), where x and y encoded as 32-byte left-padded integers<br/>
-     * <br/>
      *
-     * throws exception if coordinates are invalid or point does not belong to the curve
      */
     public static class BN128Multiplication extends PrecompiledContract {
 
@@ -390,20 +389,108 @@ public class PrecompiledContracts {
         public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return Pair.of(true, EMPTY_BYTE_ARRAY);
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
 
             byte[] x = parseWord(data, 0);
             byte[] y = parseWord(data, 1);
 
             byte[] s = parseWord(data, 2);
 
-            BN128 p = BN128.create(x, y);
+            BN128<Fp> p = BN128Fp.create(x, y);
             if (p == null)
                 return Pair.of(false, EMPTY_BYTE_ARRAY);
 
-            BN128 res = p.mul(BIUtil.toBI(s));
+            BN128<Fp> res = p.mul(BIUtil.toBI(s)).toEthNotation();
 
-            return Pair.of(true, encodeRes(res.xBytes(), res.yBytes()));
+            return Pair.of(true, encodeRes(res.x().bytes(), res.y().bytes()));
+        }
+    }
+
+    /**
+     * Computes pairing check. <br/>
+     * See {@link PairingCheck} for details.<br/>
+     * <br/>
+     *
+     * Input data[]: <br/>
+     * an array of points (a1, b1, ... , ak, bk), <br/>
+     * where "ai" is a point of {@link BN128Fp} curve and encoded as two 32-byte left-padded integers (x; y) <br/>
+     * "bi" is a point of {@link BN128G2} curve and encoded as four 32-byte left-padded integers {@code (ai + b; ci + d)},
+     * each coordinate of the point is a big-endian {@link Fp2} number, so {@code b} precedes {@code a} in the encoding:
+     * {@code (b, a; d, c)} <br/>
+     * thus each pair (ai, bi) has 192 bytes length, if 192 is not a multiple of {@code data.length} then execution fails <br/>
+     * the number of pairs is derived from input length by dividing it by 192 (the length of a pair) <br/>
+     * <br/>
+     *
+     * output: <br/>
+     * pairing product which is either 0 or 1, encoded as 32-byte left-padded integer <br/>
+     *
+     */
+    public static class BN128Pairing extends PrecompiledContract {
+
+        private static final int PAIR_SIZE = 192;
+
+        @Override
+        public long getGasForData(byte[] data) {
+
+            if (data == null) return 0;
+
+            return 100000 + (data.length / 192) * 80000;
+        }
+
+        @Override
+        public Pair<Boolean, byte[]> execute(byte[] data) {
+
+            if (data == null)
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
+
+            // fail if input len is not a multiple of PAIR_SIZE
+            if (data.length % PAIR_SIZE > 0)
+                return Pair.of(false, EMPTY_BYTE_ARRAY);
+
+            PairingCheck check = PairingCheck.create();
+
+            // iterating over all pairs
+            for (int offset = 0; offset < data.length; offset += PAIR_SIZE) {
+
+                Pair<BN128G1, BN128G2> pair = decodePair(data, offset);
+
+                // fail if decoding has failed
+                if (pair == null)
+                    return Pair.of(false, EMPTY_BYTE_ARRAY);
+
+                check.addPair(pair.getLeft(), pair.getRight());
+            }
+
+            check.run();
+            int result = check.result();
+
+            return Pair.of(true, new DataWord(result).getData());
+        }
+
+        private Pair<BN128G1, BN128G2> decodePair(byte[] in, int offset) {
+
+            byte[] x = parseWord(in, offset, 0);
+            byte[] y = parseWord(in, offset, 1);
+
+            BN128G1 p1 = BN128G1.create(x, y);
+
+            // fail if point is invalid
+            if (p1 == null) return null;
+
+            // (b, a)
+            byte[] b = parseWord(in, offset, 2);
+            byte[] a = parseWord(in, offset, 3);
+
+            // (d, c)
+            byte[] d = parseWord(in, offset, 4);
+            byte[] c = parseWord(in, offset, 5);
+
+            BN128G2 p2 = BN128G2.create(a, b, c, d);
+
+            // fail if point is invalid
+            if (p2 == null) return null;
+
+            return Pair.of(p1, p2);
         }
     }
 }
