@@ -226,6 +226,12 @@ public class TransactionExecutor {
 
                 // FIXME: save return for vm trace
                 Pair<Boolean, byte[]> out = precompiledContract.execute(tx.getData());
+
+                if (!out.getLeft()) {
+                    execError("Error executing precompiled contract 0x" + Hex.toHexString(targetAddress));
+                    m_endGas = BigInteger.ZERO;
+                    return;
+                }
             }
 
         } else {
