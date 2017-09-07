@@ -144,6 +144,11 @@ public interface BlockchainConfig {
     boolean eip211();
 
     /**
+     * EIP212: https://github.com/ethereum/EIPs/pull/212
+     */
+    boolean eip212();
+
+    /**
      * EIP213: https://github.com/ethereum/EIPs/pull/213
      */
     boolean eip213();

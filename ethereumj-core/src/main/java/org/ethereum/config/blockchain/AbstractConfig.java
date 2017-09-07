@@ -174,6 +174,11 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
+    public boolean eip212() {
+        return false;
+    }
+
+    @Override
     public boolean eip213() {
         return false;
     }
