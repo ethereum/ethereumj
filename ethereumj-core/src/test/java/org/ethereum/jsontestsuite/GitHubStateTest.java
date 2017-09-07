@@ -29,7 +29,7 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
-    static String commitSHA = "f17609b3c2fc7404addf3d228955b16ae8e0cfb4";
+    static String commitSHA = "d098a00a4e7108f7965d1ca81e2fd51fc5b1e11b";
     static String treeSHA = "fdcc301d8fdd65e6f1b56ffca9a786aa337c7bb8"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
@@ -57,7 +57,7 @@ public class GitHubStateTest {
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
         GeneralStateTestSuite.runSingle(
-                "stZeroKnowledge/pointAdd.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+                "stRevertTest/RevertDepthCreateAddressCollision.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
@@ -95,11 +95,6 @@ public class GitHubStateTest {
 
         Set<String> excluded = new HashSet<>();
         excluded.add("CallRecursiveBombPreCall"); // Max Gas value is pending to be < 2^63
-
-        // the test creates a contract with the same address as existing contract (which is not possible in
-        // live). In this case we need to clear the storage in TransactionExecutor.create
-        // return back to this case when the contract deleting will be implemented
-        excluded.add("createJS_ExampleContract");
 
         suite.runAll("stCallCreateCallCodeTest", excluded);
     }

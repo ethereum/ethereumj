@@ -197,7 +197,7 @@ public class ProgramResult {
         }
     }
     
-    public static ProgramResult empty() {
+    public static ProgramResult createEmpty() {
         ProgramResult result = new ProgramResult();
         result.setHReturn(EMPTY_BYTE_ARRAY);
         return result;

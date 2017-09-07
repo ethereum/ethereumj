@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -134,6 +135,11 @@ public class AccountState {
             this.rlpEncoded = RLP.encodeList(nonce, balance, stateRoot, codeHash);
         }
         return rlpEncoded;
+    }
+
+    public boolean isContractExist(BlockchainConfig blockchainConfig) {
+        return !FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) ||
+                !blockchainConfig.getConstants().getInitialNonce().equals(nonce);
     }
 
     public boolean isEmpty() {

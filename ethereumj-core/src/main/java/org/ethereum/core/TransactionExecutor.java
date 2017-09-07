@@ -34,7 +34,6 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -252,6 +251,13 @@ public class TransactionExecutor {
 
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
+
+        AccountState existingAddr = cacheTrack.getAccountState(newContractAddress);
+        if (existingAddr != null && existingAddr.isContractExist(blockchainConfig)) {
+            execError("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newContractAddress));
+            m_endGas = BigInteger.ZERO;
+            return;
+        }
 
         //In case of hashing collisions (for TCK tests only), check for any balance before createAccount()
         BigInteger oldBalance = track.getBalance(newContractAddress);

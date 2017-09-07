@@ -160,8 +160,8 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testRandomVMGitHub() throws ParseException {
 
-        String shacommit = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
-        List<String> fileNames = getFileNamesForTreeSha(shacommit);
+        String treeSha = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
+        List<String> fileNames = getFileNamesForTreeSha(treeSha);
         List<String> excludedFiles =
                 Collections.singletonList(
                         ""
@@ -171,7 +171,7 @@ public class GitHubVMTest {
 
             if (excludedFiles.contains(fileName)) continue;
             System.out.println("Running: " + fileName);
-            String json = JSONReader.loadJSON("VMTests//RandomTests/" + fileName);
+            String json = JSONReader.loadJSONFromCommit("VMTests//RandomTests/" + fileName, shacommit);
             GitHubJSONTestSuite.runGitHubJsonVMTest(json);
         }
 
