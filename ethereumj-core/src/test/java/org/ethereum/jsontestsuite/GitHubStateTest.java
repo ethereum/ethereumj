@@ -29,14 +29,14 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
-    static String commitSHA = "d098a00a4e7108f7965d1ca81e2fd51fc5b1e11b";
+    static String commitSHA = "538d4a4c4d6422e0feffa7c1ad9931b113573e08";
     static String treeSHA = "fdcc301d8fdd65e6f1b56ffca9a786aa337c7bb8"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
             GitHubJSONTestSuite.Network.EIP158,
-//            GitHubJSONTestSuite.Network.Byzantium
+            GitHubJSONTestSuite.Network.Byzantium
     };
 
     static GeneralStateTestSuite suite;
