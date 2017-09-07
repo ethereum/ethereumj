@@ -32,8 +32,7 @@ import java.util.Set;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockStateTest {
 
-    static String commitSHA = "d098a00a4e7108f7965d1ca81e2fd51fc5b1e11b";
-//    static String commitSHA = "f17609b3c2fc7404addf3d228955b16ae8e0cfb4";
+    static String commitSHA = "538d4a4c4d6422e0feffa7c1ad9931b113573e08";
     static String treeSHA = "c39400ae996fa2905300ddc1d609a6ee5c7f8535"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
 
     static GitHubJSONTestSuite.Network[] targetNets = {
@@ -41,7 +40,7 @@ public class GitHubBlockStateTest {
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
             GitHubJSONTestSuite.Network.EIP158,
-//            GitHubJSONTestSuite.Network.Byzantium
+            GitHubJSONTestSuite.Network.Byzantium
     };
 
     static BlockchainTestSuite suite;
@@ -58,7 +57,7 @@ public class GitHubBlockStateTest {
     // using this method turn off initializing of BlockchainTestSuite to avoid unnecessary GitHub API hits
     public void bcStSingle() throws IOException {
         BlockchainTestSuite.runSingle(
-                "GeneralStateTests/stRevertTest/RevertDepthCreateAddressCollision_d1g1v0.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+                "GeneralStateTests/stRandom/randomStatetest642_d0g0v0.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
