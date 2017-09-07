@@ -11,6 +11,7 @@ import java.util.*;
 
 import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
 import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONFromCommit;
+import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
 
 /**
  * @author Mikhail Kalinin
@@ -40,8 +41,13 @@ public class GeneralStateTestSuite {
         if (checkFiles.isEmpty()) return;
 
         List<StateTestData> suites = new ArrayList<>();
+        List<String> filenames = new ArrayList<>();
         for (String file : checkFiles) {
-            String json = loadJSONFromCommit(STATE_TEST_ROOT + file, commitSHA);
+            filenames.add(STATE_TEST_ROOT + file);
+        }
+
+        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA, 64);
+        for (String json : jsons) {
             suites.add(new StateTestData(json));
         }
 
