@@ -415,9 +415,9 @@ public class Program {
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
+        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue());
         //  actual gas subtract
-        DataWord gasLimit = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).
-                getCreateGas(getGas());
+        DataWord gasLimit = blockchainConfig.getCreateGas(getGas());
         spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
@@ -425,7 +425,7 @@ public class Program {
         byte[] newAddress = HashUtil.calcNewAddr(getOwnerAddress().getLast20Bytes(), nonce);
 
         AccountState existingAddr = getStorage().getAccountState(newAddress);
-        boolean contractAlreadyExists = existingAddr != null && existingAddr.isContractExist();
+        boolean contractAlreadyExists = existingAddr != null && existingAddr.isContractExist(blockchainConfig);
 
         if (byTestingSuite()) {
             // This keeps track of the contracts created for a test
@@ -500,7 +500,7 @@ public class Program {
             long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
             long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
             if (afterSpend < 0) {
-                if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+                if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
                     result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                             storageCost, this));
                 } else {
