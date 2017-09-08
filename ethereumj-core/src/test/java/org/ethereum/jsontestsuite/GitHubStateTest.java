@@ -44,11 +44,13 @@ public class GitHubStateTest {
     @BeforeClass
     public static void setup() {
         suite = new GeneralStateTestSuite(treeSHA, commitSHA, targetNets);
+        SystemProperties.getDefault().setRecordInternalTransactionsData(false);
     }
 
     @After
     public void clean() {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setRecordInternalTransactionsData(true);
     }
 
     @Ignore
@@ -57,7 +59,7 @@ public class GitHubStateTest {
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
         GeneralStateTestSuite.runSingle(
-                "stRevertTest/RevertDepthCreateAddressCollision.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+                "stStaticCall/static_Call50000.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test

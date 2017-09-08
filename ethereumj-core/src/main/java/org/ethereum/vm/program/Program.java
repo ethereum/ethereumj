@@ -168,6 +168,7 @@ public class Program {
         if (transaction != null) {
             byte[] senderNonce = isEmpty(nonce) ? getStorage().getNonce(senderAddress).toByteArray() : nonce;
 
+            data = config.recordInternalTransactionsData() ? data : null;
             result = getResult().addInternalTransaction(transaction.getHash(), getCallDeep(), senderNonce,
                     getGasPrice(), gasLimit, senderAddress, receiveAddress, value.toByteArray(), data, note);
         }

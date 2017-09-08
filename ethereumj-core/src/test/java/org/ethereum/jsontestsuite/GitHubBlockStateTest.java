@@ -17,11 +17,11 @@
  */
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.BlockchainTestSuite;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.ethereum.jsontestsuite.suite.GeneralStateTestSuite;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
@@ -49,6 +49,13 @@ public class GitHubBlockStateTest {
     public static void setup() {
         suite = new BlockchainTestSuite(treeSHA, commitSHA, targetNets);
         suite.setSubDir("GeneralStateTests/");
+        SystemProperties.getDefault().setRecordInternalTransactionsData(false);
+    }
+
+    @After
+    public void clean() {
+        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        SystemProperties.getDefault().setRecordInternalTransactionsData(true);
     }
 
     @Test
