@@ -33,28 +33,28 @@
 
     <logger name="test" level="ERROR"/>
     <logger name="org.springframework" level="ERROR"/>
-    <logger name="state" level="WARN"/>
-    <logger name="trie" level="WARN"/>
+    <logger name="state" level="ERROR"/>
+    <logger name="trie" level="ERROR"/>
     <logger name="peermonitor" level="ERROR"/>
     <logger name="net" level="ERROR"/>
-    <logger name="block" level="WARN"/>
+    <logger name="block" level="ERROR"/>
     <logger name="ui" level="ERROR"/>
-    <logger name="VM" level="WARN"/>
+    <logger name="VM" level="ERROR"/>
     <logger name="main" level="ERROR"/>
     <logger name="wire" level="ERROR"/>
     <logger name="db" level="ERROR"/>
-    <logger name="general" level="WARN"/>
-    <logger name="TCK-Test" level="INFO"/>
+    <logger name="general" level="ERROR"/>
+    <logger name="TCK-Test" level="ERROR"/>
     <logger name="org.hibernate" level="ERROR"/>
-    <logger name="repository" level="WARN"/>
-    <logger name="blockchain" level="WARN"/>
+    <logger name="repository" level="ERROR"/>
+    <logger name="blockchain" level="ERROR"/>
     <logger name="java.nio" level="ERROR"/>
     <logger name="blockqueue" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="peerdiscovery" level="ERROR"/>
     <logger name="hsqldb.db" level="ERROR"/>
-    <logger name="gas" level="WARN"/>
+    <logger name="gas" level="ERROR"/>
     <logger name="wallet" level="ERROR"/>
-    <logger name="txs" level="WARN"/>
+    <logger name="txs" level="ERROR"/>
 
 </configuration>
