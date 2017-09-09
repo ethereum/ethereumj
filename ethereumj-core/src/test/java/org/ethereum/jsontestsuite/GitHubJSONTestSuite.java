@@ -75,7 +75,7 @@ public class GitHubJSONTestSuite {
         }
     }
 
-    protected static void runGitHubJsonVMTest(String json) throws ParseException {
+    public static void runGitHubJsonVMTest(String json) throws ParseException {
         Set<String> excluded = new HashSet<>();
         runGitHubJsonVMTest(json, excluded);
     }

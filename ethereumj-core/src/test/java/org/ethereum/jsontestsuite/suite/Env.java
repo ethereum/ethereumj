@@ -66,12 +66,12 @@ public class Env {
         Object previousHash = env.get("previousHash");
         String prevHash = previousHash == null ? "" : previousHash.toString();
 
-        this.currentCoinbase = Hex.decode(coinbase);
+        this.currentCoinbase = Utils.parseData(coinbase);
         this.currentDifficulty = BigIntegers.asUnsignedByteArray(TestCase.toBigInt(difficulty) );
         this.currentGasLimit =   BigIntegers.asUnsignedByteArray(TestCase.toBigInt(gasLimit));
         this.currentNumber = TestCase.toBigInt(number).toByteArray();
         this.currentTimestamp = TestCase.toBigInt(timestamp).toByteArray();
-        this.previousHash = Hex.decode(prevHash);
+        this.previousHash = Utils.parseData(prevHash);
 
     }
 
