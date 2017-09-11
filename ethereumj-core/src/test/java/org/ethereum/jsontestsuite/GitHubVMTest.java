@@ -83,7 +83,7 @@ public class GitHubVMTest {
         suite.runAll("vmLogTest");
     }
 
-    @Ignore // we pass it, but it's too long to run it each built
+    @Ignore // we pass it, but it's too long to run it each build
     @Test
     public void vmPerformance() throws ParseException {
         suite.runAll("vmPerformance");
