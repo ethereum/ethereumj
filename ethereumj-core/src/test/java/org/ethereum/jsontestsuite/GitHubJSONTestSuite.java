@@ -76,12 +76,6 @@ public class GitHubJSONTestSuite {
     }
 
     public static void runGitHubJsonVMTest(String json) throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        runGitHubJsonVMTest(json, excluded);
-    }
-
-
-    protected static void runGitHubJsonVMTest(String json, Set<String> excluded) throws ParseException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
@@ -90,20 +84,9 @@ public class GitHubJSONTestSuite {
         TestSuite testSuite = new TestSuite(testSuiteObj);
         Iterator<TestCase> testIterator = testSuite.iterator();
 
-        for (TestCase testCase : testSuite.getAllTests()) {
-
-            String prefix = "    ";
-            if (excluded.contains(testCase.getName())) prefix = "[X] ";
-
-            logger.info(prefix + testCase.getName());
-        }
-
-
         while (testIterator.hasNext()) {
 
             TestCase testCase = testIterator.next();
-            if (excluded.contains(testCase.getName()))
-                continue;
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
@@ -206,24 +189,15 @@ public class GitHubJSONTestSuite {
         return result;
     }
 
-    public static void runGitHubJsonTransactionTest(String json, Set<String> excluded) throws IOException, ParseException {
+    public static void runGitHubJsonTransactionTest(String json) throws IOException {
 
         TransactionTestSuite transactionTestSuite = new TransactionTestSuite(json);
         Map<String, TransactionTestCase> testCases = transactionTestSuite.getTestCases();
         Map<String, Boolean> summary = new HashMap<>();
 
-
-        for (String testCase : testCases.keySet()) {
-            if ( excluded.contains(testCase))
-                logger.info(" [X] " + testCase);
-            else
-                logger.info("     " + testCase);
-        }
-
         Set<String> testNames = transactionTestSuite.getTestCases().keySet();
         for (String testName : testNames){
 
-            if (excluded.contains(testName)) continue;
             String output = String.format("*  running: %s  *", testName);
             String line = output.replaceAll(".", "*");
 
