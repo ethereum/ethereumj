@@ -18,126 +18,92 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.DaoHFConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
-import org.ethereum.config.blockchain.Eip160HFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.jsontestsuite.suite.JSONReader;
-import org.ethereum.jsontestsuite.suite.TransactionTestSuite;
-import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
+import org.ethereum.jsontestsuite.suite.TxTestSuite;
 import org.json.simple.parser.ParseException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTransactionTest {
 
-    //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
+    static String commitSHA = "30777f5058d51feaa44e14234ed90c4daed9c017";
+    static String treeSHA = "35dc92f10b7650a410c5f642da13014a8a202942";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
 
-    @Before
-    public void setup() {
-        SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
+    static TxTestSuite suite;
+
+    @BeforeClass
+    public static void setup() {
+        suite = new TxTestSuite(treeSHA, commitSHA);
     }
 
     @After
     public void recover() {
-        SystemProperties.resetToDefault();
-    }
-
-    @Test
-    public void testEIP155TransactionTestFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
-            add(0, new FrontierConfig());
-            add(1_150_000, new HomesteadConfig());
-            add(2_457_000, new Eip150HFConfig(new DaoHFConfig()));
-            add(2_675_000, new Eip160HFConfig(new DaoHFConfig()){
-                @Override
-                public Integer getChainId() {
-                    return null;
-                }
-            });
-        }});
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/EIP155/ttTransactionTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
+        SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
     }
 
     @Ignore
     @Test
-    public void runsingleTest() throws Exception {
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/ttTransactionTest.json", shacommit);
-        TransactionTestSuite testSuite = new TransactionTestSuite(json);
-        List<String> res = TransactionTestRunner.run(testSuite.getTestCases().get("V_overflow64bitPlus28"));
-        System.out.println(res);
+    public void runSingleTest() throws IOException, ParseException {
+        TxTestSuite.runSingle(commitSHA, "ttWrongRLPFrontier/RLPArrayLengthWithFirstZeros.json");
     }
 
     @Test
-    public void testHomesteadTestsFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        String json1 = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/tt10mbDataField.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json1, excluded);
-
-        String json2 = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/ttTransactionTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json2, excluded);
-
-        String json3 = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/ttTransactionTestEip155VitaliksTests.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json3, excluded);
-
-        String json4 = JSONReader.loadJSONFromCommit("TransactionTests/Homestead/ttWrongRLPTransaction.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json4, excluded);
+    public void ttConstantinople() throws IOException, ParseException {
+        suite.runAll("ttConstantinople");
     }
 
     @Test
-    public void testRandomTestFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        // pre-EIP155 wrong chain id (negative)
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/RandomTests/tr201506052141PYTHON.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
+    public void ttEip155VitaliksEip158() throws IOException, ParseException {
+        suite.runAll("ttEip155VitaliksEip158");
     }
 
     @Test
-    public void testGeneralTestsFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        String json1 = JSONReader.loadJSONFromCommit("TransactionTests/tt10mbDataField.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json1, excluded);
-
-        String json2 = JSONReader.loadJSONFromCommit("TransactionTests/ttTransactionTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json2, excluded);
-    }
-
-    @Ignore // Few tests fails, RLPWrongByteEncoding and RLPLength preceding 0s errors left
-    @Test
-    public void testWrongRLPTestsFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/ttWrongRLPTransaction.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
+    public void ttEip155VitaliksHomesead() throws IOException, ParseException {
+        suite.runAll("ttEip155VitaliksHomesead");
     }
 
     @Test
-    public void testEip155VitaliksTestFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/EIP155/ttTransactionTestEip155VitaliksTests.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
+    public void ttEip158() throws IOException, ParseException {
+        suite.runAll("ttEip158");
     }
 
     @Test
-    public void testEip155VRuleTestFromGitHub() throws ParseException, IOException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("TransactionTests/EIP155/ttTransactionTestVRule.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonTransactionTest(json, excluded);
+    public void ttFrontier() throws IOException, ParseException {
+        suite.run("ttFrontier", new HashSet<>(Arrays.asList(
+                "String10MbData"    // too big to run it each time
+        )));
+    }
+
+    @Test
+    public void ttHomestead() throws IOException, ParseException {
+        suite.run("ttHomestead", new HashSet<>(Arrays.asList(
+                "String10MbData"    // too big to run it each time
+        )));
+    }
+
+    @Test
+    public void ttVRuleEip158() throws IOException, ParseException {
+        suite.runAll("ttVRuleEip158");
+    }
+
+    @Test
+    public void ttWrongRLPFrontier() throws IOException, ParseException {
+        suite.run("ttWrongRLPFrontier", new HashSet<>(Arrays.asList(
+                "RLPArrayLengthWithFirstZeros",    // TODO fix those tests, it just fails
+                "RLPIncorrectByteEncoding00",
+                "RLPIncorrectByteEncoding01",
+                "RLPIncorrectByteEncoding127",
+                "RLPListLengthWithFirstZeros"
+        )));
+    }
+
+    @Test
+    public void ttWrongRLPHomestead() throws IOException, ParseException {
+        suite.runAll("ttWrongRLPHomestead");
     }
 }

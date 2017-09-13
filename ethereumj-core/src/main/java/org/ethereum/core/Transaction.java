@@ -374,7 +374,7 @@ public class Transaction {
 
     public synchronized byte[] getSender() {
         try {
-            if (sendAddress == null) {
+            if (sendAddress == null && getSignature() != null) {
                 sendAddress = ECKey.signatureToAddress(getRawHash(), getSignature());
             }
             return sendAddress;
@@ -422,7 +422,7 @@ public class Transaction {
                 ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
                 ", gas=" + ByteUtil.toHexString(gasLimit) +
                 ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
-                ", sendAddress=" + ByteUtil.toHexString(getSender()) +
+                ", sendAddress=" + ByteUtil.toHexString(getSender())  +
                 ", value=" + ByteUtil.toHexString(value) +
                 ", data=" + dataS +
                 ", signatureV=" + (signature == null ? "" : signature.v) +

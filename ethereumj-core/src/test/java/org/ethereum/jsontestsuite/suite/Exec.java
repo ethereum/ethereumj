@@ -68,23 +68,23 @@ public class Exec {
 
         String value = exec.get("value").toString();
 
-        this.address = Hex.decode(address);
-        this.caller = Hex.decode(caller);
+        this.address = Utils.parseData(address);
+        this.caller = Utils.parseData(caller);
 
         if (code != null && code.length() > 2)
-            this.code = Hex.decode(code.substring(2));
+            this.code = Utils.parseData(code);
         else
             this.code = ByteUtil.EMPTY_BYTE_ARRAY;
 
         if (data != null && data.length() > 2)
-            this.data = Hex.decode(data.substring(2));
+            this.data = Utils.parseData(data);
         else
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
 
         this.gas = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(gas));
         this.gasPrice = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(gasPrice));
 
-        this.origin = Hex.decode(origin);
+        this.origin = Utils.parseData(origin);
         this.value = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(value));
     }
 

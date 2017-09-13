@@ -17,8 +17,10 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionTestCase {
 
     private String blocknumber;
