@@ -41,7 +41,7 @@ public class HomesteadConfig extends FrontierConfig {
         public boolean hasDelegateCallOpcode() {
             return true;
         }
-    };
+    }
 
     public HomesteadConfig() {
         this(new HomesteadConstants());
@@ -67,7 +67,6 @@ public class HomesteadConfig extends FrontierConfig {
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
-        if (!super.acceptTransactionSignature(tx)) return false;
-        return tx.getSignature().s.compareTo(SECP256K1N_HALF) <= 0;
+        return super.acceptTransactionSignature(tx) && tx.getSignature().s.compareTo(SECP256K1N_HALF) <= 0;
     }
 }

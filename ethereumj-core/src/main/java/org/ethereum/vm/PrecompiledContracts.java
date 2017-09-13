@@ -186,7 +186,7 @@ public class PrecompiledContracts {
                 if (validateV(v) && signature.validateComponents()) {
                     out = new DataWord(ECKey.signatureToAddress(h, signature));
                 }
-            } catch (Throwable any) {
+            } catch (Throwable ignored) {
             }
 
             if (out == null) {
