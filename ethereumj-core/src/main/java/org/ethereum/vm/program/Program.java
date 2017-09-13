@@ -478,6 +478,26 @@ public class Program {
             getResult().merge(result);
         }
 
+        // 4. CREATE THE CONTRACT OUT OF RETURN
+        byte[] code = result.getHReturn();
+
+        long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
+        long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
+        if (afterSpend < 0) {
+            if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
+                result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                        storageCost, this));
+            } else {
+                track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+            }
+        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                    storageCost, this));
+        } else if (!result.isRevert()){
+            result.spendGas(storageCost);
+            track.saveCode(newAddress, code);
+        }
+
         if (result.getException() != null || result.isRevert()) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
@@ -495,26 +515,6 @@ public class Program {
                 returnDataBuffer = result.getHReturn();
             }
         } else {
-            // 4. CREATE THE CONTRACT OUT OF RETURN
-            byte[] code = result.getHReturn();
-
-            long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
-            long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
-            if (afterSpend < 0) {
-                if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
-                    result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                            storageCost, this));
-                } else {
-                    track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
-                }
-            } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
-                result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
-                        storageCost, this));
-            } else {
-                result.spendGas(storageCost);
-                track.saveCode(newAddress, code);
-            }
-
             if (!byTestingSuite())
                 track.commit();
 
