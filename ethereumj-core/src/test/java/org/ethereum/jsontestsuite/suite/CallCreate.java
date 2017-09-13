@@ -50,11 +50,11 @@ public class CallCreate {
         String value = callCreateJSON.get("value").toString();
 
         if (data != null && data.length() > 2)
-            this.data = Hex.decode(data.substring(2));
+            this.data = Utils.parseData(data);
         else
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
 
-        this.destination = Hex.decode(destination);
+        this.destination = Utils.parseData(destination);
         this.gasLimit = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(gasLimit));
         this.value = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(value));
     }

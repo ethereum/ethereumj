@@ -26,8 +26,8 @@ import java.io.IOException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTestNetTest {
 
-    static String commitSHA = "d098a00a4e7108f7965d1ca81e2fd51fc5b1e11b";
-    static String treeSHA = "0af522c09e8a264f651f5a4715301381c14784d7"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
+    static String commitSHA = "d07aedd65b2f0d9bc26959a67834b4fc7f3dcbbe";
+    static String treeSHA = "038011258981cb76bc54c89a538f45078e3decc1"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
 
     static BlockchainTestSuite suite;
 
@@ -52,7 +52,6 @@ public class GitHubTestNetTest {
     }
 
     @Test
-    @Ignore // TODO fix it
     public void bcHomesteadToDao() throws IOException {
         suite.runAll("bcHomesteadToDao", GitHubJSONTestSuite.Network.HomesteadToDaoAt5);
     }

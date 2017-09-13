@@ -42,7 +42,7 @@ public class TransactionBuilder {
 
             transaction = new Transaction(
                     parseNumericData(transactionTck.getNonce()),
-                    parseNumericData(transactionTck.getGasPrice()),
+                    parseVarData(transactionTck.getGasPrice()),
                     parseVarData(transactionTck.getGasLimit()),
                     parseData(transactionTck.getTo()),
                     parseNumericData(transactionTck.getValue()),

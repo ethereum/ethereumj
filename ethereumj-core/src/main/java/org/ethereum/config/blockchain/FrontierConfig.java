@@ -58,6 +58,7 @@ public class FrontierConfig extends OlympicConfig {
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         if (!super.acceptTransactionSignature(tx)) return false;
+        if (tx.getSignature() == null) return false;
         return tx.getSignature().validateComponents();
     }
 
