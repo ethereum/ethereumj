@@ -52,8 +52,8 @@ public class GitHubBlockStateTest {
         SystemProperties.getDefault().setRecordInternalTransactionsData(false);
     }
 
-    @After
-    public void clean() {
+    @AfterClass
+    public static void clean() {
         SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
         SystemProperties.getDefault().setRecordInternalTransactionsData(true);
     }
