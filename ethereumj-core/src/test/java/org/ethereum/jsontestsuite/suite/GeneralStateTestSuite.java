@@ -46,7 +46,7 @@ public class GeneralStateTestSuite {
             filenames.add(STATE_TEST_ROOT + file);
         }
 
-        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA, 64);
+        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA);
         for (String json : jsons) {
             suites.add(new StateTestData(json));
         }

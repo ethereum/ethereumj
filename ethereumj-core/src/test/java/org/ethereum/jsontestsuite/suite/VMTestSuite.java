@@ -61,7 +61,7 @@ public class VMTestSuite {
             filenames.add(TEST_ROOT + file);
         }
 
-        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA, 64);
+        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA);
         for (String json : jsons) {
             runGitHubJsonVMTest(json);
         }
