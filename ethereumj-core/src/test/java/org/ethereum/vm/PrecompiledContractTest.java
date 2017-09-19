@@ -145,7 +145,7 @@ public class PrecompiledContractTest {
                 "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e" +
                 "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
 
-        assertEquals(2611, contract.getGasForData(data1));
+        assertEquals(13056, contract.getGasForData(data1));
 
         byte[] res1 = contract.execute(data1).getRight();
         assertEquals(32, res1.length);
@@ -158,7 +158,7 @@ public class PrecompiledContractTest {
                 "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e" +
                 "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
 
-        assertEquals(2611, contract.getGasForData(data2));
+        assertEquals(13056, contract.getGasForData(data2));
 
         byte[] res2 = contract.execute(data2).getRight();
         assertEquals(32, res2.length);
@@ -172,7 +172,7 @@ public class PrecompiledContractTest {
                 "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
 
         // hardly imagine this value could be a real one
-        assertEquals(734_990_087_021_829_278L, contract.getGasForData(data3));
+        assertEquals(3_674_950_435_109_146_392L, contract.getGasForData(data3));
 
         byte[] data4 = Hex.decode(
                 "0000000000000000000000000000000000000000000000000000000000000001" +
@@ -183,7 +183,7 @@ public class PrecompiledContractTest {
                 "8000000000000000000000000000000000000000000000000000000000000000" +
                 "07"); // "07" should be ignored by data parser
 
-        assertEquals(153, contract.getGasForData(data4));
+        assertEquals(768, contract.getGasForData(data4));
 
         byte[] res4 = contract.execute(data4).getRight();
         assertEquals(32, res4.length);
@@ -198,7 +198,7 @@ public class PrecompiledContractTest {
                 "80"); // "80" should be parsed as "8000000000000000000000000000000000000000000000000000000000000000"
                        // cause call data is infinitely right-padded with zero bytes
 
-        assertEquals(153, contract.getGasForData(data5));
+        assertEquals(768, contract.getGasForData(data5));
 
         byte[] res5 = contract.execute(data5).getRight();
         assertEquals(32, res5.length);
