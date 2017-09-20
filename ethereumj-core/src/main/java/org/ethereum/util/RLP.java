@@ -697,6 +697,20 @@ public class RLP {
         public int size() {
             return cnt;
         }
+
+        // starting with a LList structure, reconstruct and return the original RLP
+        public byte[] makeRlp() {
+            assert (cnt == 2 || cnt == 17);
+            byte[][] encoded = (cnt == 2) ? new byte[2][] : new byte[17][];
+            for (int i = 0; i < cnt; i++) {
+                if (isList(i))
+                    encoded[i] = encodeList(getBytes(i));
+                else 
+                    encoded[i] = encodeElement(getBytes(i));
+            }
+            byte[] ret = encodeList(encoded);
+            return ret;
+        }
     }
 
     public static LList decodeLazyList(byte[] data) {

@@ -115,11 +115,24 @@ public class TrieImpl implements Trie<byte[]> {
             return encode(1, true);
         }
         private byte[] encode(final int depth, boolean forceHash) {
+            byte[] ret;
             if (!dirty) {
-                return hash != null ? encodeElement(hash) : rlp;
+                if (hash != null) {
+                    return encodeElement(hash);
+                } else if (rlp != null) {
+                    // If a non-dirty node has a long RLP value, then it must has been
+                    // set via a hash lookup, and thus hash would not have been null above.
+                    // This does ignore forceHash.
+                    return rlp;
+                } else if (parsedRlp != null) {
+                    ret = parsedRlp.makeRlp();
+                    // This new RLP length could be >= 32, so fall through to the section
+                    // below to save as rlp or hash.
+                } else {
+                    throw new RuntimeException("[encode] unable to find non-dirty value to return");
+                }
             } else {
                 NodeType type = getType();
-                byte[] ret;
                 if (type == NodeType.BranchNode) {
                     if (depth == 1 && async) {
                         // parallelize encode() on the first trie level only and if there are at least
@@ -175,18 +188,19 @@ public class TrieImpl implements Trie<byte[]> {
                     ret = encodeList(encodeElement(kvNodeGetKey().toPacked()),
                                     encodeElement(value == null ? EMPTY_BYTE_ARRAY : value));
                 }
-                if (hash != null) {
-                    deleteHash(hash);
-                }
-                dirty = false;
-                if (ret.length < 32 && !forceHash) {
-                    rlp = ret;
-                    return ret;
-                } else {
-                    hash = HashUtil.sha3(ret);
-                    addHash(hash, ret);
-                    return encodeElement(hash);
-                }
+            }
+
+            if (hash != null) {
+                deleteHash(hash);
+            }
+            dirty = false;
+            if (ret.length < 32 && !forceHash) {
+                rlp = ret;
+                return ret;
+            } else {
+                hash = HashUtil.sha3(ret);
+                addHash(hash, ret);
+                return encodeElement(hash);
             }
         }
 
