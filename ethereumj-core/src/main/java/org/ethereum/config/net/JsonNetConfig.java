@@ -90,6 +90,20 @@ public class JsonNetConfig extends BaseNetConfig {
                 }
                 candidates.add(lastCandidate);
             }
+            if (config.byzantiumBlock != null) {
+                if (config.chainId != null) {
+                    final int chainId = config.chainId;
+                    lastCandidate = Pair.of(config.byzantiumBlock, new ByzantiumConfig(lastCandidate.getRight()) {
+                        @Override
+                        public Integer getChainId() {
+                            return chainId;
+                        }
+                    });
+                } else {
+                    lastCandidate = Pair.of(config.byzantiumBlock, new ByzantiumConfig(lastCandidate.getRight()));
+                }
+                candidates.add(lastCandidate);
+            }
         }
 
         {

@@ -29,6 +29,7 @@ public class GenesisConfig {
     public Integer eip155Block;
     public boolean daoForkSupport;
     public Integer eip158Block;
+    public Integer byzantiumBlock;
     public Integer chainId;
 
     // EthereumJ private options
@@ -42,6 +43,6 @@ public class GenesisConfig {
 
     public boolean isCustomConfig() {
         return homesteadBlock != null || daoForkBlock != null || eip150Block != null ||
-                eip155Block != null || eip158Block != null;
+                eip155Block != null || eip158Block != null || byzantiumBlock != null;
     }
 }
