@@ -31,8 +31,8 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
-    static String commitSHA = "538d4a4c4d6422e0feffa7c1ad9931b113573e08";
-    static String treeSHA = "f957bebb5d163da11656e7a18d0b95ee025e4ca2"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
+    static String commitSHA = "69f55e8608126e6470c2888a5b344c93c1550f40";
+    static String treeSHA = "3a461731bbce5db2773b6604de335360d0ec72fd"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,

@@ -54,7 +54,7 @@ public class BlockchainTestSuite {
         for (String file : checkFiles) {
             filenames.add(TEST_ROOT + file);
         }
-        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA, 64);
+        List<String> jsons = loadJSONsFromCommit(filenames, commitSHA);
         for (String json : jsons) {
             suites.add(new BlockTestSuite(json));
         }

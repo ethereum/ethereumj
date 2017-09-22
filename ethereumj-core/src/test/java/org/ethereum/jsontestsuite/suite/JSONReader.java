@@ -41,8 +41,15 @@ public class JSONReader {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
-    public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit, int threads) {
-        ExecutorService threadPool = Executors.newFixedThreadPool(threads);
+    static ExecutorService threadPool;
+
+    public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit) {
+
+        int threads = 64;
+        if (threadPool == null) {
+            threadPool = Executors.newFixedThreadPool(threads);
+        }
+
         List<Future<String>> retF = new ArrayList<>();
         for (final String filename : filenames) {
             Future<String> f = threadPool.submit(new Callable<String>() {

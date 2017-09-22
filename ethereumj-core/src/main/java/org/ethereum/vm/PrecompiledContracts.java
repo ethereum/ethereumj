@@ -216,7 +216,7 @@ public class PrecompiledContracts {
      */
     public static class ModExp extends PrecompiledContract {
 
-        private static final BigInteger GQUAD_DIVISOR = BigInteger.valueOf(100);
+        private static final BigInteger GQUAD_DIVISOR = BigInteger.valueOf(20);
 
         private static final int ARGS_OFFSET = 32 * 3; // addresses length part
 
@@ -382,7 +382,7 @@ public class PrecompiledContracts {
 
             if (data == null) return 0;
 
-            return 2000;
+            return 40000;
         }
 
         @Override
@@ -434,7 +434,7 @@ public class PrecompiledContracts {
 
             if (data == null) return 0;
 
-            return 100000 + (data.length / 192) * 80000;
+            return 80000 * (data.length / PAIR_SIZE) + 100000;
         }
 
         @Override
