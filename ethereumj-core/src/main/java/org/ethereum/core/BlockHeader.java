@@ -30,6 +30,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.List;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -375,7 +376,7 @@ public class BlockHeader {
     }
 
     public boolean hasUncles() {
-        return !FastByteComparisons.equal(unclesHash, EMPTY_TRIE_HASH);
+        return !FastByteComparisons.equal(unclesHash, EMPTY_LIST_HASH);
     }
 
     public String toString() {
