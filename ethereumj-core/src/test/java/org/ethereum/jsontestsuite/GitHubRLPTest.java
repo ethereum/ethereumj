@@ -33,21 +33,30 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubRLPTest {
 
-    private static Logger logger = LoggerFactory.getLogger("rlp");
-    private static HashMap<String , RLPTestCase> TEST_SUITE;
+    private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
+    private static Map<String , RLPTestCase> TEST_SUITE = new HashMap<>();
+    private static String commitSHA = "develop";
 
     @BeforeClass
     public static void init() throws ParseException, IOException {
         logger.info("    Initializing RLP tests...");
-        String json = JSONReader.loadJSON("RLPTests/rlptest.json");
-
-        Assume.assumeFalse("Online test is not available", json.equals(""));
 
         ObjectMapper mapper = new ObjectMapper();
         JavaType type = mapper.getTypeFactory().
                 constructMapType(HashMap.class, String.class, RLPTestCase.class);
 
-        TEST_SUITE = mapper.readValue(json, type);
+        List<String> files = Arrays.asList(
+                "RLPTests/rlptest.json",
+                "RLPTests/invalidRLPTest.json",
+                "RLPTests/RandomRLPTests/example.json"
+        );
+
+        List<String> jsons = JSONReader.loadJSONsFromCommit(files, commitSHA);
+
+        for (String json : jsons) {
+            Map<String, RLPTestCase> cases = mapper.readValue(json, type);
+            TEST_SUITE.putAll(cases);
+        }
     }
 
     @Test

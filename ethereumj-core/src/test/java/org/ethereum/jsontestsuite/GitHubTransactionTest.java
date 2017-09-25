@@ -93,13 +93,7 @@ public class GitHubTransactionTest {
 
     @Test
     public void ttWrongRLPFrontier() throws IOException, ParseException {
-        suite.run("ttWrongRLPFrontier", new HashSet<>(Arrays.asList(
-                "RLPArrayLengthWithFirstZeros",    // TODO fix those tests, it just fails
-                "RLPIncorrectByteEncoding00",
-                "RLPIncorrectByteEncoding01",
-                "RLPIncorrectByteEncoding127",
-                "RLPListLengthWithFirstZeros"
-        )));
+        suite.runAll("ttWrongRLPFrontier");
     }
 
     @Test
