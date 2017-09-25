@@ -36,7 +36,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class GitHubPowTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    public String shacommit = "c6d96293710a37489fa3b074a9fc228e0393f152";
+    public String shacommit = "b09975f0a37afe306f52d5b771f5e3836f53c8bc";
 
     @Test
     public void runEthashTest() throws IOException {

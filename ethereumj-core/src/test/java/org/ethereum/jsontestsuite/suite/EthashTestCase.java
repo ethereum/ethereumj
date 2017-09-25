@@ -36,7 +36,6 @@ public class EthashTestCase {
 
     private String nonce;
 
-    @JsonProperty("mixhash")
     private String mixHash;
     private String header;
     private String seed;
