@@ -80,7 +80,9 @@ public class VM {
     private static BigInteger _32_ = BigInteger.valueOf(32);
     private static final String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
-    private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE / 2);
+    // max mem size which couldn't be paid for ever
+    // used to reduce expensive BigInt arithmetic
+    private static BigInteger MAX_MEM_SIZE = BigInteger.valueOf(Integer.MAX_VALUE);
 
 
     /* Keeps track of the number of steps performed in this VM */
@@ -107,8 +109,8 @@ public class VM {
         long gasCost = 0;
 
         // Avoid overflows
-        if (newMemSize.compareTo(MAX_GAS) == 1) {
-            throw Program.Exception.gasOverflow(newMemSize, MAX_GAS);
+        if (newMemSize.compareTo(MAX_MEM_SIZE) == 1) {
+            throw Program.Exception.gasOverflow(newMemSize, MAX_MEM_SIZE);
         }
 
         // memory gas calc
