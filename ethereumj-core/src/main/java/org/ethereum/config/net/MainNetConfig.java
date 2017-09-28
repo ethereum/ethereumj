@@ -31,5 +31,6 @@ public class MainNetConfig extends BaseNetConfig {
         add(1_920_000, new DaoHFConfig());
         add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
         add(2_675_000, new Eip160HFConfig(new DaoHFConfig()));
+        add(4_370_000, new ByzantiumConfig(new DaoHFConfig()));
     }
 }
