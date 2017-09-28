@@ -296,6 +296,23 @@ public class GitHubJSONTestSuite {
         }
     }
 
+    static void runABITest(String file, String commitSHA) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        ABITestSuite testSuite = new ABITestSuite(json);
+
+        for (ABITestCase testCase : testSuite.getTestCases()) {
+
+            logger.info("Running {}\n", testCase.getName());
+
+            String expected = testCase.getResult();
+            String actual = testCase.getEncoded();
+
+            assertEquals(expected, actual);
+        }
+    }
+
     public enum Network {
 
         Frontier,
