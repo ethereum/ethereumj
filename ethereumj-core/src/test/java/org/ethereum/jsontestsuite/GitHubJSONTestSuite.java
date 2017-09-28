@@ -279,6 +279,23 @@ public class GitHubJSONTestSuite {
         }
     }
 
+    static void runTrieTest(String file, String commitSHA, boolean secure) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        TrieTestSuite testSuite = new TrieTestSuite(json);
+
+        for (TrieTestCase testCase : testSuite.getTestCases()) {
+
+            logger.info("Running {}\n", testCase.getName());
+
+            String expectedRoot = testCase.getRoot();
+            String actualRoot = testCase.calculateRoot(secure);
+
+            assertEquals(expectedRoot, actualRoot);
+        }
+    }
+
     public enum Network {
 
         Frontier,
