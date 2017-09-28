@@ -19,9 +19,11 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.ethereum.core.BlockHeader;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -39,6 +41,7 @@ public class DifficultyTestCase {
     private String currentTimestamp;
     private String currentBlockNumber;
     private String currentDifficulty;
+    private String parentUncles;
 
     public String getName() {
         return name;
@@ -88,6 +91,14 @@ public class DifficultyTestCase {
         this.currentDifficulty = currentDifficulty;
     }
 
+    public String getParentUncles() {
+        return parentUncles;
+    }
+
+    public void setParentUncles(String parentUncles) {
+        this.parentUncles = parentUncles;
+    }
+
     public BlockHeader getCurrent() {
         return new BlockHeader(
                 EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
@@ -99,7 +110,7 @@ public class DifficultyTestCase {
 
     public BlockHeader getParent() {
         return new BlockHeader(
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
+                EMPTY_BYTE_ARRAY, parseData(parentUncles), EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Utils.parseNumericData(parentDifficulty),
                 Utils.parseLong(currentBlockNumber) - 1, new byte[] {0}, 0,
                 Utils.parseLong(parentTimestamp),
