@@ -31,13 +31,13 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTransactionTest {
 
-    static String commitSHA = "69f55e8608126e6470c2888a5b344c93c1550f40";
-    static String treeSHA = "842508639ae4c0bbd4314cc5576513d4b612c574";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
+    static String commitSHA = "f32ed84a66d4c3c15ececc67e76ebb40c148b478";
+    static String treeSHA = "ffa3acff38492d1e53cdf99749a410b4c7f5f285";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
 
     static TxTestSuite suite;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         suite = new TxTestSuite(treeSHA, commitSHA);
     }
 

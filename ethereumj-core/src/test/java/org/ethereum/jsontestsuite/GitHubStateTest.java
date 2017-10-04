@@ -29,8 +29,8 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
-    static String commitSHA = "69f55e8608126e6470c2888a5b344c93c1550f40";
-    static String treeSHA = "362922c23662cff124fa9a91bc81dc6503a32299"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
+    static String commitSHA = "883d2de442781548d178824db7cfbe0b3fbc0b9a";
+    static String treeSHA = "d08710643dad05f056002b7df492ecb28d943d7c"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
@@ -42,7 +42,7 @@ public class GitHubStateTest {
     static GeneralStateTestSuite suite;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         suite = new GeneralStateTestSuite(treeSHA, commitSHA, targetNets);
         SystemProperties.getDefault().setRecordInternalTransactionsData(false);
     }
@@ -59,7 +59,7 @@ public class GitHubStateTest {
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
         GeneralStateTestSuite.runSingle(
-                "stStaticCall/static_Call50000.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+                "stCreateTest/TransactionCollisionToEmpty.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
@@ -270,6 +270,21 @@ public class GitHubStateTest {
     @Test
     public void stRandom() throws IOException {
         suite.runAll("stRandom");
+    }
+
+    @Test
+    public void stBadOpcode() throws IOException {
+        suite.runAll("stBadOpcode");
+    }
+
+    @Test
+    public void stNonZeroCallsTest() throws IOException {
+        suite.runAll("stNonZeroCallsTest");
+    }
+
+    @Test
+    public void stCodeCopyTest() throws IOException {
+        suite.runAll("stCodeCopyTest");
     }
 }
 

@@ -26,8 +26,8 @@ public class TxTestSuite {
     String commitSHA;
     List<String> files;
 
-    public TxTestSuite(String treeSHA, String commitSHA) {
-        files = listJsonBlobsForTreeSha(treeSHA);
+    public TxTestSuite(String treeSHA, String commitSHA) throws IOException {
+        files = listJsonBlobsForTreeSha(treeSHA, TEST_ROOT);
         this.commitSHA = commitSHA;
     }
 

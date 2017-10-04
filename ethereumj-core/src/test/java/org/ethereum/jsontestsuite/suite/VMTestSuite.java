@@ -5,6 +5,7 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 
 import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runGitHubJsonVMTest;
@@ -25,8 +26,8 @@ public class VMTestSuite {
     String commitSHA;
     List<String> files;
 
-    public VMTestSuite(String treeSHA, String commitSHA) {
-        files = listJsonBlobsForTreeSha(treeSHA);
+    public VMTestSuite(String treeSHA, String commitSHA) throws IOException {
+        files = listJsonBlobsForTreeSha(treeSHA, TEST_ROOT);
         this.commitSHA = commitSHA;
     }
 
@@ -67,7 +68,7 @@ public class VMTestSuite {
         }
     }
 
-    public static void runSingle(String commitSHA, String file) throws ParseException {
+    public static void runSingle(String commitSHA, String file) throws ParseException, IOException {
         logger.info("     " + file);
         String json = loadJSONFromCommit(TEST_ROOT + file, commitSHA);
         runGitHubJsonVMTest(json);

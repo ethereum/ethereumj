@@ -28,8 +28,8 @@ public class GeneralStateTestSuite {
     List<String> files;
     GitHubJSONTestSuite.Network[] networks;
 
-    public GeneralStateTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks) {
-        files = listJsonBlobsForTreeSha(treeSHA);
+    public GeneralStateTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks) throws IOException {
+        files = listJsonBlobsForTreeSha(treeSHA, STATE_TEST_ROOT);
         this.commitSHA = commitSHA;
         this.networks = networks;
     }

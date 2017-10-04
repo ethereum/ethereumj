@@ -32,8 +32,8 @@ import java.util.Set;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockStateTest {
 
-    static String commitSHA = "18bbe07b9559946483875ece740eb51b443f5bc6";
-    static String treeSHA = "b7f8a7fdafb79f04270eef7d0b1a11d1fb82cb41"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
+    static String commitSHA = "883d2de442781548d178824db7cfbe0b3fbc0b9a";
+    static String treeSHA = "ba612d18c378eacb2709bd19debc883e17d9a998"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
 
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
@@ -46,7 +46,7 @@ public class GitHubBlockStateTest {
     static BlockchainTestSuite suite;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         suite = new BlockchainTestSuite(treeSHA, commitSHA, targetNets);
         suite.setSubDir("GeneralStateTests/");
         SystemProperties.getDefault().setRecordInternalTransactionsData(false);
@@ -269,5 +269,20 @@ public class GitHubBlockStateTest {
     @Test
     public void bcStRandom() throws IOException {
         suite.runAll("stRandom");
+    }
+
+    @Test
+    public void stBadOpcode() throws IOException {
+        suite.runAll("stBadOpcode");
+    }
+
+    @Test
+    public void stNonZeroCallsTest() throws IOException {
+        suite.runAll("stNonZeroCallsTest");
+    }
+
+    @Test
+    public void stCodeCopyTest() throws IOException {
+        suite.runAll("stCodeCopyTest");
     }
 }

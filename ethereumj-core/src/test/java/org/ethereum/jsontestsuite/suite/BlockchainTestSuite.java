@@ -29,13 +29,13 @@ public class BlockchainTestSuite {
     List<String> files;
     GitHubJSONTestSuite.Network[] networks;
 
-    public BlockchainTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks) {
-        files = listJsonBlobsForTreeSha(treeSHA);
+    public BlockchainTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks) throws IOException {
+        files = listJsonBlobsForTreeSha(treeSHA, TEST_ROOT);
         this.commitSHA = commitSHA;
         this.networks = networks;
     }
 
-    public BlockchainTestSuite(String treeSHA, String commitSHA) {
+    public BlockchainTestSuite(String treeSHA, String commitSHA) throws IOException {
         this(treeSHA, commitSHA, GitHubJSONTestSuite.Network.values());
     }
 
