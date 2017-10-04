@@ -348,7 +348,7 @@ public class TransactionExecutor {
                     result.getDeleteAccounts().clear();
                     result.getLogInfoList().clear();
                     result.resetFutureRefund();
-                    cacheTrack.rollback();
+                    rollback();
 
                     if (result.getException() != null) {
                         throw result.getException();
@@ -368,10 +368,19 @@ public class TransactionExecutor {
 
             // TODO: catch whatever they will throw on you !!!
 //            https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L241
-            cacheTrack.rollback();
+            rollback();
             m_endGas = BigInteger.ZERO;
             execError(e.getMessage());
         }
+    }
+
+    private void rollback() {
+
+        cacheTrack.rollback();
+
+        // remove touched account
+        touchedAccounts.remove(
+                tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress());
     }
 
     public TransactionExecutionSummary finalization() {
