@@ -19,15 +19,12 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.ethereum.jsontestsuite.suite.VMTestSuite;
 import org.json.simple.parser.ParseException;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
-import java.util.*;
-
-import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha;
+import java.io.IOException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
@@ -38,7 +35,7 @@ public class GitHubVMTest {
     static VMTestSuite suite;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         suite = new VMTestSuite(treeSHA, commitSHA);
     }
 
@@ -49,7 +46,7 @@ public class GitHubVMTest {
 
     @Ignore
     @Test
-    public void runSingle() throws ParseException {
+    public void runSingle() throws ParseException, IOException {
         VMTestSuite.runSingle(commitSHA, "vmArithmeticTest/add0.json");
     }
 

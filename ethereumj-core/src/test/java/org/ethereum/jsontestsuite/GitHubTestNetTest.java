@@ -32,7 +32,7 @@ public class GitHubTestNetTest {
     static BlockchainTestSuite suite;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         suite = new BlockchainTestSuite(treeSHA, commitSHA);
         suite.setSubDir("TransitionTests/");
     }

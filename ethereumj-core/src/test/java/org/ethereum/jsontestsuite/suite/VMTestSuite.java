@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
@@ -5,6 +22,7 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 
 import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runGitHubJsonVMTest;
@@ -25,8 +43,8 @@ public class VMTestSuite {
     String commitSHA;
     List<String> files;
 
-    public VMTestSuite(String treeSHA, String commitSHA) {
-        files = listJsonBlobsForTreeSha(treeSHA);
+    public VMTestSuite(String treeSHA, String commitSHA) throws IOException {
+        files = listJsonBlobsForTreeSha(treeSHA, TEST_ROOT);
         this.commitSHA = commitSHA;
     }
 
@@ -67,7 +85,7 @@ public class VMTestSuite {
         }
     }
 
-    public static void runSingle(String commitSHA, String file) throws ParseException {
+    public static void runSingle(String commitSHA, String file) throws ParseException, IOException {
         logger.info("     " + file);
         String json = loadJSONFromCommit(TEST_ROOT + file, commitSHA);
         runGitHubJsonVMTest(json);

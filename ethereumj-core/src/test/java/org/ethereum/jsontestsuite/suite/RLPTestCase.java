@@ -66,6 +66,11 @@ public class RLPTestCase {
     }
 
     public void doEncode() {
+
+        if ("INVALID".equals(in) || "VALID".equals(in)) {
+            return;
+        }
+
         byte[] in = buildRLP(this.in);
         String expected = this.out.toLowerCase();
         String computed = Hex.toHexString(in);
@@ -74,9 +79,17 @@ public class RLPTestCase {
     }
 
     public void doDecode() {
+
         String out = this.out.toLowerCase();
-        RLPList list = RLP.decode2(Hex.decode(out));
-        checkRLPAgainstJson(list.get(0), in);
+
+        try {
+            RLPList list = RLP.decode2(Hex.decode(out));
+            checkRLPAgainstJson(list.get(0), in);
+        } catch (Exception e) {
+            if (!"INVALID".equals(in)){
+                throw e;
+            }
+        }
     }
 
     public byte[] buildRLP(Object in) {
@@ -101,6 +114,11 @@ public class RLPTestCase {
     }
 
     public void checkRLPAgainstJson(RLPElement element, Object in) {
+
+        if ("VALID".equals(in)) {
+            return;
+        }
+
         if (in instanceof List) {
             Object[] array = ((List) in).toArray();
             RLPList list = (RLPList) element;
@@ -121,10 +139,10 @@ public class RLPTestCase {
                 this.computed.add(computed.toString());
                 this.expected.add(expected.toString());
             } else {
-                String expected = new String(element.getRLPData() != null ? element.getRLPData() :
+                String computed = new String(element.getRLPData() != null ? element.getRLPData() :
                         new byte[0], StandardCharsets.UTF_8);
-                this.expected.add(expected);
-                this.computed.add(s);
+                this.expected.add(s);
+                this.computed.add(computed);
             }
         } else {
             throw new RuntimeException("Unexpected type: " + in.getClass());

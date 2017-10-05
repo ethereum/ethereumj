@@ -17,9 +17,14 @@
  */
 package org.ethereum.jsontestsuite;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
 import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.*;
 import org.ethereum.config.net.BaseNetConfig;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.jsontestsuite.suite.*;
 import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.JSONObject;
@@ -34,6 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test file specific for tests maintained in the GitHub repository
@@ -229,6 +236,81 @@ public class GitHubJSONTestSuite {
         logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
 
         Assert.assertTrue(fails == 0);
+    }
+
+    static void runDifficultyTest(BlockchainNetConfig config, String file, String commitSHA) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        DifficultyTestSuite testSuite = new DifficultyTestSuite(json);
+
+        SystemProperties.getDefault().setBlockchainConfig(config);
+
+        try {
+            for (DifficultyTestCase testCase : testSuite.getTestCases()) {
+
+                logger.info("Running {}\n", testCase.getName());
+
+                BlockHeader current = testCase.getCurrent();
+                BlockHeader parent = testCase.getParent();
+
+                assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty
+                        (SystemProperties.getDefault().getBlockchainConfig(), parent));
+            }
+        } finally {
+            SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        }
+    }
+
+    static void runCryptoTest(String file, String commitSHA) throws IOException {
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JavaType type = mapper.getTypeFactory().
+                constructMapType(HashMap.class, String.class, CryptoTestCase.class);
+
+
+        HashMap<String , CryptoTestCase> testSuite =
+                mapper.readValue(json, type);
+
+        for (String key : testSuite.keySet()){
+            logger.info("executing: " + key);
+            testSuite.get(key).execute();
+        }
+    }
+
+    static void runTrieTest(String file, String commitSHA, boolean secure) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        TrieTestSuite testSuite = new TrieTestSuite(json);
+
+        for (TrieTestCase testCase : testSuite.getTestCases()) {
+
+            logger.info("Running {}\n", testCase.getName());
+
+            String expectedRoot = testCase.getRoot();
+            String actualRoot = testCase.calculateRoot(secure);
+
+            assertEquals(expectedRoot, actualRoot);
+        }
+    }
+
+    static void runABITest(String file, String commitSHA) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        ABITestSuite testSuite = new ABITestSuite(json);
+
+        for (ABITestCase testCase : testSuite.getTestCases()) {
+
+            logger.info("Running {}\n", testCase.getName());
+
+            String expected = testCase.getResult();
+            String actual = testCase.getEncoded();
+
+            assertEquals(expected, actual);
+        }
     }
 
     public enum Network {

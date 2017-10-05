@@ -31,8 +31,8 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
-    static String commitSHA = "69f55e8608126e6470c2888a5b344c93c1550f40";
-    static String treeSHA = "3a461731bbce5db2773b6604de335360d0ec72fd"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
+    static String commitSHA = "883d2de442781548d178824db7cfbe0b3fbc0b9a";
+    static String treeSHA = "2993be360f64cfb30c82078d4ea296e1fb44f072"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
@@ -44,7 +44,7 @@ public class GitHubBlockTest {
     static BlockchainTestSuite suite;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         suite = new BlockchainTestSuite(treeSHA, commitSHA, targetNets);
     }
 
@@ -111,8 +111,8 @@ public class GitHubBlockTest {
     }
 
     @Test
-    public void bcUncleHeaderValiditiy() throws IOException {
-        suite.runAll("bcUncleHeaderValiditiy");
+    public void bcUncleHeaderValidity() throws IOException {
+        suite.runAll("bcUncleHeaderValidity");
     }
 
     @Test

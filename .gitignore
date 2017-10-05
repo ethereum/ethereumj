@@ -38,5 +38,6 @@ sampleDB*
 
 # Local configuration
 **/user.conf
+**/test-user.conf
 **/out.log
 **/user.log4j.properties

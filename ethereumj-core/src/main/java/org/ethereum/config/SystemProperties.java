@@ -915,4 +915,14 @@ public class SystemProperties {
         return config.hasPath("blocks.loader") ?
                 config.getString("blocks.loader") : DEFAULT_BLOCKS_LOADER;
     }
+
+    public String githubTestsPath() {
+        return config.hasPath("GitHubTests.testPath") ?
+                config.getString("GitHubTests.testPath") : "";
+    }
+
+    public boolean githubTestsLoadLocal() {
+        return config.hasPath("GitHubTests.testPath") &&
+                !config.getString("GitHubTests.testPath").isEmpty();
+    }
 }
