@@ -17,19 +17,19 @@
  */
 package org.ethereum.net.rlpx;
 
-import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.net.p2p.P2pMessageCodes;
-import org.ethereum.net.shh.ShhMessageCodes;
-import org.ethereum.net.swarm.bzz.BzzMessageCodes;
+import static org.ethereum.net.eth.EthVersion.fromCode;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.ethereum.net.eth.EthVersion.*;
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 
 /**
  * @author Mikhail Kalinin
@@ -54,17 +54,21 @@ public class MessageCodesResolver {
             if (capability.getName().equals(Capability.ETH)) {
                 setEthOffset(offset);
                 EthVersion v = fromCode(capability.getVersion());
+                EthMessageCodes[] codes = EthMessageCodes.values(v);
                 offset += EthMessageCodes.maxCode(v) + 1; // +1 is essential cause STATUS code starts from 0x0
             }
 
             if (capability.getName().equals(Capability.SHH)) {
                 setShhOffset(offset);
-                offset += ShhMessageCodes.values().length;
+                ShhMessageCodes[] codes = ShhMessageCodes.values();
+                offset += codes[codes.length - 1].asByte() + 1;
             }
 
             if (capability.getName().equals(Capability.BZZ)) {
                 setBzzOffset(offset);
-                offset += BzzMessageCodes.values().length + 4;
+                BzzMessageCodes[] codes = BzzMessageCodes.values();
+                offset += codes[codes.length].asByte() + 1;
+//                offset += BzzMessageCodes.values().length + 4;
                 // FIXME: for some reason Go left 4 codes between BZZ and ETH message codes
             }
         }
