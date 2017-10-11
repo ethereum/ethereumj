@@ -60,7 +60,7 @@ public class MessageCodesResolver {
 
             if (capability.getName().equals(Capability.SHH)) {
                 setShhOffset(offset);
-                
+
                 offset += ShhMessageCodes.maxCode(capability.getVersion()) + 1;
             }
 
