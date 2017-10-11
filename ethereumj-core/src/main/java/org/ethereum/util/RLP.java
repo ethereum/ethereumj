@@ -232,7 +232,8 @@ public class RLP {
 
         final int length = calculateLength(data, index);
         byte[] valueBytes = new byte[length];
-        System.arraycopy(data, index, valueBytes, 0, length);
+        byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
+        System.arraycopy(data, index + lengthOfLength + 1, valueBytes, 0, length);
         return new BigInteger(1, valueBytes);
     }
 
@@ -903,11 +904,11 @@ public class RLP {
 
     public static byte[] encodeElement(byte[] srcData) {
 
-        if (isNullOrZeroArray(srcData))
+        if (isNullOrZeroArray(srcData)) {
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
-        else if (isSingleZero(srcData))
-        return srcData;
-        else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
+        } else if (isSingleZero(srcData)) {
+            return srcData;
+        } else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
             return srcData;
         } else if (srcData.length < SIZE_THRESHOLD) {
             // length = 8X
@@ -918,23 +919,27 @@ public class RLP {
 
             return data;
         } else {
-            // length of length = BX
-            // prefix = [BX, [length]]
+            // calculate length of number length
             int tmpLength = srcData.length;
-            byte byteNum = 0;
+            byte lengthOfLength = 0;
             while (tmpLength != 0) {
-                ++byteNum;
+                ++lengthOfLength;
                 tmpLength = tmpLength >> 8;
             }
-            byte[] lenBytes = new byte[byteNum];
-            for (int i = 0; i < byteNum; ++i) {
-                lenBytes[byteNum - 1 - i] = (byte) ((srcData.length >> (8 * i)) & 0xFF);
+
+            // set length Of length at first byte
+            byte[] data = new byte[1 + lengthOfLength + srcData.length];
+            data[0] = (byte) (OFFSET_LONG_ITEM + lengthOfLength);
+
+            // copy length after first byte
+            tmpLength = srcData.length;
+            for (int i = lengthOfLength; i > 0; --i) {
+                data[i] = (byte) (tmpLength & 0xFF);
+                tmpLength = tmpLength >> 8;
             }
-            // first byte = F7 + bytes.length
-            byte[] data = Arrays.copyOf(srcData, srcData.length + 1 + byteNum);
-            System.arraycopy(data, 0, data, 1 + byteNum, srcData.length);
-            data[0] = (byte) (OFFSET_LONG_ITEM + byteNum);
-            System.arraycopy(lenBytes, 0, data, 1, lenBytes.length);
+
+            // at last copy the number bytes after its length
+            System.arraycopy(srcData, 0, data, 1 + lengthOfLength, srcData.length);
 
             return data;
         }
