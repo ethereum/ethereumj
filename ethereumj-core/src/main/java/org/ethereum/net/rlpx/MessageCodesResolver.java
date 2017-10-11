@@ -60,14 +60,12 @@ public class MessageCodesResolver {
 
             if (capability.getName().equals(Capability.SHH)) {
                 setShhOffset(offset);
-                ShhMessageCodes[] codes = ShhMessageCodes.values();
-                offset += codes[codes.length - 1].asByte() + 1;
+                offset += ShhMessageCodes.maxCode(capability.getVersion()) + 1;
             }
 
             if (capability.getName().equals(Capability.BZZ)) {
                 setBzzOffset(offset);
-                BzzMessageCodes[] codes = BzzMessageCodes.values();
-                offset += codes[codes.length - 1].asByte() + 1;
+                offset += BzzMessageCodes.maxCode(capability.getVersion()) + 1;
             }
         }
     }
