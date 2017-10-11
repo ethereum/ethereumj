@@ -67,7 +67,7 @@ public class MessageCodesResolver {
             if (capability.getName().equals(Capability.BZZ)) {
                 setBzzOffset(offset);
                 BzzMessageCodes[] codes = BzzMessageCodes.values();
-                offset += codes[codes.length].asByte() + 1;
+                offset += codes[codes.length - 1].asByte() + 1;
 //                offset += BzzMessageCodes.values().length + 4;
                 // FIXME: for some reason Go left 4 codes between BZZ and ETH message codes
             }
