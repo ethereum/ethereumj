@@ -60,11 +60,13 @@ public class MessageCodesResolver {
 
             if (capability.getName().equals(Capability.SHH)) {
                 setShhOffset(offset);
+                
                 offset += ShhMessageCodes.maxCode(capability.getVersion()) + 1;
             }
 
             if (capability.getName().equals(Capability.BZZ)) {
                 setBzzOffset(offset);
+
                 offset += BzzMessageCodes.maxCode(capability.getVersion()) + 1;
             }
         }
