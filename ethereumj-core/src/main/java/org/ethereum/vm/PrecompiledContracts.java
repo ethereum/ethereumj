@@ -223,7 +223,7 @@ public class PrecompiledContracts {
         @Override
         public long getGasForData(byte[] data) {
 
-            if (data == null) return 0;
+            if (data == null) data = EMPTY_BYTE_ARRAY;
 
             int baseLen = parseLen(data, 0);
             int expLen  = parseLen(data, 1);
@@ -329,9 +329,6 @@ public class PrecompiledContracts {
 
         @Override
         public long getGasForData(byte[] data) {
-
-            if (data == null) return 0;
-
             return 500;
         }
 
@@ -339,7 +336,7 @@ public class PrecompiledContracts {
         public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return Pair.of(false, EMPTY_BYTE_ARRAY);
+                data = EMPTY_BYTE_ARRAY;
 
             byte[] x1 = parseWord(data, 0);
             byte[] y1 = parseWord(data, 1);
@@ -379,9 +376,6 @@ public class PrecompiledContracts {
 
         @Override
         public long getGasForData(byte[] data) {
-
-            if (data == null) return 0;
-
             return 40000;
         }
 
@@ -389,7 +383,7 @@ public class PrecompiledContracts {
         public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return Pair.of(false, EMPTY_BYTE_ARRAY);
+                data = EMPTY_BYTE_ARRAY;
 
             byte[] x = parseWord(data, 0);
             byte[] y = parseWord(data, 1);
@@ -432,7 +426,7 @@ public class PrecompiledContracts {
         @Override
         public long getGasForData(byte[] data) {
 
-            if (data == null) return 0;
+            if (data == null) return 100000;
 
             return 80000 * (data.length / PAIR_SIZE) + 100000;
         }
@@ -441,7 +435,7 @@ public class PrecompiledContracts {
         public Pair<Boolean, byte[]> execute(byte[] data) {
 
             if (data == null)
-                return Pair.of(false, EMPTY_BYTE_ARRAY);
+                data = EMPTY_BYTE_ARRAY;
 
             // fail if input len is not a multiple of PAIR_SIZE
             if (data.length % PAIR_SIZE > 0)
