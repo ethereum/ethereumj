@@ -26,8 +26,8 @@ import java.io.IOException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTestNetTest {
 
-    static String commitSHA = "d07aedd65b2f0d9bc26959a67834b4fc7f3dcbbe";
-    static String treeSHA = "038011258981cb76bc54c89a538f45078e3decc1"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "12ee51045ace4a3075e39fe58128fdaa74b3fbd0"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
 
     static BlockchainTestSuite suite;
 

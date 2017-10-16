@@ -31,8 +31,8 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTransactionTest {
 
-    static String commitSHA = "f32ed84a66d4c3c15ececc67e76ebb40c148b478";
-    static String treeSHA = "ffa3acff38492d1e53cdf99749a410b4c7f5f285";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "1405e8a09a6f695e843259b9029b04a3fc4da3fa";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
 
     static TxTestSuite suite;
 

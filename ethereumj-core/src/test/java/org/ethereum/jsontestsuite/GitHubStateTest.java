@@ -29,8 +29,8 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
-    static String commitSHA = "883d2de442781548d178824db7cfbe0b3fbc0b9a";
-    static String treeSHA = "d08710643dad05f056002b7df492ecb28d943d7c"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "d1ece13ebfb2adb27061ae5a6155bd9ed9773d8f"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
@@ -59,7 +59,7 @@ public class GitHubStateTest {
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
         GeneralStateTestSuite.runSingle(
-                "stCreateTest/TransactionCollisionToEmpty.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+                "stPreCompiledContracts2/modexpRandomInput.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
@@ -144,6 +144,11 @@ public class GitHubStateTest {
     @Test
     public void stPreCompiledContracts() throws IOException {
         suite.runAll("stPreCompiledContracts");
+    }
+
+    @Test
+    public void stPreCompiledContracts2() throws IOException {
+        suite.runAll("stPreCompiledContracts2");
     }
 
     @Test
@@ -263,6 +268,11 @@ public class GitHubStateTest {
     }
 
     @Test
+    public void stZeroKnowledge2() throws IOException {
+        suite.runAll("stZeroKnowledge2");
+    }
+
+    @Test
     public void stCodeSizeLimit() throws IOException {
         suite.runAll("stCodeSizeLimit");
     }
@@ -270,6 +280,11 @@ public class GitHubStateTest {
     @Test
     public void stRandom() throws IOException {
         suite.runAll("stRandom");
+    }
+
+    @Test
+    public void stRandom2() throws IOException {
+        suite.runAll("stRandom2");
     }
 
     @Test

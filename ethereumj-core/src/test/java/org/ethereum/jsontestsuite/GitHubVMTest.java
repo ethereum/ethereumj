@@ -29,8 +29,8 @@ import java.io.IOException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
 
-    static String commitSHA = "ddba26a8c7381345f035d9428d721f5ddba7aaec";
-    static String treeSHA = "c676f05f1558da6bad978072a3a779309ef54758";  // https://github.com/ethereum/tests/tree/develop/VMTests/
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "7429078cc0ae66034bbede7c9666c234dc76bc67";  // https://github.com/ethereum/tests/tree/develop/VMTests/
 
     static VMTestSuite suite;
 

@@ -38,7 +38,7 @@ import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runDifficultyTest;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBasicTest {
 
-    String commitSHA = "182dfacc9c72b014224dc1fac3b9c3331037d7d5";
+    String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
 
     @Test
     public void btCrypto() throws IOException {

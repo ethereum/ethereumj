@@ -32,8 +32,8 @@ import java.util.Set;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockStateTest {
 
-    static String commitSHA = "883d2de442781548d178824db7cfbe0b3fbc0b9a";
-    static String treeSHA = "ba612d18c378eacb2709bd19debc883e17d9a998"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "9b96943196bfbb8b49651eab5e479956d7dabcc7"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
 
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
@@ -145,6 +145,11 @@ public class GitHubBlockStateTest {
     @Test
     public void bcStPreCompiledContracts() throws IOException {
         suite.runAll("stPreCompiledContracts");
+    }
+
+    @Test
+    public void bcStPreCompiledContracts2() throws IOException {
+        suite.runAll("stPreCompiledContracts2");
     }
 
     @Test
@@ -262,6 +267,11 @@ public class GitHubBlockStateTest {
     }
 
     @Test
+    public void bcStZeroKnowledge2() throws IOException {
+        suite.runAll("stZeroKnowledge2");
+    }
+
+    @Test
     public void bcStCodeSizeLimit() throws IOException {
         suite.runAll("stCodeSizeLimit");
     }
@@ -269,6 +279,11 @@ public class GitHubBlockStateTest {
     @Test
     public void bcStRandom() throws IOException {
         suite.runAll("stRandom");
+    }
+
+    @Test
+    public void bcStRandom2() throws IOException {
+        suite.runAll("stRandom2");
     }
 
     @Test
