@@ -213,16 +213,18 @@ public class TransactionExecutor {
         if (precompiledContract != null) {
             long requiredGas = precompiledContract.getGasForData(tx.getData());
 
-            if (!localCall && m_endGas.compareTo(BigInteger.valueOf(requiredGas + basicTxCost)) < 0) {
+            BigInteger spendingGas = BigInteger.valueOf(requiredGas).add(BigInteger.valueOf(basicTxCost));
+
+            if (!localCall && m_endGas.compareTo(spendingGas) < 0) {
                 // no refund
                 // no endowment
                 execError("Out of Gas calling precompiled contract 0x" + Hex.toHexString(targetAddress) +
-                        ", required: " + (requiredGas + basicTxCost) + ", left: " + m_endGas);
+                        ", required: " + spendingGas + ", left: " + m_endGas);
                 m_endGas = BigInteger.ZERO;
                 return;
             } else {
 
-                m_endGas = m_endGas.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
+                m_endGas = m_endGas.subtract(spendingGas);
 
                 // FIXME: save return for vm trace
                 Pair<Boolean, byte[]> out = precompiledContract.execute(tx.getData());
