@@ -17,13 +17,12 @@
  */
 package org.ethereum.net.shh;
 
-import org.ethereum.util.RLP;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.sha3;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.util.RLP;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author by Konstantin Shabalin
@@ -81,6 +80,11 @@ public class Topic {
         if (obj == this) return true;
         if (!(obj instanceof Topic))return false;
         return Arrays.equals(this.abrigedTopic, ((Topic) obj).getBytes());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(abrigedTopic);
     }
 
     @Override

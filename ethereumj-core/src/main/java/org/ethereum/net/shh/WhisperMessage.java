@@ -17,24 +17,34 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.net.swarm.Util.rlpDecodeInt;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
+
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.SignatureException;
-import java.util.*;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.net.swarm.Util.rlpDecodeInt;
-import static org.ethereum.util.ByteUtil.merge;
-import static org.ethereum.util.ByteUtil.xor;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.
@@ -56,6 +66,8 @@ public class WhisperMessage extends ShhMessage {
     private int ttl;
     int nonce = 0;
 
+    private Object lock = new Object();
+
     private boolean encrypted = false;
     private long pow = 0;
     private byte[] messageBytes;
@@ -69,6 +81,28 @@ public class WhisperMessage extends ShhMessage {
         super(encoded);
         encrypted = true;
         parse();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(topics);
+        result = 31 * result + Arrays.hashCode(payload);
+        result = 31 * result + (to != null ? to.hashCode() : 0);
+        result = 31 * result + (from != null ? from.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof WhisperMessage)) return false;
+        WhisperMessage msg = (WhisperMessage) obj;
+        if (msg.from == null && msg.from != this.from) return false;
+        if (msg.from == null || !msg.from.equals(this.from)) return false;
+        if (msg.to == null && msg.to != this.to) return false;
+        if (msg.to == null || !msg.to.equals(this.to)) return false;
+        if (msg.topics.length != topics.length || !Arrays.asList(msg.topics).containsAll(Arrays.asList(topics))) return false;
+        return Hex.toHexString(msg.hash()).equals(Hex.toHexString(this.hash()));
     }
 
     public Topic[] getTopics() {
@@ -309,18 +343,20 @@ public class WhisperMessage extends ShhMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) {
-            if (from != null) {
-                sign();
-            }
-            payload = getBytes();
-            encrypt();
+        synchronized (lock) {
+            if (encoded == null) {
+                if (from != null) {
+                    sign();
+                }
+                payload = getBytes();
+                encrypt();
 
-            byte[] withoutNonce = encode(false);
-            nonce = seal(withoutNonce, pow);
-            encoded = encode(true);
+                byte[] withoutNonce = encode(false);
+                nonce = seal(withoutNonce, pow);
+                encoded = encode(true);
+            }
+            return encoded;
         }
-        return encoded;
     }
 
     public byte[] encode(boolean withNonce) {
