@@ -98,9 +98,9 @@ public class WhisperMessage extends ShhMessage {
         if (!(obj instanceof WhisperMessage)) return false;
         WhisperMessage msg = (WhisperMessage) obj;
         if (msg.from == null && msg.from != this.from) return false;
-        if (msg.from == null || !msg.from.equals(this.from)) return false;
+        if (msg.from != null && !msg.from.equals(this.from)) return false;
         if (msg.to == null && msg.to != this.to) return false;
-        if (msg.to == null || !msg.to.equals(this.to)) return false;
+        if (msg.to != null && !msg.to.equals(this.to)) return false;
         if (msg.topics.length != topics.length || !Arrays.asList(msg.topics).containsAll(Arrays.asList(topics))) return false;
         return Hex.toHexString(msg.hash()).equals(Hex.toHexString(this.hash()));
     }
