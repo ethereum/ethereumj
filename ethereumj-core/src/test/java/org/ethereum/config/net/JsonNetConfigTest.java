@@ -22,10 +22,7 @@ package org.ethereum.config.net;
 
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.blockchain.ByzantiumConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
-import org.ethereum.config.blockchain.Eip160HFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.*;
 import org.ethereum.core.genesis.GenesisConfig;
 import org.junit.Test;
 
@@ -40,6 +37,28 @@ public class JsonNetConfigTest {
         JsonNetConfig config = new JsonNetConfig(genesisConfig);
         assertBlockchainConfigExistsAt(config, 0, FrontierConfig.class);
         assertBlockchainConfigExistsAt(config, 10, Eip150HFConfig.class);
+    }
+
+    @Test
+    public void testCreationBasedOnDaoForkAndEip150Blocks_noHardFork() {
+        GenesisConfig genesisConfig = new GenesisConfig();
+        genesisConfig.daoForkBlock = 10;
+        genesisConfig.eip150Block = 20;
+        genesisConfig.daoForkSupport = false;
+        JsonNetConfig config = new JsonNetConfig(genesisConfig);
+        assertBlockchainConfigExistsAt(config, 0, FrontierConfig.class);
+        assertBlockchainConfigExistsAt(config, 10, DaoNoHFConfig.class);
+        assertBlockchainConfigExistsAt(config, 20, Eip150HFConfig.class);
+    }
+
+    @Test
+    public void testCreationBasedOnDaoHardFork() {
+        GenesisConfig genesisConfig = new GenesisConfig();
+        genesisConfig.daoForkBlock = 10;
+        genesisConfig.daoForkSupport = true;
+        JsonNetConfig config = new JsonNetConfig(genesisConfig);
+        assertBlockchainConfigExistsAt(config, 0, FrontierConfig.class);
+        assertBlockchainConfigExistsAt(config, 10, DaoHFConfig.class);
     }
 
     @Test

@@ -17,6 +17,10 @@
  */
 package org.ethereum.config;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.google.common.io.Files;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -25,25 +29,26 @@ import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior;
 import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.*;
+import static org.junit.Assert.*;
 
 /**
  * Created by Stan Reshetnyk on 11.09.16.
  */
 public class InitializerTest {
 
-    final Initializer.DatabaseVersionHandler resetHelper = new Initializer.DatabaseVersionHandler();
+    private final Initializer.DatabaseVersionHandler resetHelper = new Initializer.DatabaseVersionHandler();
 
-    File tempFile;
-    String databaseDir;
-    File versionFile;
+    private File tempFile;
+    private String databaseDir;
+    private File versionFile;
 
     @Before
     public void before() {
@@ -92,6 +97,7 @@ public class InitializerTest {
         // create database without version
         SystemProperties props1 = withConfig(1, null);
         resetHelper.process(props1);
+        //noinspection ResultOfMethodCallIgnored
         versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
 
         SystemProperties props2 = withConfig(2, IGNORE);
@@ -107,6 +113,7 @@ public class InitializerTest {
         resetHelper.process(props);
 
         // database is assumed to exist if dir is not empty
+        //noinspection ResultOfMethodCallIgnored
         versionFile.renameTo(new File(versionFile.getAbsoluteFile() + ".renamed"));
 
         resetHelper.process(props);
@@ -171,9 +178,42 @@ public class InitializerTest {
         assertFalse(testFile.exists()); // reset should have cleared file
     }
 
+    @Test
+    public void helper_shouldPrintCapabilityEthVersion_whenInfoEnabled() {
+        SystemProperties system = new SystemProperties();
+        Initializer initializer = new Initializer();
+
+        ListAppender<ILoggingEvent> inMemoryAppender = new ListAppender<>();
+        inMemoryAppender.start();
+
+        Logger logger = (Logger) LoggerFactory.getLogger("general");
+        try {
+            logger.setLevel(Level.DEBUG);
+            logger.addAppender(inMemoryAppender);
+
+            initializer.postProcessBeforeInitialization(system, "initializerBean");
+            assertContainsLogLine(inMemoryAppender.list, "capability eth version: [62, 63]");
+            assertContainsLogLine(inMemoryAppender.list, "capability shh version: [3]");
+            assertContainsLogLine(inMemoryAppender.list, "capability bzz version: [0]");
+        } finally {
+            inMemoryAppender.stop();
+            logger.detachAppender(inMemoryAppender);
+        }
+    }
+
+    private void assertContainsLogLine(List<ILoggingEvent> lines, final String line) {
+        for (ILoggingEvent loggingEvent : lines) {
+            if (loggingEvent.getFormattedMessage().equals(line)) {
+                return;
+            }
+        }
+        fail("Could not find log line that matches: " + line);
+    }
+
 
     // HELPERS
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private File createFile() {
         final File testFile = new File(databaseDir + "/empty.file");
         testFile.getParentFile().mkdirs();
@@ -204,11 +244,11 @@ public class InitializerTest {
 
     public static class SPO extends SystemProperties {
 
-        public SPO(Config config) {
+        SPO(Config config) {
             super(config);
         }
 
-        public void setDatabaseVersion(Integer databaseVersion) {
+        void setDatabaseVersion(Integer databaseVersion) {
             this.databaseVersion = databaseVersion;
         }
     }
