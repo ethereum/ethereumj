@@ -75,7 +75,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public final static byte VERSION = 4;
 
-    public final static byte[] SUPPORTED_VERSIONS = {4, 5};
+    public final static byte[] SUPPORTED_VERSIONS = {4};
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 

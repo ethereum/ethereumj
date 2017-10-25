@@ -76,7 +76,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     private SystemProperties config;
 
-    private boolean supportChunkedFrames = true;
+    private boolean supportChunkedFrames = false;
 
     Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(16);
     // LRU avoids OOM on invalid peers
