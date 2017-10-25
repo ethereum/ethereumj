@@ -1078,6 +1078,34 @@ public class TrieTest {
                 Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
     }
 
+    @Test
+    public void testBugFix2() throws ParseException, IOException, URISyntaxException {
+
+        Source<byte[], byte[]> src = new HashMapDB<>();
+
+        // Create trie: root -> BranchNode (..., NodeValue (less than 32 bytes), ...)
+        TrieImpl trie = new TrieImpl(src);
+        trie.put(Hex.decode("0000000000000000000000000000000000000000000000000000000000000011"), Hex.decode("11"));
+        trie.put(Hex.decode("0000000000000000000000000000000000000000000000000000000000000022"), Hex.decode("22"));
+        trie.flush();
+
+        // Reset trie to refresh the nodes
+        trie = new TrieImpl(src, trie.getRootHash());
+
+        // Update trie: root -> dirty BranchNode (..., NodeValue (less than 32 bytes), ..., dirty NodeValue, ...)
+        trie.put(Hex.decode("0000000000000000000000000000000000000000000000000000000000000033"), Hex.decode("33"));
+
+        // BUG:
+        // In that case NodeValue (encoded as plain RLP list) isn't dirty
+        // while both rlp and hash fields are null, Node has been initialized with parsedRLP only
+        // Therefore any subsequent call to BranchNode.encode() fails with NPE
+
+        // FIX:
+        // Supply Node initialization with raw rlp value
+
+        assertEquals("36e350d9a1d9c02d5bc4539a05e51890784ea5d2b675a0b26725dbbdadb4d6e2", Hex.toHexString(trie.getRootHash()));
+    }
+
     @Ignore
     @Test
     public void perfTestGet() {
