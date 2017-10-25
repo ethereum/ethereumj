@@ -162,10 +162,6 @@ public class Channel {
         logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
         if (P2pHandler.isProtocolVersionSupported(helloRemote.getP2PVersion())) {
 
-            if (helloRemote.getP2PVersion() < 5) {
-                messageCodec.setSupportChunkedFrames(false);
-            }
-
             FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
             ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
             ctx.pipeline().addLast("messageCodec", messageCodec);
