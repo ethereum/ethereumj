@@ -93,6 +93,7 @@ public class TrieImpl implements Trie<byte[]> {
 
         private Node(RLP.LList parsedRlp) {
             this.parsedRlp = parsedRlp;
+            this.rlp = parsedRlp.getEncoded();
         }
 
         private Node(Object[] children) {
