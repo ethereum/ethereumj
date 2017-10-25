@@ -75,8 +75,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public final static byte VERSION = 4;
 
-    public final static byte[] SUPPORTED_VERSIONS = {4};
-
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private static ScheduledExecutorService pingTimer =
@@ -227,36 +225,31 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.ethOutbound = (int) channel.getNodeStatistics().ethOutbound.get();
 
         this.handshakeHelloMessage = msg;
-        if (!isProtocolVersionSupported(msg.getP2PVersion())) {
-            disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
-        }
-        else {
-            List<Capability> capInCommon = getSupportedCapabilities(msg);
-            channel.initMessageCodes(capInCommon);
-            for (Capability capability : capInCommon) {
-                if (capability.getName().equals(Capability.ETH)) {
 
-                    // Activate EthHandler for this peer
-                    channel.activateEth(ctx, fromCode(capability.getVersion()));
-                } else if
-                   (capability.getName().equals(Capability.SHH) &&
-                    capability.getVersion() == ShhHandler.VERSION) {
+        List<Capability> capInCommon = getSupportedCapabilities(msg);
+        channel.initMessageCodes(capInCommon);
+        for (Capability capability : capInCommon) {
+            if (capability.getName().equals(Capability.ETH)) {
 
-                    // Activate ShhHandler for this peer
-                    channel.activateShh(ctx);
-                } else if
-                   (capability.getName().equals(Capability.BZZ) &&
-                    capability.getVersion() == BzzHandler.VERSION) {
+                // Activate EthHandler for this peer
+                channel.activateEth(ctx, fromCode(capability.getVersion()));
+            } else if
+               (capability.getName().equals(Capability.SHH) &&
+                capability.getVersion() == ShhHandler.VERSION) {
 
-                    // Activate ShhHandler for this peer
-                    channel.activateBzz(ctx);
-                }
+                // Activate ShhHandler for this peer
+                channel.activateShh(ctx);
+            } else if
+               (capability.getName().equals(Capability.BZZ) &&
+                capability.getVersion() == BzzHandler.VERSION) {
+
+                // Activate ShhHandler for this peer
+                channel.activateBzz(ctx);
             }
-
-            //todo calculate the Offsets
-            ethereumListener.onHandShakePeer(channel, msg);
-
         }
+
+        //todo calculate the Offsets
+        ethereumListener.onHandShakePeer(channel, msg);
     }
 
     /**
@@ -310,13 +303,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void setChannel(Channel channel) {
         this.channel = channel;
-    }
-
-    public static boolean isProtocolVersionSupported(byte ver) {
-        for (byte v : SUPPORTED_VERSIONS) {
-            if (v == ver) return true;
-        }
-        return false;
     }
 
     public List<Capability> getSupportedCapabilities(HelloMessage hello) {
