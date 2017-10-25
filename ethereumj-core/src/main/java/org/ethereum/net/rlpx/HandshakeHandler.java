@@ -171,7 +171,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                 this.frameCodec = new FrameCodec(secrets);
 
                 loggerNet.debug("auth exchange done");
-                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), null);
+                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
             } else {
                 loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
                 List<Frame> frames = frameCodec.readFrames(buffer);
@@ -279,7 +279,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                 channel.initWithNode(remoteId, inboundHelloMessage.getListenPort());
 
                 // Secret authentication finish here
-                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);
+                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
                 isHandshakeDone = true;
                 this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, inboundHelloMessage);
                 channel.getNodeStatistics().rlpxInHello.add();
