@@ -710,6 +710,14 @@ public class RLP {
             this.rlp = rlp;
         }
 
+        public byte[] getEncoded() {
+            byte encoded[][] = new byte[cnt][];
+            for (int i = 0; i < cnt; i++) {
+                encoded[i] = encodeElement(getBytes(i));
+            }
+            return encodeList(encoded);
+        }
+
         public void add(int off, int len, boolean isList) {
             offsets[cnt] = off;
             lens[cnt] = isList ? (-1 - len) : len;
