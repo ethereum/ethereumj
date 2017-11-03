@@ -54,7 +54,7 @@ public class MessageCodesResolver {
             if (capability.getName().equals(Capability.ETH)) {
                 setEthOffset(offset);
                 EthVersion v = fromCode(capability.getVersion());
-                offset += EthMessageCodes.values(v).length;
+                offset += EthMessageCodes.maxCode(v) + 1; // +1 is essential cause STATUS code starts from 0x0
             }
 
             if (capability.getName().equals(Capability.SHH)) {

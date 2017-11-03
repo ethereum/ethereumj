@@ -214,6 +214,16 @@ public enum EthMessageCodes {
         return versionToValuesMap.get(v);
     }
 
+    public static int maxCode(EthVersion v) {
+
+        int max = 0;
+        for (EthMessageCodes cd : versionToValuesMap.get(v))
+            if (max < cd.asByte())
+                max = cd.asByte();
+
+        return max;
+    }
+
     public static EthMessageCodes fromByte(byte i, EthVersion v) {
         Map<Integer, EthMessageCodes> map = intToTypeMap.get(v);
         return map.get((int) i);
