@@ -161,6 +161,8 @@ public class Channel {
 
         logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
 
+        messageCodec.setSupportChunkedFrames(false);
+
         FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
         ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
         ctx.pipeline().addLast("messageCodec", messageCodec);
