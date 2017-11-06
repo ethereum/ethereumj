@@ -143,6 +143,8 @@ dependencies {
         exclude group: 'junit', module: 'junit'
     }
 
+    compile "org.xerial.snappy:snappy-java:1.1.4" // Snappy compression
+
     // used to hide spring initialization logs messages in samples
     optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
 

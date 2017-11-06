@@ -165,6 +165,12 @@ public class Channel {
 
         FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
         ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
+
+        if (SnappyCodec.isSupported(Math.min(config.defaultP2PVersion(), helloRemote.getP2PVersion()))) {
+            ctx.pipeline().addLast("snappyCodec", new SnappyCodec(this));
+            logger.debug("{}: use snappy compression", ctx.channel());
+        }
+
         ctx.pipeline().addLast("messageCodec", messageCodec);
         ctx.pipeline().addLast(Capability.P2P, p2pHandler);
 
