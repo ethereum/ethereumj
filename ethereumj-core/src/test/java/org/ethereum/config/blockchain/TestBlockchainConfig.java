@@ -39,10 +39,14 @@ import static com.google.common.collect.Lists.newArrayList;
 
 @SuppressWarnings("WeakerAccess")
 class TestBlockchainConfig extends AbstractConfig {
-    boolean eip161;
-    boolean eip198;
-    boolean eip212;
-    boolean eip213;
+    boolean eip161 = false;
+    boolean eip198 = false;
+    boolean eip206 = false;
+    boolean eip211 = false;
+    boolean eip212 = false;
+    boolean eip213 = false;
+    boolean eip214 = false;
+    boolean eip658 = false;
 
     Constants constants = new Constants();
     MinerIfc minerIfc = new TestMinerIfc();
@@ -54,15 +58,56 @@ class TestBlockchainConfig extends AbstractConfig {
     byte[] extraData = new byte[]{};
     List<Pair<Long, BlockHeaderValidator>> headerValidators = newArrayList();
 
-    TestBlockchainConfig() {
-        this(false, false, false, false);
+    public TestBlockchainConfig enableAllEip() {
+        return this
+                .enableEip161()
+                .enableEip198()
+                .enableEip206()
+                .enableEip211()
+                .enableEip212()
+                .enableEip213()
+                .enableEip214()
+                .enableEip658();
     }
 
-    TestBlockchainConfig(boolean eip161, boolean eip198, boolean eip212, boolean eip213) {
-        this.eip161 = eip161;
-        this.eip198 = eip198;
-        this.eip212 = eip212;
-        this.eip213 = eip213;
+    public TestBlockchainConfig enableEip161() {
+        this.eip161 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip198() {
+        this.eip198 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip206() {
+        this.eip206 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip211() {
+        this.eip211 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip212() {
+        this.eip212 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip213() {
+        this.eip213 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip214() {
+        this.eip214 = true;
+        return this;
+    }
+
+    public TestBlockchainConfig enableEip658() {
+        this.eip658 = true;
+        return this;
     }
 
     @Override
@@ -129,6 +174,7 @@ class TestBlockchainConfig extends AbstractConfig {
     public boolean eip213() {
         return eip213;
     }
+
 
     public class TestMinerIfc implements MinerIfc {
         @Override
