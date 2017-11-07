@@ -20,7 +20,7 @@ http://ethereumj.io
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.5.0-RELEASE</version>
+     <version>1.6.3-RELEASE</version>
    </dependency>
 ```
 
@@ -30,7 +30,13 @@ http://ethereumj.io
    repositories {
        mavenCentral()
    }
-   compile "org.ethereum:ethereumj-core:1.5.+"
+   compile "org.ethereum:ethereumj-core:1.6.+"
+```
+
+##### or your SBT project: 
+
+```
+"org.ethereum" % "ethereumj-core" % "1.6.3-RELEASE"
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
