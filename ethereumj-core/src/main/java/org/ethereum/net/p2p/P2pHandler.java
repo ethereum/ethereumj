@@ -73,7 +73,7 @@ import static org.ethereum.net.message.StaticMessages.*;
 @Scope("prototype")
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
-    public final static byte VERSION = 4;
+    public final static byte VERSION = 5;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 
