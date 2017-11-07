@@ -36,7 +36,9 @@ http://ethereumj.io
 ##### or your SBT project: 
 
 ```
-"org.ethereum" % "ethereumj-core" % "1.6.3-RELEASE"
+resolvers += "Ethereum repository" at "https://dl.bintray.com/ethereum/maven"
+
+libraryDependencies += "org.ethereum" % "ethereumj-core" % "1.6.3-RELEASE"
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
