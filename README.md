@@ -12,6 +12,9 @@ ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level
 # Check our blog 
 http://ethereumj.io
 
+# Important note about this library
+ethereumj is intended to be the core library implementation in Java. It does not support RPC intentionally and you should use [ethereum harmony](https://github.com/ether-camp/ethereum-harmony) if you want an ethereum client in Java which includes JSON RPC support.
+
 # Running EthereumJ
 
 ##### Adding as a dependency to your Maven project: 
@@ -61,6 +64,12 @@ java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 ./gradlew run -PmainClass=org.ethereum.samples.PrivateMinerSample
 ./gradlew run -PmainClass=org.ethereum.samples.TestNetSample
 ./gradlew run -PmainClass=org.ethereum.samples.TransactionBomb
+```
+
+##### Run your node on ropsten or morden testnet
+```
+./gradlew runRopsten
+./gradlew runMorden
 ```
 
 ##### Importing project to IntelliJ IDEA: 

@@ -249,11 +249,11 @@ public class TransactionTest {
         byte[] nonce = BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
         byte[] gasPrice = Hex.decode("e8d4a51000");     // 1000000000000
         byte[] gas = Hex.decode("2710");           // 10000
-        byte[] recieveAddress = Hex.decode("13978aee95f38490e9769c39b2773ed763d9cd5f");
+        byte[] receiveAddress = Hex.decode("13978aee95f38490e9769c39b2773ed763d9cd5f");
         byte[] value = Hex.decode("2386f26fc10000"); //10000000000000000"
         byte[] data = new byte[0];
 
-        Transaction tx = new Transaction(nonce, gasPrice, gas, recieveAddress, value, data);
+        Transaction tx = new Transaction(nonce, gasPrice, gas, receiveAddress, value, data);
 
         // Testing unsigned
         String encodedUnsigned = Hex.toHexString(tx.getEncoded());
