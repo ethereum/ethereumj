@@ -302,7 +302,7 @@ public class ECKeyTest {
         if (provider != null) {
             testProviderRoundTrip(provider);
         } else {
-            System.out.println("Skip test as provider doesn't exist. Must be OpenJDK 1.7 which ships without 'SunEC'");
+            System.out.println("Skip test as provider doesn't exist. Must be OpenJDK 1.8 which ships without 'SunEC'");
         }
     }
 
