@@ -17,12 +17,12 @@
  */
 package org.ethereum.crypto;
 
+import java.math.BigInteger;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
 
 public class ECIESCoderTest {
 

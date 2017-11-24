@@ -17,6 +17,22 @@
  */
 package org.ethereum.core;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.ethereum.util.BIUtil.toBI;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -24,14 +40,6 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
 import org.springframework.util.Assert;
-
-import java.math.BigInteger;
-import java.util.*;
-
-import static java.util.Collections.*;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-import static org.ethereum.util.BIUtil.toBI;
 
 public class TransactionExecutionSummary {
 

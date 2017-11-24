@@ -17,6 +17,17 @@
  */
 package org.ethereum.sync;
 
+import static java.lang.Math.min;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
@@ -25,10 +36,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.Functional;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.*;
-
-import static java.lang.Math.min;
 
 /**
  * Created by Anton Nashatyrev on 27.05.2016.

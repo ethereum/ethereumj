@@ -17,16 +17,16 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Common functionality for ContractDetails implementations

@@ -17,13 +17,13 @@
  */
 package org.ethereum.datasource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Anton Nashatyrev on 27.07.2016.

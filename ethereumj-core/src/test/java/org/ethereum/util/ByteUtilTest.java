@@ -17,20 +17,19 @@
  */
 package org.ethereum.util;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.junit.Assert;
+import org.junit.Test;
+import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtilTest {
 

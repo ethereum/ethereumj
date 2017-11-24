@@ -17,14 +17,36 @@
  */
 package org.ethereum.sync;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
+import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
+import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
+import static org.ethereum.util.CompactEncoder.hasTerminator;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.BloomFilter;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -38,7 +60,10 @@ import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteArrayMap;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.Functional;
+import org.ethereum.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -47,14 +72,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
-import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
-import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
-import static org.ethereum.util.CompactEncoder.hasTerminator;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.

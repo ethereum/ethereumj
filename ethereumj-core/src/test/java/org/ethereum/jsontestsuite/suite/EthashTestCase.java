@@ -17,13 +17,13 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.spongycastle.util.encoders.Hex.decode;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import static org.spongycastle.util.encoders.Hex.decode;
 
 /**
  * @author Mikhail Kalinin

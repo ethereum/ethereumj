@@ -17,22 +17,14 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.socket.DatagramPacket;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.net.rlpx.FindNodeMessage;
-import org.ethereum.net.rlpx.Message;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
-import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DiscoverTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger("discover");

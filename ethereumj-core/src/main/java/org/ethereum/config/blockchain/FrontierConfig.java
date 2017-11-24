@@ -17,10 +17,10 @@
  */
 package org.ethereum.config.blockchain;
 
+import java.math.BigInteger;
+
 import org.ethereum.config.Constants;
 import org.ethereum.core.Transaction;
-
-import java.math.BigInteger;
 
 /**
  * Created by Anton Nashatyrev on 25.02.2016.

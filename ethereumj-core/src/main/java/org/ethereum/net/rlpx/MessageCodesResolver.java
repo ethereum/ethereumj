@@ -17,19 +17,19 @@
  */
 package org.ethereum.net.rlpx;
 
-import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.net.p2p.P2pMessageCodes;
-import org.ethereum.net.shh.ShhMessageCodes;
-import org.ethereum.net.swarm.bzz.BzzMessageCodes;
+import static org.ethereum.net.eth.EthVersion.fromCode;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.ethereum.net.eth.EthVersion.*;
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 
 /**
  * @author Mikhail Kalinin

@@ -17,7 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite.model;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Roman Mandeleil

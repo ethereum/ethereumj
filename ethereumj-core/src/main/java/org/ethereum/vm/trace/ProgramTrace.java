@@ -17,18 +17,18 @@
  */
 package org.ethereum.vm.trace;
 
+import static java.lang.String.format;
+import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.lang.String.format;
-import static org.ethereum.util.ByteUtil.toHexString;
-import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
 public class ProgramTrace {
 

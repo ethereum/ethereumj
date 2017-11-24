@@ -17,7 +17,8 @@
  */
 package org.ethereum.net.swarm;
 
-import org.ethereum.util.ByteUtil;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -26,8 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import org.ethereum.util.ByteUtil;
 
 /**
  * From Go implementation:

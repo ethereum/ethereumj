@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.swarm;
 
+import java.util.Arrays;
+
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
 
 /**
  * Data key, just a wrapper for byte array. Normally the SHA(data)

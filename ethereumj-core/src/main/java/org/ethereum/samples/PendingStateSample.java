@@ -17,6 +17,13 @@
  */
 package org.ethereum.samples;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Transaction;
@@ -29,9 +36,6 @@ import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-
-import java.math.BigInteger;
-import java.util.*;
 
 /**
  * PendingState is the ability to track the changes made by transaction immediately and not wait for

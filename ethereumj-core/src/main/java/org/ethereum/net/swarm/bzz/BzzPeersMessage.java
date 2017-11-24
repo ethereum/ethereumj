@@ -17,14 +17,14 @@
  */
 package org.ethereum.net.swarm.bzz;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.net.swarm.Key;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The message is the immediate response on the {#RETRIEVE_REQUEST} with the nearest known nodes

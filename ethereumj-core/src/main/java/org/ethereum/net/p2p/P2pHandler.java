@@ -17,11 +17,22 @@
  */
 package org.ethereum.net.p2p;
 
+import static org.ethereum.net.eth.EthVersion.fromCode;
+import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
+import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
@@ -31,30 +42,16 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
-
-import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.message.StaticMessages.*;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
  * Process the basic protocol messages between every peer on the network.

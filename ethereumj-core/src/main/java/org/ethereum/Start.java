@@ -17,15 +17,15 @@
  */
 package org.ethereum;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.mine.Ethash;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 /**
  * @author Roman Mandeleil

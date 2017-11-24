@@ -17,14 +17,15 @@
  */
 package org.ethereum.datasource;
 
-import com.googlecode.concurentlocks.ReadWriteUpdateLock;
-import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
-import org.ethereum.util.ALock;
-import org.ethereum.util.ByteArrayMap;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.ethereum.util.ALock;
+import org.ethereum.util.ByteArrayMap;
+
+import com.googlecode.concurentlocks.ReadWriteUpdateLock;
+import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
 
 /**
  * Collects changes and propagate them to the backing Source when flush() is called

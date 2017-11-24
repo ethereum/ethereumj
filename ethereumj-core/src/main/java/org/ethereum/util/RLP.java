@@ -17,19 +17,27 @@
  */
 package org.ethereum.util;
 
+import static java.util.Arrays.copyOfRange;
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
+import static org.ethereum.util.ByteUtil.isNullOrZeroArray;
+import static org.ethereum.util.ByteUtil.isSingleZero;
+import static org.spongycastle.util.Arrays.concatenate;
+import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+
 import org.ethereum.db.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.*;
-
-import static java.util.Arrays.copyOfRange;
-import static org.ethereum.util.ByteUtil.*;
-import static org.spongycastle.util.Arrays.concatenate;
-import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
 /**
  * Recursive Length Prefix (RLP) encoding.

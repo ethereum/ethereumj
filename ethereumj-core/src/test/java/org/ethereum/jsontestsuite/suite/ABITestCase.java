@@ -17,11 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.util.List;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.ethereum.core.CallTransaction;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.List;
 
 /**
  * @author Mikhail Kalinin

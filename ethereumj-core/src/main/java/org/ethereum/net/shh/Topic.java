@@ -17,13 +17,12 @@
  */
 package org.ethereum.net.shh;
 
-import org.ethereum.util.RLP;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.sha3;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.util.RLP;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author by Konstantin Shabalin

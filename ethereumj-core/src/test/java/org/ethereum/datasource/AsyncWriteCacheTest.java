@@ -17,22 +17,17 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.crypto.HashUtil;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.spongycastle.util.encoders.Hex.decode;
+
+import java.util.Map;
+
 import org.ethereum.db.SlowHashMapDb;
 import org.ethereum.db.StateSource;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Map;
-
-import static java.lang.Math.max;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.ByteUtil.intsToBytes;
-import static org.spongycastle.util.encoders.Hex.decode;
 
 /**
  * Created by Anton Nashatyrev on 19.01.2017.

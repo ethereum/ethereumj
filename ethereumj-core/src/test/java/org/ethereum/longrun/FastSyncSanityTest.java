@@ -17,7 +17,15 @@
  */
 package org.ethereum.longrun;
 
-import com.typesafe.config.ConfigFactory;
+import static java.lang.Thread.sleep;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -29,14 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static java.lang.Thread.sleep;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Fast sync with sanity check

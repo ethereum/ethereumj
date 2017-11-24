@@ -17,20 +17,12 @@
  */
 package org.ethereum.core.genesis;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
-import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Genesis;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.Trie;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
+import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
+import static org.ethereum.core.Genesis.ZERO_HASH_2048;
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.ethereum.util.ByteUtil.hexStringToBytes;
+import static org.ethereum.util.ByteUtil.wrap;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,11 +31,22 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.core.Genesis.ZERO_HASH_2048;
-import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.util.ByteUtil.*;
-import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
-import static org.ethereum.core.Genesis.PremineAccount;
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.Genesis.PremineAccount;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.Trie;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 
 public class GenesisLoader {
 

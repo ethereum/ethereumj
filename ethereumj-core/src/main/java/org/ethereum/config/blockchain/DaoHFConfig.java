@@ -17,16 +17,17 @@
  */
 package org.ethereum.config.blockchain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Created by Anton Nashatyrev on 18.07.2016.

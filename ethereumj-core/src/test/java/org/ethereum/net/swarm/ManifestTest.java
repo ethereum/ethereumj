@@ -17,11 +17,7 @@
  */
 package org.ethereum.net.swarm;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.junit.Test;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Admin on 11.06.2015.

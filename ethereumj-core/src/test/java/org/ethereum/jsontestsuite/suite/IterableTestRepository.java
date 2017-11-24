@@ -17,6 +17,17 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
@@ -25,10 +36,6 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.DataWord;
-
-import javax.annotation.Nullable;
-import java.math.BigInteger;
-import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 01.12.2016.

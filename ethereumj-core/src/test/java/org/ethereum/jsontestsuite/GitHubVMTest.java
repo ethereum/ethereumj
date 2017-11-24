@@ -17,14 +17,18 @@
  */
 package org.ethereum.jsontestsuite;
 
+import java.io.IOException;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.VMTestSuite;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import java.io.IOException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {

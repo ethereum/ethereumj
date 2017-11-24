@@ -17,10 +17,10 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.core.*;
-import org.ethereum.db.RepositoryImpl;
-
 import java.math.BigInteger;
+
+import org.ethereum.core.Repository;
+import org.ethereum.db.RepositoryImpl;
 
 /**
  * Repository for running GitHubVMTest.

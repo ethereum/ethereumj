@@ -17,6 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.ethereum.datasource.NoDeleteSource;
@@ -25,11 +30,6 @@ import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 
 /**
  * @author Mikhail Kalinin

@@ -17,13 +17,13 @@
  */
 package org.ethereum.db;
 
+import java.util.List;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.JournalSource;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 10.11.2016.

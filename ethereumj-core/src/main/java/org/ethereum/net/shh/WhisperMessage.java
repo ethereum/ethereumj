@@ -17,24 +17,34 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.net.swarm.Util.rlpDecodeInt;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
+
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.SignatureException;
-import java.util.*;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.net.swarm.Util.rlpDecodeInt;
-import static org.ethereum.util.ByteUtil.merge;
-import static org.ethereum.util.ByteUtil.xor;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.

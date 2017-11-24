@@ -17,20 +17,24 @@
  */
 package org.ethereum.mine;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.crypto.HashUtil;
-import org.spongycastle.util.Arrays;
+import static java.lang.System.arraycopy;
+import static java.math.BigInteger.valueOf;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.bytesToInts;
+import static org.ethereum.util.ByteUtil.intsToBytes;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
+import static org.spongycastle.util.Arrays.reverse;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Random;
 
-import static java.lang.System.arraycopy;
-import static java.math.BigInteger.valueOf;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.*;
-import static org.spongycastle.util.Arrays.reverse;
+import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.crypto.HashUtil;
+import org.spongycastle.util.Arrays;
 
 /**
  * The Ethash algorithm described in https://github.com/ethereum/wiki/wiki/Ethash

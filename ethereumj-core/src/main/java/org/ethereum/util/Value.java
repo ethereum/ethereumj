@@ -17,15 +17,14 @@
  */
 package org.ethereum.util;
 
-import com.cedarsoftware.util.DeepEquals;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
-
-import java.util.Arrays;
-import java.util.List;
+import com.cedarsoftware.util.DeepEquals;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion

@@ -17,12 +17,11 @@
  */
 package org.ethereum.net.shh;
 
-import org.ethereum.db.ByteArrayWrapper;
+import static org.ethereum.net.shh.ShhMessageCodes.FILTER;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.ethereum.net.shh.ShhMessageCodes.FILTER;
 
 /**
  * @author by Konstantin Shabalin

@@ -17,6 +17,27 @@
  */
 package org.ethereum.net.server;
 
+import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
+import static org.ethereum.net.message.ReasonCode.TOO_MANY_PEERS;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.NodeFilter;
 import org.ethereum.config.SystemProperties;
@@ -34,13 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.net.InetAddress;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
-import static org.ethereum.net.message.ReasonCode.TOO_MANY_PEERS;
 
 /**
  * @author Roman Mandeleil

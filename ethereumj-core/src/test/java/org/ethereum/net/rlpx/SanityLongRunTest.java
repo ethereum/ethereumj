@@ -17,7 +17,11 @@
  */
 package org.ethereum.net.rlpx;
 
-import com.typesafe.config.ConfigFactory;
+import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -37,10 +41,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.

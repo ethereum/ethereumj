@@ -17,26 +17,8 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.genesis.GenesisLoader;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.jsontestsuite.suite.StateTestSuite;
-import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
-import org.ethereum.solidity.compiler.CompilationResult;
-import org.ethereum.solidity.compiler.SolidityCompiler;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.program.ProgramResult;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -47,9 +29,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.ethereum.solidity.SolidityType.*;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.core.genesis.GenesisLoader;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.jsontestsuite.suite.StateTestSuite;
+import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
+import org.ethereum.solidity.SolidityType.IntType;
+import org.ethereum.solidity.compiler.CompilationResult;
+import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.program.ProgramResult;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 public class TransactionTest {
 

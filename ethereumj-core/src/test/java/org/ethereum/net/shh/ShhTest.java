@@ -17,19 +17,6 @@
  */
 package org.ethereum.net.shh;
 
-import org.junit.Assert;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-import org.junit.Test;
-
-import java.math.BigInteger;
-import org.spongycastle.util.encoders.Hex;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author by Konstantin Shabalin
  */

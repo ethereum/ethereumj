@@ -17,18 +17,15 @@
  */
 package org.ethereum.net.submit;
 
-import org.ethereum.core.Transaction;
-import org.ethereum.net.server.Channel;
-import org.ethereum.net.server.ChannelManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import static java.lang.Thread.sleep;
+import org.ethereum.core.Transaction;
+import org.ethereum.net.server.Channel;
+import org.ethereum.net.server.ChannelManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Roman Mandeleil

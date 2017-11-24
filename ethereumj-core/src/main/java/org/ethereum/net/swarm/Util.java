@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.swarm;
 
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.Utils;
+import static java.lang.Math.min;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static java.lang.Math.min;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.Utils;
 
 /**
  * Created by Admin on 17.06.2015.

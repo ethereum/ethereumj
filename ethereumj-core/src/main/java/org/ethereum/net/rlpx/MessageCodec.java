@@ -17,9 +17,16 @@
  */
 package org.ethereum.net.rlpx;
 
-import com.google.common.io.ByteStreams;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageCodec;
+import static java.lang.Math.min;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
@@ -31,6 +38,7 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.rlpx.FrameCodec.Frame;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
@@ -41,12 +49,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.io.ByteStreams;
 
-import static java.lang.Math.min;
-import static org.ethereum.net.rlpx.FrameCodec.Frame;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageCodec;
 
 /**
  * The Netty codec which encodes/decodes RPLx frames to subprotocol Messages

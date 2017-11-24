@@ -17,9 +17,37 @@
  */
 package org.ethereum.trie;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Serializers;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.SourceCodec;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.inmem.HashMapDBSimple;
 import org.ethereum.util.Value;
@@ -34,21 +62,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.*;
-
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class TrieTest {
 

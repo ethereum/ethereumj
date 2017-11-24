@@ -17,11 +17,11 @@
  */
 package org.ethereum.solidity.compiler;
 
+import static org.ethereum.solidity.compiler.ContractException.assembleError;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.ethereum.solidity.compiler.ContractException.assembleError;
 
 public class Sources {
 

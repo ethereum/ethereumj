@@ -1,12 +1,12 @@
 package org.ethereum.jsontestsuite;
 
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runTrieTest;
 
 import java.io.IOException;
 
-import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runTrieTest;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 /**
  * @author Mikhail Kalinin

@@ -17,13 +17,17 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.util.*;
 
 public class AccountValidator {
 

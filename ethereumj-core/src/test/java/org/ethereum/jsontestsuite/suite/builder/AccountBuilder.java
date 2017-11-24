@@ -17,18 +17,18 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.jsontestsuite.suite.ContractDetailsImpl;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.vm.DataWord;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
-import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 
 public class AccountBuilder {
 

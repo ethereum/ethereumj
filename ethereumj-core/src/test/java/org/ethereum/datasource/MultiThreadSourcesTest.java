@@ -17,11 +17,31 @@
  */
 package org.ethereum.datasource;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
+import static java.lang.Math.max;
+import static java.lang.Thread.sleep;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.db.StateSource;
 import org.ethereum.mine.AnyFuture;
 import org.ethereum.util.ALock;
@@ -32,19 +52,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static java.lang.Math.max;
-import static java.lang.Thread.sleep;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.ByteUtil.longToBytes;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Testing different sources and chain of sources in multi-thread environment

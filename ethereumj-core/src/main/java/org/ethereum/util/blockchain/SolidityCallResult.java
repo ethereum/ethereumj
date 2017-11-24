@@ -17,10 +17,10 @@
  */
 package org.ethereum.util.blockchain;
 
-import org.ethereum.core.CallTransaction;
-
 import java.util.Arrays;
 import java.util.List;
+
+import org.ethereum.core.CallTransaction;
 
 /**
  * Created by Anton Nashatyrev on 26.07.2016.

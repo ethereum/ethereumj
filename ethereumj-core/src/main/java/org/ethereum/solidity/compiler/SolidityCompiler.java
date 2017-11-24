@@ -17,14 +17,20 @@
  */
 package org.ethereum.solidity.compiler;
 
-import com.google.common.base.Joiner;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.config.SystemProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.base.Joiner;
 
 @Component
 public class SolidityCompiler {

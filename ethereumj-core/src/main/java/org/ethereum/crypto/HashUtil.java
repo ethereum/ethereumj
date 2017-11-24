@@ -17,6 +17,16 @@
  */
 package org.ethereum.crypto;
 
+import static java.util.Arrays.copyOfRange;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
+import java.util.Random;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.jce.SpongyCastleProvider;
 import org.ethereum.util.RLP;
@@ -26,15 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
-import java.util.Random;
-
-import static java.util.Arrays.copyOfRange;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class HashUtil {
 

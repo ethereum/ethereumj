@@ -17,8 +17,14 @@
  */
 package org.ethereum.config;
 
+import java.math.BigInteger;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -26,9 +32,6 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.Program;
-
-import java.math.BigInteger;
-import java.util.List;
 
 /**
  * Describes constants and algorithms used for a specific blockchain at specific stage

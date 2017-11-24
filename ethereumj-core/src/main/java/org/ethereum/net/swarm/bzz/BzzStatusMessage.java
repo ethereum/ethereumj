@@ -17,19 +17,19 @@
  */
 package org.ethereum.net.swarm.bzz;
 
+import static org.ethereum.net.swarm.Util.rlpDecodeByte;
+import static org.ethereum.net.swarm.Util.rlpDecodeInt;
+import static org.ethereum.net.swarm.Util.rlpDecodeLong;
+import static org.ethereum.net.swarm.Util.rlpDecodeString;
+import static org.ethereum.net.swarm.Util.rlpEncodeList;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.swarm.Util;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.ethereum.net.swarm.Util.*;
 
 /**
  * BZZ handshake message

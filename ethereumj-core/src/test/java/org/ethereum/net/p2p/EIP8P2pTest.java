@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.p2p;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.spongycastle.util.encoders.Hex.decode;
+
+import org.junit.Test;
 
 /**
  * @author Mikhail Kalinin

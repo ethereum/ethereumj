@@ -17,13 +17,13 @@
  */
 package org.ethereum.net.p2p;
 
-import org.ethereum.net.client.Capability;
-import org.ethereum.util.RLP;
-import org.spongycastle.util.encoders.Hex;
-
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.ethereum.net.client.Capability;
+import org.ethereum.util.RLP;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * This class models a peer in the network

@@ -22,8 +22,8 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 import static org.ethereum.util.ByteUtil.toHexString;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
@@ -31,12 +31,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
-import static org.apache.commons.lang3.ArrayUtils.*;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 public class InternalTransaction extends Transaction {
 

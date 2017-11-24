@@ -17,6 +17,9 @@
  */
 package org.ethereum.samples;
 
+import java.math.BigInteger;
+import java.util.Date;
+
 import org.ethereum.core.CallTransaction;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.util.ByteUtil;
@@ -24,9 +27,6 @@ import org.ethereum.util.Utils;
 import org.ethereum.vm.program.ProgramResult;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
-
-import java.math.BigInteger;
-import java.util.Date;
 
 /**
  * This sample demonstrates how constant calls works (that is transactions which are

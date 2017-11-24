@@ -17,11 +17,12 @@
  */
 package org.ethereum.net.rlpx;
 
-import com.google.common.io.ByteStreams;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.handler.timeout.ReadTimeoutException;
+import static org.ethereum.util.ByteUtil.bigEndianToShort;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.List;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
@@ -30,6 +31,7 @@ import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
+import org.ethereum.net.rlpx.FrameCodec.Frame;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
@@ -41,12 +43,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.List;
+import com.google.common.io.ByteStreams;
 
-import static org.ethereum.net.rlpx.FrameCodec.Frame;
-import static org.ethereum.util.ByteUtil.bigEndianToShort;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.timeout.ReadTimeoutException;
 
 /**
  * The Netty handler which manages initial negotiation with peer

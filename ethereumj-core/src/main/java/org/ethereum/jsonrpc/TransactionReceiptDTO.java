@@ -17,13 +17,13 @@
  */
 package org.ethereum.jsonrpc;
 
+import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
+
 import org.ethereum.core.Block;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.core.TransactionInfo;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.LogInfo;
-
-import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
 
 /**
  * Created by Ruben on 5/1/2016.

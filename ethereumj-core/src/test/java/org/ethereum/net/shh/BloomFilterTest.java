@@ -17,11 +17,11 @@
  */
 package org.ethereum.net.shh;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Anton Nashatyrev on 24.09.2015.

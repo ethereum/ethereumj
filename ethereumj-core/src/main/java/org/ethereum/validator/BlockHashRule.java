@@ -17,12 +17,12 @@
  */
 package org.ethereum.validator;
 
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-
-import java.util.List;
 
 /**
  *  Checks if the block is from the right fork  

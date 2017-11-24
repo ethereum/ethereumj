@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.eth.message;
 
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
+
+import java.math.BigInteger;
+
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import java.math.BigInteger;
-
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.byteArrayToLong;
 
 /**
  * Wrapper around an Ethereum GetBlockHeaders message on the network

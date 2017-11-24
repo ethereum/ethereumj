@@ -17,15 +17,15 @@
  */
 package org.ethereum.config.blockchain;
 
+import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
+
+import java.util.Objects;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.GasCost;
-
-import java.util.Objects;
-
-import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
 
 /**
  * Hard fork includes following EIPs:

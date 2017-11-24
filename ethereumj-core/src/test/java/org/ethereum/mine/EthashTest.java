@@ -17,6 +17,18 @@
  */
 package org.ethereum.mine;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.intsToBytes;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
+import static org.junit.Assert.assertArrayEquals;
+
+import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.TestUtils;
 import org.ethereum.config.SystemProperties;
@@ -24,17 +36,12 @@ import org.ethereum.core.Block;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.List;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.*;
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Created by Anton Nashatyrev on 02.12.2015.

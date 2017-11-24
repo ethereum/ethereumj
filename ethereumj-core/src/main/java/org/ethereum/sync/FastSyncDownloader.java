@@ -17,21 +17,18 @@
  */
 package org.ethereum.sync;
 
+import java.math.BigInteger;
+import java.util.List;
+
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.Blockchain;
-import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
-import java.math.BigInteger;
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.

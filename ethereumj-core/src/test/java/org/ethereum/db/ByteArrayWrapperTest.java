@@ -17,19 +17,18 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.util.FastByteComparisons;
-
-import com.google.common.primitives.UnsignedBytes;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Comparator;
 
-import static org.junit.Assert.*;
+import org.ethereum.util.FastByteComparisons;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
+
+import com.google.common.primitives.UnsignedBytes;
 
 public class ByteArrayWrapperTest {
 

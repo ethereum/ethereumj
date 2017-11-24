@@ -17,22 +17,19 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteUtil;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
-
-import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
-
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteUtil;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

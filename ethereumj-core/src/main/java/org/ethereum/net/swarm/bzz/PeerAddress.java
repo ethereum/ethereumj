@@ -17,9 +17,12 @@
  */
 package org.ethereum.net.swarm.bzz;
 
-import com.google.common.base.Joiner;
-import org.apache.commons.codec.binary.StringUtils;
-import org.ethereum.net.p2p.Peer;
+import static org.ethereum.crypto.HashUtil.sha3;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.Util;
@@ -27,12 +30,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Class similar for {@link Node} used in the swarm

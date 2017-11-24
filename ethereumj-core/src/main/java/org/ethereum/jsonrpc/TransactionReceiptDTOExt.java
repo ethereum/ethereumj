@@ -17,10 +17,10 @@
  */
 package org.ethereum.jsonrpc;
 
+import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionInfo;
-
-import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
 
 /**
  * Created by Anton Nashatyrev on 05.08.2016.

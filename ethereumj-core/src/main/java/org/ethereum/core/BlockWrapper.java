@@ -17,15 +17,15 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPList;
+import static org.ethereum.util.TimeUtils.secondsToMillis;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.ethereum.util.TimeUtils.secondsToMillis;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
 
 /**
  * <p> Wraps {@link Block} </p>

@@ -17,11 +17,10 @@
  */
 package org.ethereum.crypto.jce;
 
-import org.spongycastle.jcajce.provider.config.ConfigurableProvider;
-import org.spongycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.Provider;
 import java.security.Security;
+
+import org.spongycastle.jce.provider.BouncyCastleProvider;
 
 public final class SpongyCastleProvider {
 

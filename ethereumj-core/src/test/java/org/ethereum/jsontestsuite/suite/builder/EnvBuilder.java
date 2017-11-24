@@ -17,12 +17,12 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
-import org.ethereum.jsontestsuite.suite.Env;
-import org.ethereum.jsontestsuite.suite.model.EnvTck;
-
 import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 import static org.ethereum.jsontestsuite.suite.Utils.parseNumericData;
 import static org.ethereum.jsontestsuite.suite.Utils.parseVarData;
+
+import org.ethereum.jsontestsuite.suite.Env;
+import org.ethereum.jsontestsuite.suite.model.EnvTck;
 
 public class EnvBuilder {
 

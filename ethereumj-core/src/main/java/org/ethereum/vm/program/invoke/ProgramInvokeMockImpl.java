@@ -21,11 +21,10 @@ import org.ethereum.core.Repository;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.vm.DataWord;
-
 import org.spongycastle.util.encoders.Hex;
 
 /**

@@ -19,7 +19,7 @@ package org.ethereum.net.dht;
 
 import java.util.List;
 
-import static org.ethereum.net.dht.Bucket.*;
+import org.ethereum.net.dht.Bucket.SaveLeaf;
 
 public class DHTUtils {
 

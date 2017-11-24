@@ -17,14 +17,7 @@
  */
 package org.ethereum.datasource.leveldb;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.DbSource;
-import org.ethereum.util.FileUtil;
-import org.iq80.leveldb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.fusesource.leveldbjni.JniDBFactory.factory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +30,19 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static org.fusesource.leveldbjni.JniDBFactory.factory;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.util.FileUtil;
+import org.iq80.leveldb.CompressionType;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBException;
+import org.iq80.leveldb.DBIterator;
+import org.iq80.leveldb.Options;
+import org.iq80.leveldb.WriteBatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author Roman Mandeleil

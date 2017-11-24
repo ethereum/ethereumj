@@ -17,16 +17,16 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.ethereum.TestUtils.randomBytes;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.TestUtils.randomBytes;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.junit.Ignore;
+import org.junit.Test;
 
 @Ignore
 public class LevelDbDataSourceTest {

@@ -17,14 +17,14 @@
  */
 package org.ethereum.datasource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The JournalSource records all the changes which were made before each commitUpdate

@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.util.ByteUtil.bytesToIp;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
+
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-
-import static org.ethereum.util.ByteUtil.bytesToIp;
-import static org.ethereum.util.ByteUtil.longToBytes;
-import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
 
 public class PingMessage extends Message {
 

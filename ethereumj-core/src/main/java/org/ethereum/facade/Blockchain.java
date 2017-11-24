@@ -17,13 +17,10 @@
  */
 package org.ethereum.facade;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.db.BlockStore;
-
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Set;
+
+import org.ethereum.core.Block;
+import org.ethereum.db.BlockStore;
 
 public interface Blockchain {
 

@@ -17,15 +17,12 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import io.netty.channel.Channel;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Random;
+
+import org.ethereum.net.rlpx.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RefreshTask extends DiscoverTask {
     private static final Logger logger = LoggerFactory.getLogger("discover");

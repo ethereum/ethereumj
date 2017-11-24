@@ -17,15 +17,15 @@
  */
 package org.ethereum.jsonrpc;
 
-import org.ethereum.core.Bloom;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.LogInfo;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.core.Bloom;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
 
 /**
  * Created by Anton Nashatyrev on 12.04.2016.

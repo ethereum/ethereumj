@@ -17,7 +17,13 @@
  */
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.config.CommonConfig;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -32,20 +38,12 @@ import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.sync.SyncManager;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Testing whether Eth handler {@link Eth62} is blocking {@link BlockchainImpl}

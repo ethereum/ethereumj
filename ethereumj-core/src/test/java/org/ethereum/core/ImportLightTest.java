@@ -17,15 +17,23 @@
  */
 package org.ethereum.core;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.NoDeleteSource;
-import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -36,15 +44,14 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.

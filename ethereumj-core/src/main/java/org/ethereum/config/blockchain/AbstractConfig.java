@@ -17,12 +17,22 @@
  */
 package org.ethereum.config.blockchain;
 
+import static org.ethereum.util.BIUtil.max;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
@@ -31,13 +41,6 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.Program;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-import static org.ethereum.util.BIUtil.max;
 
 /**
  * BlockchainForkConfig is also implemented by this class - its (mostly testing) purpose to represent

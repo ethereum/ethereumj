@@ -17,6 +17,12 @@
  */
 package org.ethereum.samples;
 
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
@@ -32,9 +38,6 @@ import org.ethereum.vm.program.ProgramResult;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-
-import java.math.BigInteger;
-import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 03.03.2016.

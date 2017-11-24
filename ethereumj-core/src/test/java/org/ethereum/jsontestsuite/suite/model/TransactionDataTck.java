@@ -1,8 +1,8 @@
 package org.ethereum.jsontestsuite.suite.model;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import java.util.List;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  * @author Mikhail Kalinin

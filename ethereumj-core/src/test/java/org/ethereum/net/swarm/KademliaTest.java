@@ -17,12 +17,16 @@
  */
 package org.ethereum.net.swarm;
 
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.*;
 
 /**
  * Created by Admin on 01.07.2015.

@@ -18,9 +18,9 @@
 package org.ethereum.net.rlpx.discover;
 
 
-import org.ethereum.net.rlpx.Message;
-
 import java.net.InetSocketAddress;
+
+import org.ethereum.net.rlpx.Message;
 
 public class DiscoveryEvent {
     private Message message;

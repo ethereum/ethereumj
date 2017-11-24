@@ -17,7 +17,7 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;

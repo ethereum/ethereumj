@@ -17,13 +17,13 @@
  */
 package org.ethereum.samples;
 
+import java.util.List;
+
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.IndexedBlockStore;
-
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 21.07.2016.

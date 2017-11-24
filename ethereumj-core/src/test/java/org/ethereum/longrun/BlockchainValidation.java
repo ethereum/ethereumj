@@ -17,6 +17,13 @@
  */
 package org.ethereum.longrun;
 
+import static org.ethereum.core.BlockchainImpl.calcReceiptsTrie;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.ethereum.config.CommonConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -28,25 +35,15 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
-import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
-import org.ethereum.datasource.SourceCodec;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.ethereum.core.BlockchainImpl.calcReceiptsTrie;
 
 /**
  * Validation for all kind of blockchain data

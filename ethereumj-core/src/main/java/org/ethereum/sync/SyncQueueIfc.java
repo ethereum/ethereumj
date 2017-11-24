@@ -17,11 +17,11 @@
  */
 package org.ethereum.sync;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeaderWrapper;
-
 import java.util.Collection;
 import java.util.List;
+
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeaderWrapper;
 
 /**
  * Created by Anton Nashatyrev on 27.05.2016.

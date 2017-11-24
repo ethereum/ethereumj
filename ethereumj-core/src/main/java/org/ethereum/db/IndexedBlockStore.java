@@ -17,6 +17,15 @@
  */
 package org.ethereum.db;
 
+import static java.math.BigInteger.ZERO;
+import static org.ethereum.crypto.HashUtil.shortHash;
+import static org.spongycastle.util.Arrays.areEqual;
+
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.DataSourceArray;
@@ -30,15 +39,6 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.math.BigInteger.ZERO;
-import static org.ethereum.crypto.HashUtil.shortHash;
-import static org.spongycastle.util.Arrays.areEqual;
 
 public class IndexedBlockStore extends AbstractBlockstore{
 

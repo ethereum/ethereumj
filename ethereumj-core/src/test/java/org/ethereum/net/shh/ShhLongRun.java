@@ -17,6 +17,14 @@
  */
 package org.ethereum.net.shh;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.facade.Ethereum;
@@ -33,13 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 /**
  * This is not a JUnit test but rather a long running standalone test for messages exchange with another peer.

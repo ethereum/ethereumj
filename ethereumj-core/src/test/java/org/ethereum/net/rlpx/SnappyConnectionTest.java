@@ -1,5 +1,9 @@
 package org.ethereum.net.rlpx;
 
+import java.io.FileNotFoundException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
@@ -11,10 +15,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.io.FileNotFoundException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Mikhail Kalinin

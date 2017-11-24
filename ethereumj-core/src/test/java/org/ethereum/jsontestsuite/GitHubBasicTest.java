@@ -17,7 +17,15 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.blockchain.*;
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runCryptoTest;
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runDifficultyTest;
+
+import java.io.IOException;
+
+import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.config.net.RopstenNetConfig;
 import org.json.simple.parser.ParseException;
@@ -25,11 +33,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import java.io.IOException;
-
-import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runCryptoTest;
-import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runDifficultyTest;
 
 /**
  * @author Mikhail Kalinin

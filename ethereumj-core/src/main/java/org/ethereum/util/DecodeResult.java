@@ -17,9 +17,9 @@
  */
 package org.ethereum.util;
 
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.Serializable;
+
+import org.spongycastle.util.encoders.Hex;
 
 @SuppressWarnings("serial")
 public class DecodeResult implements Serializable {

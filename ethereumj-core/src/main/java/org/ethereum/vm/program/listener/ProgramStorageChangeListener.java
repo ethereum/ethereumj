@@ -17,10 +17,10 @@
  */
 package org.ethereum.vm.program.listener;
 
-import org.ethereum.vm.DataWord;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.ethereum.vm.DataWord;
 
 public class ProgramStorageChangeListener extends ProgramListenerAdaptor {
 

@@ -17,21 +17,21 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.bytesToIp;
+import static org.ethereum.util.ByteUtil.hostToBytes;
+
+import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.bytesToIp;
-import static org.ethereum.util.ByteUtil.hostToBytes;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;

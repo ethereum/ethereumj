@@ -17,12 +17,17 @@
  */
 package org.ethereum.core;
 
+import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.concurrent.*;
 
 /**
  * The class intended to serve as an 'Event Bus' where all EthereumJ events are

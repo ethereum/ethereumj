@@ -17,6 +17,8 @@
  */
 package org.ethereum.config;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.DaoNoHFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
@@ -24,10 +26,6 @@ import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.Test;
-
-import java.math.BigInteger;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Stan Reshetnyk on 29.12.16.

@@ -17,13 +17,12 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.Block;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Wrapper around an Ethereum BlockBodies message on the network

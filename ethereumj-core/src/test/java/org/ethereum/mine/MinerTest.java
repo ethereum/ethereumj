@@ -17,18 +17,28 @@
  */
 package org.ethereum.mine;
 
-import com.typesafe.config.ConfigFactory;
+import java.io.FileNotFoundException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.util.ByteUtil;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -37,14 +47,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static org.ethereum.crypto.HashUtil.sha3;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Long running test

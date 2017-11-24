@@ -17,14 +17,14 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.BlockStoreDummy;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.RepositoryRoot;
+import org.junit.Test;
 
 /**
  * Testing {@link BlockchainImpl#getListOfHeadersStartFrom(BlockIdentifier, int, int, boolean)}

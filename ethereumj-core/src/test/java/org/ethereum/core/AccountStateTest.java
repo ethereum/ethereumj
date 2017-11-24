@@ -17,13 +17,12 @@
  */
 package org.ethereum.core;
 
-import org.junit.Test;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 public class AccountStateTest {
 

@@ -18,7 +18,6 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 

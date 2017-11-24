@@ -17,12 +17,12 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.BlockHeader;
+import static org.ethereum.util.BIUtil.isEqual;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.BIUtil.isEqual;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.BlockHeader;
 
 /**
  * Checks block's difficulty against calculated difficulty value

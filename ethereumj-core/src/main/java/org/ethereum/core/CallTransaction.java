@@ -21,13 +21,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.solidity.SolidityType.IntType;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
-
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,10 +29,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.ethereum.solidity.SolidityType;
+import org.ethereum.solidity.SolidityType.IntType;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.encoders.Hex;
+
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Creates a contract function call transaction.

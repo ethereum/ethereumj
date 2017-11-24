@@ -17,14 +17,14 @@
  */
 package org.ethereum.net.eth.handler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.ethereum.core.BlockHeader;
 import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Testing {@link org.ethereum.net.eth.handler.Eth62#isValid(BlockHeadersMessage, GetBlockHeadersMessageWrapper)}

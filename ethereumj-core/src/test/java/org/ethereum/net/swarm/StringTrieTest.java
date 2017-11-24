@@ -17,7 +17,7 @@
  */
 package org.ethereum.net.swarm;
 
-import org.junit.*;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**

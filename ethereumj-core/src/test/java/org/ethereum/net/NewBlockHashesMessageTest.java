@@ -17,17 +17,17 @@
  */
 package org.ethereum.net;
 
-import org.ethereum.core.BlockIdentifier;
-import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.net.eth.message.NewBlockHashesMessage;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.spongycastle.util.encoders.Hex.decode;
+import static org.spongycastle.util.encoders.Hex.toHexString;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.spongycastle.util.encoders.Hex.decode;
-import static org.spongycastle.util.encoders.Hex.toHexString;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.NewBlockHashesMessage;
+import org.junit.Test;
 
 /**
  * @author Mikhail Kalinin

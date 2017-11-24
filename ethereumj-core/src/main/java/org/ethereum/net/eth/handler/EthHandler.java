@@ -17,23 +17,28 @@
  */
 package org.ethereum.net.eth.handler;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import org.ethereum.db.BlockStore;
-import org.ethereum.listener.EthereumListener;
+import java.util.List;
+
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
  * Process the messages between peers with 'eth' capability on the network<br>

@@ -20,11 +20,11 @@ package org.ethereum.solidity;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import org.ethereum.solidity.Abi.Entry;
 import org.ethereum.solidity.Abi.Entry.Type;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class AbiTest {
 

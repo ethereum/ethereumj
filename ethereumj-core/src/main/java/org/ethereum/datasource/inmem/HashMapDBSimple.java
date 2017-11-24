@@ -17,14 +17,11 @@
  */
 package org.ethereum.datasource.inmem;
 
-import org.ethereum.datasource.DbSource;
-import org.ethereum.util.ALock;
-import org.ethereum.util.ByteArrayMap;
-
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.ethereum.datasource.DbSource;
+import org.ethereum.util.ByteArrayMap;
 
 /**
  * Created by Anton Nashatyrev on 12.10.2016.

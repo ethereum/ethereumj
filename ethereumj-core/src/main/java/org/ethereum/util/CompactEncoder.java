@@ -17,18 +17,16 @@
  */
 package org.ethereum.util;
 
-import java.io.ByteArrayOutputStream;
-
-import java.nio.ByteBuffer;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import static java.util.Arrays.*;
+import static java.util.Arrays.copyOf;
+import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.appendByte;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.encoders.Hex.encode;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Compact encoding of hex sequence with optional terminator

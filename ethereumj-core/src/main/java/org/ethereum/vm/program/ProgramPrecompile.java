@@ -17,15 +17,13 @@
  */
 package org.ethereum.vm.program;
 
-import org.ethereum.datasource.Source;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPList;
-import org.ethereum.vm.OpCode;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
+import org.ethereum.vm.OpCode;
 
 /**
  * Created by Anton Nashatyrev on 06.02.2017.

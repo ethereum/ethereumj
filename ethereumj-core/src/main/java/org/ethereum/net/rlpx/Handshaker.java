@@ -17,8 +17,15 @@
  */
 package org.ethereum.net.rlpx;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.client.Capability;
@@ -29,11 +36,8 @@ import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
 import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 
 /**
  * Created by devrandom on 2015-04-09.

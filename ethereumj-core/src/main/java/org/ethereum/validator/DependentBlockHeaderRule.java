@@ -17,11 +17,11 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
-import org.slf4j.Logger;
-
 import java.util.LinkedList;
 import java.util.List;
+
+import org.ethereum.core.BlockHeader;
+import org.slf4j.Logger;
 
 /**
  * Parent class for {@link BlockHeader} validators

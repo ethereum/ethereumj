@@ -17,23 +17,30 @@
  */
 package org.ethereum.sync;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import org.ethereum.core.*;
+import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.ByteArrayMap;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.*;
-import java.util.concurrent.*;
-
-import static java.lang.Math.max;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.

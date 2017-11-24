@@ -17,13 +17,19 @@
  */
 package org.ethereum.config;
 
-import com.typesafe.config.*;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValue;
 
 /**
  * Created by Anton Nashatyrev on 13.07.2015.

@@ -17,22 +17,22 @@
  */
 package org.ethereum.net.rlpx;
 
-import org.ethereum.crypto.ECKey;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.merge;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.ethereum.crypto.ECKey;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 public class RLPXTest {
 

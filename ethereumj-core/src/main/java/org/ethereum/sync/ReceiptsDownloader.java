@@ -17,10 +17,18 @@
  */
 package org.ethereum.sync;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import org.ethereum.core.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.TransactionInfo;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
@@ -36,8 +44,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.

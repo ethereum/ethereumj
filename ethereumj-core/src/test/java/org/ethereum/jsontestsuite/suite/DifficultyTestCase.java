@@ -17,14 +17,13 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.ethereum.core.BlockHeader;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.math.BigInteger;
 
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.ethereum.core.BlockHeader;
 
 /**
  * @author Mikhail Kalinin

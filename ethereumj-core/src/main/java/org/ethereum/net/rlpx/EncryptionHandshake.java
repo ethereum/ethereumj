@@ -17,8 +17,14 @@
  */
 package org.ethereum.net.rlpx;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
+import static org.ethereum.crypto.HashUtil.sha3;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+
+import javax.annotation.Nullable;
+
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
@@ -26,12 +32,8 @@ import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.math.ec.ECPoint;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.SecureRandom;
-
-import static org.ethereum.crypto.HashUtil.sha3;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 /**
  * Created by devrandom on 2015-04-08.

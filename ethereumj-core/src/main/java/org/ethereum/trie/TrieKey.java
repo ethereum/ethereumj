@@ -17,9 +17,9 @@
  */
 package org.ethereum.trie;
 
-import org.spongycastle.util.encoders.Hex;
-
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Created by Anton Nashatyrev on 13.02.2017.

@@ -17,13 +17,13 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteUtil;
-
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.ethereum.config.SystemProperties;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteUtil;
 
 /**
  * The genesis block is the first block in the chain and has fixed values according to

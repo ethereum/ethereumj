@@ -17,8 +17,6 @@
  */
 package org.ethereum.net.swarm.bzz;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.swarm.NetStore;
@@ -28,6 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
  * Process the messages between peers with 'bzz' capability on the network.

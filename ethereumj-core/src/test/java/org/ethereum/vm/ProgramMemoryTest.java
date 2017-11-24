@@ -17,17 +17,17 @@
  */
 package org.ethereum.vm;
 
-import org.ethereum.util.ByteUtil;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.nio.ByteBuffer;
+
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.nio.ByteBuffer;
-
-import static org.junit.Assert.*;
 
 public class ProgramMemoryTest {
 

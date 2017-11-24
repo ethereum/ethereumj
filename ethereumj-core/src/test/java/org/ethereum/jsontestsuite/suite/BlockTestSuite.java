@@ -17,14 +17,18 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
 
 public class BlockTestSuite {
 

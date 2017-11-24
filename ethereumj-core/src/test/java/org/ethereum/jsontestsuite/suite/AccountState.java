@@ -17,15 +17,7 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
-
-import org.json.simple.JSONObject;
-
-import org.spongycastle.util.encoders.Hex;
-
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,6 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.DataWord;
+import org.json.simple.JSONObject;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

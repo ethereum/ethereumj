@@ -17,16 +17,14 @@
  */
 package org.ethereum.net.swarm.bzz;
 
-import org.ethereum.net.client.Capability;
-import org.ethereum.net.swarm.Key;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPList;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.ethereum.net.swarm.Key;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 
 public class BzzStoreReqMessage extends BzzMessage {
 

@@ -17,11 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
+import java.math.BigInteger;
+
 import org.ethereum.core.BlockHeader;
 import org.ethereum.jsontestsuite.suite.Utils;
 import org.ethereum.jsontestsuite.suite.model.BlockHeaderTck;
-
-import java.math.BigInteger;
 
 public class BlockHeaderBuilder {
 

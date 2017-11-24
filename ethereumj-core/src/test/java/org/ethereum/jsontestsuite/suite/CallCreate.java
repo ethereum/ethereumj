@@ -18,9 +18,7 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.util.ByteUtil;
-
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.encoders.Hex;
 
 /**

@@ -17,16 +17,20 @@
  */
 package org.ethereum.jsontestsuite;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.TxTestSuite;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTransactionTest {

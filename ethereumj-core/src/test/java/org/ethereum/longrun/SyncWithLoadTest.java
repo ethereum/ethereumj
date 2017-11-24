@@ -17,7 +17,19 @@
  */
 package org.ethereum.longrun;
 
-import com.typesafe.config.ConfigFactory;
+import static java.lang.Thread.sleep;
+
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -29,7 +41,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
@@ -44,18 +55,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static java.lang.Thread.sleep;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Regular sync with load

@@ -17,14 +17,13 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.util.ByteUtil;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
+import org.ethereum.util.ByteUtil;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

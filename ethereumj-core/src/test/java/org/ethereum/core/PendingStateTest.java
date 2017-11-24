@@ -17,18 +17,13 @@
  */
 package org.ethereum.core;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.util.blockchain.SolidityContract;
-import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
+import static org.ethereum.util.blockchain.EtherUtil.convert;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -40,10 +35,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
-import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
-import static org.ethereum.util.blockchain.EtherUtil.convert;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.util.blockchain.SolidityContract;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * @author Mikhail Kalinin

@@ -17,12 +17,12 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class LogsValidator {
 

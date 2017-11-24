@@ -17,15 +17,21 @@
  */
 package org.ethereum.net.eth.handler;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.ethereum.core.*;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.sync.SyncStatistics;
+import static org.ethereum.net.eth.EthVersion.UPPER;
+import static org.ethereum.net.eth.EthVersion.fromCode;
 
 import java.math.BigInteger;
 import java.util.List;
 
-import static org.ethereum.net.eth.EthVersion.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.EthVersion;
+import org.ethereum.sync.SyncStatistics;
+
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * It's quite annoying to always check {@code if (eth != null)} before accessing it. <br>

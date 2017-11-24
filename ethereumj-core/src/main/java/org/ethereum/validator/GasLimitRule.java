@@ -17,11 +17,11 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.Constants;
-import org.ethereum.core.BlockHeader;
-
 import java.math.BigInteger;
+
+import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.BlockHeader;
 
 /**
  * Checks {@link BlockHeader#gasLimit} against {@link Constants#getMIN_GAS_LIMIT}. <br>

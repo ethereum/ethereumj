@@ -17,7 +17,18 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.codec.binary.Hex;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.PeerClient;
@@ -26,9 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.*;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Makes test RLPx connection to the peers to acquire statistics

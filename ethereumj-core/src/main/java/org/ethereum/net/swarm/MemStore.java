@@ -17,12 +17,10 @@
  */
 package org.ethereum.net.swarm;
 
-import org.apache.commons.collections4.map.AbstractLinkedMap;
-import org.apache.commons.collections4.map.LRUMap;
-
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.collections4.map.LRUMap;
 
 /**
  * Limited capacity memory storage. Last recently used chunks are purged when

@@ -17,13 +17,14 @@
  */
 package org.ethereum.samples;
 
-import com.typesafe.config.ConfigFactory;
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.EthereumFactory;
 import org.springframework.context.annotation.Bean;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * This class just extends the BasicSample with the config which connect the peer to the test network

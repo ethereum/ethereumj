@@ -17,19 +17,35 @@
  */
 package org.ethereum.manager;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+
+import javax.annotation.PostConstruct;
+
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.EventDispatchThread;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Repository;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -38,14 +54,6 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.

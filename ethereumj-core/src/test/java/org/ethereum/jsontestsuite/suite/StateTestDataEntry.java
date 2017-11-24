@@ -1,10 +1,16 @@
 package org.ethereum.jsontestsuite.suite;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
-import org.ethereum.jsontestsuite.suite.model.*;
-
-import java.util.*;
+import org.ethereum.jsontestsuite.suite.model.AccountTck;
+import org.ethereum.jsontestsuite.suite.model.EnvTck;
+import org.ethereum.jsontestsuite.suite.model.PostDataTck;
+import org.ethereum.jsontestsuite.suite.model.TransactionDataTck;
 
 /**
  * @author Mikhail Kalinin

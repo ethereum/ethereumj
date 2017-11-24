@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.eth.message;
 
+import static org.ethereum.net.eth.EthVersion.V62;
+
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
-
-import static org.ethereum.net.eth.EthVersion.V62;
 
 /**
  * @author Mikhail Kalinin

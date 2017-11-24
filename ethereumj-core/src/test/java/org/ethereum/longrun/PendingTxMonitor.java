@@ -17,9 +17,9 @@
  */
 package org.ethereum.longrun;
 
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
-import com.googlecode.jsonrpc4j.ProxyUtil;
-import com.typesafe.config.ConfigFactory;
+import java.net.URL;
+import java.util.HashSet;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.ethereum.config.SystemProperties;
@@ -38,8 +38,9 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 
-import java.net.URL;
-import java.util.HashSet;
+import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
+import com.googlecode.jsonrpc4j.ProxyUtil;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Matches pending transactions from EthereumJ and any other JSON-RPC client

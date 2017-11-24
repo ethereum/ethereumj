@@ -17,15 +17,16 @@
  */
 package org.ethereum.vm.trace;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.ethereum.vm.DataWord;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.ethereum.util.ByteUtil.toHexString;
+import org.ethereum.vm.DataWord;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class OpActions {
 

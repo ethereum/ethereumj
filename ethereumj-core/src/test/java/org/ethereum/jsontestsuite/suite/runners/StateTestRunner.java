@@ -17,19 +17,24 @@
  */
 package org.ethereum.jsontestsuite.suite.runners;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.suite.Env;
 import org.ethereum.jsontestsuite.suite.StateTestCase;
 import org.ethereum.jsontestsuite.suite.TestProgramInvokeFactory;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.EnvBuilder;
-import org.ethereum.jsontestsuite.suite.builder.LogBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.builder.TransactionBuilder;
-import org.ethereum.jsontestsuite.suite.validators.LogsValidator;
 import org.ethereum.jsontestsuite.suite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
 import org.ethereum.vm.LogInfo;
@@ -38,9 +43,6 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class StateTestRunner {
 
