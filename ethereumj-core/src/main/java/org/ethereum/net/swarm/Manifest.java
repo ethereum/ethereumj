@@ -17,16 +17,15 @@
  */
 package org.ethereum.net.swarm;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import org.spongycastle.util.encoders.Hex;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 /**
  * Hierarchical structure of path items

@@ -17,7 +17,6 @@
  */
 package org.ethereum.samples;
 
-import com.typesafe.config.ConfigFactory;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
@@ -28,6 +27,8 @@ import org.ethereum.mine.MinerListener;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
+
+import com.typesafe.config.ConfigFactory;
 
 /**
  * The sample creates a small private net with two peers: one is the miner, another is a regular peer

@@ -17,10 +17,10 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.ByteUtil;
-
 import java.math.BigInteger;
 import java.util.Arrays;
+
+import org.ethereum.util.ByteUtil;
 
 /**
  * Decorates {@link Transaction} class with additional attributes

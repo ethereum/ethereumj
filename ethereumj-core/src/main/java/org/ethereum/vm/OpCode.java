@@ -17,12 +17,19 @@
  */
 package org.ethereum.vm;
 
+import static org.ethereum.vm.OpCode.Tier.BaseTier;
+import static org.ethereum.vm.OpCode.Tier.ExtTier;
+import static org.ethereum.vm.OpCode.Tier.HighTier;
+import static org.ethereum.vm.OpCode.Tier.LowTier;
+import static org.ethereum.vm.OpCode.Tier.MidTier;
+import static org.ethereum.vm.OpCode.Tier.SpecialTier;
+import static org.ethereum.vm.OpCode.Tier.VeryLowTier;
+import static org.ethereum.vm.OpCode.Tier.ZeroTier;
+
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.ethereum.vm.OpCode.Tier.*;
 
 
 /**

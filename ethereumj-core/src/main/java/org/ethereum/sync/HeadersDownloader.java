@@ -17,6 +17,8 @@
  */
 package org.ethereum.sync;
 
+import java.util.List;
+
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
@@ -33,8 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.

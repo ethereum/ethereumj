@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.merge;
+
+import java.security.SignatureException;
+
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-
-import java.security.SignatureException;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.merge;
 
 public abstract class Message {
 

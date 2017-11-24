@@ -17,17 +17,21 @@
  */
 package org.ethereum.net.message;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.net.client.Capability;
-import org.ethereum.net.client.ConfigCapabilities;
-import org.ethereum.net.p2p.*;
-import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.ethereum.config.SystemProperties;
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.client.ConfigCapabilities;
+import org.ethereum.net.p2p.DisconnectMessage;
+import org.ethereum.net.p2p.GetPeersMessage;
+import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
+import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * This class contains static values of messages on the network. These message

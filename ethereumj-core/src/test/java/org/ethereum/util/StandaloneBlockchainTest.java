@@ -17,6 +17,11 @@
  */
 package org.ethereum.util;
 
+import static org.ethereum.util.blockchain.EtherUtil.convert;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
+
+import java.math.BigInteger;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.blockchain.SolidityContract;
@@ -25,11 +30,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-
-import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
-import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
  * Created by Anton Nashatyrev on 06.07.2016.

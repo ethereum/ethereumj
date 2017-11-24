@@ -17,12 +17,11 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.util.FastByteComparisons;
-
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.Serializable;
 import java.util.Arrays;
+
+import org.ethereum.util.FastByteComparisons;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.net.shh.ShhMessageCodes.STATUS;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import static org.ethereum.net.shh.ShhMessageCodes.STATUS;
 
 /**
  * @author by Konstantin Shabalin

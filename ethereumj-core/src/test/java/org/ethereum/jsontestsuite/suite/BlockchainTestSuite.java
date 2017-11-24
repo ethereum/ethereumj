@@ -17,19 +17,24 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
+import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
-
-import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONFromCommit;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
 
 /**
  * @author Mikhail Kalinin

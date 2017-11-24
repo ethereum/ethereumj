@@ -17,17 +17,20 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Random;
+
 import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.rlpx.discover.table.NodeBucket;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.Random;
-
-import static org.junit.Assert.*;
 
 public class KademliaTest {
 

@@ -17,8 +17,11 @@
  */
 package org.ethereum.vm.program.invoke;
 
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+
+import java.math.BigInteger;
+
 import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
@@ -28,12 +31,7 @@ import org.ethereum.vm.program.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.math.BigInteger;
-
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 /**
  * @author Roman Mandeleil

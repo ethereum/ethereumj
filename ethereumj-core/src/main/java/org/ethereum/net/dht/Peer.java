@@ -17,11 +17,11 @@
  */
 package org.ethereum.net.dht;
 
+import java.math.BigInteger;
+
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
 
 public class Peer {
     byte[] id;

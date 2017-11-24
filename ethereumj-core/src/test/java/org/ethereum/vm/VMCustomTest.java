@@ -17,23 +17,22 @@
  */
 package org.ethereum.vm;
 
-import org.ethereum.vm.program.Program;
-import org.ethereum.vm.program.Program.OutOfGasException;
-import org.ethereum.vm.program.Program.StackTooSmallException;
-
-import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.*;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.Program.OutOfGasException;
+import org.ethereum.vm.program.Program.StackTooSmallException;
+import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

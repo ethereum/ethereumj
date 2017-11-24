@@ -17,6 +17,9 @@
  */
 package org.ethereum.config.blockchain;
 
+import java.math.BigInteger;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
@@ -34,9 +37,6 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.Program;
-
-import java.math.BigInteger;
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 14.10.2016.

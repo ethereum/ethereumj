@@ -17,9 +17,18 @@
  */
 package org.ethereum.net.rlpx;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
+import static org.ethereum.util.RLP.decode2OneItem;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.ethereum.net.swarm.Util;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -30,12 +39,9 @@ import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.ethereum.util.RLP.decode2OneItem;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
 
 /**
  * Created by devrandom on 2015-04-11.

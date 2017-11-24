@@ -17,25 +17,58 @@
  */
 package org.ethereum.net.eth.handler;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import io.netty.channel.ChannelHandlerContext;
+import static java.lang.Math.min;
+import static java.util.Collections.singletonList;
+import static org.ethereum.net.eth.EthVersion.V62;
+import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
+import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
+import static org.ethereum.sync.PeerState.DONE_HASH_RETRIEVING;
+import static org.ethereum.sync.PeerState.HEADER_RETRIEVING;
+import static org.ethereum.sync.PeerState.IDLE;
+import static org.ethereum.util.Utils.longToTimePeriod;
+import static org.spongycastle.util.encoders.Hex.toHexString;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.NewBlockHashesMessage;
+import org.ethereum.net.eth.message.NewBlockMessage;
+import org.ethereum.net.eth.message.StatusMessage;
+import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -45,18 +78,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
-import java.math.BigInteger;
-import java.util.*;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
-import static java.lang.Math.min;
-import static java.util.Collections.singletonList;
-import static org.ethereum.net.eth.EthVersion.V62;
-import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
-import static org.ethereum.sync.PeerState.*;
-import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
-import static org.ethereum.util.Utils.longToTimePeriod;
-import static org.spongycastle.util.encoders.Hex.toHexString;
+import io.netty.channel.ChannelHandlerContext;
 
 /**
  * Eth 62

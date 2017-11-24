@@ -17,15 +17,19 @@
  */
 package org.ethereum.net.rlpx;
 
-import com.google.common.collect.Lists;
-import org.ethereum.net.client.Capability;
-import org.ethereum.util.*;
+import static org.ethereum.util.ByteUtil.longToBytes;
 
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.ethereum.util.ByteUtil.longToBytes;
+import org.ethereum.net.client.Capability;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+
+import com.google.common.collect.Lists;
 
 /**
  * Created by devrandom on 2015-04-12.

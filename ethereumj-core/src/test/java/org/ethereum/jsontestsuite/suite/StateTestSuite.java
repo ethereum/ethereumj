@@ -17,14 +17,14 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class StateTestSuite {
 

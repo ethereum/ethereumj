@@ -17,17 +17,27 @@
  */
 package org.ethereum.net.swarm;
 
-import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.Promise;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.swarm.bzz.*;
+import org.ethereum.net.swarm.bzz.BzzPeersMessage;
+import org.ethereum.net.swarm.bzz.BzzProtocol;
+import org.ethereum.net.swarm.bzz.BzzRetrieveReqMessage;
+import org.ethereum.net.swarm.bzz.BzzStoreReqMessage;
+import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.Promise;
 
 /**
  * The main logic of communicating with BZZ peers.

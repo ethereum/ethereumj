@@ -17,9 +17,9 @@
  */
 package org.ethereum.vm.trace;
 
-import org.ethereum.vm.OpCode;
-
 import java.math.BigInteger;
+
+import org.ethereum.vm.OpCode;
 
 public class Op {
 

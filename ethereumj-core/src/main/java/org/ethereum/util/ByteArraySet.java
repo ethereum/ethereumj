@@ -17,12 +17,12 @@
  */
 package org.ethereum.util;
 
-import org.ethereum.db.ByteArrayWrapper;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import org.ethereum.db.ByteArrayWrapper;
 
 /**
  * Created by Anton Nashatyrev on 06.10.2016.

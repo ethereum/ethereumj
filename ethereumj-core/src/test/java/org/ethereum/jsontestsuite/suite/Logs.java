@@ -17,27 +17,23 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.DeserializationContext;
-import org.codehaus.jackson.map.JsonDeserializer;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.LogInfo;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.JsonDeserializer;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.spongycastle.util.encoders.Hex;
 
 public class Logs {
     List<LogInfo> logs;

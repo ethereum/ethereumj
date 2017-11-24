@@ -17,12 +17,12 @@
  */
 package org.ethereum.mine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *  Future completes when any of child futures completed. All others are cancelled

@@ -17,17 +17,16 @@
  */
 package org.ethereum.vm;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.core.Bloom;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Roman Mandeleil

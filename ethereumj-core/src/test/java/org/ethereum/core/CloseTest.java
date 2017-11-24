@@ -17,15 +17,15 @@
  */
 package org.ethereum.core;
 
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by Anton Nashatyrev on 24.06.2016.

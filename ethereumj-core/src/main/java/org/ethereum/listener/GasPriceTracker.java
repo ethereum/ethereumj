@@ -17,12 +17,11 @@
  */
 package org.ethereum.listener;
 
+import java.util.Arrays;
+
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.util.ByteUtil;
-
-import java.util.Arrays;
 
 /**
  * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices

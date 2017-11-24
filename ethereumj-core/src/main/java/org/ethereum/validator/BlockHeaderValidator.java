@@ -17,10 +17,10 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
-
 import java.util.Arrays;
 import java.util.List;
+
+import org.ethereum.core.BlockHeader;
 
 /**
  * Composite {@link BlockHeader} validator

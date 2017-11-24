@@ -17,14 +17,19 @@
  */
 package org.ethereum.listener;
 
-import org.ethereum.core.*;
+import java.util.List;
+
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-
-import java.util.List;
 
 /**
  * @author Roman Mandeleil

@@ -17,11 +17,11 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-
 import java.math.BigInteger;
 import java.util.List;
+
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 
 /**
  * @author Roman Mandeleil

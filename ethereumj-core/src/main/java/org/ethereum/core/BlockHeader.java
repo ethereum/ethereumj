@@ -17,6 +17,13 @@
  */
 package org.ethereum.core;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.ByteUtil.toHexString;
+
+import java.math.BigInteger;
+import java.util.List;
+
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -26,13 +33,6 @@ import org.ethereum.util.Utils;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.util.List;
-
-import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Block header is a value object containing

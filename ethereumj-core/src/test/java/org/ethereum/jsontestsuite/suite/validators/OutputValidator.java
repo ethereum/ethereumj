@@ -17,12 +17,12 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+import org.spongycastle.util.encoders.Hex;
 
 public class OutputValidator {
 

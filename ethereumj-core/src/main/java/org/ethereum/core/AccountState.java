@@ -17,19 +17,18 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.FastByteComparisons.equal;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.*;
-import static org.ethereum.util.FastByteComparisons.equal;
+import org.ethereum.config.BlockchainConfig;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 public class AccountState {
 

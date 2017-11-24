@@ -17,10 +17,10 @@
  */
 package org.ethereum.jsonrpc;
 
+import java.math.BigInteger;
+
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
 
 /**
  * Created by Ruben on 19/11/2015.

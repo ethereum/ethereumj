@@ -17,14 +17,14 @@
  */
 package org.ethereum.vm.program.invoke;
 
+import java.math.BigInteger;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.Program;
-
-import java.math.BigInteger;
 
 /**
  * @author Roman Mandeleil

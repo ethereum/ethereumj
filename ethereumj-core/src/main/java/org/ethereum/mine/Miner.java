@@ -17,19 +17,17 @@
  */
 package org.ethereum.mine;
 
-import org.ethereum.core.Block;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.spongycastle.util.Arrays;
-import org.spongycastle.util.BigIntegers;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.core.Block;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.Arrays;
+import org.spongycastle.util.BigIntegers;
 
 /**
  * The Miner performs the proof-of-work needed for a valid block

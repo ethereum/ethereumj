@@ -17,12 +17,13 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioDatagramChannel;
+import java.net.BindException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.ethereum.config.SystemProperties;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.WireTrafficStats;
 import org.slf4j.LoggerFactory;
@@ -30,13 +31,11 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.net.BindException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static org.ethereum.crypto.HashUtil.sha3;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 
 @Component
 public class UDPListener {

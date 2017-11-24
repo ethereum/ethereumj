@@ -17,22 +17,27 @@
  */
 package org.ethereum.vm;
 
+import static org.ethereum.util.ByteUtil.oneByteToHexString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.ethereum.core.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Program.BadJumpDestinationException;
 import org.ethereum.vm.program.Program.StackTooSmallException;
-
 import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.List;
-
-import static org.ethereum.util.ByteUtil.oneByteToHexString;
-import static org.junit.Assert.*;
 
 /**
  * @author Roman Mandeleil

@@ -17,16 +17,17 @@
  */
 package org.ethereum.core;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.keyvalue.AbstractKeyValue;
 import org.ethereum.util.Functional;
 import org.ethereum.vm.DataWord;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public class TransactionTouchedStorage {
 

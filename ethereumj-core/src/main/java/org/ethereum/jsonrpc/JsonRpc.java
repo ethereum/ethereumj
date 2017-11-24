@@ -17,14 +17,14 @@
  */
 package org.ethereum.jsonrpc;
 
+import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
+
+import java.util.Arrays;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.LogInfo;
-
-import java.util.Arrays;
-
-import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
 
 /**
  * Created by Anton Nashatyrev on 25.11.2015.

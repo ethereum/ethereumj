@@ -17,13 +17,13 @@
  */
 package org.ethereum.core;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * <p>Wraps {@link BlockHeader}</p>

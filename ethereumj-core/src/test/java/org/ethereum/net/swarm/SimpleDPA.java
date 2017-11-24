@@ -17,13 +17,9 @@
  */
 package org.ethereum.net.swarm;
 
-import io.netty.buffer.ByteBuf;
-
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * Created by Admin on 11.06.2015.

@@ -17,14 +17,14 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.util.Map;
+
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
-import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.EnvTck;
-
-import java.util.Map;
+import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 
 public class StateTestCase {
 

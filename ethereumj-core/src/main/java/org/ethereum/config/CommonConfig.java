@@ -17,30 +17,62 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.core.*;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.*;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
-import org.ethereum.db.*;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.sync.FastSyncManager;
-import org.ethereum.validator.*;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.annotation.*;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.AbstractCachedSource;
+import org.ethereum.datasource.AsyncWriteCache;
+import org.ethereum.datasource.BatchSourceWriter;
+import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.MemSizeEstimator;
+import org.ethereum.datasource.ObjectDataSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Serializers;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.SourceCodec;
+import org.ethereum.datasource.WriteCache;
+import org.ethereum.datasource.XorDataSource;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.PeerSource;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.db.RepositoryWrapper;
+import org.ethereum.db.StateSource;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.sync.FastSyncManager;
+import org.ethereum.validator.BlockHashRule;
+import org.ethereum.validator.BlockHeaderRule;
+import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
+import org.ethereum.validator.DifficultyRule;
+import org.ethereum.validator.ExtraDataRule;
+import org.ethereum.validator.GasLimitRule;
+import org.ethereum.validator.GasValueRule;
+import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.validator.ParentGasLimitRule;
+import org.ethereum.validator.ParentNumberRule;
+import org.ethereum.validator.ProofOfWorkRule;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.ProgramPrecompile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement

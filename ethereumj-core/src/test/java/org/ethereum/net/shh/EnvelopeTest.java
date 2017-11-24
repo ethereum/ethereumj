@@ -17,19 +17,14 @@
  */
 package org.ethereum.net.shh;
 
-import org.ethereum.crypto.ECIESCoder;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPDump;
-import org.ethereum.util.RLPTest;
-import org.junit.Assert;
-import org.junit.Test;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.util.encoders.Hex;
-
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+
+import org.ethereum.crypto.ECIESCoder;
+import org.ethereum.crypto.ECKey;
+import org.junit.Assert;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.

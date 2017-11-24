@@ -17,6 +17,15 @@
  */
 package org.ethereum.longrun;
 
+import static java.lang.Thread.sleep;
+
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.annotation.PostConstruct;
+
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -34,14 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-
-import javax.annotation.PostConstruct;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-
-import static java.lang.Thread.sleep;
 
 /**
  * BasicNode of ethereum instance

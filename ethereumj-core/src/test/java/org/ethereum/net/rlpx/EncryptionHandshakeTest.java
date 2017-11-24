@@ -17,12 +17,12 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Created by android on 4/8/15.

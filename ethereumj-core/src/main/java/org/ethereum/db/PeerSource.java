@@ -17,6 +17,8 @@
  */
 package org.ethereum.db;
 
+import java.math.BigInteger;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.ObjectDataSource;
@@ -28,7 +30,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.math.BigInteger;
 
 /**
  * Source for {@link org.ethereum.net.rlpx.Node} also known as Peers

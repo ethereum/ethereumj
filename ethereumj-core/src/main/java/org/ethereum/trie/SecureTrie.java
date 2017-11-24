@@ -17,11 +17,10 @@
  */
 package org.ethereum.trie;
 
-import org.ethereum.datasource.Source;
-import org.ethereum.util.Value;
-
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import org.ethereum.datasource.Source;
 
 public class SecureTrie extends TrieImpl {
 

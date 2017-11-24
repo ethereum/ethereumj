@@ -17,6 +17,10 @@
  */
 package org.ethereum.net.eth.handler;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.net.eth.message.NewBlockHashesMessage;
 import org.ethereum.net.server.Channel;
@@ -24,10 +28,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Testing {@link Eth62#processNewBlockHashes(NewBlockHashesMessage)}

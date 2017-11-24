@@ -42,9 +42,9 @@
  */
 package org.ethereum.crypto.cryptohash;
 
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertArrayEquals;
 
-import static org.junit.Assert.*;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Generic test utility class that gets extended from the digest test

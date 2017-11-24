@@ -17,12 +17,12 @@
  */
 package org.ethereum.config.blockchain;
 
-import org.ethereum.config.BlockchainConfig;
-import org.ethereum.core.BlockHeader;
+import static org.ethereum.util.BIUtil.max;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.BIUtil.max;
+import org.ethereum.config.BlockchainConfig;
+import org.ethereum.core.BlockHeader;
 
 /**
  * Ethereum Classic HF on Block #3_000_000:

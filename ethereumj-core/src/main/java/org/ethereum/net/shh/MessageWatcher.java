@@ -17,9 +17,6 @@
  */
 package org.ethereum.net.shh;
 
-
-import java.util.Arrays;
-
 public abstract class MessageWatcher {
     private String to;
     private String from;

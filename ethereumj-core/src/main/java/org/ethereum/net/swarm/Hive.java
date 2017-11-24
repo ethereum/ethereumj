@@ -17,6 +17,13 @@
  */
 package org.ethereum.net.swarm;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
@@ -26,8 +33,6 @@ import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.*;
 
 /**
  * Serves as an interface to the Kademlia. Manages the database of Nodes reported

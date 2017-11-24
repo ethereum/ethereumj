@@ -17,12 +17,12 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.crypto.ECKey.fromPrivate;
+import static org.junit.Assert.assertEquals;
+import static org.spongycastle.util.encoders.Hex.decode;
+
 import org.ethereum.crypto.ECKey;
 import org.junit.Test;
-
-import static org.ethereum.crypto.ECKey.fromPrivate;
-import static org.junit.Assert.*;
-import static org.spongycastle.util.encoders.Hex.decode;
 
 /**
  * @author Mikhail Kalinin

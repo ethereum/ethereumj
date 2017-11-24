@@ -17,17 +17,17 @@
  */
 package org.ethereum;
 
-import org.ethereum.core.Block;
-import org.ethereum.vm.DataWord;
-import org.spongycastle.util.BigIntegers;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.randomHash;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.crypto.HashUtil.randomHash;
+import org.ethereum.core.Block;
+import org.ethereum.vm.DataWord;
+import org.spongycastle.util.BigIntegers;
 
 public final class TestUtils {
 

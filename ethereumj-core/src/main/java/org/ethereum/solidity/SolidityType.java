@@ -17,18 +17,18 @@
  */
 package org.ethereum.solidity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
-
 import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.ethereum.util.ByteUtil;
+import org.spongycastle.util.encoders.Hex;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public abstract class SolidityType {
     protected String name;

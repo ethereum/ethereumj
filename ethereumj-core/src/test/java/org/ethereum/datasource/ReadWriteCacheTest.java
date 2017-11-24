@@ -17,16 +17,16 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.vm.DataWord;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.vm.DataWord;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Testing {@link ReadWriteCache}

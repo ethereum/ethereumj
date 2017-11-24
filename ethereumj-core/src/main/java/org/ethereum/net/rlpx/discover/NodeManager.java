@@ -17,12 +17,31 @@
  */
 package org.ethereum.net.rlpx.discover;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.PeerSource;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.rlpx.*;
+import org.ethereum.net.rlpx.FindNodeMessage;
+import org.ethereum.net.rlpx.Message;
+import org.ethereum.net.rlpx.NeighborsMessage;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.PingMessage;
+import org.ethereum.net.rlpx.PongMessage;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
@@ -30,14 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
-import static java.lang.Math.min;
 
 /**
  * The central class for Peer Discovery machinery.

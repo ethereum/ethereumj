@@ -17,25 +17,9 @@
  */
 package org.ethereum.net;
 
-import com.typesafe.config.ConfigFactory;
-import org.ethereum.config.NoAutoscan;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.mine.Ethash;
-import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.message.*;
-import org.ethereum.net.server.Channel;
-import org.ethereum.util.RLP;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -45,9 +29,35 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.config.NoAutoscan;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.facade.Ethereum;
+import org.ethereum.facade.EthereumFactory;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.mine.Ethash;
+import org.ethereum.net.eth.handler.Eth62;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.StatusMessage;
+import org.ethereum.net.server.Channel;
+import org.ethereum.util.RLP;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.

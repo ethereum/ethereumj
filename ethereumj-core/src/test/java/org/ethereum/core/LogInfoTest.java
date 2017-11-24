@@ -17,17 +17,14 @@
  */
 package org.ethereum.core;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.vm.LogInfo;
-
+import org.junit.Ignore;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
-import org.junit.Ignore;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Roman Mandeleil

@@ -17,6 +17,20 @@
  */
 package org.ethereum.core;
 
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.ethereum.util.BIUtil.isCovers;
+import static org.ethereum.util.BIUtil.isNotEqual;
+import static org.ethereum.util.BIUtil.toBI;
+import static org.ethereum.util.BIUtil.transfer;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
+import static org.ethereum.vm.VMUtils.zipAndEncode;
+
+import java.math.BigInteger;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -26,7 +40,10 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteArraySet;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.PrecompiledContracts;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
@@ -34,17 +51,6 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.util.List;
-
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.ethereum.util.BIUtil.*;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.toHexString;
-import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
-import static org.ethereum.vm.VMUtils.zipAndEncode;
 
 /**
  * @author Roman Mandeleil

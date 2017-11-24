@@ -17,28 +17,27 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.core.Genesis;
-import org.ethereum.crypto.HashUtil;
-
-import org.ethereum.core.Repository;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.NoDeleteSource;
-import org.ethereum.datasource.Source;
-import org.ethereum.vm.DataWord;
-
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.math.BigInteger;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.junit.Assert.*;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.Repository;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.vm.DataWord;
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

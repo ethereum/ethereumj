@@ -17,17 +17,13 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.Bloom;
-import org.ethereum.core.Transaction;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.vm.LogInfo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Wrapper around an Ethereum Receipts message on the network

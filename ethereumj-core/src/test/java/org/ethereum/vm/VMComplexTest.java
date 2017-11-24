@@ -17,25 +17,23 @@
  */
 package org.ethereum.vm;
 
+import static org.junit.Assert.assertEquals;
+
+import java.math.BigInteger;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.core.Repository;
-
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Roman Mandeleil

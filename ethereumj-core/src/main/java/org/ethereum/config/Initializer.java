@@ -17,6 +17,13 @@
  */
 package org.ethereum.config;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.Properties;
+
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
@@ -27,9 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-
-import java.io.*;
-import java.util.Properties;
 
 /**
  * Created by Anton Nashatyrev on 13.05.2016.

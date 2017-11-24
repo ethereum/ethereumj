@@ -17,6 +17,13 @@
  */
 package org.ethereum.datasource;
 
+import static java.math.BigInteger.ONE;
+import static java.math.BigInteger.valueOf;
+import static org.spongycastle.util.encoders.Hex.decode;
+import static org.spongycastle.util.encoders.Hex.toHexString;
+
+import java.math.BigInteger;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.inmem.HashMapDB;
@@ -24,13 +31,6 @@ import org.ethereum.db.RepositoryRoot;
 import org.ethereum.vm.DataWord;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.math.BigInteger;
-
-import static java.math.BigInteger.ONE;
-import static java.math.BigInteger.valueOf;
-import static org.spongycastle.util.encoders.Hex.decode;
-import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 12.10.2016.

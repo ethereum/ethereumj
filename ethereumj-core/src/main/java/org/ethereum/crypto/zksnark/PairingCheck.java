@@ -17,13 +17,13 @@
  */
 package org.ethereum.crypto.zksnark;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.ethereum.crypto.zksnark.Params.B_Fp2;
 import static org.ethereum.crypto.zksnark.Params.PAIRING_FINAL_EXPONENT_Z;
 import static org.ethereum.crypto.zksnark.Params.TWIST;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation of a Pairing Check operation over points of two twisted Barreto–Naehrig curves {@link BN128Fp}, {@link BN128Fp2}<br/>

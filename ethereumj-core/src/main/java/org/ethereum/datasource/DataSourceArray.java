@@ -17,10 +17,10 @@
  */
 package org.ethereum.datasource;
 
+import java.util.AbstractList;
+
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.AbstractList;
 
 /**
  * Stores List structure in Source structure

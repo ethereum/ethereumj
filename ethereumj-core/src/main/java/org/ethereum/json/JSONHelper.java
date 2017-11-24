@@ -17,25 +17,23 @@
  */
 package org.ethereum.json;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.core.Repository;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.spongycastle.util.encoders.Hex;
-
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.Repository;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.DataWord;
+import org.spongycastle.util.encoders.Hex;
+
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * JSON Helper class to format data into ObjectNodes

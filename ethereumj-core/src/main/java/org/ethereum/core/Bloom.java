@@ -17,10 +17,10 @@
  */
 package org.ethereum.core;
 
+import java.util.Arrays;
+
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
 
 /**
  * See http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html.

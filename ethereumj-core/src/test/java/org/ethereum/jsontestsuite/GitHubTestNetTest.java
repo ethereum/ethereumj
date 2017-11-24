@@ -17,11 +17,14 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.jsontestsuite.suite.BlockchainTestSuite;
-import org.junit.*;
-import org.junit.runners.MethodSorters;
-
 import java.io.IOException;
+
+import org.ethereum.jsontestsuite.suite.BlockchainTestSuite;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTestNetTest {

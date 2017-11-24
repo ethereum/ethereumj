@@ -17,7 +17,14 @@
  */
 package org.ethereum.crypto;
 
-import com.google.common.base.Throwables;
+import static org.ethereum.crypto.ECKey.CURVE;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+
 import org.ethereum.ConcatKDFBytesGenerator;
 import org.spongycastle.crypto.AsymmetricCipherKeyPair;
 import org.spongycastle.crypto.BufferedBlockCipher;
@@ -31,17 +38,16 @@ import org.spongycastle.crypto.generators.ECKeyPairGenerator;
 import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
 import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.SICBlockCipher;
-import org.spongycastle.crypto.params.*;
+import org.spongycastle.crypto.params.ECKeyGenerationParameters;
+import org.spongycastle.crypto.params.ECPrivateKeyParameters;
+import org.spongycastle.crypto.params.ECPublicKeyParameters;
+import org.spongycastle.crypto.params.IESParameters;
+import org.spongycastle.crypto.params.IESWithCipherParameters;
+import org.spongycastle.crypto.params.ParametersWithIV;
 import org.spongycastle.crypto.parsers.ECIESPublicKeyParser;
 import org.spongycastle.math.ec.ECPoint;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.SecureRandom;
-
-import static org.ethereum.crypto.ECKey.CURVE;
+import com.google.common.base.Throwables;
 
 public class ECIESCoder {
 

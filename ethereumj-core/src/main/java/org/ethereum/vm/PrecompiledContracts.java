@@ -17,19 +17,29 @@
  */
 package org.ethereum.vm;
 
+import static org.ethereum.util.BIUtil.addSafely;
+import static org.ethereum.util.BIUtil.isLessThan;
+import static org.ethereum.util.BIUtil.isZero;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.ethereum.util.ByteUtil.numberOfLeadingZeros;
+import static org.ethereum.util.ByteUtil.parseBytes;
+import static org.ethereum.util.ByteUtil.parseWord;
+import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
+
+import java.math.BigInteger;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.zksnark.*;
+import org.ethereum.crypto.zksnark.BN128;
+import org.ethereum.crypto.zksnark.BN128Fp;
+import org.ethereum.crypto.zksnark.BN128G1;
+import org.ethereum.crypto.zksnark.BN128G2;
+import org.ethereum.crypto.zksnark.Fp;
+import org.ethereum.crypto.zksnark.PairingCheck;
 import org.ethereum.util.BIUtil;
-
-import java.math.BigInteger;
-
-import static org.ethereum.util.BIUtil.addSafely;
-import static org.ethereum.util.BIUtil.isLessThan;
-import static org.ethereum.util.BIUtil.isZero;
-import static org.ethereum.util.ByteUtil.*;
 
 /**
  * @author Roman Mandeleil

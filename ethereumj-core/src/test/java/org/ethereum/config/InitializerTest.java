@@ -17,22 +17,26 @@
  */
 package org.ethereum.config;
 
-import com.google.common.io.Files;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.EXIT;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.IGNORE;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.RESET;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior;
 import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-
-import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior;
-import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.*;
+import com.google.common.io.Files;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
 
 /**
  * Created by Stan Reshetnyk on 11.09.16.

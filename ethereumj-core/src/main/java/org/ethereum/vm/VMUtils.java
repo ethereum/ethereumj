@@ -17,20 +17,27 @@
  */
 package org.ethereum.vm;
 
-import org.ethereum.config.SystemProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.lang.String.format;
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.springframework.util.StringUtils.isEmpty;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
 
-import static java.lang.String.format;
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.springframework.util.StringUtils.isEmpty;
+import org.ethereum.config.SystemProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class VMUtils {
 

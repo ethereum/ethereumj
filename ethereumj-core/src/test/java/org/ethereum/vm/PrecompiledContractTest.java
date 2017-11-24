@@ -17,24 +17,24 @@
  */
 package org.ethereum.vm;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.math.BigInteger;
+
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.Eip160HFConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
-
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
-import static org.junit.Assert.*;
 
 /**
  * @author Roman Mandeleil

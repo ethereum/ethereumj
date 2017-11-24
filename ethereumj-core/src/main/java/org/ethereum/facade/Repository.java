@@ -17,13 +17,14 @@
  */
 package org.ethereum.facade;
 
-import org.ethereum.vm.DataWord;
-
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import org.ethereum.vm.DataWord;
 
 public interface Repository {
 

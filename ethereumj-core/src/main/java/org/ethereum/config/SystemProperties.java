@@ -17,13 +17,40 @@
  */
 package org.ethereum.config;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigRenderOptions;
+import static org.ethereum.crypto.HashUtil.sha3;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.blockchain.OlympicConfig;
-import org.ethereum.config.net.*;
+import org.ethereum.config.net.JsonNetConfig;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.config.net.MordenNetConfig;
+import org.ethereum.config.net.RopstenNetConfig;
+import org.ethereum.config.net.TestNetConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.GenesisConfig;
 import org.ethereum.core.genesis.GenesisJson;
@@ -40,19 +67,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.URL;
-import java.util.*;
-
-import static org.ethereum.crypto.HashUtil.sha3;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigRenderOptions;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files

@@ -17,18 +17,26 @@
  */
 package org.ethereum.jsontestsuite;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.ethereum.jsontestsuite.suite.RLPTestCase;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubRLPTest {

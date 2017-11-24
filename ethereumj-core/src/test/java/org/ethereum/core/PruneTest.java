@@ -17,10 +17,22 @@
  */
 package org.ethereum.core;
 
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.blockchain.EtherUtil.convert;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigInteger;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.CountingBytesSource;
+import org.ethereum.datasource.JournalSource;
+import org.ethereum.datasource.Source;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
@@ -28,17 +40,11 @@ import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.util.*;
-
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
-import static org.ethereum.util.blockchain.EtherUtil.convert;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Anton Nashatyrev on 05.07.2016.

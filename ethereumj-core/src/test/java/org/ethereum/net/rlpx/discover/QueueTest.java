@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import org.junit.Test;
-
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
+
+import org.junit.Test;
 
 /**
  * Created by Anton Nashatyrev on 03.08.2015.

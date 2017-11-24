@@ -17,16 +17,16 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
-import org.ethereum.core.AccountState;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.core.Repository;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.util.ByteUtil.difference;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.ethereum.util.ByteUtil.difference;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Repository;
+import org.ethereum.db.ContractDetails;
+import org.spongycastle.util.encoders.Hex;
 
 public class RepositoryValidator {
 

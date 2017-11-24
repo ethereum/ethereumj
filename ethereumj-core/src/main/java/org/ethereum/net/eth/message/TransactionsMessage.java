@@ -17,12 +17,12 @@
  */
 package org.ethereum.net.eth.message;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.core.Transaction;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Wrapper around an Ethereum Transactions message on the network

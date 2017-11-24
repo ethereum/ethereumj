@@ -17,15 +17,15 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.BlockHeaderTck;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
-
-import java.util.List;
-import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockTestCase {

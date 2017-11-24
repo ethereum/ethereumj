@@ -17,10 +17,10 @@
  */
 package org.ethereum.samples;
 
+import java.math.BigInteger;
+
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-
-import java.math.BigInteger;
 
 /**
  * The class demonstrates usage of the StandaloneBlockchain helper class

@@ -17,11 +17,9 @@
  */
 package org.ethereum.util;
 
-import org.ethereum.core.Repository;
-
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
+
+import org.ethereum.core.Repository;
 
 public class BIUtil {
 

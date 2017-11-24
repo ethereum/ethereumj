@@ -60,20 +60,18 @@
 */
 package org.ethereum.datasource;
 
-import com.google.common.base.Preconditions;
-import com.google.common.math.LongMath;
-import com.google.common.primitives.Ints;
-import org.ethereum.util.ByteUtil;
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOfRange;
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
+import static org.ethereum.util.ByteUtil.longToBytes;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import static java.lang.System.arraycopy;
-import static java.lang.System.in;
-import static java.util.Arrays.copyOfRange;
-import static org.ethereum.util.ByteUtil.byteArrayToLong;
-import static org.ethereum.util.ByteUtil.longToBytes;
+import com.google.common.base.Preconditions;
+import com.google.common.math.LongMath;
+import com.google.common.primitives.Ints;
 
 //import net.jpountz.xxhash.XXHashFactory;
 

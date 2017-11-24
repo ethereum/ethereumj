@@ -17,11 +17,11 @@
  */
 package org.ethereum.config.net;
 
+import java.util.Arrays;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
-
-import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 25.02.2016.

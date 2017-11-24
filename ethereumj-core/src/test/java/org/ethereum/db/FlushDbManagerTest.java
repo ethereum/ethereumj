@@ -17,19 +17,18 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.MemSizeEstimator;
-import org.ethereum.datasource.WriteCache;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
+import static org.ethereum.util.ByteUtil.intToBytes;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 
-import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
-import static org.ethereum.util.ByteUtil.intToBytes;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.WriteCache;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Created by Anton Nashatyrev on 23.12.2016.

@@ -17,7 +17,12 @@
  */
 package org.ethereum.net.p2p;
 
-import com.google.common.base.Joiner;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -25,11 +30,7 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import com.google.common.base.Joiner;
 
 /**
  * Wrapper around an Ethereum HelloMessage on the network

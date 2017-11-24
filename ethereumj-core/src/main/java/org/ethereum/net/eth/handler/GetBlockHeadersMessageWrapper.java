@@ -17,11 +17,12 @@
  */
 package org.ethereum.net.eth.handler;
 
-import com.google.common.util.concurrent.SettableFuture;
+import java.util.List;
+
 import org.ethereum.core.BlockHeader;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 
-import java.util.List;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Wraps {@link GetBlockHeadersMessage},

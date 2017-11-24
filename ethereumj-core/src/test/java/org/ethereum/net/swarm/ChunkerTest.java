@@ -17,14 +17,12 @@
  */
 package org.ethereum.net.swarm;
 
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static java.lang.Math.min;
+import org.junit.Test;
 
 /**
  * Created by Admin on 19.06.2015.

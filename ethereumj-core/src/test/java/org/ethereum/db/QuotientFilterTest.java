@@ -17,13 +17,13 @@
  */
 package org.ethereum.db;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+
 import org.ethereum.datasource.QuotientFilter;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
 
 /**
  * Created by Anton Nashatyrev on 13.03.2017.

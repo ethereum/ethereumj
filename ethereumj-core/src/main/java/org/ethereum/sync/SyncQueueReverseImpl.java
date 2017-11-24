@@ -17,13 +17,19 @@
  */
 package org.ethereum.sync;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.MinMaxMap;
-
-import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.

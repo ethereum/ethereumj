@@ -17,22 +17,22 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Repository;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.NoDeleteSource;
-import org.ethereum.jsontestsuite.suite.IterableTestRepository;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.jsontestsuite.suite.ContractDetailsCacheImpl;
-import org.ethereum.jsontestsuite.suite.model.AccountTck;
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+import static org.ethereum.util.ByteUtil.wrap;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
-import static org.ethereum.util.ByteUtil.wrap;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Repository;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.jsontestsuite.suite.ContractDetailsCacheImpl;
+import org.ethereum.jsontestsuite.suite.IterableTestRepository;
+import org.ethereum.jsontestsuite.suite.model.AccountTck;
 
 public class RepositoryBuilder {
 

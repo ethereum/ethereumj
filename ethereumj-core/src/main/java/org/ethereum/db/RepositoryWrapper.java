@@ -17,6 +17,14 @@
  */
 package org.ethereum.db;
 
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
@@ -24,13 +32,6 @@ import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Nullable;
-import java.math.BigInteger;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Repository delegating all calls to the last Repository

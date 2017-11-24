@@ -17,26 +17,10 @@
  */
 package org.ethereum.sync;
 
-import org.ethereum.config.NoAutoscan;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.*;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.handler.EthHandler;
-import org.ethereum.net.eth.message.*;
-import org.ethereum.net.message.Message;
-import org.ethereum.net.p2p.DisconnectMessage;
-import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
-import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.util.FileUtil.recursiveDelete;
+import static org.junit.Assert.fail;
+import static org.spongycastle.util.encoders.Hex.decode;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,13 +29,45 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.util.FileUtil.recursiveDelete;
-import static org.junit.Assert.fail;
-import static org.spongycastle.util.encoders.Hex.decode;
+import org.ethereum.config.NoAutoscan;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.facade.Ethereum;
+import org.ethereum.facade.EthereumFactory;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.net.eth.handler.Eth62;
+import org.ethereum.net.eth.handler.EthHandler;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.StatusMessage;
+import org.ethereum.net.message.Message;
+import org.ethereum.net.p2p.DisconnectMessage;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.Channel;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
 /**
  * @author Mikhail Kalinin

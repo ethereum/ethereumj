@@ -17,11 +17,11 @@
  */
 package org.ethereum.util.blockchain;
 
+import java.math.BigInteger;
+
 import org.ethereum.core.Blockchain;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
-
-import java.math.BigInteger;
 
 /**
  * Interface for easy blockchain interaction

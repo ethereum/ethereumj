@@ -17,18 +17,22 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.*;
-import org.ethereum.vm.LogInfo;
-import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
+import org.ethereum.vm.LogInfo;
+import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * The transaction receipt is a tuple of three items

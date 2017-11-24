@@ -17,14 +17,18 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static java.util.Collections.unmodifiableMap;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.ethereum.db.ContractDetails;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
-
-import java.util.*;
-
-import static java.util.Collections.unmodifiableMap;
 
 /**
  * @author Roman Mandeleil

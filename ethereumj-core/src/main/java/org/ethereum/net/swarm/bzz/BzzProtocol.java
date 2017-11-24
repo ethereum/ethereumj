@@ -17,6 +17,13 @@
  */
 package org.ethereum.net.swarm.bzz;
 
+import static java.lang.Math.min;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.NetStore;
@@ -25,13 +32,6 @@ import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static java.lang.Math.min;
 
 /**
  * The class is the lowest level right above the network layer.

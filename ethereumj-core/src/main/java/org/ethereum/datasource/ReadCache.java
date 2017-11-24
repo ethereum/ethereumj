@@ -17,14 +17,14 @@
  */
 package org.ethereum.datasource;
 
-import org.apache.commons.collections4.map.LRUMap;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteArrayMap;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.collections4.map.LRUMap;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteArrayMap;
 
 /**
  * Caches entries get/updated and use LRU algo to purge them if the number

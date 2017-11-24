@@ -17,14 +17,14 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
-import org.ethereum.jsontestsuite.suite.model.LogTck;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.LogInfo;
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+import org.ethereum.jsontestsuite.suite.model.LogTck;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
 
 public class LogBuilder {
 

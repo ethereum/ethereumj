@@ -17,10 +17,10 @@
  */
 package org.ethereum.validator;
 
+import java.math.BigInteger;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-
-import java.math.BigInteger;
 
 /**
  * Checks if {@link BlockHeader#gasLimit} matches gas limit bounds. <br>

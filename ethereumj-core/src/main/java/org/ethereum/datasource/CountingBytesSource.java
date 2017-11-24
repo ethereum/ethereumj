@@ -17,11 +17,11 @@
  */
 package org.ethereum.datasource;
 
+import java.util.Arrays;
+
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-
-import java.util.Arrays;
 
 /**
  * 'Reference counting' Source. Unlike regular Source if an entry was

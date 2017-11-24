@@ -17,6 +17,16 @@
  */
 package org.ethereum.sync;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.ethereum.TestUtils;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
@@ -24,8 +34,6 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.FastByteComparisons;
 import org.junit.Test;
-
-import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 30.05.2016.

@@ -18,22 +18,19 @@
 package org.ethereum.core;
 
 
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.ethereum.db.ByteArrayWrapper;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertEquals;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 
 public class StateTest {

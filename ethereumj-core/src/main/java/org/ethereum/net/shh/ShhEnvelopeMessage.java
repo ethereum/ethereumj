@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.shh;
 
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
+import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.

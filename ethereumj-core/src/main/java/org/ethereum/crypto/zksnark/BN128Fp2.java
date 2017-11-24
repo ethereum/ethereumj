@@ -17,9 +17,9 @@
  */
 package org.ethereum.crypto.zksnark;
 
-import java.math.BigInteger;
-
 import static org.ethereum.crypto.zksnark.Params.B_Fp2;
+
+import java.math.BigInteger;
 
 /**
  * Definition of {@link BN128} over F_p2, where "p" equals {@link Params#P} <br/>

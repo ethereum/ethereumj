@@ -17,18 +17,21 @@
  */
 package org.ethereum.solidity;
 
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.ABI;
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.BIN;
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.INTERFACE;
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.METADATA;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.ethereum.core.CallTransaction;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-
-import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringContains.containsString;
 
 /**
  * Created by Anton Nashatyrev on 03.03.2016.

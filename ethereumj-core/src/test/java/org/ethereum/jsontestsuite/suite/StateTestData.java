@@ -1,14 +1,14 @@
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.JavaType;
-import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 
 /**
  * @author Mikhail Kalinin

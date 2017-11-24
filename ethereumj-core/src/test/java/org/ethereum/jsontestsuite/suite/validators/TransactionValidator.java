@@ -17,11 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
-import org.ethereum.core.Transaction;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 import java.util.ArrayList;
 
-import static org.ethereum.util.ByteUtil.toHexString;
+import org.ethereum.core.Transaction;
 
 public class TransactionValidator {
 

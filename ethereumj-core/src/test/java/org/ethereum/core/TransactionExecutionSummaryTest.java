@@ -17,17 +17,26 @@
  */
 package org.ethereum.core;
 
+import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.ethereum.util.ByteUtil.toHexString;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
 import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.*;
-
-import static org.apache.commons.collections4.CollectionUtils.size;
-import static org.ethereum.util.ByteUtil.toHexString;
-import static org.junit.Assert.*;
 
 public class TransactionExecutionSummaryTest {
 

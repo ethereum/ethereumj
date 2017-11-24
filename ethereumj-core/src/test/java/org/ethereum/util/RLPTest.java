@@ -17,36 +17,92 @@
  */
 package org.ethereum.util;
 
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.util.RLP.decode;
+import static org.ethereum.util.RLP.decode2;
+import static org.ethereum.util.RLP.decode2OneItem;
+import static org.ethereum.util.RLP.decodeBigInteger;
+import static org.ethereum.util.RLP.decodeIP4Bytes;
+import static org.ethereum.util.RLP.decodeInt;
+import static org.ethereum.util.RLP.encode;
+import static org.ethereum.util.RLP.encodeBigInteger;
+import static org.ethereum.util.RLP.encodeByte;
+import static org.ethereum.util.RLP.encodeElement;
+import static org.ethereum.util.RLP.encodeInt;
+import static org.ethereum.util.RLP.encodeLength;
+import static org.ethereum.util.RLP.encodeList;
+import static org.ethereum.util.RLP.encodeListHeader;
+import static org.ethereum.util.RLP.encodeSet;
+import static org.ethereum.util.RLP.encodeShort;
+import static org.ethereum.util.RLP.encodeString;
+import static org.ethereum.util.RLP.fullTraverse;
+import static org.ethereum.util.RLP.getFirstListElement;
+import static org.ethereum.util.RLP.getNextElementIndex;
+import static org.ethereum.util.RlpTestData.expected14;
+import static org.ethereum.util.RlpTestData.expected16;
+import static org.ethereum.util.RlpTestData.result01;
+import static org.ethereum.util.RlpTestData.result02;
+import static org.ethereum.util.RlpTestData.result03;
+import static org.ethereum.util.RlpTestData.result04;
+import static org.ethereum.util.RlpTestData.result05;
+import static org.ethereum.util.RlpTestData.result06;
+import static org.ethereum.util.RlpTestData.result07;
+import static org.ethereum.util.RlpTestData.result08;
+import static org.ethereum.util.RlpTestData.result09;
+import static org.ethereum.util.RlpTestData.result10;
+import static org.ethereum.util.RlpTestData.result11;
+import static org.ethereum.util.RlpTestData.result12;
+import static org.ethereum.util.RlpTestData.result13;
+import static org.ethereum.util.RlpTestData.result14;
+import static org.ethereum.util.RlpTestData.result15;
+import static org.ethereum.util.RlpTestData.result16;
+import static org.ethereum.util.RlpTestData.test01;
+import static org.ethereum.util.RlpTestData.test02;
+import static org.ethereum.util.RlpTestData.test03;
+import static org.ethereum.util.RlpTestData.test04;
+import static org.ethereum.util.RlpTestData.test05;
+import static org.ethereum.util.RlpTestData.test06;
+import static org.ethereum.util.RlpTestData.test07;
+import static org.ethereum.util.RlpTestData.test08;
+import static org.ethereum.util.RlpTestData.test09;
+import static org.ethereum.util.RlpTestData.test10;
+import static org.ethereum.util.RlpTestData.test11;
+import static org.ethereum.util.RlpTestData.test12;
+import static org.ethereum.util.RlpTestData.test13;
+import static org.ethereum.util.RlpTestData.test14;
+import static org.ethereum.util.RlpTestData.test15;
+import static org.ethereum.util.RlpTestData.test16;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+
 import org.ethereum.crypto.HashUtil;
-
-import com.cedarsoftware.util.DeepEquals;
-
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.swarm.Util;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
-import java.math.BigInteger;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import java.util.*;
-
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.wrap;
-import static org.ethereum.util.RLP.*;
-import static org.junit.Assert.*;
-import static org.ethereum.util.RlpTestData.*;
+import com.cedarsoftware.util.DeepEquals;
 
 public class RLPTest {
 

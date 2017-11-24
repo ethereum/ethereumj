@@ -17,7 +17,9 @@
  */
 package org.ethereum.net.swarm;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Trie (or prefix tree) structure, which stores Nodes with String keys in highly branched structure

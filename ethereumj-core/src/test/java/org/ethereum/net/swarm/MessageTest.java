@@ -17,13 +17,13 @@
  */
 package org.ethereum.net.swarm;
 
+import java.util.Arrays;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.swarm.bzz.BzzStatusMessage;
 import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
 
 /**
  * Created by Admin on 25.06.2015.

@@ -17,10 +17,12 @@
  */
 package org.ethereum.net.server;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import io.netty.handler.timeout.ReadTimeoutHandler;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeaderWrapper;
@@ -28,38 +30,42 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.handler.Eth;
 import org.ethereum.net.eth.handler.EthAdapter;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.eth.message.Eth63MessageFactory;
-import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.*;
-import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageFactory;
+import org.ethereum.net.rlpx.FrameCodec;
+import org.ethereum.net.rlpx.FrameCodecHandler;
+import org.ethereum.net.rlpx.HandshakeHandler;
+import org.ethereum.net.rlpx.MessageCodec;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.SnappyCodec;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageFactory;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.swarm.bzz.BzzMessageFactory;
+import org.ethereum.sync.SyncStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
  * @author Roman Mandeleil

@@ -19,7 +19,6 @@ package org.ethereum.datasource;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Clue class between Source and BatchSource

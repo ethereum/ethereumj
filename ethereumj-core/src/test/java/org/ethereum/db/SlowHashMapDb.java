@@ -17,9 +17,9 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.datasource.inmem.HashMapDB;
-
 import java.util.Map;
+
+import org.ethereum.datasource.inmem.HashMapDB;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2016.

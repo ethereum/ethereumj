@@ -17,9 +17,9 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
-
 import java.math.BigInteger;
+
+import org.ethereum.core.BlockHeader;
 
 /**
  * Checks {@link BlockHeader#gasUsed} against {@link BlockHeader#gasLimit}

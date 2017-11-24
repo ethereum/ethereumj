@@ -17,21 +17,16 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.util.ByteUtil;
-
-import org.json.simple.JSONArray;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.util.regex.Pattern;
+
+import org.ethereum.util.ByteUtil;
+import org.json.simple.JSONArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

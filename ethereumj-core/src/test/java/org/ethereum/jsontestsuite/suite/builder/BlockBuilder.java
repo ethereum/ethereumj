@@ -17,6 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite.builder;
 
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
@@ -24,12 +29,6 @@ import org.ethereum.jsontestsuite.suite.Env;
 import org.ethereum.jsontestsuite.suite.model.BlockHeaderTck;
 import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 import org.ethereum.util.ByteUtil;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.ethereum.util.BIUtil.toBI;
-import static org.ethereum.util.ByteUtil.byteArrayToLong;
 
 public class BlockBuilder {
 

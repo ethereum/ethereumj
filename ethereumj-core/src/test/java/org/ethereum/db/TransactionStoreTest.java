@@ -17,9 +17,10 @@
  */
 package org.ethereum.db;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
@@ -29,11 +30,7 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.DataWord;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.Arrays;
 
 /**
  * Created by Anton Nashatyrev on 08.04.2016.

@@ -17,11 +17,16 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * @author Mikhail Kalinin

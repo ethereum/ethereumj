@@ -17,6 +17,10 @@
  */
 package org.ethereum.jsontestsuite.suite.runners;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
@@ -27,10 +31,6 @@ import org.ethereum.jsontestsuite.suite.validators.TransactionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TransactionTestRunner {
 

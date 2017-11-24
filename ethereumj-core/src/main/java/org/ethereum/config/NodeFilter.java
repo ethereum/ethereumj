@@ -17,13 +17,13 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.net.rlpx.Node;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.ethereum.net.rlpx.Node;
 
 /**
  * Created by Anton Nashatyrev on 14.01.2016.

@@ -17,23 +17,22 @@
  */
 package org.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 public class TransactionsMessageTest {
 

@@ -17,14 +17,20 @@
  */
 package org.ethereum.jsontestsuite;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.GeneralStateTestSuite;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import java.io.IOException;
-import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {

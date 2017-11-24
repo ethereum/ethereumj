@@ -17,12 +17,7 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.IndexedBlockStore.BlockInfo;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -30,7 +25,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.IndexedBlockStore.BlockInfo;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Test for {@link IndexedBlockStore.BLOCK_INFO_SERIALIZER}

@@ -19,8 +19,16 @@ package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.*;
-import org.ethereum.trie.*;
+import org.ethereum.datasource.CachedSource;
+import org.ethereum.datasource.MultiCache;
+import org.ethereum.datasource.ReadWriteCache;
+import org.ethereum.datasource.Serializers;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.SourceCodec;
+import org.ethereum.datasource.WriteCache;
+import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.vm.DataWord;
 
 /**

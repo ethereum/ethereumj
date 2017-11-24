@@ -17,21 +17,6 @@
  */
 package org.ethereum.solidity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.Predicate;
-import org.ethereum.util.ByteUtil;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import static java.lang.String.format;
 import static org.apache.commons.collections4.ListUtils.select;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
@@ -40,6 +25,22 @@ import static org.apache.commons.lang3.StringUtils.stripEnd;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.solidity.SolidityType.IntType.decodeInt;
 import static org.ethereum.solidity.SolidityType.IntType.encodeInt;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
+import org.ethereum.util.ByteUtil;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Abi extends ArrayList<Abi.Entry> {
     private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper()

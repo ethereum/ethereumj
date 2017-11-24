@@ -17,6 +17,9 @@
  */
 package org.ethereum.samples;
 
+import java.math.BigInteger;
+import java.util.List;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
@@ -24,9 +27,6 @@ import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.util.List;
 
 public class FollowAccount extends EthereumListenerAdapter {
 

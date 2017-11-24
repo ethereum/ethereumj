@@ -17,20 +17,11 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.util.FileUtil;
-import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static java.math.BigInteger.ZERO;
+import static org.ethereum.TestUtils.getRandomChain;
+import static org.ethereum.util.ByteUtil.wrap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,13 +30,27 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
-import static java.math.BigInteger.ZERO;
-import static org.ethereum.TestUtils.*;
-import static org.ethereum.util.ByteUtil.wrap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.ethereum.util.FileUtil;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 
 public class IndexedBlockStoreTest {

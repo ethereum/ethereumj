@@ -17,12 +17,12 @@
  */
 package org.ethereum.manager;
 
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.stereotype.Component;
 
 /**
  * @author Roman Mandeleil

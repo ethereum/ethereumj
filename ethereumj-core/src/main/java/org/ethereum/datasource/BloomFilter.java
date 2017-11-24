@@ -17,10 +17,10 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.util.ByteUtil;
-
 import java.io.Serializable;
 import java.util.BitSet;
+
+import org.ethereum.util.ByteUtil;
 
 /**
  * The class mostly borrowed from http://github.com/magnuss/java-bloomfilter

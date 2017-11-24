@@ -17,6 +17,12 @@
  */
 package org.ethereum.samples;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
@@ -24,12 +30,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Collections;
-import java.util.List;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 public class TransactionBomb extends EthereumListenerAdapter {
 

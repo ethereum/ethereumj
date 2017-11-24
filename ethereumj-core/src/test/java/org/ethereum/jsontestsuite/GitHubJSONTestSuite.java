@@ -17,30 +17,52 @@
  */
 package org.ethereum.jsontestsuite;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.*;
+import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.Eip150HFConfig;
+import org.ethereum.config.blockchain.Eip160HFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.jsontestsuite.suite.*;
+import org.ethereum.jsontestsuite.suite.ABITestCase;
+import org.ethereum.jsontestsuite.suite.ABITestSuite;
+import org.ethereum.jsontestsuite.suite.BlockTestCase;
+import org.ethereum.jsontestsuite.suite.BlockTestSuite;
+import org.ethereum.jsontestsuite.suite.CryptoTestCase;
+import org.ethereum.jsontestsuite.suite.DifficultyTestCase;
+import org.ethereum.jsontestsuite.suite.DifficultyTestSuite;
+import org.ethereum.jsontestsuite.suite.JSONReader;
+import org.ethereum.jsontestsuite.suite.TestCase;
+import org.ethereum.jsontestsuite.suite.TestRunner;
+import org.ethereum.jsontestsuite.suite.TestSuite;
+import org.ethereum.jsontestsuite.suite.TransactionTestCase;
+import org.ethereum.jsontestsuite.suite.TransactionTestSuite;
+import org.ethereum.jsontestsuite.suite.TrieTestCase;
+import org.ethereum.jsontestsuite.suite.TrieTestSuite;
 import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import org.junit.Assert;
 import org.junit.Assume;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test file specific for tests maintained in the GitHub repository

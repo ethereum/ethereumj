@@ -17,10 +17,11 @@
  */
 package org.ethereum.mine;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
+
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * The adapter of Ethash for MinerIfc

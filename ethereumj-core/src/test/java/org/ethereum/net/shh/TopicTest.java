@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.shh;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.junit.Assert.assertEquals;
 
 public class TopicTest {
 

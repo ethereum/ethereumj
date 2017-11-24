@@ -17,13 +17,13 @@
  */
 package org.ethereum.vm.program;
 
-import org.ethereum.vm.DataWord;
-import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import org.ethereum.vm.DataWord;
+import org.junit.Test;
 
 public class InternalTransactionTest {
 

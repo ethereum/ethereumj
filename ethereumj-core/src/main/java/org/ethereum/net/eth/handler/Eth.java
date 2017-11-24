@@ -17,15 +17,19 @@
  */
 package org.ethereum.net.eth.handler;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.ethereum.core.*;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.sync.PeerState;
-import org.ethereum.sync.SyncStatistics;
-
 import java.math.BigInteger;
 import java.util.List;
+
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.sync.SyncStatistics;
+
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Describes interface required by Eth peer clients

@@ -17,19 +17,19 @@
  */
 package org.ethereum.vm.program;
 
-import org.ethereum.util.ByteArraySet;
-import org.ethereum.vm.CallCreate;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.LogInfo;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.size;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import org.ethereum.util.ByteArraySet;
+import org.ethereum.vm.CallCreate;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
 
 /**
  * @author Roman Mandeleil

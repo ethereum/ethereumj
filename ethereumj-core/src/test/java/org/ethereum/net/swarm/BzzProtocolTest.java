@@ -17,6 +17,28 @@
  */
 package org.ethereum.net.swarm;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.bzz.BzzMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
@@ -27,13 +49,6 @@ import org.ethereum.util.Utils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Created by Admin on 24.06.2015.

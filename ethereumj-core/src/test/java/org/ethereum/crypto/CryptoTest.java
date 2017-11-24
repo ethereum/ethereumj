@@ -17,10 +17,14 @@
  */
 package org.ethereum.crypto;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.junit.Assert.assertEquals;
+
+import java.math.BigInteger;
+import java.security.SecureRandom;
+
 import org.ethereum.util.Utils;
-
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.AsymmetricCipherKeyPair;
@@ -36,16 +40,16 @@ import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
 import org.spongycastle.crypto.generators.KDF2BytesGenerator;
 import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.SICBlockCipher;
-import org.spongycastle.crypto.params.*;
+import org.spongycastle.crypto.params.AsymmetricKeyParameter;
+import org.spongycastle.crypto.params.ECKeyGenerationParameters;
+import org.spongycastle.crypto.params.ECPrivateKeyParameters;
+import org.spongycastle.crypto.params.ECPublicKeyParameters;
+import org.spongycastle.crypto.params.IESParameters;
+import org.spongycastle.crypto.params.IESWithCipherParameters;
+import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.crypto.params.ParametersWithIV;
 import org.spongycastle.crypto.parsers.ECIESPublicKeyParser;
-import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.security.SecureRandom;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.junit.Assert.assertEquals;
 
 public class CryptoTest {
 

@@ -17,18 +17,8 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.config.CommonConfig;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.util.BIUtil.toBI;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +29,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
-import static org.ethereum.util.BIUtil.toBI;
-import static org.junit.Assert.*;
+import org.ethereum.config.CommonConfig;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Mikhail Kalinin

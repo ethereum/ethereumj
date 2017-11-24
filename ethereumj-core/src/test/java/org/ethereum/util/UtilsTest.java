@@ -17,14 +17,13 @@
  */
 package org.ethereum.util;
 
-import org.junit.Test;
-
-import org.spongycastle.util.Arrays;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.spongycastle.util.Arrays;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

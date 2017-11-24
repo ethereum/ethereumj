@@ -17,20 +17,23 @@
  */
 package org.ethereum.db;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.collections4.map.LRUMap;
-import org.ethereum.datasource.*;
 import org.ethereum.core.TransactionInfo;
+import org.ethereum.datasource.ObjectDataSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Source;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Storage (tx hash) => List of (block idx, tx idx, TransactionReceipt)
