@@ -235,8 +235,6 @@ public class Transaction {
         if (value != null  && value.length > HASH_LENGTH)
             throw new RuntimeException("Value is not valid");
         if (getSignature() != null) {
-            if (BigIntegers.asUnsignedByteArray(signature.r).length > HASH_LENGTH)
-                throw new RuntimeException("Signature R is not valid");
             if (BigIntegers.asUnsignedByteArray(signature.s).length > HASH_LENGTH)
                 throw new RuntimeException("Signature S is not valid");
             if (getSender() != null && getSender().length != ADDRESS_LENGTH)
