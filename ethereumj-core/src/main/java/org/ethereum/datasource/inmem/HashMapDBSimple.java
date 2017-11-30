@@ -90,6 +90,11 @@ public class HashMapDBSimple<V> implements DbSource<V> {
     }
 
     @Override
+    public void reset() {
+        storage.clear();
+    }
+
+    @Override
     public void updateBatch(Map<byte[], V> rows) {
         for (Map.Entry<byte[], V> entry : rows.entrySet()) {
             put(entry.getKey(), entry.getValue());

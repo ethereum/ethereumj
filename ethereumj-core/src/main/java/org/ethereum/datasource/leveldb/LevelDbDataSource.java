@@ -131,6 +131,7 @@ public class LevelDbDataSource implements DbSource<byte[]> {
         return Paths.get(config.databaseDir(), name);
     }
 
+    @Override
     public void reset() {
         close();
         FileUtil.recursiveDelete(getPath().toString());

@@ -22,6 +22,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
@@ -142,9 +143,11 @@ public class CommonConfig {
             DbSource<byte[]> dbSource;
             if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
-            } else {
-                dataSource = "leveldb";
+            } else if ("leveldb".equals(dataSource)){
                 dbSource = levelDbDataSource();
+            } else {
+                dataSource = "rocksdb";
+                dbSource = rocksDbDataSource();
             }
             dbSource.setName(name);
             dbSource.init();
@@ -159,6 +162,12 @@ public class CommonConfig {
     @Scope("prototype")
     protected LevelDbDataSource levelDbDataSource() {
         return new LevelDbDataSource();
+    }
+
+    @Bean
+    @Scope("prototype")
+    protected RocksDbDataSource rocksDbDataSource() {
+        return new RocksDbDataSource();
     }
 
     public void fastSyncCleanUp() {
@@ -180,10 +189,10 @@ public class CommonConfig {
     }
 
     private void resetDataSource(Source source) {
-        if (source instanceof LevelDbDataSource) {
-            ((LevelDbDataSource) source).reset();
+        if (source instanceof DbSource) {
+            ((DbSource) source).reset();
         } else {
-            throw new Error("Cannot cleanup non-LevelDB database");
+            throw new Error("Cannot cleanup non-db Source");
         }
     }
 

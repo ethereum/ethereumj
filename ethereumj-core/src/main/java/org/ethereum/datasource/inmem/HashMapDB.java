@@ -103,6 +103,13 @@ public class HashMapDB<V> implements DbSource<V> {
     }
 
     @Override
+    public void reset() {
+        try (ALock l = writeLock.lock()) {
+            storage.clear();
+        }
+    }
+
+    @Override
     public void updateBatch(Map<byte[], V> rows) {
         try (ALock l = writeLock.lock()) {
             for (Map.Entry<byte[], V> entry : rows.entrySet()) {
