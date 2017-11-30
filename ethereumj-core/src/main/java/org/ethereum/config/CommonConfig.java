@@ -97,7 +97,7 @@ public class CommonConfig {
     public StateSource stateSource() {
         fastSyncCleanUp();
         StateSource stateSource = new StateSource(blockchainSource("state"),
-                systemProperties().databasePruneDepth() >= 0, systemProperties().getConfig().getInt("cache.maxStateBloomSize") << 20);
+                systemProperties().databasePruneDepth() >= 0);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
 
