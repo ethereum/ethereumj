@@ -22,12 +22,13 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.swarm.NetStore;
-import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
 
 /**
  * Process the messages between peers with 'bzz' capability on the network.
@@ -35,7 +36,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
-        implements Functional.Consumer<BzzMessage> {
+        implements Consumer<BzzMessage> {
 
     public final static byte VERSION = 0;
     private MessageQueue msgQueue = null;

@@ -103,23 +103,20 @@ public class PendingTxMonitor extends BasicNode {
 
         final String pTxFilterId = jsonRpc.eth_newPendingTransactionFilter();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (Boolean.TRUE) {
-                        Object[] changes = jsonRpc.eth_getFilterChanges(pTxFilterId);
-                        if (changes.length > 0) {
-                            for (Object change : changes) {
-                                TransactionResultDTO tx = jsonRpc.eth_getTransactionByHash((String) change);
-                                newRemotePendingTx(tx);
-                            }
+        new Thread(() -> {
+            try {
+                while (Boolean.TRUE) {
+                    Object[] changes = jsonRpc.eth_getFilterChanges(pTxFilterId);
+                    if (changes.length > 0) {
+                        for (Object change : changes) {
+                            TransactionResultDTO tx = jsonRpc.eth_getTransactionByHash((String) change);
+                            newRemotePendingTx(tx);
                         }
-                        Thread.sleep(100);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    Thread.sleep(100);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }).start();
     }

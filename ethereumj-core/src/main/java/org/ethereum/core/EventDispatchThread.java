@@ -42,13 +42,9 @@ public class EventDispatchThread {
     private static final int[] queueSizeWarnLevels = new int[]{0, 10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 10_000_000};
 
     private final BlockingQueue<Runnable> executorQueue = new LinkedBlockingQueue<Runnable>();
-    private final ExecutorService executor = new ThreadPoolExecutor(1, 1,
-            0L, TimeUnit.MILLISECONDS, executorQueue, new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r, "EDT");
-        }
-    });
+    private final ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
+            TimeUnit.MILLISECONDS, executorQueue, r -> new Thread(r, "EDT")
+    );
 
     private long taskStart;
     private Runnable lastTask;
@@ -75,23 +71,20 @@ public class EventDispatchThread {
         if (executor.isShutdown()) return;
         if (counter++ % 1000 == 0) logStatus();
 
-        executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    lastTask = r;
-                    taskStart = System.nanoTime();
-                    r.run();
-                    long t = (System.nanoTime() - taskStart) / 1_000_000;
-                    taskStart = 0;
-                    if (t > 1000) {
-                        logger.warn("EDT task executed in more than 1 sec: " + t + "ms, " +
-                        "Executor queue size: " + executorQueue.size());
+        executor.submit(() -> {
+            try {
+                lastTask = r;
+                taskStart = System.nanoTime();
+                r.run();
+                long t = (System.nanoTime() - taskStart) / 1_000_000;
+                taskStart = 0;
+                if (t > 1000) {
+                    logger.warn("EDT task executed in more than 1 sec: " + t + "ms, " +
+                    "Executor queue size: " + executorQueue.size());
 
-                    }
-                } catch (Exception e) {
-                    logger.error("EDT task exception", e);
                 }
+            } catch (Exception e) {
+                logger.error("EDT task exception", e);
             }
         });
     }

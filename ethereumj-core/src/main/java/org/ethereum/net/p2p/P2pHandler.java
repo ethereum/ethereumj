@@ -78,11 +78,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private static ScheduledExecutorService pingTimer =
-            Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "P2pPingTimer");
-                }
-            });
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "P2pPingTimer"));
 
     private MessageQueue msgQueue;
 
@@ -279,14 +275,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private void startTimers() {
         // sample for pinging in background
-        pingTask = pingTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    msgQueue.sendMessage(PING_MESSAGE);
-                } catch (Throwable t) {
-                    logger.error("Unhandled exception", t);
-                }
+        pingTask = pingTimer.scheduleAtFixedRate(() -> {
+            try {
+                msgQueue.sendMessage(PING_MESSAGE);
+            } catch (Throwable t) {
+                logger.error("Unhandled exception", t);
             }
         }, 2, config.getProperty("peer.p2p.pingInterval", 5L), TimeUnit.SECONDS);
     }

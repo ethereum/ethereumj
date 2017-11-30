@@ -79,16 +79,13 @@ public class PendingStateSample extends TestNetSample {
             }
         });
 
-        new Thread("PendingStateSampleThread") {
-            @Override
-            public void run() {
-                try {
-                    sendTransactions();
-                } catch (Exception e) {
-                    logger.error("Error while sending transactions", e);
-                }
+        new Thread(() -> {
+            try {
+                sendTransactions();
+            } catch (Exception e) {
+                logger.error("Error while sending transactions", e);
             }
-        }.start();
+        }, "PendingStateSampleThread").start();
     }
 
     /**

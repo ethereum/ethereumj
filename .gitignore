@@ -27,6 +27,7 @@ target/
 
 # Output
 database*
+out
 logs
 test_db*
 testnetSampleDb

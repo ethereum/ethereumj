@@ -55,14 +55,11 @@ public class JsonRpcWhisper extends Whisper {
     public JsonRpcWhisper(URL rpcUrl) {
         this.rpcUrl = rpcUrl;
 
-        poller.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    pollFilters();
-                } catch (Exception e) {
-                    logger.error("Unhandled exception", e);
-                }
+        poller.scheduleAtFixedRate(() -> {
+            try {
+                pollFilters();
+            } catch (Exception e) {
+                logger.error("Unhandled exception", e);
             }
         }, 1, 1, TimeUnit.SECONDS);
     }

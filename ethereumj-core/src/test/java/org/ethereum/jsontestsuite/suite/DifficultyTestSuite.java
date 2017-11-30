@@ -43,12 +43,7 @@ public class DifficultyTestSuite {
             testCases.add(e.getValue());
         }
 
-        Collections.sort(testCases, new Comparator<DifficultyTestCase>() {
-            @Override
-            public int compare(DifficultyTestCase t1, DifficultyTestCase t2) {
-                return t1.getName().compareTo(t2.getName());
-            }
-        });
+        testCases.sort(Comparator.comparing(DifficultyTestCase::getName));
     }
 
     public List<DifficultyTestCase> getTestCases() {

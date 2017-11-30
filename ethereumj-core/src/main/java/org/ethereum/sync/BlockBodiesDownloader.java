@@ -78,12 +78,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
         syncQueue = new SyncQueueImpl(Collections.singletonList(genesis));
         curTotalDiff = genesis.getDifficultyBI();
 
-        headersThread = new Thread("FastsyncHeadersFetchThread") {
-            @Override
-            public void run() {
-                headerLoop();
-            }
-        };
+        headersThread = new Thread(this::headerLoop, "FastsyncHeadersFetchThread");
         headersThread.start();
 
         setHeadersDownload(false);

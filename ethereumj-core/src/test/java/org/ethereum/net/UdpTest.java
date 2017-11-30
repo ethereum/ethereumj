@@ -30,7 +30,6 @@ import org.ethereum.net.rlpx.FindNodeMessage;
 import org.ethereum.net.rlpx.Message;
 import org.ethereum.net.rlpx.discover.DiscoveryEvent;
 import org.ethereum.net.rlpx.discover.PacketDecoder;
-import org.ethereum.util.Functional;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -39,6 +38,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
@@ -66,7 +66,7 @@ public class UdpTest {
     private final SimpleNodeManager nodeManager = new SimpleNodeManager();
 
     private class SimpleMessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
-            implements Functional.Consumer<DiscoveryEvent>  {
+            implements Consumer<DiscoveryEvent> {
 
         Channel channel;
 

@@ -21,12 +21,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.keyvalue.AbstractKeyValue;
-import org.ethereum.util.Functional;
 import org.ethereum.vm.DataWord;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class TransactionTouchedStorage {
 
@@ -103,7 +103,7 @@ public class TransactionTouchedStorage {
         }
     }
 
-    private Map<DataWord, DataWord> keyValues(Functional.Function<Entry, Boolean> filter) {
+    private Map<DataWord, DataWord> keyValues(Function<Entry, Boolean> filter) {
         Map<DataWord, DataWord> result = new HashMap<>();
         for (Entry entry : getEntries()) {
             if (filter == null || filter.apply(entry)) {
@@ -115,21 +115,11 @@ public class TransactionTouchedStorage {
     }
 
     public Map<DataWord, DataWord> getChanged() {
-        return keyValues(new Functional.Function<Entry, Boolean>() {
-            @Override
-            public Boolean apply(Entry entry) {
-                return entry.isChanged();
-            }
-        });
+        return keyValues(Entry::isChanged);
     }
 
     public Map<DataWord, DataWord> getReadOnly() {
-        return keyValues(new Functional.Function<Entry, Boolean>() {
-            @Override
-            public Boolean apply(Entry entry) {
-                return !entry.isChanged();
-            }
-        });
+        return keyValues(entry -> !entry.isChanged());
     }
 
     public Map<DataWord, DataWord> getAll() {
