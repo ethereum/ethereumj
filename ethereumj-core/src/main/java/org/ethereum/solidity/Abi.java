@@ -63,12 +63,7 @@ public class Abi extends ArrayList<Abi.Entry> {
     }
 
     private <T extends Abi.Entry> T find(Class<T> resultClass, final Abi.Entry.Type type, final Predicate<T> searchPredicate) {
-        return (T) CollectionUtils.find(this, new Predicate<Abi.Entry>() {
-            @Override
-            public boolean evaluate(Abi.Entry entry) {
-                return entry.type == type && searchPredicate.evaluate((T) entry);
-            }
-        });
+        return (T) CollectionUtils.find(this, entry -> entry.type == type && searchPredicate.evaluate((T) entry));
     }
 
     public Function findFunction(Predicate<Function> searchPredicate) {
@@ -80,12 +75,7 @@ public class Abi extends ArrayList<Abi.Entry> {
     }
 
     public Abi.Constructor findConstructor() {
-        return find(Constructor.class, Entry.Type.constructor, new Predicate<Constructor>() {
-            @Override
-            public boolean evaluate(Constructor object) {
-                return true;
-            }
-        });
+        return find(Constructor.class, Entry.Type.constructor, object -> true);
     }
 
     @Override
@@ -308,12 +298,7 @@ public class Abi extends ArrayList<Abi.Entry> {
         }
 
         private List<Param> filteredInputs(final boolean indexed) {
-            return select(inputs, new Predicate<Param>() {
-                @Override
-                public boolean evaluate(Param param) {
-                    return param.indexed == indexed;
-                }
-            });
+            return select(inputs, param -> param.indexed == indexed);
         }
 
         @Override

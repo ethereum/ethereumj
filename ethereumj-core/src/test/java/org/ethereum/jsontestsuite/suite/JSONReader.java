@@ -53,12 +53,7 @@ public class JSONReader {
 
         List<Future<String>> retF = new ArrayList<>();
         for (final String filename : filenames) {
-            Future<String> f = threadPool.submit(new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return loadJSONFromCommit(filename, shacommit);
-                }
-            });
+            Future<String> f = threadPool.submit(() -> loadJSONFromCommit(filename, shacommit));
             retF.add(f);
         }
 

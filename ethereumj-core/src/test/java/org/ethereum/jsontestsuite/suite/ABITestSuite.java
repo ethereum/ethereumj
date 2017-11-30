@@ -43,12 +43,7 @@ public class ABITestSuite {
             testCases.add(e.getValue());
         }
 
-        Collections.sort(testCases, new Comparator<ABITestCase>() {
-            @Override
-            public int compare(ABITestCase t1, ABITestCase t2) {
-                return t1.getName().compareTo(t2.getName());
-            }
-        });
+        testCases.sort(Comparator.comparing(ABITestCase::getName));
     }
 
     public List<ABITestCase> getTestCases() {

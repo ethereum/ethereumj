@@ -73,17 +73,14 @@ public class UDPListener {
             if (port == 0) {
                 logger.error("Discovery can't be started while listen port == 0");
             } else {
-                new Thread("UDPListener") {
-                    @Override
-                    public void run() {
-                        try {
-                            UDPListener.this.start(bootPeers);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw new RuntimeException(e);
-                        }
+                new Thread(() -> {
+                    try {
+                        UDPListener.this.start(bootPeers);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     }
-                }.start();
+                }, "UDPListener").start();
             }
         }
     }

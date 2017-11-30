@@ -23,7 +23,7 @@ plugins {
 apply plugin: 'propdeps-maven'
 apply plugin: 'com.jfrog.artifactory-upload'
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 
 mainClassName = 'org.ethereum.Start'
 applicationDefaultJvmArgs = ["-server", "-Xss4m", "-Xmx2G", "-XX:-OmitStackTraceInFastThrow"]
@@ -163,7 +163,7 @@ javadoc {
     options.addStringOption('-quiet')
     options.encoding = "UTF-8"
     options.links(
-            "http://docs.oracle.com/javase/7/docs/api/",
+            "http://docs.oracle.com/javase/8/docs/api/",
             "http://netty.io/4.0/api/"
     )
 }

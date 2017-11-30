@@ -268,7 +268,7 @@ public class SystemProperties {
      *
      * @param cliOptions -  command line options to take presidency
      */
-    public void overrideParams(Map<String, ? extends Object> cliOptions) {
+    public void overrideParams(Map<String, ?> cliOptions) {
         Config cliConf = ConfigFactory.parseMap(cliOptions);
         overrideParams(cliConf);
     }

@@ -43,12 +43,7 @@ public class TrieTestSuite {
             testCases.add(e.getValue());
         }
 
-        Collections.sort(testCases, new Comparator<TrieTestCase>() {
-            @Override
-            public int compare(TrieTestCase t1, TrieTestCase t2) {
-                return t1.getName().compareTo(t2.getName());
-            }
-        });
+        testCases.sort(Comparator.comparing(TrieTestCase::getName));
     }
 
     public List<TrieTestCase> getTestCases() {

@@ -152,32 +152,29 @@ public class DbFlushManager {
         }
 
         logger.debug("Submitting flush task");
-        return lastFlush = flushThread.submit(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                boolean ret = false;
-                long s = System.nanoTime();
-                logger.info("Flush started");
+        return lastFlush = flushThread.submit(() -> {
+            boolean ret = false;
+            long s = System.nanoTime();
+            logger.info("Flush started");
 
-                for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
-                    if (writeCache instanceof AsyncFlushable) {
-                        try {
-                            ret |= ((AsyncFlushable) writeCache).flushAsync().get();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        ret |= writeCache.flush();
+            for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+                if (writeCache instanceof AsyncFlushable) {
+                    try {
+                        ret |= ((AsyncFlushable) writeCache).flushAsync().get();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
+                } else {
+                    ret |= writeCache.flush();
                 }
-                if (stateDbCache != null) {
-                    logger.debug("Flushing to DB");
-                    stateDbCache.flush();
-                }
-                logger.info("Flush completed in " + (System.nanoTime() - s) / 1000000 + " ms");
-
-                return ret;
             }
+            if (stateDbCache != null) {
+                logger.debug("Flushing to DB");
+                stateDbCache.flush();
+            }
+            logger.info("Flush completed in " + (System.nanoTime() - s) / 1000000 + " ms");
+
+            return ret;
         });
     }
 

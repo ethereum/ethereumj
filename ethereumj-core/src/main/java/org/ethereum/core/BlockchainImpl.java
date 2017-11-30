@@ -456,12 +456,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
-                eventDispatchThread.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        pendingState.processBest(block, summary.getReceipts());
-                    }
-                });
+                eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
             }
         }
 
@@ -628,12 +623,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             summary.setTotalDifficulty(getTotalDifficulty());
 
             if (!byTest) {
-                dbFlushManager.commit(new Runnable() {
-                    @Override
-                    public void run() {
-                        storeBlock(block, receipts);
-                        repository.commit();
-                    }
+                dbFlushManager.commit(() -> {
+                    storeBlock(block, receipts);
+                    repository.commit();
                 });
             } else {
                 storeBlock(block, receipts);
@@ -680,8 +672,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (receipts == null || receipts.isEmpty())
             return retBloomFilter.getData();
 
-        for (int i = 0; i < receipts.size(); i++) {
-            retBloomFilter.or(receipts.get(i).getBloomFilter());
+        for (TransactionReceipt receipt : receipts) {
+            retBloomFilter.or(receipt.getBloomFilter());
         }
 
         return retBloomFilter.getData();
