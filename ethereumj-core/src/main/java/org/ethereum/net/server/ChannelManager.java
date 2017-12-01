@@ -102,42 +102,25 @@ public class ChannelManager {
         this.peerServer = peerServer;
         maxActivePeers = config.maxActivePeers();
         trustedPeers = config.peerTrusted();
-        mainWorker.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    processNewPeers();
-                } catch (Throwable t) {
-                    logger.error("Error", t);
-                }
+        mainWorker.scheduleWithFixedDelay(() -> {
+            try {
+                processNewPeers();
+            } catch (Throwable t) {
+                logger.error("Error", t);
             }
         }, 0, 1, TimeUnit.SECONDS);
 
         if (config.listenPort() > 0) {
-            new Thread(new Runnable() {
-                        public void run() {
-                            peerServer.start(config.listenPort());
-                        }
-                    },
+            new Thread(() -> peerServer.start(config.listenPort()),
             "PeerServerThread").start();
         }
 
         // Resending new blocks to network in loop
-        this.blockDistributeThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                newBlocksDistributeLoop();
-            }
-        }, "NewSyncThreadBlocks");
+        this.blockDistributeThread = new Thread(this::newBlocksDistributeLoop, "NewSyncThreadBlocks");
         this.blockDistributeThread.start();
 
         // Resending pending txs to newly connected peers
-        this.txDistributeThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                newTxDistributeLoop();
-            }
-        }, "NewPeersThread");
+        this.txDistributeThread = new Thread(this::newTxDistributeLoop, "NewPeersThread");
         this.txDistributeThread.start();
     }
 

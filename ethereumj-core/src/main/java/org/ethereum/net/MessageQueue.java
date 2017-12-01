@@ -83,13 +83,11 @@ public class MessageQueue {
 
     public void activate(ChannelHandlerContext ctx) {
         this.ctx = ctx;
-        timerTask = timer.scheduleAtFixedRate(new Runnable() {
-            public void run() {
-                try {
-                    nudgeQueue();
-                } catch (Throwable t) {
-                    logger.error("Unhandled exception", t);
-                }
+        timerTask = timer.scheduleAtFixedRate(() -> {
+            try {
+                nudgeQueue();
+            } catch (Throwable t) {
+                logger.error("Unhandled exception", t);
             }
         }, 10, 10, TimeUnit.MILLISECONDS);
     }

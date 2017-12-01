@@ -681,22 +681,19 @@ public class ImportLightTest {
         int cnt = 1;
 
         final CallTransaction.Function function = a.contract.getByName("set");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int cnt = 1;
-                while (cnt++ > 0) {
-                    try {
-                        bc.generatePendingTransactions();
+        new Thread(() -> {
+            int cnt1 = 1;
+            while (cnt1++ > 0) {
+                try {
+                    bc.generatePendingTransactions();
 //                    byte[] encode = function.encode(cnt % 32, cnt);
 //                    Transaction callTx1 = bc.createTransaction(new ECKey(), 0, a.getAddress(), BigInteger.ZERO, encode);
 //                    bc.getPendingState().addPendingTransaction(callTx1);
 //                    Transaction callTx2 = bc.createTransaction(, 0, a.getAddress(), BigInteger.ZERO, encode);
 //                    bc.getPendingState().addPendingTransaction(callTx);
-                        Thread.sleep(10);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    Thread.sleep(10);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }).start();

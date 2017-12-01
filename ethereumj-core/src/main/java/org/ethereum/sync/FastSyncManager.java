@@ -140,42 +140,36 @@ public class FastSyncManager {
 
 
     void init() {
-        dbWriterThread = new Thread("FastSyncDBWriter") {
-            @Override
-            public void run() {
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        synchronized (FastSyncManager.this) {
-                            if (dbQueueSizeMonitor >= 0 && dbWriteQueue.size() <= dbQueueSizeMonitor) {
-                                FastSyncManager.this.notifyAll();
-                            }
-                        }
-                        TrieNodeRequest request = dbWriteQueue.take();
-                        nodesInserted++;
-                        stateSource.getNoJournalSource().put(request.nodeHash, request.response);
-                        if (nodesInserted % 1000 == 0) {
-                            dbFlushManager.commit();
-                            logger.debug("FastSyncDBWriter: commit: dbWriteQueue.size = " + dbWriteQueue.size());
+        dbWriterThread = new Thread(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    synchronized (FastSyncManager.this) {
+                        if (dbQueueSizeMonitor >= 0 && dbWriteQueue.size() <= dbQueueSizeMonitor) {
+                            FastSyncManager.this.notifyAll();
                         }
                     }
-                } catch (InterruptedException e) {
-                } catch (Exception e) {
-                    logger.error("Fatal FastSync error while writing data", e);
+                    TrieNodeRequest request = dbWriteQueue.take();
+                    nodesInserted++;
+                    stateSource.getNoJournalSource().put(request.nodeHash, request.response);
+                    if (nodesInserted % 1000 == 0) {
+                        dbFlushManager.commit();
+                        logger.debug("FastSyncDBWriter: commit: dbWriteQueue.size = " + dbWriteQueue.size());
+                    }
                 }
+            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                logger.error("Fatal FastSync error while writing data", e);
             }
-        };
+        }, "FastSyncDBWriter");
         dbWriterThread.start();
 
-        fastSyncThread = new Thread("FastSyncLoop") {
-            @Override
-            public void run() {
-                try {
-                    main();
-                } catch (Exception e) {
-                    logger.error("Fatal FastSync loop error", e);
-                }
+        fastSyncThread = new Thread(() -> {
+            try {
+                main();
+            } catch (Exception e) {
+                logger.error("Fatal FastSync loop error", e);
             }
-        };
+        }, "FastSyncLoop");
         fastSyncThread.start();
     }
 
@@ -595,14 +589,7 @@ public class FastSyncManager {
             // or we have incomplete headers/blocks/receipts download
 
             fastSyncInProgress = true;
-            pool.setNodesSelector(new Functional.Predicate<NodeHandler>() {
-                @Override
-                public boolean test(NodeHandler handler) {
-                    if (!handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY))
-                        return false;
-                    return true;
-                }
-            });
+            pool.setNodesSelector(handler -> handler.getNodeStatistics().capabilities.contains(ETH63_CAPABILITY));
 
             try {
                 EthereumListener.SyncState origSyncStage = getSyncStage();

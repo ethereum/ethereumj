@@ -52,7 +52,7 @@ public class Ethash {
     private static long cachedBlockEpoch = 0;
     //    private static ExecutorService executor = Executors.newSingleThreadExecutor();
     private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-            new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+            new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
             new ThreadFactoryBuilder().setNameFormat("ethash-pool-%d").build()));
 
     public static boolean fileCacheEnabled = true;

@@ -98,22 +98,12 @@ public abstract class BlockDownloader {
         logger.info("Initializing BlockDownloader.");
 
         if (headersDownload) {
-            getHeadersThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    headerRetrieveLoop();
-                }
-            }, "SyncThreadHeaders");
+            getHeadersThread = new Thread(this::headerRetrieveLoop, "SyncThreadHeaders");
             getHeadersThread.start();
         }
 
         if (blockBodiesDownload) {
-            getBodiesThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    blockRetrieveLoop();
-                }
-            }, "SyncThreadBlocks");
+            getBodiesThread = new Thread(this::blockRetrieveLoop, "SyncThreadBlocks");
             getBodiesThread.start();
         }
     }

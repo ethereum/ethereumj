@@ -110,9 +110,8 @@ public class DataWord implements Comparable<DataWord> {
     public int intValue() {
         int intVal = 0;
 
-        for (int i = 0; i < data.length; i++)
-        {
-            intVal = (intVal << 8) + (data[i] & 0xff);
+        for (byte aData : data) {
+            intVal = (intVal << 8) + (aData & 0xff);
         }
 
         return intVal;
@@ -140,9 +139,8 @@ public class DataWord implements Comparable<DataWord> {
     public long longValue() {
 
         long longVal = 0;
-        for (int i = 0; i < data.length; i++)
-        {
-            longVal = (longVal << 8) + (data[i] & 0xff);
+        for (byte aData : data) {
+            longVal = (longVal << 8) + (aData & 0xff);
         }
 
         return longVal;

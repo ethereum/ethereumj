@@ -26,7 +26,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.ExecutorPipeline;
-import org.ethereum.util.Functional;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
@@ -63,20 +63,14 @@ public class SyncManager extends BlockDownloader {
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
     private ExecutorPipeline<BlockWrapper,BlockWrapper> exec1 = new ExecutorPipeline<>
-            (4, 1000, true, new Functional.Function<BlockWrapper,BlockWrapper>() {
-                public BlockWrapper apply(BlockWrapper blockWrapper) {
-                    for (Transaction tx : blockWrapper.getBlock().getTransactionsList()) {
-                        tx.getSender();
-                    }
-                    return blockWrapper;
+            (4, 1000, true, blockWrapper -> {
+                for (Transaction tx : blockWrapper.getBlock().getTransactionsList()) {
+                    tx.getSender();
                 }
-            }, new Functional.Consumer<Throwable>() {
-                public void accept(Throwable throwable) {
-                    logger.error("Unexpected exception: ", throwable);
-                }
-            });
+                return blockWrapper;
+            }, throwable -> logger.error("Unexpected exception: ", throwable));
 
-    private ExecutorPipeline<BlockWrapper, Void> exec2 = exec1.add(1, 1, new Functional.Consumer<BlockWrapper>() {
+    private ExecutorPipeline<BlockWrapper, Void> exec2 = exec1.add(1, 1, new Consumer<BlockWrapper>() {
         @Override
         public void accept(BlockWrapper blockWrapper) {
             blockQueueByteSize.addAndGet(estimateBlockSize(blockWrapper));
@@ -132,15 +126,13 @@ public class SyncManager extends BlockDownloader {
         if (this.channelManager == null) {  // First init
             this.pool = pool;
             this.channelManager = channelManager;
-            logExecutor.scheduleAtFixedRate(new Runnable() {
-                public void run() {
-                    try {
-                        logger.info("Sync state: " + getSyncStatus() +
-                                (isSyncDone() || importStart == 0 ? "" : "; Import idle time " +
-                                longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
-                    } catch (Exception e) {
-                        logger.error("Unexpected", e);
-                    }
+            logExecutor.scheduleAtFixedRate(() -> {
+                try {
+                    logger.info("Sync state: " + getSyncStatus() +
+                            (isSyncDone() || importStart == 0 ? "" : "; Import idle time " +
+                            longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
+                } catch (Exception e) {
+                    logger.error("Unexpected", e);
                 }
             }, 10, 10, TimeUnit.SECONDS);
         }
@@ -170,13 +162,7 @@ public class SyncManager extends BlockDownloader {
         syncQueue = new SyncQueueImpl(blockchain);
         super.init(syncQueue, pool);
 
-        Runnable queueProducer = new Runnable(){
-
-            @Override
-            public void run() {
-                produceQueue();
-            }
-        };
+        Runnable queueProducer = this::produceQueue;
 
         syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
         syncQueueThread.start();

@@ -417,14 +417,11 @@ public class BlockTxForwardTest {
 
         @Override
         public void onSyncDone() {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        generateTransactions();
-                    } catch (Exception e) {
-                        logger.error("Error generating tx: ", e);
-                    }
+            new Thread(() -> {
+                try {
+                    generateTransactions();
+                } catch (Exception e) {
+                    logger.error("Error generating tx: ", e);
                 }
             }).start();
         }
@@ -467,11 +464,7 @@ public class BlockTxForwardTest {
     private final static int STOP_ON_BLOCK = 100;
 
     private static ScheduledExecutorService statTimer =
-            Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "StatTimer");
-                }
-            });
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "StatTimer"));
 
     private boolean logStats() {
         testLogger.info("---------====---------");
@@ -502,17 +495,14 @@ public class BlockTxForwardTest {
     @Test
     public void testTest() throws Exception {
 
-        statTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    logStats();
-                    if (fatalErrors.get() > 0 || blocks.size() >= STOP_ON_BLOCK) {
-                        statTimer.shutdownNow();
-                    }
-                } catch (Throwable t) {
-                    testLogger.error("Unhandled exception", t);
+        statTimer.scheduleAtFixedRate(() -> {
+            try {
+                logStats();
+                if (fatalErrors.get() > 0 || blocks.size() >= STOP_ON_BLOCK) {
+                    statTimer.shutdownNow();
                 }
+            } catch (Throwable t) {
+                testLogger.error("Unhandled exception", t);
             }
         }, 0, 15, TimeUnit.SECONDS);
 

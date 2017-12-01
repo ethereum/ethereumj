@@ -23,10 +23,10 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
-import org.ethereum.util.Functional;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static java.lang.Math.min;
 
@@ -446,7 +446,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
         private Visitor<T> handler;
         boolean downUp = true;
 
-        public ChildVisitor(Functional.Function<HeaderElement, List<T>> handler) {
+        public ChildVisitor(Function<HeaderElement, List<T>> handler) {
 //            this.handler = handler;
         }
 

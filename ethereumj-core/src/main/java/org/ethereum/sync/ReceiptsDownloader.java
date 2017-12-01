@@ -77,12 +77,7 @@ public class ReceiptsDownloader {
     }
 
     public void startImporting() {
-        retrieveThread = new Thread("FastsyncReceiptsFetchThread") {
-            @Override
-            public void run() {
-                retrieveLoop();
-            }
-        };
+        retrieveThread = new Thread(this::retrieveLoop, "FastsyncReceiptsFetchThread");
         retrieveThread.start();
     }
 

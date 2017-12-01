@@ -126,15 +126,12 @@ public abstract class AsyncWriteCache<Key, Value> extends AbstractCachedSource<K
 
     public synchronized ListenableFuture<Boolean> flushAsync() throws InterruptedException {
         logger.debug("AsyncWriteCache (" + name + "): flush submitted");
-        lastFlush = flushExecutor.submit(new Callable<Boolean>() {
-            @Override
-            public Boolean call() {
-                logger.debug("AsyncWriteCache (" + name + "): flush started");
-                long s = System.currentTimeMillis();
-                boolean ret = flushingCache.flush();
-                logger.debug("AsyncWriteCache (" + name + "): flush completed in " + (System.currentTimeMillis() - s) + " ms");
-                return ret;
-            }
+        lastFlush = flushExecutor.submit(() -> {
+            logger.debug("AsyncWriteCache (" + name + "): flush started");
+            long s = System.currentTimeMillis();
+            boolean ret = flushingCache.flush();
+            logger.debug("AsyncWriteCache (" + name + "): flush completed in " + (System.currentTimeMillis() - s) + " ms");
+            return ret;
         });
         return lastFlush;
     }

@@ -50,12 +50,7 @@ public class DefaultConfig {
     SystemProperties config;
 
     public DefaultConfig() {
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                logger.error("Uncaught exception", e);
-            }
-        });
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
     }
 
     @Bean
