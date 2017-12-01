@@ -92,9 +92,9 @@ public final class TrieKey {
     public TrieKey getCommonPrefix(TrieKey k) {
         // TODO can be optimized
         int prefixLen = 0;
-        int thisLenght = getLength();
+        int thisLength = getLength();
         int kLength = k.getLength();
-        while (prefixLen < thisLenght && prefixLen < kLength && getHex(prefixLen) == k.getHex(prefixLen))
+        while (prefixLen < thisLength && prefixLen < kLength && getHex(prefixLen) == k.getHex(prefixLen))
             prefixLen++;
         byte[] prefixKey = new byte[(prefixLen + 1) >> 1];
         TrieKey ret = new TrieKey(prefixKey, (prefixLen & 1) == 0 ? 0 : 1,
