@@ -395,7 +395,6 @@ public class SystemPropertiesTest {
         } catch (RuntimeException ignore) { }
     }
 
-    @Ignore
     @Test
     public void testExposeBugWhereNonHexEncodedIsAcceptedWithoutValidation() {
         SystemProperties props = new SystemProperties();
