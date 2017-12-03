@@ -72,8 +72,12 @@ public class NodeFilter {
 
         public boolean accept(Node node) {
             try {
-                return (nodeId == null || Arrays.equals(node.getId(), nodeId))
-                        && (hostIpPattern == null || accept(InetAddress.getByName(node.getHost())));
+                boolean shouldAcceptNodeId = nodeId == null || Arrays.equals(node.getId(), nodeId);
+                if (!shouldAcceptNodeId) {
+                    return false;
+                }
+                InetAddress nodeAddress = InetAddress.getByName(node.getHost());
+                return (hostIpPattern == null || accept(nodeAddress));
             } catch (UnknownHostException e) {
                 return false;
             }

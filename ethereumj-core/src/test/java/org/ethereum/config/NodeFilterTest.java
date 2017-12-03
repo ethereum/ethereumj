@@ -151,19 +151,17 @@ public class NodeFilterTest {
         NodeFilter filter = new NodeFilter();
         filter.add(null, "1.2.3.4");
 
-        Node nodeWithInvalidHostname = new Node(
-                "enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
+        Node nodeWithInvalidHostname = new Node("enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
         assertFalse(filter.accept(nodeWithInvalidHostname));
     }
 
     @Test
-    public void acceptInvalidNodeHostnameWhenUsingWildcard() throws Exception {
+    public void doNotAcceptInvalidNodeHostnameWhenUsingWildcard() throws Exception {
         NodeFilter filter = new NodeFilter();
         filter.add(null, null);
 
-        Node nodeWithInvalidHostname = new Node(
-                "enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
-        assertTrue(filter.accept(nodeWithInvalidHostname));
+        Node nodeWithInvalidHostname = new Node("enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
+        assertFalse(filter.accept(nodeWithInvalidHostname));
     }
 
     private static Node createTestNode(String nodeName, String hostIpPattern) {
