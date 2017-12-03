@@ -65,6 +65,7 @@ public class NodeFilter {
         }
 
         public boolean accept(InetAddress nodeAddr) {
+            if (hostIpPattern == null) return true;
             String ip = nodeAddr.getHostAddress();
             return hostIpPattern != null && ip.startsWith(hostIpPattern);
         }

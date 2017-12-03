@@ -25,11 +25,9 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class NodeFilterTest {
 
@@ -134,11 +132,11 @@ public class NodeFilterTest {
     }
 
     @Test
-    public void doNotAcceptNullIpPatternAsCatchAllForInetAddresses() throws Exception {
+    public void acceptNullIpPatternAsCatchAllForInetAddresses() throws Exception {
         NodeFilter filter = new NodeFilter();
         filter.add(NODE_1, null);
-        assertFalse(filter.accept(InetAddress.getByName("1.2.3.4")));
-        assertFalse(filter.accept(InetAddress.getByName("255.255.255.255")));
+        assertTrue(filter.accept(InetAddress.getByName("1.2.3.4")));
+        assertTrue(filter.accept(InetAddress.getByName("255.255.255.255")));
     }
 
     @Test
