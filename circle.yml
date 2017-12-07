@@ -37,7 +37,7 @@ test:
     - cp ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar ~/harmony.ether.camp.tar
 
     # Run hive and move all generated logs into the public artifacts folder
-    - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --smoke --loglevel=3):
+    - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --smoke --loglevel=10):
         timeout: 4000
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar  --test=. --loglevel=3):
         timeout: 4000
