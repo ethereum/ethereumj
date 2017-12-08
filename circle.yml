@@ -13,7 +13,7 @@ dependencies:
 
     # Pull in and hive, restore cached ethash DAGs and do a dry run
     - go get -u github.com/zilm13/hive
-    - (cd ~/.go_workspace/src/github.com/zilm13/hive && git checkout feature-ci-test && git pull)
+    - (cd ~/.go_workspace/src/github.com/zilm13/hive && git checkout feature-ci-test && git pull && git rev-parse --short HEAD)
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && mkdir -p workspace/ethash/ ~/.ethash)
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && cp -r ~/.ethash/. workspace/ethash/)
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
