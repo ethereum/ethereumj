@@ -73,6 +73,15 @@ public class SourceCodec<Key, Value, SourceKey, SourceValue>
     }
 
     /**
+     * Shortcut class when only key conversion is required
+     */
+    public static class KeyOnly<Key, Value, SourceKey> extends SourceCodec<Key, Value, SourceKey, Value> {
+        public KeyOnly(Source<SourceKey, Value> src, Serializer<Key, SourceKey> keySerializer) {
+            super(src, keySerializer, new Serializers.Identity<Value>());
+        }
+    }
+
+    /**
      * Shortcut class when only value conversion is required and keys are of byte[] type
      */
     public static class BytesKey<Value, SourceValue> extends ValueOnly<byte[], Value, SourceValue> {

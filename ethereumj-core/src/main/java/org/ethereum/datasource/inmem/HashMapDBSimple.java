@@ -20,6 +20,7 @@ package org.ethereum.datasource.inmem;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.util.ALock;
 import org.ethereum.util.ByteArrayMap;
+import org.ethereum.util.FastByteComparisons;
 
 import java.util.Map;
 import java.util.Set;
@@ -92,6 +93,17 @@ public class HashMapDBSimple<V> implements DbSource<V> {
     @Override
     public void reset() {
         storage.clear();
+    }
+
+    @Override
+    public V prefixLookup(byte[] key, int prefixBytes) {
+
+        for (Map.Entry<byte[], V> e : storage.entrySet())
+            if (FastByteComparisons.compareTo(key, 0, prefixBytes, e.getKey(), 0, prefixBytes) == 0) {
+                return e.getValue();
+            }
+
+        return null;
     }
 
     @Override

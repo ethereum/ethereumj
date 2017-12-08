@@ -60,4 +60,15 @@ public interface DbSource<V> extends BatchSource<byte[], V> {
      * Closes database, destroys its data and finally runs init()
      */
     void reset();
+
+    /**
+     * If supported, retrieves a value using a key prefix.
+     * Prefix extraction is meant to be done on the implementing side.<br>
+     *
+     * @param key a key for the lookup
+     * @param prefixBytes prefix length in bytes
+     * @return first value picked by prefix lookup over DB or null if there is no match
+     * @throws RuntimeException if operation is not supported
+     */
+    V prefixLookup(byte[] key, int prefixBytes);
 }

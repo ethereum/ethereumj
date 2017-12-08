@@ -139,6 +139,11 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     }
 
     @Override
+    public byte[] prefixLookup(byte[] key, int prefixBytes) {
+        throw new RuntimeException("LevelDbDataSource.prefixLookup() is not supported");
+    }
+
+    @Override
     public boolean isAlive() {
         return alive;
     }

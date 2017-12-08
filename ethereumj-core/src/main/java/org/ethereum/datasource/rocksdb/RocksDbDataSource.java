@@ -19,6 +19,7 @@ package org.ethereum.datasource.rocksdb;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.util.FileUtil;
 import org.rocksdb.*;
 import org.rocksdb.CompressionType;
@@ -36,6 +37,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static java.lang.System.arraycopy;
 
 /**
  * @author Mikhail Kalinin
@@ -102,6 +105,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 options.setMaxBackgroundCompactions(4);
                 options.setMaxBackgroundFlushes(2);
                 options.setMaxOpenFiles(32);
+
+                // key prefix for state node lookups
+                options.useFixedLengthPrefixExtractor(NodeKeyCompositor.PREFIX_BYTES);
 
                 // table options
                 final BlockBasedTableConfig tableCfg;
@@ -267,6 +273,45 @@ public class RocksDbDataSource implements DbSource<byte[]> {
         } catch (RocksDBException e) {
             logger.error("Failed to delete from db '{}'", name, e);
             throw new RuntimeException(e);
+        } finally {
+            resetDbLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public byte[] prefixLookup(byte[] key, int prefixBytes) {
+
+        if (prefixBytes != NodeKeyCompositor.PREFIX_BYTES)
+            throw new RuntimeException("RocksDbDataSource.prefixLookup() supports only " + prefixBytes + "-bytes prefix");
+
+        resetDbLock.readLock().lock();
+        try {
+
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key));
+
+            // RocksDB sets initial position of iterator to the first key which is greater or equal to the seek key
+            // since keys in RocksDB are ordered in asc order iterator must be initiated with the lowest key
+            // thus bytes with indexes greater than PREFIX_BYTES must be nullified
+            byte[] prefix = new byte[NodeKeyCompositor.PREFIX_BYTES];
+            arraycopy(key, 0, prefix, 0, NodeKeyCompositor.PREFIX_BYTES);
+
+            byte[] ret = null;
+            try (ReadOptions opts = new ReadOptions().setPrefixSameAsStart(true);
+                 RocksIterator it = db.newIterator(opts)) {
+
+                it.seek(prefix);
+                if (it.isValid())
+                    ret = it.value();
+
+            } catch (Exception e) {
+                logger.error("Failed to seek by prefix in db '{}'", name, e);
+                throw new RuntimeException(e);
+            }
+
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+
+            return ret;
+
         } finally {
             resetDbLock.readLock().unlock();
         }

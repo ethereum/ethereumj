@@ -25,11 +25,11 @@ import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -92,6 +92,27 @@ public class CommonConfig {
         return new RepositoryRoot(stateSource(), stateRoot);
     }
 
+    /**
+     * A source of nodes for state trie and all contract storage tries. <br/>
+     * This source provides contract code too. <br/><br/>
+     *
+     * Picks node by 16-bytes prefix of its key. <br/>
+     * Within {@link NodeKeyCompositor} this source is a part of ref counting workaround<br/><br/>
+     *
+     * <b>Note:</b> is eligible as a public node provider, like in {@link Eth63};
+     * {@link StateSource} is intended for inner usage only
+     *
+     * @see NodeKeyCompositor
+     * @see RepositoryRoot#RepositoryRoot(Source, byte[])
+     * @see Eth63
+     */
+    @Bean
+    public Source<byte[], byte[]> trieNodeSource() {
+        DbSource<byte[]> db = blockchainDB();
+        Source<byte[], byte[]> src = new PrefixLookupSource<>(db, NodeKeyCompositor.PREFIX_BYTES);
+        Source<byte[], byte[]> xorSrc = new XorDataSource<>(src, HashUtil.sha3("state".getBytes()));
+        return new CountingBytesSource(xorSrc, true);
+    }
 
     @Bean
     public StateSource stateSource() {
