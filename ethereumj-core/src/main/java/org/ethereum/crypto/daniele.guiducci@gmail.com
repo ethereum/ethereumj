@@ -51,12 +51,17 @@ public class HashUtil {
 
     private static final MessageDigest sha256digest;
 
+    private static final ThreadLocal<MessageDigest> HASH_256_THREAD_LOCAL;
+    private static final ThreadLocal<MessageDigest> HASH_512_THREAD_LOCAL;
+
     static {
         SystemProperties props = SystemProperties.getDefault();
         Security.addProvider(SpongyCastleProvider.getInstance());
         CRYPTO_PROVIDER = Security.getProvider(props.getCryptoProviderName());
         HASH_256_ALGORITHM_NAME = props.getHash256AlgName();
+        HASH_256_THREAD_LOCAL = new DigestSupplier(HASH_256_ALGORITHM_NAME);
         HASH_512_ALGORITHM_NAME = props.getHash512AlgName();
+        HASH_512_THREAD_LOCAL = new DigestSupplier(HASH_512_ALGORITHM_NAME);
         try {
             sha256digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
@@ -66,6 +71,30 @@ public class HashUtil {
         EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
         EMPTY_LIST_HASH = sha3(RLP.encodeList());
         EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
+    }
+
+    private static class DigestSupplier extends ThreadLocal<MessageDigest> {
+        private final String ALGORITHM_NAME;
+
+        public DigestSupplier(String algName) {
+            this.ALGORITHM_NAME = algName;
+        }
+        @Override
+        protected MessageDigest initialValue() {
+            try {
+                return MessageDigest.getInstance(ALGORITHM_NAME, CRYPTO_PROVIDER);
+            } catch (NoSuchAlgorithmException e) {
+                LOG.error("Can't find such algorithm", e);
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public MessageDigest get() {
+            MessageDigest digest = super.get();
+            digest.reset();
+            return digest;
+        }
     }
 
     /**
@@ -78,34 +107,18 @@ public class HashUtil {
     }
 
     public static byte[] sha3(byte[] input) {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
-            digest.update(input);
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            LOG.error("Can't find such algorithm", e);
-            throw new RuntimeException(e);
-        }
-
+        return HASH_256_THREAD_LOCAL.get().digest(input);
     }
 
     public static byte[] sha3(byte[] input1, byte[] input2) {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
-            digest.update(input1, 0, input1.length);
-            digest.update(input2, 0, input2.length);
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            LOG.error("Can't find such algorithm", e);
-            throw new RuntimeException(e);
-        }
+        MessageDigest digest = HASH_256_THREAD_LOCAL.get();
+        digest.update(input1);
+        return digest.digest(input2);
     }
 
     /**
      * hashing chunk of the data
-     * 
+     *
      * @param input
      *            - data for hash
      * @param start
@@ -115,27 +128,15 @@ public class HashUtil {
      * @return - keccak hash of the chunk
      */
     public static byte[] sha3(byte[] input, int start, int length) {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
-            digest.update(input, start, length);
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            LOG.error("Can't find such algorithm", e);
-            throw new RuntimeException(e);
-        }
+        MessageDigest digest = HASH_256_THREAD_LOCAL.get();
+        digest.update(input, start, length);
+        return digest.digest();
     }
 
     public static byte[] sha512(byte[] input) {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance(HASH_512_ALGORITHM_NAME, CRYPTO_PROVIDER);
-            digest.update(input);
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            LOG.error("Can't find such algorithm", e);
-            throw new RuntimeException(e);
-        }
+        MessageDigest digest = HASH_512_THREAD_LOCAL.get();
+        digest.update(input);
+        return digest.digest();
     }
 
     /**
@@ -157,7 +158,7 @@ public class HashUtil {
     /**
      * Calculates RIGTMOST160(SHA3(input)). This is used in address
      * calculations. *
-     * 
+     *
      * @param input
      *            - data
      * @return - 20 right bytes of the hash keccak of the data
