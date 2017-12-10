@@ -257,6 +257,24 @@ public class Utils {
         throw new RuntimeException(message);
     }
 
+    /**
+     * Show std warning messages in red.
+     */
+    public static void showWarn(String message, String... messages) {
+        LoggerFactory.getLogger("general").warn(message);
+        final String ANSI_RED = "\u001B[31m";
+        final String ANSI_RESET = "\u001B[0m";
+
+        System.err.println(ANSI_RED);
+        System.err.println("");
+        System.err.println("        " + message);
+        for (String msg : messages) {
+            System.err.println("        " + msg);
+        }
+        System.err.println("");
+        System.err.println(ANSI_RESET);
+    }
+
     public static String sizeToStr(long size) {
         if (size < 2 * (1L << 10)) return size + "b";
         if (size < 2 * (1L << 20)) return String.format("%dKb", size / (1L << 10));

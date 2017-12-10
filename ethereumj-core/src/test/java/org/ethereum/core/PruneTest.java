@@ -521,7 +521,8 @@ public class PruneTest {
                             ret.add(new ByteArrayWrapper(accountState.getCodeHash()));
                         }
                         if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-                            ret.addAll(getReferencedTrieNodes(stateDS, false, accountState.getStateRoot()));
+                            NodeKeyCompositor nodeKeyCompositor = new NodeKeyCompositor(key);
+                            ret.addAll(getReferencedTrieNodes(new SourceCodec.KeyOnly<>(stateDS, nodeKeyCompositor), false, accountState.getStateRoot()));
                         }
                     }
                 }
@@ -548,7 +549,8 @@ public class PruneTest {
                         ret.append("    CodeHash: " + Hex.toHexString(accountState.getCodeHash()) + "\n");
                     }
                     if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-                        ret.append(dumpState(stateDS, false, accountState.getStateRoot()));
+                        NodeKeyCompositor nodeKeyCompositor = new NodeKeyCompositor(key);
+                        ret.append(dumpState(new SourceCodec.KeyOnly<>(stateDS, nodeKeyCompositor), false, accountState.getStateRoot()));
                     }
                 } else {
                     ret.append("    " + Hex.toHexString(nodeHash) + ": " + Hex.toHexString(key) + " = " + Hex.toHexString(value) + "\n");
