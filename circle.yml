@@ -18,7 +18,7 @@ dependencies:
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && cp -r ~/.ethash/. workspace/ethash/)
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
     # Generating DAG
-    - (cd ~ethereumj && ./gradlew run -PmainClass=org.ethereum.Start -PjvmArgs="-Dethash.dir=~/.go_workspace/src/github.com/zilm13/hive/workspace/ethash -Dethash.blockNumber=0 -Xmx2G")
+    - (cd ~/ethereumj && ./gradlew run -PmainClass=org.ethereum.Start -PjvmArgs="-Dethash.dir=~/.go_workspace/src/github.com/zilm13/hive/workspace/ethash -Dethash.blockNumber=0 -Xmx2G")
     # timeout 20 min
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell --client=ethereumj:local --test=NONE --sim=NONE --loglevel=6):
         timeout: 1200
