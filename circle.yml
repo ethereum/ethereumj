@@ -32,12 +32,10 @@ dependencies:
 test:
   override:
     # Build app and move into a known folder
-    - (cd ~/ethereumj && ./gradlew install -x test)
-    - (cd ~/ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
-    - cp ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar ~/harmony.ether.camp.tar
+    - (cd ~/.go_workspace/src/github.com/zilm13/hive/clients/ethereumj\:local && ./build.sh ~/ethereumj ~/ethereum-harmony ~)
 
     # Run hive and move all generated logs into the public artifacts folder
-    - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --smoke --loglevel=10):
+    - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --smoke --loglevel=3):
         timeout: 4000
     - (cd ~/.go_workspace/src/github.com/zilm13/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar  --test=. --loglevel=3):
         timeout: 4000
