@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) [2016] [ <ether.camp> ]
+ * This file is part of the ethereumJ library.
+ *
+ * The ethereumJ library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The ethereumJ library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.ethereum.longrun;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
@@ -86,23 +103,20 @@ public class PendingTxMonitor extends BasicNode {
 
         final String pTxFilterId = jsonRpc.eth_newPendingTransactionFilter();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (Boolean.TRUE) {
-                        Object[] changes = jsonRpc.eth_getFilterChanges(pTxFilterId);
-                        if (changes.length > 0) {
-                            for (Object change : changes) {
-                                TransactionResultDTO tx = jsonRpc.eth_getTransactionByHash((String) change);
-                                newRemotePendingTx(tx);
-                            }
+        new Thread(() -> {
+            try {
+                while (Boolean.TRUE) {
+                    Object[] changes = jsonRpc.eth_getFilterChanges(pTxFilterId);
+                    if (changes.length > 0) {
+                        for (Object change : changes) {
+                            TransactionResultDTO tx = jsonRpc.eth_getTransactionByHash((String) change);
+                            newRemotePendingTx(tx);
                         }
-                        Thread.sleep(100);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    Thread.sleep(100);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }).start();
     }

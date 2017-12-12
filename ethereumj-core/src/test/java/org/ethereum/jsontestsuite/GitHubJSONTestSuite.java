@@ -17,16 +17,15 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.jsontestsuite.suite.BlockTestCase;
-import org.ethereum.jsontestsuite.suite.BlockTestSuite;
-import org.ethereum.jsontestsuite.suite.StateTestCase;
-import org.ethereum.jsontestsuite.suite.StateTestSuite;
-import org.ethereum.jsontestsuite.suite.TestCase;
-import org.ethereum.jsontestsuite.suite.TestRunner;
-import org.ethereum.jsontestsuite.suite.TestSuite;
-import org.ethereum.jsontestsuite.suite.TransactionTestCase;
-import org.ethereum.jsontestsuite.suite.TransactionTestSuite;
-import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.*;
+import org.ethereum.config.net.BaseNetConfig;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.jsontestsuite.suite.*;
 import org.ethereum.jsontestsuite.suite.runners.TransactionTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -41,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test file specific for tests maintained in the GitHub repository
@@ -83,13 +82,7 @@ public class GitHubJSONTestSuite {
         }
     }
 
-    protected static void runGitHubJsonVMTest(String json) throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        runGitHubJsonVMTest(json, excluded);
-    }
-
-
-    protected static void runGitHubJsonVMTest(String json, Set<String> excluded) throws ParseException {
+    public static void runGitHubJsonVMTest(String json) throws ParseException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
@@ -98,20 +91,9 @@ public class GitHubJSONTestSuite {
         TestSuite testSuite = new TestSuite(testSuiteObj);
         Iterator<TestCase> testIterator = testSuite.iterator();
 
-        for (TestCase testCase : testSuite.getAllTests()) {
-
-            String prefix = "    ";
-            if (excluded.contains(testCase.getName())) prefix = "[X] ";
-
-            logger.info(prefix + testCase.getName());
-        }
-
-
         while (testIterator.hasNext()) {
 
             TestCase testCase = testIterator.next();
-            if (excluded.contains(testCase.getName()))
-                continue;
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
@@ -214,109 +196,15 @@ public class GitHubJSONTestSuite {
         return result;
     }
 
-
-    public static void runStateTest(String jsonSuite) throws IOException {
-        runStateTest(jsonSuite, new HashSet<String>());
-    }
-
-
-    public static void runStateTest(String jsonSuite, String testName) throws IOException {
-
-        StateTestSuite stateTestSuite = new StateTestSuite(jsonSuite);
-        Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
-
-        for (String testCase : testCases.keySet()) {
-            if (testCase.equals(testName))
-                logger.info("  => " + testCase);
-            else
-                logger.info("     " + testCase);
-        }
-
-        StateTestCase testCase = testCases.get(testName);
-        if (testCase != null){
-            String output = String.format("*  running: %s  *", testName);
-            String line = output.replaceAll(".", "*");
-
-            logger.info(line);
-            logger.info(output);
-            logger.info(line);
-            List<String> fails = StateTestRunner.run(testCases.get(testName));
-
-            Assert.assertTrue(fails.isEmpty());
-
-        } else {
-            logger.error("Sorry test case doesn't exist: {}", testName);
-        }
-    }
-
-    public static void runStateTest(String jsonSuite, Set<String> excluded) throws IOException {
-
-        StateTestSuite stateTestSuite = new StateTestSuite(jsonSuite);
-        Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
-        Map<String, Boolean> summary = new HashMap<>();
-
-
-        for (String testCase : testCases.keySet()) {
-            if ( excluded.contains(testCase))
-                logger.info(" [X] " + testCase);
-            else
-                logger.info("     " + testCase);
-        }
-
-        Set<String> testNames = stateTestSuite.getTestCases().keySet();
-        for (String testName : testNames){
-
-            if (excluded.contains(testName)) continue;
-            String output = String.format("*  running: %s  *", testName);
-            String line = output.replaceAll(".", "*");
-
-            logger.info(line);
-            logger.info(output);
-            logger.info(line);
-
-            List<String> result = StateTestRunner.run(testCases.get(testName));
-            if (!result.isEmpty())
-                summary.put(testName, false);
-            else
-                summary.put(testName, true);
-        }
-
-        logger.info("Summary: ");
-        logger.info("=========");
-
-        int fails = 0; int pass = 0;
-        for (String key : summary.keySet()){
-
-            if (summary.get(key)) ++pass; else ++fails;
-            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
-                    replace(' ', '.').
-                    replace("^", " ");
-            logger.info(sumTest);
-        }
-
-        logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
-
-        Assert.assertTrue(fails == 0);
-    }
-
-    public static void runGitHubJsonTransactionTest(String json, Set<String> excluded) throws IOException, ParseException {
+    public static void runGitHubJsonTransactionTest(String json) throws IOException {
 
         TransactionTestSuite transactionTestSuite = new TransactionTestSuite(json);
         Map<String, TransactionTestCase> testCases = transactionTestSuite.getTestCases();
         Map<String, Boolean> summary = new HashMap<>();
 
-
-        for (String testCase : testCases.keySet()) {
-            if ( excluded.contains(testCase))
-                logger.info(" [X] " + testCase);
-            else
-                logger.info("     " + testCase);
-        }
-
         Set<String> testNames = transactionTestSuite.getTestCases().keySet();
         for (String testName : testNames){
 
-            if (excluded.contains(testName)) continue;
             String output = String.format("*  running: %s  *", testName);
             String line = output.replaceAll(".", "*");
 
@@ -350,4 +238,127 @@ public class GitHubJSONTestSuite {
         Assert.assertTrue(fails == 0);
     }
 
+    static void runDifficultyTest(BlockchainNetConfig config, String file, String commitSHA) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        DifficultyTestSuite testSuite = new DifficultyTestSuite(json);
+
+        SystemProperties.getDefault().setBlockchainConfig(config);
+
+        try {
+            for (DifficultyTestCase testCase : testSuite.getTestCases()) {
+
+                logger.info("Running {}\n", testCase.getName());
+
+                BlockHeader current = testCase.getCurrent();
+                BlockHeader parent = testCase.getParent();
+
+                assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty
+                        (SystemProperties.getDefault().getBlockchainConfig(), parent));
+            }
+        } finally {
+            SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+        }
+    }
+
+    static void runCryptoTest(String file, String commitSHA) throws IOException {
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JavaType type = mapper.getTypeFactory().
+                constructMapType(HashMap.class, String.class, CryptoTestCase.class);
+
+
+        HashMap<String , CryptoTestCase> testSuite =
+                mapper.readValue(json, type);
+
+        for (String key : testSuite.keySet()){
+            logger.info("executing: " + key);
+            testSuite.get(key).execute();
+        }
+    }
+
+    static void runTrieTest(String file, String commitSHA, boolean secure) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        TrieTestSuite testSuite = new TrieTestSuite(json);
+
+        for (TrieTestCase testCase : testSuite.getTestCases()) {
+
+            logger.info("Running {}\n", testCase.getName());
+
+            String expectedRoot = testCase.getRoot();
+            String actualRoot = testCase.calculateRoot(secure);
+
+            assertEquals(expectedRoot, actualRoot);
+        }
+    }
+
+    static void runABITest(String file, String commitSHA) throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit(file, commitSHA);
+
+        ABITestSuite testSuite = new ABITestSuite(json);
+
+        for (ABITestCase testCase : testSuite.getTestCases()) {
+
+            logger.info("Running {}\n", testCase.getName());
+
+            String expected = testCase.getResult();
+            String actual = testCase.getEncoded();
+
+            assertEquals(expected, actual);
+        }
+    }
+
+    public enum Network {
+
+        Frontier,
+        Homestead,
+        EIP150,
+        EIP158,
+        Byzantium,
+        Constantinople,
+
+        // Transition networks
+        FrontierToHomesteadAt5,
+        HomesteadToDaoAt5,
+        HomesteadToEIP150At5,
+        EIP158ToByzantiumAt5;
+
+        public BlockchainNetConfig getConfig() {
+            switch (this) {
+
+                case Frontier:  return new FrontierConfig();
+                case Homestead: return new HomesteadConfig();
+                case EIP150:    return new Eip150HFConfig(new DaoHFConfig());
+                case EIP158:    return new Eip160HFConfig(new DaoHFConfig());
+                case Byzantium:    return new ByzantiumConfig(new DaoHFConfig());
+
+                case FrontierToHomesteadAt5: return new BaseNetConfig() {{
+                    add(0, new FrontierConfig());
+                    add(5, new HomesteadConfig());
+                }};
+
+                case HomesteadToDaoAt5: return new BaseNetConfig() {{
+                    add(0, new HomesteadConfig());
+                    add(5, new DaoHFConfig(new HomesteadConfig(), 5));
+                }};
+
+                case HomesteadToEIP150At5: return new BaseNetConfig() {{
+                    add(0, new HomesteadConfig());
+                    add(5, new Eip150HFConfig(new HomesteadConfig()));
+                }};
+
+                case EIP158ToByzantiumAt5: return new BaseNetConfig() {{
+                    add(0, new Eip160HFConfig(new HomesteadConfig()));
+                    add(5, new ByzantiumConfig(new HomesteadConfig()));
+                }};
+
+                default: throw new IllegalArgumentException("Unknown network value: " + this.name());
+            }
+        }
+    }
 }

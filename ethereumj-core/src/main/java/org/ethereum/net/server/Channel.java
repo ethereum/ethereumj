@@ -160,33 +160,30 @@ public class Channel {
                                             HelloMessage helloRemote) throws IOException, InterruptedException {
 
         logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
-        if (P2pHandler.isProtocolVersionSupported(helloRemote.getP2PVersion())) {
 
-            if (helloRemote.getP2PVersion() < 5) {
-                messageCodec.setSupportChunkedFrames(false);
-            }
+        messageCodec.setSupportChunkedFrames(false);
 
-            FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
-            ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
-            ctx.pipeline().addLast("messageCodec", messageCodec);
-            ctx.pipeline().addLast(Capability.P2P, p2pHandler);
+        FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
+        ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
 
-            p2pHandler.setChannel(this);
-            p2pHandler.setHandshake(helloRemote, ctx);
-
-            getNodeStatistics().rlpxHandshake.add();
+        if (SnappyCodec.isSupported(Math.min(config.defaultP2PVersion(), helloRemote.getP2PVersion()))) {
+            ctx.pipeline().addLast("snappyCodec", new SnappyCodec(this));
+            logger.debug("{}: use snappy compression", ctx.channel());
         }
+
+        ctx.pipeline().addLast("messageCodec", messageCodec);
+        ctx.pipeline().addLast(Capability.P2P, p2pHandler);
+
+        p2pHandler.setChannel(this);
+        p2pHandler.setHandshake(helloRemote, ctx);
+
+        getNodeStatistics().rlpxHandshake.add();
     }
 
-    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId,
-                                 HelloMessage inboundHelloMessage) throws IOException, InterruptedException {
+    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec,
+                                 String nodeId) throws IOException, InterruptedException {
 
         final HelloMessage helloMessage = staticMessages.createHelloMessage(nodeId);
-
-        if (inboundHelloMessage != null && P2pHandler.isProtocolVersionSupported(inboundHelloMessage.getP2PVersion())) {
-            // the p2p version can be downgraded if requested by peer and supported by us
-            helloMessage.setP2pVersion(inboundHelloMessage.getP2PVersion());
-        }
 
         ByteBuf byteBufMsg = ctx.alloc().buffer();
         frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), helloMessage.getEncoded()), byteBufMsg);

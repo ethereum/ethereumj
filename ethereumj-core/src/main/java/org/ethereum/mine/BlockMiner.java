@@ -269,18 +269,15 @@ public class BlockMiner {
             }
 
             for (final ListenableFuture<MiningResult> task : currentMiningTasks) {
-                task.addListener(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            // wow, block mined!
-                            final Block minedBlock = task.get().block;
-                            blockMined(minedBlock);
-                        } catch (InterruptedException | CancellationException e) {
-                            // OK, we've been cancelled, just exit
-                        } catch (Exception e) {
-                            logger.warn("Exception during mining: ", e);
-                        }
+                task.addListener(() -> {
+                    try {
+                        // wow, block mined!
+                        final Block minedBlock = task.get().block;
+                        blockMined(minedBlock);
+                    } catch (InterruptedException | CancellationException e) {
+                        // OK, we've been cancelled, just exit
+                    } catch (Exception e) {
+                        logger.warn("Exception during mining: ", e);
                     }
                 }, MoreExecutors.sameThreadExecutor());
             }

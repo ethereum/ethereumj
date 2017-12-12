@@ -17,25 +17,28 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.EnvTck;
-import org.ethereum.jsontestsuite.suite.model.LogTck;
 
-import java.util.List;
 import java.util.Map;
 
 public class StateTestCase {
 
 
     private EnvTck env;
-    private List<LogTck> logs;
+    @JsonDeserialize(using = Logs.Deserializer.class)
+    private Logs logs;
     private String out;
     private Map<String, AccountTck> pre;
     private String postStateRoot;
     private Map<String, AccountTck> post;
     private TransactionTck transaction;
-
+    private GitHubJSONTestSuite.Network network;
+    private String name;
 
     public StateTestCase() {
     }
@@ -48,11 +51,11 @@ public class StateTestCase {
         this.env = env;
     }
 
-    public List<LogTck> getLogs() {
+    public Logs getLogs() {
         return logs;
     }
 
-    public void setLogs(List<LogTck> logs) {
+    public void setLogs(Logs logs) {
         this.logs = logs;
     }
 
@@ -94,5 +97,25 @@ public class StateTestCase {
 
     public void setTransaction(TransactionTck transaction) {
         this.transaction = transaction;
+    }
+
+    public GitHubJSONTestSuite.Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(GitHubJSONTestSuite.Network network) {
+        this.network = network;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public BlockchainNetConfig getConfig() {
+        return network.getConfig();
     }
 }

@@ -22,7 +22,6 @@ import org.ethereum.net.swarm.bzz.BzzMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -32,6 +31,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
@@ -58,12 +58,7 @@ public class BzzProtocolTest {
         }
 
         public void setFilter(final String filter) {
-            pFilter = new Predicate<String>() {
-                @Override
-                public boolean test(String s) {
-                    return s.contains(filter);
-                }
-            };
+            pFilter = s -> s.contains(filter);
         }
 
         public void setFilter(Predicate<String> pFilter) {
@@ -74,11 +69,11 @@ public class BzzProtocolTest {
     static FilterPrinter stdout = new FilterPrinter(System.out);
 
     public static class TestPipe {
-        protected Functional.Consumer<BzzMessage> out1;
-        protected Functional.Consumer<BzzMessage> out2;
+        protected Consumer<BzzMessage> out1;
+        protected Consumer<BzzMessage> out2;
         protected String name1, name2;
 
-        public TestPipe(Functional.Consumer<BzzMessage> out1, Functional.Consumer<BzzMessage> out2) {
+        public TestPipe(Consumer<BzzMessage> out1, Consumer<BzzMessage> out2) {
             this.out1 = out1;
             this.out2 = out2;
         }
@@ -86,28 +81,22 @@ public class BzzProtocolTest {
         protected TestPipe() {
         }
 
-        Functional.Consumer<BzzMessage> createIn1() {
-            return new Functional.Consumer<BzzMessage>() {
-                @Override
-                public void accept(BzzMessage bzzMessage) {
-                    BzzMessage smsg = serialize(bzzMessage);
-                    if (TestPeer.MessageOut) {
-                        stdout.println("+ " + name1 + " => " + name2 + ": " + smsg);
-                    }
-                    out2.accept(smsg);
+        Consumer<BzzMessage> createIn1() {
+            return bzzMessage -> {
+                BzzMessage smsg = serialize(bzzMessage);
+                if (TestPeer.MessageOut) {
+                    stdout.println("+ " + name1 + " => " + name2 + ": " + smsg);
                 }
+                out2.accept(smsg);
             };
         }
-        Functional.Consumer<BzzMessage> createIn2() {
-            return new Functional.Consumer<BzzMessage>() {
-                @Override
-                public void accept(BzzMessage bzzMessage) {
-                    BzzMessage smsg = serialize(bzzMessage);
-                    if (TestPeer.MessageOut) {
-                        stdout.println("+ " + name2 + " => " + name1 + ": " + smsg);
-                    }
-                    out1.accept(smsg);
+        Consumer<BzzMessage> createIn2() {
+            return bzzMessage -> {
+                BzzMessage smsg = serialize(bzzMessage);
+                if (TestPeer.MessageOut) {
+                    stdout.println("+ " + name2 + " => " + name1 + ": " + smsg);
                 }
+                out1.accept(smsg);
             };
         }
 
@@ -124,11 +113,11 @@ public class BzzProtocolTest {
             }
         }
 
-        public Functional.Consumer<BzzMessage> getOut1() {
+        public Consumer<BzzMessage> getOut1() {
             return out1;
         }
 
-        public Functional.Consumer<BzzMessage> getOut2() {
+        public Consumer<BzzMessage> getOut2() {
             return out2;
         }
     }
@@ -138,35 +127,32 @@ public class BzzProtocolTest {
         static ScheduledExecutorService exec = Executors.newScheduledThreadPool(32);
         static Queue<Future<?>> tasks = new LinkedBlockingQueue<>();
 
-        class AsyncConsumer implements Functional.Consumer<BzzMessage> {
-            Functional.Consumer<BzzMessage> delegate;
+        class AsyncConsumer implements Consumer<BzzMessage> {
+            Consumer<BzzMessage> delegate;
 
             boolean rev;
 
-            public AsyncConsumer(Functional.Consumer<BzzMessage> delegate, boolean rev) {
+            public AsyncConsumer(Consumer<BzzMessage> delegate, boolean rev) {
                 this.delegate = delegate;
                 this.rev = rev;
             }
 
             @Override
             public void accept(final BzzMessage bzzMessage) {
-                ScheduledFuture<?> future = exec.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (!rev) {
-                                if (TestPeer.MessageOut) {
-                                    stdout.println("- " + name1 + " => " + name2 + ": " + bzzMessage);
-                                }
-                            } else {
-                                if (TestPeer.MessageOut) {
-                                    stdout.println("- " + name2 + " => " + name1 + ": " + bzzMessage);
-                                }
+                ScheduledFuture<?> future = exec.schedule(() -> {
+                    try {
+                        if (!rev) {
+                            if (TestPeer.MessageOut) {
+                                stdout.println("- " + name1 + " => " + name2 + ": " + bzzMessage);
                             }
-                            delegate.accept(bzzMessage);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        } else {
+                            if (TestPeer.MessageOut) {
+                                stdout.println("- " + name2 + " => " + name1 + ": " + bzzMessage);
+                            }
                         }
+                        delegate.accept(bzzMessage);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }, channelLatencyMs, TimeUnit.MILLISECONDS);
                 tasks.add(future);
@@ -186,7 +172,7 @@ public class BzzProtocolTest {
             }
         }
 
-        public TestAsyncPipe(Functional.Consumer<BzzMessage> out1, Functional.Consumer<BzzMessage> out2) {
+        public TestAsyncPipe(Consumer<BzzMessage> out1, Consumer<BzzMessage> out2) {
             this.out1 = new AsyncConsumer(out1, false);
             this.out2 = new AsyncConsumer(out2, true);
         }
@@ -245,15 +231,12 @@ public class BzzProtocolTest {
         @Override
         public Collection<BzzProtocol> getPeers(Key key, int maxCount) {
             if (thisPeer == null) return peers.keySet();
-//            TreeMap<Key, TestPeer> sort = new TreeMap<Key, TestPeer>(new Comparator<Key>() {
-//                @Override
-//                public int compare(Key o1, Key o2) {
-//                    for (int i = 0; i < o1.getBytes().length; i++) {
-//                        if (o1.getBytes()[i] > o2.getBytes()[i]) return 1;
-//                        if (o1.getBytes()[i] < o2.getBytes()[i]) return -1;
-//                    }
-//                    return 0;
+//            TreeMap<Key, TestPeer> sort = new TreeMap<>((o1, o2) -> {
+//                for (int i = 0; i < o1.getBytes().length; i++) {
+//                    if (o1.getBytes()[i] > o2.getBytes()[i]) return 1;
+//                    if (o1.getBytes()[i] < o2.getBytes()[i]) return -1;
 //                }
+//                return 0;
 //            });
 //            for (TestPeer testPeer : TestPeer.staticMap.values()) {
 //                if (thisPeer != testPeer) {
@@ -441,12 +424,7 @@ public class BzzProtocolTest {
         System.out.println("Waiting for net idle ");
         TestAsyncPipe.waitForCompletion();
         TestPeer.MessageOut = true;
-        stdout.setFilter(new Predicate<String>() {
-            @Override
-            public boolean test(String s) {
-                return s.startsWith("+") && s.contains("BzzStoreReqMessage");
-            }
-        });
+        stdout.setFilter(s -> s.startsWith("+") && s.contains("BzzStoreReqMessage"));
 //        System.out.println("==== Storage statistics:\n" + dumpPeers(allPeers, null));
 //        System.out.println("Sleeping...");
 

@@ -75,16 +75,13 @@ public class FastSyncSanityTest {
         }
         if (overrideConfigPath != null) configPath.setValue(overrideConfigPath);
 
-        statTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (fatalErrors.get() > 0) {
-                        statTimer.shutdownNow();
-                    }
-                } catch (Throwable t) {
-                    FastSyncSanityTest.testLogger.error("Unhandled exception", t);
+        statTimer.scheduleAtFixedRate(() -> {
+            try {
+                if (fatalErrors.get() > 0) {
+                    statTimer.shutdownNow();
                 }
+            } catch (Throwable t) {
+                FastSyncSanityTest.testLogger.error("Unhandled exception", t);
             }
         }, 0, 15, TimeUnit.SECONDS);
     }
@@ -174,11 +171,7 @@ public class FastSyncSanityTest {
     private final static long MAX_RUN_MINUTES = 180L;
 
     private static ScheduledExecutorService statTimer =
-            Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "StatTimer");
-                }
-            });
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "StatTimer"));
 
     private static boolean logStats() {
         testLogger.info("---------====---------");
@@ -200,9 +193,7 @@ public class FastSyncSanityTest {
 
         runEthereum();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
             try {
                 while(firstRun.get()) {
                     sleep(1000);
@@ -230,7 +221,6 @@ public class FastSyncSanityTest {
                 testLogger.info("All checks are finished");
             } catch (Throwable e) {
                 e.printStackTrace();
-            }
             }
         }).start();
 

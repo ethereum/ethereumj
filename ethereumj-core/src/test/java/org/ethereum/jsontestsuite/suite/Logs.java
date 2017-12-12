@@ -17,6 +17,14 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.JsonDeserializer;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 
@@ -25,15 +33,40 @@ import org.json.simple.JSONObject;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 public class Logs {
-    List<LogInfo> logs = new ArrayList<>();
+    List<LogInfo> logs;
+    byte[] logsHash;
 
-    public Logs(JSONArray jLogs) {
+    @SuppressWarnings("unchecked")
+    public Logs(Object logs) {
+        if (logs instanceof JSONArray) {
+            init((JSONArray) logs);
+        } else if (logs instanceof List) {
+            this.logs = (List<LogInfo>) logs;
+        } else {
+            init((String) logs);
+        }
+    }
 
+    public static class Deserializer extends JsonDeserializer<Logs> {
+        @Override
+        public Logs deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+            return new Logs(jp.readValueAs(Object.class));
+        }
+    }
+
+    private void init(String logsHash) {
+        this.logsHash = Utils.parseData(logsHash);
+    }
+
+    private void init(JSONArray jLogs) {
+        logs = new ArrayList<>();
         for (Object jLog1 : jLogs) {
 
             JSONObject jLog = (JSONObject) jLog1;
@@ -59,66 +92,78 @@ public class Logs {
     }
 
 
-    public List<String> compareToReal(List<LogInfo> logs) {
-
+    public List<String> compareToReal(List<LogInfo> logResult) {
         List<String> results = new ArrayList<>();
-
-        int i = 0;
-        for (LogInfo postLog : this.logs) {
-
-            LogInfo realLog = logs.get(i);
-
-            String postAddress = Hex.toHexString(postLog.getAddress());
-            String realAddress = Hex.toHexString(realLog.getAddress());
-
-            if (!postAddress.equals(realAddress)) {
-
-                String formattedString = String.format("Log: %s: has unexpected address, expected address: %s found address: %s",
-                        i, postAddress, realAddress);
-                results.add(formattedString);
+        if (logsHash != null) {
+            byte[][] logInfoListE = new byte[logResult.size()][];
+            for (int i = 0; i < logResult.size(); i++) {
+                logInfoListE[i] = logResult.get(i).getEncoded();
             }
-
-            String postData = Hex.toHexString(postLog.getData());
-            String realData = Hex.toHexString(realLog.getData());
-
-            if (!postData.equals(realData)) {
-
-                String formattedString = String.format("Log: %s: has unexpected data, expected data: %s found data: %s",
-                        i, postData, realData);
-                results.add(formattedString);
+            byte[] logInfoListRLP = RLP.encodeList(logInfoListE);
+            byte[] resHash = HashUtil.sha3(logInfoListRLP);
+            if (!FastByteComparisons.equal(logsHash, resHash)) {
+                results.add("Logs hash doesn't match expected: " + Hex.toHexString(resHash) + " != " + Hex.toHexString(logsHash));
             }
+        } else {
+            Iterator<LogInfo> postLogs = getIterator();
+            int i = 0;
+            while (postLogs.hasNext()) {
 
-            String postBloom = Hex.toHexString(postLog.getBloom().getData());
-            String realBloom = Hex.toHexString(realLog.getBloom().getData());
+                LogInfo expectedLogInfo = postLogs.next();
 
-            if (!postData.equals(realData)) {
+                LogInfo foundLogInfo = null;
+                if (logResult.size() > i)
+                    foundLogInfo = logResult.get(i);
 
-                String formattedString = String.format("Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
-                        i, postBloom, realBloom);
-                results.add(formattedString);
-            }
+                if (foundLogInfo == null) {
+                    String output =
+                            String.format("Expected log [ %s ]", expectedLogInfo.toString());
+                    results.add(output);
+                } else {
+                    if (!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
+                        String output =
+                                String.format("Expected address [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getAddress()), Hex.toHexString(foundLogInfo.getAddress()));
+                        results.add(output);
+                    }
 
-            List<DataWord> postTopics = postLog.getTopics();
-            List<DataWord> realTopics = realLog.getTopics();
+                    if (!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
+                        String output =
+                                String.format("Expected data [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getData()), Hex.toHexString(foundLogInfo.getData()));
+                        results.add(output);
+                    }
 
-            int j = 0;
-            for (DataWord postTopic : postTopics) {
+                    if (!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
+                        String output =
+                                String.format("Expected bloom [ %s ], found [ %s ]",
+                                        Hex.toHexString(expectedLogInfo.getBloom().getData()),
+                                        Hex.toHexString(foundLogInfo.getBloom().getData()));
+                        results.add(output);
+                    }
 
-                DataWord realTopic = realTopics.get(j);
+                    if (expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
+                        String output =
+                                String.format("Expected number of topics [ %d ], found [ %d ]",
+                                        expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
+                        results.add(output);
+                    } else {
+                        int j = 0;
+                        for (DataWord topic : expectedLogInfo.getTopics()) {
+                            byte[] foundTopic = foundLogInfo.getTopics().get(j).getData();
 
-                if (!postTopic.equals(realTopic)) {
+                            if (!Arrays.equals(topic.getData(), foundTopic)) {
+                                String output =
+                                        String.format("Expected topic [ %s ], found [ %s ]", Hex.toHexString(topic.getData()), Hex.toHexString(foundTopic));
+                                results.add(output);
+                            }
 
-                    String formattedString = String.format("Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
-                            i, j, postTopic, realTopic);
-                    results.add(formattedString);
+                            ++j;
+                        }
+                    }
                 }
-                ++j;
+
+                ++i;
             }
-
-            ++i;
         }
-
         return results;
     }
-
 }

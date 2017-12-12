@@ -30,6 +30,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.List;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -148,7 +149,7 @@ public class BlockHeader {
         this.extraData = extraData;
         this.mixHash = mixHash;
         this.nonce = nonce;
-        this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
+        this.stateRoot = EMPTY_TRIE_HASH;
     }
 
     public boolean isGenesis() {
@@ -372,6 +373,10 @@ public class BlockHeader {
     public BigInteger calcDifficulty(BlockchainNetConfig config, BlockHeader parent) {
         return config.getConfigForBlock(getNumber()).
                 calcDifficulty(this, parent);
+    }
+
+    public boolean hasUncles() {
+        return !FastByteComparisons.equal(unclesHash, EMPTY_LIST_HASH);
     }
 
     public String toString() {

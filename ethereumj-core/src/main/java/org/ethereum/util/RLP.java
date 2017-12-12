@@ -237,7 +237,7 @@ public class RLP {
                 && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
 
             byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
-            int length = calcLengthRaw(lengthOfLength, data, index);
+            int length = calcLength(lengthOfLength, data, index);
             return new String(data, index + lengthOfLength + 1, length);
 
         } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
@@ -530,21 +530,37 @@ public class RLP {
         }
     }
 
+    /**
+     * Parse length of long item or list.
+     * RLP supports lengths with up to 8 bytes long,
+     * but due to java limitation it returns either encoded length
+     * or {@link Integer#MAX_VALUE} in case if encoded length is greater
+     *
+     * @param lengthOfLength length of length in bytes
+     * @param msgData message
+     * @param pos position to parse from
+     *
+     * @return calculated length
+     */
     private static int calcLength(int lengthOfLength, byte[] msgData, int pos) {
         byte pow = (byte) (lengthOfLength - 1);
         int length = 0;
         for (int i = 1; i <= lengthOfLength; ++i) {
-            length += (msgData[pos + i] & 0xFF) << (8 * pow);
-            pow--;
-        }
-        return length;
-    }
 
-    private static int calcLengthRaw(int lengthOfLength, byte[] msgData, int index) {
-        byte pow = (byte) (lengthOfLength - 1);
-        int length = 0;
-        for (int i = 1; i <= lengthOfLength; ++i) {
-            length += msgData[index + i] << (8 * pow);
+            int bt = msgData[pos + i] & 0xFF;
+            int shift = 8 * pow;
+
+            // no leading zeros are acceptable
+            if (bt == 0 && length == 0) {
+                throw new RuntimeException("RLP length contains leading zeros");
+            }
+
+            // return MAX_VALUE if index of highest bit is more than 31
+            if (32 - Integer.numberOfLeadingZeros(bt) + shift > 31) {
+                return Integer.MAX_VALUE;
+            }
+
+            length += bt << shift;
             pow--;
         }
         return length;
@@ -598,6 +614,15 @@ public class RLP {
                     byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_LIST);
                     int length = calcLength(lengthOfLength, msgData, pos);
 
+                    if (length < SIZE_THRESHOLD) {
+                        throw new RuntimeException("Short list has been encoded as long list");
+                    }
+
+                    // check payload bounds
+                    if (length > msgData.length - pos - lengthOfLength) {
+                        throw new RuntimeException("Parsed data lays outside of RLP length boundaries");
+                    }
+
                     byte[] rlpData = new byte[lengthOfLength + length + 1];
                     System.arraycopy(msgData, pos, rlpData, 0, lengthOfLength
                             + length + 1);
@@ -642,6 +667,15 @@ public class RLP {
                     byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_ITEM);
                     int length = calcLength(lengthOfLength, msgData, pos);
 
+                    if (length < SIZE_THRESHOLD) {
+                        throw new RuntimeException("Short item has been encoded as long item");
+                    }
+
+                    // check payload bounds
+                    if (length > msgData.length - pos - lengthOfLength) {
+                        throw new RuntimeException("Parsed data lays outside of RLP length boundaries");
+                    }
+
                     // now we can parse an item for data[1]..data[length]
                     byte[] item = new byte[length];
                     System.arraycopy(msgData, pos + lengthOfLength + 1, item,
@@ -666,6 +700,10 @@ public class RLP {
 
                     byte[] item = new byte[length];
                     System.arraycopy(msgData, pos + 1, item, 0, length);
+
+                    if (length == 1 && (item[0] & 0xFF) < OFFSET_SHORT_ITEM) {
+                        throw new RuntimeException("Single byte has been encoded as byte string");
+                    }
 
                     byte[] rlpPrefix = new byte[2];
                     System.arraycopy(msgData, pos, rlpPrefix, 0, 2);
@@ -749,6 +787,14 @@ public class RLP {
 
         public LList(byte[] rlp) {
             this.rlp = rlp;
+        }
+
+        public byte[] getEncoded() {
+            byte encoded[][] = new byte[cnt][];
+            for (int i = 0; i < cnt; i++) {
+                encoded[i] = encodeElement(getBytes(i));
+            }
+            return encodeList(encoded);
         }
 
         public void add(int off, int len, boolean isList) {
@@ -1196,7 +1242,7 @@ public class RLP {
                 && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
 
             byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
-            return calcLengthRaw(lengthOfLength, data, index);
+            return calcLength(lengthOfLength, data, index);
 
         } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
                 && (data[index] & 0xFF) <= OFFSET_LONG_ITEM) {

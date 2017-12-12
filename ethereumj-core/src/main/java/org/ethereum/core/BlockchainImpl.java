@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
@@ -56,6 +57,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.*;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
@@ -165,8 +167,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private byte[] minerCoinbase;
     private byte[] minerExtraData;
-    private BigInteger BLOCK_REWARD;
-    private BigInteger INCLUSION_REWARD;
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
@@ -224,8 +224,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void initConst(SystemProperties config) {
         minerCoinbase = config.getMinerCoinbase();
         minerExtraData = config.getMineExtraData();
-        BLOCK_REWARD = config.getBlockchainConfig().getCommonConstants().getBLOCK_REWARD();
-        INCLUSION_REWARD = BLOCK_REWARD.divide(BigInteger.valueOf(32));
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
     }
@@ -458,12 +456,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
-                eventDispatchThread.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        pendingState.processBest(block, summary.getReceipts());
-                    }
-                });
+                eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
             }
         }
 
@@ -542,8 +535,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
             stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
             if (summary1 != null) {
-                stateLogger.error("Inconsistent behavior, exiting...");
-                System.exit(-1);
+                if (config.exitOnBlockConflict()) {
+                    stateLogger.error("Inconsistent behavior, exiting...");
+                    System.exit(-1);
+                } else {
+                    return summary1;
+                }
             }
         }
         return summary;
@@ -626,12 +623,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             summary.setTotalDifficulty(getTotalDifficulty());
 
             if (!byTest) {
-                dbFlushManager.commit(new Runnable() {
-                    @Override
-                    public void run() {
-                        storeBlock(block, receipts);
-                        repository.commit();
-                    }
+                dbFlushManager.commit(() -> {
+                    storeBlock(block, receipts);
+                    repository.commit();
                 });
             } else {
                 storeBlock(block, receipts);
@@ -678,8 +672,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (receipts == null || receipts.isEmpty())
             return retBloomFilter.getData();
 
-        for (int i = 0; i < receipts.size(); i++) {
-            retBloomFilter.or(receipts.get(i).getBloomFilter());
+        for (TransactionReceipt receipt : receipts) {
+            retBloomFilter.or(receipt.getBloomFilter());
         }
 
         return retBloomFilter.getData();
@@ -860,7 +854,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
-        config.getBlockchainConfig().getConfigForBlock(block.getNumber()).hardForkTransfers(block, track);
+        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(block.getNumber());
+        blockchainConfig.hardForkTransfers(block, track);
 
         long saveTime = System.nanoTime();
         int i = 1;
@@ -886,7 +881,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             txTrack.commit();
             final TransactionReceipt receipt = executor.getReceipt();
 
-            receipt.setPostTxState(track.getRoot());
+            if (blockchainConfig.eip658()) {
+                receipt.setTxStatus(receipt.isSuccessful());
+            } else {
+                receipt.setPostTxState(track.getRoot());
+            }
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(track.getRoot()));
@@ -934,10 +933,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Map<byte[], BigInteger> rewards = new HashMap<>();
 
+        BigInteger blockReward = config.getBlockchainConfig().getConfigForBlock(block.getNumber()).getConstants().getBLOCK_REWARD();
+        BigInteger inclusionReward = blockReward.divide(BigInteger.valueOf(32));
+
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                BigInteger uncleReward = BLOCK_REWARD
+                BigInteger uncleReward = blockReward
                         .multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber()))
                         .divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET));
 
@@ -951,7 +953,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
         }
 
-        BigInteger minerReward = BLOCK_REWARD.add(INCLUSION_REWARD.multiply(BigInteger.valueOf(block.getUncleList().size())));
+        BigInteger minerReward = blockReward.add(inclusionReward.multiply(BigInteger.valueOf(block.getUncleList().size())));
 
         BigInteger totalFees = BigInteger.ZERO;
         for (TransactionExecutionSummary summary : summaries) {

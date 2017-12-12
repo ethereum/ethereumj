@@ -23,20 +23,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.net.rlpx.*;
-import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.ethereum.util.Functional;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.function.Consumer;
 
 
 public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
-        implements Functional.Consumer<DiscoveryEvent> {
+        implements Consumer<DiscoveryEvent> {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
     public Channel channel;

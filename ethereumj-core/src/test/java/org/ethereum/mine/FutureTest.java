@@ -32,31 +32,25 @@ public class FutureTest {
     @Test
     public void interruptTest() throws InterruptedException {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        final ListenableFuture<Object> future = executor.submit(new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
+        final ListenableFuture<Object> future = executor.submit(() -> {
 //                try {
-                    System.out.println("Waiting");
-                    Thread.sleep(10000);
-                    System.out.println("Complete");
-                    return null;
+                System.out.println("Waiting");
+                Thread.sleep(10000);
+                System.out.println("Complete");
+                return null;
 //                } catch (Exception e) {
 //                    e.printStackTrace();
 //                    throw e;
 //                }
-            }
         });
-        future.addListener(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Listener: " + future.isCancelled() + ", " + future.isDone());
-                try {
-                    future.get();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
+        future.addListener(() -> {
+            System.out.println("Listener: " + future.isCancelled() + ", " + future.isDone());
+            try {
+                future.get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
             }
         }, MoreExecutors.sameThreadExecutor());
 
@@ -69,22 +63,19 @@ public class FutureTest {
 //        ListeningExecutorService executor = MoreExecutors.listeningDecorator(
 //                new ThreadPoolExecutor(2, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
         ExecutorService executor =
-                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
+                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1));
         Future<Object> future = null;
         for (int i = 0; i < 4; i++) {
             final int ii = i;
-            future = executor.submit(new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    try {
-                        System.out.println("Waiting " + ii);
-                        Thread.sleep(5000);
-                        System.out.println("Complete " + ii);
-                        return null;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        throw e;
-                    }
+            future = executor.submit(() -> {
+                try {
+                    System.out.println("Waiting " + ii);
+                    Thread.sleep(5000);
+                    System.out.println("Complete " + ii);
+                    return null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
                 }
             });
         }
@@ -94,7 +85,7 @@ public class FutureTest {
     @Test
     public void anyFutureTest() throws ExecutionException, InterruptedException {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
+                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>()));
         AnyFuture<Integer> anyFuture = new AnyFuture<Integer>() {
             @Override
             protected void postProcess(Integer integer) {
@@ -103,14 +94,11 @@ public class FutureTest {
         };
         for (int i = 0; i < 4; i++) {
             final int ii = i;
-            ListenableFuture<Integer> future = executor.submit(new Callable<Integer>() {
-                @Override
-                public Integer call() throws Exception {
-                    System.out.println("Waiting " + ii);
-                    Thread.sleep(5000 - ii * 500);
-                    System.out.println("Complete " + ii);
-                    return ii;
-                }
+            ListenableFuture<Integer> future = executor.submit(() -> {
+                System.out.println("Waiting " + ii);
+                Thread.sleep(5000 - ii * 500);
+                System.out.println("Complete " + ii);
+                return ii;
             });
             anyFuture.add(future);
         }
@@ -127,14 +115,11 @@ public class FutureTest {
         };
         for (int i = 0; i < 4; i++) {
             final int ii = i;
-            ListenableFuture<Integer> future = executor.submit(new Callable<Integer>() {
-                @Override
-                public Integer call() throws Exception {
-                    System.out.println("Waiting " + ii);
-                    Thread.sleep(5000 - ii * 500);
-                    System.out.println("Complete " + ii);
-                    return ii;
-                }
+            ListenableFuture<Integer> future = executor.submit(() -> {
+                System.out.println("Waiting " + ii);
+                Thread.sleep(5000 - ii * 500);
+                System.out.println("Complete " + ii);
+                return ii;
             });
             anyFuture.add(future);
         }

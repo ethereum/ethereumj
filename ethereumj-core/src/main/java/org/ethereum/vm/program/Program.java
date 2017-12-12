@@ -17,9 +17,11 @@
  */
 package org.ethereum.vm.program;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
@@ -29,7 +31,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
-import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -42,7 +43,6 @@ import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -87,6 +87,7 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private Storage storage;
+    private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
     private ProgramTrace trace = new ProgramTrace();
@@ -167,6 +168,7 @@ public class Program {
         if (transaction != null) {
             byte[] senderNonce = isEmpty(nonce) ? getStorage().getNonce(senderAddress).toByteArray() : nonce;
 
+            data = config.recordInternalTransactionsData() ? data : null;
             result = getResult().addInternalTransaction(transaction.getHash(), getCallDeep(), senderNonce,
                     getGasPrice(), gasLimit, senderAddress, receiveAddress, value.toByteArray(), data, note);
         }
@@ -394,6 +396,7 @@ public class Program {
 
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         if (getCallDeep() == MAX_DEPTH) {
             stackPushZero();
@@ -413,14 +416,17 @@ public class Program {
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
+        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue());
         //  actual gas subtract
-        DataWord gasLimit = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).
-                getCreateGas(getGas());
+        DataWord gasLimit = blockchainConfig.getCreateGas(getGas());
         spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         byte[] newAddress = HashUtil.calcNewAddr(getOwnerAddress().getLast20Bytes(), nonce);
+
+        AccountState existingAddr = getStorage().getAccountState(newAddress);
+        boolean contractAlreadyExists = existingAddr != null && existingAddr.isContractExist(blockchainConfig);
 
         if (byTestingSuite()) {
             // This keeps track of the contracts created for a test
@@ -457,11 +463,13 @@ public class Program {
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
-                newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
+                newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
 
-        ProgramResult result = ProgramResult.empty();
-        if (isNotEmpty(programCode)) {
+        ProgramResult result = ProgramResult.createEmpty();
 
+        if (contractAlreadyExists) {
+            result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newAddress)));
+        } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
             vm.play(program);
@@ -476,7 +484,7 @@ public class Program {
         long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
         long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
-            if (!config.getBlockchainConfig().getConfigForBlock(getNumber().longValue()).getConstants().createEmptyContractOnOOG()) {
+            if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
             } else {
@@ -485,12 +493,12 @@ public class Program {
         } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
             result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
                     storageCost, this));
-        } else {
+        } else if (!result.isRevert()){
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
         }
 
-        if (result.getException() != null) {
+        if (result.getException() != null || result.isRevert()) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
                     result.getException());
@@ -500,14 +508,19 @@ public class Program {
 
             track.rollback();
             stackPushZero();
-            return;
+
+            if (result.getException() != null) {
+                return;
+            } else {
+                returnDataBuffer = result.getHReturn();
+            }
+        } else {
+            if (!byTestingSuite())
+                track.commit();
+
+            // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
+            stackPush(new DataWord(newAddress));
         }
-
-        if (!byTestingSuite())
-            track.commit();
-
-        // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
-        stackPush(new DataWord(newAddress));
 
         // 5. REFUND THE REMAIN GAS
         long refundGas = gasLimit.longValue() - result.getGasUsed();
@@ -530,6 +543,7 @@ public class Program {
      * @param msg is the message call object
      */
     public void callToAddress(MessageCall msg) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         if (getCallDeep() == MAX_DEPTH) {
             stackPushZero();
@@ -542,7 +556,7 @@ public class Program {
         // FETCH THE SAVED STORAGE
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         byte[] senderAddress = getOwnerAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().callIsStateless() ? senderAddress : codeAddress;
 
         if (logger.isInfoEnabled())
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
@@ -582,9 +596,10 @@ public class Program {
         if (isNotEmpty(programCode)) {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                     this, new DataWord(contextAddress),
-                    msg.getType() == MsgType.DELEGATECALL ? getCallerAddress() : getOwnerAddress(),
-                    msg.getType() == MsgType.DELEGATECALL ? getCallValue() : msg.getEndowment(),
-                    msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
+                    msg.getType().callIsDelegate() ? getCallerAddress() : getOwnerAddress(),
+                    msg.getType().callIsDelegate() ? getCallValue() : msg.getEndowment(),
+                    msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
+                    msg.getType().callIsStatic() || isStaticCall(), byTestingSuite());
 
             VM vm = new VM(config);
             Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
@@ -594,7 +609,7 @@ public class Program {
             getTrace().merge(program.getTrace());
             getResult().merge(result);
 
-            if (result.getException() != null) {
+            if (result.getException() != null || result.isRevert()) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                         Hex.toHexString(contextAddress),
                         result.getException());
@@ -604,12 +619,25 @@ public class Program {
 
                 track.rollback();
                 stackPushZero();
-                return;
-            } else if (byTestingSuite()) {
+
+                if (result.getException() != null) {
+                    return;
+                }
+            } else {
+                // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+                track.commit();
+                stackPushOne();
+            }
+
+            if (byTestingSuite()) {
                 logger.info("Testing run, skipping storage diff listener");
             } else if (Arrays.equals(transaction.getReceiveAddress(), internalTx.getReceiveAddress())) {
                 storageDiffListener.merge(program.getStorageDiff());
             }
+        } else {
+            // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+            track.commit();
+            stackPushOne();
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
@@ -619,11 +647,9 @@ public class Program {
             int size = msg.getOutDataSize().intValue();
 
             memorySaveLimited(offset, buffer, size);
-        }
 
-        // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        track.commit();
-        stackPushOne();
+            returnDataBuffer = buffer;
+        }
 
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
@@ -739,6 +765,20 @@ public class Program {
         return invoke.getDataCopy(offset, length);
     }
 
+    public DataWord getReturnDataBufferSize() {
+        return new DataWord(getReturnDataBufferSizeI());
+    }
+
+    private int getReturnDataBufferSizeI() {
+        return returnDataBuffer == null ? 0 : returnDataBuffer.length;
+    }
+
+    public byte[] getReturnDataBufferData(DataWord off, DataWord size) {
+        if ((long) off.intValueSafe() + size.intValueSafe() > getReturnDataBufferSizeI()) return null;
+        return returnDataBuffer == null ? new byte[0] :
+                Arrays.copyOfRange(returnDataBuffer, off.intValueSafe(), off.intValueSafe() + size.intValueSafe());
+    }
+
     public DataWord storageLoad(DataWord key) {
         DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key.clone());
         return ret == null ? null : ret.clone();
@@ -770,6 +810,10 @@ public class Program {
 
     public DataWord getGasLimit() {
         return invoke.getGaslimit().clone();
+    }
+
+    public boolean isStaticCall() {
+        return invoke.isStaticCall();
     }
 
     public ProgramResult getResult() {
@@ -1085,6 +1129,7 @@ public class Program {
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         if (getCallDeep() == MAX_DEPTH) {
             stackPushZero();
@@ -1096,7 +1141,7 @@ public class Program {
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType().isStateless() ? senderAddress : codeAddress;
+        byte[] contextAddress = msg.getType().callIsStateless() ? senderAddress : codeAddress;
 
 
         BigInteger endowment = msg.getEndowment().value();
@@ -1133,12 +1178,21 @@ public class Program {
             track.rollback();
         } else {
 
-            this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
-            byte[] out = contract.execute(data);
+            Pair<Boolean, byte[]> out = contract.execute(data);
 
-            this.memorySave(msg.getOutDataOffs().intValue(), out);
-            this.stackPushOne();
-            track.commit();
+            if (out.getLeft()) { // success
+                this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
+                this.stackPushOne();
+                returnDataBuffer = out.getRight();
+                track.commit();
+            } else {
+                // spend all gas on failure, push zero and revert state changes
+                this.refundGas(0, "call pre-compiled");
+                this.stackPushZero();
+                track.rollback();
+            }
+
+            this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
         }
     }
 
@@ -1193,6 +1247,21 @@ public class Program {
             super(format(message, args));
         }
     }
+
+    @SuppressWarnings("serial")
+    public static class ReturnDataCopyIllegalBoundsException extends BytecodeExecutionException {
+        public ReturnDataCopyIllegalBoundsException(DataWord off, DataWord size, long returnDataSize) {
+            super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)", off, size, returnDataSize));
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public static class StaticCallModificationException extends BytecodeExecutionException {
+        public StaticCallModificationException() {
+            super("Attempt to call a state modifying opcode inside STATICCALL");
+        }
+    }
+
 
     public static class Exception {
 

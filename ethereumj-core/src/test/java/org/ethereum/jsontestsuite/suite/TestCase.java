@@ -91,9 +91,9 @@ public class TestCase {
             if (testCaseJSONObj.containsKey("callcreates"))
                 callCreates = (JSONArray) testCaseJSONObj.get("callcreates");
 
-            JSONArray logsJSON = new JSONArray();
+            Object logsJSON = new JSONArray();
             if (testCaseJSONObj.containsKey("logs"))
-                logsJSON = (JSONArray) testCaseJSONObj.get("logs");
+                logsJSON = testCaseJSONObj.get("logs");
             logs = new Logs(logsJSON);
 
             String gasString = "0";
@@ -105,13 +105,13 @@ public class TestCase {
             if (testCaseJSONObj.containsKey("out"))
                 outString = testCaseJSONObj.get("out").toString();
             if (outString != null && outString.length() > 2)
-                this.out = Hex.decode(outString.substring(2));
+                this.out = Utils.parseData(outString);
             else
                 this.out = ByteUtil.EMPTY_BYTE_ARRAY;
 
             for (Object key : preJSON.keySet()) {
 
-                byte[] keyBytes = Hex.decode(key.toString());
+                byte[] keyBytes = Utils.parseData(key.toString());
                 AccountState accountState =
                         new AccountState(keyBytes, (JSONObject) preJSON.get(key));
 
@@ -120,7 +120,7 @@ public class TestCase {
 
             for (Object key : postJSON.keySet()) {
 
-                byte[] keyBytes = Hex.decode(key.toString());
+                byte[] keyBytes = Utils.parseData(key.toString());
                 AccountState accountState =
                         new AccountState(keyBytes, (JSONObject) postJSON.get(key));
 

@@ -88,6 +88,11 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
+    public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+        return this.parent.getCalcDifficultyMultiplier(curBlock, parent);
+    }
+
+    @Override
     public long getTransactionCost(Transaction tx) {
         return parent.getTransactionCost(tx);
     }
@@ -140,5 +145,40 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     @Override
     public Integer getChainId() {
         return null;
+    }
+
+    @Override
+    public boolean eip198() {
+        return parent.eip198();
+    }
+
+    @Override
+    public boolean eip206() {
+        return false;
+    }
+
+    @Override
+    public boolean eip211() {
+        return false;
+    }
+
+    @Override
+    public boolean eip212() {
+        return parent.eip212();
+    }
+
+    @Override
+    public boolean eip213() {
+        return parent.eip213();
+    }
+
+    @Override
+    public boolean eip214() {
+        return false;
+    }
+
+    @Override
+    public boolean eip658() {
+        return false;
     }
 }

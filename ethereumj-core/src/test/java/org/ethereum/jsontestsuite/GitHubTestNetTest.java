@@ -17,57 +17,52 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.DaoHFConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.blockchain.HomesteadConfig;
-import org.ethereum.config.net.BaseNetConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.jsontestsuite.suite.JSONReader;
-import org.json.simple.parser.ParseException;
+import org.ethereum.jsontestsuite.suite.BlockchainTestSuite;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-import java.util.Collections;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTestNetTest {
 
-    //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "9ed33d7440f13c09ce7f038f92abd02d23b26f0d";
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "12ee51045ace4a3075e39fe58128fdaa74b3fbd0"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
 
-    @Before
-    public void setup() {
-        SystemProperties.getDefault().setGenesisInfo("frontier.json");
-        SystemProperties.getDefault().setBlockchainConfig(new BaseNetConfig() {{
-            add(0, new FrontierConfig());
-            add(5, new HomesteadConfig());
-            add(8, new DaoHFConfig(new HomesteadConfig(), 8));
-            add(10, new Eip150HFConfig(new DaoHFConfig(new HomesteadConfig(), 8)));
+    static BlockchainTestSuite suite;
 
-        }});
-    }
-
-    @After
-    public void clean() {
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+    @BeforeClass
+    public static void setup() throws IOException {
+        suite = new BlockchainTestSuite(treeSHA, commitSHA);
+        suite.setSubDir("TransitionTests/");
     }
 
     @Test
-    public void bcEIP150Test() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/TestNetwork/bcEIP150Test.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
+    @Ignore
+    // this method is mostly for hands-on convenient testing
+    // using this method turn off initializing of BlockchainTestSuite to avoid unnecessary GitHub API hits
+    public void bcTransitionSingle() throws IOException {
+        BlockchainTestSuite.runSingle(
+                "TransitionTests/bcHomesteadToDao/DaoTransactions.json", commitSHA);
     }
+
     @Test
-    public void bcSimpleTransitionTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/TestNetwork/bcSimpleTransitionTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
+    public void bcFrontierToHomestead() throws IOException {
+        suite.runAll("bcFrontierToHomestead", GitHubJSONTestSuite.Network.FrontierToHomesteadAt5);
     }
+
     @Test
-    public void bcTheDaoTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/TestNetwork/bcTheDaoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, Collections.EMPTY_SET);
+    public void bcHomesteadToDao() throws IOException {
+        suite.runAll("bcHomesteadToDao", GitHubJSONTestSuite.Network.HomesteadToDaoAt5);
+    }
+
+    @Test
+    public void bcHomesteadToEIP150() throws IOException {
+        suite.runAll("bcHomesteadToEIP150", GitHubJSONTestSuite.Network.HomesteadToEIP150At5);
+    }
+
+    @Test
+    public void bcEIP158ToByzantium() throws IOException {
+        suite.runAll("bcEIP158ToByzantium", GitHubJSONTestSuite.Network.EIP158ToByzantiumAt5);
     }
 }

@@ -17,24 +17,19 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.blockchain.*;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.jsontestsuite.suite.DifficultyTestCase;
-import org.ethereum.jsontestsuite.suite.DifficultyTestSuite;
-import org.ethereum.jsontestsuite.suite.JSONReader;
+import org.ethereum.config.net.RopstenNetConfig;
 import org.json.simple.parser.ParseException;
-import org.junit.After;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runCryptoTest;
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runDifficultyTest;
 
 /**
  * @author Mikhail Kalinin
@@ -43,74 +38,52 @@ import static org.junit.Assert.assertEquals;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBasicTest {
 
-    private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    public String shacommit = "92bb72cccf4b5a2d29d74248fdddfe8b43baddda";
+    String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
 
-    @After
-    public void recover() {
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
+    @Test
+    public void btCrypto() throws IOException {
+        runCryptoTest("BasicTests/crypto.json", commitSHA);
     }
 
     @Test
-    public void runDifficultyTest() throws IOException, ParseException {
-
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
-
-        String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
-
-        DifficultyTestSuite testSuite = new DifficultyTestSuite(json);
-
-        for (DifficultyTestCase testCase : testSuite.getTestCases()) {
-
-            logger.info("Running {}\n", testCase.getName());
-
-            BlockHeader current = testCase.getCurrent();
-            BlockHeader parent = testCase.getParent();
-
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty
-                    (SystemProperties.getDefault().getBlockchainConfig(), parent));
-        }
+    public void btDifficulty() throws IOException, ParseException {
+        runDifficultyTest(MainNetConfig.INSTANCE, "BasicTests/difficulty.json", commitSHA);
     }
 
     @Test
-    public void runDifficultyFrontierTest() throws IOException, ParseException {
-
-        SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
-
-        String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyFrontier.json", shacommit);
-
-        DifficultyTestSuite testSuite = new DifficultyTestSuite(json);
-
-        for (DifficultyTestCase testCase : testSuite.getTestCases()) {
-
-            logger.info("Running {}\n", testCase.getName());
-
-            BlockHeader current = testCase.getCurrent();
-            BlockHeader parent = testCase.getParent();
-
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(
-                    SystemProperties.getDefault().getBlockchainConfig(), parent));
-        }
+    public void btDifficultyByzantium() throws IOException, ParseException {
+        runDifficultyTest(new ByzantiumConfig(new DaoHFConfig()), "BasicTests/difficultyByzantium.json", commitSHA);
     }
 
     @Test
-    public void runDifficultyHomesteadTest() throws IOException, ParseException {
+    @Ignore // due to CPP minimumDifficulty issue
+    public void btDifficultyCustomHomestead() throws IOException, ParseException {
+        runDifficultyTest(new HomesteadConfig(), "BasicTests/difficultyCustomHomestead.json", commitSHA);
+    }
 
-        SystemProperties.getDefault().setBlockchainConfig(new HomesteadConfig());
+    @Test
+    @Ignore // due to CPP minimumDifficulty issue
+    public void btDifficultyCustomMainNetwork() throws IOException, ParseException {
+        runDifficultyTest(MainNetConfig.INSTANCE, "BasicTests/difficultyCustomMainNetwork.json", commitSHA);
+    }
 
-        String json = JSONReader.loadJSONFromCommit("BasicTests/difficultyHomestead.json", shacommit);
+    @Test
+    public void btDifficultyFrontier() throws IOException, ParseException {
+        runDifficultyTest(new FrontierConfig(), "BasicTests/difficultyFrontier.json", commitSHA);
+    }
 
-        DifficultyTestSuite testSuite = new DifficultyTestSuite(json);
+    @Test
+    public void btDifficultyHomestead() throws IOException, ParseException {
+        runDifficultyTest(new HomesteadConfig(), "BasicTests/difficultyHomestead.json", commitSHA);
+    }
 
-        for (DifficultyTestCase testCase : testSuite.getTestCases()) {
+    @Test
+    public void btDifficultyMainNetwork() throws IOException, ParseException {
+        runDifficultyTest(MainNetConfig.INSTANCE, "BasicTests/difficultyMainNetwork.json", commitSHA);
+    }
 
-            logger.info("Running {}\n", testCase.getName());
-
-            BlockHeader current = testCase.getCurrent();
-            BlockHeader parent = testCase.getParent();
-
-            assertEquals(testCase.getExpectedDifficulty(), current.calcDifficulty(
-                    SystemProperties.getDefault().getBlockchainConfig(), parent));
-        }
+    @Test
+    public void btDifficultyRopsten() throws IOException, ParseException {
+        runDifficultyTest(new RopstenNetConfig(), "BasicTests/difficultyRopsten.json", commitSHA);
     }
 }

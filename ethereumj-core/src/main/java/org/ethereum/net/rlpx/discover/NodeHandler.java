@@ -290,16 +290,14 @@ public class NodeHandler {
         getNodeStatistics().discoverOutPing.add();
 
         if (nodeManager.getPongTimer().isShutdown()) return;
-        nodeManager.getPongTimer().schedule(new Runnable() {
-            public void run() {
-                try {
-                    if (waitForPong) {
-                        waitForPong = false;
-                        handleTimedOut();
-                    }
-                } catch (Throwable t) {
-                    logger.error("Unhandled exception", t);
+        nodeManager.getPongTimer().schedule(() -> {
+            try {
+                if (waitForPong) {
+                    waitForPong = false;
+                    handleTimedOut();
                 }
+            } catch (Throwable t) {
+                logger.error("Unhandled exception", t);
             }
         }, PingTimeout, TimeUnit.MILLISECONDS);
     }

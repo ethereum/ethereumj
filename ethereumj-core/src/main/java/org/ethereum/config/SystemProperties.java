@@ -153,6 +153,7 @@ public class SystemProperties {
     private BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
     private Boolean vmTrace;
+    private Boolean recordInternalTransactionsData;
 
     private final ClassLoader classLoader;
 
@@ -267,7 +268,7 @@ public class SystemProperties {
      *
      * @param cliOptions -  command line options to take presidency
      */
-    public void overrideParams(Map<String, ? extends Object> cliOptions) {
+    public void overrideParams(Map<String, ?> cliOptions) {
         Config cliConf = ConfigFactory.parseMap(cliOptions);
         overrideParams(cliConf);
     }
@@ -850,7 +851,19 @@ public class SystemProperties {
     public String getCryptoProviderName() {
         return config.getString("crypto.providerName");
     }
-    
+
+    @ValidateMe
+    public boolean recordInternalTransactionsData() {
+        if (recordInternalTransactionsData == null) {
+            recordInternalTransactionsData = config.getBoolean("record.internal.transactions.data");
+        }
+        return recordInternalTransactionsData;
+    }
+
+    public void setRecordInternalTransactionsData(Boolean recordInternalTransactionsData) {
+        this.recordInternalTransactionsData = recordInternalTransactionsData;
+    }
+
     @ValidateMe
     public String getHash256AlgName() {
         return config.getString("crypto.hash.alg256");
@@ -901,5 +914,15 @@ public class SystemProperties {
     public String blocksLoader() {
         return config.hasPath("blocks.loader") ?
                 config.getString("blocks.loader") : DEFAULT_BLOCKS_LOADER;
+    }
+
+    public String githubTestsPath() {
+        return config.hasPath("GitHubTests.testPath") ?
+                config.getString("GitHubTests.testPath") : "";
+    }
+
+    public boolean githubTestsLoadLocal() {
+        return config.hasPath("GitHubTests.testPath") &&
+                !config.getString("GitHubTests.testPath").isEmpty();
     }
 }

@@ -2,10 +2,11 @@
   "config": {
     "chainId": 3,
     "eip158Block": 10,
+    "byzantiumBlock": 1700000,
 
     "headerValidators": [
       {"number": 10,     "hash": "0xb3074f936815a0425e674890d7db7b5e94f3a06dca5b22d291b55dcd02dde93e"},
-      {"number": 585503, "hash": "0xc4b3dcb5b22554db111148cca5181374585b037cc0ad786460319027a3486104"}
+      {"number": 585503, "hash": "0xe8d61ae10fd62e639c2e3c9da75f8b0bdb3fa5961dbd3aed1223f92e147595b9"}
     ]
   },
 

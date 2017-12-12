@@ -19,26 +19,25 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.jsontestsuite.suite.JSONReader;
+import org.ethereum.jsontestsuite.suite.VMTestSuite;
 import org.json.simple.parser.ParseException;
-import org.junit.After;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.ethereum.jsontestsuite.suite.JSONReader.getFileNamesForTreeSha;
+import java.io.IOException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
 
-    //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "289b3e4524786618c7ec253b516bc8e76350f947";
+    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    static String treeSHA = "7429078cc0ae66034bbede7c9666c234dc76bc67";  // https://github.com/ethereum/tests/tree/develop/VMTests/
+
+    static VMTestSuite suite;
+
+    @BeforeClass
+    public static void setup() throws IOException {
+        suite = new VMTestSuite(treeSHA, commitSHA);
+    }
 
     @After
     public void recover() {
@@ -47,133 +46,68 @@ public class GitHubVMTest {
 
     @Ignore
     @Test
-    public void runSingle() throws ParseException {
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "ExtCodeSizeAddressInputTooBigRightMyAddress");
+    public void runSingle() throws ParseException, IOException {
+        VMTestSuite.runSingle(commitSHA, "vmArithmeticTest/add0.json");
     }
 
     @Test
-    public void testArithmeticFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        // TODO: these are excluded due to bad wrapping behavior in ADDMOD/DataWord.add
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmArithmeticTest.json", shacommit);
-        //String json = JSONReader.getTestBlobForTreeSha(shacommit, "vmArithmeticTest.json");
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    public void vmArithmeticTest() throws ParseException {
+        suite.runAll("vmArithmeticTest");
     }
 
-    @Test // testing full suite
-    public void testBitwiseLogicOperationFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmBitwiseLogicOperationTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
-    @Test // testing full suite
-    public void testBlockInfoFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmBlockInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
-    @Ignore
-    @Test // testing full suite
-    public void testEnvironmentalInfoFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
-    @Test // testing full suite
-    public void testIOandFlowOperationsFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmIOandFlowOperationsTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
-    }
-
-    @Ignore  //FIXME - 60M - need new fast downloader
     @Test
-    public void testvmInputLimitsTest1FromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmInputLimits1.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    public void vmBitwiseLogicOperation() throws ParseException {
+        suite.runAll("vmBitwiseLogicOperation");
     }
 
-    @Ignore //FIXME - 50M - need to handle large filesizes
     @Test
-    public void testvmInputLimitsTest2FromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmInputLimits2.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    public void vmBlockInfoTest() throws ParseException {
+        suite.runAll("vmBlockInfoTest");
     }
 
-    @Ignore //FIXME - 20M - possibly provide percentage indicator
     @Test
-    public void testvmInputLimitsLightTestFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmInputLimitsLight.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    public void vmEnvironmentalInfo() throws ParseException {
+        suite.runAll("vmEnvironmentalInfo");
     }
 
-    @Test // testing full suite
-    public void testVMLogGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmLogTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    @Test
+    public void vmIOandFlowOperations() throws ParseException {
+        suite.runAll("vmIOandFlowOperations");
     }
 
-    @Test // testing full suite
-    public void testPerformanceFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmPerformanceTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    @Test
+    public void vmLogTest() throws ParseException {
+        suite.runAll("vmLogTest");
     }
 
-    @Test // testing full suite
-    public void testPushDupSwapFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmPushDupSwapTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    @Ignore // we pass it, but it's too long to run it each build
+    @Test
+    public void vmPerformance() throws ParseException {
+        suite.runAll("vmPerformance");
     }
 
-    @Test // testing full suite
-    public void testShaFromGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmSha3Test.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    @Test
+    public void vmPushDupSwapTest() throws ParseException {
+        suite.runAll("vmPushDupSwapTest");
     }
 
-    @Test // testing full suite
-    public void testvmSystemOperationsTestGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmSystemOperationsTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    @Test
+    public void vmRandomTest() throws ParseException {
+        suite.runAll("vmRandomTest");
     }
 
-    @Test // testing full suite
-    public void testVMGitHub() throws ParseException {
-        Set<String> excluded = new HashSet<>();
-        String json = JSONReader.loadJSONFromCommit("VMTests/vmtests.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
+    @Test
+    public void vmSha3Test() throws ParseException {
+        suite.runAll("vmSha3Test");
     }
 
-    @Test // testing full suite
-    public void testRandomVMGitHub() throws ParseException {
+    @Test
+    public void vmSystemOperations() throws ParseException {
+        suite.runAll("vmSystemOperations");
+    }
 
-        String shacommit = "c5eafb85390eee59b838a93ae31bc16a5fd4f7b1";
-        List<String> fileNames = getFileNamesForTreeSha(shacommit);
-        List<String> excludedFiles =
-                Collections.singletonList(
-                        ""
-                );
-
-        for (String fileName : fileNames) {
-
-            if (excludedFiles.contains(fileName)) continue;
-            System.out.println("Running: " + fileName);
-            String json = JSONReader.loadJSON("VMTests//RandomTests/" + fileName);
-            GitHubJSONTestSuite.runGitHubJsonVMTest(json);
-        }
-
+    @Test
+    public void vmTests() throws ParseException {
+        suite.runAll("vmTests");
     }
 }

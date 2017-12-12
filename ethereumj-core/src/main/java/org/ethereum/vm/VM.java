@@ -20,7 +20,6 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
@@ -35,11 +34,7 @@ import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.OpCode.CALL;
-import static org.ethereum.vm.OpCode.CALLCODE;
-import static org.ethereum.vm.OpCode.CREATE;
-import static org.ethereum.vm.OpCode.DELEGATECALL;
-import static org.ethereum.vm.OpCode.PUSH1;
+import static org.ethereum.vm.OpCode.*;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -85,7 +80,9 @@ public class VM {
     private static BigInteger _32_ = BigInteger.valueOf(32);
     private static final String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
-    private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE / 2);
+    // max mem size which couldn't be paid for ever
+    // used to reduce expensive BigInt arithmetic
+    private static BigInteger MAX_MEM_SIZE = BigInteger.valueOf(Integer.MAX_VALUE);
 
 
     /* Keeps track of the number of steps performed in this VM */
@@ -112,8 +109,8 @@ public class VM {
         long gasCost = 0;
 
         // Avoid overflows
-        if (newMemSize.compareTo(MAX_GAS) == 1) {
-            throw Program.Exception.gasOverflow(newMemSize, MAX_GAS);
+        if (newMemSize.compareTo(MAX_MEM_SIZE) == 1) {
+            throw Program.Exception.gasOverflow(newMemSize, MAX_MEM_SIZE);
         }
 
         // memory gas calc
@@ -151,11 +148,30 @@ public class VM {
             if (op == null) {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
             }
-            if (op == DELEGATECALL) {
-                // opcode since Homestead release only
-                if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
-                    throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                }
+
+            switch (op) {
+                case DELEGATECALL:
+                    if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
+                        // opcode since Homestead release only
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case REVERT:
+                    if (!blockchainConfig.eip206()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case RETURNDATACOPY:
+                case RETURNDATASIZE:
+                    if (!blockchainConfig.eip211()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
+                case STATICCALL:
+                    if (!blockchainConfig.eip214()) {
+                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
+                    }
+                    break;
             }
 
             program.setLastOp(op.val());
@@ -236,6 +252,7 @@ public class VM {
                     gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
                     break;
                 case RETURN:
+                case REVERT:
                     gasCost = gasCosts.getSTOP() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     break;
@@ -246,6 +263,7 @@ public class VM {
                     gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
+                case RETURNDATACOPY:
                     gasCost += calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.peek(), stack.get(stack.size() - 3)),
                             stack.get(stack.size() - 3).longValueSafe());
@@ -266,16 +284,18 @@ public class VM {
                 case CALL:
                 case CALLCODE:
                 case DELEGATECALL:
+                case STATICCALL:
 
                     gasCost = gasCosts.getCALL();
                     DataWord callGasWord = stack.get(stack.size() - 1);
 
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
-                    //check to see if account does not exist and is not a precompiled contract
+                    DataWord value = op.callHasValue() ?
+                            stack.get(stack.size() - 3) : DataWord.ZERO;
 
+                    //check to see if account does not exist and is not a precompiled contract
                     if (op == CALL) {
-                        DataWord value = stack.get(stack.size() - 3);
                         if (blockchainConfig.eip161()) {
                             if (isDeadAccount(program, callAddressWord.getLast20Bytes()) && !value.isZero()) {
                                 gasCost += gasCosts.getNEW_ACCT_CALL();
@@ -288,10 +308,10 @@ public class VM {
                     }
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
-                    if (op != DELEGATECALL && !stack.get(stack.size() - 3).isZero() )
+                    if (!value.isZero() )
                         gasCost += gasCosts.getVT_CALL();
 
-                    int opOff = op == DELEGATECALL ? 3 : 4;
+                    int opOff = op.callHasValue() ? 4 : 3;
                     BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
                     gasCost += calcMemGas(gasCosts, oldMemSize, in.max(out), 0);
@@ -774,6 +794,34 @@ public class VM {
                     program.step();
                 }
                 break;
+                case RETURNDATASIZE: {
+                    DataWord dataSize = program.getReturnDataBufferSize();
+
+                    if (logger.isInfoEnabled())
+                        hint = "size: " + dataSize.value();
+
+                    program.stackPush(dataSize);
+                    program.step();
+                }
+                break;
+                case RETURNDATACOPY: {
+                    DataWord memOffsetData = program.stackPop();
+                    DataWord dataOffsetData = program.stackPop();
+                    DataWord lengthData = program.stackPop();
+
+                    byte[] msgData = program.getReturnDataBufferData(dataOffsetData, lengthData);
+
+                    if (msgData == null) {
+                        throw new Program.ReturnDataCopyIllegalBoundsException(dataOffsetData, lengthData, program.getReturnDataBufferSize().longValueSafe());
+                    }
+
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + Hex.toHexString(msgData);
+
+                    program.memorySave(memOffsetData.intValueSafe(), msgData);
+                    program.step();
+                }
+                break;
                 case CODESIZE:
                 case EXTCODESIZE: {
 
@@ -934,6 +982,7 @@ public class VM {
                 case LOG3:
                 case LOG4: {
 
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
                     DataWord address = program.getOwnerAddress();
 
                     DataWord memStart = stack.pop();
@@ -1004,6 +1053,8 @@ public class VM {
                 }
                 break;
                 case SSTORE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord addr = program.stackPop();
                     DataWord value = program.stackPop();
 
@@ -1123,6 +1174,8 @@ public class VM {
                 }
                 break;
                 case CREATE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord value = program.stackPop();
                     DataWord inOffset = program.stackPop();
                     DataWord inSize = program.stackPop();
@@ -1140,11 +1193,15 @@ public class VM {
                 break;
                 case CALL:
                 case CALLCODE:
-                case DELEGATECALL: {
+                case DELEGATECALL:
+                case STATICCALL: {
                     program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
-                    DataWord value = !op.equals(DELEGATECALL) ?
+                    DataWord value = op.callHasValue() ?
                             program.stackPop() : DataWord.ZERO;
+
+                    if (program.isStaticCall() && op == CALL && !value.isZero())
+                        throw new Program.StaticCallModificationException();
 
                     if( !value.isZero()) {
                         adjustedCallGas.add(new DataWord(gasCosts.getSTIPEND_CALL()));
@@ -1170,14 +1227,13 @@ public class VM {
                     program.memoryExpand(outDataOffs, outDataSize);
 
                     MessageCall msg = new MessageCall(
-                            MsgType.fromOpcode(op),
-                            adjustedCallGas, codeAddress, value, inDataOffs, inDataSize,
+                            op, adjustedCallGas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
 
                     PrecompiledContracts.PrecompiledContract contract =
-                            PrecompiledContracts.getContractForAddress(codeAddress);
+                            PrecompiledContracts.getContractForAddress(codeAddress, blockchainConfig);
 
-                    if (op.equals(CALL)) {
+                    if (!op.callIsStateless()) {
                         program.getResult().addTouchAccount(codeAddress.getLast20Bytes());
                     }
 
@@ -1190,7 +1246,8 @@ public class VM {
                     program.step();
                 }
                 break;
-                case RETURN: {
+                case RETURN:
+                case REVERT: {
                     DataWord offset = program.stackPop();
                     DataWord size = program.stackPop();
 
@@ -1204,9 +1261,15 @@ public class VM {
 
                     program.step();
                     program.stop();
+
+                    if (op == REVERT) {
+                        program.getResult().setRevert();
+                    }
                 }
                 break;
                 case SUICIDE: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
                     DataWord address = program.stackPop();
                     program.suicide(address);
                     program.getResult().addTouchAccount(address.getLast20Bytes());
@@ -1223,9 +1286,7 @@ public class VM {
 
             program.setPreviouslyExecutedOp(op.val());
 
-            if (logger.isInfoEnabled() && !op.equals(CALL)
-                    && !op.equals(CALLCODE)
-                    && !op.equals(CREATE))
+            if (logger.isInfoEnabled() && !op.isCall())
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                         String.format("%-12s",
                                 op.name()), program.getGas().value(),

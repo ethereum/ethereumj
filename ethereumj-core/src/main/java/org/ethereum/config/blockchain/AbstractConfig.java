@@ -100,8 +100,6 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         return difficulty;
     }
 
-    protected abstract BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent);
-
     protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
         int periodCount = (int) (curBlock.getNumber() / getConstants().getEXP_DIFFICULTY_PERIOD());
         return periodCount - 2;
@@ -158,6 +156,41 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     @Override
     public Integer getChainId() {
         return null;
+    }
+
+    @Override
+    public boolean eip198() {
+        return false;
+    }
+
+    @Override
+    public boolean eip206() {
+        return false;
+    }
+
+    @Override
+    public boolean eip211() {
+        return false;
+    }
+
+    @Override
+    public boolean eip212() {
+        return false;
+    }
+
+    @Override
+    public boolean eip213() {
+        return false;
+    }
+
+    @Override
+    public boolean eip214() {
+        return false;
+    }
+
+    @Override
+    public boolean eip658() {
+        return false;
     }
 
     @Override

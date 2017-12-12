@@ -551,7 +551,7 @@ public class ByteUtil {
 
     public static byte[] intsToBytes(int[] arr, boolean bigEndian) {
         byte[] ret = new byte[arr.length * 4];
-        intsToBytes(arr,ret, bigEndian);
+        intsToBytes(arr, ret, bigEndian);
         return ret;
     }
 
@@ -665,5 +665,59 @@ public class ByteUtil {
 
         String ip = sb.toString();
         return ip;
+    }
+
+    /**
+     * Returns a number of zero bits preceding the highest-order ("leftmost") one-bit
+     * interpreting input array as a big-endian integer value
+     */
+    public static int numberOfLeadingZeros(byte[] bytes) {
+
+        int i = firstNonZeroByte(bytes);
+
+        if (i == -1) {
+            return bytes.length * 8;
+        } else {
+            int byteLeadingZeros = Integer.numberOfLeadingZeros((int)bytes[i] & 0xff) - 24;
+            return i * 8 + byteLeadingZeros;
+        }
+    }
+
+    /**
+     * Parses fixed number of bytes starting from {@code offset} in {@code input} array.
+     * If {@code input} has not enough bytes return array will be right padded with zero bytes.
+     * I.e. if {@code offset} is higher than {@code input.length} then zero byte array of length {@code len} will be returned
+     */
+    public static byte[] parseBytes(byte[] input, int offset, int len) {
+
+        if (offset >= input.length || len == 0)
+            return EMPTY_BYTE_ARRAY;
+
+        byte[] bytes = new byte[len];
+        System.arraycopy(input, offset, bytes, 0, Math.min(input.length - offset, len));
+        return bytes;
+    }
+
+    /**
+     * Parses 32-bytes word from given input.
+     * Uses {@link #parseBytes(byte[], int, int)} method,
+     * thus, result will be right-padded with zero bytes if there is not enough bytes in {@code input}
+     *
+     * @param idx an index of the word starting from {@code 0}
+     */
+    public static byte[] parseWord(byte[] input, int idx) {
+        return parseBytes(input, 32 * idx, 32);
+    }
+
+    /**
+     * Parses 32-bytes word from given input.
+     * Uses {@link #parseBytes(byte[], int, int)} method,
+     * thus, result will be right-padded with zero bytes if there is not enough bytes in {@code input}
+     *
+     * @param idx an index of the word starting from {@code 0}
+     * @param offset an offset in {@code input} array to start parsing from
+     */
+    public static byte[] parseWord(byte[] input, int offset, int idx) {
+        return parseBytes(input, offset + 32 * idx, 32);
     }
 }

@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -33,7 +34,6 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -208,24 +208,32 @@ public class TransactionExecutor {
         if (!readyToExecute) return;
 
         byte[] targetAddress = tx.getReceiveAddress();
-        precompiledContract = PrecompiledContracts.getContractForAddress(new DataWord(targetAddress));
+        precompiledContract = PrecompiledContracts.getContractForAddress(new DataWord(targetAddress), blockchainConfig);
 
         if (precompiledContract != null) {
             long requiredGas = precompiledContract.getGasForData(tx.getData());
 
-            if (!localCall && m_endGas.compareTo(BigInteger.valueOf(requiredGas + basicTxCost)) < 0) {
+            BigInteger spendingGas = BigInteger.valueOf(requiredGas).add(BigInteger.valueOf(basicTxCost));
+
+            if (!localCall && m_endGas.compareTo(spendingGas) < 0) {
                 // no refund
                 // no endowment
                 execError("Out of Gas calling precompiled contract 0x" + Hex.toHexString(targetAddress) +
-                        ", required: " + (requiredGas + basicTxCost) + ", left: " + m_endGas);
+                        ", required: " + spendingGas + ", left: " + m_endGas);
                 m_endGas = BigInteger.ZERO;
                 return;
             } else {
 
-                m_endGas = m_endGas.subtract(BigInteger.valueOf(requiredGas + basicTxCost));
+                m_endGas = m_endGas.subtract(spendingGas);
 
                 // FIXME: save return for vm trace
-                byte[] out = precompiledContract.execute(tx.getData());
+                Pair<Boolean, byte[]> out = precompiledContract.execute(tx.getData());
+
+                if (!out.getLeft()) {
+                    execError("Error executing precompiled contract 0x" + Hex.toHexString(targetAddress));
+                    m_endGas = BigInteger.ZERO;
+                    return;
+                }
             }
 
         } else {
@@ -251,6 +259,13 @@ public class TransactionExecutor {
 
     private void create() {
         byte[] newContractAddress = tx.getContractAddress();
+
+        AccountState existingAddr = cacheTrack.getAccountState(newContractAddress);
+        if (existingAddr != null && existingAddr.isContractExist(blockchainConfig)) {
+            execError("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newContractAddress));
+            m_endGas = BigInteger.ZERO;
+            return;
+        }
 
         //In case of hashing collisions (for TCK tests only), check for any balance before createAccount()
         BigInteger oldBalance = track.getBalance(newContractAddress);
@@ -300,7 +315,7 @@ public class TransactionExecutor {
                 result = program.getResult();
                 m_endGas = toBI(tx.getGasLimit()).subtract(toBI(program.getResult().getGasUsed()));
 
-                if (tx.isContractCreation()) {
+                if (tx.isContractCreation() && !result.isRevert()) {
                     int returnDataGasValue = getLength(program.getResult().getHReturn()) *
                             blockchainConfig.getGasCost().getCREATE_DATA();
                     if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) < 0) {
@@ -331,27 +346,43 @@ public class TransactionExecutor {
                 }
 
 
-                if (result.getException() != null) {
+                if (result.getException() != null || result.isRevert()) {
                     result.getDeleteAccounts().clear();
                     result.getLogInfoList().clear();
                     result.resetFutureRefund();
+                    rollback();
 
-                    throw result.getException();
+                    if (result.getException() != null) {
+                        throw result.getException();
+                    } else {
+                        execError("REVERT opcode executed");
+                    }
+                } else {
+                    touchedAccounts.addAll(result.getTouchedAccounts());
+                    cacheTrack.commit();
                 }
 
-                touchedAccounts.addAll(result.getTouchedAccounts());
+            } else {
+                cacheTrack.commit();
             }
-
-            cacheTrack.commit();
 
         } catch (Throwable e) {
 
             // TODO: catch whatever they will throw on you !!!
 //            https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L241
-            cacheTrack.rollback();
+            rollback();
             m_endGas = BigInteger.ZERO;
             execError(e.getMessage());
         }
+    }
+
+    private void rollback() {
+
+        cacheTrack.rollback();
+
+        // remove touched account
+        touchedAccounts.remove(
+                tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress());
     }
 
     public TransactionExecutionSummary finalization() {

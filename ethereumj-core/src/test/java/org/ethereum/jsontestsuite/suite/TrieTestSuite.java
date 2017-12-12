@@ -15,45 +15,45 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.jsontestsuite;
+package org.ethereum.jsontestsuite.suite;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
-import org.ethereum.jsontestsuite.suite.CryptoTestCase;
-import org.ethereum.jsontestsuite.suite.JSONReader;
-import org.json.simple.parser.ParseException;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
 
+/**
+ * @author Mikhail Kalinin
+ * @since 28.09.2017
+ */
+public class TrieTestSuite {
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class GitHubCryptoTest {
+    List<TrieTestCase> testCases = new ArrayList<>();
 
-
-    @Test
-    public void testAllInCryptoSute() throws ParseException, IOException {
-
-        String json = JSONReader.loadJSON("BasicTests/crypto.json");
-
+    public TrieTestSuite(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JavaType type = mapper.getTypeFactory().
-                constructMapType(HashMap.class, String.class, CryptoTestCase.class);
+                constructMapType(HashMap.class, String.class, TrieTestCase.class);
 
+        Map<String, TrieTestCase> caseMap = new ObjectMapper().readValue(json, type);
 
-        HashMap<String , CryptoTestCase> testSuite =
-                mapper.readValue(json, type);
-
-        for (String key : testSuite.keySet()){
-
-            System.out.println("executing: " + key);
-            testSuite.get(key).execute();
-
+        for (Map.Entry<String, TrieTestCase> e : caseMap.entrySet()) {
+            e.getValue().setName(e.getKey());
+            testCases.add(e.getValue());
         }
+
+        testCases.sort(Comparator.comparing(TrieTestCase::getName));
     }
 
+    public List<TrieTestCase> getTestCases() {
+        return testCases;
+    }
 
+    @Override
+    public String toString() {
+        return "TrieTestSuite{" +
+                "testCases=" + testCases +
+                '}';
+    }
 }

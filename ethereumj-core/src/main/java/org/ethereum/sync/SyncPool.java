@@ -25,7 +25,6 @@ import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +38,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import static java.lang.Math.min;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
@@ -79,7 +79,7 @@ public class SyncPool {
 
     private ScheduledExecutorService poolLoopExecutor = Executors.newSingleThreadScheduledExecutor();
 
-    private Functional.Predicate<NodeHandler> nodesSelector;
+    private Predicate<NodeHandler> nodesSelector;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
@@ -93,37 +93,29 @@ public class SyncPool {
         this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
-        poolLoopExecutor.scheduleWithFixedDelay(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            heartBeat();
-                            updateLowerUsefulDifficulty();
-                            fillUp();
-                            prepareActive();
-                            cleanupActive();
-                        } catch (Throwable t) {
-                            logger.error("Unhandled exception", t);
-                        }
-                    }
-                }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS
-        );
-        logExecutor.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    logActivePeers();
-                    logger.info("\n");
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    logger.error("Exception in log worker", t);
-                }
+        poolLoopExecutor.scheduleWithFixedDelay(() -> {
+            try {
+                heartBeat();
+                updateLowerUsefulDifficulty();
+                fillUp();
+                prepareActive();
+                cleanupActive();
+            } catch (Throwable t) {
+                logger.error("Unhandled exception", t);
+            }
+        }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS);
+        logExecutor.scheduleWithFixedDelay(() -> {
+            try {
+                logActivePeers();
+                logger.info("\n");
+            } catch (Throwable t) {
+                t.printStackTrace();
+                logger.error("Exception in log worker", t);
             }
         }, 30, 30, TimeUnit.SECONDS);
     }
 
-    public void setNodesSelector(Functional.Predicate<NodeHandler> nodesSelector) {
+    public void setNodesSelector(Predicate<NodeHandler> nodesSelector) {
         this.nodesSelector = nodesSelector;
     }
 
@@ -232,7 +224,7 @@ public class SyncPool {
         }
     }
 
-    class NodeSelector implements Functional.Predicate<NodeHandler> {
+    class NodeSelector implements Predicate<NodeHandler> {
         BigInteger lowerDifficulty;
         Set<String> nodesInUse;
 
@@ -303,12 +295,7 @@ public class SyncPool {
         if (active.isEmpty()) return;
 
         // filtering by 20% from top difficulty
-        Collections.sort(active, new Comparator<Channel>() {
-            @Override
-            public int compare(Channel c1, Channel c2) {
-                return c2.getTotalDifficulty().compareTo(c1.getTotalDifficulty());
-            }
-        });
+        active.sort((c1, c2) -> c2.getTotalDifficulty().compareTo(c1.getTotalDifficulty()));
 
         BigInteger highestDifficulty = active.get(0).getTotalDifficulty();
         int thresholdIdx = min(config.syncPeerCount(), active.size()) - 1;
@@ -323,12 +310,7 @@ public class SyncPool {
         List<Channel> filtered = active.subList(0, thresholdIdx + 1);
 
         // sorting by latency in asc order
-        Collections.sort(filtered, new Comparator<Channel>() {
-            @Override
-            public int compare(Channel c1, Channel c2) {
-                return Double.valueOf(c1.getPeerStats().getAvgLatency()).compareTo(c2.getPeerStats().getAvgLatency());
-            }
-        });
+        filtered.sort(Comparator.comparingDouble(c -> c.getPeerStats().getAvgLatency()));
 
         for (Channel channel : filtered) {
             if (!activePeers.contains(channel)) {

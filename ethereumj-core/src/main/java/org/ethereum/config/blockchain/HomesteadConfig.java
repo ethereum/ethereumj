@@ -52,7 +52,7 @@ public class HomesteadConfig extends FrontierConfig {
     }
 
     @Override
-    protected BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
+    public BigInteger getCalcDifficultyMultiplier(BlockHeader curBlock, BlockHeader parent) {
         return BigInteger.valueOf(Math.max(1 - (curBlock.getTimestamp() - parent.getTimestamp()) / 10, -99));
     }
 
@@ -68,6 +68,7 @@ public class HomesteadConfig extends FrontierConfig {
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         if (!super.acceptTransactionSignature(tx)) return false;
+        if (tx.getSignature() == null) return false;
         return tx.getSignature().s.compareTo(SECP256K1N_HALF) <= 0;
     }
 }

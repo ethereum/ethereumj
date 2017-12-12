@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.util.List;
 
-@JsonIgnoreProperties({"acomment", "comment", "chainname", "chainnetwork"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockTck {
 
     BlockHeaderTck blockHeader;

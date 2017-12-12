@@ -34,16 +34,24 @@ public class Utils {
 
     public static byte[] parseVarData(String data){
         if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
+
+        byte[] bytes;
         if (data.startsWith("0x")) {
             data = data.substring(2);
             if (data.equals("")) return EMPTY_BYTE_ARRAY;
 
             if (data.length() % 2 == 1) data = "0" + data;
 
-            return Hex.decode(data);
+            bytes = Hex.decode(data);
+        } else {
+            bytes = parseNumericData(data);
         }
 
-        return parseNumericData(data);
+        if (ByteUtil.firstNonZeroByte(bytes) == -1) {
+            return EMPTY_BYTE_ARRAY;
+        } else {
+            return bytes;
+        }
     }
 
 

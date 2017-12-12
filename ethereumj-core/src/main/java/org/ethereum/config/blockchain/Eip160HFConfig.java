@@ -75,6 +75,9 @@ public class Eip160HFConfig extends Eip150HFConfig {
 
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
+
+        if (tx.getSignature() == null) return false;
+
         // Restoring old logic. Making this through inheritance stinks too much
         if (!tx.getSignature().validateComponents() ||
                 tx.getSignature().s.compareTo(SECP256K1N_HALF) > 0) return false;

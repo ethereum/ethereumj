@@ -18,6 +18,8 @@
 package org.ethereum.util;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * @author Mikhail Kalinin
@@ -25,7 +27,7 @@ import java.util.*;
  */
 public class CollectionUtils {
 
-    public static <K, V> List<V> collectList(Collection<K> items, Functional.Function<K, V> collector) {
+    public static <K, V> List<V> collectList(Collection<K> items, Function<K, V> collector) {
         List<V> collected = new ArrayList<>(items.size());
         for(K item : items) {
             collected.add(collector.apply(item));
@@ -33,7 +35,7 @@ public class CollectionUtils {
         return collected;
     }
 
-    public static <K, V> Set<V> collectSet(Collection<K> items, Functional.Function<K, V> collector) {
+    public static <K, V> Set<V> collectSet(Collection<K> items, Function<K, V> collector) {
         Set<V> collected = new HashSet<>();
         for(K item : items) {
             collected.add(collector.apply(item));
@@ -55,7 +57,7 @@ public class CollectionUtils {
         return truncated;
     }
 
-    public static <T> List<T> selectList(Collection<T> items, Functional.Predicate<T> predicate) {
+    public static <T> List<T> selectList(Collection<T> items, Predicate<T> predicate) {
         List<T> selected = new ArrayList<>();
         for(T item : items) {
             if(predicate.test(item)) {
@@ -65,7 +67,7 @@ public class CollectionUtils {
         return selected;
     }
 
-    public static <T> Set<T> selectSet(Collection<T> items, Functional.Predicate<T> predicate) {
+    public static <T> Set<T> selectSet(Collection<T> items, Predicate<T> predicate) {
         Set<T> selected = new HashSet<>();
         for(T item : items) {
             if(predicate.test(item)) {

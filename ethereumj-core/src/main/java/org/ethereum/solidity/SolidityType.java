@@ -253,8 +253,14 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encode(Object value) {
-            if (!(value instanceof byte[])) throw new RuntimeException("byte[] value expected for type 'bytes'");
-            byte[] bb = (byte[]) value;
+            byte[] bb;
+            if (value instanceof byte[]) {
+                bb = (byte[]) value;
+            } else if (value instanceof String) {
+                bb = ((String) value).getBytes();
+            } else {
+                throw new RuntimeException("byte[] or String value is expected for type 'bytes'");
+            }
             byte[] ret = new byte[((bb.length - 1) / 32 + 1) * 32]; // padding 32 bytes
             System.arraycopy(bb, 0, ret, 0, bb.length);
 

@@ -27,6 +27,7 @@ target/
 
 # Output
 database*
+out
 logs
 test_db*
 testnetSampleDb
@@ -38,5 +39,6 @@ sampleDB*
 
 # Local configuration
 **/user.conf
+**/test-user.conf
 **/out.log
 **/user.log4j.properties

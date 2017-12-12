@@ -55,76 +55,64 @@ public class FlushDbManagerTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final Throwable[] exception = new Throwable[1];
 
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < 300; i++) {
-                        final int i_ = i;
-                        dbFlushManager.commit(new Runnable() {
-                            @Override
-                            public void run() {
-                                cache1.put(intToBytes(i_), intToBytes(i_));
-                                try {
-                                    Thread.sleep(5);
-                                } catch (InterruptedException e) {}
-                                cache2.put(intToBytes(i_), intToBytes(i_));
-                            }
-                        });
-                    }
-                } catch (Throwable e) {
-                    exception[0] = e;
-                    e.printStackTrace();
-                } finally {
-                    latch.countDown();
+        new Thread(() -> {
+            try {
+                for (int i = 0; i < 300; i++) {
+                    final int i_ = i;
+                    dbFlushManager.commit(() -> {
+                        cache1.put(intToBytes(i_), intToBytes(i_));
+                        try {
+                            Thread.sleep(5);
+                        } catch (InterruptedException e) {}
+                        cache2.put(intToBytes(i_), intToBytes(i_));
+                    });
                 }
+            } catch (Throwable e) {
+                exception[0] = e;
+                e.printStackTrace();
+            } finally {
+                latch.countDown();
             }
-        }.start();
+        }).start();
 
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        dbFlushManager.commit();
-                        Thread.sleep(5);
-                    }
-                } catch (Exception e) {
-                    exception[0] = e;
-                    e.printStackTrace();
-                } finally {
-                    latch.countDown();
+        new Thread(() -> {
+            try {
+                while (true) {
+                    dbFlushManager.commit();
+                    Thread.sleep(5);
                 }
+            } catch (Exception e) {
+                exception[0] = e;
+                e.printStackTrace();
+            } finally {
+                latch.countDown();
             }
-        }.start();
+        }).start();
 
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    int cnt = 0;
-                    while (true) {
-                        synchronized (dbFlushManager) {
-                            for (; cnt < 300; cnt++) {
-                                byte[] val1 = db1.get(intToBytes(cnt));
-                                byte[] val2 = db2.get(intToBytes(cnt));
-                                if (val1 == null) {
-                                    Assert.assertNull(val2);
-                                    break;
-                                } else {
-                                    Assert.assertNotNull(val2);
-                                }
+        new Thread(() -> {
+            try {
+                int cnt = 0;
+                while (true) {
+                    synchronized (dbFlushManager) {
+                        for (; cnt < 300; cnt++) {
+                            byte[] val1 = db1.get(intToBytes(cnt));
+                            byte[] val2 = db2.get(intToBytes(cnt));
+                            if (val1 == null) {
+                                Assert.assertNull(val2);
+                                break;
+                            } else {
+                                Assert.assertNotNull(val2);
                             }
                         }
                     }
-                } catch (Exception e) {
-                    exception[0] = e;
-                    e.printStackTrace();
-                } finally {
-                    latch.countDown();
                 }
+            } catch (Exception e) {
+                exception[0] = e;
+                e.printStackTrace();
+            } finally {
+                latch.countDown();
             }
-        }.start();
+        }).start();
 
 
 

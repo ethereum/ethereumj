@@ -19,12 +19,12 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BlockTestSuite {
 
@@ -43,6 +43,20 @@ public class BlockTestSuite {
 
     public Map<String, BlockTestCase> getTestCases() {
         return testCases;
+    }
+
+    public Map<String, BlockTestCase> getTestCases(GitHubJSONTestSuite.Network[] networks) {
+
+        Set<GitHubJSONTestSuite.Network> nets = new HashSet<>(Arrays.asList(networks));
+        Map<String, BlockTestCase> filtered = new HashMap<>();
+
+        for (Map.Entry<String, BlockTestCase> testCase : testCases.entrySet()) {
+            if (nets.contains(testCase.getValue().getNetwork())) {
+                filtered.put(testCase.getKey(), testCase.getValue());
+            }
+        }
+
+        return filtered;
     }
 
     @Override
