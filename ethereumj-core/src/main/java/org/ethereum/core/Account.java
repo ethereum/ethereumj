@@ -84,9 +84,14 @@ public class Account {
                 // todo: calculate the fee for pending
             }
         }
-
-
         return balance;
+    }
+    public BigInteger getTotalPendingFees(Transaction[] transactions) {
+        BigInteger pendingFees = BigInteger.ZERO;
+        for (Transaction tx : transactions) {
+            pendingFees=pendingFees.add(new BigInteger(1,tx.getGasPrice()));
+        }
+        return pendingFees;
     }
 
 
