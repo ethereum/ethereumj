@@ -157,6 +157,8 @@ public class SystemProperties {
 
     private final ClassLoader classLoader;
 
+    private GenerateNodeIdStrategy generateNodeIdStrategy = null;
+
     public SystemProperties() {
         this(ConfigFactory.empty());
     }
@@ -223,6 +225,8 @@ public class SystemProperties {
             this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
             this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
+
+            this.generateNodeIdStrategy = new GenerateNodeIdFromPropsFile(databaseDir());
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
@@ -646,28 +650,7 @@ public class SystemProperties {
 
     private String getGeneratedNodePrivateKey() {
         if (generatedNodePrivateKey == null) {
-            try {
-                File file = new File(databaseDir(), "nodeId.properties");
-                Properties props = new Properties();
-                if (file.canRead()) {
-                    try (Reader r = new FileReader(file)) {
-                        props.load(r);
-                    }
-                } else {
-                    ECKey key = new ECKey();
-                    props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
-                    props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
-                    file.getParentFile().mkdirs();
-                    try (Writer w = new FileWriter(file)) {
-                        props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
-                    }
-                    logger.info("New nodeID generated: " + props.getProperty("nodeId"));
-                    logger.info("Generated nodeID and its private key stored in " + file);
-                }
-                generatedNodePrivateKey = props.getProperty("nodeIdPrivateKey");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            generatedNodePrivateKey = generateNodeIdStrategy.getNodePrivateKey();
         }
         return generatedNodePrivateKey;
     }
@@ -899,6 +882,14 @@ public class SystemProperties {
 
     public String dump() {
         return config.root().render(ConfigRenderOptions.defaults().setComments(false));
+    }
+
+    /**
+     * Used mostly for testing
+     * @param generateNodeIdStrategy
+     */
+    void setGenerateNodeIdStrategy(GenerateNodeIdStrategy generateNodeIdStrategy) {
+        this.generateNodeIdStrategy = generateNodeIdStrategy;
     }
 
     /*
