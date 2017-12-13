@@ -112,7 +112,7 @@ public class RLPTest {
         BigInteger peerId = decodeBigInteger(payload, nextIndex);
 
         BigInteger expectedPeerId =
-                new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+                new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
         assertEquals(expectedPeerId, peerId);
 
         nextIndex = getNextElementIndex(payload, nextIndex);
@@ -128,7 +128,7 @@ public class RLPTest {
         peerId = decodeBigInteger(payload, nextIndex);
 
         expectedPeerId =
-                new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+                new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
 
         assertEquals(expectedPeerId, peerId);
 
@@ -1149,5 +1149,14 @@ public class RLPTest {
         byte[] rlpEncoded = encode(testString);
         String res = new String((byte[])decode(rlpEncoded, 0).getDecoded());
         assertEquals(testString, res); //Fails
+    }
+
+    @Test
+    public void encodeDecodeBigInteger() {
+        BigInteger expected = new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+        byte[] encoded = encodeBigInteger(expected);
+        BigInteger decoded = decodeBigInteger(encoded, 0);
+        assertNotNull(decoded);
+        assertEquals(expected, decoded);
     }
 }
