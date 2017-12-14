@@ -177,10 +177,6 @@ public class RLPTest {
         byte[] expected5 = {(byte) 0x82, (byte) 0x4E, (byte) 0xEA};
         data = encodeShort((short) 20202);
         assertArrayEquals(expected5, data);
-
-        byte[] expected6 = {(byte) 0x82, (byte) 0x9D, (byte) 0x0A};
-        data = encodeShort((short) 40202);
-        assertArrayEquals(expected6, data);
     }
 
     @Test
@@ -225,21 +221,35 @@ public class RLPTest {
         assertArrayEquals(expected6, data);
         assertEquals(65536, RLP.decodeInt(data, 0));
 
-        byte[] expected7 = {(byte) 0x84, (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-        data = encodeInt(Integer.MIN_VALUE);
-        assertArrayEquals(expected7, data);
-        assertEquals(Integer.MIN_VALUE, RLP.decodeInt(data, 0));
-
         byte[] expected8 = {(byte) 0x84, (byte) 0x7F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
         data = encodeInt(Integer.MAX_VALUE);
         assertArrayEquals(expected8, data);
         assertEquals(Integer.MAX_VALUE, RLP.decodeInt(data, 0));
+    }
 
-        byte[] expected9 = {(byte) 0x84, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-        data = encodeInt(0xFFFFFFFF);
-        assertArrayEquals(expected9, data);
-        assertEquals(0xFFFFFFFF, RLP.decodeInt(data, 0));
+    @Test(expected = RuntimeException.class)
+    public void incorrectZero() {
+        RLP.decodeInt(new byte[]{0x00}, 0);
+    }
 
+    @Test(expected = RuntimeException.class)
+    public void cannotEncodeNegativeNumbers() {
+        encodeInt(Integer.MIN_VALUE);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void tooBigForInt() {
+        decodeInt(encodeBigInteger(BigInteger.valueOf(Integer.MAX_VALUE).add(BigInteger.ONE)), 0);
+    }
+
+    @Test
+    public void testMaxNumerics() {
+        int expected1 = Integer.MAX_VALUE;
+        assertEquals(expected1, decodeInt(encodeInt(expected1), 0));
+        short expected2 = Short.MAX_VALUE;
+        assertEquals(expected2, decodeShort(encodeShort(expected2), 0));
+        long expected3 = Long.MAX_VALUE;
+        assertEquals(expected3, decodeLong(encodeBigInteger(BigInteger.valueOf(expected3)), 0));
     }
 
     @Test

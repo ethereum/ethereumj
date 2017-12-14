@@ -208,7 +208,7 @@ public class FrameCodec {
         ingressMac.update(buffer, 0, frameSize);
         dec.processBytes(buffer, 0, frameSize, buffer, 0);
         int pos = 0;
-        long type = RLP.decodeInt(buffer, pos); // FIXME long
+        long type = RLP.decodeLong(buffer, pos);
         pos = RLP.getNextElementIndex(buffer, pos);
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalBodySize - pos);
         int size = totalBodySize - pos;
