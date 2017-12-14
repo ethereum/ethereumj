@@ -232,14 +232,15 @@ public class RLPTest {
         RLP.decodeInt(new byte[]{0x00}, 0);
     }
 
+    /**
+     * NOTE: While negative numbers are not used in RLP, we usually use RLP
+     * for encoding all data and sometime use -1 in primitive fields as null.
+     * So, currently negative numbers encoding is allowed
+     */
+    @Ignore
     @Test(expected = RuntimeException.class)
     public void cannotEncodeNegativeNumbers() {
         encodeInt(Integer.MIN_VALUE);
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void tooBigForInt() {
-        decodeInt(encodeBigInteger(BigInteger.valueOf(Integer.MAX_VALUE).add(BigInteger.ONE)), 0);
     }
 
     @Test

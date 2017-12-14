@@ -172,7 +172,6 @@ public class RLP {
                 value += (data[index + i] & 0xFF) << (8 * pow);
                 pow--;
             }
-            if (value < 0) throw new RuntimeException("not a valid number");
         } else {
 
             // If there are more than 4 bytes, it is not going
@@ -201,7 +200,6 @@ public class RLP {
                 value += (data[index + i] & 0xFF) << (8 * pow);
                 pow--;
             }
-            if (value < 0) throw new RuntimeException("not a valid number");
         } else {
 
             // If there are more than 2 bytes, it is not going
@@ -230,7 +228,6 @@ public class RLP {
                 value += (long) (data[index + i] & 0xFF) << (8 * pow);
                 pow--;
             }
-            if (value < 0) throw new RuntimeException("not a valid number");
         } else {
 
             // If there are more than 8 bytes, it is not going
@@ -915,7 +912,6 @@ public class RLP {
     }
 
     public static byte[] encodeShort(short singleShort) {
-        if (singleShort < 0) throw new RuntimeException("negative numbers are not allowed");
 
         if ((singleShort & 0xFF) == singleShort)
             return encodeByte((byte) singleShort);
@@ -927,7 +923,6 @@ public class RLP {
     }
 
     public static byte[] encodeInt(int singleInt) {
-        if (singleInt < 0) throw new RuntimeException("negative numbers are not allowed");
 
         if ((singleInt & 0xFF) == singleInt)
             return encodeByte((byte) singleInt);
