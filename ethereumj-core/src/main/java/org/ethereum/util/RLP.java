@@ -258,7 +258,6 @@ public class RLP {
             return BigInteger.ZERO;
         } else {
             BigInteger res = new BigInteger(1, valueBytes);
-            if (res.compareTo(BigInteger.ZERO) < 0) throw new RuntimeException("not a valid number");
             return res;
         }
     }
@@ -1225,14 +1224,16 @@ public class RLP {
             System.arraycopy(data, index+1, valueBytes, 0, length);
             return valueBytes;
 
-            // [0xb8, 0xbf] - 56+ bytes item,
-            // for 0xc0 and greater exception is thrown before in {@link #calculateItemLength}
-        } else {
+            // [0xb8, 0xbf] - 56+ bytes item
+        } else if ((data[index] & 0xFF) > OFFSET_LONG_ITEM
+                && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
 
             byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
             byte[] valueBytes = new byte[length];
             System.arraycopy(data, index + 1 + lengthOfLength, valueBytes, 0, length);
             return valueBytes;
+        } else {
+            throw new RuntimeException("wrong decode attempt");
         }
     }
 
