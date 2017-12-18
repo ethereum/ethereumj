@@ -87,7 +87,20 @@ public class SnappyCodec extends MessageToMessageCodec<FrameCodec.Frame, FrameCo
         }
 
         byte[] uncompressed = new byte[(int) uncompressedLength];
-        Snappy.rawUncompress(in, 0, in.length, uncompressed, 0);
+        try {
+            Snappy.rawUncompress(in, 0, in.length, uncompressed, 0);
+        } catch (IOException e) {
+            String detailMessage = e.getMessage();
+            // 5 - error code for framed snappy
+            if (detailMessage.startsWith("FAILED_TO_UNCOMPRESS") && detailMessage.contains("5")) {
+                logger.info("{}: Snappy frames are not allowed in DEVp2p protocol, drop the peer", channel);
+                channel.getNodeStatistics().nodeDisconnectedLocal(ReasonCode.BAD_PROTOCOL);
+                channel.disconnect(ReasonCode.BAD_PROTOCOL);
+                return;
+            } else {
+                throw e;
+            }
+        }
 
         out.add(new FrameCodec.Frame((int) msg.type, uncompressed));
     }
