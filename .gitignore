@@ -42,3 +42,6 @@ sampleDB*
 **/test-user.conf
 **/out.log
 **/user.log4j.properties
+
+# jenv
+.java-version
