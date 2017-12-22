@@ -83,6 +83,17 @@ To override needed options you may use one of the following ways:
 * programmatically using by overriding Spring `SystemProperties` bean 
 
 Note that don’t need to put all the options to your custom config, just those you want to override. 
+
+# Special thanks
+YourKit for providing us with their nice profiler absolutely for free.
+
+YourKit supports open source projects with its full-featured Java Profiler.
+YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>
+and <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
+innovative and intelligent tools for profiling Java and .NET applications.
+
+![YourKit Logo](https://www.yourkit.com/images/yklogo.png)
+
 # Contact
 Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj)
 
