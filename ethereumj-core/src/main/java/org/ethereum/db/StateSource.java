@@ -20,8 +20,6 @@ package org.ethereum.db;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -29,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         implements HashedKeySource<byte[], byte[]> {
-    private static final Logger logger = LoggerFactory.getLogger("db");
 
     // for debug purposes
     public static StateSource INST;
@@ -37,7 +34,6 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     JournalSource<byte[]> journalSource;
     NoDeleteSource<byte[], byte[]> noDeleteSource;
 
-    CountingBytesSource countingSource;
     ReadCache<byte[], byte[]> readCache;
     AbstractCachedSource<byte[], byte[]> writeCache;
 
@@ -46,12 +42,10 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         INST = this;
         add(readCache = new ReadCache.BytesKey<>(src).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
         readCache.setFlushSource(true);
-        add(countingSource = new CountingBytesSource(readCache, true));
-        countingSource.setFlushSource(true);
-        writeCache = new AsyncWriteCache<byte[], byte[]>(countingSource) {
+        writeCache = new AsyncWriteCache<byte[], byte[]>(readCache) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
-                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING);
+                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.SIMPLE);
                 ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
                 ret.setFlushSource(true);
                 return ret;
@@ -77,6 +71,7 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     public void setCommonConfig(CommonConfig commonConfig) {
         if (journalSource != null) {
             journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
+            journalSource.setPruneSource(commonConfig.pruneSource());
         }
     }
 

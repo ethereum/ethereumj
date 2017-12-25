@@ -51,8 +51,7 @@ public class TrieNodeSourceTest {
         stateSource = new StateSource(db, true);
         stateWriteCache = (AsyncWriteCache<byte[], byte[]>) stateSource.getWriteCache();
 
-        Source<byte[], byte[]> prefixSrc = new PrefixLookupSource<>(db, NodeKeyCompositor.PREFIX_BYTES);
-        trieNodeSource = new CountingBytesSource(prefixSrc, true);
+        trieNodeSource = new PrefixLookupSource<>(db, NodeKeyCompositor.PREFIX_BYTES);
 
         repository = new RepositoryRoot(stateSource);
     }

@@ -22,6 +22,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.ethereum.datasource.prune.PruneEntry;
+import org.ethereum.datasource.prune.PruneEntrySource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
@@ -110,8 +112,7 @@ public class CommonConfig {
     public Source<byte[], byte[]> trieNodeSource() {
         DbSource<byte[]> db = blockchainDB();
         Source<byte[], byte[]> src = new PrefixLookupSource<>(db, NodeKeyCompositor.PREFIX_BYTES);
-        Source<byte[], byte[]> xorSrc = new XorDataSource<>(src, HashUtil.sha3("state".getBytes()));
-        return new CountingBytesSource(xorSrc, true);
+        return new XorDataSource<>(src, HashUtil.sha3("state".getBytes()));
     }
 
     @Bean
@@ -123,6 +124,19 @@ public class CommonConfig {
         dbFlushManager().addCache(stateSource.getWriteCache());
 
         return stateSource;
+    }
+
+    @Bean
+    public Source<byte[], PruneEntry> pruneSource() {
+        // 64 bytes - rounded up size of the entry
+        // 512 - approx entries per block
+        // thus, 8mb cache should be enough to maintain 256-blocks window
+        int cacheSize = systemProperties().getProperty("cache.pruneCacheSize", 8);
+        PruneEntrySource pruneSource = new PruneEntrySource(blockchainSource("prune"), cacheSize);
+
+        dbFlushManager().addCache(pruneSource.getWriteCache());
+
+        return pruneSource;
     }
 
     @Bean

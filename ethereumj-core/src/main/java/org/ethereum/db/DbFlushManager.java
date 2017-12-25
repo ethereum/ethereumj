@@ -45,7 +45,7 @@ import java.util.concurrent.*;
 public class DbFlushManager {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    List<AbstractCachedSource<byte[], byte[]>> writeCaches = new ArrayList<>();
+    List<AbstractCachedSource<byte[], ?>> writeCaches = new ArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
     AbstractCachedSource<byte[], byte[]> stateDbCache;
 
@@ -90,13 +90,13 @@ public class DbFlushManager {
         this.sizeThreshold = sizeThreshold;
     }
 
-    public void addCache(AbstractCachedSource<byte[], byte[]> cache) {
+    public void addCache(AbstractCachedSource<byte[], ?> cache) {
         writeCaches.add(cache);
     }
 
     public long getCacheSize() {
         long ret = 0;
-        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], ?> writeCache : writeCaches) {
             ret += writeCache.estimateCacheSize();
         }
         return ret;
@@ -141,7 +141,7 @@ public class DbFlushManager {
             }
         }
         logger.debug("Flipping async storages");
-        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], ?> writeCache : writeCaches) {
             try {
                 if (writeCache instanceof AsyncFlushable) {
                     ((AsyncFlushable) writeCache).flipStorage();
@@ -157,7 +157,7 @@ public class DbFlushManager {
             long s = System.nanoTime();
             logger.info("Flush started");
 
-            for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+            for (AbstractCachedSource<byte[], ?> writeCache : writeCaches) {
                 if (writeCache instanceof AsyncFlushable) {
                     try {
                         ret |= ((AsyncFlushable) writeCache).flushAsync().get();
