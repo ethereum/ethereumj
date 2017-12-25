@@ -44,6 +44,7 @@ import java.util.List;
  */
 public class BlockReplay extends EthereumListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger("events");
+    public static final int HALF_BUFFER = 192;
 
     BlockStore blockStore;
     TransactionStore transactionStore;
@@ -54,7 +55,7 @@ public class BlockReplay extends EthereumListenerAdapter {
 
     boolean replayComplete = false;
     Block lastReplayedBlock;
-    CircularFifoQueue<BlockSummary> onBlockBuffer = new CircularFifoQueue<>(192 * 2);
+    CircularFifoQueue<BlockSummary> onBlockBuffer = new CircularFifoQueue<>(HALF_BUFFER * 2);
 
     public BlockReplay(BlockStore blockStore, TransactionStore transactionStore, EthereumListener listener, long firstBlock) {
         this.blockStore = blockStore;
@@ -78,7 +79,7 @@ public class BlockReplay extends EthereumListenerAdapter {
         logger.info("Replaying blocks from " + firstBlock + ", current best block: " + lastBlock);
         int cnt = 0;
         long num = firstBlock;
-        while(true) {
+        while(!replayComplete) {
             for (; num <= lastBlock; num++) {
                 replayBlock(num);
                 cnt++;
@@ -90,12 +91,11 @@ public class BlockReplay extends EthereumListenerAdapter {
             synchronized (this) {
                 if (onBlockBuffer.size() < onBlockBuffer.maxSize()) {
                     replayComplete = true;
-                    break;
                 } else {
-                    long newLastBlock = blockStore.getMaxNumber() - 192;
+                    // So we'll have half of the buffer for new blocks until not synchronized replay finish
+                    long newLastBlock = blockStore.getMaxNumber() - HALF_BUFFER;
                     if (lastBlock >= newLastBlock) {
                         replayComplete = true;
-                        break;
                     } else {
                         lastBlock = newLastBlock;
                     }
