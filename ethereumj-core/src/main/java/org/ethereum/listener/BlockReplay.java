@@ -34,6 +34,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
+
 /**
  * Class capable of replaying stored blocks prior to 'going online' and
  * notifying on newly imported blocks
@@ -44,7 +46,7 @@ import java.util.List;
  */
 public class BlockReplay extends EthereumListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger("events");
-    public static final int HALF_BUFFER = 192;
+    private static final int HALF_BUFFER = MAX_IN_REQUEST;
 
     BlockStore blockStore;
     TransactionStore transactionStore;
