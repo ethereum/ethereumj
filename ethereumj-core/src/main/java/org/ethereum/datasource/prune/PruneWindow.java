@@ -39,7 +39,7 @@ public class PruneWindow {
         if (entry == null) {
             entries.put(key, PruneEntry.newInserted());
         } else {
-            entry.inserted();
+            entry.attached().inserted();
         }
     }
 
@@ -48,7 +48,7 @@ public class PruneWindow {
         if (entry == null) {
             entries.put(key, PruneEntry.newDeleted());
         } else {
-            entry.deleted();
+            entry.attached().deleted();
         }
     }
 
