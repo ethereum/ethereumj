@@ -22,7 +22,6 @@ import org.ethereum.core.Repository;
 import org.ethereum.datasource.*;
 import org.ethereum.trie.*;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * Created by Anton Nashatyrev on 07.10.2016.

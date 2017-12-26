@@ -18,8 +18,11 @@
 package org.ethereum.db;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.datasource.*;
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.ObjectDataSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Source;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
