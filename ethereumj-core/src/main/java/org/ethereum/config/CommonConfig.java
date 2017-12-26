@@ -134,6 +134,7 @@ public class CommonConfig {
         int cacheSize = systemProperties().getProperty("cache.pruneCacheSize", 8);
         PruneEntrySource pruneSource = new PruneEntrySource(blockchainSource("prune"), cacheSize);
 
+        dbFlushManager().addSource(pruneSource);
         dbFlushManager().addCache(pruneSource.getWriteCache());
 
         return pruneSource;

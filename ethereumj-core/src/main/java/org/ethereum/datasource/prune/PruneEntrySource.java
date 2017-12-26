@@ -41,12 +41,12 @@ public class PruneEntrySource implements Source<byte[], PruneEntry> {
     public PruneEntrySource(Source<byte[], byte[]> src, int cacheSize) {
         this.store = src;
 
-        Source<byte[], PruneEntry> codec = new SourceCodec.BytesKey<>(src, PruneEntry.serializer);
+        Source<byte[], PruneEntry> codec = new SourceCodec.BytesKey<>(src, PruneEntry.Serializer);
         writeCache = new AsyncWriteCache<byte[], PruneEntry>(codec) {
             @Override
             protected WriteCache<byte[], PruneEntry> createCache(Source<byte[], PruneEntry> source) {
                 WriteCache.BytesKey<PruneEntry> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
-                ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, PruneEntry.memSizeEstimator);
+                ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, PruneEntry.MemSizeEstimator);
                 ret.setFlushSource(true);
                 return ret;
             }
@@ -54,7 +54,6 @@ public class PruneEntrySource implements Source<byte[], PruneEntry> {
 
         // 64 bytes - rounded up size of the entry
         readCache = new ReadCache.BytesKey<>(writeCache).withMaxCapacity(cacheSize * 1024 * 1024 / 64);
-        readCache.setFlushSource(true);
 
         byte[] filterBytes = store.get(filterKey);
         if (filterBytes != null) {
@@ -93,9 +92,10 @@ public class PruneEntrySource implements Source<byte[], PruneEntry> {
         if (dirty) {
             store.put(filterKey, filter.serialize());
             dirty = false;
+            return true;
         }
 
-        return readCache.flush();
+        return false;
     }
 
     public AbstractCachedSource<byte[], PruneEntry> getWriteCache() {

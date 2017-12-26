@@ -114,12 +114,12 @@ public class PruneEntry {
         );
     }
 
-    public static final MemSizeEstimator<PruneEntry> memSizeEstimator = entry -> {
+    public static final MemSizeEstimator<PruneEntry> MemSizeEstimator = entry -> {
         if (entry == null) return 0;
         return 4 + 2 * 4; // compressed ref size + size of couple 4-bytes counters
     };
 
-    public static final Serializer<PruneEntry, byte[]> serializer = new Serializer<PruneEntry, byte[]>() {
+    public static final Serializer<PruneEntry, byte[]> Serializer = new Serializer<PruneEntry, byte[]>() {
 
         @Override
         public byte[] serialize(PruneEntry entry) {
