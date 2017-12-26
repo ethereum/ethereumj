@@ -17,7 +17,6 @@
  */
 package org.ethereum.datasource;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.ByteUtil;
@@ -29,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by Anton Nashatyrev on 27.07.2016.
  */
-@Ignore // TODO fix new pruning
 public class JournalPruneTest {
 
     class StringJDS extends JournalSource<byte[]> {

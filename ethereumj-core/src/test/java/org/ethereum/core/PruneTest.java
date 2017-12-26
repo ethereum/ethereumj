@@ -43,7 +43,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by Anton Nashatyrev on 05.07.2016.
  */
-@Ignore // TODO fix new pruning
 public class PruneTest {
 
     @AfterClass
@@ -90,13 +89,6 @@ public class PruneTest {
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
         journalDB.persistUpdate(intToBytes(4));
-        checkKeys(db.getStorage(), "11", "22", "33");
-
-        delete(journalDB, "22");
-        journalDB.commitUpdates(intToBytes(5));
-        checkKeys(db.getStorage(), "11", "22", "33");
-
-        journalDB.persistUpdate(intToBytes(5));
         checkKeys(db.getStorage(), "11", "33");
 
     }
@@ -104,6 +96,7 @@ public class PruneTest {
     private static void put(Source<byte[], byte[]> db, String key) {
         db.put(Hex.decode(key), Hex.decode(key));
     }
+
     private static void delete(Source<byte[], byte[]> db, String key) {
         db.delete(Hex.decode(key));
     }
