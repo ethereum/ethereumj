@@ -26,6 +26,7 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.BloomFilter;
 import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
@@ -150,7 +151,7 @@ public class FastSyncManager {
                     }
                     TrieNodeRequest request = dbWriteQueue.take();
                     nodesInserted++;
-                    stateSource.getNoJournalSource().put(request.nodeHash, request.response);
+                    stateSource.getNoJournalSource().put(request.key(), request.response);
                     if (nodesInserted % 1000 == 0) {
                         dbFlushManager.commit();
                         logger.debug("FastSyncDBWriter: commit: dbWriteQueue.size = " + dbWriteQueue.size());
@@ -217,6 +218,7 @@ public class FastSyncManager {
         TrieNodeType type;
         byte[] nodeHash;
         byte[] response;
+        byte[] accAddrHash;
         final Map<Long, Long> requestSent = new HashMap<>();
 
         TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
@@ -228,6 +230,11 @@ public class FastSyncManager {
                 case CODE: codeNodesCnt++; break;
                 case STORAGE: storageNodesCnt++; break;
             }
+        }
+
+        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, byte[] accAddrHash) {
+            this(type, nodeHash);
+            this.accAddrHash = accAddrHash;
         }
 
         List<TrieNodeRequest> createChildRequests() {
@@ -243,10 +250,10 @@ public class FastSyncManager {
                     AccountState state = new AccountState(nodeValue);
 
                     if (!FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, state.getCodeHash())) {
-                        ret.add(new TrieNodeRequest(TrieNodeType.CODE, state.getCodeHash()));
+                        ret.add(new TrieNodeRequest(TrieNodeType.CODE, state.getCodeHash(), nodeHash));
                     }
                     if (!FastByteComparisons.equal(HashUtil.EMPTY_TRIE_HASH, state.getStateRoot())) {
-                        ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot()));
+                        ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot(), nodeHash));
                     }
                     return ret;
                 }
@@ -254,9 +261,18 @@ public class FastSyncManager {
 
             List<byte[]> childHashes = getChildHashes(node);
             for (byte[] childHash : childHashes) {
-                ret.add(new TrieNodeRequest(type, childHash));
+                ret.add(new TrieNodeRequest(type, childHash, accAddrHash));
             }
             return ret;
+        }
+
+        byte[] key() {
+            if (type == TrieNodeType.STORAGE ||
+                    type == TrieNodeType.CODE) {
+                return NodeKeyCompositor.compose(nodeHash, accAddrHash);
+            } else {
+                return nodeHash;
+            }
         }
 
         public void reqSent(Long requestId) {
@@ -277,6 +293,7 @@ public class FastSyncManager {
             return "TrieNodeRequest{" +
                     "type=" + type +
                     ", nodeHash=" + Hex.toHexString(nodeHash) +
+                    ", accAddrHash=" + (accAddrHash != null ? Hex.toHexString(accAddrHash) : "null") +
                     '}';
         }
     }
