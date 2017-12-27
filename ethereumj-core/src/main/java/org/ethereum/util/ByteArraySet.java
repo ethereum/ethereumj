@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Anton Nashatyrev on 06.10.2016.
@@ -122,7 +123,11 @@ public class ByteArraySet implements Set<byte[]> {
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        throw new RuntimeException("Not implemented");
+        boolean changed = false;
+        for (Object el : c) {
+            changed |= remove(el);
+        }
+        return changed;
     }
 
     @Override

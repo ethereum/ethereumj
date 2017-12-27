@@ -42,6 +42,8 @@ import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
  *
  * All other EthereumListener events are just forwarded to the supplied listener.
  *
+ * For example of usage, look at {@link org.ethereum.samples.EventListenerSample}
+ *
  * Created by Anton Nashatyrev on 18.07.2016.
  */
 public class BlockReplay extends EthereumListenerAdapter {
