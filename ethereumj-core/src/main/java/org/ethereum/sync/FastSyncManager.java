@@ -24,8 +24,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.BloomFilter;
 import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
@@ -36,8 +36,8 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
+import org.ethereum.trie.TrieKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +54,7 @@ import java.util.concurrent.*;
 import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
 import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
 import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
+import static org.ethereum.trie.TrieKey.fromPacked;
 import static org.ethereum.util.CompactEncoder.hasTerminator;
 
 /**
@@ -150,7 +151,7 @@ public class FastSyncManager {
                     }
                     TrieNodeRequest request = dbWriteQueue.take();
                     nodesInserted++;
-                    stateSource.getNoJournalSource().put(request.nodeHash, request.response);
+                    request.stateKeys.forEach(key -> stateSource.getNoJournalSource().put(key, request.response));
                     if (nodesInserted % 1000 == 0) {
                         dbFlushManager.commit();
                         logger.debug("FastSyncDBWriter: commit: dbWriteQueue.size = " + dbWriteQueue.size());
@@ -218,6 +219,9 @@ public class FastSyncManager {
         byte[] nodeHash;
         byte[] response;
         final Map<Long, Long> requestSent = new HashMap<>();
+        TrieKey nodePath = TrieKey.empty(false);
+        byte[] accountStateKey;
+        Set<byte[]> stateKeys = new ByteArraySet();
 
         TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
             this.type = type;
@@ -228,6 +232,20 @@ public class FastSyncManager {
                 case CODE: codeNodesCnt++; break;
                 case STORAGE: storageNodesCnt++; break;
             }
+
+            if (type == TrieNodeType.STATE)
+                stateKeys.add(nodeHash);
+        }
+
+        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, byte[] accountStateKey) {
+            this(type, nodeHash);
+            if ((this.accountStateKey = accountStateKey) != null)
+                stateKeys.add(NodeKeyCompositor.compose(nodeHash, accountStateKey));
+        }
+
+        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, TrieKey nodePath, byte[] accountStateKey) {
+            this(type, nodeHash, accountStateKey);
+            this.nodePath = nodePath;
         }
 
         List<TrieNodeRequest> createChildRequests() {
@@ -242,20 +260,34 @@ public class FastSyncManager {
                     byte[] nodeValue = (byte[]) node.get(1);
                     AccountState state = new AccountState(nodeValue);
 
+                    TrieKey accountKey = nodePath.concat(fromPacked((byte[]) node.get(0)));
+
                     if (!FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, state.getCodeHash())) {
-                        ret.add(new TrieNodeRequest(TrieNodeType.CODE, state.getCodeHash()));
+                        ret.add(new TrieNodeRequest(TrieNodeType.CODE, state.getCodeHash(), accountKey.toNormal()));
                     }
                     if (!FastByteComparisons.equal(HashUtil.EMPTY_TRIE_HASH, state.getStateRoot())) {
-                        ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot()));
+                        ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot(), accountKey.toNormal()));
                     }
                     return ret;
                 }
             }
 
-            List<byte[]> childHashes = getChildHashes(node);
-            for (byte[] childHash : childHashes) {
-                ret.add(new TrieNodeRequest(type, childHash));
+            if (node.size() == 2) {
+                Value val = new Value(node.get(1));
+                if (val.isHashCode() && !hasTerminator((byte[]) node.get(0))) {
+                    TrieKey childPath = nodePath.concat(fromPacked((byte[]) node.get(0)));
+                    ret.add(new TrieNodeRequest(type, val.asBytes(), childPath, accountStateKey));
+                }
+            } else {
+                for (int j = 0; j < 16; ++j) {
+                    Value val = new Value(node.get(j));
+                    if (val.isHashCode()) {
+                        TrieKey childPath = nodePath.concat(TrieKey.singleHex(j));
+                        ret.add(new TrieNodeRequest(type, val.asBytes(), childPath, accountStateKey));
+                    }
+                }
             }
+
             return ret;
         }
 
@@ -272,29 +304,19 @@ public class FastSyncManager {
             }
         }
 
+        public void merge(TrieNodeRequest other) {
+            this.stateKeys.addAll(other.stateKeys);
+        }
+
         @Override
         public String toString() {
             return "TrieNodeRequest{" +
                     "type=" + type +
                     ", nodeHash=" + Hex.toHexString(nodeHash) +
+                    ", nodePath=" + nodePath +
+                    ", accountStateKey=" + (accountStateKey == null ? "null" : Hex.toHexString(accountStateKey)) +
                     '}';
         }
-    }
-
-    private static List<byte[]> getChildHashes(List<Object> siblings) {
-        List<byte[]> ret = new ArrayList<>();
-        if (siblings.size() == 2) {
-            Value val = new Value(siblings.get(1));
-            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
-                ret.add(val.asBytes());
-        } else {
-            for (int j = 0; j < 16; ++j) {
-                Value val = new Value(siblings.get(j));
-                if (val.isHashCode())
-                    ret.add(val.asBytes());
-            }
-        }
-        return ret;
     }
 
     Deque<TrieNodeRequest> nodesQueue = new LinkedBlockingDeque<>();
@@ -344,11 +366,14 @@ public class FastSyncManager {
             synchronized (this) {
                 for (int i = 0; i < cnt && !nodesQueue.isEmpty(); i++) {
                     TrieNodeRequest req = nodesQueue.poll();
+
                     hashes.add(req.nodeHash);
                     TrieNodeRequest request = pendingNodes.get(req.nodeHash);
                     if (request == null) {
                         pendingNodes.put(req.nodeHash, req);
                         request = req;
+                    } else {
+                        request.merge(req);
                     }
                     sentRequestIds.add(requestId);
                     request.reqSent(requestId);
