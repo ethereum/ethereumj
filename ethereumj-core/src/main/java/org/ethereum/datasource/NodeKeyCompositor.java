@@ -62,7 +62,7 @@ public class NodeKeyCompositor implements Serializer<byte[], byte[]> {
 
     private static void validateKey(byte[] key) {
         if (key.length != HASH_LEN)
-            throw new IllegalArgumentException("Key is too short");
+            throw new IllegalArgumentException("Key is not a hash code");
     }
 
     private static byte[] addrHash(byte[] addrOrHash) {
