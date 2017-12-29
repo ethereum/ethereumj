@@ -50,6 +50,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
 import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
@@ -151,7 +152,8 @@ public class FastSyncManager {
                     }
                     TrieNodeRequest request = dbWriteQueue.take();
                     nodesInserted++;
-                    request.stateKeys.forEach(key -> stateSource.getNoJournalSource().put(key, request.response));
+                    request.storageHashes().forEach(hash -> stateSource.getNoJournalSource().put(hash, request.response));
+
                     if (nodesInserted % 1000 == 0) {
                         dbFlushManager.commit();
                         logger.debug("FastSyncDBWriter: commit: dbWriteQueue.size = " + dbWriteQueue.size());
@@ -220,8 +222,8 @@ public class FastSyncManager {
         byte[] response;
         final Map<Long, Long> requestSent = new HashMap<>();
         TrieKey nodePath = TrieKey.empty(false);
-        byte[] accountStateKey;
-        Set<byte[]> stateKeys = new ByteArraySet();
+
+        private final Set<byte[]> accounts = new ByteArraySet();
 
         TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
             this.type = type;
@@ -232,20 +234,17 @@ public class FastSyncManager {
                 case CODE: codeNodesCnt++; break;
                 case STORAGE: storageNodesCnt++; break;
             }
-
-            if (type == TrieNodeType.STATE)
-                stateKeys.add(nodeHash);
         }
 
-        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, byte[] accountStateKey) {
+        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, byte[] accountKey) {
             this(type, nodeHash);
-            if ((this.accountStateKey = accountStateKey) != null)
-                stateKeys.add(NodeKeyCompositor.compose(nodeHash, accountStateKey));
+            this.accounts.add(accountKey);
         }
 
-        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, TrieKey nodePath, byte[] accountStateKey) {
-            this(type, nodeHash, accountStateKey);
+        TrieNodeRequest(TrieNodeType type, byte[] nodeHash, TrieKey nodePath, Set<byte[]> accounts) {
+            this(type, nodeHash);
             this.nodePath = nodePath;
+            this.accounts.addAll(accounts);
         }
 
         List<TrieNodeRequest> createChildRequests() {
@@ -276,14 +275,14 @@ public class FastSyncManager {
                 Value val = new Value(node.get(1));
                 if (val.isHashCode() && !hasTerminator((byte[]) node.get(0))) {
                     TrieKey childPath = nodePath.concat(fromPacked((byte[]) node.get(0)));
-                    ret.add(new TrieNodeRequest(type, val.asBytes(), childPath, accountStateKey));
+                    ret.add(new TrieNodeRequest(type, val.asBytes(), childPath, accountsSnapshot()));
                 }
             } else {
                 for (int j = 0; j < 16; ++j) {
                     Value val = new Value(node.get(j));
                     if (val.isHashCode()) {
                         TrieKey childPath = nodePath.concat(TrieKey.singleHex(j));
-                        ret.add(new TrieNodeRequest(type, val.asBytes(), childPath, accountStateKey));
+                        ret.add(new TrieNodeRequest(type, val.asBytes(), childPath, accountsSnapshot()));
                     }
                 }
             }
@@ -304,8 +303,25 @@ public class FastSyncManager {
             }
         }
 
+        public List<byte[]> storageHashes() {
+            if (type == TrieNodeType.STATE) {
+                return Collections.singletonList(nodeHash);
+            } else {
+                return accountsSnapshot().stream().map(key -> NodeKeyCompositor.compose(nodeHash, key))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        public Set<byte[]> accountsSnapshot() {
+            synchronized (FastSyncManager.this) {
+                return new HashSet<>(accounts);
+            }
+        }
+
         public void merge(TrieNodeRequest other) {
-            this.stateKeys.addAll(other.stateKeys);
+            synchronized (FastSyncManager.this) {
+                accounts.addAll(other.accounts);
+            }
         }
 
         @Override
@@ -314,7 +330,6 @@ public class FastSyncManager {
                     "type=" + type +
                     ", nodeHash=" + Hex.toHexString(nodeHash) +
                     ", nodePath=" + nodePath +
-                    ", accountStateKey=" + (accountStateKey == null ? "null" : Hex.toHexString(accountStateKey)) +
                     '}';
         }
     }
