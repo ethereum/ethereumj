@@ -153,7 +153,11 @@ public class EventListenerSample extends TestNetSample {
 
         public IncEventListener(PendingStateImpl pendingState, String contractABI, byte[] contractAddress) {
             super(pendingState);
-            setContract(contractABI, contractAddress);
+            initContractAddress(contractABI, contractAddress);
+            // Instead you can init with topic search,
+            // so you could get events from all contracts with the same code
+            // You could init listener only once
+//            initContractTopic(contractABI, sha3("Inc(address,int256,int256)".getBytes()));
         }
 
         @Override
