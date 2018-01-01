@@ -56,6 +56,10 @@ import static org.junit.Assert.assertNotNull;
  * most complicated conditions for application
  *
  * Run with '-Dlogback.configurationFile=longrun/logback.xml' for proper logging
+ * *** NOTE: this test uses standard output for discovering node process pid, but if you run test using Gradle,
+ *           it will put away standard streams, so test is unable to work. To solve the issue, you need to add
+ *           "showStandardStreams = true" line and extend events with 'standard_out', 'standard_error'
+ *           in test.testLogging section of build.gradle
  * Also following flags are supported:
  *     -Doverride.config.res=longrun/conf/live.conf
  *     -Dnode.run.cmd="./gradlew run"
