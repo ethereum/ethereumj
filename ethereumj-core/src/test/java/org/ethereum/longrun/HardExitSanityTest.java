@@ -217,7 +217,9 @@ public class HardExitSanityTest {
 
     private int getChildPID(int processPID) throws Exception {
         try {
-            Process getPID = Runtime.getRuntime().exec("pgrep -P " + processPID);
+            ProcessBuilder builder = new ProcessBuilder("pgrep", "-P", "" + processPID);
+            builder.redirectErrorStream(true);
+            Process getPID = builder.start();
             String output = getProcOutput(getPID);
             String pidPart = output.substring(0, output.indexOf('\n'));
             Integer ret = new Integer(pidPart);
@@ -241,13 +243,19 @@ public class HardExitSanityTest {
      */
     private void flushOutput(Process process) throws Exception {
         new Thread(() -> {
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = null;
-
-            try {
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 while ((line = input.readLine()) != null) {
                 }
-
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        new Thread(() -> {
+            String line = null;
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                while ((line = input.readLine()) != null) {
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -257,22 +265,20 @@ public class HardExitSanityTest {
     private String getProcOutput(Process process) throws Exception {
         StringBuilder buffer = new StringBuilder();
         Thread listener = new Thread(() -> {
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = null;
-
-            try {
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 while ((line = input.readLine()) != null) {
                     buffer.append(line);
                     buffer.append('\n');
                 }
 
-            } catch (IOException e) {
+                process.waitFor();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
         listener.start();
-        process.waitFor();
-        listener.interrupt();
+        listener.join();
 
         return buffer.toString();
     }
