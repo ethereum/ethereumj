@@ -42,21 +42,19 @@ public class TestNetSample extends BasicSample {
 
     protected abstract static class TestNetConfig {
         private final String config =
-                // network has no discovery, peers are connected directly
-                "peer.discovery.enabled = false \n" +
-                // set port to 0 to disable accident inbound connections
-                "peer.listen.port = 0 \n" +
-                "peer.networkId = 161 \n" +
+                // Ropsten revive network configuration
+                "peer.discovery.enabled = true \n" +
+                "peer.listen.port = 30303 \n" +
+                "peer.networkId = 3 \n" +
                 // a number of public peers for this network (not all of then may be functioning)
                 "peer.active = [" +
-                "    { url = 'enode://9bcff30ea776ebd28a9424d0ac7aa500d372f918445788f45a807d83186bd52c4c0afaf504d77e2077e5a99f1f264f75f8738646c1ac3673ccc652b65565c3bb@peer-1.ether.camp:30303' }," +
-                "    { url = 'enode://c2b35ed63f5d79c7f160d05c54dd60b3ba32d455dbb10a5fe6fde44854073db02f9a538423a63a480126c74c7f650d77066ae446258e3d00388401d419b99f88@peer-2.ether.camp:30303' }," +
-                "    { url = 'enode://8246787f8d57662b850b354f0b526251eafee1f077fc709460dc8788fa640a597e49ffc727580f3ebbbc5eacb34436a66ea40415fab9d73563481666090a6cf0@peer-3.ether.camp:30303' }" +
+                "    {url = 'enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303'}," +
+                "    {url = 'enode://20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1@52.169.14.227:30303'}" +
                 "] \n" +
                 "sync.enabled = true \n" +
                 // special genesis for this test network
-                "genesis = frontier-test.json \n" +
-                "blockchain.config.name = 'testnet' \n" +
+                "genesis = ropsten.json \n" +
+                "blockchain.config.name = 'ropsten' \n" +
                 "database.dir = testnetSampleDb \n" +
                 "cache.flush.memory = 0";
 

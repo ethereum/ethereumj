@@ -99,6 +99,16 @@ public class BlockSummary {
         );
     }
 
+    /**
+     * Whether this block could be new best block
+     * for the chain with provided old total difficulty
+     * @param oldTotDifficulty Total difficulty for the suggested chain
+     * @return True - best, False - not best
+     */
+    public boolean betterThan(BigInteger oldTotDifficulty) {
+        return getTotalDifficulty().compareTo(oldTotDifficulty) > 0;
+    }
+
     private static <T> byte[] encodeList(List<T> entries, Function<T, byte[]> encoder) {
         byte[][] result = new byte[entries.size()][];
         for (int i = 0; i < entries.size(); i++) {

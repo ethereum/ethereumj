@@ -29,12 +29,13 @@ import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.Math.min;
+import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
 
 /**
  * Created by Anton Nashatyrev on 27.05.2016.
  */
 public class SyncQueueImpl implements SyncQueueIfc {
-    static int MAX_CHAIN_LEN = 192;
+    static int MAX_CHAIN_LEN = MAX_IN_REQUEST;
 
     static class HeadersRequestImpl implements HeadersRequest {
         public HeadersRequestImpl(long start, int count, boolean reverse) {
