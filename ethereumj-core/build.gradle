@@ -94,6 +94,8 @@ test {
         exceptionFormat "short"
     }
 
+    systemProperties System.properties
+    systemProperty "user.dir", workingDir
     systemProperty "file.encoding", "UTF-8"
 }
 
