@@ -59,7 +59,7 @@ public class PruneEntrySource implements Source<byte[], PruneEntry> {
         if (filterBytes != null) {
             filter = QuotientFilter.deserialize(filterBytes);
         } else {
-            filter = QuotientFilter.create(10_000_000, 100_000);
+            filter = QuotientFilter.create(4_000_000, 2_000_000);
         }
     }
 

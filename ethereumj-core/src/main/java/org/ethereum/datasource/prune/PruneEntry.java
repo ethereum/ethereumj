@@ -23,33 +23,34 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 /**
- * Represents a trie node in pruning window. <br/><br/>
+ * <p>
+ *     Represents a trie node in pruning window.
  *
- * Keeps tracking of node references. <br/>
- * There are two types of references: storage references and references
- * inside pruning window itself. <br/><br/>
+ * <p>
+ *     Implements a kind of decision making system which
+ *     registers each probabilistic insert and delete. <br>
+ *     Registered actions are meant to be confirmed or undone in the future calls,
+ *     thus entry reflects fork handling behaviour.
  *
- * Lifecycle: <br/>
- * ~> attached (blk N): [inserted/deleted] <br/>
- * ~> ... <br/>
- * ~> attached (blk K): [inserted/deleted] <br/>
- * ~> ... <br/>
- * ~> detached (blk N) <br/>
- * ~> ... <br/>
- * ~> detached (blk K): engage pruning <br/><br/>
- *
- * Detached nodes with storage ref counter less than 1 are treated as orphans
- * and tend to be removed from the storage.
+ * <p>
+ *     Once there becomes no ambiguity in entry's state
+ *     its state can be propagated to the storage.
+ *     See {@link #decisionMade()} method for details
  *
  * @author Mikhail Kalinin
  * @since 25.12.2017
  */
 public class PruneEntry {
 
-    // tracks references kept by pruning window
-    int pruning = 0;
-    // tracks storage references
-    int storage = 0;
+    int inserts = 0;
+    int deletes = 0;
+    State state = State.UNCONFIRMED;
+
+    enum State {
+        UNCONFIRMED,
+        INSERTED,
+        DELETED
+    }
 
     private PruneEntry() {
     }
@@ -58,65 +59,100 @@ public class PruneEntry {
         parse(encoded);
     }
 
-    static PruneEntry newInserted() {
+    static PruneEntry newlyInserted() {
         PruneEntry entry = new PruneEntry();
-        return entry.attached().inserted();
+        entry.inserted();
+        return entry;
     }
 
-    static PruneEntry newDeleted() {
+    static PruneEntry newlyDeleted() {
         PruneEntry entry = new PruneEntry();
-        return entry.attached();
+        entry.deleted();
+        return entry;
     }
 
-    /**
-     * Supposed to be called each time when node enters pruning
-     */
-    public PruneEntry attached() {
-        ++pruning;
-        return this;
+    public void inserted() {
+        ++inserts;
     }
 
-    /**
-     * Supposed to be called each time when node leaves pruning
-     */
-    public PruneEntry detached() {
-        --pruning;
-        return this;
+    public void deleted() {
+        ++deletes;
     }
 
-    /**
-     * Increases storage refs by one
-     */
-    public PruneEntry inserted() {
-        ++storage;
-        return this;
+    public void confirmDelete() {
+        processDelete(true);
     }
 
-    /**
-     * Decreases storage refs by one
-     */
-    public PruneEntry deleted() {
-        --storage;
-        return this;
+    public void undoDelete() {
+        processDelete(false);
+    }
+
+    public void confirmInsert() {
+        processInsert(true);
+    }
+
+    public void undoInsert() {
+        processInsert(false);
+    }
+
+    private void processInsert(boolean confirmed) {
+        --inserts;
+        if (confirmed) {
+            state = State.INSERTED;
+        }
+    }
+
+    private void processDelete(boolean confirmed) {
+        --deletes;
+        if (confirmed) {
+            state = State.DELETED;
+        }
+    }
+
+    public boolean isInsertConfirmed() {
+        return state == State.INSERTED;
+    }
+
+    public boolean decisionMade() {
+
+        // vote finished
+        if (deletes < 1 && inserts < 1) {
+            return true;
+        }
+
+        // deleted with no chance to be inserted
+        if (state == State.DELETED && inserts < 1) {
+            return true;
+        }
+
+        // inserted with no chance to be deleted
+        if (state == State.INSERTED && deletes < 1) {
+            return true;
+        }
+
+        // not yet
+        return false;
     }
 
     private void parse(byte[] encoded) {
         byte[] data;
         RLPList elements = (RLPList) RLP.decode2(encoded).get(0);
-        this.pruning = (data = elements.get(0).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0;
-        this.storage = (data = elements.get(1).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0;
+        this.inserts = (data = elements.get(0).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0;
+        this.deletes = (data = elements.get(1).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0;
+        this.state = State.values()[(data = elements.get(1).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0];
     }
 
     private byte[] getEncoded() {
         return RLP.encodeList(
-                RLP.encodeElement(RLP.encodeInt(pruning)),
-                RLP.encodeElement(RLP.encodeInt(storage))
+                RLP.encodeElement(RLP.encodeInt(inserts)),
+                RLP.encodeElement(RLP.encodeInt(deletes)),
+                RLP.encodeElement(RLP.encodeInt(state.ordinal()))
         );
     }
 
     public static final MemSizeEstimator<PruneEntry> MemSizeEstimator = entry -> {
         if (entry == null) return 0;
-        return 4 + 2 * 4; // compressed ref size + size of couple 4-bytes counters
+        return 12 + 2 * 4 + 2 * 4; // object header + size of two refs (instance itself and enum) + size of couple 4-bytes counters
     };
 
     public static final Serializer<PruneEntry, byte[]> Serializer = new Serializer<PruneEntry, byte[]>() {

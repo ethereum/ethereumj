@@ -27,8 +27,9 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
-import static org.ethereum.datasource.prune.PruneWindow.DetachStatus.PRUNED;
+import static org.ethereum.datasource.prune.PruneWindow.Decision.DELETE;
 
 /**
  * The JournalSource records all the changes which were made before each commitUpdate
@@ -177,8 +178,8 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
 
-        update.insertedKeys.forEach(this::firePruning);
-        update.deletedKeys.forEach(this::firePruning);
+        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertPersisted));
+        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deletePersisted));
 
         journal.delete(updateHash);
     }
@@ -190,20 +191,14 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
 
-        update.insertedKeys.forEach(pruning::revertInsert);
-        update.deletedKeys.forEach(pruning::revertDelete);
-
-        update.insertedKeys.forEach(this::firePruning);
-        update.deletedKeys.forEach(this::firePruning);
+        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertReverted));
+        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deleteReverted));
 
         journal.delete(updateHash);
     }
 
-    /**
-     * Tries to detach given node from the window and delete it is tend to be pruned
-     */
-    private void firePruning(byte[] key) {
-        if (pruning.detach(key) == PRUNED)
+    private void invokePrune(byte[] key, Function<byte[], PruneWindow.Decision> invocation) {
+        if (invocation.apply(key) == DELETE)
             getSource().delete(key);
     }
 

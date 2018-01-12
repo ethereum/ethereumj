@@ -128,16 +128,22 @@ public class CommonConfig {
 
     @Bean
     public Source<byte[], PruneEntry> pruneSource() {
-        // 64 bytes - rounded up size of the entry
-        // 512 - approx entries per block
-        // thus, 8mb cache should be enough to maintain 256-blocks window
-        int cacheSize = systemProperties().getProperty("cache.pruneCacheSize", 8);
-        PruneEntrySource pruneSource = new PruneEntrySource(blockchainSource("prune"), cacheSize);
 
-        dbFlushManager().addSource(pruneSource);
-        dbFlushManager().addCache(pruneSource.getWriteCache());
+        // back pruning by disk storage if expected footprint is too high
+        if (systemProperties().databasePruneDepth() > 256) {
+            // 64 bytes - rounded up size of the entry
+            // 512 - approx entries per block
+            // thus, 8mb cache should be enough to maintain 256-blocks window
+            int cacheSize = systemProperties().getProperty("cache.pruneCacheSize", 8);
+            PruneEntrySource pruneSource = new PruneEntrySource(blockchainSource("prune"), cacheSize);
 
-        return pruneSource;
+            dbFlushManager().addSource(pruneSource);
+            dbFlushManager().addCache(pruneSource.getWriteCache());
+
+            return pruneSource;
+        } else {
+            return new HashMapDB<>();
+        }
     }
 
     @Bean

@@ -20,9 +20,10 @@ package org.ethereum.datasource.prune;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.inmem.HashMapDB;
 
-import static org.ethereum.datasource.prune.PruneWindow.DetachStatus.DETACHED;
-import static org.ethereum.datasource.prune.PruneWindow.DetachStatus.KEPT;
-import static org.ethereum.datasource.prune.PruneWindow.DetachStatus.PRUNED;
+import java.util.function.Consumer;
+
+import static org.ethereum.datasource.prune.PruneWindow.Decision.DELETE;
+import static org.ethereum.datasource.prune.PruneWindow.Decision.KEEP;
 
 /**
  * Manages {@link PruneEntry} lifecycle
@@ -34,67 +35,64 @@ public class PruneWindow {
 
     Source<byte[], PruneEntry> entries = new HashMapDB<>();
 
-    public void inserted(byte[] key) {
+    public synchronized void inserted(byte[] key) {
         PruneEntry entry = entries.get(key);
         if (entry == null) {
-            entries.put(key, PruneEntry.newInserted());
+            entries.put(key, PruneEntry.newlyInserted());
         } else {
-            entry.attached().inserted();
-        }
-    }
-
-    public void deleted(byte[] key) {
-        PruneEntry entry = entries.get(key);
-        if (entry == null) {
-            entries.put(key, PruneEntry.newDeleted());
-        } else {
-            entry.attached().deleted();
-        }
-    }
-
-    public void revertInsert(byte[] key) {
-        PruneEntry entry = entries.get(key);
-        if (entry != null) {
-            entry.deleted();
-        }
-    }
-
-    public void revertDelete(byte[] key) {
-        PruneEntry entry = entries.get(key);
-        if (entry != null) {
             entry.inserted();
         }
     }
 
-    /**
-     * Decreases window reference counter by one
-     * If last reference was removed it checks storage ref counter value
-     */
-    public DetachStatus detach(byte[] key) {
+    public synchronized void deleted(byte[] key) {
+        PruneEntry entry = entries.get(key);
+        if (entry == null) {
+            entries.put(key, PruneEntry.newlyDeleted());
+        } else {
+            entry.deleted();
+        }
+    }
+
+    public Decision insertPersisted(byte[] key) {
+        return decide(key, PruneEntry::confirmInsert);
+    }
+
+    public Decision deletePersisted(byte[] key) {
+        return decide(key, PruneEntry::confirmDelete);
+    }
+
+    public Decision insertReverted(byte[] key) {
+        return decide(key, PruneEntry::undoInsert);
+    }
+
+    public Decision deleteReverted(byte[] key) {
+        return decide(key, PruneEntry::undoDelete);
+    }
+
+    synchronized Decision decide(byte[] key, Consumer<PruneEntry> vote) {
 
         PruneEntry entry = entries.get(key);
+        if (entry == null) {
+            return KEEP;
+        }
 
-        // in some unexpected case entry might be not found
-        // no node entry - no pruning
-        if (entry == null) return DETACHED;
+        vote.accept(entry);
 
-        // detach entry
-        entry.detached();
-        if (entry.pruning > 0) return KEPT;
-
-        // delete entry
-        entries.delete(key);
-        if (entry.storage < 1) return PRUNED;
-        return DETACHED;
+        if (entry.decisionMade()) {
+            entries.delete(key);
+            // keep node only if its final state is insert
+            return entry.isInsertConfirmed() ? KEEP : DELETE;
+        } else {
+            return KEEP;
+        }
     }
 
     public void setSource(Source<byte[], PruneEntry> src) {
         this.entries = src;
     }
 
-    public enum DetachStatus {
-        KEPT,       // yet referenced by the window
-        PRUNED,     // neither window nor storage refs, tend to be deleted
-        DETACHED    // left the window but has storage refs, must keep stored
+    public enum Decision {
+        KEEP,   // do nothing
+        DELETE  // remove from storage
     }
 }
