@@ -157,13 +157,13 @@ public class FastSyncSanityTest {
 
                 switch (syncState) {
                     case UNSECURE:
-                        if (!firstRun.get()) break;
+                        if (!firstRun.get() || statesCompleted.contains(EthereumListener.SyncState.UNSECURE)) break;
                         testLogger.info("[v] Unsecure sync completed");
                         statesCompleted.add(EthereumListener.SyncState.UNSECURE);
                         firstRunChecks();
                         break;
                     case SECURE:
-                        if (!firstRun.get()) break;
+                        if (!firstRun.get() || statesCompleted.contains(EthereumListener.SyncState.SECURE)) break;
                         testLogger.info("[v] Secure sync completed");
                         statesCompleted.add(EthereumListener.SyncState.SECURE);
                         firstRunChecks();
