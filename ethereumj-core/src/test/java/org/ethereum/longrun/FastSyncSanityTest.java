@@ -143,8 +143,15 @@ public class FastSyncSanityTest {
 
             sleep(60000);
             stopSync();
+
+            testLogger.info("Validating nodes: Start");
             BlockchainValidation.checkNodes(ethereum, commonConfig, fatalErrors);
+            testLogger.info("Validating nodes: End");
+
+            testLogger.info("Validating block headers: Start");
             BlockchainValidation.checkFastHeaders(ethereum, commonConfig, fatalErrors);
+            testLogger.info("Validating block headers: End");
+
             firstRun.set(false);
         }
 
