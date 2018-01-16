@@ -87,7 +87,7 @@ public class BlockchainValidation {
         try {
             Source<byte[], byte[]> stateDS = commonConfig.stateSource();
             byte[] stateRoot = ethereum.getBlockchain().getBestBlock().getHeader().getStateRoot();
-            Integer rootsSize = getReferencedTrieNodes(stateDS, true, stateRoot);
+            int rootsSize = TrieTraversal.ofState(stateDS, stateRoot, true).go();
             testLogger.info("Node validation successful");
             testLogger.info("Non-unique node size: {}", rootsSize);
         } catch (Exception | AssertionError ex) {
