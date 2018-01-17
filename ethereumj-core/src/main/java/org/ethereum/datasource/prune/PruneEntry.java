@@ -79,38 +79,56 @@ public class PruneEntry {
         ++deletes;
     }
 
-    public void confirmDelete() {
+    public void confirmDeletion() {
         processDelete(true);
     }
 
-    public void undoDelete() {
+    public void undoDeletion() {
         processDelete(false);
     }
 
-    public void confirmInsert() {
+    public void confirmInsertion() {
         processInsert(true);
     }
 
-    public void undoInsert() {
+    public void undoInsertion() {
         processInsert(false);
     }
 
+    public void setUnconfirmed() {
+        state = State.UNCONFIRMED;
+    }
+
     private void processInsert(boolean confirmed) {
-        --inserts;
+        if (inserts < 1) {
+            return;
+        }
         if (confirmed) {
             state = State.INSERTED;
         }
+        --inserts;
     }
 
     private void processDelete(boolean confirmed) {
-        --deletes;
+        if (deletes < 1) {
+            return;
+        }
         if (confirmed) {
             state = State.DELETED;
         }
+        --deletes;
     }
 
-    public boolean isInsertConfirmed() {
+    public boolean isInsertionConfirmed() {
         return state == State.INSERTED;
+    }
+
+    public boolean isUnconfirmed() {
+        return state == State.UNCONFIRMED;
+    }
+
+    public boolean isDeletionConfirmed() {
+        return state == State.UNCONFIRMED;
     }
 
     public boolean decisionMade() {

@@ -22,8 +22,8 @@ import org.ethereum.datasource.inmem.HashMapDB;
 
 import java.util.function.Consumer;
 
-import static org.ethereum.datasource.prune.PruneWindow.Decision.DELETE;
-import static org.ethereum.datasource.prune.PruneWindow.Decision.KEEP;
+import static org.ethereum.datasource.prune.PruneWindow.StorageCall.DELETE;
+import static org.ethereum.datasource.prune.PruneWindow.StorageCall.KEEP;
 
 /**
  * Manages {@link PruneEntry} lifecycle
@@ -53,46 +53,70 @@ public class PruneWindow {
         }
     }
 
-    public Decision insertPersisted(byte[] key) {
-        return decide(key, PruneEntry::confirmInsert);
+    public StorageCall insertionConfirmed(byte[] key) {
+        return deleteIfUnconfirmed(key, PruneEntry::confirmInsertion);
     }
 
-    public Decision deletePersisted(byte[] key) {
-        return decide(key, PruneEntry::confirmDelete);
+    public StorageCall deletionConfirmed(byte[] key) {
+        return deleteIfUnconfirmed(key, PruneEntry::confirmDeletion);
     }
 
-    public Decision insertReverted(byte[] key) {
-        return decide(key, PruneEntry::undoInsert);
+    public StorageCall insertionReverted(byte[] key) {
+        return deleteIfUnconfirmed(key, PruneEntry::undoInsertion);
     }
 
-    public Decision deleteReverted(byte[] key) {
-        return decide(key, PruneEntry::undoDelete);
+    public StorageCall deletionReverted(byte[] key) {
+        return deleteIfUnconfirmed(key, PruneEntry::undoDeletion);
     }
 
-    synchronized Decision decide(byte[] key, Consumer<PruneEntry> vote) {
+    synchronized StorageCall deleteIfUnconfirmed(byte[] key, Consumer<PruneEntry> action) {
 
         PruneEntry entry = entries.get(key);
         if (entry == null) {
             return KEEP;
         }
 
-        vote.accept(entry);
+        action.accept(entry);
 
         if (entry.decisionMade()) {
-            entries.delete(key);
-            // keep node only if its final state is insert
-            return entry.isInsertConfirmed() ? KEEP : DELETE;
-        } else {
+            if (!entry.isDeletionConfirmed()) { // evict UNCONFIRMED and INSERTED entries
+                entries.delete(key);
+            }
+            if (entry.isUnconfirmed()) { // UNCONFIRMED entries can be deleted at that moment
+                return DELETE;
+            }
+        }
+
+        return KEEP;
+    }
+
+    public synchronized StorageCall persisted(byte[] key) {
+
+        PruneEntry entry = entries.get(key);
+        if (entry == null) {
             return KEEP;
         }
+
+        // treat entry as DELETED, the others have been previously evicted
+
+        if (entry.decisionMade()) {
+            entries.delete(key); // evict entry from pruning
+            return DELETE;
+        } else {
+            // otherwise it has been inserted again
+            // keep entry UNCONFIRMED until decision can be made
+            entry.setUnconfirmed();
+        }
+
+        return KEEP;
     }
 
     public void setSource(Source<byte[], PruneEntry> src) {
         this.entries = src;
     }
 
-    public enum Decision {
-        KEEP,   // do nothing
+    public enum StorageCall {
+        KEEP,   // keep (do nothing)
         DELETE  // remove from storage
     }
 }

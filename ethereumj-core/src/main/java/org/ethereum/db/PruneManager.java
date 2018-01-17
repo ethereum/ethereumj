@@ -17,6 +17,7 @@
  */
 package org.ethereum.db;
 
+import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
@@ -36,10 +37,13 @@ public class PruneManager {
     private IndexedBlockStore blockStore;
 
     private int pruneBlocksCnt;
+    private int forkDepth;
 
     @Autowired
     private PruneManager(SystemProperties config) {
         pruneBlocksCnt = config.databasePruneDepth();
+        forkDepth = pruneBlocksCnt < Constants.getLONGEST_FORK_CHAIN() ?
+                pruneBlocksCnt : Constants.getLONGEST_FORK_CHAIN();
     }
 
     public PruneManager(IndexedBlockStore blockStore, JournalSource journal, int pruneBlocksCnt) {
@@ -57,19 +61,32 @@ public class PruneManager {
         if (pruneBlocksCnt < 0) return; // pruning disabled
 
         journal.commitUpdates(block.getHash());
-        long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
-        if (pruneBlockNum < 0) return;
 
-        List<Block> pruneBlocks = blockStore.getBlocksByNumber(pruneBlockNum);
-        Block chainBlock = blockStore.getChainBlockByNumber(pruneBlockNum);
+        // run forks payload first
+        long forkBlockNum = block.getNumber() - forkDepth;
+        if (forkBlockNum < 0) return;
+
+        List<Block> pruneBlocks = blockStore.getBlocksByNumber(forkBlockNum);
+        Block chainBlock = blockStore.getChainBlockByNumber(forkBlockNum);
         for (Block pruneBlock : pruneBlocks) {
             if (journal.hasUpdate(pruneBlock.getHash())) {
                 if (chainBlock.isEqual(pruneBlock)) {
-                    journal.persistUpdate(pruneBlock.getHash());
+                    journal.confirmUpdate(pruneBlock.getHash());
                 } else {
                     journal.revertUpdate(pruneBlock.getHash());
                 }
             }
+        }
+
+        long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
+        if (pruneBlockNum < 0) return;
+
+        if (pruneBlockNum != forkBlockNum) {
+            chainBlock = blockStore.getChainBlockByNumber(pruneBlockNum);
+        }
+
+        if (journal.hasUpdate(chainBlock.getHash())) {
+            journal.persistUpdate(chainBlock.getHash());
         }
     }
 }

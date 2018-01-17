@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static org.ethereum.datasource.prune.PruneWindow.Decision.DELETE;
+import static org.ethereum.datasource.prune.PruneWindow.StorageCall.DELETE;
 
 /**
  * The JournalSource records all the changes which were made before each commitUpdate
@@ -172,32 +172,46 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     }
 
     /**
-     * Given update hash prunes touched nodes
+     * Persists nodes deletions made under given update hash and evicts update after that
      */
     public synchronized void persistUpdate(byte[] updateHash) {
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
 
-        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertPersisted));
-        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deletePersisted));
+        update.deletedKeys.forEach(key -> invokePrune(key, pruning::persisted));
 
         journal.delete(updateHash);
     }
 
     /**
-     * Reverts all changes made under this update hash and prunes touched nodes
+     * Claims that given update belongs to the main chain.
+     *
+     * It prunes unconfirmed nodes, pruning of the others is deferred until next {@link #persistUpdate(byte[])} call,
+     * update is kept and evicted later by next {@link #persistUpdate(byte[])} call
+     */
+    public synchronized void confirmUpdate(byte[] updateHash) {
+        Update update = journal.get(updateHash);
+        if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
+
+        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertionConfirmed));
+        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deletionConfirmed));
+    }
+
+    /**
+     * Reverts all changes made under given update and invokes pruning,
+     * at the end of the invocation update is evicted
      */
     public synchronized void revertUpdate(byte[] updateHash) {
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
 
-        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertReverted));
-        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deleteReverted));
+        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertionReverted));
+        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deletionReverted));
 
         journal.delete(updateHash);
     }
 
-    private void invokePrune(byte[] key, Function<byte[], PruneWindow.Decision> invocation) {
+    private void invokePrune(byte[] key, Function<byte[], PruneWindow.StorageCall> invocation) {
         if (invocation.apply(key) == DELETE)
             getSource().delete(key);
     }
