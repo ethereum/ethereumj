@@ -62,8 +62,8 @@ public class PruningFlow implements PruningRule {
      *
      * When applied to a certain update:
      * - Accepts both deletions and insertions
-     * - Just in case checks if change has been finally reverted and if yes propagates corresponding update to storage and recycles pruning
-     * - Recycles pruning by removing entries for those nodes which are finally inserted
+     * - Just in case checks if change are tend to be reverted and if yes propagates corresponding update to storage and recycles pruning
+     * - Recycles pruning by removing entries for those nodes which are tend to be inserted
      * - Propagates deleted nodes to {@link #PruneMainChain} flow
      * - Keeps updates until they are processed by {@link #PruneMainChain}
      */
@@ -75,8 +75,8 @@ public class PruningFlow implements PruningRule {
      *
      * When applied to a certain update:
      * - Reverts both deletions and insertions
-     * - Checks if change has been reverted finally and if yes propagates corresponding update to storage and recycles pruning
-     * - Recycles pruning by removing entries for those nodes which are finally inserted
+     * - Checks if change are tend to be reverted and if yes propagates corresponding update to storage and recycles pruning
+     * - Recycles pruning by removing entries for those nodes which are tend to be inserted
      * - Propagates deleted nodes to {@link #PruneMainChain} flow
      * - Releases updates
      */
@@ -94,9 +94,9 @@ public class PruningFlow implements PruningRule {
      * ~> PruneMainChain: propagates to storage and recycles deletes
      *
      * When applied to a certain update:
-     * - Propagates deletion to the storage if node is meant to be deleted
-     * - If decision can't be made at the moment (node has been inserted after it has passed fork management flow)
-     *   then resets prune entry to send it to fork management again
+     * - Propagates deletion to the storage if node is tend to be deleted
+     * - If decision can't be made at the moment (node has been inserted again after passing fork management flow)
+     *   then sends prune entry to fork management again
      * - Recycles pruning by removing deleted nodes
      * - Releases updates
      *
