@@ -65,8 +65,9 @@ public class BlockHeader {
      * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_recipe)]
      * of the block */
     private byte[] receiptTrieRoot;
-
-    /*todo: comment it when you know what the fuck it is*/
+    /* The Bloom filter composed from indexable information 
+     * (logger address and log topics) contained in each log entry 
+     * from the receipt of each transaction in the transactions list */
     private byte[] logsBloom;
     /* A scalar value corresponding to the difficulty level of this block.
      * This can be calculated from the previous block’s difficulty level
