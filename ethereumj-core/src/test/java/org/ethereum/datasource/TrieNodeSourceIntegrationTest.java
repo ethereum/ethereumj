@@ -23,6 +23,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.PruningFlow;
 import org.ethereum.db.StateSource;
 import org.ethereum.vm.DataWord;
 import org.junit.AfterClass;
@@ -178,7 +179,7 @@ public class TrieNodeSourceIntegrationTest {
     private void flushChanges() throws ExecutionException, InterruptedException {
         repository.commit();
         stateSource.getJournalSource().commitUpdates(HashUtil.EMPTY_DATA_HASH);
-        stateSource.getJournalSource().persistUpdate(HashUtil.EMPTY_DATA_HASH);
+        stateSource.getJournalSource().processUpdate(HashUtil.EMPTY_DATA_HASH, PruningFlow.PersistUpdate);
         dbFlushManager.flush().get();
     }
 }

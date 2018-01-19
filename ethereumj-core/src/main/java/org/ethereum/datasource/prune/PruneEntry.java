@@ -24,12 +24,12 @@ import org.ethereum.util.RLPList;
 
 /**
  * <p>
- *     Represents a trie node in pruning window.
+ *     Represents a trie node within pruning process.
  *
  * <p>
  *     Implements a kind of decision making system which
  *     registers each probabilistic insert and delete. <br>
- *     Registered actions are meant to be confirmed or undone in the future calls,
+ *     Registered actions are meant to be accepted or reverted in the future calls,
  *     thus entry reflects fork handling behaviour.
  *
  * <p>
@@ -44,13 +44,7 @@ public class PruneEntry {
 
     int inserts = 0;
     int deletes = 0;
-    State state = State.UNCONFIRMED;
-
-    enum State {
-        UNCONFIRMED,
-        INSERTED,
-        DELETED
-    }
+    PruneEntryState state = PruneEntryState.UNACCEPTED;
 
     private PruneEntry() {
     }
@@ -59,79 +53,92 @@ public class PruneEntry {
         parse(encoded);
     }
 
-    static PruneEntry newlyInserted() {
-        PruneEntry entry = new PruneEntry();
-        entry.inserted();
-        return entry;
+    public static PruneEntry create() {
+        return new PruneEntry();
     }
 
-    static PruneEntry newlyDeleted() {
-        PruneEntry entry = new PruneEntry();
-        entry.deleted();
-        return entry;
+    public void track(JournalAction action) {
+        switch (action) {
+            case INSERTION:
+                ++inserts;
+                break;
+            case DELETION:
+                ++deletes;
+                break;
+            default:
+                throw new IllegalArgumentException("Incorrect action: " + action);
+        }
     }
 
-    public void inserted() {
-        ++inserts;
+    public void accept(JournalAction action) {
+        switch (action) {
+            case INSERTION:
+                processInsert(true);
+                break;
+            case DELETION:
+                processDelete(true);
+                break;
+            default:
+                throw new IllegalArgumentException("Incorrect action: " + action);
+        }
     }
 
-    public void deleted() {
-        ++deletes;
+    public void revert(JournalAction action) {
+        switch (action) {
+            case INSERTION:
+                processInsert(false);
+                break;
+            case DELETION:
+                processDelete(false);
+                break;
+            default:
+                throw new IllegalArgumentException("Incorrect action: " + action);
+        }
     }
 
-    public void confirmDeletion() {
-        processDelete(true);
+    public void resetIfDirty(JournalAction action) {
+        if (!decisionMade() && state.relatesTo(action)) {
+            state = PruneEntryState.UNACCEPTED;
+        }
     }
 
-    public void undoDeletion() {
-        processDelete(false);
+    public void recycle() {
+        state = PruneEntryState.RECYCLED;
     }
 
-    public void confirmInsertion() {
-        processInsert(true);
+    public boolean isRecycled() {
+        return state == PruneEntryState.RECYCLED;
     }
 
-    public void undoInsertion() {
-        processInsert(false);
+    public boolean isAccepted(JournalAction action) {
+        return decisionMade() && state.relatesTo(action);
     }
 
-    public void setUnconfirmed() {
-        state = State.UNCONFIRMED;
+    public boolean isUnaccepted() {
+        return decisionMade() && state == PruneEntryState.UNACCEPTED;
     }
 
-    private void processInsert(boolean confirmed) {
+    private void processInsert(boolean accepted) {
         if (inserts < 1) {
             return;
         }
-        if (confirmed) {
-            state = State.INSERTED;
+        if (accepted) {
+            state = PruneEntryState.INSERTED;
         }
         --inserts;
     }
 
-    private void processDelete(boolean confirmed) {
+    private void processDelete(boolean accepted) {
         if (deletes < 1) {
             return;
         }
-        if (confirmed) {
-            state = State.DELETED;
+        if (accepted) {
+            state = PruneEntryState.DELETED;
         }
         --deletes;
     }
 
-    public boolean isInsertionConfirmed() {
-        return state == State.INSERTED;
-    }
-
-    public boolean isUnconfirmed() {
-        return state == State.UNCONFIRMED;
-    }
-
-    public boolean isDeletionConfirmed() {
-        return state == State.UNCONFIRMED;
-    }
-
-    public boolean decisionMade() {
+    private boolean decisionMade() {
 
         // vote finished
         if (deletes < 1 && inserts < 1) {
@@ -139,12 +146,12 @@ public class PruneEntry {
         }
 
         // deleted with no chance to be inserted
-        if (state == State.DELETED && inserts < 1) {
+        if (state == PruneEntryState.DELETED && inserts < 1) {
             return true;
         }
 
         // inserted with no chance to be deleted
-        if (state == State.INSERTED && deletes < 1) {
+        if (state == PruneEntryState.INSERTED && deletes < 1) {
             return true;
         }
 
@@ -157,7 +164,7 @@ public class PruneEntry {
         RLPList elements = (RLPList) RLP.decode2(encoded).get(0);
         this.inserts = (data = elements.get(0).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0;
         this.deletes = (data = elements.get(1).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0;
-        this.state = State.values()[(data = elements.get(1).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0];
+        this.state = PruneEntryState.values()[(data = elements.get(1).getRLPData()) != null ? RLP.decodeInt(data, 0) : 0];
     }
 
     private byte[] getEncoded() {

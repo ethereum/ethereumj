@@ -20,6 +20,7 @@ package org.ethereum.datasource;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.PruningFlow;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.StateSource;
 import org.ethereum.vm.DataWord;
@@ -145,7 +146,7 @@ public class TrieNodeSourceTest {
     private void flushChanges() throws ExecutionException, InterruptedException {
         repository.commit();
         stateSource.getJournalSource().commitUpdates(HashUtil.EMPTY_DATA_HASH);
-        stateSource.getJournalSource().persistUpdate(HashUtil.EMPTY_DATA_HASH);
+        stateSource.getJournalSource().processUpdate(HashUtil.EMPTY_DATA_HASH, PruningFlow.PersistUpdate);
 
         stateWriteCache.flipStorage();
         stateWriteCache.flushAsync().get();

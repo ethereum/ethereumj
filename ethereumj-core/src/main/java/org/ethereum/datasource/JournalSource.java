@@ -18,8 +18,9 @@
 package org.ethereum.datasource;
 
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.datasource.prune.JournalAction;
 import org.ethereum.datasource.prune.PruneEntry;
-import org.ethereum.datasource.prune.PruneWindow;
+import org.ethereum.db.PruningFlow;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -27,28 +28,24 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
-import static org.ethereum.datasource.prune.PruneWindow.StorageCall.DELETE;
+import static org.ethereum.datasource.prune.JournalAction.DELETION;
+import static org.ethereum.datasource.prune.JournalAction.INSERTION;
+import static org.ethereum.db.PruningRule.ReleaseUpdate;
 
 /**
  * The JournalSource records all the changes which were made before each commitUpdate
  * Unlike 'put' deletes are not propagated to the backing Source immediately but are
- * delayed until 'persistUpdate' is called for the corresponding hash.
- * Also 'revertUpdate' might be called for a hash, in this case all inserts are removed
- * from the database.
+ * delayed until 'processUpdate' accepts and persists changes for the corresponding hash.
+ * Also 'processUpdate' might be called to revert inserts made under given updates hash.
  *
  * Normally this class is used for State pruning: we need all the state nodes for last N
  * blocks to be able to get back to previous state for applying fork block
  * however we would like to delete 'zombie' nodes which are not referenced anymore by
- * calling 'persistUpdate' for the block CurrentBlockNumber - N and we would
+ * persisting update for the block CurrentBlockNumber - N and we would
  * also like to remove the updates made by the blocks which weren't too lucky
- * to remain on the main chain by calling revertUpdate for such blocks
- *
- * NOTE: the backing Source should be <b>counting</b> for this class to work correctly
- * if e.g. some key is deleted in block 100 then added in block 200
- * then pruning of the block 100 would delete this key from the backing store
- * if it was non-counting
+ * to remain on the main chain by reverting update for such blocks
  *
  * Created by Anton Nashatyrev on 08.11.2016.
  */
@@ -96,7 +93,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     private Update currentUpdate = new Update();
 
     Source<byte[], Update> journal = new HashMapDB<>();
-    PruneWindow pruning = new PruneWindow();
+    Source<byte[], PruneEntry> pruning = new HashMapDB<>();
 
     /**
      * Constructs instance with the underlying backing Source
@@ -113,8 +110,8 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
                 });
     }
 
-    public void setPruneSource(Source<byte[], PruneEntry> pruneSource) {
-        pruning.setSource(pruneSource);
+    public void setPruningStore(Source<byte[], PruneEntry> src) {
+        pruning = src;
     }
 
     /**
@@ -129,20 +126,31 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
             return;
         }
 
-        currentUpdate.insertedKeys.add(key);
-        pruning.inserted(key);
         getSource().put(key, val);
+        currentUpdate.insertedKeys.add(key);
+        track(key, INSERTION);
     }
 
     /**
      * Deletes are not propagated to the backing Source immediately
      * but instead they are recorded to the current Update and
-     * might be later persisted with persistUpdate call
+     * might be later persisted
      */
     @Override
     public synchronized void delete(byte[] key) {
         currentUpdate.deletedKeys.add(key);
-        pruning.deleted(key);
+        track(key, DELETION);
+    }
+
+    /**
+     * Tracks action made on the node for pruning purposes
+     */
+    private void track(byte[] key, JournalAction action) {
+        PruneEntry entry = pruning.get(key);
+        if (entry == null) {
+            pruning.put(key, entry = PruneEntry.create());
+        }
+        entry.track(action);
     }
 
     @Override
@@ -154,9 +162,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      * Records all the changes made prior to this call to a single chunk
      * with supplied hash.
      * Later those updates could be either persisted to backing Source (deletes only)
-     * via persistUpdate call
      * or reverted from the backing Source (inserts only)
-     * via revertUpdate call
      */
     public synchronized void commitUpdates(byte[] updateHash) {
         currentUpdate.updateHash = updateHash;
@@ -172,53 +178,44 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     }
 
     /**
-     * Persists nodes deletions made under given update hash and evicts update after that
+     * Fires pruning rules for each insertion and deletion made under given update hash
+     * and propagates pruning result to the storage, it also removes update if requested
      */
-    public synchronized void persistUpdate(byte[] updateHash) {
+    public synchronized void processUpdate(byte[] updateHash, PruningFlow rules) {
+
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
 
-        update.deletedKeys.forEach(key -> invokePrune(key, pruning::persisted));
+        update.insertedKeys.forEach(key -> invokePruning(key, INSERTION, rules::apply));
+        update.deletedKeys.forEach(key -> invokePruning(key, DELETION, rules::apply));
 
-        journal.delete(updateHash);
+        if (rules.has(ReleaseUpdate)) {
+            journal.delete(updateHash);
+        }
     }
 
     /**
-     * Claims that given update belongs to the main chain.
-     *
-     * It prunes unconfirmed nodes, pruning of the others is deferred until next {@link #persistUpdate(byte[])} call,
-     * update is kept and evicted later by next {@link #persistUpdate(byte[])} call
+     * Invokes pruning process for given node,
+     * if pruning function returns true then node is deleted from backing Source,
+     * it also recycles pruning entries
      */
-    public synchronized void confirmUpdate(byte[] updateHash) {
-        Update update = journal.get(updateHash);
-        if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
-
-        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertionConfirmed));
-        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deletionConfirmed));
-    }
-
-    /**
-     * Reverts all changes made under given update and invokes pruning,
-     * at the end of the invocation update is evicted
-     */
-    public synchronized void revertUpdate(byte[] updateHash) {
-        Update update = journal.get(updateHash);
-        if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
-
-        update.insertedKeys.forEach(key -> invokePrune(key, pruning::insertionReverted));
-        update.deletedKeys.forEach(key -> invokePrune(key, pruning::deletionReverted));
-
-        journal.delete(updateHash);
-    }
-
-    private void invokePrune(byte[] key, Function<byte[], PruneWindow.StorageCall> invocation) {
-        if (invocation.apply(key) == DELETE)
+    private void invokePruning(byte[] key, JournalAction action, BiFunction<PruneEntry, JournalAction, Boolean> prune) {
+        PruneEntry entry = pruning.get(key);
+        if (entry == null) {
+            return;
+        }
+        if (prune.apply(entry, action)) {
             getSource().delete(key);
+        }
+        if (entry.isRecycled()) {
+            pruning.delete(key);
+        }
     }
 
     @Override
     public synchronized boolean flushImpl() {
         journal.flush();
+        pruning.flush();
         return false;
     }
 }

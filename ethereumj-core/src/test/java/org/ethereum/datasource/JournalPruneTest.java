@@ -22,6 +22,8 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
 
+import static org.ethereum.db.PruningFlow.PersistUpdate;
+import static org.ethereum.db.PruningFlow.RevertUpdate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -88,16 +90,17 @@ public class JournalPruneTest {
         jds.delete("a2");
         jds.commitUpdates(hashInt(3));
 
-        jds.persistUpdate(hashInt(1));
+        jds.processUpdate(hashInt(1), PersistUpdate);
         checkDb(jds, "a1", "a2", "a3");
 
-        jds.persistUpdate(hashInt(2));
+        jds.processUpdate(hashInt(2), PersistUpdate);
         checkDb(jds, "a1", "a2");
 
-        jds.persistUpdate(hashInt(3));
+        jds.processUpdate(hashInt(3), PersistUpdate);
         checkDb(jds, "a1");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     @Test
@@ -118,11 +121,12 @@ public class JournalPruneTest {
 
         checkDb(jds, "a1", "a2", "a3", "a4", "a5");
 
-        jds.persistUpdate(hashInt(1));
-        jds.revertUpdate(hashInt(2));
+        jds.processUpdate(hashInt(2), RevertUpdate);
+        jds.processUpdate(hashInt(1), PersistUpdate);
         checkDb(jds, "a1", "a3", "a4");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     @Test
@@ -147,19 +151,20 @@ public class JournalPruneTest {
 
         checkDb(jds, "a1", "a2", "a3", "a4");
 
-        jds.persistUpdate(hashInt(1));
-        jds.revertUpdate(hashInt(2));
+        jds.processUpdate(hashInt(1), PersistUpdate);
+        jds.processUpdate(hashInt(2), RevertUpdate);
         checkDb(jds, "a1", "a2", "a3", "a4");
 
-        jds.persistUpdate(hashInt(3));
-        jds.revertUpdate(hashInt(4));
-        jds.revertUpdate(hashInt(5));
+        jds.processUpdate(hashInt(3), PersistUpdate);
+        jds.processUpdate(hashInt(4), RevertUpdate);
+        jds.processUpdate(hashInt(5), RevertUpdate);
         checkDb(jds, "a2", "a3");
 
-        jds.persistUpdate(hashInt(6));
+        jds.processUpdate(hashInt(6), PersistUpdate);
         checkDb(jds, "a2", "a3");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     @Test
@@ -181,12 +186,13 @@ public class JournalPruneTest {
 
         checkDb(jds, "a1", "a2", "a3");
 
-        jds.persistUpdate(hashInt(1));
-        jds.revertUpdate(hashInt(2));
-        jds.revertUpdate(hashInt(3));
+        jds.processUpdate(hashInt(1), PersistUpdate);
+        jds.processUpdate(hashInt(2), RevertUpdate);
+        jds.processUpdate(hashInt(3), RevertUpdate);
         checkDb(jds, "a1", "a2");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     public byte[] hashInt(int i) {

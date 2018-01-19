@@ -34,6 +34,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.db.PruningFlow.PersistUpdate;
+import static org.ethereum.db.PruningFlow.RevertUpdate;
 import static org.ethereum.util.ByteUtil.intToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
@@ -67,10 +69,10 @@ public class PruneTest {
         journalDB.commitUpdates(intToBytes(2));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.persistUpdate(intToBytes(1));
+        journalDB.processUpdate(intToBytes(1), PersistUpdate);
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.revertUpdate(intToBytes(2));
+        journalDB.processUpdate(intToBytes(2), RevertUpdate);
         checkKeys(db.getStorage(), "11", "22", "33");
 
         put(journalDB, "22");
@@ -85,10 +87,10 @@ public class PruneTest {
         journalDB.commitUpdates(intToBytes(4));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.persistUpdate(intToBytes(3));
+        journalDB.processUpdate(intToBytes(3), PersistUpdate);
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.persistUpdate(intToBytes(4));
+        journalDB.processUpdate(intToBytes(4), PersistUpdate);
         checkKeys(db.getStorage(), "11", "33");
 
     }

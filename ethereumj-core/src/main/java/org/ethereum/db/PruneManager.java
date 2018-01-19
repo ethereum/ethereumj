@@ -42,14 +42,18 @@ public class PruneManager {
     @Autowired
     private PruneManager(SystemProperties config) {
         pruneBlocksCnt = config.databasePruneDepth();
-        forkDepth = pruneBlocksCnt < Constants.getLONGEST_FORK_CHAIN() ?
-                pruneBlocksCnt : Constants.getLONGEST_FORK_CHAIN();
+        forkDepth = forkDepth();
     }
 
     public PruneManager(IndexedBlockStore blockStore, JournalSource journal, int pruneBlocksCnt) {
         this.blockStore = blockStore;
         this.journal = journal;
         this.pruneBlocksCnt = pruneBlocksCnt;
+        this.forkDepth = forkDepth();
+    }
+
+    private int forkDepth() {
+        return pruneBlocksCnt < Constants.getLONGEST_FORK_CHAIN() ? pruneBlocksCnt : Constants.getLONGEST_FORK_CHAIN();
     }
 
     @Autowired
@@ -62,7 +66,7 @@ public class PruneManager {
 
         journal.commitUpdates(block.getHash());
 
-        // run forks payload first
+        // fork management
         long forkBlockNum = block.getNumber() - forkDepth;
         if (forkBlockNum < 0) return;
 
@@ -71,13 +75,14 @@ public class PruneManager {
         for (Block pruneBlock : pruneBlocks) {
             if (journal.hasUpdate(pruneBlock.getHash())) {
                 if (chainBlock.isEqual(pruneBlock)) {
-                    journal.confirmUpdate(pruneBlock.getHash());
+                    journal.processUpdate(pruneBlock.getHash(), PruningFlow.AcceptFork);
                 } else {
-                    journal.revertUpdate(pruneBlock.getHash());
+                    journal.processUpdate(pruneBlock.getHash(), PruningFlow.RevertFork);
                 }
             }
         }
 
+        // main chain pruning
         long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
         if (pruneBlockNum < 0) return;
 
@@ -86,7 +91,7 @@ public class PruneManager {
         }
 
         if (journal.hasUpdate(chainBlock.getHash())) {
-            journal.persistUpdate(chainBlock.getHash());
+            journal.processUpdate(chainBlock.getHash(), PruningFlow.PruneMainChain);
         }
     }
 }
