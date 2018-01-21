@@ -1939,7 +1939,7 @@ public class VMTest {
     @Test // ADDMOD OP mal
     public void testADDMOD_1() {
         VM vm = new VM();
-        program = new Program(Hex.decode("60026002600308"), invoke);
+        program = new Program(compile("PUSH1 0x02 PUSH1 0x02 PUSH1 0x03 ADDMOD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1955,7 +1955,7 @@ public class VMTest {
     @Test // ADDMOD OP
     public void testADDMOD_2() {
         VM vm = new VM();
-        program = new Program(Hex.decode("6110006002611002086000"), invoke);
+        program = new Program(compile("PUSH2 0x1000 PUSH1 0x02 PUSH2 0x1002 ADDMOD PUSH1 0x00"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -1971,7 +1971,7 @@ public class VMTest {
     @Test // ADDMOD OP
     public void testADDMOD_3() {
         VM vm = new VM();
-        program = new Program(Hex.decode("61100265123456789009600208"), invoke);
+        program = new Program(compile("PUSH2 0x1002 PUSH6 0x123456789009 PUSH1 0x02 ADDMOD"), invoke);
         String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000093B";
 
         vm.step(program);
@@ -1987,7 +1987,7 @@ public class VMTest {
     @Test(expected = StackTooSmallException.class) // ADDMOD OP mal
     public void testADDMOD_4() {
         VM vm = new VM();
-        program = new Program(Hex.decode("61123408"), invoke);
+        program = new Program(compile("PUSH2 0x1234 ADDMOD"), invoke);
         try {
             vm.step(program);
             vm.step(program);
