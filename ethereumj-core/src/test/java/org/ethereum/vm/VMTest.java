@@ -1433,7 +1433,7 @@ public class VMTest {
     public void testMLOAD_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600051"), invoke);
+        program = new Program(compile("PUSH1 0x00 MLOAD"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -1448,7 +1448,7 @@ public class VMTest {
     public void testMLOAD_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602251"), invoke);
+        program = new Program(compile("PUSH1 0x22 MLOAD"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1466,7 +1466,7 @@ public class VMTest {
     public void testMLOAD_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602051"), invoke);
+        program = new Program(compile("PUSH1 0x20 MLOAD"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1482,7 +1482,7 @@ public class VMTest {
     public void testMLOAD_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("611234602052602051"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x20 MSTORE PUSH1 0x20 MLOAD"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000001234";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000001234";
@@ -1501,7 +1501,7 @@ public class VMTest {
     public void testMLOAD_5() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("611234602052601F51"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x20 MSTORE PUSH1 0x1F MLOAD"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000001234";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000012";
@@ -1520,7 +1520,7 @@ public class VMTest {
     public void testMLOAD_6() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("51"), invoke);
+        program = new Program(compile("MLOAD"), invoke);
         try {
             vm.step(program);
         } finally {
