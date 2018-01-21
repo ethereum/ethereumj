@@ -1751,7 +1751,7 @@ public class VMTest {
     public void testJUMP_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600C600C905660CC60DD60EE60FF"), invoke);
+        program = new Program(compile("PUSH1 0x0C PUSH1 0x0C SWAP1 JUMP PUSH1 0xCC PUSH1 0xDD PUSH1 0xEE PUSH1 0xFF"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1767,7 +1767,7 @@ public class VMTest {
     public void testJUMPI_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60016005575B60CC"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH1 0x05 JUMPI JUMPDEST PUSH1 0xCC"), invoke);
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000CC";
 
         vm.step(program);
@@ -1784,7 +1784,7 @@ public class VMTest {
     public void testJUMPI_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("630000000060445760CC60DD"), invoke);
+        program = new Program(compile("PUSH4 0x00000000 PUSH1 0x44 JUMPI PUSH1 0xCC PUSH1 0xDD"), invoke);
         String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000DD";
         String s_expected_2 = "00000000000000000000000000000000000000000000000000000000000000CC";
 
@@ -1805,7 +1805,7 @@ public class VMTest {
     public void testJUMPI_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600157"), invoke);
+        program = new Program(compile("PUSH1 0x01 JUMPI"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1818,7 +1818,7 @@ public class VMTest {
     public void testJUMPI_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60016022909057"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH1 0x22 SWAP1 SWAP1 JUMPI"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1834,7 +1834,7 @@ public class VMTest {
     public void testJUMPDEST_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602360085660015b600255"), invoke);
+        program = new Program(compile("PUSH1 0x23 PUSH1 0x08 JUMP PUSH1 0x01 JUMPDEST PUSH1 0x02 SSTORE"), invoke);
 
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
@@ -1857,7 +1857,7 @@ public class VMTest {
     public void testJUMPDEST_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6023600160095760015b600255"), invoke);
+        program = new Program(compile("PUSH1 0x23 PUSH1 0x01 PUSH1 0x09 JUMPI PUSH1 0x01 JUMPDEST PUSH1 0x02 SSTORE"), invoke);
 
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
