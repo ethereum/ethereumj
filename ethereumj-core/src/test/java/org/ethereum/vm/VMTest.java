@@ -1022,7 +1022,7 @@ public class VMTest {
     public void testNOT_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600119"), invoke);
+        program = new Program(compile("PUSH1 0x01 NOT"), invoke);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
 
         vm.step(program);
@@ -1035,7 +1035,7 @@ public class VMTest {
     public void testNOT_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61A00319"), invoke);
+        program = new Program(compile("PUSH2 0xA003 NOT"), invoke);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5FFC";
 
         vm.step(program);
@@ -1049,7 +1049,7 @@ public class VMTest {
     public void testBNOT_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("1a"), invoke);
+        program = new Program(compile("NOT"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1062,7 +1062,7 @@ public class VMTest {
     public void testNOT_5() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600019"), invoke);
+        program = new Program(compile("PUSH1 0x00 NOT"), invoke);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
