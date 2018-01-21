@@ -1076,7 +1076,7 @@ public class VMTest {
     public void testPOP_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61000060016200000250"), invoke);
+        program = new Program(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1091,7 +1091,7 @@ public class VMTest {
     public void testPOP_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6100006001620000025050"), invoke);
+        program = new Program(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP POP"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1107,7 +1107,7 @@ public class VMTest {
     public void testPOP_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61000060016200000250505050"), invoke);
+        program = new Program(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP POP POP POP"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1136,12 +1136,15 @@ public class VMTest {
     private void testDUPN_1(int n) {
 
         VM vm = new VM();
-        byte operation = (byte) (OpCode.DUP1.val() + n - 1);
         String programCode = "";
+
         for (int i = 0; i < n; i++) {
-            programCode += "60" + (12 + i);
+            programCode += "PUSH1 0x" + (12 + i) + " ";
         }
-        program = new Program(ByteUtil.appendByte(Hex.decode(programCode.getBytes()), operation), invoke);
+
+        programCode += "DUP" + n;
+
+        program = new Program(compile(programCode), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000012";
         int expectedLen = n + 1;
 
@@ -1161,7 +1164,7 @@ public class VMTest {
     public void testDUPN_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("80"), invoke);
+        program = new Program(compile("DUP1"), invoke);
         try {
             vm.step(program);
         } finally {
