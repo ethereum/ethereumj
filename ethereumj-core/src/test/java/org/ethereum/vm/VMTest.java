@@ -504,7 +504,7 @@ public class VMTest {
     public void testAND_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600A600A16"), invoke);
+        program = new Program(compile("PUSH1 0x0A PUSH1 0x0A AND"), invoke);
         String expected = "000000000000000000000000000000000000000000000000000000000000000A";
 
         vm.step(program);
@@ -518,7 +518,7 @@ public class VMTest {
     public void testAND_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60C0600A16"), invoke);
+        program = new Program(compile("PUSH1 0xC0 PUSH1 0x0A AND"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -532,7 +532,7 @@ public class VMTest {
     public void testAND_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60C016"), invoke);
+        program = new Program(compile("PUSH1 0xC0 AND"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -546,7 +546,7 @@ public class VMTest {
     public void testOR_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60F0600F17"), invoke);
+        program = new Program(compile("PUSH1 0xF0 PUSH1 0x0F OR"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -560,7 +560,7 @@ public class VMTest {
     public void testOR_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60C3603C17"), invoke);
+        program = new Program(compile("PUSH1 0xC3 PUSH1 0x3C OR"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -574,7 +574,7 @@ public class VMTest {
     public void testOR_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60C017"), invoke);
+        program = new Program(compile("PUSH1 0xC0 OR"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -588,7 +588,7 @@ public class VMTest {
     public void testXOR_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60FF60FF18"), invoke);
+        program = new Program(compile("PUSH1 0xFF PUSH1 0xFF XOR"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -602,7 +602,7 @@ public class VMTest {
     public void testXOR_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600F60F018"), invoke);
+        program = new Program(compile("PUSH1 0x0F PUSH1 0xF0 XOR"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -617,7 +617,7 @@ public class VMTest {
     public void testXOR_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60C018"), invoke);
+        program = new Program(compile("PUSH1 0xC0 XOR"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -631,7 +631,7 @@ public class VMTest {
     public void testBYTE_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("65AABBCCDDEEFF601E1A"), invoke);
+        program = new Program(compile("PUSH6 0xAABBCCDDEEFF PUSH1 0x1E BYTE"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000EE";
 
         vm.step(program);
@@ -645,7 +645,7 @@ public class VMTest {
     public void testBYTE_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("65AABBCCDDEEFF60201A"), invoke);
+        program = new Program(compile("PUSH6 0xAABBCCDDEEFF PUSH1 0x20 BYTE"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -659,7 +659,7 @@ public class VMTest {
     public void testBYTE_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("65AABBCCDDEE3A601F1A"), invoke);
+        program = new Program(compile("PUSH6 0xAABBCCDDEE3A PUSH1 0x1F BYTE"), invoke);
         String expected = "000000000000000000000000000000000000000000000000000000000000003A";
 
         vm.step(program);
@@ -674,7 +674,7 @@ public class VMTest {
     public void testBYTE_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("65AABBCCDDEE3A1A"), invoke);
+        program = new Program(compile("PUSH6 0xAABBCCDDEE3A BYTE"), invoke);
         try {
             vm.step(program);
             vm.step(program);
