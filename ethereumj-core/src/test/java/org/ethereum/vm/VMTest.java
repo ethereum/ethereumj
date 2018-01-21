@@ -1590,7 +1590,7 @@ public class VMTest {
 
         VM vm = new VM();
 
-        program = new Program(Hex.decode("602260AA55"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE"), invoke);
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000AA";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1610,7 +1610,7 @@ public class VMTest {
 
         VM vm = new VM();
 
-        program = new Program(Hex.decode("602260AA55602260BB55"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0x22 PUSH1 0xBB SSTORE"), invoke);
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000BB";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1632,7 +1632,7 @@ public class VMTest {
     public void testSSTORE_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602255"), invoke);
+        program = new Program(compile("PUSH1 0x22 SSTORE"), invoke);
         try {
             vm.step(program);
             vm.step(program);
