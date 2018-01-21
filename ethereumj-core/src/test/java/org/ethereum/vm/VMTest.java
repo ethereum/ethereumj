@@ -2000,7 +2000,7 @@ public class VMTest {
     public void testMUL_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6003600202"), invoke);
+        program = new Program(compile("PUSH1 0x03 PUSH1 0x02 MUL"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000006";
 
         vm.step(program);
@@ -2015,7 +2015,7 @@ public class VMTest {
     public void testMUL_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("62222222600302"), invoke);
+        program = new Program(compile("PUSH3 0x222222 PUSH1 0x03 MUL"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000666666";
 
         vm.step(program);
@@ -2030,7 +2030,7 @@ public class VMTest {
     public void testMUL_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("622222226233333302"), invoke);
+        program = new Program(compile("PUSH3 0x222222 PUSH3 0x333333 MUL"), invoke);
         String s_expected_1 = "000000000000000000000000000000000000000000000000000006D3A05F92C6";
 
         vm.step(program);
@@ -2045,7 +2045,7 @@ public class VMTest {
     public void testMUL_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600102"), invoke);
+        program = new Program(compile("PUSH1 0x01 MUL"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -2057,7 +2057,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_1() {
         VM vm = new VM();
-        program = new Program(Hex.decode("60036002600409"), invoke);
+        program = new Program(compile("PUSH1 0x03 PUSH1 0x02 PUSH1 0x04 MULMOD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2072,7 +2072,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_2() {
         VM vm = new VM();
-        program = new Program(Hex.decode("622222226003600409"), invoke);
+        program = new Program(compile("PUSH3 0x222222 PUSH1 0x03 PUSH1 0x04 MULMOD"), invoke);
         String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000000C";
 
         vm.step(program);
@@ -2087,7 +2087,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_3() {
         VM vm = new VM();
-        program = new Program(Hex.decode("62222222623333336244444409"), invoke);
+        program = new Program(compile("PUSH3 0x222222 PUSH3 0x333333 PUSH3 0x444444 MULMOD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2102,7 +2102,7 @@ public class VMTest {
     @Test(expected = StackTooSmallException.class) // MULMOD OP mal
     public void testMULMOD_4() {
         VM vm = new VM();
-        program = new Program(Hex.decode("600109"), invoke);
+        program = new Program(compile("PUSH1 0x01 MULMOD"), invoke);
         try {
             vm.step(program);
             vm.step(program);
