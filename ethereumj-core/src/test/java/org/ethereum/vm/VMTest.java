@@ -1882,7 +1882,7 @@ public class VMTest {
     public void testADD_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6002600201"), invoke);
+        program = new Program(compile("PUSH1 0x02 PUSH1 0x02 ADD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -1897,7 +1897,7 @@ public class VMTest {
     public void testADD_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("611002600201"), invoke);
+        program = new Program(compile("PUSH2 0x1002 PUSH1 0x02 ADD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000001004";
 
         vm.step(program);
@@ -1912,7 +1912,7 @@ public class VMTest {
     public void testADD_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6110026512345678900901"), invoke);
+        program = new Program(compile("PUSH2 0x1002 PUSH6 0x123456789009 ADD"), invoke);
         String s_expected_1 = "000000000000000000000000000000000000000000000000000012345678A00B";
 
         vm.step(program);
@@ -1927,7 +1927,7 @@ public class VMTest {
     public void testADD_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123401"), invoke);
+        program = new Program(compile("PUSH2 0x1234 ADD"), invoke);
         try {
             vm.step(program);
             vm.step(program);
