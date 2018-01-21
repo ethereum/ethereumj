@@ -18,6 +18,7 @@
 package org.ethereum.test;
 
 import org.ethereum.vm.OpCode;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,10 @@ public class BytecodeCompiler {
             if (token.isEmpty())
                 continue;
 
-            bytecodes.add(OpCode.byteVal(token));
+            if (isHexadecimal(token))
+                compileHexadecimal(token, bytecodes);
+            else
+                bytecodes.add(OpCode.byteVal(token));
         }
 
         int nbytes = bytecodes.size();
@@ -47,5 +51,16 @@ public class BytecodeCompiler {
             bytes[k] = bytecodes.get(k).byteValue();
 
         return bytes;
+    }
+
+    private static boolean isHexadecimal(String token) {
+        return token.startsWith("0X");
+    }
+
+    private static void compileHexadecimal(String token, List<Byte> bytecodes) {
+        byte[] bytes = Hex.decode(token.substring(2));
+
+        for (int k = 0; k < bytes.length; k++)
+            bytecodes.add(bytes[k]);
     }
 }
