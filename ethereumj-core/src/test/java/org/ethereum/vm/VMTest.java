@@ -2205,8 +2205,7 @@ public class VMTest {
     public void testSDIV_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6103E87FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC1805" +
-                ""), invoke);
+        program = new Program(compile("PUSH2 0x03E8 PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC18 SDIV"), invoke);
         String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -2221,7 +2220,7 @@ public class VMTest {
     public void testSDIV_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60FF60FF05"), invoke);
+        program = new Program(compile("PUSH1 0xFF PUSH1 0xFF SDIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2236,7 +2235,7 @@ public class VMTest {
     public void testSDIV_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600060FF05"), invoke);
+        program = new Program(compile("PUSH1 0x00 PUSH1 0xFF SDIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2251,7 +2250,7 @@ public class VMTest {
     public void testSDIV_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60FF05"), invoke);
+        program = new Program(compile("PUSH1 0xFF SDIV"), invoke);
 
         try {
             vm.step(program);
