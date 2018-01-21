@@ -1187,18 +1187,17 @@ public class VMTest {
     private void testSWAPN_1(int n) {
 
         VM vm = new VM();
-        byte operation = (byte) (OpCode.SWAP1.val() + n - 1);
 
         String programCode = "";
         String top = new DataWord(0x10 + n).toString();
-        for (int i = n; i > -1; --i) {
-            programCode += "60" + oneByteToHexString((byte) (0x10 + i));
 
+        for (int i = n; i > -1; --i) {
+            programCode += "PUSH1 0x" + oneByteToHexString((byte) (0x10 + i)) + " ";
         }
 
-        programCode += Hex.toHexString(new byte[]{   (byte)(OpCode.SWAP1.val() + n - 1)   });
+        programCode += "SWAP" + n;
 
-        program = new Program(ByteUtil.appendByte(Hex.decode(programCode), operation), invoke);
+        program = new Program(compile(programCode), invoke);
 
         for (int i = 0; i < n + 2; ++i) {
             vm.step(program);
@@ -1212,7 +1211,7 @@ public class VMTest {
     public void testSWAPN_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("90"), invoke);
+        program = new Program(compile("SWAP1"), invoke);
 
         try {
             vm.step(program);
