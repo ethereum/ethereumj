@@ -1645,7 +1645,7 @@ public class VMTest {
     public void testSLOAD_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60AA54"), invoke);
+        program = new Program(compile("PUSH1 0xAA SLOAD"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1658,7 +1658,7 @@ public class VMTest {
     public void testSLOAD_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602260AA5560AA54"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0xAA SLOAD"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000022";
 
         vm.step(program);
@@ -1674,7 +1674,7 @@ public class VMTest {
     public void testSLOAD_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602260AA55603360CC5560CC54"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0x33 PUSH1 0xCC SSTORE PUSH1 0xCC SLOAD"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000033";
 
         vm.step(program);
@@ -1693,7 +1693,7 @@ public class VMTest {
     public void testSLOAD_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("56"), invoke);
+        program = new Program(compile("SLOAD"), invoke);
         try {
             vm.step(program);
         } finally {
@@ -1705,7 +1705,7 @@ public class VMTest {
     public void testPC_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("58"), invoke);
+        program = new Program(compile("PC"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1718,7 +1718,7 @@ public class VMTest {
     public void testPC_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602260AA5260AA5458"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA MSTORE PUSH1 0xAA SLOAD PC"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000008";
 
         vm.step(program);
