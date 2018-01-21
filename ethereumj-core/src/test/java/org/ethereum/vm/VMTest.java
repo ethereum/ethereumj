@@ -2115,7 +2115,7 @@ public class VMTest {
     public void testDIV_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6002600404"), invoke);
+        program = new Program(compile("PUSH1 0x02 PUSH1 0x04 DIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2130,7 +2130,7 @@ public class VMTest {
     public void testDIV_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6033609904"), invoke);
+        program = new Program(compile("PUSH1 0x33 PUSH1 0x99 DIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000003";
 
         vm.step(program);
@@ -2146,7 +2146,7 @@ public class VMTest {
     public void testDIV_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6022609904"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0x99 DIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -2161,7 +2161,7 @@ public class VMTest {
     public void testDIV_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6015609904"), invoke);
+        program = new Program(compile("PUSH1 0x15 PUSH1 0x99 DIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000007";
 
         vm.step(program);
@@ -2177,7 +2177,7 @@ public class VMTest {
     public void testDIV_5() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6004600704"), invoke);
+        program = new Program(compile("PUSH1 0x04 PUSH1 0x07 DIV"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2192,7 +2192,7 @@ public class VMTest {
     public void testDIV_6() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600704"), invoke);
+        program = new Program(compile("PUSH1 0x07 DIV"), invoke);
         try {
             vm.step(program);
             vm.step(program);
