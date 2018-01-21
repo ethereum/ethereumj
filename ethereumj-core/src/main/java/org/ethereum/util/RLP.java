@@ -643,10 +643,6 @@ public class RLP {
                     System.arraycopy(msgData, pos + lengthOfLength + 1, item,
                             0, length);
 
-                    byte[] rlpPrefix = new byte[lengthOfLength + 1];
-                    System.arraycopy(msgData, pos, rlpPrefix, 0,
-                            lengthOfLength + 1);
-
                     RLPItem rlpItem = new RLPItem(item);
                     rlpList.add(rlpItem);
                     pos += lengthOfLength + length + 1;
@@ -666,9 +662,6 @@ public class RLP {
                     if (length == 1 && (item[0] & 0xFF) < OFFSET_SHORT_ITEM) {
                         throw new RuntimeException("Single byte has been encoded as byte string");
                     }
-
-                    byte[] rlpPrefix = new byte[2];
-                    System.arraycopy(msgData, pos, rlpPrefix, 0, 2);
 
                     RLPItem rlpItem = new RLPItem(item);
                     rlpList.add(rlpItem);
