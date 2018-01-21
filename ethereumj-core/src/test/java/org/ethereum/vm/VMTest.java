@@ -688,7 +688,7 @@ public class VMTest {
     public void testISZERO_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600015"), invoke);
+        program = new Program(compile("PUSH1 0x00 ISZERO"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -701,7 +701,7 @@ public class VMTest {
     public void testISZERO_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602A15"), invoke);
+        program = new Program(compile("PUSH1 0x2A ISZERO"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -714,7 +714,7 @@ public class VMTest {
     public void testISZERO_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("15"), invoke);
+        program = new Program(compile("ISZERO"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -729,7 +729,7 @@ public class VMTest {
 
         VM vm = new VM();
         program = new Program(Hex.decode("602A602A14"), invoke);
-        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+        String expected = "000000000000000000000000000000000000000000000a0000000000000000001";
 
         vm.step(program);
         vm.step(program);
