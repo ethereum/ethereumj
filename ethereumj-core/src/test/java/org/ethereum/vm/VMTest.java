@@ -2521,7 +2521,7 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode("60036007600039123456"), invoke);
+                new Program(compile("PUSH1 0x03 PUSH1 0x07 PUSH1 0x00 CODECOPY SLT CALLVALUE JUMP"), invoke);
         String m_expected_1 = "1234560000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2771,7 +2771,7 @@ public class VMTest {
     @Test // MOD OP
     public void testMOD_1() {
         VM vm = new VM();
-        program = new Program(Hex.decode("6003600406"), invoke);
+        program = new Program(compile("PUSH1 0x03 PUSH1 0x04 MOD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2785,7 +2785,7 @@ public class VMTest {
     @Test // MOD OP
     public void testMOD_2() {
         VM vm = new VM();
-        program = new Program(Hex.decode("61012C6101F406"), invoke);
+        program = new Program(compile("PUSH2 0x012C PUSH2 0x01F4 MOD"), invoke);
         String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000C8";
 
         vm.step(program);
@@ -2799,7 +2799,7 @@ public class VMTest {
     @Test // MOD OP
     public void testMOD_3() {
         VM vm = new VM();
-        program = new Program(Hex.decode("6004600206"), invoke);
+        program = new Program(compile("PUSH1 0x04 PUSH1 0x02 MOD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2814,7 +2814,7 @@ public class VMTest {
     public void testMOD_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("600406"), invoke);
+        program = new Program(compile("PUSH1 0x04 MOD"), invoke);
 
         try {
             vm.step(program);
@@ -2828,7 +2828,7 @@ public class VMTest {
     @Test // SMOD OP
     public void testSMOD_1() {
         VM vm = new VM();
-        program = new Program(Hex.decode("6003600407"), invoke);
+        program = new Program(compile("PUSH1 0x03 PUSH1 0x04 SMOD"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2842,9 +2842,9 @@ public class VMTest {
     @Test // SMOD OP
     public void testSMOD_2() {
         VM vm = new VM();
-        program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE2" + //  -30
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "07"), invoke);
+        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE2 " + //  -30
+                "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SMOD"), invoke);
         String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC";
 
         vm.step(program);
@@ -2858,9 +2858,9 @@ public class VMTest {
     @Test // SMOD OP
     public void testSMOD_3() {
         VM vm = new VM();
-        program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "07"), invoke);
+        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+                "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SMOD"), invoke);
         String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC";
 
         vm.step(program);
@@ -2874,8 +2874,8 @@ public class VMTest {
     @Test(expected = StackTooSmallException.class) // SMOD OP mal
     public void testSMOD_4() {
         VM vm = new VM();
-        program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
-                "07"), invoke);
+        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+                "SMOD"), invoke);
         try {
             vm.step(program);
             vm.step(program);
