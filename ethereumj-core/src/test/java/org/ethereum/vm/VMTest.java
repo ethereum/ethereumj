@@ -1532,7 +1532,7 @@ public class VMTest {
     public void testMSTORE8_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6011600053"), invoke);
+        program = new Program(compile("PUSH1 0x11 PUSH1 0x00 MSTORE8"), invoke);
         String m_expected = "1100000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1547,7 +1547,7 @@ public class VMTest {
     public void testMSTORE8_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6022600153"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0x01 MSTORE8"), invoke);
         String m_expected = "0022000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1561,7 +1561,7 @@ public class VMTest {
     public void testMSTORE8_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6022602153"), invoke);
+        program = new Program(compile("PUSH1 0x22 PUSH1 0x21 MSTORE8"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0022000000000000000000000000000000000000000000000000000000000000";
 
@@ -1576,7 +1576,7 @@ public class VMTest {
     public void testMSTORE8_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602253"), invoke);
+        program = new Program(compile("PUSH1 0x22 MSTORE8"), invoke);
         try {
             vm.step(program);
             vm.step(program);
