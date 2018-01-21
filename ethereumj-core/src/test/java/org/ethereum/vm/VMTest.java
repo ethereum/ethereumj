@@ -728,8 +728,8 @@ public class VMTest {
     public void testEQ_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602A602A14"), invoke);
-        String expected = "000000000000000000000000000000000000000000000a0000000000000000001";
+        program = new Program(compile("PUSH1 0x2A PUSH1 0x2A EQ"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
         vm.step(program);
@@ -742,7 +742,7 @@ public class VMTest {
     public void testEQ_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("622A3B4C622A3B4C14"), invoke);
+        program = new Program(compile("PUSH3 0x2A3B4C PUSH3 0x2A3B4C EQ"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -756,7 +756,7 @@ public class VMTest {
     public void testEQ_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("622A3B5C622A3B4C14"), invoke);
+        program = new Program(compile("PUSH3 0x2A3B5C PUSH3 0x2A3B4C EQ"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -770,7 +770,7 @@ public class VMTest {
     public void testEQ_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("622A3B4C14"), invoke);
+        program = new Program(compile("PUSH3 0x2A3B4C EQ"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -784,7 +784,7 @@ public class VMTest {
     public void testGT_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001600211"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 GT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -798,7 +798,7 @@ public class VMTest {
     public void testGT_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001610F0011"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH2 0x0F00 GT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -812,7 +812,7 @@ public class VMTest {
     public void testGT_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6301020304610F0011"), invoke);
+        program = new Program(compile("PUSH4 0x01020304 PUSH2 0x0F00 GT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -826,7 +826,7 @@ public class VMTest {
     public void testGT_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("622A3B4C11"), invoke);
+        program = new Program(compile("PUSH3 0x2A3B4C GT"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -840,7 +840,7 @@ public class VMTest {
     public void testSGT_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001600213"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 SGT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -854,9 +854,9 @@ public class VMTest {
     public void testSGT_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "13"), invoke);
+        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+                "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SGT"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -871,9 +871,9 @@ public class VMTest {
     public void testSGT_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
-                "13"), invoke);
+        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57 " + // -169
+                "SGT"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -888,8 +888,8 @@ public class VMTest {
     public void testSGT_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "13"), invoke);
+        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SGT"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -903,7 +903,7 @@ public class VMTest {
     public void testLT_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001600210"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 LT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -917,7 +917,7 @@ public class VMTest {
     public void testLT_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001610F0010"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH2 0x0F00 LT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -931,7 +931,7 @@ public class VMTest {
     public void testLT_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6301020304610F0010"), invoke);
+        program = new Program(compile("PUSH4 0x01020304 PUSH2 0x0F00 LT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -945,7 +945,7 @@ public class VMTest {
     public void testLT_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("622A3B4C10"), invoke);
+        program = new Program(compile("PUSH3 0x2A3B4C LT"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -959,7 +959,7 @@ public class VMTest {
     public void testSLT_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001600212"), invoke);
+        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 SLT"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -973,9 +973,9 @@ public class VMTest {
     public void testSLT_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "12"), invoke);
+        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+                "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SLT"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -990,9 +990,9 @@ public class VMTest {
     public void testSLT_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
-                "12"), invoke);
+        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57 " + // -169
+                "SLT"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -1007,8 +1007,8 @@ public class VMTest {
     public void testSLT_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "12"), invoke);
+        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SLT"), invoke);
         try {
             vm.step(program);
             vm.step(program);
