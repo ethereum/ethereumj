@@ -2264,7 +2264,7 @@ public class VMTest {
     public void testSUB_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6004600603"), invoke);
+        program = new Program(compile("PUSH1 0x04 PUSH1 0x06 SUB"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2279,7 +2279,7 @@ public class VMTest {
     public void testSUB_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61444461666603"), invoke);
+        program = new Program(compile("PUSH2 0x4444 PUSH2 0x6666 SUB"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000002222";
 
         vm.step(program);
@@ -2294,7 +2294,7 @@ public class VMTest {
     public void testSUB_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("614444639999666603"), invoke);
+        program = new Program(compile("PUSH2 0x4444 PUSH4 0x99996666 SUB"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000099992222";
 
         vm.step(program);
@@ -2309,7 +2309,7 @@ public class VMTest {
     public void testSUB_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("639999666603"), invoke);
+        program = new Program(compile("PUSH4 0x99996666 SUB"), invoke);
         try {
             vm.step(program);
             vm.step(program);
