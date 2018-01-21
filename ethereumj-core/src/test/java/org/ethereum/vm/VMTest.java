@@ -1735,7 +1735,7 @@ public class VMTest {
     public void testJUMP_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60AA60BB600E5660CC60DD60EE5B60FF"), invoke);
+        program = new Program(compile("PUSH1 0xAA PUSH1 0xBB PUSH1 0x0E JUMP PUSH1 0xCC PUSH1 0xDD PUSH1 0xEE JUMPDEST PUSH1 0xFF"), invoke);
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
