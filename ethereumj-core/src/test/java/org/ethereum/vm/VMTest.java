@@ -1224,7 +1224,7 @@ public class VMTest {
     public void testMSTORE_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("611234600052"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000001234";
 
         vm.step(program);
@@ -1239,7 +1239,7 @@ public class VMTest {
     public void tesLog0() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123460005260206000A0"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 LOG0"), invoke);
 
         vm.step(program);
         vm.step(program);
@@ -1261,7 +1261,7 @@ public class VMTest {
     public void tesLog1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123460005261999960206000A1"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH1 0x20 PUSH1 0x00 LOG1"), invoke);
 
         vm.step(program);
         vm.step(program);
@@ -1284,7 +1284,7 @@ public class VMTest {
     public void tesLog2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123460005261999961666660206000A2"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH1 0x20 PUSH1 0x00 LOG2"), invoke);
 
         vm.step(program);
         vm.step(program);
@@ -1308,7 +1308,7 @@ public class VMTest {
     public void tesLog3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123460005261999961666661333360206000A3"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH2 0x3333 PUSH1 0x20 PUSH1 0x00 LOG3"), invoke);
 
         vm.step(program);
         vm.step(program);
@@ -1334,7 +1334,7 @@ public class VMTest {
     public void tesLog4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123460005261999961666661333361555560206000A4"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH2 0x3333 PUSH2 0x5555 PUSH1 0x20 PUSH1 0x00 LOG4"), invoke);
 
         vm.step(program);
         vm.step(program);
@@ -1361,7 +1361,7 @@ public class VMTest {
     public void testMSTORE_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("611234600052615566602052"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x5566 PUSH1 0x20 MSTORE"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000001234" +
                 "0000000000000000000000000000000000000000000000000000000000005566";
 
@@ -1379,7 +1379,7 @@ public class VMTest {
     public void testMSTORE_3() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("611234600052615566602052618888600052"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x5566 PUSH1 0x20 MSTORE PUSH2 0x8888 PUSH1 0x00 MSTORE"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000008888" +
                 "0000000000000000000000000000000000000000000000000000000000005566";
 
@@ -1400,7 +1400,7 @@ public class VMTest {
     public void testMSTORE_4() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123460A052"), invoke);
+        program = new Program(compile("PUSH2 0x1234 PUSH1 0xA0 MSTORE"), invoke);
         String expected = "" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
@@ -1420,7 +1420,7 @@ public class VMTest {
     public void testMSTORE_5() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("61123452"), invoke);
+        program = new Program(compile("PUSH2 0x1234 MSTORE"), invoke);
         try {
             vm.step(program);
             vm.step(program);
