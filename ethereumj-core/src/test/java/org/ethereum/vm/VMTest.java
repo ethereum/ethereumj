@@ -2322,7 +2322,7 @@ public class VMTest {
     public void testMSIZE_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("59"), invoke);
+        program = new Program(compile("MSIZE"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2335,7 +2335,7 @@ public class VMTest {
     public void testMSIZE_2() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("602060305259"), invoke);
+        program = new Program(compile("PUSH1 0x20 PUSH1 0x30 MSTORE MSIZE"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000060";
 
         vm.step(program);
@@ -2352,7 +2352,7 @@ public class VMTest {
     public void testSTOP_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("60206030601060306011602300"), invoke);
+        program = new Program(compile("PUSH1 0x20 PUSH1 0x30 PUSH1 0x10 PUSH1 0x30 PUSH1 0x11 PUSH1 0x23 STOP"), invoke);
         int expectedSteps = 7;
 
         int i = 0;
