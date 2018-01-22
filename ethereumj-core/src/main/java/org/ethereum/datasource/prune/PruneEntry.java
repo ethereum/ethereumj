@@ -96,10 +96,12 @@ public class PruneEntry {
         }
     }
 
-    public void resetIfDirty(JournalAction action) {
-        if (!decisionMade() && state.relatesTo(action)) {
-            state = PruneEntryState.UNACCEPTED;
-        }
+    public boolean isDirty() {
+        return !decisionMade();
+    }
+
+    public void reset() {
+        state = PruneEntryState.UNACCEPTED;
     }
 
     public void recycle() {
@@ -110,7 +112,7 @@ public class PruneEntry {
         return state == PruneEntryState.RECYCLED;
     }
 
-    public boolean isAccepted(JournalAction action) {
+    public boolean acceptedFor(JournalAction action) {
         return decisionMade() && state.relatesTo(action);
     }
 

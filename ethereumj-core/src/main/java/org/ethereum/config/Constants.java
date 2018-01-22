@@ -37,7 +37,7 @@ public class Constants {
 
     private static final int BEST_NUMBER_DIFF_LIMIT = 100;
 
-    private static final int LONGEST_FORK_CHAIN = 192;
+    private static final int MAX_FORK_BLOCKS = 192;
 
     private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
 
@@ -93,8 +93,8 @@ public class Constants {
 
     public int getMAX_CONTRACT_SZIE() { return Integer.MAX_VALUE; }
 
-    public static int getLONGEST_FORK_CHAIN() {
-        return LONGEST_FORK_CHAIN;
+    public static int getMAX_FORK_BLOCKS() {
+        return MAX_FORK_BLOCKS;
     }
 
     /**

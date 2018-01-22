@@ -34,12 +34,12 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.ethereum.db.PruningFlow.PersistUpdate;
-import static org.ethereum.db.PruningFlow.RevertUpdate;
+import static org.ethereum.db.PruneRuleSet.AcceptChanges;
+import static org.ethereum.db.PruneRuleSet.PropagateDeletions;
+import static org.ethereum.db.PruneRuleSet.RevertChanges;
 import static org.ethereum.util.ByteUtil.intToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -69,10 +69,10 @@ public class PruneTest {
         journalDB.commitUpdates(intToBytes(2));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(1), PersistUpdate);
+        journalDB.processUpdate(intToBytes(1), AcceptChanges, PropagateDeletions);
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(2), RevertUpdate);
+        journalDB.processUpdate(intToBytes(2), RevertChanges);
         checkKeys(db.getStorage(), "11", "22", "33");
 
         put(journalDB, "22");
@@ -87,10 +87,10 @@ public class PruneTest {
         journalDB.commitUpdates(intToBytes(4));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(3), PersistUpdate);
+        journalDB.processUpdate(intToBytes(3), AcceptChanges, PropagateDeletions);
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(4), PersistUpdate);
+        journalDB.processUpdate(intToBytes(4), AcceptChanges, PropagateDeletions);
         checkKeys(db.getStorage(), "11", "33");
 
     }

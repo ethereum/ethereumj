@@ -20,7 +20,7 @@ package org.ethereum.datasource;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.prune.JournalAction;
 import org.ethereum.datasource.prune.PruneEntry;
-import org.ethereum.db.PruningFlow;
+import org.ethereum.db.PruneRuleSet;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -32,7 +32,7 @@ import java.util.function.BiFunction;
 
 import static org.ethereum.datasource.prune.JournalAction.DELETION;
 import static org.ethereum.datasource.prune.JournalAction.INSERTION;
-import static org.ethereum.db.PruningRule.ReleaseUpdate;
+import static org.ethereum.db.PruneRule.ReleaseUpdate;
 
 /**
  * The JournalSource records all the changes which were made before each commitUpdate
@@ -181,16 +181,18 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      * Fires pruning rules for each insertion and deletion made under given update hash
      * and propagates pruning result to the storage, it also removes update if requested
      */
-    public synchronized void processUpdate(byte[] updateHash, PruningFlow rules) {
+    public synchronized void processUpdate(byte[] updateHash, PruneRuleSet... sets) {
 
         Update update = journal.get(updateHash);
         if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
 
-        update.insertedKeys.forEach(key -> invokePruning(key, INSERTION, rules::apply));
-        update.deletedKeys.forEach(key -> invokePruning(key, DELETION, rules::apply));
-
-        if (rules.has(ReleaseUpdate)) {
-            journal.delete(updateHash);
+        for (PruneRuleSet set : sets) {
+            if (set.isApplicableTo(INSERTION))
+                update.insertedKeys.forEach(key -> invokePruning(key, INSERTION, set::apply));
+            if (set.isApplicableTo(DELETION))
+                update.deletedKeys.forEach(key -> invokePruning(key, DELETION, set::apply));
+            if (set.has(ReleaseUpdate))
+                journal.delete(updateHash);
         }
     }
 
