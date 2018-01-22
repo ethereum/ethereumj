@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -29,7 +30,6 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static java.util.Collections.*;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static org.ethereum.util.BIUtil.toBI;
 
@@ -93,7 +93,7 @@ public class TransactionExecutionSummary {
     }
 
     private static BigInteger decodeBigInteger(byte[] encoded) {
-        return isEmpty(encoded) ? BigInteger.ZERO : new BigInteger(1, encoded);
+        return ByteUtil.bytesToBigInteger(encoded);
     }
 
     public byte[] getEncoded() {
