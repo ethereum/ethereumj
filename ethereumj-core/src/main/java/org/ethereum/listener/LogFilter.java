@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.jsonrpc;
+package org.ethereum.listener;
 
 import org.ethereum.core.Bloom;
 import org.ethereum.vm.DataWord;
@@ -81,7 +81,7 @@ public class LogFilter {
         return true;
     }
 
-    boolean matchesContractAddress(byte[] toAddr) {
+    public boolean matchesContractAddress(byte[] toAddr) {
         initBlooms();
         for (byte[] address : contractAddresses) {
             if (Arrays.equals(address, toAddr)) return true;
