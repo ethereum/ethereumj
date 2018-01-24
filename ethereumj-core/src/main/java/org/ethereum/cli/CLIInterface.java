@@ -35,6 +35,9 @@ import java.util.Map;
 @Component
 public class CLIInterface {
 
+    private CLIInterface() {
+    }
+
     private static final Logger logger = LoggerFactory.getLogger("general");
 
 
@@ -42,46 +45,50 @@ public class CLIInterface {
 
         try {
             Map<String, Object> cliOptions = new HashMap<>();
+
             for (int i = 0; i < args.length; ++i) {
+                String arg = args[i];
 
-                // override the db directory
-                if (args[i].equals("--help")) {
-
+                // show help
+                if ("--help".equals(arg)) {
                     printHelp();
+
                     System.exit(1);
                 }
 
                 // override the db directory
-                if (args[i].equals("-db") && i + 1 < args.length) {
+                if ("-db".equals(arg) && i + 1 < args.length) {
                     String db = args[i + 1];
                     logger.info("DB directory set to [{}]", db);
                     cliOptions.put(SystemProperties.PROPERTY_DB_DIR, db);
                 }
 
                 // override the listen port directory
-                if (args[i].equals("-listen") && i + 1 < args.length) {
+                if ("-listen".equals(arg) && i + 1 < args.length) {
                     String port = args[i + 1];
                     logger.info("Listen port set to [{}]", port);
                     cliOptions.put(SystemProperties.PROPERTY_LISTEN_PORT, port);
                 }
 
                 // override the connect host:port directory
-                if (args[i].startsWith("-connect") && i + 1 < args.length) {
+                if (arg.startsWith("-connect") && i + 1 < args.length) {
                     String connectStr = args[i + 1];
                     logger.info("Connect URI set to [{}]", connectStr);
                     URI uri = new URI(connectStr);
-                    if (!uri.getScheme().equals("enode"))
+
+                    if (!"enode".equals(uri.getScheme()))
                         throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
+
                     List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
                     cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
                 }
 
-                if (args[i].equals("-connectOnly")) {
+                if ("-connectOnly".equals(arg)) {
                     cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
                 }
 
                 // override the listen port directory
-                if (args[i].equals("-reset") && i + 1 < args.length) {
+                if ("-reset".equals(arg) && i + 1 < args.length) {
                     Boolean resetStr = interpret(args[i + 1]);
                     logger.info("Resetting db set to [{}]", resetStr);
                     cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetStr.toString());
@@ -89,8 +96,9 @@ public class CLIInterface {
             }
 
             if (cliOptions.size() > 0) {
-                logger.info("Overriding config file with CLI options: " + cliOptions);
+                logger.info("Overriding config file with CLI options: {}", cliOptions);
             }
+
             SystemProperties.getDefault().overrideParams(cliOptions);
 
         } catch (Throwable e) {
@@ -100,9 +108,8 @@ public class CLIInterface {
     }
 
     private static Boolean interpret(String arg) {
-
-        if (arg.equals("on") || arg.equals("true") || arg.equals("yes")) return true;
-        if (arg.equals("off") || arg.equals("false") || arg.equals("no")) return false;
+        if ("on".equals(arg) || "true".equals(arg) || "yes".equals(arg)) return true;
+        if ("off".equals(arg) || "false".equals(arg) || "no".equals(arg)) return false;
 
         throw new Error("Can't interpret the answer: " + arg);
     }
