@@ -42,45 +42,21 @@ public class CLIInterface {
 
 
     public static void call(String[] args) {
-
         try {
             Map<String, Object> cliOptions = new HashMap<>();
 
             for (int i = 0; i < args.length; ++i) {
                 String arg = args[i];
 
-                // show help
-                if ("--help".equals(arg)) {
-                    printHelp();
+                processHelp(arg);
 
-                    System.exit(1);
-                }
-
-                // override the db directory
-                if ("-db".equals(arg) && i + 1 < args.length) {
-                    String db = args[i + 1];
-                    logger.info("DB directory set to [{}]", db);
-                    cliOptions.put(SystemProperties.PROPERTY_DB_DIR, db);
-                }
-
-                // override the listen port directory
-                if ("-listen".equals(arg) && i + 1 < args.length) {
-                    String port = args[i + 1];
-                    logger.info("Listen port set to [{}]", port);
-                    cliOptions.put(SystemProperties.PROPERTY_LISTEN_PORT, port);
-                }
-
-                // override the connect host:port directory
-                if (arg.startsWith("-connect") && i + 1 < args.length) {
-                    String connectStr = args[i + 1];
-                    logger.info("Connect URI set to [{}]", connectStr);
-                    URI uri = new URI(connectStr);
-
-                    if (!"enode".equals(uri.getScheme()))
-                        throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
-
-                    List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
-                    cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
+                if (i + 1 < args.length) {
+                    if (processDbDirectory(arg, args[i + 1], cliOptions))
+                        continue;
+                    if (processListenPort(arg, args[i + 1], cliOptions))
+                        continue;
+                    if (processConnect(arg, args[i + 1], cliOptions))
+                        continue;
                 }
 
                 if ("-connectOnly".equals(arg)) {
@@ -105,6 +81,57 @@ public class CLIInterface {
             logger.error("Error parsing command line: [{}]", e.getMessage());
             System.exit(1);
         }
+    }
+
+    // show help
+    private static void processHelp(String arg) {
+        if ("--help".equals(arg)) {
+            printHelp();
+
+            System.exit(1);
+        }
+    }
+
+    // override the db directory
+    private static boolean processDbDirectory(String arg, String db, Map<String, Object> cliOptions) {
+        if (!"-db".equals(arg))
+            return false;
+
+        logger.info("DB directory set to [{}]", db);
+
+        cliOptions.put(SystemProperties.PROPERTY_DB_DIR, db);
+
+        return true;
+    }
+
+    // override the listen port directory
+    private static boolean processListenPort(String arg, String port, Map<String, Object> cliOptions) {
+        if (!"-listen".equals(arg))
+            return false;
+
+        logger.info("Listen port set to [{}]", port);
+
+        cliOptions.put(SystemProperties.PROPERTY_LISTEN_PORT, port);
+
+        return true;
+    }
+
+    // override the connect host:port directory
+    private static boolean processConnect(String arg, String connectStr, Map<String, Object> cliOptions) {
+        if (!arg.startsWith("-connect"))
+            return false;
+
+        logger.info("Connect URI set to [{}]", connectStr);
+        URI uri = new URI(connectStr);
+
+        if (!"enode".equals(uri.getScheme()))
+            throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
+
+        List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
+
+        cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
+
+        return true;
     }
 
     private static Boolean interpret(String arg) {
