@@ -65,7 +65,7 @@ public class JSONReader {
 
     public static List<String> loadJSONsFromCommitImpl(List<String> filenames, final String shacommit) {
 
-        int threads = 64;
+        int threads = 4;
         if (threadPool == null) {
             threadPool = Executors.newFixedThreadPool(threads);
         }
