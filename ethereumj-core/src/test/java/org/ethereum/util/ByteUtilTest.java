@@ -17,20 +17,19 @@
  */
 package org.ethereum.util;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Assert;
 import org.junit.Test;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class ByteUtilTest {
 
@@ -111,20 +110,20 @@ public class ByteUtilTest {
         assertEquals(0, ByteUtil.byteArrayToInt(null));
         assertEquals(0, ByteUtil.byteArrayToInt(new byte[0]));
 
-//      byte[] x = new byte[] { 5,1,7,0,8 };
-//      long start = System.currentTimeMillis();
-//      for (int i = 0; i < 100000000; i++) {
-//           ByteArray.read32bit(x, 0);
-//      }
-//      long end = System.currentTimeMillis();
-//      System.out.println(end - start + "ms");
-//
-//      long start1 = System.currentTimeMillis();
-//      for (int i = 0; i < 100000000; i++) {
-//          new BigInteger(1, x).intValue();
-//      }
-//      long end1 = System.currentTimeMillis();
-//      System.out.println(end1 - start1 + "ms");
+        //      byte[] x = new byte[] { 5,1,7,0,8 };
+        //      long start = System.currentTimeMillis();
+        //      for (int i = 0; i < 100000000; i++) {
+        //           ByteArray.read32bit(x, 0);
+        //      }
+        //      long end = System.currentTimeMillis();
+        //      System.out.println(end - start + "ms");
+        //
+        //      long start1 = System.currentTimeMillis();
+        //      for (int i = 0; i < 100000000; i++) {
+        //          new BigInteger(1, x).intValue();
+        //      }
+        //      long end1 = System.currentTimeMillis();
+        //      System.out.println(end1 - start1 + "ms");
 
     }
 
@@ -238,7 +237,7 @@ public class ByteUtilTest {
     /**
      * This test shows the difference between iterating over,
      * and comparing byte[] vs BigInteger value.
-     *
+     * <p>
      * Results indicate that the former has ~15x better performance.
      * Therefore this is used in the Miner.mine() method.
      */
@@ -265,7 +264,8 @@ public class ByteUtilTest {
                 }
                 counter2 = counter2.add(BigInteger.ONE);
             }
-            System.out.println(System.currentTimeMillis() - start2 + "ms to reach: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
+            System.out.println(System.currentTimeMillis() - start2 + "ms to reach: " +
+                                       Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
         }
     }
 
@@ -354,19 +354,12 @@ public class ByteUtilTest {
         List<Integer> found = new ArrayList<>();
         for (int i = 0; i < (data.length * 8); i++) {
             int res = ByteUtil.getBit(data, i);
-            if (res == 1)
-                if (i != 24 && i != 25 && i != 2)
-                    assertTrue(false);
-                else
-                    found.add(i);
-            else {
-                if (i == 24 || i == 25 || i == 2)
-                    assertTrue(false);
+            if (res == 1) { if (i != 24 && i != 25 && i != 2) { assertTrue(false); } else { found.add(i); } } else {
+                if (i == 24 || i == 25 || i == 2) { assertTrue(false); }
             }
         }
 
-        if (found.size() != 3)
-            assertTrue(false);
+        if (found.size() != 3) { assertTrue(false); }
         assertTrue(found.get(0) == 2);
         assertTrue(found.get(1) == 24);
         assertTrue(found.get(2) == 25);
@@ -424,19 +417,19 @@ public class ByteUtilTest {
         {
             String str = "0000";
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {0, 0};
+            byte[] expected = new byte[]{0, 0};
             assertArrayEquals(expected, actuals);
         }
         {
             String str = "0x0000";
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {0, 0};
+            byte[] expected = new byte[]{0, 0};
             assertArrayEquals(expected, actuals);
         }
         {
             String str = "0x45a6";
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {69, -90};
+            byte[] expected = new byte[]{69, -90};
             assertArrayEquals(expected, actuals);
         }
         {
@@ -448,31 +441,31 @@ public class ByteUtilTest {
         {
             String str = "0x"; // Empty
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {};
+            byte[] expected = new byte[]{};
             assertArrayEquals(expected, actuals);
         }
         {
             String str = "0"; // Same as 0x00
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {0};
+            byte[] expected = new byte[]{0};
             assertArrayEquals(expected, actuals);
         }
         {
             String str = "0x00"; // This case shouldn't be empty array
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {0};
+            byte[] expected = new byte[]{0};
             assertArrayEquals(expected, actuals);
         }
         {
             String str = "0xd"; // Should work with odd length, adding leading 0
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {13};
+            byte[] expected = new byte[]{13};
             assertArrayEquals(expected, actuals);
         }
         {
             String str = "0xd0d"; // Should work with odd length, adding leading 0
             byte[] actuals = ByteUtil.hexStringToBytes(str);
-            byte[] expected = new byte[] {13, 13};
+            byte[] expected = new byte[]{13, 13};
             assertArrayEquals(expected, actuals);
         }
     }

@@ -17,10 +17,9 @@
  */
 package org.ethereum.facade;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Transaction;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Mikhail Kalinin

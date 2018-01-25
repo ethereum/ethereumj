@@ -17,6 +17,8 @@
  */
 package org.ethereum.longrun;
 
+import static org.ethereum.core.BlockchainImpl.calcReceiptsTrie;
+
 import org.ethereum.config.CommonConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -28,15 +30,12 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
-import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
-import org.ethereum.datasource.SourceCodec;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +45,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.ethereum.core.BlockchainImpl.calcReceiptsTrie;
-
 /**
  * Validation for all kind of blockchain data
  */
@@ -56,7 +53,7 @@ public class BlockchainValidation {
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
 
     private static Integer getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
-                                                  byte[] ... roots) {
+                                                  byte[]... roots) {
         final AtomicInteger ret = new AtomicInteger(0);
         for (byte[] root : roots) {
             SecureTrie trie = new SecureTrie(stateDS, root);
@@ -162,8 +159,11 @@ public class BlockchainValidation {
                 assert ((BlockchainImpl) ethereum.getBlockchain()).validateUncles(currentBlock);
                 // Validate total difficulty
                 Assert.assertTrue(String.format("Total difficulty, count %s == %s blockStore",
-                        curTotalDiff, blockStore.getTotalDifficultyForHash(currentBlock.getHash())),
-                        curTotalDiff.compareTo(blockStore.getTotalDifficultyForHash(currentBlock.getHash())) == 0);
+                                                curTotalDiff,
+                                                blockStore.getTotalDifficultyForHash(currentBlock.getHash())),
+                                  curTotalDiff.compareTo(blockStore.getTotalDifficultyForHash(currentBlock.getHash())
+                                  ) ==
+                                          0);
                 curTotalDiff = curTotalDiff.subtract(currentBlock.getDifficultyBI());
 
                 blockNumber--;
@@ -172,11 +172,14 @@ public class BlockchainValidation {
             // Checking total difficulty for genesis
             currentBlock = ethereum.getBlockchain().getBlockByNumber(0);
             Assert.assertTrue(String.format("Total difficulty for genesis, count %s == %s blockStore",
-                    curTotalDiff, blockStore.getTotalDifficultyForHash(currentBlock.getHash())),
-                    curTotalDiff.compareTo(blockStore.getTotalDifficultyForHash(currentBlock.getHash())) == 0);
+                                            curTotalDiff,
+                                            blockStore.getTotalDifficultyForHash(currentBlock.getHash())),
+                              curTotalDiff.compareTo(blockStore.getTotalDifficultyForHash(currentBlock.getHash())) ==
+                                      0);
             Assert.assertTrue(String.format("Total difficulty, count %s == %s genesis",
-                    curTotalDiff, currentBlock.getDifficultyBI()),
-                    curTotalDiff.compareTo(currentBlock.getDifficultyBI()) == 0);
+                                            curTotalDiff,
+                                            currentBlock.getDifficultyBI()),
+                              curTotalDiff.compareTo(currentBlock.getDifficultyBI()) == 0);
 
             testLogger.info("Checking blocks successful, ended on block: {}", blockNumber + 1);
         } catch (Exception | AssertionError ex) {
@@ -195,7 +198,8 @@ public class BlockchainValidation {
 
                 List<TransactionReceipt> receipts = new ArrayList<>();
                 for (Transaction tx : currentBlock.getTransactionsList()) {
-                    TransactionInfo txInfo = ((BlockchainImpl) ethereum.getBlockchain()).getTransactionInfo(tx.getHash());
+                    TransactionInfo txInfo =
+                            ((BlockchainImpl) ethereum.getBlockchain()).getTransactionInfo(tx.getHash());
                     assert txInfo != null;
                     receipts.add(txInfo.getReceipt());
                 }

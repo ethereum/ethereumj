@@ -28,7 +28,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Properties;
 
 /**
@@ -46,7 +50,10 @@ class Initializer implements BeanPostProcessor {
      * Effectively is called before any other bean is initialized
      */
     private void initConfig(SystemProperties config) {
-        logger.info("Running {},  core version: {}-{}", config.genesisInfo(), config.projectVersion(), config.projectVersionModifier());
+        logger.info("Running {},  core version: {}-{}",
+                    config.genesisInfo(),
+                    config.projectVersion(),
+                    config.projectVersionModifier());
         BuildInfo.printInfo();
 
         databaseVersionHandler.process(config);
@@ -97,12 +104,8 @@ class Initializer implements BeanPostProcessor {
      */
     public static class DatabaseVersionHandler {
 
-        public enum Behavior {
-            EXIT, RESET, IGNORE
-        }
-
         public void process(SystemProperties config) {
-            if (config.databaseReset() && config.databaseResetBlock() == 0){
+            if (config.databaseReset() && config.databaseResetBlock() == 0) {
                 FileUtil.recursiveDelete(config.databaseDir());
                 putDatabaseVersion(config, config.databaseVersion());
                 logger.info("Database reset done");
@@ -110,8 +113,8 @@ class Initializer implements BeanPostProcessor {
             }
 
             final File versionFile = getDatabaseVersionFile(config);
-            final Behavior behavior = Behavior.valueOf(
-                    config.getProperty("database.incompatibleDatabaseBehavior", Behavior.EXIT.toString()).toUpperCase());
+            final Behavior behavior = Behavior.valueOf(config.getProperty("database.incompatibleDatabaseBehavior",
+                                                                          Behavior.EXIT.toString()).toUpperCase());
 
 
             // Detect database version
@@ -128,13 +131,14 @@ class Initializer implements BeanPostProcessor {
                 if (actualVersion.equals(expectedVersion) || (isVersionFileNotFound && expectedVersion.equals(1))) {
                     logger.info("Database directory location: '{}', version: {}", config.databaseDir(), actualVersion);
                 } else {
-                    logger.warn("Detected incompatible database version. Detected:{}, required:{}", actualVersion, expectedVersion);
+                    logger.warn("Detected incompatible database version. Detected:{}, required:{}",
+                                actualVersion,
+                                expectedVersion);
                     if (behavior == Behavior.EXIT) {
-                        Utils.showErrorAndExit(
-                                "Incompatible database version " + actualVersion,
-                                "Please remove database directory manually or set `database.incompatibleDatabaseBehavior` to `RESET`",
-                                "Database directory location is " + config.databaseDir()
-                        );
+                        Utils.showErrorAndExit("Incompatible database version " + actualVersion,
+                                               "Please remove database directory manually or set `database" +
+                                                       ".incompatibleDatabaseBehavior` to `RESET`",
+                                               "Database directory location is " + config.databaseDir());
                     } else if (behavior == Behavior.RESET) {
                         boolean res = FileUtil.recursiveDelete(config.databaseDir());
                         if (!res) {
@@ -160,7 +164,7 @@ class Initializer implements BeanPostProcessor {
 
         /**
          * @return database version stored in specific location in database dir
-         *         or -1 if can't detect version due to error
+         * or -1 if can't detect version due to error
          */
         public Integer getDatabaseVersion(File file) {
             if (!file.exists()) {
@@ -191,6 +195,12 @@ class Initializer implements BeanPostProcessor {
 
         private File getDatabaseVersionFile(SystemProperties config) {
             return new File(config.databaseDir() + "/version.properties");
+        }
+
+        public enum Behavior {
+            EXIT,
+            RESET,
+            IGNORE
         }
     }
 }

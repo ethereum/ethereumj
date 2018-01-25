@@ -17,6 +17,9 @@
  */
 package org.ethereum.net.rlpx;
 
+import static java.lang.Math.min;
+import static org.ethereum.net.rlpx.FrameCodec.Frame;
+
 import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
@@ -42,11 +45,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static java.lang.Math.min;
-import static org.ethereum.net.rlpx.FrameCodec.Frame;
 
 /**
  * The Netty codec which encodes/decodes RPLx frames to subprotocol Messages
@@ -55,32 +59,24 @@ import static org.ethereum.net.rlpx.FrameCodec.Frame;
 @Scope("prototype")
 public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
+    public static final int NO_FRAMING = Integer.MAX_VALUE >> 1;
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
-
-    public static final int NO_FRAMING = Integer.MAX_VALUE >> 1;
-
+    @Autowired
+    EthereumListener ethereumListener;
+    Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(16);
+    // LRU avoids OOM on invalid peers
+    AtomicInteger contextIdCounter = new AtomicInteger(1);
     private int maxFramePayloadSize = NO_FRAMING;
-
     private Channel channel;
     private MessageCodesResolver messageCodesResolver;
-
     private MessageFactory p2pMessageFactory;
     private MessageFactory ethMessageFactory;
     private MessageFactory shhMessageFactory;
     private MessageFactory bzzMessageFactory;
     private EthVersion ethVersion;
-
-    @Autowired
-    EthereumListener ethereumListener;
-
     private SystemProperties config;
-
     private boolean supportChunkedFrames = false;
-
-    Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(16);
-    // LRU avoids OOM on invalid peers
-    AtomicInteger contextIdCounter = new AtomicInteger(1);
 
     public MessageCodec() {
     }
@@ -102,10 +98,11 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             Pair<? extends List<Frame>, AtomicInteger> frameParts = incompleteFrames.get(frame.contextId);
             if (frameParts == null) {
                 if (frame.totalFrameSize < 0) {
-//                    loggerNet.warn("No initial frame received for context-id: " + frame.contextId + ". Discarding this frame as invalid.");
+                    //                    loggerNet.warn("No initial frame received for context-id: " + frame
+                    // .contextId + ". Discarding this frame as invalid.");
                     // TODO: refactor this logic (Cpp sends non-chunked frames with context-id)
                     Message message = decodeMessage(ctx, Collections.singletonList(frame));
-                    if (message == null) return;
+                    if (message == null) { return; }
                     out.add(message);
                     return;
                 } else {
@@ -114,7 +111,9 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
                 }
             } else {
                 if (frame.totalFrameSize >= 0) {
-                    loggerNet.warn("Non-initial chunked frame shouldn't contain totalFrameSize field (context-id: " + frame.contextId + ", totalFrameSize: " + frame.totalFrameSize + "). Discarding this frame and all previous.");
+                    loggerNet.warn("Non-initial chunked frame shouldn't contain totalFrameSize field (context-id: " +
+                                           frame.contextId + ", totalFrameSize: " + frame.totalFrameSize +
+                                           "). Discarding this frame and all previous.");
                     incompleteFrames.remove(frame.contextId);
                     return;
                 }
@@ -123,11 +122,14 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             frameParts.getLeft().add(frame);
             int curSize = frameParts.getRight().addAndGet(frame.size);
 
-            if (loggerWire.isDebugEnabled())
-                loggerWire.debug("Recv: Chunked (" + curSize + " of " + frameParts.getLeft().get(0).totalFrameSize + ") [size: " + frame.getSize() + "]");
+            if (loggerWire.isDebugEnabled()) {
+                loggerWire.debug("Recv: Chunked (" + curSize + " of " + frameParts.getLeft().get(0).totalFrameSize +
+                                         ") [size: " + frame.getSize() + "]");
+            }
 
             if (curSize > frameParts.getLeft().get(0).totalFrameSize) {
-                loggerNet.warn("The total frame chunks size (" + curSize + ") is greater than expected (" + frameParts.getLeft().get(0).totalFrameSize + "). Discarding the frame.");
+                loggerNet.warn("The total frame chunks size (" + curSize + ") is greater than expected (" +
+                                       frameParts.getLeft().get(0).totalFrameSize + "). Discarding the frame.");
                 incompleteFrames.remove(frame.contextId);
                 return;
             }
@@ -151,8 +153,9 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             pos += ByteStreams.read(frame.getStream(), payload, pos, frame.getSize());
         }
 
-        if (loggerWire.isDebugEnabled())
+        if (loggerWire.isDebugEnabled()) {
             loggerWire.debug("Recv: Encoded: {} [{}]", frameType, Hex.toHexString(payload));
+        }
 
         Message msg;
         try {
@@ -163,8 +166,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             return null;
         }
 
-        if (loggerNet.isDebugEnabled())
-            loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
+        if (loggerNet.isDebugEnabled()) { loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString()); }
 
         ethereumListener.onRecvMessage(channel, msg);
 
@@ -177,13 +179,13 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
         ethereumListener.trace(output);
 
-        if (loggerNet.isDebugEnabled())
-            loggerNet.debug("To:   {}    Send:  {}", channel, msg);
+        if (loggerNet.isDebugEnabled()) { loggerNet.debug("To:   {}    Send:  {}", channel, msg); }
 
         byte[] encoded = msg.getEncoded();
 
-        if (loggerWire.isDebugEnabled())
+        if (loggerWire.isDebugEnabled()) {
             loggerWire.debug("Send: Encoded: {} [{}]", getCode(msg.getCommand()), Hex.toHexString(encoded));
+        }
 
         List<Frame> frames = splitMessageToFrames(msg);
 
@@ -197,10 +199,10 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         List<Frame> ret = new ArrayList<>();
         byte[] bytes = msg.getEncoded();
         int curPos = 0;
-        while(curPos < bytes.length) {
+        while (curPos < bytes.length) {
             int newPos = min(curPos + maxFramePayloadSize, bytes.length);
-            byte[] frameBytes = curPos == 0 && newPos == bytes.length ? bytes :
-                    Arrays.copyOfRange(bytes, curPos, newPos);
+            byte[] frameBytes =
+                    curPos == 0 && newPos == bytes.length ? bytes : Arrays.copyOfRange(bytes, curPos, newPos);
             ret.add(new Frame(code, frameBytes));
             curPos = newPos;
         }
@@ -209,7 +211,8 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             // frame has been split
             int contextId = contextIdCounter.getAndIncrement();
             ret.get(0).totalFrameSize = bytes.length;
-            loggerWire.debug("Message (size " + bytes.length + ") split to " + ret.size() + " frames. Context-id: " + contextId);
+            loggerWire.debug(
+                    "Message (size " + bytes.length + ") split to " + ret.size() + " frames. Context-id: " + contextId);
             for (Frame frame : ret) {
                 frame.contextId = contextId;
             }
@@ -227,22 +230,22 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     /* TODO: this dirty hack is here cause we need to use message
            TODO: adaptive id on high message abstraction level,
            TODO: need a solution here*/
-    private byte getCode(Enum msgCommand){
+    private byte getCode(Enum msgCommand) {
         byte code = 0;
 
-        if (msgCommand instanceof P2pMessageCodes){
+        if (msgCommand instanceof P2pMessageCodes) {
             code = messageCodesResolver.withP2pOffset(((P2pMessageCodes) msgCommand).asByte());
         }
 
-        if (msgCommand instanceof EthMessageCodes){
+        if (msgCommand instanceof EthMessageCodes) {
             code = messageCodesResolver.withEthOffset(((EthMessageCodes) msgCommand).asByte());
         }
 
-        if (msgCommand instanceof ShhMessageCodes){
-            code = messageCodesResolver.withShhOffset(((ShhMessageCodes)msgCommand).asByte());
+        if (msgCommand instanceof ShhMessageCodes) {
+            code = messageCodesResolver.withShhOffset(((ShhMessageCodes) msgCommand).asByte());
         }
 
-        if (msgCommand instanceof BzzMessageCodes){
+        if (msgCommand instanceof BzzMessageCodes) {
             code = messageCodesResolver.withBzzOffset(((BzzMessageCodes) msgCommand).asByte());
         }
 
@@ -274,7 +277,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         throw new IllegalArgumentException("No such message: " + code + " [" + Hex.toHexString(payload) + "]");
     }
 
-    public void setChannel(Channel channel){
+    public void setChannel(Channel channel) {
         this.channel = channel;
     }
 

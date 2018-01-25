@@ -17,6 +17,8 @@
  */
 package org.ethereum.config.blockchain;
 
+import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
@@ -24,8 +26,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.vm.GasCost;
 
 import java.util.Objects;
-
-import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
 
 /**
  * Hard fork includes following EIPs:
@@ -35,12 +35,7 @@ import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
  */
 public class Eip160HFConfig extends Eip150HFConfig {
 
-    static class GasCostEip160HF extends GasCostEip150HF {
-        public int getEXP_BYTE_GAS()        {     return 50;     }
-    }
-
     private static final GasCost NEW_GAS_COST = new GasCostEip160HF();
-
     private final Constants constants;
 
     public Eip160HFConfig(BlockchainConfig parent) {
@@ -76,11 +71,16 @@ public class Eip160HFConfig extends Eip150HFConfig {
     @Override
     public boolean acceptTransactionSignature(Transaction tx) {
 
-        if (tx.getSignature() == null) return false;
+        if (tx.getSignature() == null) { return false; }
 
         // Restoring old logic. Making this through inheritance stinks too much
-        if (!tx.getSignature().validateComponents() ||
-                tx.getSignature().s.compareTo(SECP256K1N_HALF) > 0) return false;
-        return  tx.getChainId() == null || Objects.equals(getChainId(), tx.getChainId());
+        if (!tx.getSignature().validateComponents() || tx.getSignature().s.compareTo(SECP256K1N_HALF) > 0) {
+            return false;
+        }
+        return tx.getChainId() == null || Objects.equals(getChainId(), tx.getChainId());
+    }
+
+    static class GasCostEip160HF extends GasCostEip150HF {
+        public int getEXP_BYTE_GAS() { return 50; }
     }
 }

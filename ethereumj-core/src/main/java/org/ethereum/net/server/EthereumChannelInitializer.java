@@ -17,7 +17,10 @@
  */
 package org.ethereum.net.server;
 
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,13 +38,10 @@ import org.springframework.stereotype.Component;
 public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChannel> {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
-
-    @Autowired
-    private ApplicationContext ctx;
-
     @Autowired
     ChannelManager channelManager;
-
+    @Autowired
+    private ApplicationContext ctx;
     private String remoteId;
 
     private boolean peerDiscoveryMode = false;
@@ -67,7 +67,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             final Channel channel = ctx.getBean(Channel.class);
             channel.init(ch.pipeline(), remoteId, peerDiscoveryMode, channelManager);
 
-            if(!peerDiscoveryMode) {
+            if (!peerDiscoveryMode) {
                 channelManager.add(channel);
             }
 

@@ -47,8 +47,6 @@ public enum ShhMessageCodes {
      */
     FILTER(0x02);
 
-    private final int cmd;
-
     private static final Map<Integer, ShhMessageCodes> intToTypeMap = new HashMap<>();
 
     static {
@@ -56,6 +54,8 @@ public enum ShhMessageCodes {
             intToTypeMap.put(type.cmd, type);
         }
     }
+
+    private final int cmd;
 
     private ShhMessageCodes(int cmd) {
         this.cmd = cmd;

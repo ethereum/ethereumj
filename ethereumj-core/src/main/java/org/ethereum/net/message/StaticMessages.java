@@ -20,7 +20,11 @@ package org.ethereum.net.message;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
-import org.ethereum.net.p2p.*;
+import org.ethereum.net.p2p.DisconnectMessage;
+import org.ethereum.net.p2p.GetPeersMessage;
+import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -39,30 +43,27 @@ import java.util.regex.Pattern;
 @Component
 public class StaticMessages {
 
-    @Autowired
-    SystemProperties config;
-
-    @Autowired
-    ConfigCapabilities configCapabilities;
-
     public final static PingMessage PING_MESSAGE = new PingMessage();
     public final static PongMessage PONG_MESSAGE = new PongMessage();
     public final static GetPeersMessage GET_PEERS_MESSAGE = new GetPeersMessage();
     public final static DisconnectMessage DISCONNECT_MESSAGE = new DisconnectMessage(ReasonCode.REQUESTED);
-
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
+    @Autowired
+    SystemProperties config;
+    @Autowired
+    ConfigCapabilities configCapabilities;
 
     public HelloMessage createHelloMessage(String peerId) {
         return createHelloMessage(peerId, config.listenPort());
     }
+
     public HelloMessage createHelloMessage(String peerId, int listenPort) {
 
         String helloAnnouncement = buildHelloAnnouncement();
         byte p2pVersion = (byte) config.defaultP2PVersion();
         List<Capability> capabilities = configCapabilities.getConfigCapabilities();
 
-        return new HelloMessage(p2pVersion, helloAnnouncement,
-                capabilities, listenPort, peerId);
+        return new HelloMessage(p2pVersion, helloAnnouncement, capabilities, listenPort, peerId);
     }
 
     private String buildHelloAnnouncement() {
@@ -74,13 +75,14 @@ public class StaticMessages {
             numberVersion = numberVersion.substring(matcher.start(), matcher.end());
         }
         String system = System.getProperty("os.name");
-        if (system.contains(" "))
-            system = system.substring(0, system.indexOf(" "));
-        if (System.getProperty("java.vm.vendor").contains("Android"))
-            system = "Android";
+        if (system.contains(" ")) { system = system.substring(0, system.indexOf(" ")); }
+        if (System.getProperty("java.vm.vendor").contains("Android")) { system = "Android"; }
         String phrase = config.helloPhrase();
 
-        return String.format("Ethereum(J)/v%s/%s/%s/Java/%s", numberVersion, system,
-                config.projectVersionModifier().equalsIgnoreCase("release") ? "Release" : "Dev", phrase);
+        return String.format("Ethereum(J)/v%s/%s/%s/Java/%s",
+                             numberVersion,
+                             system,
+                             config.projectVersionModifier().equalsIgnoreCase("release") ? "Release" : "Dev",
+                             phrase);
     }
 }

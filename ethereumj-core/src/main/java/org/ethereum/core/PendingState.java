@@ -47,9 +47,9 @@ public interface PendingState extends org.ethereum.facade.PendingState {
      * It should be called on each block imported as <b>BEST</b> <br>
      * Does several things:
      * <ul>
-     *     <li>removes block's txs from pending state and wire lists</li>
-     *     <li>removes outdated wire txs</li>
-     *     <li>updates pending state</li>
+     * <li>removes block's txs from pending state and wire lists</li>
+     * <li>removes outdated wire txs</li>
+     * <li>updates pending state</li>
      * </ul>
      *
      * @param block block imported into blockchain as a <b>BEST</b> one

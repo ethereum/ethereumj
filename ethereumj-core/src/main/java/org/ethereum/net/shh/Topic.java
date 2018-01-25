@@ -17,13 +17,12 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * @author by Konstantin Shabalin
@@ -43,6 +42,15 @@ public class Topic {
         this.abrigedTopic = buildAbrigedTopic(fullTopic);
     }
 
+    public static Topic[] createTopics(String... topicsString) {
+        if (topicsString == null) { return new Topic[0]; }
+        Topic[] topics = new Topic[topicsString.length];
+        for (int i = 0; i < topicsString.length; i++) {
+            topics[i] = new Topic(topicsString[i]);
+        }
+        return topics;
+    }
+
     public byte[] getBytes() {
         return abrigedTopic;
     }
@@ -52,15 +60,6 @@ public class Topic {
         byte[] topic = new byte[4];
         System.arraycopy(hash, 0, topic, 0, 4);
         return topic;
-    }
-
-    public static Topic[] createTopics(String ... topicsString) {
-        if (topicsString == null) return new Topic[0];
-        Topic[] topics = new Topic[topicsString.length];
-        for (int i = 0; i < topicsString.length; i++) {
-            topics[i] = new Topic(topicsString[i]);
-        }
-        return topics;
     }
 
     public byte[] getAbrigedTopic() {
@@ -77,9 +76,9 @@ public class Topic {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (obj == this) return true;
-        if (!(obj instanceof Topic))return false;
+        if (obj == null) { return false; }
+        if (obj == this) { return true; }
+        if (!(obj instanceof Topic)) { return false; }
         return Arrays.equals(this.abrigedTopic, ((Topic) obj).getBytes());
     }
 

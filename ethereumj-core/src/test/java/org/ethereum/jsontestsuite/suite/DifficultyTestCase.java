@@ -17,14 +17,13 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.ethereum.core.BlockHeader;
-import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-
 import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.ethereum.core.BlockHeader;
+
+import java.math.BigInteger;
 
 /**
  * @author Mikhail Kalinin
@@ -100,22 +99,33 @@ public class DifficultyTestCase {
     }
 
     public BlockHeader getCurrent() {
-        return new BlockHeader(
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
-                Utils.parseLong(currentBlockNumber), new byte[] {0}, 0,
-                Utils.parseLong(currentTimestamp),
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
-        );
+        return new BlockHeader(EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               Utils.parseLong(currentBlockNumber),
+                               new byte[]{0},
+                               0,
+                               Utils.parseLong(currentTimestamp),
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY);
     }
 
     public BlockHeader getParent() {
-        return new BlockHeader(
-                EMPTY_BYTE_ARRAY, parseData(parentUncles), EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
-                Utils.parseNumericData(parentDifficulty),
-                Utils.parseLong(currentBlockNumber) - 1, new byte[] {0}, 0,
-                Utils.parseLong(parentTimestamp),
-                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
-        );
+        return new BlockHeader(EMPTY_BYTE_ARRAY,
+                               parseData(parentUncles),
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               Utils.parseNumericData(parentDifficulty),
+                               Utils.parseLong(currentBlockNumber) - 1,
+                               new byte[]{0},
+                               0,
+                               Utils.parseLong(parentTimestamp),
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY,
+                               EMPTY_BYTE_ARRAY);
     }
 
     public BigInteger getExpectedDifficulty() {
@@ -124,13 +134,9 @@ public class DifficultyTestCase {
 
     @Override
     public String toString() {
-        return "DifficultyTestCase{" +
-                "name='" + name + '\'' +
-                ", parentTimestamp='" + parentTimestamp + '\'' +
-                ", parentDifficulty='" + parentDifficulty + '\'' +
-                ", currentTimestamp='" + currentTimestamp + '\'' +
-                ", currentBlockNumber='" + currentBlockNumber + '\'' +
-                ", currentDifficulty='" + currentDifficulty + '\'' +
-                '}';
+        return "DifficultyTestCase{" + "name='" + name + '\'' + ", parentTimestamp='" + parentTimestamp + '\'' +
+                ", parentDifficulty='" + parentDifficulty + '\'' + ", currentTimestamp='" + currentTimestamp + '\'' +
+                ", currentBlockNumber='" + currentBlockNumber + '\'' + ", currentDifficulty='" + currentDifficulty +
+                '\'' + '}';
     }
 }

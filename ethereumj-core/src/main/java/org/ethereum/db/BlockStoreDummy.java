@@ -22,7 +22,6 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.crypto.HashUtil;
 
 import java.math.BigInteger;
-
 import java.util.List;
 
 /**

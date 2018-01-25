@@ -17,21 +17,32 @@
  */
 package org.ethereum.vm;
 
+import static java.lang.Math.ceil;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.vm.program.Memory;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
-import static java.lang.Math.ceil;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 public class MemoryTest {
 
     private static final int WORD_SIZE = 32;
     private static final int CHUNK_SIZE = 1024;
+
+    private static void checkMemoryExtend(int dataSize) {
+        Memory memory = new Memory();
+        memory.extend(0, dataSize);
+        assertEquals(calcSize(dataSize, CHUNK_SIZE), memory.internalSize());
+        assertEquals(calcSize(dataSize, WORD_SIZE), memory.size());
+    }
+
+    private static int calcSize(int dataSize, int chunkSize) {
+        return (int) ceil((double) dataSize / chunkSize) * chunkSize;
+    }
 
     @Test
     public void testExtend() {
@@ -43,17 +54,6 @@ public class MemoryTest {
         checkMemoryExtend(CHUNK_SIZE);
         checkMemoryExtend(CHUNK_SIZE + 1);
         checkMemoryExtend(2000);
-    }
-
-    private static void checkMemoryExtend(int dataSize) {
-        Memory memory = new Memory();
-        memory.extend(0, dataSize);
-        assertEquals(calcSize(dataSize, CHUNK_SIZE), memory.internalSize());
-        assertEquals(calcSize(dataSize, WORD_SIZE), memory.size());
-    }
-
-    private static int calcSize(int dataSize, int chunkSize) {
-        return (int) ceil((double) dataSize / chunkSize) * chunkSize;
     }
 
     @Test
@@ -249,16 +249,16 @@ public class MemoryTest {
 
         memoryBuffer.extendAndWrite(0, 256, data1);
 
-        int ones = 0; int zeroes = 0;
-        for (int i = 0; i < memoryBuffer.size(); ++i){
-            if (memoryBuffer.readByte(i) == 1) ++ones;
-            if (memoryBuffer.readByte(i) == 0) ++zeroes;
+        int ones = 0;
+        int zeroes = 0;
+        for (int i = 0; i < memoryBuffer.size(); ++i) {
+            if (memoryBuffer.readByte(i) == 1) { ++ones; }
+            if (memoryBuffer.readByte(i) == 0) { ++zeroes; }
         }
 
         assertTrue(ones == zeroes);
         assertTrue(256 == memoryBuffer.size());
     }
-
 
 
     @Test
@@ -322,23 +322,20 @@ public class MemoryTest {
         DataWord val2 = memoryBuffer.readWord(0x3e0);
         DataWord val3 = memoryBuffer.readWord(0x3e1);
 
-        assertArrayEquals(
-                Hex.decode("0101010101010101010101010101010101010101010101010101010101010101"),
-                val1.getData());
+        assertArrayEquals(Hex.decode("0101010101010101010101010101010101010101010101010101010101010101"),
+                          val1.getData());
 
-        assertArrayEquals(
-                Hex.decode("0101010101010101010101010101010101010101010101010101010101010101"),
-                val2.getData());
+        assertArrayEquals(Hex.decode("0101010101010101010101010101010101010101010101010101010101010101"),
+                          val2.getData());
 
-        assertArrayEquals(
-                Hex.decode("0101010101010101010101010101010101010101010101010101010101010102"),
-                val3.getData());
+        assertArrayEquals(Hex.decode("0101010101010101010101010101010101010101010101010101010101010102"),
+                          val3.getData());
         assertTrue(memoryBuffer.size() == 2048);
     }
 
 
     @Test
-    public void memoryChunk_1(){
+    public void memoryChunk_1() {
         Memory memoryBuffer = new Memory();
 
         byte[] data1 = new byte[32];
@@ -352,18 +349,15 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(0, 64);
 
-        assertArrayEquals(
-                Hex.decode("0101010101010101010101010101010101010101010101010101010101010101" +
-                        "0202020202020202020202020202020202020202020202020202020202020202"),
-                data
-        );
+        assertArrayEquals(Hex.decode("0101010101010101010101010101010101010101010101010101010101010101" +
+                                             "0202020202020202020202020202020202020202020202020202020202020202"), data);
 
         assertEquals(64, memoryBuffer.size());
     }
 
 
     @Test
-    public void memoryChunk_2(){
+    public void memoryChunk_2() {
         Memory memoryBuffer = new Memory();
 
         byte[] data1 = new byte[32];
@@ -374,17 +368,14 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(0, 64);
 
-        assertArrayEquals(
-                Hex.decode("0101010101010101010101010101010101010101010101010101010101010101" +
-                        "0000000000000000000000000000000000000000000000000000000000000000"),
-                data
-        );
+        assertArrayEquals(Hex.decode("0101010101010101010101010101010101010101010101010101010101010101" +
+                                             "0000000000000000000000000000000000000000000000000000000000000000"), data);
 
         assertEquals(64, memoryBuffer.size());
     }
 
     @Test
-    public void memoryChunk_3(){
+    public void memoryChunk_3() {
 
         Memory memoryBuffer = new Memory();
 
@@ -399,10 +390,11 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(0, 2048);
 
-        int ones = 0; int twos = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] == 1) ++ones;
-            if (data[i] == 2) ++twos;
+        int ones = 0;
+        int twos = 0;
+        for (int i = 0; i < data.length; ++i) {
+            if (data[i] == 1) { ++ones; }
+            if (data[i] == 2) { ++twos; }
         }
 
         assertTrue(ones == twos);
@@ -410,7 +402,7 @@ public class MemoryTest {
     }
 
     @Test
-    public void memoryChunk_4(){
+    public void memoryChunk_4() {
 
         Memory memoryBuffer = new Memory();
 
@@ -425,11 +417,13 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(0, 2049);
 
-        int ones = 0; int twos = 0; int zero = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] == 1) ++ones;
-            if (data[i] == 2) ++twos;
-            if (data[i] == 0) ++zero;
+        int ones = 0;
+        int twos = 0;
+        int zero = 0;
+        for (int i = 0; i < data.length; ++i) {
+            if (data[i] == 1) { ++ones; }
+            if (data[i] == 2) { ++twos; }
+            if (data[i] == 0) { ++zero; }
         }
 
         assertTrue(zero == 1);
@@ -439,7 +433,7 @@ public class MemoryTest {
 
 
     @Test
-    public void memoryWriteLimited_1(){
+    public void memoryWriteLimited_1() {
 
         Memory memoryBuffer = new Memory();
         memoryBuffer.extend(0, 3072);
@@ -458,10 +452,11 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(2720, 352);
 
-        int ones = 0; int zero = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] == 1) ++ones;
-            if (data[i] == 0) ++zero;
+        int ones = 0;
+        int zero = 0;
+        for (int i = 0; i < data.length; ++i) {
+            if (data[i] == 1) { ++ones; }
+            if (data[i] == 0) { ++zero; }
         }
 
         assertTrue(ones == data.length);
@@ -469,7 +464,7 @@ public class MemoryTest {
     }
 
     @Test
-    public void memoryWriteLimited_2(){
+    public void memoryWriteLimited_2() {
 
         Memory memoryBuffer = new Memory();
         memoryBuffer.extend(0, 3072);
@@ -488,10 +483,11 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(2720, 352);
 
-        int ones = 0; int zero = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] == 1) ++ones;
-            if (data[i] == 0) ++zero;
+        int ones = 0;
+        int zero = 0;
+        for (int i = 0; i < data.length; ++i) {
+            if (data[i] == 1) { ++ones; }
+            if (data[i] == 0) { ++zero; }
         }
 
         assertTrue(ones == 300);
@@ -499,7 +495,7 @@ public class MemoryTest {
     }
 
     @Test
-    public void memoryWriteLimited_3(){
+    public void memoryWriteLimited_3() {
 
         Memory memoryBuffer = new Memory();
         memoryBuffer.extend(0, 128);
@@ -518,16 +514,16 @@ public class MemoryTest {
 
         byte[] data = memoryBuffer.read(10, 30);
 
-        int ones = 0; int zero = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] == 1) ++ones;
-            if (data[i] == 0) ++zero;
+        int ones = 0;
+        int zero = 0;
+        for (int i = 0; i < data.length; ++i) {
+            if (data[i] == 1) { ++ones; }
+            if (data[i] == 0) { ++zero; }
         }
 
         assertTrue(ones == 20);
         assertTrue(zero == 10);
     }
-
 
 
 }

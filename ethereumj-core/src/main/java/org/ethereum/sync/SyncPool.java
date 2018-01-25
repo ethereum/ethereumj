@@ -17,6 +17,9 @@
  */
 package org.ethereum.sync;
 
+import static java.lang.Math.min;
+import static org.ethereum.util.BIUtil.isIn20PercentRange;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
@@ -32,20 +35,23 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-
-import static java.lang.Math.min;
-import static org.ethereum.util.BIUtil.isIn20PercentRange;
+import javax.annotation.Nullable;
 
 /**
  * <p>Encapsulates logic which manages peers involved in blockchain sync</p>
- *
+ * <p>
  * Holds connections, bans, disconnects and other peers logic<br>
  * The pool is completely threadsafe<br>
  * Implements {@link Iterable} and can be used in "foreach" loop<br>
@@ -89,7 +95,9 @@ public class SyncPool {
     }
 
     public void init(final ChannelManager channelManager) {
-        if (this.channelManager != null) return; // inited already
+        if (this.channelManager != null) {
+            return; // inited already
+        }
         this.channelManager = channelManager;
         updateLowerUsefulDifficulty();
 
@@ -133,8 +141,7 @@ public class SyncPool {
         ArrayList<Channel> channels = new ArrayList<>(activePeers);
         Collections.shuffle(channels);
         for (Channel peer : channels) {
-            if (peer.isIdle())
-                return peer;
+            if (peer.isIdle()) { return peer; }
         }
 
         return null;
@@ -143,8 +150,7 @@ public class SyncPool {
     @Nullable
     public synchronized Channel getBestIdle() {
         for (Channel peer : activePeers) {
-            if (peer.isIdle())
-                return peer;
+            if (peer.isIdle()) { return peer; }
         }
         return null;
     }
@@ -170,8 +176,7 @@ public class SyncPool {
     public synchronized List<Channel> getAllIdle() {
         List<Channel> ret = new ArrayList<>();
         for (Channel peer : activePeers) {
-            if (peer.isIdle())
-                ret.add(peer);
+            if (peer.isIdle()) { ret.add(peer); }
         }
         return ret;
     }
@@ -243,16 +248,16 @@ public class SyncPool {
                 return false;
             }
 
-            if (handler.getNodeStatistics().isPredefined()) return true;
+            if (handler.getNodeStatistics().isPredefined()) { return true; }
 
-            if (nodesSelector != null && !nodesSelector.test(handler)) return false;
+            if (nodesSelector != null && !nodesSelector.test(handler)) { return false; }
 
             if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 &&
                     handler.getNodeStatistics().getEthTotalDifficulty() == null) {
                 return false;
             }
 
-            if (handler.getNodeStatistics().getReputation() < 100) return false;
+            if (handler.getNodeStatistics().getReputation() < 100) { return false; }
 
             return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
         }
@@ -260,7 +265,7 @@ public class SyncPool {
 
     private void fillUp() {
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
-        if(lackSize <= 0) return;
+        if (lackSize <= 0) { return; }
 
         final Set<String> nodesInUse = nodesInUse();
         nodesInUse.add(Hex.toHexString(config.nodeId()));   // exclude home node
@@ -275,7 +280,7 @@ public class SyncPool {
             logDiscoveredNodes(newNodes);
         }
 
-        for(NodeHandler n : newNodes) {
+        for (NodeHandler n : newNodes) {
             channelManager.connect(n.getNode());
         }
     }
@@ -292,7 +297,7 @@ public class SyncPool {
             }
         }
 
-        if (active.isEmpty()) return;
+        if (active.isEmpty()) { return; }
 
         // filtering by 20% from top difficulty
         active.sort((c1, c2) -> c2.getTotalDifficulty().compareTo(c1.getTotalDifficulty()));
@@ -336,17 +341,14 @@ public class SyncPool {
 
     private void logDiscoveredNodes(List<NodeHandler> nodes) {
         StringBuilder sb = new StringBuilder();
-        for(NodeHandler n : nodes) {
+        for (NodeHandler n : nodes) {
             sb.append(Utils.getNodeIdShort(Hex.toHexString(n.getNode().getId())));
             sb.append(", ");
         }
-        if(sb.length() > 0) {
+        if (sb.length() > 0) {
             sb.delete(sb.length() - 2, sb.length());
         }
-        logger.trace(
-                "Node list obtained from discovery: {}",
-                nodes.size() > 0 ? sb.toString() : "empty"
-        );
+        logger.trace("Node list obtained from discovery: {}", nodes.size() > 0 ? sb.toString() : "empty");
     }
 
     private void updateLowerUsefulDifficulty() {
@@ -360,12 +362,46 @@ public class SyncPool {
         return channelManager;
     }
 
-    private void heartBeat() {
-//        for (Channel peer : channelManager.getActivePeers()) {
-//            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config.peerChannelReadTimeout()) {
-//                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config.peerChannelReadTimeout());
-//                peer.dropConnection();
-//            }
-//        }
+    class NodeSelector implements Predicate<NodeHandler> {
+        BigInteger lowerDifficulty;
+        Set<String> nodesInUse;
+
+        public NodeSelector(BigInteger lowerDifficulty) {
+            this.lowerDifficulty = lowerDifficulty;
+        }
+
+        public NodeSelector(BigInteger lowerDifficulty, Set<String> nodesInUse) {
+            this.lowerDifficulty = lowerDifficulty;
+            this.nodesInUse = nodesInUse;
+        }
+
+        @Override
+        public boolean test(NodeHandler handler) {
+            if (nodesInUse != null && nodesInUse.contains(handler.getNode().getHexId())) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().isPredefined()) { return true; }
+
+            if (nodesSelector != null && !nodesSelector.test(handler)) { return false; }
+
+            if (lowerDifficulty.compareTo(BigInteger.ZERO) > 0 &&
+                    handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                return false;
+            }
+
+            if (handler.getNodeStatistics().getReputation() < 100) { return false; }
+
+            return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) >= 0;
+        }
+    }    private void heartBeat() {
+        //        for (Channel peer : channelManager.getActivePeers()) {
+        //            if (!peer.isIdle() && peer.getSyncStats().secondsSinceLastUpdate() > config
+        // .peerChannelReadTimeout()) {
+        //                logger.info("Peer {}: no response after {} seconds", peer.getPeerIdShort(), config
+        // .peerChannelReadTimeout());
+        //                peer.dropConnection();
+        //            }
+        //        }
     }
 }

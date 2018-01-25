@@ -17,6 +17,9 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
+import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
@@ -25,11 +28,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
-
-import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONFromCommit;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Mikhail Kalinin
@@ -37,16 +42,15 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
  */
 public class BlockchainTestSuite {
 
-    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
-
     private static final String TEST_ROOT = "BlockchainTests/";
-
+    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
     String commitSHA;
     String subDir = "";
     List<String> files;
     GitHubJSONTestSuite.Network[] networks;
 
-    public BlockchainTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks) throws IOException {
+    public BlockchainTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks)
+            throws IOException {
         files = listJsonBlobsForTreeSha(treeSHA, TEST_ROOT);
         this.commitSHA = commitSHA;
         this.networks = networks;
@@ -56,16 +60,10 @@ public class BlockchainTestSuite {
         this(treeSHA, commitSHA, GitHubJSONTestSuite.Network.values());
     }
 
-    public void setSubDir(String subDir) {
-        if (!subDir.endsWith("/")) subDir = subDir + "/";
-        this.subDir = subDir;
-    }
+    private static void run(List<String> checkFiles, String commitSHA, GitHubJSONTestSuite.Network[] networks)
+            throws IOException {
 
-    private static void run(List<String> checkFiles,
-                            String commitSHA,
-                            GitHubJSONTestSuite.Network[] networks) throws IOException {
-
-        if (checkFiles.isEmpty()) return;
+        if (checkFiles.isEmpty()) { return; }
 
         List<BlockTestSuite> suites = new ArrayList<>();
         List<String> filenames = new ArrayList<>();
@@ -87,7 +85,7 @@ public class BlockchainTestSuite {
 
         for (String testName : testCases.keySet()) {
 
-            BlockTestCase blockTestCase =  testCases.get(testName);
+            BlockTestCase blockTestCase = testCases.get(testName);
             TestRunner runner = new TestRunner();
 
             logger.info("\n\n ***************** Running test: {} ***************************** \n\n", testName);
@@ -99,14 +97,9 @@ public class BlockchainTestSuite {
                 List<String> result = runner.runTestCase(blockTestCase);
 
                 logger.info("--------- POST Validation---------");
-                if (!result.isEmpty())
-                    for (String single : result)
-                        logger.info(single);
+                if (!result.isEmpty()) { for (String single : result) { logger.info(single); } }
 
-                if (!result.isEmpty())
-                    summary.put(testName, false);
-                else
-                    summary.put(testName, true);
+                if (!result.isEmpty()) { summary.put(testName, false); } else { summary.put(testName, true); }
 
             } finally {
                 SystemProperties.getDefault().setBlockchainConfig(MainNetConfig.INSTANCE);
@@ -119,10 +112,11 @@ public class BlockchainTestSuite {
         logger.info("Summary: ");
         logger.info("=========");
 
-        int fails = 0; int pass = 0;
-        for (String key : summary.keySet()){
+        int fails = 0;
+        int pass = 0;
+        for (String key : summary.keySet()) {
 
-            if (summary.get(key)) ++pass; else ++fails;
+            if (summary.get(key)) { ++pass; } else { ++fails; }
             String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
                     replace(' ', '.').
                     replace("^", " ");
@@ -134,7 +128,24 @@ public class BlockchainTestSuite {
         Assert.assertTrue(fails == 0);
     }
 
-    public void runAll(String testCaseRoot, Set<String> excludedCases, GitHubJSONTestSuite.Network[] networks) throws IOException {
+    public static void runSingle(String testFile, String commitSHA, GitHubJSONTestSuite.Network network)
+            throws IOException {
+        logger.info("     " + testFile);
+        run(Collections.singletonList(testFile), commitSHA, new GitHubJSONTestSuite.Network[]{network});
+    }
+
+    public static void runSingle(String testFile, String commitSHA) throws IOException {
+        logger.info("     " + testFile);
+        run(Collections.singletonList(testFile), commitSHA, GitHubJSONTestSuite.Network.values());
+    }
+
+    public void setSubDir(String subDir) {
+        if (!subDir.endsWith("/")) { subDir = subDir + "/"; }
+        this.subDir = subDir;
+    }
+
+    public void runAll(String testCaseRoot, Set<String> excludedCases, GitHubJSONTestSuite.Network[] networks)
+            throws IOException {
 
         List<String> testCaseFiles = new ArrayList<>();
         for (String file : files) {
@@ -171,16 +182,5 @@ public class BlockchainTestSuite {
 
     public void runAll(String testCaseRoot, GitHubJSONTestSuite.Network network) throws IOException {
         runAll(testCaseRoot, Collections.<String>emptySet(), new GitHubJSONTestSuite.Network[]{network});
-    }
-
-    public static void runSingle(String testFile, String commitSHA,
-                                 GitHubJSONTestSuite.Network network) throws IOException {
-        logger.info("     " + testFile);
-        run(Collections.singletonList(testFile), commitSHA, new GitHubJSONTestSuite.Network[] { network });
-    }
-
-    public static void runSingle(String testFile, String commitSHA) throws IOException {
-        logger.info("     " + testFile);
-        run(Collections.singletonList(testFile), commitSHA, GitHubJSONTestSuite.Network.values());
     }
 }

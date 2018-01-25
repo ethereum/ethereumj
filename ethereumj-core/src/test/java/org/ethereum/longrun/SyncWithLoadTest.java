@@ -17,6 +17,8 @@
  */
 package org.ethereum.longrun;
 
+import static java.lang.Thread.sleep;
+
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.ethereum.config.CommonConfig;
@@ -29,7 +31,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
@@ -49,47 +50,43 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.lang.Thread.sleep;
-
 /**
  * Regular sync with load
  * Loads ethereumJ during sync with various onBlock/repo track/callback usages
- *
+ * <p>
  * Runs sync with defined config for 1-30 minutes
  * - checks State Trie is not broken
  * - checks whether all blocks are in blockstore, validates parent connection and bodies
  * - checks and validate transaction receipts
  * Stopped, than restarts in 1 minute, syncs and pass all checks again.
  * Repeats forever or until first error occurs
- *
+ * <p>
  * Run with '-Dlogback.configurationFile=longrun/logback.xml' for proper logging
  * Also following flags are available:
- *     -Dreset.db.onFirstRun=true
- *     -Doverride.config.res=longrun/conf/live.conf
+ * -Dreset.db.onFirstRun=true
+ * -Doverride.config.res=longrun/conf/live.conf
  */
 @Ignore
 public class SyncWithLoadTest {
 
-    private Ethereum regularNode;
-
     private final static CountDownLatch errorLatch = new CountDownLatch(1);
-    private static AtomicBoolean isRunning = new AtomicBoolean(true);
-    private static AtomicBoolean firstRun = new AtomicBoolean(true);
-
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
-
     private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten-noprune.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
-
     // Timer stops while not syncing
-    private static final AtomicLong lastImport =  new AtomicLong();
+    private static final AtomicLong lastImport = new AtomicLong();
     private static final int LAST_IMPORT_TIMEOUT = 10 * 60 * 1000;
+    private final static AtomicInteger fatalErrors = new AtomicInteger(0);
+    private static AtomicBoolean isRunning = new AtomicBoolean(true);
+    private static AtomicBoolean firstRun = new AtomicBoolean(true);
+    private static ScheduledExecutorService statTimer =
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "StatTimer"));
+    private Ethereum regularNode;
 
     public SyncWithLoadTest() throws Exception {
 
@@ -100,7 +97,7 @@ public class SyncWithLoadTest {
         } else if (resetDb != null && resetDb.equalsIgnoreCase("false")) {
             resetDBOnFirstRun.setValue(false);
         }
-        if (overrideConfigPath != null) configPath.setValue(overrideConfigPath);
+        if (overrideConfigPath != null) { configPath.setValue(overrideConfigPath); }
 
         statTimer.scheduleAtFixedRate(() -> {
             // Adds error if no successfully imported blocks for LAST_IMPORT_TIMEOUT
@@ -119,9 +116,62 @@ public class SyncWithLoadTest {
                 SyncWithLoadTest.testLogger.error("Unhandled exception", t);
             }
 
-            if (lastImport.get() == 0 && isRunning.get()) lastImport.set(currentMillis);
-            if (lastImport.get() != 0 && !isRunning.get()) lastImport.set(0);
+            if (lastImport.get() == 0 && isRunning.get()) { lastImport.set(currentMillis); }
+            if (lastImport.get() != 0 && !isRunning.get()) { lastImport.set(0); }
         }, 0, 15, TimeUnit.SECONDS);
+    }
+
+    private static boolean logStats() {
+        testLogger.info("---------====---------");
+        testLogger.info("fatalErrors: {}", fatalErrors);
+        testLogger.info("---------====---------");
+
+        return fatalErrors.get() == 0;
+    }
+
+    private static void fullSanityCheck(Ethereum ethereum, CommonConfig commonConfig) {
+
+        BlockchainValidation.fullCheck(ethereum, commonConfig, fatalErrors);
+        logStats();
+
+        firstRun.set(false);
+    }
+
+    @Test
+    public void testDelayedCheck() throws Exception {
+
+        runEthereum();
+
+        new Thread(() -> {
+            try {
+                while (firstRun.get()) {
+                    sleep(1000);
+                }
+                testLogger.info("Stopping first run");
+
+                while (true) {
+                    while (isRunning.get()) {
+                        sleep(1000);
+                    }
+                    regularNode.close();
+                    testLogger.info("Run stopped");
+                    sleep(10_000);
+                    testLogger.info("Starting next run");
+                    runEthereum();
+                    isRunning.set(true);
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        errorLatch.await();
+        if (!logStats()) { assert false; }
+    }
+
+    public void runEthereum() throws Exception {
+        testLogger.info("Starting EthereumJ regular instance!");
+        this.regularNode = EthereumFactory.createEthereum(RegularConfig.class);
     }
 
     /**
@@ -176,23 +226,29 @@ public class SyncWithLoadTest {
                     // Getting contract details
                     byte[] contractAddress = receipt.getTransaction().getContractAddress();
                     if (contractAddress != null) {
-                        ContractDetails details = ((Repository) ethereum.getRepository()).getContractDetails(contractAddress);
+                        ContractDetails details =
+                                ((Repository) ethereum.getRepository()).getContractDetails(contractAddress);
                         assert FastByteComparisons.equal(details.getAddress(), contractAddress);
                     }
 
                     // Getting AccountState for sender in the past
                     Random rnd = new Random();
                     Block bestBlock = ethereum.getBlockchain().getBestBlock();
-                    Block randomBlock = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
+                    Block randomBlock =
+                            ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
                     byte[] sender = receipt.getTransaction().getSender();
-                    AccountState senderState = ((Repository) ethereum.getRepository()).getSnapshotTo(randomBlock.getStateRoot()).getAccountState(sender);
-                    if (senderState != null) senderState.getBalance();
+                    AccountState senderState =
+                            ((Repository) ethereum.getRepository()).getSnapshotTo(randomBlock.getStateRoot())
+                                    .getAccountState(sender);
+                    if (senderState != null) { senderState.getBalance(); }
 
                     // Getting receiver's nonce somewhere in the past
-                    Block anotherRandomBlock = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
+                    Block anotherRandomBlock =
+                            ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
                     byte[] receiver = receipt.getTransaction().getReceiveAddress();
                     if (receiver != null) {
-                        ((Repository) ethereum.getRepository()).getSnapshotTo(anotherRandomBlock.getStateRoot()).getNonce(receiver);
+                        ((Repository) ethereum.getRepository()).getSnapshotTo(anotherRandomBlock.getStateRoot())
+                                .getNonce(receiver);
                     }
                 }
             }
@@ -203,14 +259,17 @@ public class SyncWithLoadTest {
                 Block bestBlock = ethereum.getBlockchain().getBestBlock();
                 for (Transaction tx : transactions) {
                     Block block = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
-                    Repository repository = ((Repository) ethereum.getRepository())
-                            .getSnapshotTo(block.getStateRoot())
-                            .startTracking();
+                    Repository repository =
+                            ((Repository) ethereum.getRepository()).getSnapshotTo(block.getStateRoot()).startTracking();
                     try {
-                        TransactionExecutor executor = new TransactionExecutor
-                                (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                        programInvokeFactory, block, new EthereumListenerAdapter(), 0)
-                                .withCommonConfig(commonConfig)
+                        TransactionExecutor executor = new TransactionExecutor(tx,
+                                                                               block.getCoinbase(),
+                                                                               repository,
+                                                                               ethereum.getBlockchain().getBlockStore(),
+                                                                               programInvokeFactory,
+                                                                               block,
+                                                                               new EthereumListenerAdapter(),
+                                                                               0).withCommonConfig(commonConfig)
                                 .setLocalCall(true);
 
                         executor.init();
@@ -255,63 +314,5 @@ public class SyncWithLoadTest {
             fullSanityCheck(ethereum, commonConfig);
             isRunning.set(false);
         }
-    }
-
-    private final static AtomicInteger fatalErrors = new AtomicInteger(0);
-
-    private static ScheduledExecutorService statTimer =
-            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "StatTimer"));
-
-    private static boolean logStats() {
-        testLogger.info("---------====---------");
-        testLogger.info("fatalErrors: {}", fatalErrors);
-        testLogger.info("---------====---------");
-
-        return fatalErrors.get() == 0;
-    }
-
-    private static void fullSanityCheck(Ethereum ethereum, CommonConfig commonConfig) {
-
-        BlockchainValidation.fullCheck(ethereum, commonConfig, fatalErrors);
-        logStats();
-
-        firstRun.set(false);
-    }
-
-    @Test
-    public void testDelayedCheck() throws Exception {
-
-        runEthereum();
-
-        new Thread(() -> {
-            try {
-                while(firstRun.get()) {
-                    sleep(1000);
-                }
-                testLogger.info("Stopping first run");
-
-                while(true) {
-                    while(isRunning.get()) {
-                        sleep(1000);
-                    }
-                    regularNode.close();
-                    testLogger.info("Run stopped");
-                    sleep(10_000);
-                    testLogger.info("Starting next run");
-                    runEthereum();
-                    isRunning.set(true);
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        errorLatch.await();
-        if (!logStats()) assert false;
-    }
-
-    public void runEthereum() throws Exception {
-        testLogger.info("Starting EthereumJ regular instance!");
-        this.regularNode = EthereumFactory.createEthereum(RegularConfig.class);
     }
 }

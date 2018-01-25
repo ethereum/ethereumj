@@ -26,30 +26,17 @@ import java.math.BigInteger;
  * The class demonstrates usage of the StandaloneBlockchain helper class
  * which greatly simplifies Solidity contract testing on a locally created
  * blockchain
- *
+ * <p>
  * Created by Anton Nashatyrev on 04.04.2016.
  */
 public class StandaloneBlockchainSample {
     // Pretty simple (and probably the most expensive) Calculator
-    private static final String contractSrc =
-            "contract Calculator {" +
-            "  int public result;" +  // public field can be accessed by calling 'result' function
-            "  function add(int num) {" +
-            "    result = result + num;" +
-            "  }" +
-            "  function sub(int num) {" +
-            "    result = result - num;" +
-            "  }" +
-            "  function mul(int num) {" +
-            "    result = result * num;" +
-            "  }" +
-            "  function div(int num) {" +
-            "    result = result / num;" +
-            "  }" +
-            "  function clear() {" +
-            "    result = 0;" +
-            "  }" +
-            "}";
+    private static final String contractSrc = "contract Calculator {" + "  int public result;" +
+            // public field can be accessed by calling 'result' function
+            "  function add(int num) {" + "    result = result + num;" + "  }" + "  function sub(int num) {" +
+            "    result = result - num;" + "  }" + "  function mul(int num) {" + "    result = result * num;" + "  }" +
+            "  function div(int num) {" + "    result = result / num;" + "  }" + "  function clear() {" +
+            "    result = 0;" + "  }" + "}";
 
     public static void main(String[] args) throws Exception {
         // Creating a blockchain which generates a new block for each transaction

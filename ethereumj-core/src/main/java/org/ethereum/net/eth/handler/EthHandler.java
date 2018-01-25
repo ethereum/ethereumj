@@ -19,15 +19,19 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.ethereum.db.BlockStore;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
@@ -39,7 +43,6 @@ import java.util.List;
  * Process the messages between peers with 'eth' capability on the network<br>
  * Contains common logic to all supported versions
  * delegating version specific stuff to its descendants
- *
  */
 public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> implements Eth {
 
@@ -52,13 +55,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected CompositeEthereumListener ethereumListener;
 
     protected Channel channel;
-
-    private MessageQueue msgQueue = null;
-
     protected EthVersion version;
-
     protected boolean peerDiscoveryMode = false;
-
     protected Block bestBlock;
     protected EthereumListener listener = new EthereumListenerAdapter() {
         @Override
@@ -66,16 +64,15 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             bestBlock = block;
         }
     };
-
     protected boolean processTransactions = false;
+    private MessageQueue msgQueue = null;
 
     protected EthHandler(EthVersion version) {
         this.version = version;
     }
 
-    protected EthHandler(final EthVersion version, final SystemProperties config,
-                         final Blockchain blockchain, final BlockStore blockStore,
-                         final CompositeEthereumListener ethereumListener) {
+    protected EthHandler(final EthVersion version, final SystemProperties config, final Blockchain blockchain,
+                         final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
         this.version = version;
         this.config = config;
         this.ethereumListener = ethereumListener;
@@ -89,8 +86,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
-        if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
+        if (EthMessageCodes.inRange(msg.getCommand().asByte(), version)) {
             logger.trace("EthHandler invoke: [{}]", msg.getCommand());
+        }
 
         ethereumListener.trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 

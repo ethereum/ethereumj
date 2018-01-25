@@ -54,11 +54,13 @@ public class PruneManager {
     }
 
     public void blockCommitted(BlockHeader block) {
-        if (pruneBlocksCnt < 0) return; // pruning disabled
+        if (pruneBlocksCnt < 0) {
+            return; // pruning disabled
+        }
 
         journal.commitUpdates(block.getHash());
         long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
-        if (pruneBlockNum < 0) return;
+        if (pruneBlockNum < 0) { return; }
 
         List<Block> pruneBlocks = blockStore.getBlocksByNumber(pruneBlockNum);
         Block chainBlock = blockStore.getChainBlockByNumber(pruneBlockNum);

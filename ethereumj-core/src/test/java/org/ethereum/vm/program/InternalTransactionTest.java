@@ -17,15 +17,21 @@
  */
 package org.ethereum.vm.program;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.vm.DataWord;
 import org.junit.Test;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 public class InternalTransactionTest {
+
+    private static byte[] randomBytes(int len) {
+        byte[] bytes = new byte[len];
+        new Random().nextBytes(bytes);
+        return bytes;
+    }
 
     @Test
     public void testRlpEncoding() {
@@ -41,7 +47,17 @@ public class InternalTransactionTest {
         byte[] data = randomBytes(128);
         String note = "transaction note";
 
-        byte[] encoded = new InternalTransaction(parentHash, deep, index, nonce, gasPrice, gasLimit, sendAddress, receiveAddress, value, data, note).getEncoded();
+        byte[] encoded = new InternalTransaction(parentHash,
+                                                 deep,
+                                                 index,
+                                                 nonce,
+                                                 gasPrice,
+                                                 gasLimit,
+                                                 sendAddress,
+                                                 receiveAddress,
+                                                 value,
+                                                 data,
+                                                 note).getEncoded();
 
         InternalTransaction tx = new InternalTransaction(encoded);
 
@@ -56,12 +72,6 @@ public class InternalTransactionTest {
         assertArrayEquals(value, tx.getValue());
         assertArrayEquals(data, tx.getData());
         assertEquals(note, tx.getNote());
-    }
-
-    private static byte[] randomBytes(int len) {
-        byte[] bytes = new byte[len];
-        new Random().nextBytes(bytes);
-        return bytes;
     }
 
 }

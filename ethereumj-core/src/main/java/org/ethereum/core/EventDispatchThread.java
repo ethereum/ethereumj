@@ -22,29 +22,31 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The class intended to serve as an 'Event Bus' where all EthereumJ events are
  * dispatched asynchronously from component to component or from components to
  * the user event handlers.
- *
+ * <p>
  * This made for decoupling different components which are intended to work
  * asynchronously and to avoid complex synchronisation and deadlocks between them
- *
+ * <p>
  * Created by Anton Nashatyrev on 29.12.2015.
  */
 @Component
 public class EventDispatchThread {
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
+    private static final int[] queueSizeWarnLevels =
+            new int[]{0, 10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 10_000_000};
     private static EventDispatchThread eventDispatchThread;
-
-    private static final int[] queueSizeWarnLevels = new int[]{0, 10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 10_000_000};
-
     private final BlockingQueue<Runnable> executorQueue = new LinkedBlockingQueue<Runnable>();
-    private final ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
-            TimeUnit.MILLISECONDS, executorQueue, r -> new Thread(r, "EDT")
-    );
+    private final ExecutorService executor =
+            new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, executorQueue, r -> new Thread(r, "EDT"));
 
     private long taskStart;
     private Runnable lastTask;
@@ -67,9 +69,14 @@ public class EventDispatchThread {
         return eventDispatchThread;
     }
 
+    private static int getSizeWarnLevel(int size) {
+        int idx = Arrays.binarySearch(queueSizeWarnLevels, size);
+        return idx >= 0 ? idx : -(idx + 1) - 1;
+    }
+
     public void invokeLater(final Runnable r) {
-        if (executor.isShutdown()) return;
-        if (counter++ % 1000 == 0) logStatus();
+        if (executor.isShutdown()) { return; }
+        if (counter++ % 1000 == 0) { logStatus(); }
 
         executor.submit(() -> {
             try {
@@ -79,8 +86,8 @@ public class EventDispatchThread {
                 long t = (System.nanoTime() - taskStart) / 1_000_000;
                 taskStart = 0;
                 if (t > 1000) {
-                    logger.warn("EDT task executed in more than 1 sec: " + t + "ms, " +
-                    "Executor queue size: " + executorQueue.size());
+                    logger.warn("EDT task executed in more than 1 sec: " + t + "ms, " + "Executor queue size: " +
+                                        executorQueue.size());
 
                 }
             } catch (Exception e) {
@@ -92,12 +99,14 @@ public class EventDispatchThread {
     // monitors EDT queue size and prints warning if exceeds thresholds
     private void logStatus() {
         int curLevel = getSizeWarnLevel(executorQueue.size());
-        if (lastQueueSizeWarnLevel == curLevel) return;
+        if (lastQueueSizeWarnLevel == curLevel) { return; }
 
         synchronized (this) {
             if (curLevel > lastQueueSizeWarnLevel) {
                 long t = taskStart == 0 ? 0 : (System.nanoTime() - taskStart) / 1_000_000;
-                String msg = "EDT size grown up to " + executorQueue.size() + " (last task executing for " + t + " ms: " + lastTask;
+                String msg =
+                        "EDT size grown up to " + executorQueue.size() + " (last task executing for " + t + " ms: " +
+                                lastTask;
                 if (curLevel < 3) {
                     logger.info(msg);
                 } else {
@@ -108,11 +117,6 @@ public class EventDispatchThread {
             }
             lastQueueSizeWarnLevel = curLevel;
         }
-    }
-
-    private static int getSizeWarnLevel(int size) {
-        int idx = Arrays.binarySearch(queueSizeWarnLevels, size);
-        return idx >= 0 ? idx : -(idx + 1) - 1;
     }
 
     public void shutdown() {

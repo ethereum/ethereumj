@@ -17,11 +17,20 @@
  */
 package org.ethereum.mine;
 
+import static java.lang.Math.max;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -36,14 +45,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static java.lang.Math.max;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Manages embedded CPU mining and allows to use external miners.
- *
+ * <p>
  * Created by Anton Nashatyrev on 10.12.2015.
  */
 @Component
@@ -51,40 +66,29 @@ public class BlockMiner {
     private static final Logger logger = LoggerFactory.getLogger("mine");
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
-
+    private final Queue<ListenableFuture<MiningResult>> currentMiningTasks = new ConcurrentLinkedQueue<>();
+    protected PendingState pendingState;
     private Blockchain blockchain;
-
     private BlockStore blockStore;
-
     @Autowired
     private Ethereum ethereum;
-
-    protected PendingState pendingState;
-
     private CompositeEthereumListener listener;
-
     private SystemProperties config;
-
     private List<MinerListener> listeners = new CopyOnWriteArrayList<>();
-
     private BigInteger minGasPrice;
     private long minBlockTimeout;
     private int cpuThreads;
     private boolean fullMining = true;
-
     private volatile boolean isLocalMining;
     private Block miningBlock;
     private volatile MinerIfc externalMiner;
-
-    private final Queue<ListenableFuture<MiningResult>> currentMiningTasks = new ConcurrentLinkedQueue<>();
     private long lastBlockMinedTime;
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
     @Autowired
     public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
-                      final Blockchain blockchain, final BlockStore blockStore,
-                      final PendingState pendingState) {
+                      final Blockchain blockchain, final BlockStore blockStore, final PendingState pendingState) {
         this.listener = listener;
         this.config = config;
         this.blockchain = blockchain;
@@ -152,7 +156,7 @@ public class BlockMiner {
         PendingStateImpl.TransactionSortedSet ret = new PendingStateImpl.TransactionSortedSet();
         ret.addAll(pendingState.getPendingTransactions());
         Iterator<Transaction> it = ret.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             Transaction tx = it.next();
             if (!isAcceptableTx(tx)) {
                 logger.debug("Miner excluded the transaction: {}", tx);
@@ -163,7 +167,7 @@ public class BlockMiner {
     }
 
     private void onPendingStateChanged() {
-        if (!isLocalMining && externalMiner == null) return;
+        if (!isLocalMining && externalMiner == null) { return; }
 
         logger.debug("onPendingStateChanged()");
         if (miningBlock == null) {
@@ -210,8 +214,9 @@ public class BlockMiner {
         Block mineChain = mineBest;
 
         long limitNum = max(0, miningNum - UNCLE_GENERATION_LIMIT);
-        Set<ByteArrayWrapper> ancestors = BlockchainImpl.getAncestors(blockStore, mineBest, UNCLE_GENERATION_LIMIT + 1, true);
-        Set<ByteArrayWrapper> knownUncles = ((BlockchainImpl)blockchain).getUsedUncles(blockStore, mineBest, true);
+        Set<ByteArrayWrapper> ancestors =
+                BlockchainImpl.getAncestors(blockStore, mineBest, UNCLE_GENERATION_LIMIT + 1, true);
+        Set<ByteArrayWrapper> knownUncles = ((BlockchainImpl) blockchain).getUsedUncles(blockStore, mineBest, true);
         knownUncles.addAll(ancestors);
         knownUncles.add(new ByteArrayWrapper(mineBest.getHash()));
 
@@ -222,7 +227,9 @@ public class BlockMiner {
                 if (genBlocks.size() > 1) {
                     for (Block uncleCandidate : genBlocks) {
                         if (!knownUncles.contains(new ByteArrayWrapper(uncleCandidate.getHash())) &&
-                                ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate.getParentHash()).getHash()))) {
+                                ancestors.contains(new ByteArrayWrapper(blockStore.getBlockByHash(uncleCandidate
+                                                                                                          .getParentHash())
+                                                                                .getHash()))) {
 
                             ret.add(uncleCandidate.getHeader());
                             if (ret.size() >= UNCLE_LIST_LIMIT) {
@@ -244,17 +251,17 @@ public class BlockMiner {
         Block bestPendingState = ((PendingStateImpl) pendingState).getBestBlock();
 
         logger.debug("getNewBlockForMining best blocks: PendingState: " + bestPendingState.getShortDescr() +
-                ", Blockchain: " + bestBlockchain.getShortDescr());
+                             ", Blockchain: " + bestBlockchain.getShortDescr());
 
-        Block newMiningBlock = blockchain.createNewBlock(bestPendingState, getAllPendingTransactions(),
-                getUncles(bestPendingState));
+        Block newMiningBlock =
+                blockchain.createNewBlock(bestPendingState, getAllPendingTransactions(), getUncles(bestPendingState));
         return newMiningBlock;
     }
 
     protected void restartMining() {
         Block newMiningBlock = getNewBlockForMining();
 
-        synchronized(this) {
+        synchronized (this) {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
 
@@ -298,8 +305,8 @@ public class BlockMiner {
         long t = System.currentTimeMillis();
         if (t - lastBlockMinedTime < minBlockTimeout) {
             long sleepTime = minBlockTimeout - (t - lastBlockMinedTime);
-            logger.debug("Last block was mined " + (t - lastBlockMinedTime) + " ms ago. Sleeping " +
-                    sleepTime + " ms before importing...");
+            logger.debug("Last block was mined " + (t - lastBlockMinedTime) + " ms ago. Sleeping " + sleepTime +
+                                 " ms before importing...");
             Thread.sleep(sleepTime);
         }
 
@@ -336,21 +343,25 @@ public class BlockMiner {
             l.miningStarted();
         }
     }
+
     protected void fireMinerStopped() {
         for (MinerListener l : listeners) {
             l.miningStopped();
         }
     }
+
     protected void fireBlockStarted(Block b) {
         for (MinerListener l : listeners) {
             l.blockMiningStarted(b);
         }
     }
+
     protected void fireBlockCancelled(Block b) {
         for (MinerListener l : listeners) {
             l.blockMiningCanceled(b);
         }
     }
+
     protected void fireBlockMined(Block b) {
         for (MinerListener l : listeners) {
             l.blockMined(b);

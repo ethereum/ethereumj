@@ -23,7 +23,13 @@ import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.MinMaxMap;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.
@@ -31,7 +37,7 @@ import java.util.*;
 public class SyncQueueReverseImpl implements SyncQueueIfc {
 
     byte[] curHeaderHash;
-//    List<BlockHeaderWrapper> headers = new ArrayList<>();
+    //    List<BlockHeaderWrapper> headers = new ArrayList<>();
     MinMaxMap<BlockHeaderWrapper> headers = new MinMaxMap<>();
     long minValidated = -1;
 
@@ -58,8 +64,10 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
             return null;
         } else {
             if (minValidated - headers.getMin() < maxSize * maxSize && minValidated > maxSize) {
-                ret.add(new SyncQueueImpl.HeadersRequestImpl(
-                        headers.get(headers.getMin()).getHash(), maxSize, true, maxSize - 1));
+                ret.add(new SyncQueueImpl.HeadersRequestImpl(headers.get(headers.getMin()).getHash(),
+                                                             maxSize,
+                                                             true,
+                                                             maxSize - 1));
                 maxRequests--;
             }
 
@@ -67,7 +75,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
                     headers.descendingMap().subMap(minValidated, true, headers.getMin(), true).entrySet();
             Iterator<Map.Entry<Long, BlockHeaderWrapper>> it = entries.iterator();
             BlockHeaderWrapper prevEntry = it.next().getValue();
-            while(maxRequests > 0 && it.hasNext()) {
+            while (maxRequests > 0 && it.hasNext()) {
                 BlockHeaderWrapper entry = it.next().getValue();
                 if (prevEntry.getNumber() - entry.getNumber() > 1) {
                     ret.add(new SyncQueueImpl.HeadersRequestImpl(prevEntry.getHash(), maxSize, true));
@@ -96,7 +104,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
         }
 
         // start header not found or we are already done
-        if (minValidated <= 0) return Collections.emptyList();
+        if (minValidated <= 0) { return Collections.emptyList(); }
 
         for (BlockHeaderWrapper header : newHeaders) {
             if (header.getNumber() < minValidated) {
@@ -105,13 +113,13 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
         }
 
 
-        if (minValidated == -1) minValidated = headers.getMax();
-        for (; minValidated >= headers.getMin() ; minValidated--) {
+        if (minValidated == -1) { minValidated = headers.getMax(); }
+        for (; minValidated >= headers.getMin(); minValidated--) {
             BlockHeaderWrapper header = headers.get(minValidated);
             BlockHeaderWrapper parent = headers.get(minValidated - 1);
             if (parent == null) {
                 // Some peers doesn't return 0 block header
-                if (minValidated == 1) minValidated = 0;
+                if (minValidated == 1) { minValidated = 0; }
                 break;
             }
             if (!FastByteComparisons.equal(header.getHeader().getParentHash(), parent.getHash())) {
@@ -135,7 +143,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     public synchronized BlocksRequest requestBlocks(int maxSize) {
         List<BlockHeaderWrapper> reqHeaders = new ArrayList<>();
         for (BlockHeaderWrapper header : headers.descendingMap().values()) {
-            if (maxSize == 0) break;
+            if (maxSize == 0) { break; }
             if (blocks.get(header.getHash()) == null) {
                 reqHeaders.add(header);
                 maxSize--;
@@ -152,7 +160,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
         List<Block> ret = new ArrayList<>();
         for (long i = headers.getMax(); i > minValidated; i--) {
             Block block = blocks.get(headers.get(i).getHash());
-            if (block == null) break;
+            if (block == null) { break; }
             ret.add(block);
             blocks.remove(headers.get(i).getHash());
             headers.remove(i);

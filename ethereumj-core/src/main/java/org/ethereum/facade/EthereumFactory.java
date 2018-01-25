@@ -21,7 +21,6 @@ import org.ethereum.config.DefaultConfig;
 import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
@@ -41,24 +40,24 @@ public class EthereumFactory {
     }
 
     public static Ethereum createEthereum(Class userSpringConfig) {
-        return userSpringConfig == null ? createEthereum(new Class[] {DefaultConfig.class}) :
+        return userSpringConfig == null ? createEthereum(new Class[]{DefaultConfig.class}) :
                 createEthereum(DefaultConfig.class, userSpringConfig);
     }
 
     /**
+     * @param config           Not used
+     * @param userSpringConfig User Spring configuration class
+     * @return Fully initialized Ethereum instance
      * @deprecated The config parameter is not used anymore. The configuration is passed
      * via 'systemProperties' bean either from the DefaultConfig or from supplied userSpringConfig
-     * @param config  Not used
-     * @param userSpringConfig   User Spring configuration class
-     * @return  Fully initialized Ethereum instance
      */
     public static Ethereum createEthereum(SystemProperties config, Class userSpringConfig) {
 
-        return userSpringConfig == null ? createEthereum(new Class[] {DefaultConfig.class}) :
+        return userSpringConfig == null ? createEthereum(new Class[]{DefaultConfig.class}) :
                 createEthereum(DefaultConfig.class, userSpringConfig);
     }
 
-    public static Ethereum createEthereum(Class ... springConfigs) {
+    public static Ethereum createEthereum(Class... springConfigs) {
         logger.info("Starting EthereumJ...");
         ApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
 

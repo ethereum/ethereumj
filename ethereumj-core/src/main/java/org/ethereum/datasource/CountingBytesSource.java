@@ -28,14 +28,14 @@ import java.util.Arrays;
  * e.g. 'put' twice it is actually deleted when 'delete' is called twice
  * I.e. each put increments counter and delete decrements counter, the
  * entry is deleted when the counter becomes zero.
- *
+ * <p>
  * Please note that the counting mechanism makes sense only for
  * {@link HashedKeySource} like Sources when any taken key can correspond to
  * the only value
- *
+ * <p>
  * This Source is constrained to byte[] values only as the counter
  * needs to be encoded to the backing Source value as byte[]
- *
+ * <p>
  * Created by Anton Nashatyrev on 08.11.2016.
  */
 public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]>
@@ -49,6 +49,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
         this(src, false);
 
     }
+
     public CountingBytesSource(Source<byte[], byte[]> src, boolean bloom) {
         super(src);
         byte[] filterBytes = src.get(filterKey);
@@ -72,7 +73,7 @@ public class CountingBytesSource extends AbstractChainedSource<byte[], byte[], b
             byte[] srcVal = getSource().get(key);
             int srcCount = decodeCount(srcVal);
             if (srcCount >= 1) {
-                if (filter != null) filter.insert(key);
+                if (filter != null) { filter.insert(key); }
                 dirty = true;
             }
             getSource().put(key, encodeCount(val, srcCount + 1));

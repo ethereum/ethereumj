@@ -22,7 +22,6 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.DataWord;
 
 import java.math.BigInteger;
-
 import java.util.HashMap;
 import java.util.Set;
 
@@ -30,7 +29,7 @@ import java.util.Set;
  * @author Roman Mandeleil
  * @since 08.09.2014
  */
-public interface Repository extends org.ethereum.facade.Repository{
+public interface Repository extends org.ethereum.facade.Repository {
 
     /**
      * Create a new account in the database
@@ -44,7 +43,7 @@ public interface Repository extends org.ethereum.facade.Repository{
     /**
      * @param addr - account to check
      * @return - true if account exist,
-     *           false otherwise
+     * false otherwise
      */
     boolean isExist(byte[] addr);
 
@@ -74,7 +73,7 @@ public interface Repository extends org.ethereum.facade.Repository{
     /**
      * Sets the account nonce of the given account
      *
-     * @param addr of the account
+     * @param addr  of the account
      * @param nonce new nonce
      * @return new value of the nonce
      */
@@ -125,8 +124,8 @@ public interface Repository extends org.ethereum.facade.Repository{
     /**
      * Put a value in storage of an account at a given key
      *
-     * @param addr of the account
-     * @param key of the data to store
+     * @param addr  of the account
+     * @param key   of the data to store
      * @param value is the data to store
      */
     void addStorageRow(byte[] addr, DataWord key, DataWord value);
@@ -136,7 +135,7 @@ public interface Repository extends org.ethereum.facade.Repository{
      * Retrieve storage value from an account for a given key
      *
      * @param addr of the account
-     * @param key associated with this value
+     * @param key  associated with this value
      * @return data in the form of a <code>DataWord</code>
      */
     DataWord getStorageValue(byte[] addr, DataWord key);
@@ -153,7 +152,7 @@ public interface Repository extends org.ethereum.facade.Repository{
     /**
      * Add value to the balance of an account
      *
-     * @param addr of the account
+     * @param addr  of the account
      * @param value to be added
      * @return new balance of the account
      */
@@ -169,11 +168,11 @@ public interface Repository extends org.ethereum.facade.Repository{
      * Dump the full state of the current repository into a file with JSON format
      * It contains all the contracts/account, their attributes and
      *
-     * @param block of the current state
-     * @param gasUsed the amount of gas used in the block until that point
+     * @param block    of the current state
+     * @param gasUsed  the amount of gas used in the block until that point
      * @param txNumber is the number of the transaction for which the dump has to be made
-     * @param txHash is the hash of the given transaction.
-     * If null, the block state post coinbase reward is dumped.
+     * @param txHash   is the hash of the given transaction.
+     *                 If null, the block state post coinbase reward is dumped.
      */
     void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);
 
@@ -185,6 +184,7 @@ public interface Repository extends org.ethereum.facade.Repository{
     Repository startTracking();
 
     void flush();
+
     void flushNoReconnect();
 
 
@@ -226,7 +226,7 @@ public interface Repository extends org.ethereum.facade.Repository{
     void reset();
 
     void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
-                            HashMap<ByteArrayWrapper, ContractDetails> contractDetailes);
+                     HashMap<ByteArrayWrapper, ContractDetails> contractDetailes);
 
 
     byte[] getRoot();

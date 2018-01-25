@@ -21,11 +21,9 @@ import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
-
 /**
  * Authentication response message, to be wrapped inside
- *
+ * <p>
  * Created by devrandom on 2015-04-07.
  */
 public class AuthResponseMessage {
@@ -46,14 +44,15 @@ public class AuthResponseMessage {
         offset += message.nonce.length;
         byte tokenUsed = wire[offset];
         offset += 1;
-        if (tokenUsed != 0x00 && tokenUsed != 0x01)
+        if (tokenUsed != 0x00 && tokenUsed != 0x01) {
             throw new RuntimeException("invalid boolean"); // TODO specific exception
+        }
         message.isTokenUsed = (tokenUsed == 0x01);
         return message;
     }
 
     public static int getLength() {
-        return 64+32+1;
+        return 64 + 32 + 1;
     }
 
     public byte[] encode() {
@@ -64,17 +63,14 @@ public class AuthResponseMessage {
         offset += publicBytes.length - 1;
         System.arraycopy(nonce, 0, buffer, offset, nonce.length);
         offset += nonce.length;
-        buffer[offset] = (byte)(isTokenUsed ? 0x01 : 0x00);
+        buffer[offset] = (byte) (isTokenUsed ? 0x01 : 0x00);
         offset += 1;
         return buffer;
     }
 
     @Override
     public String toString() {
-        return "AuthResponseMessage{" +
-                "\n  ephemeralPublicKey=" + ephemeralPublicKey +
-                "\n  nonce=" + Hex.toHexString(nonce) +
-                "\n  isTokenUsed=" + isTokenUsed +
-                '}';
+        return "AuthResponseMessage{" + "\n  ephemeralPublicKey=" + ephemeralPublicKey + "\n  nonce=" +
+                Hex.toHexString(nonce) + "\n  isTokenUsed=" + isTokenUsed + '}';
     }
 }

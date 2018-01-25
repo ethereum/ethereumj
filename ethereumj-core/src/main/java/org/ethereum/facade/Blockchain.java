@@ -18,17 +18,15 @@
 package org.ethereum.facade;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Set;
 
 public interface Blockchain {
 
     /**
      * Get block by number from the best chain
+     *
      * @param number - number of the block
      * @return block by that number
      */
@@ -36,6 +34,7 @@ public interface Blockchain {
 
     /**
      * Get block by hash
+     *
      * @param hash - hash of the block
      * @return - bloc by that hash
      */
@@ -51,6 +50,7 @@ public interface Blockchain {
 
     /**
      * Get the underlying BlockStore
+     *
      * @return Blockstore
      */
     BlockStore getBlockStore();

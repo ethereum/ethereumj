@@ -25,15 +25,15 @@ import java.util.Set;
 public interface DbSource<V> extends BatchSource<byte[], V> {
 
     /**
+     * @return DB name
+     */
+    String getName();
+
+    /**
      * Sets the DB name.
      * This could be the underlying DB table/dir name
      */
     void setName(String name);
-
-    /**
-     * @return DB name
-     */
-    String getName();
 
     /**
      * Initializes DB (open table, connection, etc)

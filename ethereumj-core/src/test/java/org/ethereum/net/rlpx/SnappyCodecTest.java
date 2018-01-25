@@ -20,6 +20,13 @@
 
 package org.ethereum.net.rlpx;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static org.ethereum.net.message.ReasonCode.BAD_PROTOCOL;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.junit.Test;
@@ -27,13 +34,8 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.FileCopyUtils;
-import java.util.List;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static org.ethereum.net.message.ReasonCode.BAD_PROTOCOL;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import java.util.List;
 
 /**
  * EIP-706 provides snappy samples. FrameCodec should be
@@ -56,10 +58,9 @@ public class SnappyCodecTest {
 
     @Test
     public void testFramedDecodeDisconnect() throws Exception {
-        byte[] frameBytes = new byte[] {(byte) 0xff, 0x06, 0x00, 0x00, 0x73, 0x4e, 0x61, 0x50, 0x70, 0x59};
+        byte[] frameBytes = new byte[]{(byte) 0xff, 0x06, 0x00, 0x00, 0x73, 0x4e, 0x61, 0x50, 0x70, 0x59};
         Channel shouldBeDropped = mock(Channel.class);
-        when(shouldBeDropped.getNodeStatistics())
-                .thenReturn(new NodeStatistics(new Node(new byte[0], "", 0)));
+        when(shouldBeDropped.getNodeStatistics()).thenReturn(new NodeStatistics(new Node(new byte[0], "", 0)));
 
         snappyDecode(frameBytes, shouldBeDropped);
 

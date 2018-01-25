@@ -30,8 +30,7 @@ public class ExecutorPipelineTest {
 
     @Test
     public void joinTest() throws InterruptedException {
-        ExecutorPipeline<Integer, Integer> exec1 = new ExecutorPipeline<>(8, 100, true,
-                integer -> {
+        ExecutorPipeline<Integer, Integer> exec1 = new ExecutorPipeline<>(8, 100, true, integer -> {
             try {
                 Thread.sleep(2);
             } catch (InterruptedException e) {

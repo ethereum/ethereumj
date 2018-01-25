@@ -17,19 +17,16 @@
  */
 package org.ethereum.net.rlpx;
 
-import org.ethereum.crypto.ECKey;
-import org.spongycastle.math.ec.ECPoint;
-import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
-
 import static org.ethereum.util.ByteUtil.merge;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
+import org.ethereum.crypto.ECKey;
+import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.util.encoders.Hex;
+
 /**
  * Authentication initiation message, to be wrapped inside
- *
+ * <p>
  * Created by devrandom on 2015-04-07.
  */
 public class AuthInitiateMessage {
@@ -43,7 +40,7 @@ public class AuthInitiateMessage {
     }
 
     public static int getLength() {
-        return 65+32+64+32+1;
+        return 65 + 32 + 64 + 32 + 1;
     }
 
     static AuthInitiateMessage decode(byte[] wire) {
@@ -57,7 +54,7 @@ public class AuthInitiateMessage {
         offset += 32;
         int v = wire[offset] + 27;
         offset += 1;
-        message.signature = ECKey.ECDSASignature.fromComponents(r, s, (byte)v);
+        message.signature = ECKey.ECDSASignature.fromComponents(r, s, (byte) v);
         message.ephemeralPublicHash = new byte[32];
         System.arraycopy(wire, offset, message.ephemeralPublicHash, 0, 32);
         offset += 32;
@@ -71,8 +68,9 @@ public class AuthInitiateMessage {
         offset += message.nonce.length;
         byte tokenUsed = wire[offset];
         offset += 1;
-        if (tokenUsed != 0x00 && tokenUsed != 0x01)
+        if (tokenUsed != 0x00 && tokenUsed != 0x01) {
             throw new RuntimeException("invalid boolean"); // TODO specific exception
+        }
         message.isTokenUsed = (tokenUsed == 0x01);
         return message;
     }
@@ -100,7 +98,7 @@ public class AuthInitiateMessage {
         offset += publicBytes.length - 1;
         System.arraycopy(nonce, 0, buffer, offset, nonce.length);
         offset += nonce.length;
-        buffer[offset] = (byte)(isTokenUsed ? 0x01 : 0x00);
+        buffer[offset] = (byte) (isTokenUsed ? 0x01 : 0x00);
         offset += 1;
         return buffer;
     }
@@ -109,13 +107,11 @@ public class AuthInitiateMessage {
     public String toString() {
 
         byte[] sigBytes = merge(asUnsignedByteArray(signature.r),
-                asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
+                                asUnsignedByteArray(signature.s),
+                                new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
-        return "AuthInitiateMessage{" +
-                "\n  sigBytes=" + Hex.toHexString(sigBytes) +
-                "\n  ephemeralPublicHash=" + Hex.toHexString(ephemeralPublicHash) +
-                "\n  publicKey=" + Hex.toHexString(publicKey.getEncoded(false)) +
-                "\n  nonce=" + Hex.toHexString(nonce) +
-                "\n}";
+        return "AuthInitiateMessage{" + "\n  sigBytes=" + Hex.toHexString(sigBytes) + "\n  ephemeralPublicHash=" +
+                Hex.toHexString(ephemeralPublicHash) + "\n  publicKey=" + Hex.toHexString(publicKey.getEncoded(false)) +
+                "\n  nonce=" + Hex.toHexString(nonce) + "\n}";
     }
 }

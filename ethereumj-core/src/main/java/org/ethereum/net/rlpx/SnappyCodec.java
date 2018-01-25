@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * Snappy compression codec. <br>
- *
+ * <p>
  * Check <a href="https://github.com/ethereum/EIPs/blob/master/EIPS/eip-706.md">EIP-706</a> for details
  *
  * @author Mikhail Kalinin
@@ -80,7 +80,9 @@ public class SnappyCodec extends MessageToMessageCodec<FrameCodec.Frame, FrameCo
 
         long uncompressedLength = Snappy.uncompressedLength(in) & 0xFFFFFFFFL;
         if (uncompressedLength > MAX_SIZE) {
-            logger.info("{}: uncompressed frame size exceeds the limit ({} bytes), drop the peer", channel, uncompressedLength);
+            logger.info("{}: uncompressed frame size exceeds the limit ({} bytes), drop the peer",
+                        channel,
+                        uncompressedLength);
             channel.getNodeStatistics().nodeDisconnectedLocal(ReasonCode.BAD_PROTOCOL);
             channel.disconnect(ReasonCode.BAD_PROTOCOL);
             return;

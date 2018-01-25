@@ -42,27 +42,18 @@ import java.util.List;
  * Created by Anton Nashatyrev on 14.10.2016.
  */
 public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
+    private static final GasCost NEW_GAS_COST = new GasCostEip150HF();
     protected BlockchainConfig parent;
 
-
-    static class GasCostEip150HF extends GasCost {
-        public int getBALANCE()             {     return 400;     }
-        public int getEXT_CODE_SIZE()       {     return 700;     }
-        public int getEXT_CODE_COPY()       {     return 700;     }
-        public int getSLOAD()               {     return 200;     }
-        public int getCALL()                {     return 700;     }
-        public int getSUICIDE()             {     return 5000;    }
-        public int getNEW_ACCT_SUICIDE()    {     return 25000;   }
-    };
-
-    private static final GasCost NEW_GAS_COST = new GasCostEip150HF();
+    ;
 
     public Eip150HFConfig(BlockchainConfig parent) {
         this.parent = parent;
     }
 
     @Override
-    public DataWord getCallGas(OpCode op, DataWord requestedGas, DataWord availableGas) throws Program.OutOfGasException {
+    public DataWord getCallGas(OpCode op, DataWord requestedGas, DataWord availableGas)
+            throws Program.OutOfGasException {
         DataWord maxAllowed = Utils.allButOne64th(availableGas);
         return requestedGas.compareTo(maxAllowed) > 0 ? maxAllowed : requestedGas;
     }
@@ -103,7 +94,8 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     }
 
     @Override
-    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx, Repository repository) {
+    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
+                                             Repository repository) {
         return parent.validateTransactionChanges(blockStore, curBlock, tx, repository);
     }
 
@@ -180,5 +172,21 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     @Override
     public boolean eip658() {
         return false;
+    }
+
+    static class GasCostEip150HF extends GasCost {
+        public int getBALANCE() { return 400; }
+
+        public int getEXT_CODE_SIZE() { return 700; }
+
+        public int getEXT_CODE_COPY() { return 700; }
+
+        public int getSLOAD() { return 200; }
+
+        public int getCALL() { return 700; }
+
+        public int getSUICIDE() { return 5000; }
+
+        public int getNEW_ACCT_SUICIDE() { return 25000; }
     }
 }

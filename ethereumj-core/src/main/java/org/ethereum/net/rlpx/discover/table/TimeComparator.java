@@ -22,7 +22,7 @@ import java.util.Comparator;
 /**
  * Created by kest on 5/26/15.
  */
-public class TimeComparator implements Comparator<NodeEntry>  {
+public class TimeComparator implements Comparator<NodeEntry> {
 
     @Override
     public int compare(NodeEntry e1, NodeEntry e2) {

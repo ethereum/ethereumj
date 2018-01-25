@@ -68,19 +68,18 @@ public class DataWord implements Comparable<DataWord> {
         this(Hex.decode(data));
     }
 
-    public DataWord(ByteArrayWrapper wrappedData){
+    public DataWord(ByteArrayWrapper wrappedData) {
         this(wrappedData.getData());
     }
 
     public DataWord(byte[] data) {
-        if (data == null)
-            this.data = ByteUtil.EMPTY_BYTE_ARRAY;
-        else if (data.length == 32)
+        if (data == null) { this.data = ByteUtil.EMPTY_BYTE_ARRAY; } else if (data.length == 32) {
             this.data = data;
-        else if (data.length <= 32)
+        } else if (data.length <= 32) {
             System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
-        else
+        } else {
             throw new RuntimeException("Data word can't exceed 32 bytes: " + data);
+        }
     }
 
     public byte[] getData() {
@@ -124,7 +123,7 @@ public class DataWord implements Comparable<DataWord> {
     public int intValueSafe() {
         int bytesOccupied = bytesOccupied();
         int intValue = intValue();
-        if (bytesOccupied > 4 || intValue < 0) return Integer.MAX_VALUE;
+        if (bytesOccupied > 4 || intValue < 0) { return Integer.MAX_VALUE; }
         return intValue;
     }
 
@@ -153,7 +152,7 @@ public class DataWord implements Comparable<DataWord> {
     public long longValueSafe() {
         int bytesOccupied = bytesOccupied();
         long longValue = longValue();
-        if (bytesOccupied > 8 || longValue < 0) return Long.MAX_VALUE;
+        if (bytesOccupied > 8 || longValue < 0) { return Long.MAX_VALUE; }
         return longValue;
     }
 
@@ -161,13 +160,13 @@ public class DataWord implements Comparable<DataWord> {
         return new BigInteger(data);
     }
 
-    public String  bigIntValue() {
+    public String bigIntValue() {
         return new BigInteger(data).toString();
     }
 
     public boolean isZero() {
         for (byte tmp : data) {
-            if (tmp != 0) return false;
+            if (tmp != 0) { return false; }
         }
         return true;
     }
@@ -206,7 +205,7 @@ public class DataWord implements Comparable<DataWord> {
 
     public void negate() {
 
-        if (this.isZero()) return;
+        if (this.isZero()) { return; }
 
         for (int i = 0; i < this.data.length; ++i) {
             this.data[i] = (byte) ~this.data[i];
@@ -214,7 +213,7 @@ public class DataWord implements Comparable<DataWord> {
 
         for (int i = this.data.length - 1; i >= 0; --i) {
             this.data[i] = (byte) (1 + this.data[i] & 0xFF);
-            if (this.data[i] != 0) break;
+            if (this.data[i] != 0) { break; }
         }
     }
 
@@ -343,10 +342,9 @@ public class DataWord implements Comparable<DataWord> {
     public String toPrefixString() {
 
         byte[] pref = getNoLeadZeroesData();
-        if (pref.length == 0) return "";
+        if (pref.length == 0) { return ""; }
 
-        if (pref.length < 7)
-            return Hex.toHexString(pref);
+        if (pref.length < 7) { return Hex.toHexString(pref); }
 
         return Hex.toHexString(pref).substring(0, 6);
     }
@@ -362,8 +360,8 @@ public class DataWord implements Comparable<DataWord> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         DataWord dataWord = (DataWord) o;
 
@@ -378,17 +376,14 @@ public class DataWord implements Comparable<DataWord> {
 
     @Override
     public int compareTo(DataWord o) {
-        if (o == null || o.getData() == null) return -1;
-        int result = FastByteComparisons.compareTo(
-                data, 0, data.length,
-                o.getData(), 0, o.getData().length);
+        if (o == null || o.getData() == null) { return -1; }
+        int result = FastByteComparisons.compareTo(data, 0, data.length, o.getData(), 0, o.getData().length);
         // Convert result into -1, 0 or 1 as is the convention
         return (int) Math.signum(result);
     }
 
     public void signExtend(byte k) {
-        if (0 > k || k > 31)
-            throw new IndexOutOfBoundsException();
+        if (0 > k || k > 31) { throw new IndexOutOfBoundsException(); }
         byte mask = this.sValue().testBit((k * 8) + 7) ? (byte) 0xff : 0;
         for (int i = 31; i > k; i--) {
             this.data[31 - i] = mask;
@@ -397,7 +392,7 @@ public class DataWord implements Comparable<DataWord> {
 
     public int bytesOccupied() {
         int firstNonZero = ByteUtil.firstNonZeroByte(data);
-        if (firstNonZero == -1) return 0;
+        if (firstNonZero == -1) { return 0; }
         return 31 - firstNonZero + 1;
     }
 
@@ -405,7 +400,7 @@ public class DataWord implements Comparable<DataWord> {
         return Hex.toHexString(data).equals(hex);
     }
 
-    public String asString(){
+    public String asString() {
         return new String(getNoLeadZeroesData());
     }
 }

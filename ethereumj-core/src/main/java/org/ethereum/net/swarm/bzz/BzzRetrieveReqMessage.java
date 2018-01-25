@@ -23,7 +23,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,7 +30,7 @@ import java.util.List;
  * - the main is to ask for a {@link org.ethereum.net.swarm.Chunk} with the specified hash
  * - ask to send back {#PEERS} message with the known nodes nearest to the specified hash
  * - initial request after handshake with zero hash. On this request the nearest known
- *   neighbours are sent back with the {#PEERS} message.
+ * neighbours are sent back with the {#PEERS} message.
  */
 public class BzzRetrieveReqMessage extends BzzMessage {
 
@@ -85,7 +84,7 @@ public class BzzRetrieveReqMessage extends BzzMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -118,11 +117,7 @@ public class BzzRetrieveReqMessage extends BzzMessage {
 
     @Override
     public String toString() {
-        return "BzzRetrieveReqMessage{" +
-                "key=" + key +
-                ", id=" + id +
-                ", maxSize=" + maxSize +
-                ", maxPeers=" + maxPeers +
-                '}';
+        return "BzzRetrieveReqMessage{" + "key=" + key + ", id=" + id + ", maxSize=" + maxSize + ", maxPeers=" +
+                maxPeers + '}';
     }
 }

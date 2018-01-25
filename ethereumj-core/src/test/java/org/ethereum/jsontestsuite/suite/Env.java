@@ -18,7 +18,6 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -36,9 +35,8 @@ public class Env {
     private final byte[] previousHash;
 
 
-    public Env(byte[] currentCoinbase, byte[] currentDifficulty, byte[] 
-            currentGasLimit, byte[] currentNumber, byte[] 
-            currentTimestamp, byte[] previousHash) {
+    public Env(byte[] currentCoinbase, byte[] currentDifficulty, byte[] currentGasLimit, byte[] currentNumber,
+               byte[] currentTimestamp, byte[] previousHash) {
         this.currentCoinbase = currentCoinbase;
         this.currentDifficulty = currentDifficulty;
         this.currentGasLimit = currentGasLimit;
@@ -67,8 +65,8 @@ public class Env {
         String prevHash = previousHash == null ? "" : previousHash.toString();
 
         this.currentCoinbase = Utils.parseData(coinbase);
-        this.currentDifficulty = BigIntegers.asUnsignedByteArray(TestCase.toBigInt(difficulty) );
-        this.currentGasLimit =   BigIntegers.asUnsignedByteArray(TestCase.toBigInt(gasLimit));
+        this.currentDifficulty = BigIntegers.asUnsignedByteArray(TestCase.toBigInt(difficulty));
+        this.currentGasLimit = BigIntegers.asUnsignedByteArray(TestCase.toBigInt(gasLimit));
         this.currentNumber = TestCase.toBigInt(number).toByteArray();
         this.currentTimestamp = TestCase.toBigInt(timestamp).toByteArray();
         this.previousHash = Utils.parseData(prevHash);
@@ -101,13 +99,9 @@ public class Env {
 
     @Override
     public String toString() {
-        return "Env{" +
-                "currentCoinbase=" + Hex.toHexString(currentCoinbase) +
-                ", currentDifficulty=" + Hex.toHexString(currentDifficulty) +
-                ", currentGasLimit=" + Hex.toHexString(currentGasLimit) +
-                ", currentNumber=" + Hex.toHexString(currentNumber) +
-                ", currentTimestamp=" + Hex.toHexString(currentTimestamp) +
-                ", previousHash=" + Hex.toHexString(previousHash) +
-                '}';
+        return "Env{" + "currentCoinbase=" + Hex.toHexString(currentCoinbase) + ", currentDifficulty=" +
+                Hex.toHexString(currentDifficulty) + ", currentGasLimit=" + Hex.toHexString(currentGasLimit) +
+                ", currentNumber=" + Hex.toHexString(currentNumber) + ", currentTimestamp=" +
+                Hex.toHexString(currentTimestamp) + ", previousHash=" + Hex.toHexString(previousHash) + '}';
     }
 }

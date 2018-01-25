@@ -19,8 +19,9 @@ package org.ethereum.crypto.zksnark;
 
 /**
  * Implementation of specific cyclic subgroup of points belonging to {@link BN128Fp} <br/>
- * Members of this subgroup are passed as a first param to pairing input {@link PairingCheck#addPair(BN128G1, BN128G2)} <br/>
- *
+ * Members of this subgroup are passed as a first param to pairing input
+ * {@link PairingCheck#addPair(BN128G1, BN128G2)} <br/>
+ * <p>
  * Subgroup generator G = (1; 2)
  *
  * @author Mikhail Kalinin
@@ -32,11 +33,6 @@ public class BN128G1 extends BN128Fp {
         super(p.x, p.y, p.z);
     }
 
-    @Override
-    public BN128G1 toAffine() {
-        return new BN128G1(super.toAffine());
-    }
-
     /**
      * Checks whether point is a member of subgroup,
      * returns a point if check has been passed and null otherwise
@@ -45,9 +41,9 @@ public class BN128G1 extends BN128Fp {
 
         BN128<Fp> p = BN128Fp.create(x, y);
 
-        if (p == null) return null;
+        if (p == null) { return null; }
 
-        if (!isGroupMember(p)) return null;
+        if (!isGroupMember(p)) { return null; }
 
         return new BN128G1(p);
     }
@@ -59,5 +55,10 @@ public class BN128G1 extends BN128Fp {
      */
     private static boolean isGroupMember(BN128<Fp> p) {
         return true;
+    }
+
+    @Override
+    public BN128G1 toAffine() {
+        return new BN128G1(super.toAffine());
     }
 }

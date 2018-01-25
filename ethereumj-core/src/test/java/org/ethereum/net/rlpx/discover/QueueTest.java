@@ -19,7 +19,6 @@ package org.ethereum.net.rlpx.discover;
 
 import org.junit.Test;
 
-import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,7 +41,7 @@ public class QueueTest {
                 System.out.println("Adding...");
                 for (int i = 0; i < elemCnt && !exception; i++) {
                     queue.add("aaa" + i);
-                    if (i % 100 == 0) Thread.sleep(10);
+                    if (i % 100 == 0) { Thread.sleep(10); }
                 }
                 System.out.println("Done.");
             } catch (Exception e) {
@@ -87,6 +86,6 @@ public class QueueTest {
             thread.join();
         }
 
-        if (exception) throw new RuntimeException("Test failed");
+        if (exception) { throw new RuntimeException("Test failed"); }
     }
 }

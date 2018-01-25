@@ -58,7 +58,7 @@ public class BlockHeaderWrapper {
 
         byte[] headerBytes = wrapper.get(0).getRLPData();
 
-        this.header= new BlockHeader(headerBytes);
+        this.header = new BlockHeader(headerBytes);
         this.nodeId = wrapper.get(1).getRLPData();
     }
 
@@ -88,9 +88,6 @@ public class BlockHeaderWrapper {
 
     @Override
     public String toString() {
-        return "BlockHeaderWrapper {" +
-                "header=" + header +
-                ", nodeId=" + Hex.toHexString(nodeId) +
-                '}';
+        return "BlockHeaderWrapper {" + "header=" + header + ", nodeId=" + Hex.toHexString(nodeId) + '}';
     }
 }

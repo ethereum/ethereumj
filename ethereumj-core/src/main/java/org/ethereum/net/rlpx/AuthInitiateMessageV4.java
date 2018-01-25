@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.util.ByteUtil.merge;
+import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
+
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.ethereum.util.ByteUtil.merge;
-import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
 /**
  * Auth Initiate message defined by EIP-8
@@ -57,7 +57,7 @@ public class AuthInitiateMessageV4 {
         System.arraycopy(signatureBytes, offset, s, 0, 32);
         offset += 32;
         int v = signatureBytes[offset] + 27;
-        message.signature = ECKey.ECDSASignature.fromComponents(r, s, (byte)v);
+        message.signature = ECKey.ECDSASignature.fromComponents(r, s, (byte) v);
 
         byte[] publicKeyBytes = params.get(1).getRLPData();
         byte[] bytes = new byte[65];
@@ -86,7 +86,8 @@ public class AuthInitiateMessageV4 {
         byte[] publicKey = new byte[64];
         System.arraycopy(this.publicKey.getEncoded(false), 1, publicKey, 0, publicKey.length);
 
-        byte[] sigBytes = RLP.encode(merge(rsigPad, ssigPad, new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)}));
+        byte[] sigBytes =
+                RLP.encode(merge(rsigPad, ssigPad, new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)}));
         byte[] publicBytes = RLP.encode(publicKey);
         byte[] nonceBytes = RLP.encode(nonce);
         byte[] versionBytes = RLP.encodeInt(version);
@@ -98,13 +99,11 @@ public class AuthInitiateMessageV4 {
     public String toString() {
 
         byte[] sigBytes = merge(asUnsignedByteArray(signature.r),
-                asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
+                                asUnsignedByteArray(signature.s),
+                                new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
-        return "AuthInitiateMessage{" +
-                "\n  sigBytes=" + Hex.toHexString(sigBytes) +
-                "\n  publicKey=" + Hex.toHexString(publicKey.getEncoded(false)) +
-                "\n  nonce=" + Hex.toHexString(nonce) +
-                "\n  version=" + version +
-                "\n}";
+        return "AuthInitiateMessage{" + "\n  sigBytes=" + Hex.toHexString(sigBytes) + "\n  publicKey=" +
+                Hex.toHexString(publicKey.getEncoded(false)) + "\n  nonce=" + Hex.toHexString(nonce) + "\n  version=" +
+                version + "\n}";
     }
 }

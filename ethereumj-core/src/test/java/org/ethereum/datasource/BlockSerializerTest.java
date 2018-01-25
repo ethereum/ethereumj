@@ -17,6 +17,8 @@
  */
 package org.ethereum.datasource;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.IndexedBlockStore.BlockInfo;
 import org.ethereum.util.ByteUtil;
@@ -29,8 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Test for {@link IndexedBlockStore.BLOCK_INFO_SERIALIZER}
@@ -57,7 +57,7 @@ public class BlockSerializerTest {
         List<BlockInfo> blockInfoList = generateBlockInfos(100);
         byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(blockInfoList);
         System.out.printf("Blocks total byte size: %s%n", data.length);
-        List<BlockInfo> blockInfoList2  = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
+        List<BlockInfo> blockInfoList2 = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
 
         assert blockInfoList.size() == blockInfoList2.size();
         for (int i = 0; i < blockInfoList2.size(); i++) {

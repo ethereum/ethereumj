@@ -17,8 +17,16 @@
  */
 package org.ethereum.listener;
 
+import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
+
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionInfo;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.net.eth.message.StatusMessage;
@@ -34,16 +42,14 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
-
 /**
  * Class capable of replaying stored blocks prior to 'going online' and
  * notifying on newly imported blocks
- *
+ * <p>
  * All other EthereumListener events are just forwarded to the supplied listener.
- *
+ * <p>
  * For example of usage, look at {@link org.ethereum.samples.EventListenerSample}
- *
+ * <p>
  * Created by Anton Nashatyrev on 18.07.2016.
  */
 public class BlockReplay extends EthereumListenerAdapter {
@@ -61,7 +67,8 @@ public class BlockReplay extends EthereumListenerAdapter {
     Block lastReplayedBlock;
     CircularFifoQueue<BlockSummary> onBlockBuffer = new CircularFifoQueue<>(HALF_BUFFER * 2);
 
-    public BlockReplay(BlockStore blockStore, TransactionStore transactionStore, EthereumListener listener, long firstBlock) {
+    public BlockReplay(BlockStore blockStore, TransactionStore transactionStore, EthereumListener listener,
+                       long firstBlock) {
         this.blockStore = blockStore;
         this.transactionStore = transactionStore;
         this.listener = listener;
@@ -83,7 +90,7 @@ public class BlockReplay extends EthereumListenerAdapter {
         logger.info("Replaying blocks from " + firstBlock + ", current best block: " + lastBlock);
         int cnt = 0;
         long num = firstBlock;
-        while(!replayComplete) {
+        while (!replayComplete) {
             for (; num <= lastBlock; num++) {
                 replayBlock(num);
                 cnt++;
@@ -134,7 +141,8 @@ public class BlockReplay extends EthereumListenerAdapter {
                 boolean lastBlockFound = lastReplayedBlock == null || onBlockBuffer.size() < onBlockBuffer.maxSize();
                 for (BlockSummary block : onBlockBuffer) {
                     if (!lastBlockFound) {
-                        lastBlockFound = FastByteComparisons.equal(block.getBlock().getHash(), lastReplayedBlock.getHash());
+                        lastBlockFound =
+                                FastByteComparisons.equal(block.getBlock().getHash(), lastReplayedBlock.getHash());
                     } else {
                         listener.onBlock(block);
                     }
@@ -149,7 +157,8 @@ public class BlockReplay extends EthereumListenerAdapter {
     }
 
     @Override
-    public void onPendingTransactionUpdate(TransactionReceipt transactionReceipt, PendingTransactionState pendingTransactionState, Block block) {
+    public void onPendingTransactionUpdate(TransactionReceipt transactionReceipt,
+                                           PendingTransactionState pendingTransactionState, Block block) {
         listener.onPendingTransactionUpdate(transactionReceipt, pendingTransactionState, block);
     }
 

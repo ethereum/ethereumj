@@ -20,7 +20,10 @@ package org.ethereum.util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,33 +34,34 @@ import java.util.function.Function;
  * Queues execution tasks into a single pipeline where some tasks can be executed in parallel
  * but preserve 'messages' order so the next task process messages on a single thread in
  * the same order they were added to the previous executor
- *
+ * <p>
  * Created by Anton Nashatyrev on 23.02.2016.
  */
-public class ExecutorPipeline <In, Out>{
+public class ExecutorPipeline<In, Out> {
 
+    private static AtomicInteger pipeNumber = new AtomicInteger(1);
     private BlockingQueue<Runnable> queue;
     private ThreadPoolExecutor exec;
     private boolean preserveOrder = false;
     private Function<In, Out> processor;
     private Consumer<Throwable> exceptionHandler;
-    private ExecutorPipeline <Out, ?> next;
-
+    private ExecutorPipeline<Out, ?> next;
     private AtomicLong orderCounter = new AtomicLong();
     private long nextOutTaskNumber = 0;
     private Map<Long, Out> orderMap = new HashMap<>();
     private ReentrantLock lock = new ReentrantLock();
     private String threadPoolName;
-
-    private static AtomicInteger pipeNumber = new AtomicInteger(1);
     private AtomicInteger threadNumber = new AtomicInteger(1);
 
     public ExecutorPipeline(int threads, int queueSize, boolean preserveOrder, Function<In, Out> processor,
                             Consumer<Throwable> exceptionHandler) {
         queue = new LimitedQueue<>(queueSize);
-        exec = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, queue, r ->
-                new Thread(r, threadPoolName + "-" + threadNumber.getAndIncrement())
-        );
+        exec = new ThreadPoolExecutor(threads,
+                                      threads,
+                                      0L,
+                                      TimeUnit.MILLISECONDS,
+                                      queue,
+                                      r -> new Thread(r, threadPoolName + "-" + threadNumber.getAndIncrement()));
         this.preserveOrder = preserveOrder;
         this.processor = processor;
         this.exceptionHandler = exceptionHandler;
@@ -73,7 +77,8 @@ public class ExecutorPipeline <In, Out>{
 
     public <NextOut> ExecutorPipeline<Out, NextOut> add(int threads, int queueSize, boolean preserveOrder,
                                                         Function<Out, NextOut> processor) {
-        ExecutorPipeline<Out, NextOut> ret = new ExecutorPipeline<>(threads, queueSize, preserveOrder, processor, exceptionHandler);
+        ExecutorPipeline<Out, NextOut> ret =
+                new ExecutorPipeline<>(threads, queueSize, preserveOrder, processor, exceptionHandler);
         next = ret;
         return ret;
     }
@@ -87,10 +92,10 @@ public class ExecutorPipeline <In, Out>{
                 try {
                     if (order == nextOutTaskNumber) {
                         next.push(res);
-                        while(true) {
+                        while (true) {
                             nextOutTaskNumber++;
                             Out out = orderMap.remove(nextOutTaskNumber);
-                            if (out == null) break;
+                            if (out == null) { break; }
                             next.push(out);
                         }
                     } else {
@@ -149,12 +154,13 @@ public class ExecutorPipeline <In, Out>{
     /**
      * Shutdowns executors and waits until all pipeline
      * submitted tasks complete
+     *
      * @throws InterruptedException
      */
     public void join() throws InterruptedException {
         exec.shutdown();
         exec.awaitTermination(10, TimeUnit.MINUTES);
-        if (next != null) next.join();
+        if (next != null) { next.join(); }
     }
 
     private static class LimitedQueue<E> extends LinkedBlockingQueue<E> {
@@ -168,7 +174,7 @@ public class ExecutorPipeline <In, Out>{
             try {
                 put(e);
                 return true;
-            } catch(InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
             return false;

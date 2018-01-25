@@ -17,11 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 import org.ethereum.core.Transaction;
 
 import java.util.ArrayList;
-
-import static org.ethereum.util.ByteUtil.toHexString;
 
 public class TransactionValidator {
 
@@ -36,7 +36,7 @@ public class TransactionValidator {
 
         if (orig != null && valid == null) {
 
-            String output ="Transaction expected to be not valid";
+            String output = "Transaction expected to be not valid";
 
             outputSummary.add(output);
             return outputSummary;
@@ -44,20 +44,17 @@ public class TransactionValidator {
 
         if (orig == null && valid != null) {
 
-            String output ="Transaction expected to be valid";
+            String output = "Transaction expected to be valid";
 
             outputSummary.add(output);
             return outputSummary;
         }
 
-        if (!toHexString(orig.getEncoded())
-                .equals(toHexString(valid.getEncoded()))) {
+        if (!toHexString(orig.getEncoded()).equals(toHexString(valid.getEncoded()))) {
 
-            String output =
-                    String.format("Wrong transaction.encoded: \n expected: %s \n got: %s",
-                            toHexString(valid.getEncoded()),
-                            toHexString(orig.getEncoded())
-                    );
+            String output = String.format("Wrong transaction.encoded: \n expected: %s \n got: %s",
+                                          toHexString(valid.getEncoded()),
+                                          toHexString(orig.getEncoded()));
 
             outputSummary.add(output);
         }

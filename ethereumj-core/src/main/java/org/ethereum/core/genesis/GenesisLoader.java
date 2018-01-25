@@ -17,6 +17,14 @@
  */
 package org.ethereum.core.genesis;
 
+import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
+import static org.ethereum.core.Genesis.PremineAccount;
+import static org.ethereum.core.Genesis.ZERO_HASH_2048;
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.ethereum.util.ByteUtil.hexStringToBytes;
+import static org.ethereum.util.ByteUtil.wrap;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,18 +47,13 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.core.Genesis.ZERO_HASH_2048;
-import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.util.ByteUtil.*;
-import static org.ethereum.core.BlockHeader.NONCE_LENGTH;
-import static org.ethereum.core.Genesis.PremineAccount;
-
 public class GenesisLoader {
 
     /**
      * Load genesis from passed location or from classpath `genesis` directory
      */
-    public static GenesisJson loadGenesisJson(SystemProperties config, ClassLoader classLoader) throws RuntimeException {
+    public static GenesisJson loadGenesisJson(SystemProperties config, ClassLoader classLoader)
+            throws RuntimeException {
         final String genesisFile = config.getProperty("genesisFile", null);
         final String genesisResource = config.genesisInfo();
 
@@ -79,13 +82,13 @@ public class GenesisLoader {
     }
 
     private static void showLoadError(String message, String genesisFile, String genesisResource) {
-        Utils.showErrorAndExit(
-            message,
-            "Config option 'genesisFile': " + genesisFile,
-            "Config option 'genesis': " + genesisResource);
+        Utils.showErrorAndExit(message,
+                               "Config option 'genesisFile': " + genesisFile,
+                               "Config option 'genesis': " + genesisResource);
     }
 
-    public static Genesis parseGenesis(BlockchainNetConfig blockchainNetConfig, GenesisJson genesisJson) throws RuntimeException {
+    public static Genesis parseGenesis(BlockchainNetConfig blockchainNetConfig, GenesisJson genesisJson)
+            throws RuntimeException {
         try {
             Genesis genesis = createBlockForJson(genesisJson);
 
@@ -115,15 +118,14 @@ public class GenesisLoader {
         try {
             json = new String(ByteStreams.toByteArray(genesisJsonIS));
 
-            ObjectMapper mapper = new ObjectMapper()
-                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                     .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
 
-            GenesisJson genesisJson  = mapper.readValue(json, GenesisJson.class);
+            GenesisJson genesisJson = mapper.readValue(json, GenesisJson.class);
             return genesisJson;
         } catch (Exception e) {
 
-            Utils.showErrorAndExit("Problem parsing genesis: "+ e.getMessage(), json);
+            Utils.showErrorAndExit("Problem parsing genesis: " + e.getMessage(), json);
 
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -132,23 +134,32 @@ public class GenesisLoader {
 
     private static Genesis createBlockForJson(GenesisJson genesisJson) {
 
-        byte[] nonce       = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
-        byte[] difficulty  = hexStringToBytesValidate(genesisJson.difficulty, 32, true);
-        byte[] mixHash     = hexStringToBytesValidate(genesisJson.mixhash, 32, false);
-        byte[] coinbase    = hexStringToBytesValidate(genesisJson.coinbase, 20, false);
+        byte[] nonce = prepareNonce(ByteUtil.hexStringToBytes(genesisJson.nonce));
+        byte[] difficulty = hexStringToBytesValidate(genesisJson.difficulty, 32, true);
+        byte[] mixHash = hexStringToBytesValidate(genesisJson.mixhash, 32, false);
+        byte[] coinbase = hexStringToBytesValidate(genesisJson.coinbase, 20, false);
 
         byte[] timestampBytes = hexStringToBytesValidate(genesisJson.timestamp, 8, true);
-        long   timestamp         = ByteUtil.byteArrayToLong(timestampBytes);
+        long timestamp = ByteUtil.byteArrayToLong(timestampBytes);
 
-        byte[] parentHash  = hexStringToBytesValidate(genesisJson.parentHash, 32, false);
-        byte[] extraData   = hexStringToBytesValidate(genesisJson.extraData, 32, true);
+        byte[] parentHash = hexStringToBytesValidate(genesisJson.parentHash, 32, false);
+        byte[] extraData = hexStringToBytesValidate(genesisJson.extraData, 32, true);
 
-        byte[] gasLimitBytes    = hexStringToBytesValidate(genesisJson.gasLimit, 8, true);
-        long   gasLimit         = ByteUtil.byteArrayToLong(gasLimitBytes);
+        byte[] gasLimitBytes = hexStringToBytesValidate(genesisJson.gasLimit, 8, true);
+        long gasLimit = ByteUtil.byteArrayToLong(gasLimitBytes);
 
-        return new Genesis(parentHash, EMPTY_LIST_HASH, coinbase, ZERO_HASH_2048,
-                            difficulty, 0, gasLimit, 0, timestamp, extraData,
-                            mixHash, nonce);
+        return new Genesis(parentHash,
+                           EMPTY_LIST_HASH,
+                           coinbase,
+                           ZERO_HASH_2048,
+                           difficulty,
+                           0,
+                           gasLimit,
+                           0,
+                           timestamp,
+                           extraData,
+                           mixHash,
+                           nonce);
     }
 
     private static byte[] hexStringToBytesValidate(String hex, int bytes, boolean notGreater) {
@@ -167,8 +178,9 @@ public class GenesisLoader {
 
     /**
      * Prepares nonce to be correct length
-     * @param nonceUnchecked    unchecked, user-provided nonce
-     * @return  correct nonce
+     *
+     * @param nonceUnchecked unchecked, user-provided nonce
+     * @return correct nonce
      * @throws RuntimeException when nonce is too long
      */
     private static byte[] prepareNonce(byte[] nonceUnchecked) {
@@ -186,17 +198,19 @@ public class GenesisLoader {
     }
 
 
-    private static Map<ByteArrayWrapper, PremineAccount> generatePreMine(BlockchainNetConfig blockchainNetConfig, Map<String, GenesisJson.AllocatedAccount> allocs){
+    private static Map<ByteArrayWrapper, PremineAccount> generatePreMine(BlockchainNetConfig blockchainNetConfig,
+                                                                         Map<String, GenesisJson.AllocatedAccount>
+                                                                                 allocs) {
 
         final Map<ByteArrayWrapper, PremineAccount> premine = new HashMap<>();
 
-        for (String key : allocs.keySet()){
+        for (String key : allocs.keySet()) {
 
             final byte[] address = hexStringToBytes(key);
             final GenesisJson.AllocatedAccount alloc = allocs.get(key);
             final PremineAccount state = new PremineAccount();
-            AccountState accountState = new AccountState(
-                    blockchainNetConfig.getCommonConstants().getInitialNonce(), parseHexOrDec(alloc.balance));
+            AccountState accountState = new AccountState(blockchainNetConfig.getCommonConstants().getInitialNonce(),
+                                                         parseHexOrDec(alloc.balance));
 
             if (alloc.nonce != null) {
                 accountState = accountState.withNonce(parseHexOrDec(alloc.nonce));
@@ -217,7 +231,7 @@ public class GenesisLoader {
 
     /**
      * @param rawValue either hex started with 0x or dec
-     * return BigInteger
+     *                 return BigInteger
      */
     private static BigInteger parseHexOrDec(String rawValue) {
         if (rawValue != null) {
@@ -227,7 +241,7 @@ public class GenesisLoader {
         }
     }
 
-    public static byte[] generateRootHash(Map<ByteArrayWrapper, PremineAccount> premine){
+    public static byte[] generateRootHash(Map<ByteArrayWrapper, PremineAccount> premine) {
 
         Trie<byte[]> state = new SecureTrie((byte[]) null);
 

@@ -97,19 +97,16 @@ public class PendingTransaction {
 
     @Override
     public String toString() {
-        return "PendingTransaction [" +
-                "  transaction=" + transaction +
-                ", blockNumber=" + blockNumber +
-                ']';
+        return "PendingTransaction [" + "  transaction=" + transaction + ", blockNumber=" + blockNumber + ']';
     }
 
     /**
-     *  Two pending transaction are equal if equal their sender + nonce
+     * Two pending transaction are equal if equal their sender + nonce
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PendingTransaction)) return false;
+        if (this == o) { return true; }
+        if (!(o instanceof PendingTransaction)) { return false; }
 
         PendingTransaction that = (PendingTransaction) o;
 

@@ -70,9 +70,11 @@ public class CLIInterface {
                     String connectStr = args[i + 1];
                     logger.info("Connect URI set to [{}]", connectStr);
                     URI uri = new URI(connectStr);
-                    if (!uri.getScheme().equals("enode"))
+                    if (!uri.getScheme().equals("enode")) {
                         throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
-                    List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
+                    }
+                    List<Map<String, String>> peerActiveList =
+                            Collections.singletonList(Collections.singletonMap("url", connectStr));
                     cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
                 }
 
@@ -101,8 +103,8 @@ public class CLIInterface {
 
     private static Boolean interpret(String arg) {
 
-        if (arg.equals("on") || arg.equals("true") || arg.equals("yes")) return true;
-        if (arg.equals("off") || arg.equals("false") || arg.equals("no")) return false;
+        if (arg.equals("on") || arg.equals("true") || arg.equals("yes")) { return true; }
+        if (arg.equals("off") || arg.equals("false") || arg.equals("no")) { return false; }
 
         throw new Error("Can't interpret the answer: " + arg);
     }
@@ -114,7 +116,9 @@ public class CLIInterface {
         System.out.println("-db <db>              -- to setup the path for the database directory ");
         System.out.println("-listen  <port>       -- port to listen on for incoming connections ");
         System.out.println("-connect <enode://pubKey@host:port>  -- address actively connect to  ");
-        System.out.println("-connectOnly <enode://pubKey@host:port>  -- like 'connect', but will not attempt to connect to other peers  ");
+        System.out.println(
+                "-connectOnly <enode://pubKey@host:port>  -- like 'connect', but will not attempt to connect to other" +
+                        " peers  ");
         System.out.println("");
         System.out.println("e.g: cli -reset no -db db-1 -listen 20202 -connect enode://0be5b4@poc-7.ethdev.com:30300 ");
         System.out.println("");

@@ -17,6 +17,13 @@
  */
 package org.ethereum.solidity;
 
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.ABI;
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.BIN;
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.INTERFACE;
+import static org.ethereum.solidity.compiler.SolidityCompiler.Options.METADATA;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
+
 import org.ethereum.core.CallTransaction;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
@@ -26,14 +33,14 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
-import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringContains.containsString;
-
 /**
  * Created by Anton Nashatyrev on 03.03.2016.
  */
 public class CompilerTest {
+
+    public static void main(String[] args) throws Exception {
+        new CompilerTest().simpleTest();
+    }
 
     @Test
     public void solc_getVersion_shouldWork() throws IOException {
@@ -49,39 +56,27 @@ public class CompilerTest {
 
     @Test
     public void simpleTest() throws IOException {
-        String contract =
-            "pragma solidity ^0.4.7;\n" +
-                    "\n" +
-                    "contract a {\n" +
-                    "\n" +
-                    "        mapping(address => string) private mailbox;\n" +
-                    "\n" +
-                    "        event Mailed(address from, string message);\n" +
-                    "        event Read(address from, string message);\n" +
-                    "\n" +
-                    "}";
+        String contract = "pragma solidity ^0.4.7;\n" + "\n" + "contract a {\n" + "\n" +
+                "        mapping(address => string) private mailbox;\n" + "\n" +
+                "        event Mailed(address from, string message);\n" +
+                "        event Read(address from, string message);\n" + "\n" + "}";
 
-        SolidityCompiler.Result res = SolidityCompiler.compile(
-                contract.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
+        SolidityCompiler.Result res =
+                SolidityCompiler.compile(contract.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
-        if (result.contracts.get("a") != null)
-            System.out.println(result.contracts.get("a").bin);
-        else
+        if (result.contracts.get("a") != null) { System.out.println(result.contracts.get("a").bin); } else {
             Assert.fail();
+        }
     }
 
     @Test
     public void defaultFuncTest() throws IOException {
-        String contractSrc =
-            "pragma solidity ^0.4.7;\n" +
-                    "contract a {" +
-                    "        function() {throw;}" +
-                    "}";
+        String contractSrc = "pragma solidity ^0.4.7;\n" + "contract a {" + "        function() {throw;}" + "}";
 
-        SolidityCompiler.Result res = SolidityCompiler.compile(
-                contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
+        SolidityCompiler.Result res =
+                SolidityCompiler.compile(contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
@@ -96,8 +91,7 @@ public class CompilerTest {
 
         File source = new File("src/test/resources/solidity/file1.sol");
 
-        SolidityCompiler.Result res = SolidityCompiler.compile(
-                source, true, ABI, BIN, INTERFACE, METADATA);
+        SolidityCompiler.Result res = SolidityCompiler.compile(source, true, ABI, BIN, INTERFACE, METADATA);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
@@ -105,10 +99,5 @@ public class CompilerTest {
         CompilationResult.ContractMetadata a = result.contracts.get("test1");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.printf(contract.functions[0].toString());
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        new CompilerTest().simpleTest();
     }
 }

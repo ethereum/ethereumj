@@ -24,7 +24,7 @@ import java.math.BigInteger;
 
 /**
  * Checks if {@link BlockHeader#gasLimit} matches gas limit bounds. <br>
- *
+ * <p>
  * This check is NOT run in Frontier
  *
  * @author Mikhail Kalinin
@@ -46,13 +46,13 @@ public class ParentGasLimitRule extends DependentBlockHeaderRule {
         BigInteger headerGasLimit = new BigInteger(1, header.getGasLimit());
         BigInteger parentGasLimit = new BigInteger(1, parent.getGasLimit());
 
-        if (headerGasLimit.compareTo(parentGasLimit.multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR - 1)).divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR))) < 0 ||
-            headerGasLimit.compareTo(parentGasLimit.multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR + 1)).divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR))) > 0) {
+        if (headerGasLimit.compareTo(parentGasLimit.multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR - 1))
+                                             .divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR))) < 0 ||
+                headerGasLimit.compareTo(parentGasLimit.multiply(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR + 1))
+                                                 .divide(BigInteger.valueOf(GAS_LIMIT_BOUND_DIVISOR))) > 0) {
 
-            errors.add(String.format(
-                    "#%d: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR",
-                    header.getNumber()
-            ));
+            errors.add(String.format("#%d: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR",
+                                     header.getNumber()));
             return false;
         }
 

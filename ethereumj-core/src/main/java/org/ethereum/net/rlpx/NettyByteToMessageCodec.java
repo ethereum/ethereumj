@@ -52,16 +52,19 @@ public abstract class NettyByteToMessageCodec<I> extends ByteToMessageCodec<I> {
         decoder.channelReadComplete(ctx);
         super.channelReadComplete(ctx);
     }
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         decoder.channelInactive(ctx);
         super.channelInactive(ctx);
     }
+
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         decoder.handlerAdded(ctx);
         super.handlerAdded(ctx);
     }
+
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         decoder.handlerRemoved(ctx);

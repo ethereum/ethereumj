@@ -18,15 +18,11 @@
 package org.ethereum.db;
 
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.JdkFutureAdapters;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.AbstractCachedSource;
 import org.ethereum.datasource.AsyncFlushable;
 import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.WriteCache;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.slf4j.Logger;
@@ -37,33 +33,39 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
  */
 public class DbFlushManager {
     private static final Logger logger = LoggerFactory.getLogger("db");
-
+    private final BlockingQueue<Runnable> executorQueue = new ArrayBlockingQueue<>(1);
+    private final ExecutorService flushThread = new ThreadPoolExecutor(1,
+                                                                       1,
+                                                                       0L,
+                                                                       TimeUnit.MILLISECONDS,
+                                                                       executorQueue,
+                                                                       new ThreadFactoryBuilder().setNameFormat(
+                                                                               "DbFlushManagerThread-%d").build());
     List<AbstractCachedSource<byte[], byte[]>> writeCaches = new ArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
     AbstractCachedSource<byte[], byte[]> stateDbCache;
-
     long sizeThreshold;
     int commitsCountThreshold;
     boolean syncDone = false;
     boolean flushAfterSyncDone;
-
     SystemProperties config;
-
     int commitCount = 0;
-
-    private final BlockingQueue<Runnable> executorQueue = new ArrayBlockingQueue<>(1);
-    private final ExecutorService flushThread = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-            executorQueue, new ThreadFactoryBuilder().setNameFormat("DbFlushManagerThread-%d").build());
     Future<Boolean> lastFlush = Futures.immediateFuture(false);
 
-    public DbFlushManager(SystemProperties config, Set<DbSource> dbSources, AbstractCachedSource<byte[], byte[]> stateDbCache) {
+    public DbFlushManager(SystemProperties config, Set<DbSource> dbSources,
+                          AbstractCachedSource<byte[], byte[]> stateDbCache) {
         this.config = config;
         this.dbSources = dbSources;
         sizeThreshold = config.getConfig().getInt("cache.flush.writeCacheSize") * 1024 * 1024;
@@ -74,7 +76,7 @@ public class DbFlushManager {
 
     @Autowired
     public void setEthereumListener(CompositeEthereumListener listener) {
-        if (!flushAfterSyncDone) return;
+        if (!flushAfterSyncDone) { return; }
         listener.addListener(new EthereumListenerAdapter() {
             @Override
             public void onSyncDone(SyncState state) {
@@ -110,10 +112,12 @@ public class DbFlushManager {
     public synchronized void commit() {
         long cacheSize = getCacheSize();
         if (sizeThreshold >= 0 && cacheSize >= sizeThreshold) {
-            logger.info("DbFlushManager: flushing db due to write cache size (" + cacheSize + ") reached threshold (" + sizeThreshold + ")");
+            logger.info("DbFlushManager: flushing db due to write cache size (" + cacheSize + ") reached threshold (" +
+                                sizeThreshold + ")");
             flush();
         } else if (commitsCountThreshold > 0 && commitCount >= commitsCountThreshold) {
-            logger.info("DbFlushManager: flushing db due to commits (" + commitCount + ") reached threshold (" + commitsCountThreshold + ")");
+            logger.info("DbFlushManager: flushing db due to commits (" + commitCount + ") reached threshold (" +
+                                commitsCountThreshold + ")");
             flush();
             commitCount = 0;
         } else if (flushAfterSyncDone && syncDone) {

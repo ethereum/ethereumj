@@ -17,29 +17,26 @@
  */
 package org.ethereum.config.blockchain;
 
+import static org.ethereum.util.BIUtil.max;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
-import static org.ethereum.util.BIUtil.max;
 
 /**
  * EIPs included in the Hard Fork:
  * <ul>
- *     <li>100 - Change difficulty adjustment to target mean block time including uncles</li>
- *     <li>140 - REVERT instruction in the Ethereum Virtual Machine</li>
- *     <li>196 - Precompiled contracts for addition and scalar multiplication on the elliptic curve alt_bn128</li>
- *     <li>197 - Precompiled contracts for optimal Ate pairing check on the elliptic curve alt_bn128</li>
- *     <li>198 - Precompiled contract for bigint modular exponentiation</li>
- *     <li>211 - New opcodes: RETURNDATASIZE and RETURNDATACOPY</li>
- *     <li>214 - New opcode STATICCALL</li>
- *     <li>658 - Embedding transaction return data in receipts</li>
+ * <li>100 - Change difficulty adjustment to target mean block time including uncles</li>
+ * <li>140 - REVERT instruction in the Ethereum Virtual Machine</li>
+ * <li>196 - Precompiled contracts for addition and scalar multiplication on the elliptic curve alt_bn128</li>
+ * <li>197 - Precompiled contracts for optimal Ate pairing check on the elliptic curve alt_bn128</li>
+ * <li>198 - Precompiled contract for bigint modular exponentiation</li>
+ * <li>211 - New opcodes: RETURNDATASIZE and RETURNDATACOPY</li>
+ * <li>214 - New opcode STATICCALL</li>
+ * <li>658 - Embedding transaction return data in receipts</li>
  * </ul>
  *
  * @author Mikhail Kalinin
@@ -79,14 +76,16 @@ public class ByzantiumConfig extends Eip160HFConfig {
         int explosion = getExplosion(curBlock, parent);
 
         if (explosion >= 0) {
-            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
+            difficulty =
+                    max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
         }
 
         return difficulty;
     }
 
     protected int getExplosion(BlockHeader curBlock, BlockHeader parent) {
-        int periodCount = (int) (Math.max(0, curBlock.getNumber() - 3_000_000) / getConstants().getEXP_DIFFICULTY_PERIOD());
+        int periodCount =
+                (int) (Math.max(0, curBlock.getNumber() - 3_000_000) / getConstants().getEXP_DIFFICULTY_PERIOD());
         return periodCount - 2;
     }
 

@@ -19,7 +19,6 @@ package org.ethereum.net.rlpx.discover.table;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -70,10 +69,10 @@ public class NodeBucket {
     }
 
     public List<NodeEntry> getNodes() {
-//        List<NodeEntry> nodes = new ArrayList<>();
-//        for (NodeEntry e : this.nodes) {
-//            nodes.add(e);
-//        }
+        //        List<NodeEntry> nodes = new ArrayList<>();
+        //        for (NodeEntry e : this.nodes) {
+        //            nodes.add(e);
+        //        }
         return nodes;
     }
 }

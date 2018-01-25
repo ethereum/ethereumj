@@ -37,7 +37,7 @@ public enum BzzMessageCodes {
      * - the main is to ask for a {@link org.ethereum.net.swarm.Chunk} with the specified hash
      * - ask to send back {#PEERS} message with the known nodes nearest to the specified hash
      * - initial request after handshake with zero hash. On this request the nearest known
-     *   neighbours are sent back with the {#PEERS} message.
+     * neighbours are sent back with the {#PEERS} message.
      */
     RETRIEVE_REQUEST(0x02),
 
@@ -47,8 +47,6 @@ public enum BzzMessageCodes {
      */
     PEERS(0x03);
 
-    private int cmd;
-
     private static final Map<Integer, BzzMessageCodes> intToTypeMap = new HashMap<>();
 
     static {
@@ -56,6 +54,8 @@ public enum BzzMessageCodes {
             intToTypeMap.put(type.cmd, type);
         }
     }
+
+    private int cmd;
 
     BzzMessageCodes(int cmd) {
         this.cmd = cmd;

@@ -19,11 +19,11 @@ package org.ethereum.db;
 
 import org.ethereum.vm.DataWord;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 public interface ContractDetails {
 
@@ -33,21 +33,21 @@ public interface ContractDetails {
 
     byte[] getCode();
 
-    byte[] getCode(byte[] codeHash);
-
     void setCode(byte[] code);
+
+    byte[] getCode(byte[] codeHash);
 
     byte[] getStorageHash();
 
     void decode(byte[] rlpCode);
 
-    void setDirty(boolean dirty);
-
-    void setDeleted(boolean deleted);
-
     boolean isDirty();
 
+    void setDirty(boolean dirty);
+
     boolean isDeleted();
+
+    void setDeleted(boolean deleted);
 
     byte[] getEncoded();
 
@@ -55,13 +55,13 @@ public interface ContractDetails {
 
     Set<DataWord> getStorageKeys();
 
-    Map<DataWord,DataWord> getStorage(@Nullable Collection<DataWord> keys);
+    Map<DataWord, DataWord> getStorage(@Nullable Collection<DataWord> keys);
 
     Map<DataWord, DataWord> getStorage();
 
-    void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues);
-
     void setStorage(Map<DataWord, DataWord> storage);
+
+    void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues);
 
     byte[] getAddress();
 

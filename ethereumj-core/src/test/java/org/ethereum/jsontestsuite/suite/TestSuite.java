@@ -42,7 +42,7 @@ public class TestSuite {
         }
     }
 
-    public List<TestCase> getAllTests(){
+    public List<TestCase> getAllTests() {
         return testList;
     }
 

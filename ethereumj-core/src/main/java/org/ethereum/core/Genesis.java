@@ -44,21 +44,29 @@ import java.util.Map;
  */
 public class Genesis extends Block {
 
-    private Map<ByteArrayWrapper, PremineAccount> premine = new HashMap<>();
-
-    public  static byte[] ZERO_HASH_2048 = new byte[256];
+    public static byte[] ZERO_HASH_2048 = new byte[256];
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long NUMBER = 0;
-
     private static Block instance;
+    private Map<ByteArrayWrapper, PremineAccount> premine = new HashMap<>();
 
-    public Genesis(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-                   byte[] difficulty, long number, long gasLimit,
-                   long gasUsed, long timestamp,
-                   byte[] extraData, byte[] mixHash, byte[] nonce){
-        super(parentHash, unclesHash, coinbase, logsBloom, difficulty,
-                number, ByteUtil.longToBytesNoLeadZeroes(gasLimit), gasUsed, timestamp, extraData,
-                mixHash, nonce, null, null);
+    public Genesis(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom, byte[] difficulty,
+                   long number, long gasLimit, long gasUsed, long timestamp, byte[] extraData, byte[] mixHash,
+                   byte[] nonce) {
+        super(parentHash,
+              unclesHash,
+              coinbase,
+              logsBloom,
+              difficulty,
+              number,
+              ByteUtil.longToBytesNoLeadZeroes(gasLimit),
+              gasUsed,
+              timestamp,
+              extraData,
+              mixHash,
+              nonce,
+              null,
+              null);
     }
 
     public static Block getInstance() {
@@ -67,19 +75,6 @@ public class Genesis extends Block {
 
     public static Genesis getInstance(SystemProperties config) {
         return config.getGenesis();
-    }
-
-
-    public Map<ByteArrayWrapper, PremineAccount> getPremine() {
-        return premine;
-    }
-
-    public void setPremine(Map<ByteArrayWrapper, PremineAccount> premine) {
-        this.premine = premine;
-    }
-
-    public void addPremine(ByteArrayWrapper address, AccountState accountState) {
-        premine.put(address, new PremineAccount(accountState));
     }
 
     public static void populateRepository(Repository repository, Genesis genesis) {
@@ -96,6 +91,18 @@ public class Genesis extends Block {
         }
     }
 
+    public Map<ByteArrayWrapper, PremineAccount> getPremine() {
+        return premine;
+    }
+
+    public void setPremine(Map<ByteArrayWrapper, PremineAccount> premine) {
+        this.premine = premine;
+    }
+
+    public void addPremine(ByteArrayWrapper address, AccountState accountState) {
+        premine.put(address, new PremineAccount(accountState));
+    }
+
     /**
      * Used to keep addition fields.
      */
@@ -105,15 +112,15 @@ public class Genesis extends Block {
 
         public AccountState accountState;
 
-        public byte[] getStateRoot() {
-            return accountState.getStateRoot();
-        }
-
         public PremineAccount(AccountState accountState) {
             this.accountState = accountState;
         }
 
         public PremineAccount() {
+        }
+
+        public byte[] getStateRoot() {
+            return accountState.getStateRoot();
         }
     }
 }

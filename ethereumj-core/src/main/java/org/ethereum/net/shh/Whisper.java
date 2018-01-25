@@ -18,7 +18,6 @@
 package org.ethereum.net.shh;
 
 import org.ethereum.crypto.ECKey;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,12 +37,15 @@ public abstract class Whisper {
     public void send(byte[] payload, Topic[] topics) {
         send(null, null, payload, topics, 50, 50);
     }
+
     public void send(byte[] payload, Topic[] topics, int ttl, int workToProve) {
         send(null, null, payload, topics, ttl, workToProve);
     }
+
     public void send(String toIdentity, byte[] payload, Topic[] topics) {
         send(null, toIdentity, payload, topics, 50, 50);
     }
+
     public void send(String toIdentity, byte[] payload, Topic[] topics, int ttl, int workToProve) {
         send(null, toIdentity, payload, topics, ttl, workToProve);
     }
@@ -52,5 +54,6 @@ public abstract class Whisper {
         send(fromIdentity, toIdentity, payload, topics, 50, 50);
     }
 
-    public abstract void send(String fromIdentity, String toIdentity, byte[] payload, Topic[] topics, int ttl, int workToProve);
+    public abstract void send(String fromIdentity, String toIdentity, byte[] payload, Topic[] topics, int ttl,
+                              int workToProve);
 }

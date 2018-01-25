@@ -18,6 +18,8 @@
 package org.ethereum.core;
 
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.inmem.HashMapDB;
@@ -47,38 +49,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 @NoAutoscan
 public class ImportTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
-
-    @Configuration
-    @ComponentScan(basePackages = "org.ethereum")
-    @NoAutoscan
-    static class ContextConfiguration {
-
-        @Bean
-        public BlockStore blockStore(){
-
-            IndexedBlockStore blockStore = new IndexedBlockStore();
-            blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
-
-            return blockStore;
-        }
-    }
-
     @Autowired
     WorldManager worldManager;
 
     @AfterClass
-    public static void close(){
-//        FileUtil.recursiveDelete(CONFIG.databaseDir());
+    public static void close() {
+        //        FileUtil.recursiveDelete(CONFIG.databaseDir());
     }
-
 
     @Ignore
     @Test
@@ -87,26 +70,38 @@ public class ImportTest {
         BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
         logger.info("Running as: {}", SystemProperties.getDefault().genesisInfo());
 
-        URL scenario1 = ClassLoader
-                .getSystemResource("blockload/scenario1.dmp");
+        URL scenario1 = ClassLoader.getSystemResource("blockload/scenario1.dmp");
 
         File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
         byte[] root = Genesis.getInstance().getStateRoot();
         for (String blockRLP : strData) {
-            Block block = new Block(
-                    Hex.decode(blockRLP));
+            Block block = new Block(Hex.decode(blockRLP));
             logger.info("sending block.hash: {}", Hex.toHexString(block.getHash()));
             blockchain.tryToConnect(block);
             root = block.getStateRoot();
         }
 
-        Repository repository = (Repository)worldManager.getRepository();
+        Repository repository = (Repository) worldManager.getRepository();
         logger.info("asserting root state is: {}", Hex.toHexString(root));
-        assertEquals(Hex.toHexString(root),
-                Hex.toHexString(repository.getRoot()));
+        assertEquals(Hex.toHexString(root), Hex.toHexString(repository.getRoot()));
 
+    }
+
+    @Configuration
+    @ComponentScan(basePackages = "org.ethereum")
+    @NoAutoscan
+    static class ContextConfiguration {
+
+        @Bean
+        public BlockStore blockStore() {
+
+            IndexedBlockStore blockStore = new IndexedBlockStore();
+            blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
+
+            return blockStore;
+        }
     }
 
 }

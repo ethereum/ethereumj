@@ -28,9 +28,10 @@ public abstract class AbstractBlockstore implements BlockStore {
     public byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash) {
         Block branchBlock = getBlockByHash(branchBlockHash);
         if (branchBlock.getNumber() < blockNumber) {
-            throw new IllegalArgumentException("Requested block number > branch hash number: " + blockNumber + " < " + branchBlock.getNumber());
+            throw new IllegalArgumentException(
+                    "Requested block number > branch hash number: " + blockNumber + " < " + branchBlock.getNumber());
         }
-        while(branchBlock.getNumber() > blockNumber) {
+        while (branchBlock.getNumber() > blockNumber) {
             branchBlock = getBlockByHash(branchBlock.getParentHash());
         }
         return branchBlock.getHash();

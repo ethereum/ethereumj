@@ -19,10 +19,7 @@ package org.ethereum.sync;
 
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.Blockchain;
-import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +67,8 @@ public class FastSyncDownloader extends BlockDownloader {
                 blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
                 counter++;
                 if (counter >= maxCount) {
-                    logger.info("All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
+                    logger.info("All requested " + counter + " blocks are downloaded. (last " +
+                                        blockWrapper.getBlock().getShortDescr() + ")");
                     stop();
                     break;
                 }
@@ -79,7 +77,8 @@ public class FastSyncDownloader extends BlockDownloader {
             long c = System.currentTimeMillis();
             if (c - t > 5000) {
                 t = c;
-                logger.info("FastSync: downloaded " + counter + " blocks so far. Last: " + blockWrappers.get(0).getBlock().getShortDescr());
+                logger.info("FastSync: downloaded " + counter + " blocks so far. Last: " +
+                                    blockWrappers.get(0).getBlock().getShortDescr());
                 blockStore.flush();
             }
         }

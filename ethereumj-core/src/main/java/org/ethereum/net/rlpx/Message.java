@@ -17,15 +17,15 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.merge;
+
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.security.SignatureException;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.merge;
 
 public abstract class Message {
 
@@ -38,7 +38,7 @@ public abstract class Message {
 
     public static Message decode(byte[] wire) {
 
-        if (wire.length < 98) throw new RuntimeException("Bad message");
+        if (wire.length < 98) { throw new RuntimeException("Bad message"); }
 
         byte[] mdc = new byte[32];
         System.arraycopy(wire, 0, mdc, 0, 32);
@@ -56,14 +56,16 @@ public abstract class Message {
 
         int check = FastByteComparisons.compareTo(mdc, 0, mdc.length, mdcCheck, 0, mdcCheck.length);
 
-        if (check != 0) throw new RuntimeException("MDC check failed");
+        if (check != 0) { throw new RuntimeException("MDC check failed"); }
 
         Message msg;
-        if (type[0] == 1) msg = new PingMessage();
-        else if (type[0] == 2) msg = new PongMessage();
-        else if (type[0] == 3) msg = new FindNodeMessage();
-        else if (type[0] == 4) msg = new NeighborsMessage();
-        else throw new RuntimeException("Unknown RLPx message: " + type[0]);
+        if (type[0] == 1) { msg = new PingMessage(); } else if (type[0] == 2) { msg = new PongMessage(); } else if (type[0] == 3) {
+            msg = new FindNodeMessage();
+        } else if (type[0] == 4) {
+            msg = new NeighborsMessage();
+        } else {
+            throw new RuntimeException("Unknown RLPx message: " + type[0]);
+        }
 
         msg.mdc = mdc;
         msg.signature = signature;
@@ -90,9 +92,9 @@ public abstract class Message {
 
         signature.v -= 27;
 
-        byte[] sigBytes =
-                merge(BigIntegers.asUnsignedByteArray(32, signature.r),
-                        BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{signature.v});
+        byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(32, signature.r),
+                                BigIntegers.asUnsignedByteArray(32, signature.s),
+                                new byte[]{signature.v});
 
         // [3] calculate MDC
         byte[] forSha = merge(sigBytes, type, data);
@@ -116,8 +118,8 @@ public abstract class Message {
         byte v = signature[64];
 
         // todo: remove this when cpp conclude what they do here
-        if (v == 1) v = 28;
-        if (v == 0) v = 27;
+        if (v == 1) { v = 28; }
+        if (v == 0) { v = 27; }
 
         System.arraycopy(signature, 0, r, 0, 32);
         System.arraycopy(signature, 32, s, 0, 32);
@@ -163,11 +165,7 @@ public abstract class Message {
 
     @Override
     public String toString() {
-        return "{" +
-                "mdc=" + Hex.toHexString(mdc) +
-                ", signature=" + Hex.toHexString(signature) +
-                ", type=" + Hex.toHexString(type) +
-                ", data=" + Hex.toHexString(data) +
-                '}';
+        return "{" + "mdc=" + Hex.toHexString(mdc) + ", signature=" + Hex.toHexString(signature) + ", type=" +
+                Hex.toHexString(type) + ", data=" + Hex.toHexString(data) + '}';
     }
 }

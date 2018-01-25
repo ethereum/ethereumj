@@ -17,6 +17,8 @@
  */
 package org.ethereum.config;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.DaoNoHFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
@@ -24,10 +26,6 @@ import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.Test;
-
-import java.math.BigInteger;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Stan Reshetnyk on 29.12.16.
@@ -45,7 +43,7 @@ public class DaoLightMiningTest {
 
         for (int i = 0; i < FORK_BLOCK + 30; i++) {
             Block b = sb.createBlock();
-//            System.out.println("Created block " + b.getNumber() + " " + getData(b.getExtraData()));
+            //            System.out.println("Created block " + b.getNumber() + " " + getData(b.getExtraData()));
         }
 
         assertEquals("EthereumJ powered", getData(sb, FORK_BLOCK - 1));
@@ -79,8 +77,6 @@ public class DaoLightMiningTest {
         netConfig.add(FORK_BLOCK, proFork ? new DaoHFConfig(c1, FORK_BLOCK) : new DaoNoHFConfig(c1, FORK_BLOCK));
 
         // create blockchain
-        return new StandaloneBlockchain()
-                .withAutoblock(true)
-                .withNetConfig(netConfig);
+        return new StandaloneBlockchain().withAutoblock(true).withNetConfig(netConfig);
     }
 }

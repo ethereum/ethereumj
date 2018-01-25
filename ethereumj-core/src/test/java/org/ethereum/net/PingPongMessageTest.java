@@ -17,20 +17,18 @@
  */
 package org.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.p2p.PongMessage;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class PingPongMessageTest {
 
     /* PING_MESSAGE & PONG_MESSAGE */
 
-    @Test /* PingMessage */
-    public void testPing() {
+    @Test /* PingMessage */ public void testPing() {
 
         PingMessage pingMessage = new PingMessage();
         System.out.println(pingMessage);
@@ -40,8 +38,7 @@ public class PingPongMessageTest {
         assertEquals(P2pMessageCodes.PING, pingMessage.getCommand());
     }
 
-    @Test /* PongMessage */
-    public void testPong() {
+    @Test /* PongMessage */ public void testPong() {
 
         PongMessage pongMessage = new PongMessage();
         System.out.println(pongMessage);

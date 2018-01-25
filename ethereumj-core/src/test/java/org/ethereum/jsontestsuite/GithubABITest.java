@@ -17,13 +17,13 @@
  */
 package org.ethereum.jsontestsuite;
 
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runABITest;
+
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-
-import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runABITest;
 
 /**
  * @author Mikhail Kalinin

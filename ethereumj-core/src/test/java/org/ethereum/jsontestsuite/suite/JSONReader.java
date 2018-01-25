@@ -23,26 +23,28 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.*;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class JSONReader {
 
-    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
-
     static ExecutorService threadPool;
+    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit) {
 
@@ -71,16 +73,19 @@ public class JSONReader {
 
     public static String loadJSONFromCommit(String filename, String shacommit) throws IOException {
         String json = "";
-        if (!SystemProperties.getDefault().githubTestsLoadLocal())
+        if (!SystemProperties.getDefault().githubTestsLoadLocal()) {
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
-        if (!json.isEmpty()) json = json.replaceAll("//", "data");
+        }
+        if (!json.isEmpty()) {
+            json = json.replaceAll("//", "data");
+        }
         return json.isEmpty() ? getFromLocal(filename) : json;
     }
 
     public static String getFromLocal(String filename) throws IOException {
 
-        filename = SystemProperties.getDefault().githubTestsPath()
-                + System.getProperty("file.separator") + filename.replaceAll("/", System.getProperty("file.separator"));
+        filename = SystemProperties.getDefault().githubTestsPath() + System.getProperty("file.separator") +
+                filename.replaceAll("/", System.getProperty("file.separator"));
 
         logger.info("Loading local file: {}", filename);
 
@@ -117,17 +122,17 @@ public class JSONReader {
 
         if (SystemProperties.getDefault().githubTestsLoadLocal()) {
 
-            String path = SystemProperties.getDefault().githubTestsPath() +
-                    System.getProperty("file.separator") + testRoot.replaceAll("/", "");
+            String path = SystemProperties.getDefault().githubTestsPath() + System.getProperty("file.separator") +
+                    testRoot.replaceAll("/", "");
 
             List<String> files = FileUtil.recursiveList(path);
 
             List<String> jsons = new ArrayList<>();
             for (String f : files) {
-                if (f.endsWith(".json"))
-                    jsons.add(
-                            f.replace(path + System.getProperty("file.separator"), "")
-                             .replaceAll(System.getProperty("file.separator"), "/"));
+                if (f.endsWith(".json")) {
+                    jsons.add(f.replace(path + System.getProperty("file.separator"), "")
+                                      .replaceAll(System.getProperty("file.separator"), "/"));
+                }
             }
 
             return jsons;
@@ -141,15 +146,15 @@ public class JSONReader {
         List<String> blobs = new ArrayList<>();
         try {
             testSuiteObj = (JSONObject) parser.parse(result);
-            JSONArray tree = (JSONArray)testSuiteObj.get("tree");
+            JSONArray tree = (JSONArray) testSuiteObj.get("tree");
 
             for (Object oEntry : tree) {
                 JSONObject entry = (JSONObject) oEntry;
                 String type = (String) entry.get("type");
                 String path = (String) entry.get("path");
 
-                if (!type.equals("blob")) continue;
-                if (!path.endsWith(".json")) continue;
+                if (!type.equals("blob")) { continue; }
+                if (!path.endsWith(".json")) { continue; }
 
                 blobs.add((String) entry.get("path"));
             }

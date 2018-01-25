@@ -17,6 +17,8 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -24,8 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.
@@ -39,7 +39,7 @@ public class ShhEnvelopeMessage extends ShhMessage {
         parse();
     }
 
-    public ShhEnvelopeMessage(WhisperMessage ... msg) {
+    public ShhEnvelopeMessage(WhisperMessage... msg) {
         Collections.addAll(messages, msg);
         parsed = true;
     }

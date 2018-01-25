@@ -29,15 +29,15 @@ import java.util.Map;
 /**
  * Caches entries get/updated and use LRU algo to purge them if the number
  * of entries exceeds threshold.
- *
+ * <p>
  * This implementation could extended to estimate cached data size for
  * more accurate size restriction, but if entries are more or less
  * of the same size the entries count would be good enough
- *
+ * <p>
  * Another implementation idea is heap sensitive read cache based on
  * SoftReferences, when the cache occupies all the available heap
  * but get shrink when low heap
- *
+ * <p>
  * Created by Anton Nashatyrev on 05.10.2016.
  */
 public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
@@ -46,6 +46,8 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
 
     private Map<Key, Value> cache;
     private boolean byteKeyMap;
+    // the guard against incorrect Map implementation for byte[] keys
+    private boolean checked = false;
 
     public ReadCache(Source<Key, Value> src) {
         super(src);
@@ -74,10 +76,8 @@ public class ReadCache<Key, Value> extends AbstractCachedSource<Key, Value> {
         });
     }
 
-    // the guard against incorrect Map implementation for byte[] keys
-    private boolean checked = false;
     private void checkByteArrKey(Key key) {
-        if (checked) return;
+        if (checked) { return; }
 
         if (key instanceof byte[]) {
             if (!byteKeyMap) {

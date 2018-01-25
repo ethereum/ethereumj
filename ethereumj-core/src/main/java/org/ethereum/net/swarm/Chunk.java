@@ -18,8 +18,8 @@
 package org.ethereum.net.swarm;
 
 /**
- *  Any binary data with its key
- *  The key is normally SHA3(data)
+ * Any binary data with its key
+ * The key is normally SHA3(data)
  */
 public class Chunk {
 

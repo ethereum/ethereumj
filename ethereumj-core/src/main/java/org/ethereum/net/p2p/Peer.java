@@ -73,17 +73,14 @@ public class Peer {
 
     @Override
     public String toString() {
-        return "[ip=" + getAddress().getHostAddress() +
-                " port=" + getPort()
-                + " peerId=" + getPeerId() + "]";
+        return "[ip=" + getAddress().getHostAddress() + " port=" + getPort() + " peerId=" + getPeerId() + "]";
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof Peer)) return false;
+        if (!(obj instanceof Peer)) { return false; }
         Peer peerData = (Peer) obj;
-        return peerData.peerId.equals(this.peerId)
-                || this.getAddress().equals(peerData.getAddress());
+        return peerData.peerId.equals(this.peerId) || this.getAddress().equals(peerData.getAddress());
     }
 
     @Override

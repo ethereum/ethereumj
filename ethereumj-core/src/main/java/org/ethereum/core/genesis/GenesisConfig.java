@@ -33,16 +33,15 @@ public class GenesisConfig {
     public Integer chainId;
 
     // EthereumJ private options
+    public List<HashValidator> headerValidators;
+
+    public boolean isCustomConfig() {
+        return homesteadBlock != null || daoForkBlock != null || eip150Block != null || eip155Block != null ||
+                eip158Block != null || byzantiumBlock != null;
+    }
 
     public static class HashValidator {
         public long number;
         public String hash;
-    }
-
-    public List<HashValidator> headerValidators;
-
-    public boolean isCustomConfig() {
-        return homesteadBlock != null || daoForkBlock != null || eip150Block != null ||
-                eip155Block != null || eip158Block != null || byzantiumBlock != null;
     }
 }

@@ -19,16 +19,13 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,32 +85,28 @@ public class TestCase {
                 postJSON = (JSONObject) testCaseJSONObj.get("post");
             }
             JSONArray callCreates = new JSONArray();
-            if (testCaseJSONObj.containsKey("callcreates"))
+            if (testCaseJSONObj.containsKey("callcreates")) {
                 callCreates = (JSONArray) testCaseJSONObj.get("callcreates");
+            }
 
             Object logsJSON = new JSONArray();
-            if (testCaseJSONObj.containsKey("logs"))
-                logsJSON = testCaseJSONObj.get("logs");
+            if (testCaseJSONObj.containsKey("logs")) { logsJSON = testCaseJSONObj.get("logs"); }
             logs = new Logs(logsJSON);
 
             String gasString = "0";
-            if (testCaseJSONObj.containsKey("gas"))
-                gasString = testCaseJSONObj.get("gas").toString();
+            if (testCaseJSONObj.containsKey("gas")) { gasString = testCaseJSONObj.get("gas").toString(); }
             this.gas = BigIntegers.asUnsignedByteArray(toBigInt(gasString));
 
             String outString = null;
-            if (testCaseJSONObj.containsKey("out"))
-                outString = testCaseJSONObj.get("out").toString();
-            if (outString != null && outString.length() > 2)
-                this.out = Utils.parseData(outString);
-            else
+            if (testCaseJSONObj.containsKey("out")) { outString = testCaseJSONObj.get("out").toString(); }
+            if (outString != null && outString.length() > 2) { this.out = Utils.parseData(outString); } else {
                 this.out = ByteUtil.EMPTY_BYTE_ARRAY;
+            }
 
             for (Object key : preJSON.keySet()) {
 
                 byte[] keyBytes = Utils.parseData(key.toString());
-                AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject) preJSON.get(key));
+                AccountState accountState = new AccountState(keyBytes, (JSONObject) preJSON.get(key));
 
                 pre.put(new ByteArrayWrapper(keyBytes), accountState);
             }
@@ -121,8 +114,7 @@ public class TestCase {
             for (Object key : postJSON.keySet()) {
 
                 byte[] keyBytes = Utils.parseData(key.toString());
-                AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject) postJSON.get(key));
+                AccountState accountState = new AccountState(keyBytes, (JSONObject) postJSON.get(key));
 
                 post.put(new ByteArrayWrapper(keyBytes), accountState);
             }
@@ -133,11 +125,9 @@ public class TestCase {
                 this.callCreateList.add(cc);
             }
 
-            if (testCaseJSONObj.containsKey("env"))
-              this.env = new Env(envJSON);
+            if (testCaseJSONObj.containsKey("env")) { this.env = new Env(envJSON); }
 
-            if (testCaseJSONObj.containsKey("exec"))
-              this.exec = new Exec(execJSON);
+            if (testCaseJSONObj.containsKey("exec")) { this.exec = new Exec(execJSON); }
 
         } catch (Throwable e) {
             e.printStackTrace();
@@ -147,7 +137,7 @@ public class TestCase {
 
     static BigInteger toBigInt(String s) {
         if (s.startsWith("0x")) {
-            if (s.equals("0x")) return new BigInteger("0");
+            if (s.equals("0x")) { return new BigInteger("0"); }
             return new BigInteger(s.substring(2), 16);
         } else {
             return new BigInteger(s);
@@ -192,14 +182,7 @@ public class TestCase {
 
     @Override
     public String toString() {
-        return "TestCase{" +
-                "" + env +
-                ", " + exec +
-                ", gas=" + Hex.toHexString(gas) +
-                ", out=" + Hex.toHexString(out) +
-                ", pre=" + pre +
-                ", post=" + post +
-                ", callcreates=" + callCreateList +
-                '}';
+        return "TestCase{" + "" + env + ", " + exec + ", gas=" + Hex.toHexString(gas) + ", out=" +
+                Hex.toHexString(out) + ", pre=" + pre + ", post=" + post + ", callcreates=" + callCreateList + '}';
     }
 }

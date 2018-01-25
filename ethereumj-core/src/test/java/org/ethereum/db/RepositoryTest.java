@@ -17,28 +17,27 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.core.Genesis;
-import org.ethereum.crypto.HashUtil;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
-import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.NoDeleteSource;
 import org.ethereum.datasource.Source;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.vm.DataWord;
-
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.junit.Assert.*;
 
 /**
  * @author Roman Mandeleil
@@ -48,19 +47,21 @@ import static org.junit.Assert.*;
 public class RepositoryTest {
 
 
+    private boolean running = true;
+
     @Test
     public void test1() {
 
         RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
 
-        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
         repository.increaseNonce(cow);
         repository.increaseNonce(horse);
 
         assertEquals(BigInteger.ONE, repository.getNonce(cow));
-//        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+        //        assertEquals(BigInteger.ONE, repository.getNonce(horse));
 
         System.out.println(repository.getTrieDump());
 
@@ -70,7 +71,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test2() {
@@ -88,7 +88,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test3() {
@@ -134,7 +133,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test5() {
@@ -222,7 +220,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test8() {
@@ -315,7 +312,6 @@ public class RepositoryTest {
         repository.close();
     }
 
-
     @Test
     public void test9() {
 
@@ -374,7 +370,6 @@ public class RepositoryTest {
         repository.close();
     }
 
-
     @Test
     public void test11() {
 
@@ -400,7 +395,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test12() {
@@ -434,7 +428,7 @@ public class RepositoryTest {
         RepositoryRoot repository = new RepositoryRoot(new HashMapDB());
         Repository track = repository.startTracking();
 
-        Genesis genesis = (Genesis)Genesis.getInstance();
+        Genesis genesis = (Genesis) Genesis.getInstance();
         Genesis.populateRepository(track, genesis);
 
         track.commit();
@@ -443,7 +437,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test14() {
@@ -480,7 +473,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
 
     @Test
     public void test15() {
@@ -731,7 +723,6 @@ public class RepositoryTest {
         repository.close();
     }
 
-
     @Test
     public void test16_5() {
 
@@ -772,9 +763,6 @@ public class RepositoryTest {
 
         repository.close();
     }
-
-
-
 
     @Test
     public void test17() {
@@ -873,11 +861,10 @@ public class RepositoryTest {
         assertEquals(horseVal0, horseValOrin);
     }
 
-
     @Test // testing for snapshot
     public void test20() {
 
-//        MapDB stateDB = new MapDB();
+        //        MapDB stateDB = new MapDB();
         Source<byte[], byte[]> stateDB = new NoDeleteSource<>(new HashMapDB<byte[]>());
         RepositoryRoot repository = new RepositoryRoot(stateDB);
         byte[] root = repository.getRoot();
@@ -914,10 +901,10 @@ public class RepositoryTest {
         Repository snapshot = new RepositoryRoot(stateDB, root);
         ContractDetails cowDetails = snapshot.getContractDetails(cow);
         ContractDetails horseDetails = snapshot.getContractDetails(horse);
-        assertEquals(null, cowDetails.get(cowKey1) );
-        assertEquals(null, cowDetails.get(cowKey2) );
-        assertEquals(null, horseDetails.get(horseKey1) );
-        assertEquals(null, horseDetails.get(horseKey2) );
+        assertEquals(null, cowDetails.get(cowKey1));
+        assertEquals(null, cowDetails.get(cowKey2));
+        assertEquals(null, horseDetails.get(horseKey1));
+        assertEquals(null, horseDetails.get(horseKey2));
 
 
         snapshot = new RepositoryRoot(stateDB, root2);
@@ -925,19 +912,17 @@ public class RepositoryTest {
         horseDetails = snapshot.getContractDetails(horse);
         assertEquals(cowVal1, cowDetails.get(cowKey1));
         assertEquals(null, cowDetails.get(cowKey2));
-        assertEquals(horseVal1, horseDetails.get(horseKey1) );
-        assertEquals(null, horseDetails.get(horseKey2) );
+        assertEquals(horseVal1, horseDetails.get(horseKey1));
+        assertEquals(null, horseDetails.get(horseKey2));
 
         snapshot = new RepositoryRoot(stateDB, root3);
         cowDetails = snapshot.getContractDetails(cow);
         horseDetails = snapshot.getContractDetails(horse);
         assertEquals(cowVal1, cowDetails.get(cowKey1));
         assertEquals(cowVal0, cowDetails.get(cowKey2));
-        assertEquals(horseVal1, horseDetails.get(horseKey1) );
-        assertEquals(horseVal0, horseDetails.get(horseKey2) );
+        assertEquals(horseVal1, horseDetails.get(horseKey1));
+        assertEquals(horseVal0, horseDetails.get(horseKey2));
     }
-
-    private boolean running = true;
 
     @Test // testing for snapshot
     public void testMultiThread() throws InterruptedException {
@@ -983,7 +968,7 @@ public class RepositoryTest {
         new Thread(() -> {
             int cnt = 1;
             try {
-                while(running) {
+                while (running) {
                     Repository track21 = repository.startTracking(); //track
                     DataWord cVal = new DataWord(cnt);
                     track21.addStorageRow(cow, cowKey1, cVal);

@@ -22,7 +22,7 @@ package org.ethereum.util.blockchain;
  * Solidity members layout.
  * E.g. an individual member of a structure or mapping element can be accessed via
  * names or/and indexes
- *
+ * <p>
  * Created by Anton Nashatyrev on 24.03.2016.
  */
 public interface SolidityStorage extends ContractStorage {

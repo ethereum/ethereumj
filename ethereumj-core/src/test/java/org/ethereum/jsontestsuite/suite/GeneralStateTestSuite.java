@@ -17,6 +17,9 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
+import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
 import org.junit.Assert;
@@ -24,11 +27,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
-
-import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONFromCommit;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Mikhail Kalinin
@@ -37,25 +42,23 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
 
 public class GeneralStateTestSuite {
 
-    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
-
     private static final String STATE_TEST_ROOT = "GeneralStateTests/";
-
+    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
     String commitSHA;
     List<String> files;
     GitHubJSONTestSuite.Network[] networks;
 
-    public GeneralStateTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks) throws IOException {
+    public GeneralStateTestSuite(String treeSHA, String commitSHA, GitHubJSONTestSuite.Network[] networks)
+            throws IOException {
         files = listJsonBlobsForTreeSha(treeSHA, STATE_TEST_ROOT);
         this.commitSHA = commitSHA;
         this.networks = networks;
     }
 
-    private static void run(List<String> checkFiles,
-                            String commitSHA,
-                            GitHubJSONTestSuite.Network[] networks) throws IOException {
+    private static void run(List<String> checkFiles, String commitSHA, GitHubJSONTestSuite.Network[] networks)
+            throws IOException {
 
-        if (checkFiles.isEmpty()) return;
+        if (checkFiles.isEmpty()) { return; }
 
         List<StateTestData> suites = new ArrayList<>();
         List<String> filenames = new ArrayList<>();
@@ -87,19 +90,19 @@ public class GeneralStateTestSuite {
             logger.info(line);
 
             List<String> result = StateTestRunner.run(testCase);
-            if (!result.isEmpty())
-                summary.put(testCase.getName(), false);
-            else
+            if (!result.isEmpty()) { summary.put(testCase.getName(), false); } else {
                 summary.put(testCase.getName(), true);
+            }
         }
 
         logger.info("Summary: ");
         logger.info("=========");
 
-        int fails = 0; int pass = 0;
-        for (String key : summary.keySet()){
+        int fails = 0;
+        int pass = 0;
+        for (String key : summary.keySet()) {
 
-            if (summary.get(key)) ++pass; else ++fails;
+            if (summary.get(key)) { ++pass; } else { ++fails; }
             String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
                     replace(' ', '.').
                     replace("^", " ");
@@ -111,11 +114,18 @@ public class GeneralStateTestSuite {
         Assert.assertTrue(fails == 0);
     }
 
-    public void runAll(String testCaseRoot, Set<String> excludedCases, GitHubJSONTestSuite.Network[] networks) throws IOException {
+    public static void runSingle(String testFile, String commitSHA, GitHubJSONTestSuite.Network network)
+            throws IOException {
+        logger.info("     " + testFile);
+        run(Collections.singletonList(testFile), commitSHA, new GitHubJSONTestSuite.Network[]{network});
+    }
+
+    public void runAll(String testCaseRoot, Set<String> excludedCases, GitHubJSONTestSuite.Network[] networks)
+            throws IOException {
 
         List<String> testCaseFiles = new ArrayList<>();
         for (String file : files) {
-            if (file.startsWith(testCaseRoot + "/")) testCaseFiles.add(file);
+            if (file.startsWith(testCaseRoot + "/")) { testCaseFiles.add(file); }
         }
 
         Set<String> toExclude = new HashSet<>();
@@ -144,11 +154,5 @@ public class GeneralStateTestSuite {
 
     public void runAll(String testCaseRoot, GitHubJSONTestSuite.Network network) throws IOException {
         runAll(testCaseRoot, Collections.<String>emptySet(), new GitHubJSONTestSuite.Network[]{network});
-    }
-
-    public static void runSingle(String testFile, String commitSHA,
-                                 GitHubJSONTestSuite.Network network) throws IOException {
-        logger.info("     " + testFile);
-        run(Collections.singletonList(testFile), commitSHA, new GitHubJSONTestSuite.Network[] { network });
     }
 }

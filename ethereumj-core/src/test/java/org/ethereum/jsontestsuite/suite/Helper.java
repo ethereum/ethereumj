@@ -18,19 +18,14 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.util.ByteUtil;
-
 import org.json.simple.JSONArray;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.util.regex.Pattern;
 
 /**
@@ -57,7 +52,7 @@ public class Helper {
                 boolean hexVal = Pattern.matches("0[xX][0-9a-fA-F]+", val.toString());
                 if (hexVal) {
                     String number = ((String) val).substring(2);
-                    if (number.length() % 2 == 1) number = "0" + number;
+                    if (number.length() % 2 == 1) { number = "0" + number; }
                     byte[] data = Hex.decode(number);
                     try {
                         bos.write(data);
@@ -68,8 +63,7 @@ public class Helper {
 
                     // BigInt num
                     boolean isNumeric = Pattern.matches("[0-9a-fA-F]+", val.toString());
-                    if (!isNumeric) throw new Error("Wrong test case JSON format");
-                    else {
+                    if (!isNumeric) { throw new Error("Wrong test case JSON format"); } else {
                         BigInteger value = new BigInteger(val.toString());
                         try {
                             bos.write(value.toByteArray());

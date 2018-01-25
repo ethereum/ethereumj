@@ -18,7 +18,6 @@
 package org.ethereum.net.swarm;
 
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -43,16 +42,13 @@ public class RLPTest {
     @Test
     public void zeroTest() {
         {
-            byte[] e = RLP.encodeList(
-                    RLP.encodeString("aaa"),
-                    RLP.encodeInt((byte) 0)
-            );
+            byte[] e = RLP.encodeList(RLP.encodeString("aaa"), RLP.encodeInt((byte) 0));
 
             System.out.println(Hex.toHexString(e));
 
             RLPList l1 = (RLPList) RLP.decode2(e).get(0);
 
-            System.out.println(new String (l1.get(0).getRLPData()));
+            System.out.println(new String(l1.get(0).getRLPData()));
             System.out.println(l1.get(1).getRLPData());
 
             byte[] rlpData = l1.get(1).getRLPData();
@@ -62,9 +58,7 @@ public class RLPTest {
         {
             byte[] e = RLP.encodeList(
                     //                RLP.encodeString("aaa"),
-                    RLP.encodeElement(new byte[] {1}),
-                    RLP.encodeElement(new byte[] {0})
-            );
+                    RLP.encodeElement(new byte[]{1}), RLP.encodeElement(new byte[]{0}));
 
             System.out.println(Hex.toHexString(e));
 

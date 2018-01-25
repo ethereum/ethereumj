@@ -17,11 +17,16 @@
  */
 package org.ethereum.net.p2p;
 
+import static org.ethereum.net.eth.EthVersion.fromCode;
+import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
+import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
@@ -31,42 +36,32 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
-
-import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.message.StaticMessages.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Process the basic protocol messages between every peer on the network.
- *
+ * <p>
  * Peers can send/receive
  * <ul>
- *  <li>HELLO       :   Announce themselves to the network</li>
- *  <li>DISCONNECT  :   Disconnect themselves from the network</li>
- *  <li>GET_PEERS   :   Request a list of other knows peers</li>
- *  <li>PEERS       :   Send a list of known peers</li>
- *  <li>PING        :   Check if another peer is still alive</li>
- *  <li>PONG        :   Confirm that they themselves are still alive</li>
+ * <li>HELLO       :   Announce themselves to the network</li>
+ * <li>DISCONNECT  :   Disconnect themselves from the network</li>
+ * <li>GET_PEERS   :   Request a list of other knows peers</li>
+ * <li>PEERS       :   Send a list of known peers</li>
+ * <li>PING        :   Check if another peer is still alive</li>
+ * <li>PONG        :   Confirm that they themselves are still alive</li>
  * </ul>
  */
 @Component
@@ -79,25 +74,17 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private static ScheduledExecutorService pingTimer =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "P2pPingTimer"));
-
-    private MessageQueue msgQueue;
-
-    private boolean peerDiscoveryMode = false;
-
-    private HelloMessage handshakeHelloMessage = null;
-
-    private int ethInbound;
-    private int ethOutbound;
-
     @Autowired
     EthereumListener ethereumListener;
-
     @Autowired
     ConfigCapabilities configCapabilities;
-
     @Autowired
     SystemProperties config;
-
+    private MessageQueue msgQueue;
+    private boolean peerDiscoveryMode = false;
+    private HelloMessage handshakeHelloMessage = null;
+    private int ethInbound;
+    private int ethOutbound;
     private Channel channel;
     private ScheduledFuture<?> pingTask;
 
@@ -130,8 +117,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
 
-        if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
+        if (P2pMessageCodes.inRange(msg.getCommand().asByte())) {
             logger.trace("P2PHandler invoke: [{}]", msg.getCommand());
+        }
 
         ethereumListener.trace(String.format("P2PHandler invoke: [%s]", msg.getCommand()));
 
@@ -139,7 +127,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             case HELLO:
                 msgQueue.receivedMessage(msg);
                 setHandshake((HelloMessage) msg, ctx);
-//                sendGetPeers();
+                //                sendGetPeers();
                 break;
             case DISCONNECT:
                 msgQueue.receivedMessage(msg);
@@ -157,8 +145,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             case PEERS:
                 msgQueue.receivedMessage(msg);
 
-                if (peerDiscoveryMode ||
-                        !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)) {
+                if (peerDiscoveryMode || !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)) {
                     disconnect(ReasonCode.REQUESTED);
                     killTimers();
                     ctx.close().sync();
@@ -229,15 +216,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
                 // Activate EthHandler for this peer
                 channel.activateEth(ctx, fromCode(capability.getVersion()));
-            } else if
-               (capability.getName().equals(Capability.SHH) &&
-                capability.getVersion() == ShhHandler.VERSION) {
+            } else if (capability.getName().equals(Capability.SHH) && capability.getVersion() == ShhHandler.VERSION) {
 
                 // Activate ShhHandler for this peer
                 channel.activateShh(ctx);
-            } else if
-               (capability.getName().equals(Capability.BZZ) &&
-                capability.getVersion() == BzzHandler.VERSION) {
+            } else if (capability.getName().equals(Capability.BZZ) && capability.getVersion() == BzzHandler.VERSION) {
 
                 // Activate ShhHandler for this peer
                 channel.activateBzz(ctx);

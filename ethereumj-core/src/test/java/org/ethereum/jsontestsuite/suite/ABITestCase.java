@@ -78,11 +78,7 @@ public class ABITestCase {
 
     @Override
     public String toString() {
-        return "ABITestCase{" +
-                "name='" + name + '\'' +
-                ", args=" + args +
-                ", types=" + types +
-                ", result='" + result + '\'' +
-                '}';
+        return "ABITestCase{" + "name='" + name + '\'' + ", args=" + args + ", types=" + types + ", result='" + result +
+                '\'' + '}';
     }
 }

@@ -7,7 +7,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}]  %m%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}] %m%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
@@ -24,7 +24,7 @@
             <totalSizeCap>50GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}]  %m%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %p [%c{1}] %m%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>TRACE</level>
@@ -39,7 +39,7 @@
         <!-- (the smaller value -> flush occurs often) -->
         <queueSize>100</queueSize>
 
-        <appender-ref ref="FILE" />
+        <appender-ref ref="FILE"/>
     </appender>
 
     <root level="DEBUG">

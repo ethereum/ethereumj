@@ -17,15 +17,15 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.vm.DataWord;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.vm.DataWord;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Test for {@link SourceCodec}
@@ -49,7 +49,7 @@ public class SourceCodecTest {
     }
 
     private String str(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) { return null; }
 
         byte[] data;
         if (obj instanceof DataWord) {
@@ -66,7 +66,8 @@ public class SourceCodecTest {
         Source<byte[], byte[]> parentSrc = new HashMapDB<>();
         Serializer<DataWord, byte[]> keySerializer = Serializers.StorageKeySerializer;
         Serializer<byte[], byte[]> valueSerializer = new Serializers.Identity<>();
-        SourceCodec<DataWord, byte[], byte[], byte[]> src = new SourceCodec<>(parentSrc, keySerializer, valueSerializer);
+        SourceCodec<DataWord, byte[], byte[], byte[]> src =
+                new SourceCodec<>(parentSrc, keySerializer, valueSerializer);
 
         for (int i = 0; i < 10_000; ++i) {
             src.put(intToDataWordKey(i), intToValue(i));
@@ -91,7 +92,8 @@ public class SourceCodecTest {
         Source<byte[], byte[]> parentSrc = new HashMapDB<>();
         Serializer<DataWord, byte[]> keySerializer = Serializers.StorageKeySerializer;
         Serializer<DataWord, byte[]> valueSerializer = Serializers.StorageValueSerializer;
-        SourceCodec<DataWord, DataWord, byte[], byte[]> src = new SourceCodec<>(parentSrc, keySerializer, valueSerializer);
+        SourceCodec<DataWord, DataWord, byte[], byte[]> src =
+                new SourceCodec<>(parentSrc, keySerializer, valueSerializer);
 
         for (int i = 0; i < 10_000; ++i) {
             src.put(intToDataWordKey(i), intToDataWord(i));

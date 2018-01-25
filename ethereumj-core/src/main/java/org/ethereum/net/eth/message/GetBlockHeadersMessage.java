@@ -17,6 +17,9 @@
  */
 package org.ethereum.net.eth.message;
 
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
+
 import org.ethereum.core.BlockIdentifier;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -24,15 +27,11 @@ import org.ethereum.util.RLPList;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.byteArrayToLong;
-
 /**
  * Wrapper around an Ethereum GetBlockHeaders message on the network
  *
- * @see EthMessageCodes#GET_BLOCK_HEADERS
- *
  * @author Mikhail Kalinin
+ * @see EthMessageCodes#GET_BLOCK_HEADERS
  * @since 04.09.2015
  */
 public class GetBlockHeadersMessage extends EthMessage {
@@ -88,9 +87,9 @@ public class GetBlockHeadersMessage extends EthMessage {
     }
 
     private void encode() {
-        byte[] maxHeaders  = RLP.encodeInt(this.maxHeaders);
+        byte[] maxHeaders = RLP.encodeInt(this.maxHeaders);
         byte[] skipBlocks = RLP.encodeInt(this.skipBlocks);
-        byte[] reverse  = RLP.encodeByte((byte) (this.reverse ? 1 : 0));
+        byte[] reverse = RLP.encodeByte((byte) (this.reverse ? 1 : 0));
 
         if (this.blockHash != null) {
             byte[] hash = RLP.encodeElement(this.blockHash);
@@ -102,7 +101,7 @@ public class GetBlockHeadersMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         byte[] blockBytes = paramsList.get(0).getRLPData();
@@ -160,7 +159,7 @@ public class GetBlockHeadersMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -177,11 +176,8 @@ public class GetBlockHeadersMessage extends EthMessage {
     @Override
     public String toString() {
         parse();
-        return "[" + this.getCommand().name() +
-                " blockNumber=" + String.valueOf(blockNumber) +
-                " blockHash=" + ByteUtil.toHexString(blockHash) +
-                " maxHeaders=" + maxHeaders +
-                " skipBlocks=" + skipBlocks +
+        return "[" + this.getCommand().name() + " blockNumber=" + String.valueOf(blockNumber) + " blockHash=" +
+                ByteUtil.toHexString(blockHash) + " maxHeaders=" + maxHeaders + " skipBlocks=" + skipBlocks +
                 " reverse=" + reverse + "]";
     }
 }

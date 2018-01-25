@@ -17,6 +17,8 @@
  */
 package org.ethereum.net;
 
+import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
+
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
@@ -25,7 +27,6 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
-import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,23 +35,26 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
 
 /**
  * This class contains the logic for sending messages in a queue
- *
+ * <p>
  * Messages open by send and answered by receive of appropriate message
- *      PING by PONG
- *      GET_PEERS by PEERS
- *      GET_TRANSACTIONS by TRANSACTIONS
- *      GET_BLOCK_HASHES by BLOCK_HASHES
- *      GET_BLOCKS by BLOCKS
- *
+ * PING by PONG
+ * GET_PEERS by PEERS
+ * GET_TRANSACTIONS by TRANSACTIONS
+ * GET_BLOCK_HASHES by BLOCK_HASHES
+ * GET_BLOCKS by BLOCKS
+ * <p>
  * The following messages will not be answered:
- *      PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
+ * PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
  * @author Roman Mandeleil
  */
@@ -67,14 +71,12 @@ public class MessageQueue {
             return new Thread(r, "MessageQueueTimer-" + cnt.getAndIncrement());
         }
     });
-
-    private Queue<MessageRoundtrip> requestQueue = new ConcurrentLinkedQueue<>();
-    private Queue<MessageRoundtrip> respondQueue = new ConcurrentLinkedQueue<>();
-    private ChannelHandlerContext ctx = null;
-
     @Autowired
     EthereumListener ethereumListener;
     boolean hasPing = false;
+    private Queue<MessageRoundtrip> requestQueue = new ConcurrentLinkedQueue<>();
+    private Queue<MessageRoundtrip> respondQueue = new ConcurrentLinkedQueue<>();
+    private ChannelHandlerContext ctx = null;
     private ScheduledFuture<?> timerTask;
     private Channel channel;
 
@@ -98,14 +100,13 @@ public class MessageQueue {
 
     public void sendMessage(Message msg) {
         if (msg instanceof PingMessage) {
-            if (hasPing) return;
+            if (hasPing) { return; }
             hasPing = true;
         }
 
-        if (msg.getAnswerMessage() != null)
-            requestQueue.add(new MessageRoundtrip(msg));
-        else
+        if (msg.getAnswerMessage() != null) { requestQueue.add(new MessageRoundtrip(msg)); } else {
             respondQueue.add(new MessageRoundtrip(msg));
+        }
     }
 
     public void disconnect() {
@@ -129,22 +130,20 @@ public class MessageQueue {
             MessageRoundtrip messageRoundtrip = requestQueue.peek();
             Message waitingMessage = messageRoundtrip.getMsg();
 
-            if (waitingMessage instanceof PingMessage) hasPing = false;
+            if (waitingMessage instanceof PingMessage) { hasPing = false; }
 
-            if (waitingMessage.getAnswerMessage() != null
-                    && msg.getClass() == waitingMessage.getAnswerMessage()) {
+            if (waitingMessage.getAnswerMessage() != null && msg.getClass() == waitingMessage.getAnswerMessage()) {
                 messageRoundtrip.answer();
-                if (waitingMessage instanceof EthMessage)
+                if (waitingMessage instanceof EthMessage) {
                     channel.getPeerStats().pong(messageRoundtrip.lastTimestamp);
-                logger.trace("Message round trip covered: [{}] ",
-                        messageRoundtrip.getMsg().getClass());
+                }
+                logger.trace("Message round trip covered: [{}] ", messageRoundtrip.getMsg().getClass());
             }
         }
     }
 
     private void removeAnsweredMessage(MessageRoundtrip messageRoundtrip) {
-        if (messageRoundtrip != null && messageRoundtrip.isAnswered())
-            requestQueue.remove();
+        if (messageRoundtrip != null && messageRoundtrip.isAnswered()) { requestQueue.remove(); }
     }
 
     private void nudgeQueue() {

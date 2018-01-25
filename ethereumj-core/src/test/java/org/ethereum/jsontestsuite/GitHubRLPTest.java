@@ -22,19 +22,27 @@ import org.codehaus.jackson.type.JavaType;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.ethereum.jsontestsuite.suite.RLPTestCase;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubRLPTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
-    private static Map<String , RLPTestCase> TEST_SUITE = new HashMap<>();
+    private static Map<String, RLPTestCase> TEST_SUITE = new HashMap<>();
     private static String commitSHA = "develop";
 
     @BeforeClass
@@ -45,11 +53,9 @@ public class GitHubRLPTest {
         JavaType type = mapper.getTypeFactory().
                 constructMapType(HashMap.class, String.class, RLPTestCase.class);
 
-        List<String> files = Arrays.asList(
-                "RLPTests/rlptest.json",
-                "RLPTests/invalidRLPTest.json",
-                "RLPTests/RandomRLPTests/example.json"
-        );
+        List<String> files = Arrays.asList("RLPTests/rlptest.json",
+                                           "RLPTests/invalidRLPTest.json",
+                                           "RLPTests/RandomRLPTests/example.json");
 
         List<String> jsons = JSONReader.loadJSONsFromCommit(files, commitSHA);
 
@@ -78,11 +84,10 @@ public class GitHubRLPTest {
         Set<String> excluded = new HashSet<>();
 
         for (String key : TEST_SUITE.keySet()) {
-            if ( excluded.contains(key)) {
+            if (excluded.contains(key)) {
                 logger.info("[X] " + key);
                 continue;
-            }
-            else {
+            } else {
                 logger.info("    " + key);
             }
 

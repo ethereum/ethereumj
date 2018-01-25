@@ -18,9 +18,9 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
-import org.ethereum.core.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.Program;
@@ -44,16 +44,16 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
 
     @Override
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository, BlockStore blockStore) {
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository,
+                                             BlockStore blockStore) {
         return generalInvoke(tx, repository, blockStore);
     }
 
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
-                                             DataWord inValue, DataWord inGas,
-                                             BigInteger balanceInt, byte[] dataIn,
-                                             Repository repository, BlockStore blockStore,
-                                             boolean isStaticCall, boolean byTestingSuite) {
+                                             DataWord inValue, DataWord inGas, BigInteger balanceInt, byte[] dataIn,
+                                             Repository repository, BlockStore blockStore, boolean isStaticCall,
+                                             boolean byTestingSuite) {
         return null;
     }
 
@@ -87,8 +87,9 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
         /***     CALLDATALOAD  op   ***/
         /***     CALLDATACOPY  op   ***/
         /***     CALLDATASIZE  op   ***/
-        byte[] data = tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY :( tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData() );
-//        byte[] data =  tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData() ;
+        byte[] data = tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY :
+                (tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData());
+        //        byte[] data =  tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData() ;
 
         /***    PREVHASH  op  ***/
         byte[] lastHash = env.getPreviousHash();
@@ -108,9 +109,22 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
         /*** GASLIMIT op ***/
         byte[] gaslimit = env.getCurrentGasLimit();
 
-        return new ProgramInvokeImpl(address, origin, caller, balance,
-                gasPrice, gas, callValue, data, lastHash, coinbase,
-                timestamp, number, difficulty, gaslimit, repository, blockStore);
+        return new ProgramInvokeImpl(address,
+                                     origin,
+                                     caller,
+                                     balance,
+                                     gasPrice,
+                                     gas,
+                                     callValue,
+                                     data,
+                                     lastHash,
+                                     coinbase,
+                                     timestamp,
+                                     number,
+                                     difficulty,
+                                     gaslimit,
+                                     repository,
+                                     blockStore);
     }
 
 }

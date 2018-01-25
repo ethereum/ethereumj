@@ -17,12 +17,10 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.core.BlockHeader;
-
 /**
  * Describes a set of configs for a specific blockchain depending on the block number
  * E.g. the main Ethereum net has at least FrontierConfig and HomesteadConfig depending on the block
- *
+ * <p>
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public interface BlockchainNetConfig {

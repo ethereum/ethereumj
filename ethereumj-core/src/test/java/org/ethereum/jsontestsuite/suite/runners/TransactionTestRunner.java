@@ -35,24 +35,23 @@ import java.util.List;
 public class TransactionTestRunner {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
-
-    public static List<String> run(TransactionTestCase transactionTestCase2) {
-        return new TransactionTestRunner(transactionTestCase2).runImpl();
-    }
-
     protected TransactionTestCase transactionTestCase;
     protected Transaction transaction = null;
     protected Transaction expectedTransaction;
     protected long blockNumber;
     protected BlockchainConfig blockchainConfig;
-
     public TransactionTestRunner(TransactionTestCase transactionTestCase) {
         this.transactionTestCase = transactionTestCase;
     }
 
+    public static List<String> run(TransactionTestCase transactionTestCase2) {
+        return new TransactionTestRunner(transactionTestCase2).runImpl();
+    }
+
     public List<String> runImpl() {
 
-        blockNumber = transactionTestCase.getBlocknumber() == null ? 0 : Utils.parseLong(transactionTestCase.getBlocknumber());
+        blockNumber = transactionTestCase.getBlocknumber() == null ? 0 :
+                Utils.parseLong(transactionTestCase.getBlocknumber());
         logger.info("Block number: {}", blockNumber);
         this.blockchainConfig = SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(blockNumber);
 
@@ -69,7 +68,8 @@ public class TransactionTestRunner {
             logger.info("Transaction data skipped because it's too big", transaction);
         }
 
-        expectedTransaction = transactionTestCase.getTransaction() == null ? null : TransactionBuilder.build(transactionTestCase.getTransaction());
+        expectedTransaction = transactionTestCase.getTransaction() == null ? null :
+                TransactionBuilder.build(transactionTestCase.getTransaction());
         if (expectedTransaction == null || expectedTransaction.getEncoded().length < 10000) {
             logger.info("Expected transaction: {}", expectedTransaction);
         } else {
@@ -87,7 +87,7 @@ public class TransactionTestRunner {
         // Transaction signature verification
         String acceptFail = null;
         boolean shouldAccept = transaction != null && blockchainConfig.acceptTransactionSignature(transaction);
-        if (!shouldAccept) transaction = null;
+        if (!shouldAccept) { transaction = null; }
         if (shouldAccept != (expectedTransaction != null)) {
             acceptFail = "Transaction shouldn't be accepted";
         }
@@ -96,25 +96,26 @@ public class TransactionTestRunner {
         String wrongHash = null;
         if (transaction != null && expectedTransaction != null) {
             // Verifying sender
-            if (!Hex.toHexString(transaction.getSender()).equals(transactionTestCase.getSender()))
+            if (!Hex.toHexString(transaction.getSender()).equals(transactionTestCase.getSender())) {
                 wrongSender = "Sender is incorrect in parsed transaction";
+            }
             // Verifying hash
             // NOTE: "hash" is not required field in test case
             if (transactionTestCase.getHash() != null &&
-                    !Hex.toHexString(transaction.getHash()).equals(transactionTestCase.getHash()))
+                    !Hex.toHexString(transaction.getHash()).equals(transactionTestCase.getHash())) {
                 wrongHash = "Hash is incorrect in parsed transaction";
+            }
         }
 
         logger.info("--------- POST Validation---------");
         List<String> results = new ArrayList<>();
 
-        ArrayList<String> outputSummary =
-                TransactionValidator.valid(transaction, expectedTransaction);
+        ArrayList<String> outputSummary = TransactionValidator.valid(transaction, expectedTransaction);
 
         results.addAll(outputSummary);
-        if (acceptFail != null) results.add(acceptFail);
-        if (wrongSender != null) results.add(wrongSender);
-        if (wrongHash != null) results.add(wrongHash);
+        if (acceptFail != null) { results.add(acceptFail); }
+        if (wrongSender != null) { results.add(wrongSender); }
+        if (wrongHash != null) { results.add(wrongHash); }
 
         for (String result : results) {
             logger.error(result);

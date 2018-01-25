@@ -17,6 +17,8 @@
  */
 package org.ethereum.config.net;
 
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
@@ -24,8 +26,6 @@ import org.ethereum.config.blockchain.Eip160HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class ETCNetConfigTest {
 
@@ -39,7 +39,8 @@ public class ETCNetConfigTest {
         assertBlockchainConfigExistsAt(config, 3_000_000, Eip160HFConfig.class);
     }
 
-    private <T extends BlockchainConfig> void assertBlockchainConfigExistsAt(BlockchainNetConfig netConfig, long blockNumber, Class<T> configType) {
+    private <T extends BlockchainConfig> void assertBlockchainConfigExistsAt(BlockchainNetConfig netConfig,
+                                                                             long blockNumber, Class<T> configType) {
         BlockchainConfig block = netConfig.getConfigForBlock(blockNumber);
         assertTrue(configType.isAssignableFrom(block.getClass()));
     }

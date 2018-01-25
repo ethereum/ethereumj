@@ -19,13 +19,10 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
-
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,10 +56,9 @@ public class AccountState {
 
         this.balance = TestCase.toBigInt(balance).toByteArray();
 
-        if (code != null && code.length() > 2)
-            this.code = Hex.decode(code.substring(2));
-        else
+        if (code != null && code.length() > 2) { this.code = Hex.decode(code.substring(2)); } else {
             this.code = ByteUtil.EMPTY_BYTE_ARRAY;
+        }
 
         this.nonce = TestCase.toBigInt(nonce).toByteArray();
 
@@ -115,8 +111,11 @@ public class AccountState {
 
         BigInteger expectedBalance = new BigInteger(1, this.getBalance());
         if (!state.getBalance().equals(expectedBalance)) {
-            String formattedString = String.format("Account: %s: has unexpected balance, expected balance: %s found balance: %s",
-                    Hex.toHexString(this.address), expectedBalance.toString(), state.getBalance().toString());
+            String formattedString = String.format(
+                    "Account: %s: has unexpected balance, expected balance: %s found balance: %s",
+                    Hex.toHexString(this.address),
+                    expectedBalance.toString(),
+                    state.getBalance().toString());
             results.add(formattedString);
         }
 
@@ -124,14 +123,20 @@ public class AccountState {
         if (!state.getNonce().equals(expectedNonce)) {
             state.getNonce();
             this.getNonce();
-            String formattedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
-                    Hex.toHexString(this.address), expectedNonce.toString(), state.getNonce().toString());
+            String formattedString = String.format(
+                    "Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
+                    Hex.toHexString(this.address),
+                    expectedNonce.toString(),
+                    state.getNonce().toString());
             results.add(formattedString);
         }
 
         if (!Arrays.equals(details.getCode(), this.getCode())) {
-            String formattedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
-                    Hex.toHexString(this.address), Hex.toHexString(this.getCode()), Hex.toHexString(details.getCode()));
+            String formattedString = String.format(
+                    "Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
+                    Hex.toHexString(this.address),
+                    Hex.toHexString(this.getCode()),
+                    Hex.toHexString(details.getCode()));
             results.add(formattedString);
         }
 
@@ -148,9 +153,9 @@ public class AccountState {
             if (expectedValue == null) {
 
                 String formattedString = String.format("Account: %s: has unexpected storage data: %s = %s",
-                        Hex.toHexString(this.address),
-                        key.toString(),
-                        value.toString());
+                                                       Hex.toHexString(this.address),
+                                                       key.toString(),
+                                                       value.toString());
 
                 results.add(formattedString);
 
@@ -159,9 +164,12 @@ public class AccountState {
 
             if (!expectedValue.equals(value)) {
 
-                String formattedString = String.format("Account: %s: has unexpected value, for key: %s , expectedValue: %s real value: %s",
-                        Hex.toHexString(this.address), key.toString(),
-                        expectedValue.toString(), value.toString());
+                String formattedString = String.format(
+                        "Account: %s: has unexpected value, for key: %s , expectedValue: %s real value: %s",
+                        Hex.toHexString(this.address),
+                        key.toString(),
+                        expectedValue.toString(),
+                        value.toString());
                 results.add(formattedString);
                 continue;
             }
@@ -172,7 +180,8 @@ public class AccountState {
         for (DataWord key : expectedKeys) {
             if (!checked.contains(key)) {
                 String formattedString = String.format("Account: %s: doesn't exist expected storage key: %s",
-                        Hex.toHexString(this.address), key.toString());
+                                                       Hex.toHexString(this.address),
+                                                       key.toString());
                 results.add(formattedString);
             }
         }
@@ -182,12 +191,7 @@ public class AccountState {
 
     @Override
     public String toString() {
-        return "AccountState{" +
-                "address=" + Hex.toHexString(address) +
-                ", balance=" + Hex.toHexString(balance) +
-                ", code=" + Hex.toHexString(code) +
-                ", nonce=" + Hex.toHexString(nonce) +
-                ", storage=" + storage +
-                '}';
+        return "AccountState{" + "address=" + Hex.toHexString(address) + ", balance=" + Hex.toHexString(balance) +
+                ", code=" + Hex.toHexString(code) + ", nonce=" + Hex.toHexString(nonce) + ", storage=" + storage + '}';
     }
 }

@@ -60,6 +60,7 @@ public class FollowAccount extends EthereumListenerAdapter {
         BigInteger nonce_ = snapshot.getNonce(cow);
         BigInteger nonce = repository.getNonce(cow);
 
-        System.err.println(" #" + block.getNumber() + " [cd2a3d9] => snapshot_nonce:" +  nonce_ + " latest_nonce:" + nonce);
+        System.err.println(
+                " #" + block.getNumber() + " [cd2a3d9] => snapshot_nonce:" + nonce_ + " latest_nonce:" + nonce);
     }
 }

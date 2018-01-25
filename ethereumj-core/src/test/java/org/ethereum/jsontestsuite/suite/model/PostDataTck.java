@@ -21,8 +21,6 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.ethereum.jsontestsuite.suite.Logs;
 
-import java.util.List;
-
 /**
  * @author Mikhail Kalinin
  * @since 09.08.2017

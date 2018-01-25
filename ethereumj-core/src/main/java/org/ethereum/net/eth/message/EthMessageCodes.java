@@ -17,12 +17,13 @@
  */
 package org.ethereum.net.eth.message;
 
+import static org.ethereum.net.eth.EthVersion.V62;
+import static org.ethereum.net.eth.EthVersion.V63;
+
 import org.ethereum.net.eth.EthVersion;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.ethereum.net.eth.EthVersion.*;
 
 /**
  * A list of commands for the Ethereum network protocol.
@@ -38,7 +39,7 @@ public enum EthMessageCodes {
 
     /**
      * {@code [0x00, [PROTOCOL_VERSION, NETWORK_ID, TD, BEST_HASH, GENESIS_HASH] } <br>
-     *
+     * <p>
      * Inform a peer of it's current ethereum state. This message should be
      * send after the initial handshake and prior to any ethereum related messages.
      */
@@ -47,10 +48,10 @@ public enum EthMessageCodes {
     /**
      * PV 61 and lower <br>
      * {@code [+0x01, [hash_0: B_32, hash_1: B_32, ...] } <br>
-     *
+     * <p>
      * PV 62 and upper <br>
      * {@code [+0x01: P, [hash_0: B_32, number_0: P], [hash_1: B_32, number_1: P], ...] } <br>
-     *
+     * <p>
      * Specify one or more new blocks which have appeared on the network.
      * To be maximally helpful, nodes should inform peers of all blocks that they may not be aware of.
      * Including hashes that the sending peer could reasonably be considered to know
@@ -59,13 +60,12 @@ public enum EthMessageCodes {
      * is considered Bad Form, and may reduce the reputation of the sending node.
      * Including hashes that the sending node later refuses to honour with a proceeding
      * GetBlocks message is considered Bad Form, and may reduce the reputation of the sending node.
-     *
      */
     NEW_BLOCK_HASHES(0x01),
 
     /**
      * {@code [+0x02, [nonce, receiving_address, value, ...], ...] } <br>
-     *
+     * <p>
      * Specify (a) transaction(s) that the peer should make sure is included
      * on its transaction queue. The items in the list (following the first item 0x12)
      * are transactions in the format described in the main Ethereum specification.
@@ -74,9 +74,9 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x03: P, block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ] } <br>
-     *
+     * <p>
      * Replaces GetBlockHashes since PV 62. <br>
-     *
+     * <p>
      * Require peer to return a BlockHeaders message.
      * Reply must contain a number of block headers,
      * of rising number when reverse is 0, falling when 1, skip blocks apart,
@@ -87,9 +87,9 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x04, blockHeader_0, blockHeader_1, ...] } <br>
-     *
+     * <p>
      * Replaces BLOCK_HASHES since PV 62. <br>
-     *
+     * <p>
      * Reply to GetBlockHeaders.
      * The items in the list (following the message ID) are
      * block headers in the format described in the main Ethereum specification,
@@ -101,9 +101,9 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x05, hash_0: B_32, hash_1: B_32, ...] } <br>
-     *
+     * <p>
      * Replaces GetBlocks since PV 62. <br>
-     *
+     * <p>
      * Require peer to return a BlockBodies message.
      * Specify the set of blocks that we're interested in with the hashes.
      */
@@ -111,9 +111,9 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x06, [transactions_0, uncles_0] , ...] } <br>
-     *
+     * <p>
      * Replaces Blocks since PV 62. <br>
-     *
+     * <p>
      * Reply to GetBlockBodies.
      * The items in the list (following the message ID) are some of the blocks, minus the header,
      * in the format described in the main Ethereum specification, previously asked for in a GetBlockBodies message.
@@ -124,7 +124,7 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x07 [blockHeader, transactionList, uncleList], totalDifficulty] } <br>
-     *
+     * <p>
      * Specify a single block that the peer should know about. The composite item
      * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification.
@@ -133,7 +133,7 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x0d, hash_0: B_32, hash_1: B_32, ...] } <br>
-     *
+     * <p>
      * Require peer to return a NodeData message. Hint that useful values in it
      * are those which correspond to given hashes.
      */
@@ -141,7 +141,7 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x0e, value_0: B, value_1: B, ...] } <br>
-     *
+     * <p>
      * Provide a set of values which correspond to previously asked node data
      * hashes from GetNodeData. Does not need to contain all; best effort is
      * fine. If it contains none, then has no information for previous
@@ -151,7 +151,7 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x0f, hash_0: B_32, hash_1: B_32, ...] } <br>
-     *
+     * <p>
      * Require peer to return a Receipts message. Hint that useful values in it
      * are those which correspond to blocks of the given hashes.
      */
@@ -159,43 +159,24 @@ public enum EthMessageCodes {
 
     /**
      * {@code [+0x10, [receipt_0, receipt_1], ...] } <br>
-     *
+     * <p>
      * Provide a set of receipts which correspond to previously asked in GetReceipts.
      */
     RECEIPTS(0x10);
-
-    private int cmd;
 
     private static final Map<EthVersion, Map<Integer, EthMessageCodes>> intToTypeMap = new HashMap<>();
     private static final Map<EthVersion, EthMessageCodes[]> versionToValuesMap = new HashMap<>();
 
     static {
 
-        versionToValuesMap.put(V62, new EthMessageCodes[]{
-                STATUS,
-                NEW_BLOCK_HASHES,
-                TRANSACTIONS,
-                GET_BLOCK_HEADERS,
-                BLOCK_HEADERS,
-                GET_BLOCK_BODIES,
-                BLOCK_BODIES,
-                NEW_BLOCK
-        });
+        versionToValuesMap.put(V62,
+                               new EthMessageCodes[]{STATUS, NEW_BLOCK_HASHES, TRANSACTIONS, GET_BLOCK_HEADERS,
+                                       BLOCK_HEADERS, GET_BLOCK_BODIES, BLOCK_BODIES, NEW_BLOCK});
 
-        versionToValuesMap.put(V63, new EthMessageCodes[]{
-                STATUS,
-                NEW_BLOCK_HASHES,
-                TRANSACTIONS,
-                GET_BLOCK_HEADERS,
-                BLOCK_HEADERS,
-                GET_BLOCK_BODIES,
-                BLOCK_BODIES,
-                NEW_BLOCK,
-                GET_NODE_DATA,
-                NODE_DATA,
-                GET_RECEIPTS,
-                RECEIPTS
-        });
+        versionToValuesMap.put(V63,
+                               new EthMessageCodes[]{STATUS, NEW_BLOCK_HASHES, TRANSACTIONS, GET_BLOCK_HEADERS,
+                                       BLOCK_HEADERS, GET_BLOCK_BODIES, BLOCK_BODIES, NEW_BLOCK, GET_NODE_DATA,
+                                       NODE_DATA, GET_RECEIPTS, RECEIPTS});
 
         for (EthVersion v : EthVersion.values()) {
             Map<Integer, EthMessageCodes> map = new HashMap<>();
@@ -205,6 +186,8 @@ public enum EthMessageCodes {
             }
         }
     }
+
+    private int cmd;
 
     private EthMessageCodes(int cmd) {
         this.cmd = cmd;
@@ -217,9 +200,7 @@ public enum EthMessageCodes {
     public static int maxCode(EthVersion v) {
 
         int max = 0;
-        for (EthMessageCodes cd : versionToValuesMap.get(v))
-            if (max < cd.asByte())
-                max = cd.asByte();
+        for (EthMessageCodes cd : versionToValuesMap.get(v)) { if (max < cd.asByte()) { max = cd.asByte(); } }
 
         return max;
     }

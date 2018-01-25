@@ -17,12 +17,19 @@
  */
 package org.ethereum.vm;
 
+import static org.ethereum.vm.OpCode.Tier.BaseTier;
+import static org.ethereum.vm.OpCode.Tier.ExtTier;
+import static org.ethereum.vm.OpCode.Tier.HighTier;
+import static org.ethereum.vm.OpCode.Tier.LowTier;
+import static org.ethereum.vm.OpCode.Tier.MidTier;
+import static org.ethereum.vm.OpCode.Tier.SpecialTier;
+import static org.ethereum.vm.OpCode.Tier.VeryLowTier;
+import static org.ethereum.vm.OpCode.Tier.ZeroTier;
+
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.ethereum.vm.OpCode.Tier.*;
 
 
 /**
@@ -189,7 +196,8 @@ public enum OpCode {
      * (0x39) Copy code running in current
      * environment to memory
      */
-    CODECOPY(0x39, 3, 0, VeryLowTier), // [len code_start mem_start CODECOPY]
+    CODECOPY(0x39, 3, 0, VeryLowTier),
+    // [len code_start mem_start CODECOPY]
 
     RETURNDATASIZE(0x3d, 0, 1, BaseTier),
 
@@ -530,7 +538,7 @@ public enum OpCode {
     /**
      * (0x99) Exchange 11th item from stack with the top
      */
-    SWAP10(0x99, 11, 11,VeryLowTier),
+    SWAP10(0x99, 11, 11, VeryLowTier),
     /**
      * (0x9a) Exchange 12th item from stack with the top
      */
@@ -570,7 +578,8 @@ public enum OpCode {
     /**
      * (0xf0) Create a new account with associated code
      */
-    CREATE(0xf0, 3, 1, SpecialTier),   //       [in_size] [in_offs] [gas_val] CREATE
+    CREATE(0xf0, 3, 1, SpecialTier),
+    //       [in_size] [in_offs] [gas_val] CREATE
     /**
      * (cxf1) Message-call into an account
      */
@@ -589,17 +598,17 @@ public enum OpCode {
 
     /**
      * (0xf4)  similar in idea to CALLCODE, except that it propagates the sender and value
-     *  from the parent scope to the child scope, ie. the call created has the same sender
-     *  and value as the original call.
-     *  also the Value parameter is omitted for this opCode
+     * from the parent scope to the child scope, ie. the call created has the same sender
+     * and value as the original call.
+     * also the Value parameter is omitted for this opCode
      */
     DELEGATECALL(0xf4, 6, 1, SpecialTier, CallFlags.Call, CallFlags.Stateless, CallFlags.Delegate),
 
     /**
-     *  opcode that can be used to call another contract (or itself) while disallowing any
-     *  modifications to the state during the call (and its subcalls, if present).
-     *  Any opcode that attempts to perform such a modification (see below for details)
-     *  will result in an exception instead of performing the modification.
+     * opcode that can be used to call another contract (or itself) while disallowing any
+     * modifications to the state during the call (and its subcalls, if present).
+     * Any opcode that attempts to perform such a modification (see below for details)
+     * will result in an exception instead of performing the modification.
      */
     STATICCALL(0xfa, 6, 1, SpecialTier, CallFlags.Call, CallFlags.Static),
 
@@ -615,12 +624,6 @@ public enum OpCode {
      */
     SUICIDE(0xff, 1, 0, ZeroTier);
 
-    private final byte opcode;
-    private final int require;
-    private final Tier tier;
-    private final int ret;
-    private final EnumSet<CallFlags> callFlags;
-
     private static final OpCode[] intToTypeMap = new OpCode[256];
     private static final Map<String, Byte> stringToByteMap = new HashMap<>();
 
@@ -631,17 +634,34 @@ public enum OpCode {
         }
     }
 
+    private final byte opcode;
+    private final int require;
+    private final Tier tier;
+    private final int ret;
+    private final EnumSet<CallFlags> callFlags;
+
     //require = required args
     //return = required return
-    private OpCode(int op, int require, int ret, Tier tier, CallFlags ... callFlags) {
+    private OpCode(int op, int require, int ret, Tier tier, CallFlags... callFlags) {
         this.opcode = (byte) op;
         this.require = require;
         this.tier = tier;
         this.ret = ret;
-        this.callFlags = callFlags.length == 0 ? EnumSet.noneOf(CallFlags.class) :
-                EnumSet.copyOf(Arrays.asList(callFlags));
+        this.callFlags =
+                callFlags.length == 0 ? EnumSet.noneOf(CallFlags.class) : EnumSet.copyOf(Arrays.asList(callFlags));
     }
 
+    public static boolean contains(String code) {
+        return stringToByteMap.containsKey(code.trim());
+    }
+
+    public static byte byteVal(String code) {
+        return stringToByteMap.get(code);
+    }
+
+    public static OpCode code(byte code) {
+        return intToTypeMap[code & 0xFF];
+    }
 
     public byte val() {
         return opcode;
@@ -664,18 +684,6 @@ public enum OpCode {
         return opcode;
     }
 
-    public static boolean contains(String code) {
-        return stringToByteMap.containsKey(code.trim());
-    }
-
-    public static byte byteVal(String code) {
-        return stringToByteMap.get(code);
-    }
-
-    public static OpCode code(byte code) {
-        return intToTypeMap[code & 0xFF];
-    }
-
     private EnumSet<CallFlags> getCallFlags() {
         return callFlags;
     }
@@ -688,11 +696,11 @@ public enum OpCode {
     }
 
     private void checkCall() {
-        if (!isCall()) throw new RuntimeException("Opcode is not a call: " + this);
+        if (!isCall()) { throw new RuntimeException("Opcode is not a call: " + this); }
     }
 
     /**
-     *  Indicates that the code is executed in the context of the caller
+     * Indicates that the code is executed in the context of the caller
      */
     public boolean callIsStateless() {
         checkCall();
@@ -700,7 +708,7 @@ public enum OpCode {
     }
 
     /**
-     *  Indicates that the opcode has value parameter (3rd on stack)
+     * Indicates that the opcode has value parameter (3rd on stack)
      */
     public boolean callHasValue() {
         checkCall();
@@ -708,7 +716,7 @@ public enum OpCode {
     }
 
     /**
-     *  Indicates that any state modifications are disallowed during the call
+     * Indicates that any state modifications are disallowed during the call
      */
     public boolean callIsStatic() {
         checkCall();
@@ -716,7 +724,7 @@ public enum OpCode {
     }
 
     /**
-     *  Indicates that value and message sender are propagated from parent to child scope
+     * Indicates that value and message sender are propagated from parent to child scope
      */
     public boolean callIsDelegate() {
         checkCall();
@@ -735,7 +743,8 @@ public enum OpCode {
         MidTier(8),
         HighTier(10),
         ExtTier(20),
-        SpecialTier(1), //TODO #POC9 is this correct?? "multiparam" from cpp
+        SpecialTier(1),
+        //TODO #POC9 is this correct?? "multiparam" from cpp
         InvalidTier(0);
 
 
@@ -757,22 +766,22 @@ public enum OpCode {
         Call,
 
         /**
-         *  Indicates that the code is executed in the context of the caller
+         * Indicates that the code is executed in the context of the caller
          */
         Stateless,
 
         /**
-         *  Indicates that the opcode has value parameter (3rd on stack)
+         * Indicates that the opcode has value parameter (3rd on stack)
          */
         HasValue,
 
         /**
-         *  Indicates that any state modifications are disallowed during the call
+         * Indicates that any state modifications are disallowed during the call
          */
         Static,
 
         /**
-         *  Indicates that value and message sender are propagated from parent to child scope
+         * Indicates that value and message sender are propagated from parent to child scope
          */
         Delegate
     }

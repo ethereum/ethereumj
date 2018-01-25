@@ -61,7 +61,7 @@ public abstract class Message {
     public abstract Enum getCommand();
 
     public byte getCode() {
-            return code;
+        return code;
     }
 
 }

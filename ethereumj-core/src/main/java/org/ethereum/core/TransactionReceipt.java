@@ -17,7 +17,14 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.*;
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -26,9 +33,6 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * The transaction receipt is a tuple of three items
@@ -87,8 +91,7 @@ public class TransactionReceipt {
     }
 
 
-    public TransactionReceipt(byte[] postTxState, byte[] cumulativeGas,
-                              Bloom bloomFilter, List<LogInfo> logInfoList) {
+    public TransactionReceipt(byte[] postTxState, byte[] cumulativeGas, Bloom bloomFilter, List<LogInfo> logInfoList) {
         this.postTxState = postTxState;
         this.cumulativeGas = cumulativeGas;
         this.bloomFilter = bloomFilter;
@@ -96,15 +99,17 @@ public class TransactionReceipt {
     }
 
     public TransactionReceipt(final RLPList rlpList) {
-        if (rlpList == null || rlpList.size() != 4)
-            throw new RuntimeException("Should provide RLPList with postTxState, cumulativeGas, bloomFilter, logInfoList");
+        if (rlpList == null || rlpList.size() != 4) {
+            throw new RuntimeException(
+                    "Should provide RLPList with postTxState, cumulativeGas, bloomFilter, logInfoList");
+        }
 
         this.postTxState = rlpList.get(0).getRLPData();
         this.cumulativeGas = rlpList.get(1).getRLPData();
         this.bloomFilter = new Bloom(rlpList.get(2).getRLPData());
 
         List<LogInfo> logInfos = new ArrayList<>();
-        for (RLPElement logInfoEl: (RLPList) rlpList.get(3)) {
+        for (RLPElement logInfoEl : (RLPList) rlpList.get(3)) {
             LogInfo logInfo = new LogInfo(logInfoEl.getRLPData());
             logInfos.add(logInfo);
         }
@@ -115,22 +120,41 @@ public class TransactionReceipt {
         return postTxState;
     }
 
+    public void setPostTxState(byte[] postTxState) {
+        this.postTxState = postTxState;
+        rlpEncoded = null;
+    }
+
     public byte[] getCumulativeGas() {
         return cumulativeGas;
+    }
+
+    public void setCumulativeGas(byte[] cumulativeGas) {
+        this.cumulativeGas = cumulativeGas;
+        rlpEncoded = null;
     }
 
     public byte[] getGasUsed() {
         return gasUsed;
     }
 
+    public void setGasUsed(long gasUsed) {
+        this.gasUsed = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(gasUsed));
+        rlpEncoded = null;
+    }
+
     public byte[] getExecutionResult() {
         return executionResult;
+    }
+
+    public void setExecutionResult(byte[] executionResult) {
+        this.executionResult = executionResult;
+        rlpEncoded = null;
     }
 
     public long getCumulativeGasLong() {
         return new BigInteger(1, cumulativeGas).longValue();
     }
-
 
     public Bloom getBloomFilter() {
         return bloomFilter;
@@ -138,6 +162,16 @@ public class TransactionReceipt {
 
     public List<LogInfo> getLogInfoList() {
         return logInfoList;
+    }
+
+    public void setLogInfoList(List<LogInfo> logInfoList) {
+        if (logInfoList == null) { return; }
+        this.logInfoList = logInfoList;
+
+        for (LogInfo loginfo : logInfoList) {
+            bloomFilter.or(loginfo.getBloom());
+        }
+        rlpEncoded = null;
     }
 
     public boolean isValid() {
@@ -152,9 +186,13 @@ public class TransactionReceipt {
         return error;
     }
 
+    public void setError(String error) {
+        this.error = error == null ? "" : error;
+    }
+
     /**
-     *  Used for Receipt trie hash calculation. Should contain only the following items encoded:
-     *  [postTxState, cumulativeGas, bloomFilter, logInfoList]
+     * Used for Receipt trie hash calculation. Should contain only the following items encoded:
+     * [postTxState, cumulativeGas, bloomFilter, logInfoList]
      */
     public byte[] getReceiptTrieEncoded() {
         return getEncoded(true);
@@ -191,17 +229,15 @@ public class TransactionReceipt {
             logInfoListRLP = RLP.encodeList();
         }
 
-        return receiptTrie ?
-                RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP):
-                RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP,
-                        RLP.encodeElement(gasUsed), RLP.encodeElement(executionResult),
-                        RLP.encodeElement(error.getBytes(StandardCharsets.UTF_8)));
+        return receiptTrie ? RLP.encodeList(postTxStateRLP, cumulativeGasRLP, bloomRLP, logInfoListRLP) :
+                RLP.encodeList(postTxStateRLP,
+                               cumulativeGasRLP,
+                               bloomRLP,
+                               logInfoListRLP,
+                               RLP.encodeElement(gasUsed),
+                               RLP.encodeElement(executionResult),
+                               RLP.encodeElement(error.getBytes(StandardCharsets.UTF_8)));
 
-    }
-
-    public void setPostTxState(byte[] postTxState) {
-        this.postTxState = postTxState;
-        rlpEncoded = null;
     }
 
     public void setTxStatus(boolean success) {
@@ -222,47 +258,21 @@ public class TransactionReceipt {
         rlpEncoded = null;
     }
 
-    public void setCumulativeGas(byte[] cumulativeGas) {
-        this.cumulativeGas = cumulativeGas;
-        rlpEncoded = null;
-    }
-
     public void setGasUsed(byte[] gasUsed) {
         this.gasUsed = gasUsed;
         rlpEncoded = null;
     }
 
-    public void setGasUsed(long gasUsed) {
-        this.gasUsed = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(gasUsed));
-        rlpEncoded = null;
-    }
-
-    public void setExecutionResult(byte[] executionResult) {
-        this.executionResult = executionResult;
-        rlpEncoded = null;
-    }
-
-    public void setError(String error) {
-        this.error = error == null ? "" : error;
-    }
-
-    public void setLogInfoList(List<LogInfo> logInfoList) {
-        if (logInfoList == null) return;
-        this.logInfoList = logInfoList;
-
-        for (LogInfo loginfo : logInfoList) {
-            bloomFilter.or(loginfo.getBloom());
+    public Transaction getTransaction() {
+        if (transaction == null) {
+            throw new NullPointerException(
+                    "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
         }
-        rlpEncoded = null;
+        return transaction;
     }
 
     public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
-    }
-
-    public Transaction getTransaction() {
-        if (transaction == null) throw new NullPointerException("Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
-        return transaction;
     }
 
     @Override
@@ -270,16 +280,11 @@ public class TransactionReceipt {
 
         // todo: fix that
 
-        return "TransactionReceipt[" +
-                "\n  , " + (hasTxStatus() ? ("txStatus=" + (isTxStatusOK() ? "OK" : "FAILED"))
-                                        : ("postTxState=" + Hex.toHexString(postTxState))) +
-                "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
-                "\n  , gasUsed=" + Hex.toHexString(gasUsed) +
-                "\n  , error=" + error +
-                "\n  , executionResult=" + Hex.toHexString(executionResult) +
-                "\n  , bloom=" + bloomFilter.toString() +
-                "\n  , logs=" + logInfoList +
-                ']';
+        return "TransactionReceipt[" + "\n  , " + (hasTxStatus() ? ("txStatus=" + (isTxStatusOK() ? "OK" : "FAILED")) :
+                ("postTxState=" + Hex.toHexString(postTxState))) + "\n  , cumulativeGas=" +
+                Hex.toHexString(cumulativeGas) + "\n  , gasUsed=" + Hex.toHexString(gasUsed) + "\n  , error=" + error +
+                "\n  , executionResult=" + Hex.toHexString(executionResult) + "\n  , bloom=" + bloomFilter.toString() +
+                "\n  , logs=" + logInfoList + ']';
     }
 
 }

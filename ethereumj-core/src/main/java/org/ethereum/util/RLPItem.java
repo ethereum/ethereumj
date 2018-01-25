@@ -30,8 +30,7 @@ public class RLPItem implements RLPElement {
     }
 
     public byte[] getRLPData() {
-        if (rlpData.length == 0)
-            return null;
+        if (rlpData.length == 0) { return null; }
         return rlpData;
     }
 }

@@ -17,24 +17,16 @@
  */
 package org.ethereum.net.swarm;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.junit.Test;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Admin on 11.06.2015.
  */
 public class ManifestTest {
 
-    static String testManifest = "{\"entries\":[\n" +
-            "  {\"path\":\"a/b\"},\n" +
-            "  {\"path\":\"a\"},\n" +
-            "  {\"path\":\"a/bb\"},\n" +
-            "  {\"path\":\"a/bd\"},\n" +
-            "  {\"path\":\"a/bb/c\"}\n" +
-            "]}";
+    static String testManifest =
+            "{\"entries\":[\n" + "  {\"path\":\"a/b\"},\n" + "  {\"path\":\"a\"},\n" + "  {\"path\":\"a/bb\"},\n" +
+                    "  {\"path\":\"a/bd\"},\n" + "  {\"path\":\"a/bb/c\"}\n" + "]}";
 
     static DPA dpa = new SimpleDPA();
 

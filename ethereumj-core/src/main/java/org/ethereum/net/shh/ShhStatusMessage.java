@@ -17,10 +17,10 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.net.shh.ShhMessageCodes.STATUS;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import static org.ethereum.net.shh.ShhMessageCodes.STATUS;
 
 /**
  * @author by Konstantin Shabalin
@@ -51,7 +51,7 @@ public class ShhStatusMessage extends ShhMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -67,9 +67,8 @@ public class ShhStatusMessage extends ShhMessage {
 
     @Override
     public String toString() {
-        if (!parsed) parse();
-        return "[" + this.getCommand().name() +
-            " protocolVersion=" + this.protocolVersion + "]";
+        if (!parsed) { parse(); }
+        return "[" + this.getCommand().name() + " protocolVersion=" + this.protocolVersion + "]";
     }
 
 }

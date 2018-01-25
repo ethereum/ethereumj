@@ -20,13 +20,13 @@
 
 package org.ethereum.config.net;
 
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class TestNetConfigTest {
     @Test
@@ -37,7 +37,8 @@ public class TestNetConfigTest {
         assertBlockchainConfigExistsAt(config, 1_150_000, HomesteadConfig.class);
     }
 
-    private <T extends BlockchainConfig> void assertBlockchainConfigExistsAt(BlockchainNetConfig netConfig, long blockNumber, Class<T> configType) {
+    private <T extends BlockchainConfig> void assertBlockchainConfigExistsAt(BlockchainNetConfig netConfig,
+                                                                             long blockNumber, Class<T> configType) {
         BlockchainConfig block = netConfig.getConfigForBlock(blockNumber);
         assertTrue(configType.isAssignableFrom(block.getClass()));
     }

@@ -17,6 +17,8 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import org.ethereum.crypto.ECIESCoder;
@@ -26,12 +28,10 @@ import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.math.ec.ECPoint;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-
-import static org.ethereum.crypto.HashUtil.sha3;
+import javax.annotation.Nullable;
 
 /**
  * Created by devrandom on 2015-04-08.
@@ -57,7 +57,8 @@ public class EncryptionHandshake {
         isInitiator = true;
     }
 
-    EncryptionHandshake(ECPoint remotePublicKey, ECKey ephemeralKey, byte[] initiatorNonce, byte[] responderNonce, boolean isInitiator) {
+    EncryptionHandshake(ECPoint remotePublicKey, ECKey ephemeralKey, byte[] initiatorNonce, byte[] responderNonce,
+                        boolean isInitiator) {
         this.remotePublicKey = remotePublicKey;
         this.ephemeralKey = ephemeralKey;
         this.initiatorNonce = initiatorNonce;
@@ -70,6 +71,23 @@ public class EncryptionHandshake {
         responderNonce = new byte[NONCE_SIZE];
         random.nextBytes(responderNonce);
         isInitiator = false;
+    }
+
+    private static byte[] xor(byte[] b1, byte[] b2) {
+        Preconditions.checkArgument(b1.length == b2.length);
+        byte[] out = new byte[b1.length];
+        for (int i = 0; i < b1.length; i++) {
+            out[i] = (byte) (b1[i] ^ b2[i]);
+        }
+        return out;
+    }
+
+    static public byte recIdFromSignatureV(int v) {
+        if (v >= 31) {
+            // compressed
+            v -= 4;
+        }
+        return (byte) (v - 27);
     }
 
     /**
@@ -152,8 +170,8 @@ public class EncryptionHandshake {
         byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         byte[] signed = xor(token, initiatorNonce);
 
-        ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
-                initiate.signature, signed);
+        ECKey ephemeral =
+                ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v), initiate.signature, signed);
         if (ephemeral == null) {
             throw new RuntimeException("failed to recover signatue from message");
         }
@@ -191,7 +209,7 @@ public class EncryptionHandshake {
      * Create a handshake auth message
      *
      * @param token previous token if we had a previous session
-     * @param key our private key
+     * @param key   our private key
      */
     public AuthInitiateMessage createAuthInitiate(@Nullable byte[] token, ECKey key) {
         AuthInitiateMessage message = new AuthInitiateMessage();
@@ -212,15 +230,6 @@ public class EncryptionHandshake {
         message.publicKey = key.getPubKeyPoint();
         message.nonce = initiatorNonce;
         return message;
-    }
-
-    private static byte[] xor(byte[] b1, byte[] b2) {
-        Preconditions.checkArgument(b1.length == b2.length);
-        byte[] out = new byte[b1.length];
-        for (int i = 0; i < b1.length; i++) {
-            out[i] = (byte) (b1[i] ^ b2[i]);
-        }
-        return out;
     }
 
     public byte[] encryptAuthMessage(AuthInitiateMessage message) {
@@ -268,10 +277,10 @@ public class EncryptionHandshake {
         secrets.aes = aesSecret;
         secrets.mac = sha3(agreedSecret, aesSecret);
         secrets.token = sha3(sharedSecret);
-//        System.out.println("mac " + Hex.toHexString(secrets.mac));
-//        System.out.println("aes " + Hex.toHexString(secrets.aes));
-//        System.out.println("shared " + Hex.toHexString(sharedSecret));
-//        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
+        //        System.out.println("mac " + Hex.toHexString(secrets.mac));
+        //        System.out.println("aes " + Hex.toHexString(secrets.aes));
+        //        System.out.println("shared " + Hex.toHexString(sharedSecret));
+        //        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
 
         KeccakDigest mac1 = new KeccakDigest(MAC_SIZE);
         mac1.update(xor(secrets.mac, responderNonce), 0, secrets.mac.length);
@@ -312,8 +321,8 @@ public class EncryptionHandshake {
         byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         byte[] signed = xor(token, initiatorNonce);
 
-        ECKey ephemeral = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
-                initiate.signature, signed);
+        ECKey ephemeral =
+                ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v), initiate.signature, signed);
         if (ephemeral == null) {
             throw new RuntimeException("failed to recover signatue from message");
         }
@@ -342,20 +351,16 @@ public class EncryptionHandshake {
         return paddedMessage;
     }
 
-    static public byte recIdFromSignatureV(int v) {
-        if (v >= 31) {
-            // compressed
-            v -= 4;
-        }
-        return (byte)(v - 27);
-    }
-
     public Secrets getSecrets() {
         return secrets;
     }
 
     public ECPoint getRemotePublicKey() {
         return remotePublicKey;
+    }
+
+    public boolean isInitiator() {
+        return isInitiator;
     }
 
     public static class Secrets {
@@ -384,9 +389,5 @@ public class EncryptionHandshake {
         public KeccakDigest getEgressMac() {
             return egressMac;
         }
-    }
-
-    public boolean isInitiator() {
-        return isInitiator;
     }
 }

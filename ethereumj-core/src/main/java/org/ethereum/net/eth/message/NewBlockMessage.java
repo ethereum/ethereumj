@@ -20,7 +20,6 @@ package org.ethereum.net.eth.message;
 import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -54,7 +53,7 @@ public class NewBlockMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         RLPList blockRLP = ((RLPList) paramsList.get(0));

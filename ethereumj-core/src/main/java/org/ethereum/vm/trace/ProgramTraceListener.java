@@ -31,27 +31,27 @@ public class ProgramTraceListener extends ProgramListenerAdaptor {
 
     @Override
     public void onMemoryExtend(int delta) {
-        if (enabled) actions.addMemoryExtend(delta);
+        if (enabled) { actions.addMemoryExtend(delta); }
     }
 
     @Override
     public void onMemoryWrite(int address, byte[] data, int size) {
-        if (enabled) actions.addMemoryWrite(address, data, size);
+        if (enabled) { actions.addMemoryWrite(address, data, size); }
     }
 
     @Override
     public void onStackPop() {
-        if (enabled) actions.addStackPop();
+        if (enabled) { actions.addStackPop(); }
     }
 
     @Override
     public void onStackPush(DataWord value) {
-        if (enabled) actions.addStackPush(value);
+        if (enabled) { actions.addStackPush(value); }
     }
 
     @Override
     public void onStackSwap(int from, int to) {
-        if (enabled) actions.addStackSwap(from, to);
+        if (enabled) { actions.addStackSwap(from, to); }
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ProgramTraceListener extends ProgramListenerAdaptor {
 
     @Override
     public void onStorageClear() {
-        if (enabled) actions.addStorageClear();
+        if (enabled) { actions.addStorageClear(); }
     }
 
     public OpActions resetActions() {

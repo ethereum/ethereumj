@@ -18,10 +18,13 @@
 package org.ethereum.net.eth.handler;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
@@ -30,9 +33,8 @@ import java.util.List;
 /**
  * Describes interface required by Eth peer clients
  *
- * @see org.ethereum.net.server.Channel
- *
  * @author Mikhail Kalinin
+ * @see org.ethereum.net.server.Channel
  * @since 20.08.2015
  */
 public interface Eth {
@@ -100,14 +102,15 @@ public interface Eth {
     void sendTransaction(List<Transaction> tx);
 
     /**
-     *  Send GET_BLOCK_HEADERS message to the peer
+     * Send GET_BLOCK_HEADERS message to the peer
      */
     ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse);
 
-    ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse);
+    ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip,
+                                                            boolean reverse);
 
     /**
-     *  Send GET_BLOCK_BODIES message to the peer
+     * Send GET_BLOCK_BODIES message to the peer
      */
     ListenableFuture<List<Block>> sendGetBlockBodies(List<BlockHeaderWrapper> headers);
 

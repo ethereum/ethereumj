@@ -17,6 +17,8 @@
  */
 package org.ethereum.core;
 
+import static org.ethereum.util.TimeUtils.secondsToMillis;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -24,8 +26,6 @@ import org.ethereum.util.RLPList;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.ethereum.util.TimeUtils.secondsToMillis;
 
 /**
  * <p> Wraps {@link Block} </p>
@@ -129,7 +129,7 @@ public class BlockWrapper {
     }
 
     public long timeSinceFail() {
-        if(importFailedAt == 0) {
+        if (importFailedAt == 0) {
             return 0;
         } else {
             return System.currentTimeMillis() - importFailedAt;
@@ -146,8 +146,7 @@ public class BlockWrapper {
         byte[] receivedAtBytes = RLP.encodeBigInteger(BigInteger.valueOf(receivedAt));
         byte[] newBlockBytes = RLP.encodeByte((byte) (newBlock ? 1 : 0));
         byte[] nodeIdBytes = RLP.encodeElement(nodeId);
-        return RLP.encodeList(blockBytes, importFailedBytes,
-                receivedAtBytes, newBlockBytes, nodeIdBytes);
+        return RLP.encodeList(blockBytes, importFailedBytes, receivedAtBytes, newBlockBytes, nodeIdBytes);
     }
 
     private void parse(byte[] bytes) {
@@ -169,8 +168,8 @@ public class BlockWrapper {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         BlockWrapper wrapper = (BlockWrapper) o;
 

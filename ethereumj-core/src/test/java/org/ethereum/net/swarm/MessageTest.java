@@ -32,12 +32,14 @@ public class MessageTest {
 
     @Test
     public void statusMessageTest() {
-        BzzStatusMessage m1 = new BzzStatusMessage(777, "IdString",
-                new PeerAddress(new byte[] {127,0,0, (byte) 255}, 1010, new byte[] {1,2,3,4}), 888,
-                Arrays.asList(new Capability[] {
-                        new Capability("bzz", (byte) 0),
-                        new Capability("shh", (byte) 202),
-                }));
+        BzzStatusMessage m1 = new BzzStatusMessage(777,
+                                                   "IdString",
+                                                   new PeerAddress(new byte[]{127, 0, 0, (byte) 255},
+                                                                   1010,
+                                                                   new byte[]{1, 2, 3, 4}),
+                                                   888,
+                                                   Arrays.asList(new Capability[]{new Capability("bzz", (byte) 0),
+                                                           new Capability("shh", (byte) 202),}));
         byte[] encoded = m1.getEncoded();
         BzzStatusMessage m2 = new BzzStatusMessage(encoded);
         System.out.println(m1);

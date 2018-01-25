@@ -19,7 +19,11 @@ package org.ethereum.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +66,7 @@ public class FileUtil {
             //check if the file is a directory
             if (file.isDirectory()) {
                 if ((file.list()).length > 0) {
-                    for(String s:file.list()){
+                    for (String s : file.list()) {
                         //call deletion of file individually
                         recursiveDelete(fileName + System.getProperty("file.separator") + s);
                     }

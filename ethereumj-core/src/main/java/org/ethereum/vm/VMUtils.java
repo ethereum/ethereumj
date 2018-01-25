@@ -17,24 +17,32 @@
  */
 package org.ethereum.vm;
 
-import org.ethereum.config.SystemProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.Inflater;
-import java.util.zip.InflaterOutputStream;
-
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.springframework.util.StringUtils.isEmpty;
 
+import org.ethereum.config.SystemProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterOutputStream;
+
 public final class VMUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("VM");
+    private static final int BUF_SIZE = 4096;
 
     private VMUtils() {
     }
@@ -81,7 +89,7 @@ public final class VMUtils {
             if (data != null) {
                 out.write(data.getBytes("UTF-8"));
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error(format("Cannot write to file '%s': ", file.getAbsolutePath()), e);
         } finally {
             closeQuietly(out);
@@ -94,8 +102,6 @@ public final class VMUtils {
             writeStringToFile(file, content);
         }
     }
-
-    private static final int BUF_SIZE = 4096;
 
     private static void write(InputStream in, OutputStream out, int bufSize) throws IOException {
         try {

@@ -17,30 +17,26 @@
  */
 package org.ethereum.net.shh;
 
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.MessageQueue;
-
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.MessageQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
  * Process the messages between peers with 'shh' capability on the network.
- *
+ * <p>
  * Peers with 'shh' capability can send/receive:
  */
 @Component
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
-    private final static Logger logger = LoggerFactory.getLogger("net.shh");
     public final static byte VERSION = 3;
-
+    private final static Logger logger = LoggerFactory.getLogger("net.shh");
     private MessageQueue msgQueue = null;
     private boolean active = false;
     private BloomFilter peerBloomFilter = BloomFilter.createAll();
@@ -61,10 +57,11 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
 
-        if (!isActive()) return;
+        if (!isActive()) { return; }
 
-        if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
+        if (ShhMessageCodes.inRange(msg.getCommand().asByte())) {
             logger.info("ShhHandler invoke: [{}]", msg.getCommand());
+        }
 
         ethereumListener.trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
 
@@ -124,13 +121,13 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     void sendEnvelope(ShhEnvelopeMessage env) {
         sendMessage(env);
-//        Topic[] topics = env.getTopics();
-//        for (Topic topic : topics) {
-//            if (peerBloomFilter.hasTopic(topic)) {
-//                sendMessage(env);
-//                break;
-//            }
-//        }
+        //        Topic[] topics = env.getTopics();
+        //        for (Topic topic : topics) {
+        //            if (peerBloomFilter.hasTopic(topic)) {
+        //                sendMessage(env);
+        //                break;
+        //            }
+        //        }
     }
 
     void sendMessage(ShhMessage msg) {

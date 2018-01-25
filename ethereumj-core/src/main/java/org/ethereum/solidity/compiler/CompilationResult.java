@@ -31,7 +31,7 @@ public class CompilationResult {
     public String version;
 
     public static CompilationResult parse(String rawJson) throws IOException {
-        if(rawJson == null || rawJson.isEmpty()){
+        if (rawJson == null || rawJson.isEmpty()) {
             CompilationResult empty = new CompilationResult();
             empty.contracts = Collections.emptyMap();
             empty.version = "";

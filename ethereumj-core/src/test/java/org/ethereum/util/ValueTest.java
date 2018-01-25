@@ -17,15 +17,15 @@
  */
 package org.ethereum.util;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.Arrays;
-
-import static org.junit.Assert.*;
 
 public class ValueTest {
 
@@ -67,7 +67,8 @@ public class ValueTest {
     @Test
     public void longListRLPBug_1() {
 
-        String testRlp = "f7808080d387206f72726563748a626574656c676575736580d387207870726573738a70726564696361626c658080808080808080808080";
+        String testRlp =
+                "f7808080d387206f72726563748a626574656c676575736580d387207870726573738a70726564696361626c658080808080808080808080";
 
         Value val = Value.fromRlpEncoded(Hex.decode(testRlp));
 

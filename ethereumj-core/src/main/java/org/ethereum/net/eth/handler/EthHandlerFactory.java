@@ -30,7 +30,6 @@ public interface EthHandlerFactory {
      *
      * @param version Eth version
      * @return created handler
-     *
      * @throws IllegalArgumentException if provided Eth version is not supported
      */
     EthHandler create(EthVersion version);

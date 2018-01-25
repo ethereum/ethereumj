@@ -42,24 +42,23 @@
  */
 package org.ethereum.crypto.cryptohash;
 
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertArrayEquals;
 
-import static org.junit.Assert.*;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Generic test utility class that gets extended from the digest test
  * classes.
+ *
  * @author Stephan Fuhrmann &lt;stephan@tynne.de&gt;
  */
 public class AbstractCryptoTest {
 
-    protected void testKatHex(Digest dig, String data, String ref) {
-        testFrom(dig, Hex.decode(data), Hex.decode(ref));
-    }
-
-    /** Does the comparison using the digest and some calls on it.
-     * @param digest the digest to operate on.
-     * @param message the input data to pass to the digest.
+    /**
+     * Does the comparison using the digest and some calls on it.
+     *
+     * @param digest   the digest to operate on.
+     * @param message  the input data to pass to the digest.
      * @param expected the expected data out of the digest.
      */
     private static void testFrom(Digest digest, byte[] message, byte[] expected) {
@@ -87,5 +86,9 @@ public class AbstractCryptoTest {
         assertArrayEquals(expected, digest.digest());
         dig2.update(message, blen / 2, blen - (blen / 2));
         assertArrayEquals(expected, dig2.digest());
+    }
+
+    protected void testKatHex(Digest dig, String data, String ref) {
+        testFrom(dig, Hex.decode(data), Hex.decode(ref));
     }
 }

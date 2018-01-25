@@ -17,83 +17,29 @@
  */
 package org.ethereum.core;
 
+import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.ethereum.util.ByteUtil.toHexString;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
 import org.junit.Test;
 
 import java.math.BigInteger;
-import java.util.*;
-
-import static org.apache.commons.collections4.CollectionUtils.size;
-import static org.ethereum.util.ByteUtil.toHexString;
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 public class TransactionExecutionSummaryTest {
 
-
-    @Test
-    public void testRlpEncoding() {
-        Transaction tx = randomTransaction();
-        Set<DataWord> deleteAccounts = new HashSet<>(randomDataWords(10));
-        List<LogInfo> logs = randomLogsInfo(5);
-
-        final Map<DataWord, DataWord> readOnly = randomStorageEntries(20);
-        final Map<DataWord, DataWord> changed = randomStorageEntries(5);
-        Map<DataWord, DataWord> all = new HashMap<DataWord, DataWord>() {{
-            putAll(readOnly);
-            putAll(changed);
-        }};
-
-        BigInteger gasLeftover = new BigInteger("123");
-        BigInteger gasRefund = new BigInteger("125");
-        BigInteger gasUsed = new BigInteger("556");
-
-        final int nestedLevelCount = 5000;
-        final int countByLevel = 1;
-        List<InternalTransaction> internalTransactions = randomInternalTransactions(tx, nestedLevelCount, countByLevel);
-
-        byte[] result = randomBytes(32);
-
-
-        byte[] encoded = new TransactionExecutionSummary.Builder(tx)
-                .deletedAccounts(deleteAccounts)
-                .logs(logs)
-                .touchedStorage(all, changed)
-                .gasLeftover(gasLeftover)
-                .gasRefund(gasRefund)
-                .gasUsed(gasUsed)
-                .internalTransactions(internalTransactions)
-                .result(result)
-                .build()
-                .getEncoded();
-
-
-        TransactionExecutionSummary summary = new TransactionExecutionSummary(encoded);
-        assertArrayEquals(tx.getHash(), summary.getTransactionHash());
-
-        assertEquals(size(deleteAccounts), size(summary.getDeletedAccounts()));
-        for (DataWord account : summary.getDeletedAccounts()) {
-            assertTrue(deleteAccounts.contains(account));
-        }
-
-        assertEquals(size(logs), size(summary.getLogs()));
-        for (int i = 0; i < logs.size(); i++) {
-            assertLogInfoEquals(logs.get(i), summary.getLogs().get(i));
-        }
-
-        assertStorageEquals(all, summary.getTouchedStorage().getAll());
-        assertStorageEquals(changed, summary.getTouchedStorage().getChanged());
-        assertStorageEquals(readOnly, summary.getTouchedStorage().getReadOnly());
-
-        assertEquals(gasRefund, summary.getGasRefund());
-        assertEquals(gasLeftover, summary.getGasLeftover());
-        assertEquals(gasUsed, summary.getGasUsed());
-
-        assertEquals(nestedLevelCount * countByLevel, size(internalTransactions));
-
-        assertArrayEquals(result, summary.getResult());
-    }
 
     private static void assertStorageEquals(Map<DataWord, DataWord> expected, Map<DataWord, DataWord> actual) {
         assertNotNull(expected);
@@ -154,24 +100,40 @@ public class TransactionExecutionSummaryTest {
     }
 
     private static InternalTransaction randomInternalTransaction(Transaction parent, int deep, int index) {
-        return new InternalTransaction(parent.getHash(), deep, index, randomBytes(1), DataWord.ZERO, DataWord.ZERO,
-                parent.getReceiveAddress(), randomBytes(20), randomBytes(2), randomBytes(64), "test note");
+        return new InternalTransaction(parent.getHash(),
+                                       deep,
+                                       index,
+                                       randomBytes(1),
+                                       DataWord.ZERO,
+                                       DataWord.ZERO,
+                                       parent.getReceiveAddress(),
+                                       randomBytes(20),
+                                       randomBytes(2),
+                                       randomBytes(64),
+                                       "test note");
     }
 
-    private static List<InternalTransaction> randomInternalTransactions(Transaction parent, int nestedLevelCount, int countByLevel) {
+    private static List<InternalTransaction> randomInternalTransactions(Transaction parent, int nestedLevelCount,
+                                                                        int countByLevel) {
         List<InternalTransaction> result = new ArrayList<>();
         if (nestedLevelCount > 0) {
             for (int index = 0; index < countByLevel; index++) {
                 result.add(randomInternalTransaction(parent, nestedLevelCount, index));
             }
-            result.addAll(0, randomInternalTransactions(result.get(result.size() - 1), nestedLevelCount - 1, countByLevel));
+            result.addAll(0,
+                          randomInternalTransactions(result.get(result.size() - 1),
+                                                     nestedLevelCount - 1,
+                                                     countByLevel));
         }
 
         return result;
     }
 
     private static Transaction randomTransaction() {
-        Transaction transaction = Transaction.createDefault(toHexString(randomBytes(20)), new BigInteger(randomBytes(2)), new BigInteger(randomBytes(1)), null);
+        Transaction transaction = Transaction.createDefault(toHexString(randomBytes(20)),
+                                                            new BigInteger(randomBytes(2)),
+                                                            new BigInteger(randomBytes(1)),
+                                                            null);
         transaction.sign(randomBytes(32));
         return transaction;
     }
@@ -180,5 +142,67 @@ public class TransactionExecutionSummaryTest {
         byte[] bytes = new byte[len];
         new Random().nextBytes(bytes);
         return bytes;
+    }
+
+    @Test
+    public void testRlpEncoding() {
+        Transaction tx = randomTransaction();
+        Set<DataWord> deleteAccounts = new HashSet<>(randomDataWords(10));
+        List<LogInfo> logs = randomLogsInfo(5);
+
+        final Map<DataWord, DataWord> readOnly = randomStorageEntries(20);
+        final Map<DataWord, DataWord> changed = randomStorageEntries(5);
+        Map<DataWord, DataWord> all = new HashMap<DataWord, DataWord>() {{
+            putAll(readOnly);
+            putAll(changed);
+        }};
+
+        BigInteger gasLeftover = new BigInteger("123");
+        BigInteger gasRefund = new BigInteger("125");
+        BigInteger gasUsed = new BigInteger("556");
+
+        final int nestedLevelCount = 5000;
+        final int countByLevel = 1;
+        List<InternalTransaction> internalTransactions = randomInternalTransactions(tx, nestedLevelCount, countByLevel);
+
+        byte[] result = randomBytes(32);
+
+
+        byte[] encoded = new TransactionExecutionSummary.Builder(tx).deletedAccounts(deleteAccounts)
+                .logs(logs)
+                .touchedStorage(all, changed)
+                .gasLeftover(gasLeftover)
+                .gasRefund(gasRefund)
+                .gasUsed(gasUsed)
+                .internalTransactions(internalTransactions)
+                .result(result)
+                .build()
+                .getEncoded();
+
+
+        TransactionExecutionSummary summary = new TransactionExecutionSummary(encoded);
+        assertArrayEquals(tx.getHash(), summary.getTransactionHash());
+
+        assertEquals(size(deleteAccounts), size(summary.getDeletedAccounts()));
+        for (DataWord account : summary.getDeletedAccounts()) {
+            assertTrue(deleteAccounts.contains(account));
+        }
+
+        assertEquals(size(logs), size(summary.getLogs()));
+        for (int i = 0; i < logs.size(); i++) {
+            assertLogInfoEquals(logs.get(i), summary.getLogs().get(i));
+        }
+
+        assertStorageEquals(all, summary.getTouchedStorage().getAll());
+        assertStorageEquals(changed, summary.getTouchedStorage().getChanged());
+        assertStorageEquals(readOnly, summary.getTouchedStorage().getReadOnly());
+
+        assertEquals(gasRefund, summary.getGasRefund());
+        assertEquals(gasLeftover, summary.getGasLeftover());
+        assertEquals(gasUsed, summary.getGasUsed());
+
+        assertEquals(nestedLevelCount * countByLevel, size(internalTransactions));
+
+        assertArrayEquals(result, summary.getResult());
     }
 }

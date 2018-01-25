@@ -28,51 +28,56 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.ethereum.solidity.SolidityType;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Creates a contract function call transaction.
  * Serializes arguments according to the function ABI .
- *
+ * <p>
  * Created by Anton Nashatyrev on 25.08.2015.
  */
 public class CallTransaction {
 
-    private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
+    private final static ObjectMapper DEFAULT_MAPPER =
+            new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 
     public static Transaction createRawTransaction(long nonce, long gasPrice, long gasLimit, String toAddress,
-                                                    long value, byte[] data) {
+                                                   long value, byte[] data) {
         Transaction tx = new Transaction(longToBytesNoLeadZeroes(nonce),
-                longToBytesNoLeadZeroes(gasPrice),
-                longToBytesNoLeadZeroes(gasLimit),
-                toAddress == null ? null : Hex.decode(toAddress),
-                longToBytesNoLeadZeroes(value),
-                data,
-                null);
+                                         longToBytesNoLeadZeroes(gasPrice),
+                                         longToBytesNoLeadZeroes(gasLimit),
+                                         toAddress == null ? null : Hex.decode(toAddress),
+                                         longToBytesNoLeadZeroes(value),
+                                         data,
+                                         null);
         return tx;
     }
 
 
-
     public static Transaction createCallTransaction(long nonce, long gasPrice, long gasLimit, String toAddress,
-                        long value, Function callFunc, Object ... funcArgs) {
+                                                    long value, Function callFunc, Object... funcArgs) {
 
         byte[] callData = callFunc.encode(funcArgs);
         return createRawTransaction(nonce, gasPrice, gasLimit, toAddress, value, callData);
     }
 
+
+    public enum FunctionType {
+        constructor,
+        function,
+        event,
+        fallback
+    }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Param {
@@ -86,13 +91,6 @@ public class CallTransaction {
         }
     }
 
-    public enum FunctionType {
-        constructor,
-        function,
-        event,
-        fallback
-    }
-
     public static class Function {
         public boolean anonymous;
         public boolean constant;
@@ -104,11 +102,46 @@ public class CallTransaction {
 
         private Function() {}
 
-        public byte[] encode(Object ... args) {
+        public static Function fromJsonInterface(String json) {
+            try {
+                return DEFAULT_MAPPER.readValue(json, Function.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public static Function fromSignature(String funcName, String... paramTypes) {
+            return fromSignature(funcName, paramTypes, new String[0]);
+        }
+
+        public static Function fromSignature(String funcName, String[] paramTypes, String[] resultTypes) {
+            Function ret = new Function();
+            ret.name = funcName;
+            ret.constant = false;
+            ret.type = FunctionType.function;
+            ret.inputs = new Param[paramTypes.length];
+            for (int i = 0; i < paramTypes.length; i++) {
+                ret.inputs[i] = new Param();
+                ret.inputs[i].name = "param" + i;
+                ret.inputs[i].type = SolidityType.getType(paramTypes[i]);
+            }
+            ret.outputs = new Param[resultTypes.length];
+            for (int i = 0; i < resultTypes.length; i++) {
+                ret.outputs[i] = new Param();
+                ret.outputs[i].name = "res" + i;
+                ret.outputs[i].type = SolidityType.getType(resultTypes[i]);
+            }
+            return ret;
+        }
+
+        public byte[] encode(Object... args) {
             return ByteUtil.merge(encodeSignature(), encodeArguments(args));
         }
-        public byte[] encodeArguments(Object ... args) {
-            if (args.length > inputs.length) throw new RuntimeException("Too many arguments: " + args.length + " > " + inputs.length);
+
+        public byte[] encodeArguments(Object... args) {
+            if (args.length > inputs.length) {
+                throw new RuntimeException("Too many arguments: " + args.length + " > " + inputs.length);
+            }
 
             int staticSize = 0;
             int dynamicCnt = 0;
@@ -186,42 +219,12 @@ public class CallTransaction {
             return formatSignature();
         }
 
-        public static Function fromJsonInterface(String json) {
-            try {
-                return DEFAULT_MAPPER.readValue(json, Function.class);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public static Function fromSignature(String funcName, String ... paramTypes) {
-            return fromSignature(funcName, paramTypes, new String[0]);
-        }
-
-        public static Function fromSignature(String funcName, String[] paramTypes, String[] resultTypes) {
-            Function ret = new Function();
-            ret.name = funcName;
-            ret.constant = false;
-            ret.type = FunctionType.function;
-            ret.inputs = new Param[paramTypes.length];
-            for (int i = 0; i < paramTypes.length; i++) {
-                ret.inputs[i] = new Param();
-                ret.inputs[i].name = "param" + i;
-                ret.inputs[i].type = SolidityType.getType(paramTypes[i]);
-            }
-            ret.outputs = new Param[resultTypes.length];
-            for (int i = 0; i < resultTypes.length; i++) {
-                ret.outputs[i] = new Param();
-                ret.outputs[i].name = "res" + i;
-                ret.outputs[i].type = SolidityType.getType(resultTypes[i]);
-            }
-            return ret;
-        }
-
 
     }
 
     public static class Contract {
+        public Function[] functions;
+
         public Contract(String jsonInterface) {
             try {
                 functions = new ObjectMapper().readValue(jsonInterface, Function[].class);
@@ -249,13 +252,13 @@ public class CallTransaction {
         }
 
         private Function getBySignatureHash(byte[] hash) {
-            if (hash.length == 4 ) {
+            if (hash.length == 4) {
                 for (Function function : functions) {
                     if (FastByteComparisons.equal(function.encodeSignature(), hash)) {
                         return function;
                     }
                 }
-            } else if (hash.length == 32 ) {
+            } else if (hash.length == 32) {
                 for (Function function : functions) {
                     if (FastByteComparisons.equal(function.encodeSignatureLong(), hash)) {
                         return function;
@@ -271,9 +274,9 @@ public class CallTransaction {
          * Parses function and its arguments from transaction invocation binary data
          */
         public Invocation parseInvocation(byte[] data) {
-            if (data.length < 4) throw new RuntimeException("Invalid data length: " + data.length);
+            if (data.length < 4) { throw new RuntimeException("Invalid data length: " + data.length); }
             Function function = getBySignatureHash(Arrays.copyOfRange(data, 0, 4));
-            if (function == null) throw new RuntimeException("Can't find function/event by it signature");
+            if (function == null) { throw new RuntimeException("Can't find function/event by it signature"); }
             Object[] args = function.decode(data);
             return new Invocation(this, function, args);
         }
@@ -284,7 +287,7 @@ public class CallTransaction {
         public Invocation parseEvent(LogInfo eventLog) {
             CallTransaction.Function event = getBySignatureHash(eventLog.getTopics().get(0).getData());
             int indexedArg = 1;
-            if (event == null) return null;
+            if (event == null) { return null; }
             List<Object> indexedArgs = new ArrayList<>();
             List<Param> unindexed = new ArrayList<>();
             for (Param input : event.inputs) {
@@ -308,8 +311,6 @@ public class CallTransaction {
             }
             return new Invocation(this, event, args);
         }
-
-        public Function[] functions;
     }
 
     /**
@@ -329,9 +330,8 @@ public class CallTransaction {
 
         @Override
         public String toString() {
-            return "[" + "contract=" + contract +
-                    (function.type == FunctionType.event ? ", event=" : ", function=")
-                    + function + ", args=" + Arrays.toString(args) + ']';
+            return "[" + "contract=" + contract + (function.type == FunctionType.event ? ", event=" : ", function=") +
+                    function + ", args=" + Arrays.toString(args) + ']';
         }
     }
 }

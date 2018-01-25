@@ -19,11 +19,9 @@ package org.ethereum.datasource;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.util.concurrent.Future;
-
 /**
  * Represents cache Source which is able to do asynchronous flush
- *
+ * <p>
  * Created by Anton Nashatyrev on 02.02.2017.
  */
 public interface AsyncFlushable {
@@ -33,12 +31,12 @@ public interface AsyncFlushable {
      * when call {@link #flushAsync()} and all the newer changes will
      * be collected to a new backing store and will be flushed only on
      * subsequent flush call
-     *
+     * <p>
      * The method is intended to make consistent flush from several
      * sources. I.e. at some point all the related Sources are flipped
      * synchronously first (this doesn't consume any time normally) and then
      * are flushed asynchronously
-     *
+     * <p>
      * This call may block until a previous flush is completed (if still in progress)
      *
      * @throws InterruptedException

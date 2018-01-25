@@ -17,23 +17,24 @@
  */
 package org.ethereum.crypto.zksnark;
 
-import java.math.BigInteger;
-
 import static org.ethereum.crypto.zksnark.Params.R;
 import static org.ethereum.crypto.zksnark.Params.TWIST_MUL_BY_P_X;
 import static org.ethereum.crypto.zksnark.Params.TWIST_MUL_BY_P_Y;
 
+import java.math.BigInteger;
+
 /**
  * Implementation of specific cyclic subgroup of points belonging to {@link BN128Fp2} <br/>
- * Members of this subgroup are passed as a second param to pairing input {@link PairingCheck#addPair(BN128G1, BN128G2)} <br/>
+ * Members of this subgroup are passed as a second param to pairing input
+ * {@link PairingCheck#addPair(BN128G1, BN128G2)} <br/>
  * <br/>
- *
+ * <p>
  * The order of subgroup is {@link Params#R} <br/>
  * Generator of subgroup G = <br/>
  * (11559732032986387107991004021392285783925812861821192530917403151452391805634 * i + <br/>
- *  10857046999023057135944570762232829481370756359578518086990519993285655852781, <br/>
- *  4082367875863433681332203403145435568316851327593401208105741076214120093531 * i + <br/>
- *  8495653923123431417604973247489272438418190587263600148770280649306958101930) <br/>
+ * 10857046999023057135944570762232829481370756359578518086990519993285655852781, <br/>
+ * 4082367875863433681332203403145435568316851327593401208105741076214120093531 * i + <br/>
+ * 8495653923123431417604973247489272438418190587263600148770280649306958101930) <br/>
  * <br/>
  *
  * @author Mikhail Kalinin
@@ -41,17 +42,14 @@ import static org.ethereum.crypto.zksnark.Params.TWIST_MUL_BY_P_Y;
  */
 public class BN128G2 extends BN128Fp2 {
 
+    static final BigInteger FR_NEG_ONE = BigInteger.ONE.negate().mod(R);
+
     BN128G2(BN128<Fp2> p) {
         super(p.x, p.y, p.z);
     }
 
     BN128G2(Fp2 x, Fp2 y, Fp2 z) {
         super(x, y, z);
-    }
-
-    @Override
-    public BN128G2 toAffine() {
-        return new BN128G2(super.toAffine());
     }
 
     /**
@@ -68,7 +66,7 @@ public class BN128G2 extends BN128Fp2 {
         }
 
         // check whether point is a subgroup member
-        if (!isGroupMember(p)) return null;
+        if (!isGroupMember(p)) { return null; }
 
         return new BN128G2(p);
     }
@@ -77,7 +75,11 @@ public class BN128G2 extends BN128Fp2 {
         BN128<Fp2> left = p.mul(FR_NEG_ONE).add(p);
         return left.isZero(); // should satisfy condition: -1 * p + p == 0, where -1 belongs to F_r
     }
-    static final BigInteger FR_NEG_ONE = BigInteger.ONE.negate().mod(R);
+
+    @Override
+    public BN128G2 toAffine() {
+        return new BN128G2(super.toAffine());
+    }
 
     BN128G2 mulByP() {
 

@@ -17,16 +17,22 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import com.google.common.collect.Lists;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.client.Capability;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.security.SecureRandom;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by devrandom on 2015-04-11.
@@ -52,23 +58,19 @@ public class RlpxConnectionTest {
         byte[] initiatePacket = initiator.encryptAuthMessage(initiate);
         byte[] responsePacket = responder.handleAuthInitiate(initiatePacket, remoteKey);
         initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
-        to = new PipedInputStream(1024*1024);
+        to = new PipedInputStream(1024 * 1024);
         toOut = new PipedOutputStream(to);
-        from = new PipedInputStream(1024*1024);
+        from = new PipedInputStream(1024 * 1024);
         fromOut = new PipedOutputStream(from);
         iCodec = new FrameCodec(initiator.getSecrets());
         rCodec = new FrameCodec(responder.getSecrets());
         byte[] nodeId = {1, 2, 3, 4};
-        iMessage = new HandshakeMessage(
-                123,
-                "abcd",
-                Lists.newArrayList(
-                        new Capability("zz", (byte) 1),
-                        new Capability("yy", (byte) 3)
-                ),
-                3333,
-                nodeId
-        );
+        iMessage = new HandshakeMessage(123,
+                                        "abcd",
+                                        Lists.newArrayList(new Capability("zz", (byte) 1),
+                                                           new Capability("yy", (byte) 3)),
+                                        3333,
+                                        nodeId);
     }
 
     @Test
@@ -98,8 +100,8 @@ public class RlpxConnectionTest {
 
     @Test
     public void testHandshake() throws IOException {
-        RlpxConnection iConn =  new RlpxConnection(initiator.getSecrets(), from, toOut);
-        RlpxConnection rConn =  new RlpxConnection(responder.getSecrets(), to, fromOut);
+        RlpxConnection iConn = new RlpxConnection(initiator.getSecrets(), from, toOut);
+        RlpxConnection rConn = new RlpxConnection(responder.getSecrets(), to, fromOut);
         iConn.sendProtocolHandshake(iMessage);
         rConn.handleNextMessage();
         HandshakeMessage receivedMessage = rConn.getHandshakeMessage();

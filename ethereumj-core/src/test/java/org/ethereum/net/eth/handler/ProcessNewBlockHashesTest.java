@@ -34,6 +34,62 @@ import java.util.List;
  */
 public class ProcessNewBlockHashesTest {
     private static final Logger logger = LoggerFactory.getLogger("test");
+    private Eth62Tester ethHandler;
+
+    public ProcessNewBlockHashesTest() {
+        ethHandler = new Eth62Tester();
+    }
+
+    @Test
+    public void testSingleHashHandling() {
+        List<BlockIdentifier> blockIdentifiers = new ArrayList<>();
+        byte[] blockHash = new byte[]{2, 3, 4};
+        long blockNumber = 123;
+        blockIdentifiers.add(new BlockIdentifier(blockHash, blockNumber));
+        NewBlockHashesMessage msg = new NewBlockHashesMessage(blockIdentifiers);
+
+        ethHandler.setGetNewBlockHeadersParams(blockHash, 1, 0, false);
+        ethHandler.processNewBlockHashes(msg);
+        assert ethHandler.wasCalled;
+    }
+
+    @Test
+    public void testSeveralHashesHandling() {
+        List<BlockIdentifier> blockIdentifiers = new ArrayList<>();
+        byte[] blockHash1 = new byte[]{2, 3, 4};
+        long blockNumber1 = 123;
+        byte[] blockHash2 = new byte[]{5, 3, 4};
+        long blockNumber2 = 124;
+        byte[] blockHash3 = new byte[]{2, 6, 4};
+        long blockNumber3 = 125;
+        blockIdentifiers.add(new BlockIdentifier(blockHash1, blockNumber1));
+        blockIdentifiers.add(new BlockIdentifier(blockHash2, blockNumber2));
+        blockIdentifiers.add(new BlockIdentifier(blockHash3, blockNumber3));
+        NewBlockHashesMessage msg = new NewBlockHashesMessage(blockIdentifiers);
+
+        ethHandler.setGetNewBlockHeadersParams(blockHash1, 3, 0, false);
+        ethHandler.processNewBlockHashes(msg);
+        assert ethHandler.wasCalled;
+    }
+
+    @Test
+    public void testSeveralHashesMixedOrderHandling() {
+        List<BlockIdentifier> blockIdentifiers = new ArrayList<>();
+        byte[] blockHash1 = new byte[]{5, 3, 4};
+        long blockNumber1 = 124;
+        byte[] blockHash2 = new byte[]{2, 3, 4};
+        long blockNumber2 = 123;
+        byte[] blockHash3 = new byte[]{2, 6, 4};
+        long blockNumber3 = 125;
+        blockIdentifiers.add(new BlockIdentifier(blockHash1, blockNumber1));
+        blockIdentifiers.add(new BlockIdentifier(blockHash2, blockNumber2));
+        blockIdentifiers.add(new BlockIdentifier(blockHash3, blockNumber3));
+        NewBlockHashesMessage msg = new NewBlockHashesMessage(blockIdentifiers);
+
+        ethHandler.setGetNewBlockHeadersParams(blockHash2, 3, 0, false);
+        ethHandler.processNewBlockHashes(msg);
+        assert ethHandler.wasCalled;
+    }
 
     private class Eth62Tester extends Eth62 {
 
@@ -58,69 +114,16 @@ public class ProcessNewBlockHashesTest {
         }
 
         @Override
-        protected synchronized void sendGetNewBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+        protected synchronized void sendGetNewBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip,
+                                                           boolean reverse) {
             this.wasCalled = true;
             logger.error("Request for sending new headers: hash {}, max {}, skip {}, reverse {}",
-                    Hex.toHexString(blockHash), maxBlocksAsk, skip, reverse);
-            assert Arrays.equals(blockHash, this.blockHash) &&
-                    maxBlocksAsk == this.maxBlockAsk && skip == this.skip && reverse == this.reverse;
+                         Hex.toHexString(blockHash),
+                         maxBlocksAsk,
+                         skip,
+                         reverse);
+            assert Arrays.equals(blockHash, this.blockHash) && maxBlocksAsk == this.maxBlockAsk && skip == this.skip &&
+                    reverse == this.reverse;
         }
-    }
-
-    private Eth62Tester ethHandler;
-
-    public ProcessNewBlockHashesTest() {
-        ethHandler = new Eth62Tester();
-    }
-
-    @Test
-    public void testSingleHashHandling() {
-        List<BlockIdentifier> blockIdentifiers = new ArrayList<>();
-        byte[] blockHash = new byte[] {2, 3, 4};
-        long blockNumber = 123;
-        blockIdentifiers.add(new BlockIdentifier(blockHash, blockNumber));
-        NewBlockHashesMessage msg = new NewBlockHashesMessage(blockIdentifiers);
-
-        ethHandler.setGetNewBlockHeadersParams(blockHash, 1, 0, false);
-        ethHandler.processNewBlockHashes(msg);
-        assert ethHandler.wasCalled;
-    }
-
-    @Test
-    public void testSeveralHashesHandling() {
-        List<BlockIdentifier> blockIdentifiers = new ArrayList<>();
-        byte[] blockHash1 = new byte[] {2, 3, 4};
-        long blockNumber1 = 123;
-        byte[] blockHash2 = new byte[] {5, 3, 4};
-        long blockNumber2 = 124;
-        byte[] blockHash3 = new byte[] {2, 6, 4};
-        long blockNumber3 = 125;
-        blockIdentifiers.add(new BlockIdentifier(blockHash1, blockNumber1));
-        blockIdentifiers.add(new BlockIdentifier(blockHash2, blockNumber2));
-        blockIdentifiers.add(new BlockIdentifier(blockHash3, blockNumber3));
-        NewBlockHashesMessage msg = new NewBlockHashesMessage(blockIdentifiers);
-
-        ethHandler.setGetNewBlockHeadersParams(blockHash1, 3, 0, false);
-        ethHandler.processNewBlockHashes(msg);
-        assert ethHandler.wasCalled;
-    }
-
-    @Test
-    public void testSeveralHashesMixedOrderHandling() {
-        List<BlockIdentifier> blockIdentifiers = new ArrayList<>();
-        byte[] blockHash1 = new byte[] {5, 3, 4};
-        long blockNumber1 = 124;
-        byte[] blockHash2 = new byte[] {2, 3, 4};
-        long blockNumber2 = 123;
-        byte[] blockHash3 = new byte[] {2, 6, 4};
-        long blockNumber3 = 125;
-        blockIdentifiers.add(new BlockIdentifier(blockHash1, blockNumber1));
-        blockIdentifiers.add(new BlockIdentifier(blockHash2, blockNumber2));
-        blockIdentifiers.add(new BlockIdentifier(blockHash3, blockNumber3));
-        NewBlockHashesMessage msg = new NewBlockHashesMessage(blockIdentifiers);
-
-        ethHandler.setGetNewBlockHeadersParams(blockHash2, 3, 0, false);
-        ethHandler.processNewBlockHashes(msg);
-        assert ethHandler.wasCalled;
     }
 }

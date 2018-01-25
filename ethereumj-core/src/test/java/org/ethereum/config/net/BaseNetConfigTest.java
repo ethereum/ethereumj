@@ -17,6 +17,8 @@
  */
 package org.ethereum.config.net;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.blockchain.AbstractConfig;
 import org.ethereum.core.BlockHeader;
@@ -24,8 +26,6 @@ import org.ethereum.core.Transaction;
 import org.junit.Test;
 
 import java.math.BigInteger;
-
-import static org.junit.Assert.*;
 
 public class BaseNetConfigTest {
     @Test(expected = RuntimeException.class)
@@ -53,7 +53,9 @@ public class BaseNetConfigTest {
         assertEquals("BaseNetConfig{blockNumbers=[0], configs=[TestBlockchainConfig], count=1}", config.toString());
 
         config.add(1, blockchainConfig);
-        assertEquals("BaseNetConfig{blockNumbers=[0, 1], configs=[TestBlockchainConfig, TestBlockchainConfig], count=2}", config.toString());
+        assertEquals("BaseNetConfig{blockNumbers=[0, 1], configs=[TestBlockchainConfig, TestBlockchainConfig], " +
+                             "count=2}",
+                     config.toString());
     }
 
     private static class TestBlockchainConfig extends AbstractConfig {

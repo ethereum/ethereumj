@@ -24,7 +24,7 @@ import java.util.List;
  * Represents a chain of Sources as a single Source
  * All calls to this Source are delegated to the last Source in the chain
  * On flush all Sources in chain are flushed in reverse order
- *
+ * <p>
  * Created by Anton Nashatyrev on 07.12.2016.
  */
 public class SourceChainBox<Key, Value, SourceKey, SourceValue>
@@ -63,14 +63,14 @@ public class SourceChainBox<Key, Value, SourceKey, SourceValue>
         lastSource.delete(key);
     }
 
-//    @Override
-//    public boolean flush() {
-////        boolean ret = false;
-////        for (int i = chain.size() - 1; i >= 0 ; i--) {
-////            ret |= chain.get(i).flush();
-////        }
-//        return lastSource.flush();
-//    }
+    //    @Override
+    //    public boolean flush() {
+    ////        boolean ret = false;
+    ////        for (int i = chain.size() - 1; i >= 0 ; i--) {
+    ////            ret |= chain.get(i).flush();
+    ////        }
+    //        return lastSource.flush();
+    //    }
 
     @Override
     protected boolean flushImpl() {

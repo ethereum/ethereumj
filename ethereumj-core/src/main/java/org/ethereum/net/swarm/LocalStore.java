@@ -19,10 +19,10 @@ package org.ethereum.net.swarm;
 
 /**
  * Manages the local ChunkStore
- *
+ * <p>
  * Uses {@link DBStore} for slow access long living data
  * and {@link MemStore} for fast access short living
- *
+ * <p>
  * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class LocalStore implements ChunkStore {
@@ -55,7 +55,7 @@ public class LocalStore implements ChunkStore {
     public void clean() {
         for (ChunkStore chunkStore : new ChunkStore[]{dbStore, memStore}) {
             if (chunkStore instanceof MemStore) {
-                ((MemStore)chunkStore).clear();
+                ((MemStore) chunkStore).clear();
             }
         }
     }

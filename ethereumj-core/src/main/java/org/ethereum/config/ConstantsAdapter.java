@@ -29,6 +29,10 @@ public class ConstantsAdapter extends Constants {
         this.delegate = delegate;
     }
 
+    public static BigInteger getSECP256K1N() {
+        return Constants.getSECP256K1N();
+    }
+
     @Override
     public int getDURATION_LIMIT() {
         return delegate.getDURATION_LIMIT();
@@ -102,9 +106,5 @@ public class ConstantsAdapter extends Constants {
     @Override
     public boolean hasDelegateCallOpcode() {
         return delegate.hasDelegateCallOpcode();
-    }
-
-    public static BigInteger getSECP256K1N() {
-        return Constants.getSECP256K1N();
     }
 }

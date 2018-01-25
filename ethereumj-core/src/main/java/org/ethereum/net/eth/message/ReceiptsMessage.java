@@ -17,14 +17,10 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.Bloom;
-import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.vm.LogInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +45,7 @@ public class ReceiptsMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.receipts = new ArrayList<>();
@@ -91,7 +87,7 @@ public class ReceiptsMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -115,15 +111,15 @@ public class ReceiptsMessage extends EthMessage {
         parse();
         final StringBuilder sb = new StringBuilder();
         if (receipts.size() < 4) {
-            for (List<TransactionReceipt> blockReceipts : receipts)
+            for (List<TransactionReceipt> blockReceipts : receipts) {
                 sb.append("\n   ").append(blockReceipts.size()).append(" receipts in block");
+            }
         } else {
             for (int i = 0; i < 3; i++) {
                 sb.append("\n   ").append(receipts.get(i).size()).append(" receipts in block");
             }
             sb.append("\n   ").append("[Skipped ").append(receipts.size() - 3).append(" blocks]");
         }
-        return "[" + getCommand().name() + " num:"
-                + receipts.size() + " " + sb.toString() + "]";
+        return "[" + getCommand().name() + " num:" + receipts.size() + " " + sb.toString() + "]";
     }
 }

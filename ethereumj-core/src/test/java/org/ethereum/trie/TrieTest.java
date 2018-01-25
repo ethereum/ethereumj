@@ -17,9 +17,22 @@
  */
 package org.ethereum.trie;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Serializers;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.SourceCodec;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.inmem.HashMapDBSimple;
 import org.ethereum.util.Value;
@@ -42,13 +55,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
-
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class TrieTest {
 
@@ -64,110 +77,80 @@ public class TrieTest {
     private static String doge = "doge";
     private static String test = "test";
     private static String dude = "dude";
-
-    public class NoDoubleDeleteMapDB extends HashMapDB<byte[]> {
-        @Override
-        public synchronized void delete(byte[] key) {
-            if (storage.get(key) == null) {
-                throw new RuntimeException("Trying delete non-existing entry: " + Hex.toHexString(key));
-            }
-            super.delete(key);
-        }
-        public NoDoubleDeleteMapDB getDb() {return this;}
-    };
-
-    public class TrieCache extends SourceCodec<byte[], Value, byte[], byte[]> {
-        public TrieCache() {
-            super(new NoDoubleDeleteMapDB(), new Serializers.Identity<byte[]>(), Serializers.TrieNodeSerializer);
-        }
-
-        public NoDoubleDeleteMapDB getDb() {return (NoDoubleDeleteMapDB) getSource();}
-    }
-
-//    public TrieCache mockDb = new TrieCache();
-//    public TrieCache mockDb_2 = new TrieCache();
-    public NoDoubleDeleteMapDB mockDb = new NoDoubleDeleteMapDB();
-    public NoDoubleDeleteMapDB mockDb_2 = new NoDoubleDeleteMapDB();
-
-//      ROOT: [ '\x16', A ]
-//      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
-//      B: [ '\x00\x6f', D ]
-//      D: [ '', '', '', '', '', '', E, '', '', '', '', '', '', '', '', '', 'verb' ]
-//      E: [ '\x17', F ]
-//      F: [ '', '', '', '', '', '', G, '', '', '', '', '', '', '', '', '', 'puppy' ]
-//      G: [ '\x35', 'coin' ]
-//      C: [ '\x20\x6f\x72\x73\x65', 'stallion' ]
-
-    @After
-    public void closeMockDb() throws IOException {
-    }
-
     private static Serializer<String, byte[]> STR_SERIALIZER = new Serializer<String, byte[]>() {
         public byte[] serialize(String object) {return object == null ? null : object.getBytes();}
+
         public String deserialize(byte[] stream) {return stream == null ? null : new String(stream);}
     };
 
+    ;
+    private final String randomDictionary =
+            "spinneries, archipenko, prepotency, herniotomy, preexpress, relaxative, insolvably, debonnaire, " +
+                    "apophysate, virtuality, cavalryman, utilizable, diagenesis, vitascopic, governessy, abranchial, " +
+                    "cyanogenic, gratulated, signalment, predicable, subquality, crystalize, prosaicism, oenologist, " +
+                    "repressive, impanelled, cockneyism, bordelaise, compigne, konstantin, predicated, unsublimed, " +
+                    "hydrophane, phycomyces, capitalise, slippingly, untithable, unburnable, deoxidizer, misteacher, " +
+                    "precorrect, disclaimer, solidified, neuraxitis, caravaning, betelgeuse, underprice, uninclosed, " +
+                    "acrogynous, reirrigate, dazzlingly, chaffiness, corybantes, intumesced, intentness, superexert, " +
+                    "abstrusely, astounding, pilgrimage, posttarsal, prayerless, nomologist, semibelted, frithstool, " +
+                    "unstinging, ecalcarate, amputating, megascopic, graphalloy, platteland, adjacently, mingrelian, " +
+                    "valentinus, appendical, unaccurate, coriaceous, waterworks, sympathize, doorkeeper, overguilty, " +
+                    "flaggingly, admonitory, aeriferous, normocytic, parnellism, catafalque, odontiasis, apprentice, " +
+                    "adulterous, mechanisma, wilderness, undivorced, reinterred, effleurage, pretrochal, phytogenic, " +
+                    "swirlingly, herbarized, unresolved, classifier, diosmosing, microphage, consecrate, astarboard, " +
+                    "predefying, predriving, lettergram, ungranular, overdozing, conferring, unfavorite, peacockish, " +
+                    "coinciding, erythraeum, freeholder, zygophoric, imbitterer, centroidal, appendixes, grayfishes, " +
+                    "enological, indiscreet, broadcloth, divulgated, anglophobe, stoopingly, bibliophil, laryngitis, " +
+                    "separatist, estivating, bellarmine, greasiness, typhlology, xanthation, mortifying, endeavorer, " +
+                    "aviatrices, unequalise, metastatic, leftwinger, apologizer, quatrefoil, nonfouling, bitartrate, " +
+                    "outchiding, undeported, poussetted, haemolysis, asantehene, montgomery, unjoinable, cedarhurst, " +
+                    "unfastener, nonvacuums, beauregard, animalized, polyphides, cannizzaro, gelatinoid, apologised, " +
+                    "unscripted, tracheidal, subdiscoid, gravelling, variegated, interabang, inoperable, immortelle, " +
+                    "laestrygon, duplicatus, proscience, deoxidised, manfulness, channelize, nondefense, ectomorphy, " +
+                    "unimpelled, headwaiter, hexaemeric, derivation, prelexical, limitarian, nonionized, prorefugee, " +
+                    "invariably, patronizer, paraplegia, redivision, occupative, unfaceable, hypomnesia, psalterium, " +
+                    "doctorfish, gentlefolk, overrefine, heptastich, desirously, clarabelle, uneuphonic, autotelism, " +
+                    "firewarden, timberjack, fumigation, drainpipes, spathulate, novelvelle, bicorporal, grisliness, " +
+                    "unhesitant, supergiant, unpatented, womanpower, toastiness, multichord, paramnesia, undertrick, " +
+                    "contrarily, neurogenic, gunmanship, settlement, brookville, gradualism, unossified, villanovan, " +
+                    "ecospecies, organising, buckhannon, prefulfill, johnsonese, unforegone, unwrathful, dunderhead, " +
+                    "erceldoune, unwadeable, refunction, understuff, swaggering, freckliest, telemachus, groundsill, " +
+                    "outslidden, bolsheviks, recognizer, hemangioma, tarantella, muhammedan, talebearer, relocation, " +
+                    "preemption, chachalaca, septuagint, ubiquitous, plexiglass, humoresque, biliverdin, tetraploid, " +
+                    "capitoline, summerwood, undilating, undetested, meningitic, petrolatum, phytotoxic, adiphenine, " +
+                    "flashlight, protectory, inwreathed, rawishness, tendrillar, hastefully, bananaquit, anarthrous, " +
+                    "unbedimmed, herborized, decenniums, deprecated, karyotypic, squalidity, pomiferous, petroglyph, " +
+                    "actinomere, peninsular, trigonally, androgenic, resistance, unassuming, frithstool, documental, " +
+                    "eunuchised, interphone, thymbraeus, confirmand, expurgated, vegetation, myographic, plasmagene, " +
+                    "spindrying, unlackeyed, foreknower, mythically, albescence, rebudgeted, implicitly, unmonastic, " +
+                    "torricelli, mortarless, labialized, phenacaine, radiometry, sluggishly, understood, wiretapper, " +
+                    "jacobitely, unbetrayed, stadholder, directress, emissaries, corelation, sensualize, uncurbable, " +
+                    "permillage, tentacular, thriftless, demoralize, preimagine, iconoclast, acrobatism, firewarden, " +
+                    "transpired, bluethroat, wanderjahr, groundable, pedestrian, unulcerous, preearthly, freelanced, " +
+                    "sculleries, avengingly, visigothic, preharmony, bressummer, acceptable, unfoolable, predivider, " +
+                    "overseeing, arcosolium, piriformis, needlecord, homebodies, sulphation, phantasmic, unsensible, " +
+                    "unpackaged, isopiestic, cytophagic, butterlike, frizzliest, winklehawk, necrophile, mesothorax, " +
+                    "cuchulainn, unrentable, untangible, unshifting, unfeasible, poetastric, extermined, gaillardia, " +
+                    "nonpendent, harborside, pigsticker, infanthood, underrower, easterling, jockeyship, housebreak, " +
+                    "horologium, undepicted, dysacousma, incurrable, editorship, unrelented, peritricha, interchaff, " +
+                    "frothiness, underplant, proafrican, squareness, enigmatise, reconciled, nonnumeral, nonevident, " +
+                    "hamantasch, victualing, watercolor, schrdinger, understand, butlerlike, hemiglobin, yankeeland";
+    //    public TrieCache mockDb = new TrieCache();
+    //    public TrieCache mockDb_2 = new TrieCache();
+    public NoDoubleDeleteMapDB mockDb = new NoDoubleDeleteMapDB();
+    public NoDoubleDeleteMapDB mockDb_2 = new NoDoubleDeleteMapDB();
 
-//    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
-//        public StringTrie(Source<byte[], Value> src) {
-//            this(src, null);
-//        }
-//        public StringTrie(Source<byte[], Value> src, byte[] root) {
-//            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
-//        }
-//
-//        public byte[] getRootHash() {
-//            return ((TrieImpl) getSource()).getRootHash();
-//        }
-//
-//        public String getTrieDump() {
-//            return ((TrieImpl) getSource()).getTrieDump();
-//        }
-//
-//        @Override
-//        public boolean equals(Object obj) {
-//            return getSource().equals(((StringTrie) obj).getSource());
-//        }
-//    }
-    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
-        public StringTrie(Source<byte[], byte[]> src) {
-            this(src, null);
-        }
-        public StringTrie(Source<byte[], byte[]> src, byte[] root) {
-            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
-        }
+    //      ROOT: [ '\x16', A ]
+    //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
+    //      B: [ '\x00\x6f', D ]
+    //      D: [ '', '', '', '', '', '', E, '', '', '', '', '', '', '', '', '', 'verb' ]
+    //      E: [ '\x17', F ]
+    //      F: [ '', '', '', '', '', '', G, '', '', '', '', '', '', '', '', '', 'puppy' ]
+    //      G: [ '\x35', 'coin' ]
+    //      C: [ '\x20\x6f\x72\x73\x65', 'stallion' ]
 
-        public byte[] getRootHash() {
-            return ((TrieImpl) getSource()).getRootHash();
-        }
-
-        public String getTrieDump() {
-            return ((TrieImpl) getSource()).dumpTrie();
-        }
-
-        public String dumpStructure() {
-            return ((TrieImpl) getSource()).dumpStructure();
-        }
-
-        @Override
-        public String get(String s) {
-            String ret = super.get(s);
-            return ret == null ? "" : ret;
-        }
-
-    @Override
-    public void put(String s, String val) {
-        if (val == null || val.isEmpty()) {
-            super.delete(s);
-        } else {
-            super.put(s, val);
-        }
-    }
-
-    @Override
-        public boolean equals(Object obj) {
-            return getSource().equals(((StringTrie) obj).getSource());
-        }
+    @After
+    public void closeMockDb() throws IOException {
     }
 
     @Test
@@ -470,7 +453,6 @@ public class TrieTest {
         Assert.assertEquals(root1, root1_);
     }
 
-
     @Test
     public void testDeleteMultipleItems1() {
         String ROOT_HASH_BEFORE = "3a784eddf1936515f0313b073f99e3bd65c38689021d24855f62a9601ea41717";
@@ -583,28 +565,32 @@ public class TrieTest {
         assertNotEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
     }
 
-    // Using tests from: https://github.com/ethereum/tests/blob/master/trietest.json
-
     @Test
     public void testSingleItem() {
         StringTrie trie = new StringTrie(mockDb);
         trie.put("A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
-        assertEquals("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab", Hex.toHexString(trie.getRootHash()));
+        assertEquals("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab",
+                     Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
     public void testDogs() {
         StringTrie trie = new StringTrie(mockDb);
         trie.put("doe", "reindeer");
-        assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e", Hex.toHexString(trie.getRootHash()));
+        assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
+                     Hex.toHexString(trie.getRootHash()));
 
         trie.put("dog", "puppy");
-        assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4", Hex.toHexString(trie.getRootHash()));
+        assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
+                     Hex.toHexString(trie.getRootHash()));
 
         trie.put("dogglesworth", "cat");
-        assertEquals("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3", Hex.toHexString(trie.getRootHash()));
+        assertEquals("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3",
+                     Hex.toHexString(trie.getRootHash()));
     }
+
+    // Using tests from: https://github.com/ethereum/tests/blob/master/trietest.json
 
     @Test
     public void testPuppy() {
@@ -614,7 +600,8 @@ public class TrieTest {
         trie.put("horse", "stallion");
         trie.put("dog", "puppy");
 
-        assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", Hex.toHexString(trie.getRootHash()));
+        assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
+                     Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -629,7 +616,8 @@ public class TrieTest {
         trie.put("dog", "puppy");
         trie.put("shaman", "");
 
-        assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", Hex.toHexString(trie.getRootHash()));
+        assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
+                     Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -639,7 +627,8 @@ public class TrieTest {
         trie.put("food", "bat");
         trie.put("food", "bass");
 
-        assertEquals("17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3", Hex.toHexString(trie.getRootHash()));
+        assertEquals("17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3",
+                     Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -649,7 +638,8 @@ public class TrieTest {
         trie.put("be", "e");
         trie.put("dog", "puppy");
         trie.put("bed", "d");
-        assertEquals("3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b", Hex.toHexString(trie.getRootHash()));
+        assertEquals("3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b",
+                     Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -657,13 +647,13 @@ public class TrieTest {
         StringTrie trie = new StringTrie(mockDb);
 
         trie.put("test", "test");
-        assertEquals("85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8", Hex.toHexString(trie.getRootHash()));
+        assertEquals("85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8",
+                     Hex.toHexString(trie.getRootHash()));
 
         trie.put("te", "testy");
-        assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928", Hex.toHexString(trie.getRootHash()));
+        assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928",
+                     Hex.toHexString(trie.getRootHash()));
     }
-
-    private final String randomDictionary = "spinneries, archipenko, prepotency, herniotomy, preexpress, relaxative, insolvably, debonnaire, apophysate, virtuality, cavalryman, utilizable, diagenesis, vitascopic, governessy, abranchial, cyanogenic, gratulated, signalment, predicable, subquality, crystalize, prosaicism, oenologist, repressive, impanelled, cockneyism, bordelaise, compigne, konstantin, predicated, unsublimed, hydrophane, phycomyces, capitalise, slippingly, untithable, unburnable, deoxidizer, misteacher, precorrect, disclaimer, solidified, neuraxitis, caravaning, betelgeuse, underprice, uninclosed, acrogynous, reirrigate, dazzlingly, chaffiness, corybantes, intumesced, intentness, superexert, abstrusely, astounding, pilgrimage, posttarsal, prayerless, nomologist, semibelted, frithstool, unstinging, ecalcarate, amputating, megascopic, graphalloy, platteland, adjacently, mingrelian, valentinus, appendical, unaccurate, coriaceous, waterworks, sympathize, doorkeeper, overguilty, flaggingly, admonitory, aeriferous, normocytic, parnellism, catafalque, odontiasis, apprentice, adulterous, mechanisma, wilderness, undivorced, reinterred, effleurage, pretrochal, phytogenic, swirlingly, herbarized, unresolved, classifier, diosmosing, microphage, consecrate, astarboard, predefying, predriving, lettergram, ungranular, overdozing, conferring, unfavorite, peacockish, coinciding, erythraeum, freeholder, zygophoric, imbitterer, centroidal, appendixes, grayfishes, enological, indiscreet, broadcloth, divulgated, anglophobe, stoopingly, bibliophil, laryngitis, separatist, estivating, bellarmine, greasiness, typhlology, xanthation, mortifying, endeavorer, aviatrices, unequalise, metastatic, leftwinger, apologizer, quatrefoil, nonfouling, bitartrate, outchiding, undeported, poussetted, haemolysis, asantehene, montgomery, unjoinable, cedarhurst, unfastener, nonvacuums, beauregard, animalized, polyphides, cannizzaro, gelatinoid, apologised, unscripted, tracheidal, subdiscoid, gravelling, variegated, interabang, inoperable, immortelle, laestrygon, duplicatus, proscience, deoxidised, manfulness, channelize, nondefense, ectomorphy, unimpelled, headwaiter, hexaemeric, derivation, prelexical, limitarian, nonionized, prorefugee, invariably, patronizer, paraplegia, redivision, occupative, unfaceable, hypomnesia, psalterium, doctorfish, gentlefolk, overrefine, heptastich, desirously, clarabelle, uneuphonic, autotelism, firewarden, timberjack, fumigation, drainpipes, spathulate, novelvelle, bicorporal, grisliness, unhesitant, supergiant, unpatented, womanpower, toastiness, multichord, paramnesia, undertrick, contrarily, neurogenic, gunmanship, settlement, brookville, gradualism, unossified, villanovan, ecospecies, organising, buckhannon, prefulfill, johnsonese, unforegone, unwrathful, dunderhead, erceldoune, unwadeable, refunction, understuff, swaggering, freckliest, telemachus, groundsill, outslidden, bolsheviks, recognizer, hemangioma, tarantella, muhammedan, talebearer, relocation, preemption, chachalaca, septuagint, ubiquitous, plexiglass, humoresque, biliverdin, tetraploid, capitoline, summerwood, undilating, undetested, meningitic, petrolatum, phytotoxic, adiphenine, flashlight, protectory, inwreathed, rawishness, tendrillar, hastefully, bananaquit, anarthrous, unbedimmed, herborized, decenniums, deprecated, karyotypic, squalidity, pomiferous, petroglyph, actinomere, peninsular, trigonally, androgenic, resistance, unassuming, frithstool, documental, eunuchised, interphone, thymbraeus, confirmand, expurgated, vegetation, myographic, plasmagene, spindrying, unlackeyed, foreknower, mythically, albescence, rebudgeted, implicitly, unmonastic, torricelli, mortarless, labialized, phenacaine, radiometry, sluggishly, understood, wiretapper, jacobitely, unbetrayed, stadholder, directress, emissaries, corelation, sensualize, uncurbable, permillage, tentacular, thriftless, demoralize, preimagine, iconoclast, acrobatism, firewarden, transpired, bluethroat, wanderjahr, groundable, pedestrian, unulcerous, preearthly, freelanced, sculleries, avengingly, visigothic, preharmony, bressummer, acceptable, unfoolable, predivider, overseeing, arcosolium, piriformis, needlecord, homebodies, sulphation, phantasmic, unsensible, unpackaged, isopiestic, cytophagic, butterlike, frizzliest, winklehawk, necrophile, mesothorax, cuchulainn, unrentable, untangible, unshifting, unfeasible, poetastric, extermined, gaillardia, nonpendent, harborside, pigsticker, infanthood, underrower, easterling, jockeyship, housebreak, horologium, undepicted, dysacousma, incurrable, editorship, unrelented, peritricha, interchaff, frothiness, underplant, proafrican, squareness, enigmatise, reconciled, nonnumeral, nonevident, hamantasch, victualing, watercolor, schrdinger, understand, butlerlike, hemiglobin, yankeeland";
 
     @Test
     public void testMasiveUpdate() {
@@ -718,8 +708,7 @@ public class TrieTest {
 
         // should be root: cfd77c0fcb037adefce1f4e2eb94381456a4746379d2896bb8f309c620436d30
 
-        URL massiveUpload_1 = ClassLoader
-                .getSystemResource("trie/massive-upload.dmp");
+        URL massiveUpload_1 = ClassLoader.getSystemResource("trie/massive-upload.dmp");
 
         File file = new File(massiveUpload_1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
@@ -732,10 +721,9 @@ public class TrieTest {
 
             String[] keyVal = aStrData.split("=");
 
-            if (keyVal[0].equals("*"))
-                trieSingle.delete(keyVal[1].trim());
-            else
+            if (keyVal[0].equals("*")) { trieSingle.delete(keyVal[1].trim()); } else {
                 trieSingle.put(keyVal[0].trim(), keyVal[1].trim());
+            }
         }
 
 
@@ -753,10 +741,9 @@ public class TrieTest {
 
             String[] keyVal = strData.get(i).split("=");
 
-            if (keyVal[0].equals("*"))
-                trie.delete(keyVal[1].trim());
-            else
+            if (keyVal[0].equals("*")) { trie.delete(keyVal[1].trim()); } else {
                 trie.put(keyVal[0].trim(), keyVal[1].trim());
+            }
         }
 
         StringTrie trie2 = new StringTrie(mockDb, trie.getRootHash());
@@ -765,10 +752,9 @@ public class TrieTest {
 
             String[] keyVal = strData.get(i).split("=");
 
-            if (keyVal[0].equals("*"))
-                trie2.delete(keyVal[1].trim());
-            else
+            if (keyVal[0].equals("*")) { trie2.delete(keyVal[1].trim()); } else {
                 trie2.put(keyVal[0].trim(), keyVal[1].trim());
+            }
         }
 
         System.out.println("root_2:  => " + Hex.toHexString(trie2.getRootHash()));
@@ -801,8 +787,8 @@ public class TrieTest {
                 testerMap.put(word1, word2);
             }
 
-//            trie.cleanCache();
-//            trie.sync();
+            //            trie.cleanCache();
+            //            trie.sync();
 
             // Assert the result now
             Iterator<String> keys = testerMap.keySet().iterator();
@@ -830,14 +816,12 @@ public class TrieTest {
         }
     }
 
-
     @Test
     public void testRollbackTrie() throws URISyntaxException, IOException {
 
         StringTrie trieSingle = new StringTrie(mockDb);
 
-        URL massiveUpload_1 = ClassLoader
-                .getSystemResource("trie/massive-upload.dmp");
+        URL massiveUpload_1 = ClassLoader.getSystemResource("trie/massive-upload.dmp");
 
         File file = new File(massiveUpload_1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
@@ -849,10 +833,9 @@ public class TrieTest {
 
             String[] keyVal = strData.get(i).split("=");
 
-            if (keyVal[0].equals("*"))
-                trieSingle.delete(keyVal[1].trim());
-            else
+            if (keyVal[0].equals("*")) { trieSingle.delete(keyVal[1].trim()); } else {
                 trieSingle.put(keyVal[0].trim(), keyVal[1].trim());
+            }
 
             byte[] hash = trieSingle.getRootHash();
             roots.add(hash);
@@ -877,7 +860,6 @@ public class TrieTest {
 
     }
 
-
     @Test
     public void testGetFromRootNode() {
         StringTrie trie1 = new StringTrie(mockDb);
@@ -885,15 +867,6 @@ public class TrieTest {
         TrieImpl trie2 = new TrieImpl(mockDb, trie1.getRootHash());
         assertEquals(LONG_STRING, new String(trie2.get(cat.getBytes())));
     }
-
-
-/*
-        0x7645b9fbf1b51e6b980801fafe6bbc22d2ebe218 0x517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62 0x 0x1
-        0x0000000000000000000000000000000000000000000000000000000000000010 0x947e70f9460402290a3e487dae01f610a1a8218fda
-        0x0000000000000000000000000000000000000000000000000000000000000014 0x40
-        0x0000000000000000000000000000000000000000000000000000000000000016 0x94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d
-        0x0000000000000000000000000000000000000000000000000000000000000017 0x01
-*/
 
     @Test
     public void storageHashCalc_1() {
@@ -920,14 +893,12 @@ public class TrieTest {
         Assert.assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
     }
 
-
     @Test
     public void testFromDump_1() throws URISyntaxException, IOException, ParseException {
 
 
         // LOAD: real dump from real state run
-        URL dbDump = ClassLoader
-                .getSystemResource("dbdump/dbdump.json");
+        URL dbDump = ClassLoader.getSystemResource("dbdump/dbdump.json");
 
         File dbDumpFile = new File(dbDump.toURI());
         byte[] testData = Files.readAllBytes(dbDumpFile.toPath());
@@ -936,8 +907,8 @@ public class TrieTest {
         JSONParser parser = new JSONParser();
         JSONArray dbDumpJSONArray = (JSONArray) parser.parse(testSrc);
 
-//        KeyValueDataSource keyValueDataSource = new LevelDbDataSource("testState");
-//        keyValueDataSource.init();
+        //        KeyValueDataSource keyValueDataSource = new LevelDbDataSource("testState");
+        //        keyValueDataSource.init();
 
         HashMapDB<byte[]> dataSource = new HashMapDB<>();
 
@@ -959,7 +930,8 @@ public class TrieTest {
         AccountState accountState1 = new AccountState(val1);
 
         assertEquals(BigInteger.valueOf(2).pow(200), accountState1.getBalance());
-        assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", Hex.toHexString(accountState1.getCodeHash()));
+        assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+                     Hex.toHexString(accountState1.getCodeHash()));
         assertEquals(BigInteger.ZERO, accountState1.getNonce());
         assertEquals(null, accountState1.getStateRoot());
 
@@ -968,13 +940,13 @@ public class TrieTest {
         AccountState accountState2 = new AccountState(val2);
 
         assertEquals(new BigInteger("1500000000000000000"), accountState2.getBalance());
-        assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", Hex.toHexString(accountState2.getCodeHash()));
+        assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+                     Hex.toHexString(accountState2.getCodeHash()));
         assertEquals(BigInteger.ZERO, accountState2.getNonce());
         assertEquals(null, accountState2.getStateRoot());
 
-//        keyValueDataSource.close();
+        //        keyValueDataSource.close();
     }
-
 
     @Test // update the trie with blog key/val
     // each time dump the entire trie
@@ -986,24 +958,36 @@ public class TrieTest {
         String dmp = trie.getTrieDump();
         System.out.println(dmp);
         System.out.println();
-        Assert.assertEquals("ed6e08740e4a267eca9d4740f71f573e9aabbcc739b16a2fa6c1baed5ec21278", Hex.toHexString(trie.getRootHash()));
+        Assert.assertEquals("ed6e08740e4a267eca9d4740f71f573e9aabbcc739b16a2fa6c1baed5ec21278",
+                            Hex.toHexString(trie.getRootHash()));
 
         trie.put("do", "verb");
         dmp = trie.getTrieDump();
         System.out.println(dmp);
         System.out.println();
-        Assert.assertEquals("779db3986dd4f38416bfde49750ef7b13c6ecb3e2221620bcad9267e94604d36", Hex.toHexString(trie.getRootHash()));
+        Assert.assertEquals("779db3986dd4f38416bfde49750ef7b13c6ecb3e2221620bcad9267e94604d36",
+                            Hex.toHexString(trie.getRootHash()));
 
         trie.put("doggiestan", "aeswome_place");
         dmp = trie.getTrieDump();
         System.out.println(dmp);
         System.out.println();
-        Assert.assertEquals("8bd5544747b4c44d1274aa99a6293065fe319b3230e800203317e4c75a770099", Hex.toHexString(trie.getRootHash()));
+        Assert.assertEquals("8bd5544747b4c44d1274aa99a6293065fe319b3230e800203317e4c75a770099",
+                            Hex.toHexString(trie.getRootHash()));
     }
 
 
+/*
+        0x7645b9fbf1b51e6b980801fafe6bbc22d2ebe218 0x517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62
+         0x 0x1
+        0x0000000000000000000000000000000000000000000000000000000000000010 0x947e70f9460402290a3e487dae01f610a1a8218fda
+        0x0000000000000000000000000000000000000000000000000000000000000014 0x40
+        0x0000000000000000000000000000000000000000000000000000000000000016 0x94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d
+        0x0000000000000000000000000000000000000000000000000000000000000017 0x01
+*/
+
     @Test
-    public void testSecureTrie(){
+    public void testSecureTrie() {
 
         Trie trie = new SecureTrie(mockDb);
 
@@ -1044,7 +1028,7 @@ public class TrieTest {
 
         logger.info("root: " + Hex.toHexString(root));
 
-        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d",Hex.toHexString(root));
+        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d", Hex.toHexString(root));
     }
 
     // this case relates to a bug which led us to conflict on Morden network (block #486248)
@@ -1054,8 +1038,10 @@ public class TrieTest {
     public void testBugFix() throws ParseException, IOException, URISyntaxException {
 
         Map<String, String> dataMap = new HashMap<>();
-        dataMap.put("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2", "00000000000000000000000000000000000000000000000000000000000000be");
-        dataMap.put("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae", "00000000000000000000000000000000000000000000002f0000000000000000");
+        dataMap.put("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2",
+                    "00000000000000000000000000000000000000000000000000000000000000be");
+        dataMap.put("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae",
+                    "00000000000000000000000000000000000000000000002f0000000000000000");
 
         TrieImpl trie = new TrieImpl();
 
@@ -1064,18 +1050,18 @@ public class TrieTest {
         }
 
         assertArrayEquals(trie.get(Hex.decode("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2")),
-                Hex.decode("00000000000000000000000000000000000000000000000000000000000000be"));
+                          Hex.decode("00000000000000000000000000000000000000000000000000000000000000be"));
 
         assertArrayEquals(trie.get(Hex.decode("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae")),
-                Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
+                          Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
 
         trie.delete(Hex.decode("6e9286c946c6dd1f5d97f35683732dc8a70dc511133a43d416892f527dfcd243"));
 
         assertArrayEquals(trie.get(Hex.decode("6e929251b981389774af84a07585724c432e2db487381810719c3dd913192ae2")),
-                Hex.decode("00000000000000000000000000000000000000000000000000000000000000be"));
+                          Hex.decode("00000000000000000000000000000000000000000000000000000000000000be"));
 
         assertArrayEquals(trie.get(Hex.decode("6e92718d00dae27b2a96f6853a0bf11ded08bc658b2e75904ca0344df5aff9ae")),
-                Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
+                          Hex.decode("00000000000000000000000000000000000000000000002f0000000000000000"));
     }
 
     @Test
@@ -1103,7 +1089,8 @@ public class TrieTest {
         // FIX:
         // Supply Node initialization with raw rlp value
 
-        assertEquals("36e350d9a1d9c02d5bc4539a05e51890784ea5d2b675a0b26725dbbdadb4d6e2", Hex.toHexString(trie.getRootHash()));
+        assertEquals("36e350d9a1d9c02d5bc4539a05e51890784ea5d2b675a0b26725dbbdadb4d6e2",
+                     Hex.toHexString(trie.getRootHash()));
     }
 
     @Ignore
@@ -1125,19 +1112,20 @@ public class TrieTest {
             }
         }
 
-//        Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
-//        Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
+        //        Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
+        //        Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
 
         System.out.println("Benching...");
         while (true) {
             long s = System.nanoTime();
             for (int j = 0; j < 5; j++) {
                 for (int k = 0; k < 100; k++) {
-//                    Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie.getRootHash());
-//                    Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
+                    //                    Trie trie1 = new TrieImpl(new ReadCache.BytesKey<>(trieCache), trie
+                    // .getRootHash());
+                    //                    Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
                     for (int i = 0; i < 1000; i++) {
                         Trie trie1 = new TrieImpl(trieCache.getDb(), trie.getRootHash());
-//                        Trie trie1 = new TrieImpl(trieCache, trie.getRootHash());
+                        //                        Trie trie1 = new TrieImpl(trieCache, trie.getRootHash());
                         trie1.get(keys[k * 100 + i]);
                     }
                 }
@@ -1150,24 +1138,108 @@ public class TrieTest {
     @Test
     public void perfTestRoot() {
 
-        while(true) {
+        while (true) {
             HashMapDB<byte[]> db = new HashMapDB<>();
             TrieCache trieCache = new TrieCache();
 
-//        TrieImpl trie = new TrieImpl(trieCache);
+            //        TrieImpl trie = new TrieImpl(trieCache);
             TrieImpl trie = new TrieImpl(db, null);
             trie.setAsync(true);
 
-//            System.out.println("Filling trie...");
+            //            System.out.println("Filling trie...");
             long s = System.nanoTime();
             for (int i = 0; i < 200_000; i++) {
                 byte[] k = sha3(intToBytes(i));
                 trie.put(k, new byte[512]);
             }
             long s1 = System.nanoTime();
-//            System.out.println("Calculating root...");
+            //            System.out.println("Calculating root...");
             System.out.println(Hex.toHexString(trie.getRootHash()));
-            System.out.println((System.nanoTime() - s) / 1_000_000 + " ms, root: " + (System.nanoTime() - s1) / 1_000_000 + " ms");
+            System.out.println(
+                    (System.nanoTime() - s) / 1_000_000 + " ms, root: " + (System.nanoTime() - s1) / 1_000_000 + " ms");
         }
+    }
+
+    //    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
+    //        public StringTrie(Source<byte[], Value> src) {
+    //            this(src, null);
+    //        }
+    //        public StringTrie(Source<byte[], Value> src, byte[] root) {
+    //            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
+    //        }
+    //
+    //        public byte[] getRootHash() {
+    //            return ((TrieImpl) getSource()).getRootHash();
+    //        }
+    //
+    //        public String getTrieDump() {
+    //            return ((TrieImpl) getSource()).getTrieDump();
+    //        }
+    //
+    //        @Override
+    //        public boolean equals(Object obj) {
+    //            return getSource().equals(((StringTrie) obj).getSource());
+    //        }
+    //    }
+    private static class StringTrie extends SourceCodec<String, String, byte[], byte[]> {
+        public StringTrie(Source<byte[], byte[]> src) {
+            this(src, null);
+        }
+
+        public StringTrie(Source<byte[], byte[]> src, byte[] root) {
+            super(new TrieImpl(new NoDeleteSource<>(src), root), STR_SERIALIZER, STR_SERIALIZER);
+        }
+
+        public byte[] getRootHash() {
+            return ((TrieImpl) getSource()).getRootHash();
+        }
+
+        public String getTrieDump() {
+            return ((TrieImpl) getSource()).dumpTrie();
+        }
+
+        public String dumpStructure() {
+            return ((TrieImpl) getSource()).dumpStructure();
+        }
+
+        @Override
+        public String get(String s) {
+            String ret = super.get(s);
+            return ret == null ? "" : ret;
+        }
+
+        @Override
+        public void put(String s, String val) {
+            if (val == null || val.isEmpty()) {
+                super.delete(s);
+            } else {
+                super.put(s, val);
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return getSource().equals(((StringTrie) obj).getSource());
+        }
+    }
+
+    public class NoDoubleDeleteMapDB extends HashMapDB<byte[]> {
+        @Override
+        public synchronized void delete(byte[] key) {
+            if (storage.get(key) == null) {
+                throw new RuntimeException("Trying delete non-existing entry: " + Hex.toHexString(key));
+            }
+            super.delete(key);
+        }
+
+        public NoDoubleDeleteMapDB getDb() {return this;}
+    }
+
+    public class TrieCache extends SourceCodec<byte[], Value, byte[], byte[]> {
+        public TrieCache() {
+            super(new NoDoubleDeleteMapDB(), new Serializers.Identity<byte[]>(), Serializers.TrieNodeSerializer);
+        }
+
+        public NoDoubleDeleteMapDB getDb() {return (NoDoubleDeleteMapDB) getSource();}
     }
 }

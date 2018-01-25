@@ -17,6 +17,9 @@
  */
 package org.ethereum.samples;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
@@ -27,9 +30,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
 import java.util.List;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 public class TransactionBomb extends EthereumListenerAdapter {
 
@@ -61,11 +61,12 @@ public class TransactionBomb extends EthereumListenerAdapter {
     @Override
     public void onBlock(Block block, List<TransactionReceipt> receipts) {
 
-        if (startedTxBomb){
+        if (startedTxBomb) {
             byte[] sender = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-            long nonce = ethereum.getRepository().getNonce(sender).longValue();;
+            long nonce = ethereum.getRepository().getNonce(sender).longValue();
+            ;
 
-            for (int i=0; i < 20; ++i){
+            for (int i = 0; i < 20; ++i) {
                 sendTx(nonce);
                 ++nonce;
                 sleep(10);
@@ -73,7 +74,7 @@ public class TransactionBomb extends EthereumListenerAdapter {
         }
     }
 
-    private void sendTx(long nonce){
+    private void sendTx(long nonce) {
 
         byte[] gasPrice = longToBytesNoLeadZeroes(1_000_000_000_000L);
         byte[] gasLimit = longToBytesNoLeadZeroes(21000);
@@ -82,12 +83,12 @@ public class TransactionBomb extends EthereumListenerAdapter {
         byte[] value = longToBytesNoLeadZeroes(10_000);
 
         Transaction tx = new Transaction(longToBytesNoLeadZeroes(nonce),
-                gasPrice,
-                gasLimit,
-                toAddress,
-                value,
-                null,
-                ethereum.getChainIdForNextBlock());
+                                         gasPrice,
+                                         gasLimit,
+                                         toAddress,
+                                         value,
+                                         null,
+                                         ethereum.getChainIdForNextBlock());
 
         byte[] privKey = sha3("cow".getBytes());
         tx.sign(privKey);
@@ -96,8 +97,7 @@ public class TransactionBomb extends EthereumListenerAdapter {
         System.err.println("Sending tx: " + Hex.toHexString(tx.getHash()));
     }
 
-    private void sleep(int millis){
-        try {Thread.sleep(millis);}
-        catch (InterruptedException e) {e.printStackTrace();}
+    private void sleep(int millis) {
+        try {Thread.sleep(millis);} catch (InterruptedException e) {e.printStackTrace();}
     }
 }

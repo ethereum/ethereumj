@@ -22,11 +22,11 @@ import org.ethereum.core.Block;
 /**
  * This interface is implemented by the locally created blockchain
  * where block issuance can be controlled.
- *
+ * <p>
  * All the pending transactions submitted via EasyBlockchain are
  * buffered and become part of the blockchain as soon as
  * a new block is generated
- *
+ * <p>
  * Created by Anton Nashatyrev on 24.03.2016.
  */
 public interface LocalBlockchain extends EasyBlockchain {

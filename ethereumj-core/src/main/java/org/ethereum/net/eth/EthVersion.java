@@ -40,10 +40,6 @@ public enum EthVersion {
         this.code = code;
     }
 
-    public byte getCode() {
-        return code;
-    }
-
     public static EthVersion fromCode(int code) {
         for (EthVersion v : values()) {
             if (v.code == code) {
@@ -67,6 +63,10 @@ public enum EthVersion {
         }
 
         return supported;
+    }
+
+    public byte getCode() {
+        return code;
     }
 
     public boolean isCompatible(EthVersion version) {

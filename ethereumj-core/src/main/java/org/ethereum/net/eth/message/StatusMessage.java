@@ -20,7 +20,6 @@ package org.ethereum.net.eth.message;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -52,8 +51,8 @@ public class StatusMessage extends EthMessage {
         super(encoded);
     }
 
-    public StatusMessage(byte protocolVersion, int networkId,
-                         byte[] totalDifficulty, byte[] bestHash, byte[] genesisHash) {
+    public StatusMessage(byte protocolVersion, int networkId, byte[] totalDifficulty, byte[] bestHash,
+                         byte[] genesisHash) {
         this.protocolVersion = protocolVersion;
         this.networkId = networkId;
         this.totalDifficulty = totalDifficulty;
@@ -63,7 +62,7 @@ public class StatusMessage extends EthMessage {
     }
 
     protected synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.protocolVersion = paramsList.get(0).getRLPData()[0];
@@ -85,13 +84,12 @@ public class StatusMessage extends EthMessage {
         byte[] bestHash = RLP.encodeElement(this.bestHash);
         byte[] genesisHash = RLP.encodeElement(this.genesisHash);
 
-        this.encoded = RLP.encodeList( protocolVersion, networkId,
-                totalDifficulty, bestHash, genesisHash);
+        this.encoded = RLP.encodeList(protocolVersion, networkId, totalDifficulty, bestHash, genesisHash);
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -138,12 +136,8 @@ public class StatusMessage extends EthMessage {
     @Override
     public String toString() {
         parse();
-        return "[" + this.getCommand().name() +
-                " protocolVersion=" + this.protocolVersion +
-                " networkId=" + this.networkId +
-                " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) +
-                " bestHash=" + Hex.toHexString(this.bestHash) +
-                " genesisHash=" + Hex.toHexString(this.genesisHash) +
-                "]";
+        return "[" + this.getCommand().name() + " protocolVersion=" + this.protocolVersion + " networkId=" +
+                this.networkId + " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) + " bestHash=" +
+                Hex.toHexString(this.bestHash) + " genesisHash=" + Hex.toHexString(this.genesisHash) + "]";
     }
 }

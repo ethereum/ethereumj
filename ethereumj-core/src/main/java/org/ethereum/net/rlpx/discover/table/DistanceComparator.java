@@ -22,7 +22,7 @@ import java.util.Comparator;
 /**
  * Created by kest on 5/26/15.
  */
-public class DistanceComparator implements Comparator<NodeEntry>  {
+public class DistanceComparator implements Comparator<NodeEntry> {
     byte[] targetId;
 
     DistanceComparator(byte[] targetId) {

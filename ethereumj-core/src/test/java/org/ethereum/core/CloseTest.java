@@ -43,10 +43,11 @@ public class CloseTest {
             final CountDownLatch latch = new CountDownLatch(1);
             ethereum.addListener(new EthereumListenerAdapter() {
                 int counter = 0;
+
                 @Override
                 public void onBlock(Block block, List<TransactionReceipt> receipts) {
                     counter++;
-                    if (counter > 1100) latch.countDown();
+                    if (counter > 1100) { latch.countDown(); }
                 }
             });
             System.out.println("### Waiting for some blocks to be imported...");

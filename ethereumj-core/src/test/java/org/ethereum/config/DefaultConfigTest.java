@@ -20,6 +20,8 @@
 
 package org.ethereum.config;
 
+import static org.junit.Assert.assertEquals;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -29,14 +31,12 @@ import org.ethereum.db.PruneManager;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.concurrent.Executors;
-
-import static org.junit.Assert.*;
 
 public class DefaultConfigTest {
     /**
-     * TODO: For better testability, consider making setDefaultUncaughtExceptionHandler pluggable or Spring configurable as an autowired list
+     * TODO: For better testability, consider making setDefaultUncaughtExceptionHandler pluggable or Spring
+     * configurable as an autowired list
      */
     @Test
     public void testConstruction() throws InterruptedException {

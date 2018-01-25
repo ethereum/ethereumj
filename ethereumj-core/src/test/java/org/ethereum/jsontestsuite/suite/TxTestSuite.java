@@ -17,18 +17,21 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runGitHubJsonTransactionTest;
+import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
+import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONFromCommit;
+import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
-
-import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runGitHubJsonTransactionTest;
-import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runGitHubJsonVMTest;
-import static org.ethereum.jsontestsuite.suite.JSONReader.listJsonBlobsForTreeSha;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONFromCommit;
-import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Mikhail Kalinin
@@ -36,16 +39,20 @@ import static org.ethereum.jsontestsuite.suite.JSONReader.loadJSONsFromCommit;
  */
 public class TxTestSuite {
 
-    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
-
     private static final String TEST_ROOT = "TransactionTests/";
-
+    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
     String commitSHA;
     List<String> files;
 
     public TxTestSuite(String treeSHA, String commitSHA) throws IOException {
         files = listJsonBlobsForTreeSha(treeSHA, TEST_ROOT);
         this.commitSHA = commitSHA;
+    }
+
+    public static void runSingle(String commitSHA, String file) throws ParseException, IOException {
+        logger.info("     " + file);
+        String json = loadJSONFromCommit(TEST_ROOT + file, commitSHA);
+        runGitHubJsonTransactionTest(json);
     }
 
     public void runAll(String testCaseRoot) throws ParseException, IOException {
@@ -56,7 +63,7 @@ public class TxTestSuite {
 
         List<String> testCaseFiles = new ArrayList<>();
         for (String file : files) {
-            if (file.startsWith(testCaseRoot + "/")) testCaseFiles.add(file);
+            if (file.startsWith(testCaseRoot + "/")) { testCaseFiles.add(file); }
         }
 
         Set<String> toExclude = new HashSet<>();
@@ -72,7 +79,7 @@ public class TxTestSuite {
 
         testCaseFiles.removeAll(toExclude);
 
-        if (testCaseFiles.isEmpty()) return;
+        if (testCaseFiles.isEmpty()) { return; }
 
         List<String> filenames = new ArrayList<>();
         for (String file : testCaseFiles) {
@@ -83,11 +90,5 @@ public class TxTestSuite {
         for (String json : jsons) {
             runGitHubJsonTransactionTest(json);
         }
-    }
-
-    public static void runSingle(String commitSHA, String file) throws ParseException, IOException {
-        logger.info("     " + file);
-        String json = loadJSONFromCommit(TEST_ROOT + file, commitSHA);
-        runGitHubJsonTransactionTest(json);
     }
 }

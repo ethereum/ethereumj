@@ -86,7 +86,7 @@ public class RLPTestCase {
             RLPList list = RLP.decode2(Hex.decode(out));
             checkRLPAgainstJson(list.get(0), in);
         } catch (Exception e) {
-            if (!"INVALID".equals(in)){
+            if (!"INVALID".equals(in)) {
                 throw e;
             }
         }
@@ -139,8 +139,8 @@ public class RLPTestCase {
                 this.computed.add(computed.toString());
                 this.expected.add(expected.toString());
             } else {
-                String computed = new String(element.getRLPData() != null ? element.getRLPData() :
-                        new byte[0], StandardCharsets.UTF_8);
+                String computed = new String(element.getRLPData() != null ? element.getRLPData() : new byte[0],
+                                             StandardCharsets.UTF_8);
                 this.expected.add(s);
                 this.computed.add(computed);
             }

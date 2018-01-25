@@ -21,7 +21,7 @@ import static org.ethereum.crypto.zksnark.Params.B_Fp;
 
 /**
  * Definition of {@link BN128} over F_p, where "p" equals {@link Params#P} <br/>
- *
+ * <p>
  * Curve equation: <br/>
  * Y^2 = X^3 + b, where "b" equals {@link Params#B_Fp} <br/>
  *
@@ -37,30 +37,10 @@ public class BN128Fp extends BN128<Fp> {
         super(x, y, z);
     }
 
-    @Override
-    protected BN128<Fp> zero() {
-        return ZERO;
-    }
-
-    @Override
-    protected BN128<Fp> instance(Fp x, Fp y, Fp z) {
-        return new BN128Fp(x, y, z);
-    }
-
-    @Override
-    protected Fp b() {
-        return B_Fp;
-    }
-
-    @Override
-    protected Fp one() {
-        return Fp._1;
-    }
-
     /**
      * Checks whether x and y belong to Fp,
      * then checks whether point with (x; y) coordinates lays on the curve.
-     *
+     * <p>
      * Returns new point if all checks have been passed,
      * otherwise returns null
      */
@@ -82,5 +62,25 @@ public class BN128Fp extends BN128<Fp> {
         } else {
             return null;
         }
+    }
+
+    @Override
+    protected BN128<Fp> zero() {
+        return ZERO;
+    }
+
+    @Override
+    protected BN128<Fp> instance(Fp x, Fp y, Fp z) {
+        return new BN128Fp(x, y, z);
+    }
+
+    @Override
+    protected Fp b() {
+        return B_Fp;
+    }
+
+    @Override
+    protected Fp one() {
+        return Fp._1;
     }
 }

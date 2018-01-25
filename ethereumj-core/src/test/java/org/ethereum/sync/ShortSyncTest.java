@@ -17,9 +17,13 @@
  */
 package org.ethereum.sync;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.util.FileUtil.recursiveDelete;
+import static org.junit.Assert.fail;
+import static org.spongycastle.util.encoders.Hex.decode;
+
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
@@ -30,13 +34,23 @@ import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.NewBlockMessage;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -53,11 +67,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.util.FileUtil.recursiveDelete;
-import static org.junit.Assert.fail;
-import static org.spongycastle.util.encoders.Hex.decode;
 
 /**
  * @author Mikhail Kalinin
@@ -84,21 +93,26 @@ public class ShortSyncTest {
 
         SystemProperties.getDefault().setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
 
-        nodeA = new Node("enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334");
+        nodeA = new Node(
+                "enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334");
 
-        SysPropConfigA.props.overrideParams(
-                "peer.listen.port", "30334",
-                "peer.privateKey", "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
-                // nodeId: 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
-                "genesis", "genesis-light.json"
-        );
+        SysPropConfigA.props.overrideParams("peer.listen.port",
+                                            "30334",
+                                            "peer.privateKey",
+                                            "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
+                                            // nodeId:
+                                            // 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
+                                            "genesis",
+                                            "genesis-light.json");
 
-        SysPropConfigB.props.overrideParams(
-                "peer.listen.port", "30335",
-                "peer.privateKey", "6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec",
-                "genesis", "genesis-light.json",
-                "sync.enabled", "true"
-        );
+        SysPropConfigB.props.overrideParams("peer.listen.port",
+                                            "30335",
+                                            "peer.privateKey",
+                                            "6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec",
+                                            "genesis",
+                                            "genesis-light.json",
+                                            "sync.enabled",
+                                            "true");
 
         mainB1B10 = loadBlocks("sync/main-b1-b10.dmp");
         forkB1B5B8_ = loadBlocks("sync/fork-b1-b5-b8_.dmp");
@@ -174,7 +188,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -212,7 +226,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b8'
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -254,7 +268,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -276,12 +290,12 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainA.tryToConnect(b);
-            if (b.isEqual(b5)) break;
+            if (b.isEqual(b5)) { break; }
         }
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b9)) break;
+            if (b.isEqual(b9)) { break; }
         }
 
         // A == b5, B == b9
@@ -309,7 +323,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -335,7 +349,7 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b9)) break;
+            if (b.isEqual(b9)) { break; }
         }
 
         // A == b8', B == b9
@@ -357,7 +371,7 @@ public class ShortSyncTest {
         ethA.sendNewBlockHashes(b8_);
 
         semaphoreB8_.await(10, SECONDS);
-        if(semaphoreB8_.getCount() > 0) {
+        if (semaphoreB8_.getCount() > 0) {
             fail("PeerB didn't import b8'");
         }
 
@@ -372,7 +386,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -393,7 +407,7 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainA.tryToConnect(b);
-            if (b.isEqual(b7)) break;
+            if (b.isEqual(b7)) { break; }
         }
 
         for (Block b : forkB1B5B8_) {
@@ -421,7 +435,7 @@ public class ShortSyncTest {
         semaphoreB7.await(10, SECONDS);
 
         // check if B == b7
-        if(semaphoreB7.getCount() > 0) {
+        if (semaphoreB7.getCount() > 0) {
             fail("PeerB didn't recover a gap");
         }
 
@@ -435,7 +449,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -461,7 +475,7 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b4)) break;
+            if (b.isEqual(b4)) { break; }
         }
 
         // A == b8', B == b4
@@ -494,7 +508,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -517,12 +531,12 @@ public class ShortSyncTest {
 
         for (Block b : forkB1B5B8_) {
             blockchainA.tryToConnect(b);
-            if (b.isEqual(b7_)) break;
+            if (b.isEqual(b7_)) { break; }
         }
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b8)) break;
+            if (b.isEqual(b8)) { break; }
         }
 
         // A == b7', B == b8
@@ -549,7 +563,7 @@ public class ShortSyncTest {
         ethA.sendNewBlockHashes(b7_);
 
         semaphoreB7_.await(10, SECONDS);
-        if(semaphoreB7_.getCount() > 0) {
+        if (semaphoreB7_.getCount() > 0) {
             fail("PeerB didn't import b7'");
         }
 
@@ -558,7 +572,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -605,7 +619,7 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b6)) break;
+            if (b.isEqual(b6)) { break; }
         }
 
         // A == b8', B == b6
@@ -625,7 +639,7 @@ public class ShortSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
 
@@ -657,7 +671,7 @@ public class ShortSyncTest {
 
         // await connection
         semaphoreConnect.await(10, SECONDS);
-        if(semaphoreConnect.getCount() > 0) {
+        if (semaphoreConnect.getCount() > 0) {
             fail("PeerB is not able to connect to PeerA");
         }
 
@@ -666,7 +680,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -712,7 +726,7 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b9)) break;
+            if (b.isEqual(b9)) { break; }
         }
 
         // A == b8', B == b9
@@ -732,7 +746,7 @@ public class ShortSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
 
@@ -760,7 +774,7 @@ public class ShortSyncTest {
 
         // await connection
         semaphoreConnect.await(10, SECONDS);
-        if(semaphoreConnect.getCount() > 0) {
+        if (semaphoreConnect.getCount() > 0) {
             fail("PeerB is not able to connect to PeerA");
         }
 
@@ -775,7 +789,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -801,7 +815,7 @@ public class ShortSyncTest {
 
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b5)) break;
+            if (b.isEqual(b5)) { break; }
         }
 
         // A == b8', B == b5
@@ -824,7 +838,7 @@ public class ShortSyncTest {
         ethA.sendNewBlock(b6_);
         semaphore1.await(10, SECONDS);
 
-        if(semaphore1.getCount() > 0) {
+        if (semaphore1.getCount() > 0) {
             fail("PeerB doesn't accept block with higher TD");
         }
 
@@ -839,7 +853,7 @@ public class ShortSyncTest {
         semaphore2.await(5, SECONDS);
 
         // check if B skips b6'
-        if(semaphore2.getCount() == 0) {
+        if (semaphore2.getCount() == 0) {
             fail("PeerB doesn't skip block with lower TD");
         }
     }
@@ -853,9 +867,7 @@ public class ShortSyncTest {
 
             @Override
             protected void processGetBlockBodies(GetBlockBodiesMessage msg) {
-                List<byte[]> bodies = Arrays.asList(
-                        mainB1B10.get(0).getEncodedBody()
-                );
+                List<byte[]> bodies = Arrays.asList(mainB1B10.get(0).getEncodedBody());
 
                 BlockBodiesMessage response = new BlockBodiesMessage(bodies);
                 sendMessage(response);
@@ -887,7 +899,7 @@ public class ShortSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -909,12 +921,10 @@ public class ShortSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
-                        forkB1B5B8_.get(7).getHeader(),
-                        forkB1B5B8_.get(6).getHeader(),
-                        forkB1B5B8_.get(4).getHeader(),
-                        forkB1B5B8_.get(5).getHeader()
-                );
+                List<BlockHeader> headers = Arrays.asList(forkB1B5B8_.get(7).getHeader(),
+                                                          forkB1B5B8_.get(6).getHeader(),
+                                                          forkB1B5B8_.get(4).getHeader(),
+                                                          forkB1B5B8_.get(5).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -932,7 +942,7 @@ public class ShortSyncTest {
         }
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b9)) break;
+            if (b.isEqual(b9)) { break; }
         }
 
         // A == b8', B == b10
@@ -952,7 +962,7 @@ public class ShortSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -974,13 +984,21 @@ public class ShortSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
-                        forkB1B5B8_.get(7).getHeader(),
-                        forkB1B5B8_.get(6).getHeader(),
-                        new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
-                                6, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
-                        forkB1B5B8_.get(4).getHeader()
-                );
+                List<BlockHeader> headers = Arrays.asList(forkB1B5B8_.get(7).getHeader(),
+                                                          forkB1B5B8_.get(6).getHeader(),
+                                                          new BlockHeader(new byte[32],
+                                                                          new byte[32],
+                                                                          new byte[32],
+                                                                          new byte[32],
+                                                                          new byte[32],
+                                                                          6,
+                                                                          new byte[]{0},
+                                                                          0,
+                                                                          0,
+                                                                          new byte[0],
+                                                                          new byte[0],
+                                                                          new byte[0]),
+                                                          forkB1B5B8_.get(4).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -998,7 +1016,7 @@ public class ShortSyncTest {
         }
         for (Block b : mainB1B10) {
             blockchainB.tryToConnect(b);
-            if (b.isEqual(b9)) break;
+            if (b.isEqual(b9)) { break; }
         }
 
         // A == b8', B == b10
@@ -1018,7 +1036,7 @@ public class ShortSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -1047,7 +1065,7 @@ public class ShortSyncTest {
         ethereumB.connect(nodeA);
 
         semaphore.await(10, SECONDS);
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("Failed to set up peers");
         }
     }
@@ -1066,7 +1084,7 @@ public class ShortSyncTest {
         @Bean
         @Scope("prototype")
         public Eth62 eth62() throws IllegalAccessException, InstantiationException {
-            if (eth62 != null) return eth62;
+            if (eth62 != null) { return eth62; }
             return new Eth62();
         }
     }

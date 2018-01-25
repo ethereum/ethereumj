@@ -17,24 +17,25 @@
  */
 package org.ethereum.net.rlpx.discover;
 
+import static java.lang.Math.min;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Statter;
 import org.ethereum.util.ByteUtil;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.lang.Math.min;
-
 /**
  * Handles all possible statistics related to a Node
  * The primary aim of this is collecting info about a Node
  * for maintaining its reputation.
- *
+ * <p>
  * Created by Anton Nashatyrev on 16.07.2015.
  */
 public class NodeStatistics {
@@ -43,21 +44,6 @@ public class NodeStatistics {
     public final static int REPUTATION_AUTH = 1000;
     public final static int REPUTATION_DISCOVER_PING = 1;
     public final static long TOO_MANY_PEERS_PENALIZE_TIMEOUT = 10 * 1000;
-
-    public class StatHandler {
-        AtomicLong count = new AtomicLong(0);
-        public void add() {count.incrementAndGet(); }
-        public void add(long delta) {count.addAndGet(delta); }
-        public long get() {return count.get();}
-        public String toString() {return count.toString();}
-    }
-
-    private final Node node;
-
-    private boolean isPredefined = false;
-
-    private int persistedReputation = 0;
-
     // discovery stat
     public final StatHandler discoverOutPing = new StatHandler();
     public final StatHandler discoverInPong = new StatHandler();
@@ -69,7 +55,6 @@ public class NodeStatistics {
     public final StatHandler discoverOutNeighbours = new StatHandler();
     public final Statter.SimpleStatter discoverMessageLatency;
     public final AtomicLong lastPongReplyTime = new AtomicLong(0l); // in milliseconds
-
     // rlpx stat
     public final StatHandler rlpxConnectionAttempts = new StatHandler();
     public final StatHandler rlpxAuthMessagesSent = new StatHandler();
@@ -78,30 +63,27 @@ public class NodeStatistics {
     public final StatHandler rlpxHandshake = new StatHandler();
     public final StatHandler rlpxOutMessages = new StatHandler();
     public final StatHandler rlpxInMessages = new StatHandler();
-    // Not the fork we are working on
-    // Set only after specific block hashes received
-    public boolean wrongFork;
-
-    private String clientId = "";
-
     public final List<Capability> capabilities = new ArrayList<>();
-
-    private ReasonCode rlpxLastRemoteDisconnectReason = null;
-    private ReasonCode rlpxLastLocalDisconnectReason = null;
-    private long lastDisconnectedTime = 0;
-
     // Eth stat
     public final StatHandler ethHandshake = new StatHandler();
     public final StatHandler ethInbound = new StatHandler();
     public final StatHandler ethOutbound = new StatHandler();
-    private StatusMessage ethLastInboundStatusMsg = null;
-    private BigInteger ethTotalDifficulty = BigInteger.ZERO;
-
     // Eth63 stat
     public final StatHandler eth63NodesRequested = new StatHandler();
     public final StatHandler eth63NodesReceived = new StatHandler();
     public final StatHandler eth63NodesRetrieveTime = new StatHandler();
-
+    private final Node node;
+    // Not the fork we are working on
+    // Set only after specific block hashes received
+    public boolean wrongFork;
+    private boolean isPredefined = false;
+    private int persistedReputation = 0;
+    private String clientId = "";
+    private ReasonCode rlpxLastRemoteDisconnectReason = null;
+    private ReasonCode rlpxLastLocalDisconnectReason = null;
+    private long lastDisconnectedTime = 0;
+    private StatusMessage ethLastInboundStatusMsg = null;
+    private BigInteger ethTotalDifficulty = BigInteger.ZERO;
     public NodeStatistics(Node node) {
         this.node = node;
         discoverMessageLatency = (Statter.SimpleStatter) Statter.create(getStatName() + ".discoverMessageLatency");
@@ -110,12 +92,13 @@ public class NodeStatistics {
     private int getSessionReputation() {
         return getSessionFairReputation() + (isPredefined ? REPUTATION_PREDEFINED : 0);
     }
+
     private int getSessionFairReputation() {
         int discoverReput = 0;
 
         discoverReput += min(discoverInPong.get(), 10) * (discoverOutPing.get() == discoverInPong.get() ? 2 : 1);
         discoverReput += min(discoverInNeighbours.get(), 10) * 2;
-//        discoverReput += 20 / (min((int)discoverMessageLatency.getAvrg(), 1) / 100);
+        //        discoverReput += 20 / (min((int)discoverMessageLatency.getAvrg(), 1) / 100);
 
         int rlpxReput = 0;
         rlpxReput += rlpxAuthMessagesSent.get() > 0 ? 10 : 0;
@@ -146,7 +129,7 @@ public class NodeStatistics {
     }
 
     private boolean isReputationPenalized() {
-        if (wrongFork) return true;
+        if (wrongFork) { return true; }
         if (wasDisconnected() && rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS &&
                 System.currentTimeMillis() - lastDisconnectedTime < TOO_MANY_PEERS_PENALIZE_TIMEOUT) {
             return true;
@@ -155,7 +138,7 @@ public class NodeStatistics {
                 System.currentTimeMillis() - lastDisconnectedTime < TOO_MANY_PEERS_PENALIZE_TIMEOUT) {
             return true;
         }
-        return  rlpxLastLocalDisconnectReason == ReasonCode.NULL_IDENTITY ||
+        return rlpxLastLocalDisconnectReason == ReasonCode.NULL_IDENTITY ||
                 rlpxLastRemoteDisconnectReason == ReasonCode.NULL_IDENTITY ||
                 rlpxLastLocalDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL ||
                 rlpxLastRemoteDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL ||
@@ -183,7 +166,6 @@ public class NodeStatistics {
         return lastDisconnectedTime > 0;
     }
 
-
     public void ethHandshake(StatusMessage ethInboundStatus) {
         this.ethLastInboundStatusMsg = ethInboundStatus;
         this.ethTotalDifficulty = ethInboundStatus.getTotalDifficultyAsBigInt();
@@ -198,20 +180,20 @@ public class NodeStatistics {
         this.ethTotalDifficulty = ethTotalDifficulty;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
     public String getClientId() {
         return clientId;
     }
 
-    public void setPredefined(boolean isPredefined) {
-        this.isPredefined = isPredefined;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public boolean isPredefined() {
         return isPredefined;
+    }
+
+    public void setPredefined(boolean isPredefined) {
+        this.isPredefined = isPredefined;
     }
 
     public StatusMessage getEthLastInboundStatusMsg() {
@@ -232,20 +214,29 @@ public class NodeStatistics {
 
     @Override
     public String toString() {
-        return "NodeStat[reput: " + getReputation() + "(" + persistedReputation + "), discover: " +
-                discoverInPong + "/" + discoverOutPing + " " +
-                discoverOutPong + "/" + discoverInPing + " " +
-                discoverInNeighbours + "/" + discoverOutFind + " " +
-                discoverOutNeighbours + "/" + discoverInFind + " " +
-                ((int)discoverMessageLatency.getAvrg()) + "ms" +
-                ", rlpx: " + rlpxHandshake + "/" + rlpxAuthMessagesSent + "/" + rlpxConnectionAttempts + " " +
-                rlpxInMessages + "/" + rlpxOutMessages +
+        return "NodeStat[reput: " + getReputation() + "(" + persistedReputation + "), discover: " + discoverInPong +
+                "/" + discoverOutPing + " " + discoverOutPong + "/" + discoverInPing + " " + discoverInNeighbours +
+                "/" + discoverOutFind + " " + discoverOutNeighbours + "/" + discoverInFind + " " +
+                ((int) discoverMessageLatency.getAvrg()) + "ms" + ", rlpx: " + rlpxHandshake + "/" +
+                rlpxAuthMessagesSent + "/" + rlpxConnectionAttempts + " " + rlpxInMessages + "/" + rlpxOutMessages +
                 ", eth: " + ethHandshake + "/" + ethInbound + "/" + ethOutbound + " " +
-                (ethLastInboundStatusMsg != null ? ByteUtil.toHexString(ethLastInboundStatusMsg.getTotalDifficulty()) : "-") + " " +
-                (wasDisconnected() ? "X " : "") +
+                (ethLastInboundStatusMsg != null ? ByteUtil.toHexString(ethLastInboundStatusMsg.getTotalDifficulty()) :
+                        "-") + " " + (wasDisconnected() ? "X " : "") +
                 (rlpxLastLocalDisconnectReason != null ? ("<=" + rlpxLastLocalDisconnectReason) : " ") +
-                (rlpxLastRemoteDisconnectReason != null ? ("=>" + rlpxLastRemoteDisconnectReason) : " ")  +
-                "[" + clientId + "]";
+                (rlpxLastRemoteDisconnectReason != null ? ("=>" + rlpxLastRemoteDisconnectReason) : " ") + "[" +
+                clientId + "]";
+    }
+
+    public class StatHandler {
+        AtomicLong count = new AtomicLong(0);
+
+        public void add() {count.incrementAndGet(); }
+
+        public void add(long delta) {count.addAndGet(delta); }
+
+        public long get() {return count.get();}
+
+        public String toString() {return count.toString();}
     }
 
 

@@ -28,9 +28,8 @@ import java.util.List;
 /**
  * Wrapper around an Ethereum GetBlockBodies message on the network
  *
- * @see EthMessageCodes#GET_BLOCK_BODIES
- *
  * @author Mikhail Kalinin
+ * @see EthMessageCodes#GET_BLOCK_BODIES
  * @since 04.09.2015
  */
 public class GetBlockBodiesMessage extends EthMessage {
@@ -50,7 +49,7 @@ public class GetBlockBodiesMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockHashes = new ArrayList<>();
@@ -62,15 +61,14 @@ public class GetBlockBodiesMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (byte[] hash : blockHashes)
-            encodedElements.add(RLP.encodeElement(hash));
+        for (byte[] hash : blockHashes) { encodedElements.add(RLP.encodeElement(hash)); }
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 

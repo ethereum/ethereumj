@@ -30,7 +30,7 @@ public class BloomTest {
 
 
     @Test /// based on http://bit.ly/1MtXxFg
-    public void test1(){
+    public void test1() {
 
         byte[] address = Hex.decode("095e7baea6a6c7c4c2dfeb977efac326af552d87");
         Bloom addressBloom = Bloom.create(HashUtil.sha3(address));
@@ -45,13 +45,14 @@ public class BloomTest {
 
         Assert.assertEquals(
                 "00000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000040000000000000000000000000000000000000000000000000000000",
-                totalBloom.toString()
-        );
+                totalBloom.toString());
 
         Assert.assertTrue(totalBloom.matches(addressBloom));
         Assert.assertTrue(totalBloom.matches(topicBloom));
-        Assert.assertFalse(totalBloom.matches(Bloom.create(HashUtil.sha3(Hex.decode("1000000000000000000000000000000000000000000000000000000000000000")))));
-        Assert.assertFalse(totalBloom.matches(Bloom.create(HashUtil.sha3(Hex.decode("195e7baea6a6c7c4c2dfeb977efac326af552d87")))));
+        Assert.assertFalse(totalBloom.matches(Bloom.create(HashUtil.sha3(Hex.decode(
+                "1000000000000000000000000000000000000000000000000000000000000000")))));
+        Assert.assertFalse(totalBloom.matches(Bloom.create(HashUtil.sha3(Hex.decode(
+                "195e7baea6a6c7c4c2dfeb977efac326af552d87")))));
     }
 
 

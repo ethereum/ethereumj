@@ -19,7 +19,7 @@ package org.ethereum.net.rlpx.discover;
 
 /**
  * Allows to handle discovered nodes state changes
- *
+ * <p>
  * Created by Anton Nashatyrev on 21.07.2015.
  */
 public interface DiscoverListener {
@@ -37,6 +37,7 @@ public interface DiscoverListener {
 
     class Adapter implements DiscoverListener {
         public void nodeAppeared(NodeHandler handler) {}
+
         public void nodeDisappeared(NodeHandler handler) {}
     }
 }

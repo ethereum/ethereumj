@@ -21,7 +21,7 @@ import java.util.Collection;
 
 /**
  * Source which internally caches underlying Source key-value pairs
- *
+ * <p>
  * Created by Anton Nashatyrev on 21.10.2016.
  */
 public interface CachedSource<Key, Value> extends Source<Key, Value> {
@@ -44,6 +44,7 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
     /**
      * Estimates the size of cached entries in bytes.
      * This value shouldn't be precise size of Java objects
+     *
      * @return cache size in bytes
      */
     long estimateCacheSize();

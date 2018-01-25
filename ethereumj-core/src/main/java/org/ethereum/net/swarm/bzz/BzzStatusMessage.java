@@ -17,19 +17,19 @@
  */
 package org.ethereum.net.swarm.bzz;
 
+import static org.ethereum.net.swarm.Util.rlpDecodeByte;
+import static org.ethereum.net.swarm.Util.rlpDecodeInt;
+import static org.ethereum.net.swarm.Util.rlpDecodeLong;
+import static org.ethereum.net.swarm.Util.rlpDecodeString;
+import static org.ethereum.net.swarm.Util.rlpEncodeList;
+
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.swarm.Util;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import static org.ethereum.net.swarm.Util.*;
 
 /**
  * BZZ handshake message
@@ -78,14 +78,14 @@ public class BzzStatusMessage extends BzzMessage {
         byte[][] capabilities = new byte[this.capabilities.size()][];
         for (int i = 0; i < this.capabilities.size(); i++) {
             Capability capability = this.capabilities.get(i);
-            capabilities[i] = rlpEncodeList(capability.getName(),capability.getVersion());
+            capabilities[i] = rlpEncodeList(capability.getName(), capability.getVersion());
         }
         this.encoded = rlpEncodeList(version, id, addr.encodeRlp(), networkId, rlpEncodeList(capabilities));
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -124,12 +124,7 @@ public class BzzStatusMessage extends BzzMessage {
 
     @Override
     public String toString() {
-        return "BzzStatusMessage{" +
-                "version=" + version +
-                ", id='" + id + '\'' +
-                ", addr=" + addr +
-                ", networkId=" + networkId +
-                ", capabilities=" + capabilities +
-                '}';
+        return "BzzStatusMessage{" + "version=" + version + ", id='" + id + '\'' + ", addr=" + addr + ", networkId=" +
+                networkId + ", capabilities=" + capabilities + '}';
     }
 }

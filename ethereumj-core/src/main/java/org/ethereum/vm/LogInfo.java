@@ -23,7 +23,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -122,11 +121,8 @@ public class LogInfo {
         topicsStr.append("]");
 
 
-        return "LogInfo{" +
-                "address=" + Hex.toHexString(address) +
-                ", topics=" + topicsStr +
-                ", data=" + Hex.toHexString(data) +
-                '}';
+        return "LogInfo{" + "address=" + Hex.toHexString(address) + ", topics=" + topicsStr + ", data=" +
+                Hex.toHexString(data) + '}';
     }
 
 

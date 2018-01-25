@@ -17,14 +17,17 @@
  */
 package org.ethereum.datasource;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.vm.DataWord;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.longToBytes;
-import static org.junit.Assert.*;
 
 /**
  * Testing {@link WriteCache}
@@ -40,7 +43,7 @@ public class WriteCacheTest {
     }
 
     private String str(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) { return null; }
         return Hex.toHexString((byte[]) obj);
     }
 
@@ -115,7 +118,7 @@ public class WriteCacheTest {
         // want to spend unnecessary time for getting the value from
         // underlying storage, so getCached may return null.
         // get() should work as expected
-//        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
+        //        assertEquals(str(intToValue(0)), str(writeCache.getCached(intToKey(0))));
 
         assertEquals(str(intToValue(0)), str(src.get(intToKey(0))));
         writeCache.flush();

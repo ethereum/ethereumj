@@ -19,8 +19,10 @@ package org.ethereum.net;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -40,16 +42,14 @@ import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
-
 /**
  * Not for regular run, but just for testing UDP client/server communication
- *
+ * <p>
  * For running server with gradle:
  * - adjust constants
  * - remove @Ignore from server() method
  * - > ./gradlew -Dtest.single=UdpTest test
- *
+ * <p>
  * Created by Anton Nashatyrev on 28.12.2016.
  */
 public class UdpTest {
@@ -64,6 +64,81 @@ public class UdpTest {
     private static final int MAX_LENGTH = 4096;
 
     private final SimpleNodeManager nodeManager = new SimpleNodeManager();
+
+    public static String bindIp() {
+        String bindIp;
+        try {
+            Socket s = new Socket("www.google.com", 80);
+            bindIp = s.getLocalAddress().getHostAddress();
+            System.out.printf("UDP local bound to: %s%n", bindIp);
+        } catch (IOException e) {
+            System.out.printf("Can't get bind IP. Fall back to 0.0.0.0: " + e);
+            bindIp = "0.0.0.0";
+        }
+        return bindIp;
+    }
+
+    public Channel create(String bindAddr, int port) throws InterruptedException {
+        NioEventLoopGroup group = new NioEventLoopGroup(1);
+
+        Bootstrap b = new Bootstrap();
+        b.group(group).channel(NioDatagramChannel.class).handler(new ChannelInitializer<NioDatagramChannel>() {
+            @Override
+            public void initChannel(NioDatagramChannel ch) throws Exception {
+                ch.pipeline().addLast(new PacketDecoder());
+                SimpleMessageHandler messageHandler = new SimpleMessageHandler(ch, nodeManager);
+                nodeManager.setMessageSender(messageHandler);
+                ch.pipeline().addLast(messageHandler);
+            }
+        });
+
+        return b.bind(bindAddr, port).sync().channel();
+    }
+
+    public void startServer() throws InterruptedException {
+        create(serverAddr, serverPort).closeFuture().sync();
+    }
+
+    public void startClient() throws InterruptedException {
+        String defaultMessage = RandomStringUtils.randomAlphanumeric(MAX_LENGTH);
+        for (int i = defaultMessage.length() - 1; i >= 0; i--) {
+            int sendAttempts = 0;
+            boolean ok = false;
+            while (sendAttempts < 3) {
+                Channel channel = create(clientAddr, clientPort);
+                String sendMessage = defaultMessage.substring(i, defaultMessage.length());
+                FindNodeMessage msg = FindNodeMessage.create(sendMessage.getBytes(), privKey);
+                System.out.printf("Sending message with string payload of size %s, packet size %s, attempt %s%n",
+                                  sendMessage.length(),
+                                  msg.getPacket().length,
+                                  sendAttempts + 1);
+                nodeManager.getMessageSender()
+                        .sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
+                ok = channel.closeFuture().await(1, TimeUnit.SECONDS);
+                if (ok) { break; }
+                sendAttempts++;
+                channel.close().sync();
+            }
+            if (!ok) {
+                System.out.println("ERROR: Timeout waiting for response after all attempts");
+                assert false;
+            } else {
+                System.out.println("OK");
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void server() throws Exception {
+        startServer();
+    }
+
+    @Ignore
+    @Test
+    public void client() throws Exception {
+        startClient();
+    }
 
     private class SimpleMessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
             implements Consumer<DiscoveryEvent> {
@@ -98,8 +173,9 @@ public class UdpTest {
 
         private void sendPacket(byte[] payload, InetSocketAddress address) {
             DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(payload), address);
-            System.out.println("Sending message from " + clientAddr + ":" + clientPort +
-                    " to " + address.getHostString() + ":" + address.getPort());
+            System.out.println(
+                    "Sending message from " + clientAddr + ":" + clientPort + " to " + address.getHostString() + ":" +
+                            address.getPort());
             channel.writeAndFlush(packet);
         }
 
@@ -113,12 +189,12 @@ public class UdpTest {
 
         SimpleMessageHandler messageSender;
 
-        public void setMessageSender(SimpleMessageHandler messageSender) {
-            this.messageSender = messageSender;
-        }
-
         public SimpleMessageHandler getMessageSender() {
             return messageSender;
+        }
+
+        public void setMessageSender(SimpleMessageHandler messageSender) {
+            this.messageSender = messageSender;
         }
 
         public void handleInbound(DiscoveryEvent discoveryEvent) {
@@ -127,8 +203,10 @@ public class UdpTest {
                 return;
             }
             String msg = new String(((FindNodeMessage) m).getTarget());
-            System.out.printf("Inbound message \"%s\" from %s:%s%n", msg,
-                    discoveryEvent.getAddress().getHostString(), discoveryEvent.getAddress().getPort());
+            System.out.printf("Inbound message \"%s\" from %s:%s%n",
+                              msg,
+                              discoveryEvent.getAddress().getHostString(),
+                              discoveryEvent.getAddress().getPort());
             if (msg.endsWith("+1")) {
                 messageSender.channel.close();
             } else {
@@ -136,80 +214,5 @@ public class UdpTest {
                 messageSender.sendPacket(newMsg.getPacket(), discoveryEvent.getAddress());
             }
         }
-    }
-
-    public Channel create(String bindAddr, int port) throws InterruptedException {
-        NioEventLoopGroup group = new NioEventLoopGroup(1);
-
-        Bootstrap b = new Bootstrap();
-        b.group(group)
-            .channel(NioDatagramChannel.class)
-            .handler(new ChannelInitializer<NioDatagramChannel>() {
-                @Override
-                public void initChannel(NioDatagramChannel ch)
-                        throws Exception {
-                    ch.pipeline().addLast(new PacketDecoder());
-                    SimpleMessageHandler messageHandler = new SimpleMessageHandler(ch, nodeManager);
-                    nodeManager.setMessageSender(messageHandler);
-                    ch.pipeline().addLast(messageHandler);
-                }
-            });
-
-        return b.bind(bindAddr, port).sync().channel();
-    }
-
-    public void startServer() throws InterruptedException {
-        create(serverAddr, serverPort).closeFuture().sync();
-    }
-
-    public void startClient()
-            throws InterruptedException {
-        String defaultMessage = RandomStringUtils.randomAlphanumeric(MAX_LENGTH);
-        for (int i = defaultMessage.length() - 1; i >= 0 ; i--) {
-            int sendAttempts = 0;
-            boolean ok = false;
-            while (sendAttempts < 3) {
-                Channel channel = create(clientAddr, clientPort);
-                String sendMessage = defaultMessage.substring(i, defaultMessage.length());
-                FindNodeMessage msg = FindNodeMessage.create(sendMessage.getBytes(), privKey);
-                System.out.printf("Sending message with string payload of size %s, packet size %s, attempt %s%n", sendMessage.length(), msg.getPacket().length, sendAttempts + 1);
-                nodeManager.getMessageSender().sendPacket(msg.getPacket(), new InetSocketAddress(serverAddr, serverPort));
-                ok = channel.closeFuture().await(1, TimeUnit.SECONDS);
-                if (ok) break;
-                sendAttempts++;
-                channel.close().sync();
-            }
-            if (!ok) {
-                System.out.println("ERROR: Timeout waiting for response after all attempts");
-                assert false;
-            } else {
-                System.out.println("OK");
-            }
-        }
-    }
-
-    @Ignore
-    @Test
-    public void server() throws Exception {
-        startServer();
-    }
-
-    @Ignore
-    @Test
-    public void client() throws Exception {
-        startClient();
-    }
-
-    public static String bindIp() {
-        String bindIp;
-            try {
-                Socket s = new Socket("www.google.com", 80);
-                bindIp = s.getLocalAddress().getHostAddress();
-                System.out.printf("UDP local bound to: %s%n", bindIp);
-            } catch (IOException e) {
-                System.out.printf("Can't get bind IP. Fall back to 0.0.0.0: " + e);
-                bindIp = "0.0.0.0";
-            }
-        return bindIp;
     }
 }

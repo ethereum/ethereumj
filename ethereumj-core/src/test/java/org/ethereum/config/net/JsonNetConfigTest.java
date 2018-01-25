@@ -20,14 +20,19 @@
 
 package org.ethereum.config.net;
 
-import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.blockchain.*;
-import org.ethereum.core.genesis.GenesisConfig;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import org.ethereum.config.BlockchainConfig;
+import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.DaoNoHFConfig;
+import org.ethereum.config.blockchain.Eip150HFConfig;
+import org.ethereum.config.blockchain.Eip160HFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.core.genesis.GenesisConfig;
+import org.junit.Test;
 
 public class JsonNetConfigTest {
     @Test
@@ -108,7 +113,8 @@ public class JsonNetConfigTest {
             new JsonNetConfig(genesisConfig);
             fail("Must fail. EIP155 and EIP158 must have same blocks");
         } catch (RuntimeException e) {
-            assertEquals("Unable to build config with different blocks for EIP155 (10) and EIP158 (13)", e.getMessage());
+            assertEquals("Unable to build config with different blocks for EIP155 (10) and EIP158 (13)",
+                         e.getMessage());
         }
     }
 
@@ -130,7 +136,8 @@ public class JsonNetConfigTest {
         assertEquals("chainId should be copied from genesis config", new Integer(99), eip160.getChainId());
     }
 
-    private <T extends BlockchainConfig> void assertBlockchainConfigExistsAt(BlockchainNetConfig netConfig, long blockNumber, Class<T> configType) {
+    private <T extends BlockchainConfig> void assertBlockchainConfigExistsAt(BlockchainNetConfig netConfig,
+                                                                             long blockNumber, Class<T> configType) {
         BlockchainConfig block = netConfig.getConfigForBlock(blockNumber);
         if (!configType.isAssignableFrom(block.getClass())) {
             fail(block.getClass().getName() + " is not of type " + configType);

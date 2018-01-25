@@ -35,23 +35,17 @@ import java.util.function.Consumer;
  */
 @Component
 @Scope("prototype")
-public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
-        implements Consumer<BzzMessage> {
+public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage> implements Consumer<BzzMessage> {
 
     public final static byte VERSION = 0;
-    private MessageQueue msgQueue = null;
-
-    private boolean active = false;
-
     private final static Logger logger = LoggerFactory.getLogger("net");
-
     BzzProtocol bzzProtocol;
-
     @Autowired
     EthereumListener ethereumListener;
-
     @Autowired
     NetStore netStore;
+    private MessageQueue msgQueue = null;
+    private boolean active = false;
 
     public BzzHandler() {
     }
@@ -63,10 +57,11 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, BzzMessage msg) throws InterruptedException {
 
-        if (!isActive()) return;
+        if (!isActive()) { return; }
 
-        if (BzzMessageCodes.inRange(msg.getCommand().asByte()))
+        if (BzzMessageCodes.inRange(msg.getCommand().asByte())) {
             logger.debug("BzzHandler invoke: [{}]", msg.getCommand());
+        }
 
         ethereumListener.trace(String.format("BzzHandler invoke: [%s]", msg.getCommand()));
 

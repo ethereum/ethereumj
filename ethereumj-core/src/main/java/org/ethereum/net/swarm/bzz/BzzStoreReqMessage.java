@@ -17,11 +17,9 @@
  */
 package org.ethereum.net.swarm.bzz;
 
-import org.ethereum.net.client.Capability;
 import org.ethereum.net.swarm.Key;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
@@ -30,11 +28,10 @@ import java.util.List;
 
 public class BzzStoreReqMessage extends BzzMessage {
 
-    private Key key;
-    private byte[] data;
-
     // optional
     byte[] metadata = new byte[0];
+    private Key key;
+    private byte[] data;
 
     public BzzStoreReqMessage(byte[] encoded) {
         super(encoded);
@@ -72,18 +69,18 @@ public class BzzStoreReqMessage extends BzzMessage {
         List<byte[]> elems = new ArrayList<>();
         elems.add(RLP.encodeElement(key.getBytes()));
         elems.add(RLP.encodeElement(data));
-//        if (id >= 0 || metadata != null) {
-            elems.add(RLP.encodeInt((int) id));
-//        }
-//        if (metadata != null) {
-            elems.add(RLP.encodeList(metadata));
-//        }
+        //        if (id >= 0 || metadata != null) {
+        elems.add(RLP.encodeInt((int) id));
+        //        }
+        //        if (metadata != null) {
+        elems.add(RLP.encodeList(metadata));
+        //        }
         this.encoded = RLP.encodeList(elems.toArray(new byte[0][]));
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -111,11 +108,7 @@ public class BzzStoreReqMessage extends BzzMessage {
 
     @Override
     public String toString() {
-        return "BzzStoreReqMessage{" +
-                "key=" + key +
-                ", data=" + Arrays.toString(data) +
-                ", id=" + id +
-                ", metadata=" + Arrays.toString(metadata) +
-                '}';
+        return "BzzStoreReqMessage{" + "key=" + key + ", data=" + Arrays.toString(data) + ", id=" + id + ", metadata=" +
+                Arrays.toString(metadata) + '}';
     }
 }

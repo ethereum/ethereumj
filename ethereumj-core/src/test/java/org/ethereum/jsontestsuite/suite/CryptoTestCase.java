@@ -39,11 +39,11 @@ public class CryptoTestCase {
     private String payload = "";
 
 
-    public CryptoTestCase(){
+    public CryptoTestCase() {
     }
 
 
-    public void execute(){
+    public void execute() {
 
         byte[] key = Hex.decode(this.key);
         byte[] cipher = Hex.decode(this.cipher);
@@ -51,17 +51,18 @@ public class CryptoTestCase {
         ECKey ecKey = ECKey.fromPrivate(key);
 
         byte[] resultPayload = new byte[0];
-        if (decryption_type.equals("aes_ctr"))
-            resultPayload = ecKey.decryptAES(cipher);
+        if (decryption_type.equals("aes_ctr")) { resultPayload = ecKey.decryptAES(cipher); }
 
-        if (decryption_type.equals("ecies_sec1_altered"))
+        if (decryption_type.equals("ecies_sec1_altered")) {
             try {
                 resultPayload = ECIESCoder.decrypt(new BigInteger(Hex.toHexString(key), 16), cipher);
             } catch (Throwable e) {e.printStackTrace();}
+        }
 
-        if (!Hex.toHexString(resultPayload).equals(payload)){
+        if (!Hex.toHexString(resultPayload).equals(payload)) {
             String error = String.format("payload should be: %s, but got that result: %s  ",
-                    payload, Hex.toHexString(resultPayload));
+                                         payload,
+                                         Hex.toHexString(resultPayload));
             logger.info(error);
 
             System.exit(-1);
@@ -103,11 +104,7 @@ public class CryptoTestCase {
 
     @Override
     public String toString() {
-        return "CryptoTestCase{" +
-                "decryption_type='" + decryption_type + '\'' +
-                ", key='" + key + '\'' +
-                ", cipher='" + cipher + '\'' +
-                ", payload='" + payload + '\'' +
-                '}';
+        return "CryptoTestCase{" + "decryption_type='" + decryption_type + '\'' + ", key='" + key + '\'' +
+                ", cipher='" + cipher + '\'' + ", payload='" + payload + '\'' + '}';
     }
 }

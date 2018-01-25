@@ -85,8 +85,6 @@ public enum ReasonCode {
      */
     UNKNOWN(0xFF);
 
-    private int reason;
-
     private static final Map<Integer, ReasonCode> intToTypeMap = new HashMap<>();
 
     static {
@@ -95,14 +93,15 @@ public enum ReasonCode {
         }
     }
 
+    private int reason;
+
     private ReasonCode(int reason) {
         this.reason = reason;
     }
 
     public static ReasonCode fromInt(int i) {
         ReasonCode type = intToTypeMap.get(i);
-        if (type == null)
-            return ReasonCode.UNKNOWN;
+        if (type == null) { return ReasonCode.UNKNOWN; }
         return type;
     }
 

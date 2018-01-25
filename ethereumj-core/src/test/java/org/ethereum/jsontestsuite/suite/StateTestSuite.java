@@ -28,9 +28,8 @@ import java.util.Map;
 
 public class StateTestSuite {
 
-    private Logger logger = LoggerFactory.getLogger("TCK-Test");
-
     Map<String, StateTestCase> testCases = new HashMap<>();
+    private Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public StateTestSuite(String json) throws IOException {
 
@@ -47,8 +46,6 @@ public class StateTestSuite {
 
     @Override
     public String toString() {
-        return "StateTestSuite{" +
-                "testCases=" + testCases +
-                '}';
+        return "StateTestSuite{" + "testCases=" + testCases + '}';
     }
 }

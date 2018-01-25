@@ -20,21 +20,23 @@
 
 package org.ethereum.config;
 
+import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.net.rlpx.Node;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class NodeFilterTest {
 
     private static final byte[] NODE_1 = "node-1".getBytes();
     private static final byte[] NODE_2 = "node-2".getBytes();
+
+    private static Node createTestNode(String nodeName, String hostIpPattern) {
+        return new Node("enode://" + Hex.toHexString(nodeName.getBytes()) + "@" + hostIpPattern + ":30303");
+    }
 
     @Test
     public void addByHostIpPattern() throws Exception {
@@ -153,8 +155,7 @@ public class NodeFilterTest {
         NodeFilter filter = new NodeFilter();
         filter.add(null, "1.2.3.4");
 
-        Node nodeWithInvalidHostname = new Node(
-                "enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
+        Node nodeWithInvalidHostname = new Node("enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
         assertFalse(filter.accept(nodeWithInvalidHostname));
     }
 
@@ -163,13 +164,8 @@ public class NodeFilterTest {
         NodeFilter filter = new NodeFilter();
         filter.add(null, null);
 
-        Node nodeWithInvalidHostname = new Node(
-                "enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
+        Node nodeWithInvalidHostname = new Node("enode://" + Hex.toHexString(NODE_1) + "@unknown:30303");
         assertTrue(filter.accept(nodeWithInvalidHostname));
-    }
-
-    private static Node createTestNode(String nodeName, String hostIpPattern) {
-        return new Node("enode://" + Hex.toHexString(nodeName.getBytes()) + "@" + hostIpPattern + ":30303");
     }
 
 }

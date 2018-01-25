@@ -17,12 +17,17 @@
  */
 package org.ethereum.config.blockchain;
 
+import static org.ethereum.util.BIUtil.max;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.EthashMiner;
 import org.ethereum.mine.MinerIfc;
@@ -37,12 +42,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.ethereum.util.BIUtil.max;
-
 /**
  * BlockchainForkConfig is also implemented by this class - its (mostly testing) purpose to represent
  * the specific config for all blocks on the chain (kinda constant config).
- *
+ * <p>
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetConfig {
@@ -77,7 +80,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public MinerIfc getMineAlgorithm(SystemProperties config) {
-        if (miner == null) miner = new EthashMiner(config);
+        if (miner == null) { miner = new EthashMiner(config); }
         return miner;
     }
 
@@ -94,7 +97,8 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         int explosion = getExplosion(curBlock, parent);
 
         if (explosion >= 0) {
-            difficulty = max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
+            difficulty =
+                    max(getConstants().getMINIMUM_DIFFICULTY(), difficulty.add(BigInteger.ONE.shiftLeft(explosion)));
         }
 
         return difficulty;
@@ -112,7 +116,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
-                                               Repository repository) {
+                                             Repository repository) {
         return null;
     }
 
@@ -136,7 +140,8 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
     }
 
     @Override
-    public DataWord getCallGas(OpCode op, DataWord requestedGas, DataWord availableGas) throws Program.OutOfGasException {
+    public DataWord getCallGas(OpCode op, DataWord requestedGas, DataWord availableGas)
+            throws Program.OutOfGasException {
         if (requestedGas.compareTo(availableGas) > 0) {
             throw Program.Exception.notEnoughOpGas(op, requestedGas, availableGas);
         }

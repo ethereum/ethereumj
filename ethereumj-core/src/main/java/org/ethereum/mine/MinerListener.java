@@ -24,8 +24,12 @@ import org.ethereum.core.Block;
  */
 public interface MinerListener {
     void miningStarted();
+
     void miningStopped();
+
     void blockMiningStarted(Block block);
+
     void blockMined(Block block);
+
     void blockMiningCanceled(Block block);
 }

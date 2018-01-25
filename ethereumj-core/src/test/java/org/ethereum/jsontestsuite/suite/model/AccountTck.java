@@ -17,7 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite.model;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Roman Mandeleil
@@ -78,11 +79,7 @@ public class AccountTck {
 
     @Override
     public String toString() {
-        return "AccountState2{" +
-                "balance='" + balance + '\'' +
-                ", code='" + code + '\'' +
-                ", nonce='" + nonce + '\'' +
-                ", storage=" + storage +
-                '}';
+        return "AccountState2{" + "balance='" + balance + '\'' + ", code='" + code + '\'' + ", nonce='" + nonce + '\'' +
+                ", storage=" + storage + '}';
     }
 }

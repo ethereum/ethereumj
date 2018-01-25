@@ -60,25 +60,23 @@
 */
 package org.ethereum.datasource;
 
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOfRange;
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
+import static org.ethereum.util.ByteUtil.longToBytes;
+
 import com.google.common.base.Preconditions;
 import com.google.common.math.LongMath;
 import com.google.common.primitives.Ints;
-import org.ethereum.util.ByteUtil;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import static java.lang.System.arraycopy;
-import static java.lang.System.in;
-import static java.util.Arrays.copyOfRange;
-import static org.ethereum.util.ByteUtil.byteArrayToLong;
-import static org.ethereum.util.ByteUtil.longToBytes;
-
 //import net.jpountz.xxhash.XXHashFactory;
 
 public class QuotientFilter implements Iterable<Long> {
-//    static final XXHashFactory hashFactory = XXHashFactory.fastestInstance();
+    //    static final XXHashFactory hashFactory = XXHashFactory.fastestInstance();
     byte QUOTIENT_BITS;
     byte REMAINDER_BITS;
     byte ELEMENT_BITS;
@@ -92,6 +90,25 @@ public class QuotientFilter implements Iterable<Long> {
 
     boolean overflowed = false;
     long entries;
+
+    private QuotientFilter() {}
+
+    public QuotientFilter(int quotientBits, int remainderBits) {
+        Preconditions.checkArgument(quotientBits > 0);
+        Preconditions.checkArgument(remainderBits > 0);
+        Preconditions.checkArgument(quotientBits + remainderBits <= 64);
+
+        QUOTIENT_BITS = (byte) quotientBits;
+        REMAINDER_BITS = (byte) remainderBits;
+        ELEMENT_BITS = (byte) (REMAINDER_BITS + 3);
+        INDEX_MASK = LOW_MASK(QUOTIENT_BITS);
+        REMAINDER_MASK = LOW_MASK(REMAINDER_BITS);
+        ELEMENT_MASK = LOW_MASK(ELEMENT_BITS);
+        MAX_SIZE = 1 << QUOTIENT_BITS;
+        MAX_INSERTIONS = (long) (MAX_SIZE * .75);
+        table = new long[TABLE_SIZE(QUOTIENT_BITS, REMAINDER_BITS)];
+        entries = 0;
+    }
 
     public static QuotientFilter deserialize(byte[] bytes) {
         QuotientFilter ret = new QuotientFilter();
@@ -112,24 +129,6 @@ public class QuotientFilter implements Iterable<Long> {
         return ret;
     }
 
-    public synchronized byte[] serialize() {
-        byte[] ret = new byte[1 + 1 + 1 + 8 + 8 + 8 + 8 + 8 + 1 + 8 + table.length * 8];
-        ret[0] = QUOTIENT_BITS;
-        ret[1] = REMAINDER_BITS;
-        ret[2] = ELEMENT_BITS;
-        arraycopy(longToBytes(INDEX_MASK), 0, ret, 3, 8);
-        arraycopy(longToBytes(REMAINDER_MASK), 0, ret, 11, 8);
-        arraycopy(longToBytes(ELEMENT_MASK), 0, ret, 19, 8);
-        arraycopy(longToBytes(MAX_SIZE), 0, ret, 27, 8);
-        arraycopy(longToBytes(MAX_INSERTIONS), 0, ret, 35, 8);
-        ret[43] = (byte) (overflowed ? 1 : 0);
-        arraycopy(longToBytes(entries), 0, ret, 44, 8);
-        for (int i = 0; i < table.length; i++) {
-            arraycopy(longToBytes(table[i]), 0, ret, 52 + i * 8, 8);
-        }
-        return ret;
-    }
-
     static long LOW_MASK(long n) {
         return (1L << n) - 1L;
     }
@@ -145,8 +144,7 @@ public class QuotientFilter implements Iterable<Long> {
             return 1;
         }
 
-        int candidateBits = Long.bitCount(numElements) == 1 ?
-                Math.max(1, Long.numberOfTrailingZeros(numElements)) :
+        int candidateBits = Long.bitCount(numElements) == 1 ? Math.max(1, Long.numberOfTrailingZeros(numElements)) :
                 Long.numberOfTrailingZeros(Long.highestOneBit(numElements) << 1L);
 
         //May need an extra bit due to load factor
@@ -177,70 +175,6 @@ public class QuotientFilter implements Iterable<Long> {
         remainderBits -= quotientBits;
 
         return new QuotientFilter(quotientBits, remainderBits);
-    }
-
-    private QuotientFilter() {}
-
-    public QuotientFilter(int quotientBits, int remainderBits) {
-        Preconditions.checkArgument(quotientBits > 0);
-        Preconditions.checkArgument(remainderBits > 0);
-        Preconditions.checkArgument(quotientBits + remainderBits <= 64);
-
-        QUOTIENT_BITS = (byte) quotientBits;
-        REMAINDER_BITS = (byte) remainderBits;
-        ELEMENT_BITS = (byte) (REMAINDER_BITS + 3);
-        INDEX_MASK = LOW_MASK(QUOTIENT_BITS);
-        REMAINDER_MASK = LOW_MASK(REMAINDER_BITS);
-        ELEMENT_MASK = LOW_MASK(ELEMENT_BITS);
-        MAX_SIZE = 1 << QUOTIENT_BITS;
-        MAX_INSERTIONS = (long) (MAX_SIZE * .75);
-        table = new long[TABLE_SIZE(QUOTIENT_BITS, REMAINDER_BITS)];
-        entries = 0;
-    }
-
-    public QuotientFilter withMaxDuplicates(int maxDuplicates) {
-        MAX_DUPLICATES = maxDuplicates;
-        return this;
-    }
-
-    /* Return QF[idx] in the lower bits. */
-    long getElement(long idx) {
-        long elt = 0;
-        long bitpos = ELEMENT_BITS * idx;
-        int tabpos = Ints.checkedCast(bitpos / 64);
-        long slotpos = bitpos % 64;
-        long spillbits = (slotpos + ELEMENT_BITS) - 64;
-        elt = (table[tabpos] >>> slotpos) & ELEMENT_MASK;
-        if (spillbits > 0) {
-            ++tabpos;
-            long x = table[tabpos] & LOW_MASK(spillbits);
-            elt |= x << (ELEMENT_BITS - spillbits);
-        }
-        return elt;
-    }
-
-    /* Store the lower bits of elt into QF[idx]. */
-    void setElement(long idx, long elt) {
-        long bitpos = ELEMENT_BITS * idx;
-        int tabpos = Ints.checkedCast(bitpos / 64);
-        long slotpos = bitpos % 64;
-        long spillbits = (slotpos + ELEMENT_BITS) - 64;
-        elt &= ELEMENT_MASK;
-        table[tabpos] &= ~(ELEMENT_MASK << slotpos);
-        table[tabpos] |= elt << slotpos;
-        if (spillbits > 0) {
-            ++tabpos;
-            table[tabpos] &= ~LOW_MASK(spillbits);
-            table[tabpos] |= elt >>> (ELEMENT_BITS - spillbits);
-        }
-    }
-
-    long incrementIndex(long idx) {
-        return (idx + 1) & INDEX_MASK;
-    }
-
-    long decrementIndex(long idx) {
-        return (idx - 1) & INDEX_MASK;
     }
 
     static boolean isElementOccupied(long elt) {
@@ -295,6 +229,69 @@ public class QuotientFilter implements Iterable<Long> {
         return !isElementContinuation(elt) & (isElementOccupied(elt) | isElementShifted(elt));
     }
 
+    public synchronized byte[] serialize() {
+        byte[] ret = new byte[1 + 1 + 1 + 8 + 8 + 8 + 8 + 8 + 1 + 8 + table.length * 8];
+        ret[0] = QUOTIENT_BITS;
+        ret[1] = REMAINDER_BITS;
+        ret[2] = ELEMENT_BITS;
+        arraycopy(longToBytes(INDEX_MASK), 0, ret, 3, 8);
+        arraycopy(longToBytes(REMAINDER_MASK), 0, ret, 11, 8);
+        arraycopy(longToBytes(ELEMENT_MASK), 0, ret, 19, 8);
+        arraycopy(longToBytes(MAX_SIZE), 0, ret, 27, 8);
+        arraycopy(longToBytes(MAX_INSERTIONS), 0, ret, 35, 8);
+        ret[43] = (byte) (overflowed ? 1 : 0);
+        arraycopy(longToBytes(entries), 0, ret, 44, 8);
+        for (int i = 0; i < table.length; i++) {
+            arraycopy(longToBytes(table[i]), 0, ret, 52 + i * 8, 8);
+        }
+        return ret;
+    }
+
+    public QuotientFilter withMaxDuplicates(int maxDuplicates) {
+        MAX_DUPLICATES = maxDuplicates;
+        return this;
+    }
+
+    /* Return QF[idx] in the lower bits. */
+    long getElement(long idx) {
+        long elt = 0;
+        long bitpos = ELEMENT_BITS * idx;
+        int tabpos = Ints.checkedCast(bitpos / 64);
+        long slotpos = bitpos % 64;
+        long spillbits = (slotpos + ELEMENT_BITS) - 64;
+        elt = (table[tabpos] >>> slotpos) & ELEMENT_MASK;
+        if (spillbits > 0) {
+            ++tabpos;
+            long x = table[tabpos] & LOW_MASK(spillbits);
+            elt |= x << (ELEMENT_BITS - spillbits);
+        }
+        return elt;
+    }
+
+    /* Store the lower bits of elt into QF[idx]. */
+    void setElement(long idx, long elt) {
+        long bitpos = ELEMENT_BITS * idx;
+        int tabpos = Ints.checkedCast(bitpos / 64);
+        long slotpos = bitpos % 64;
+        long spillbits = (slotpos + ELEMENT_BITS) - 64;
+        elt &= ELEMENT_MASK;
+        table[tabpos] &= ~(ELEMENT_MASK << slotpos);
+        table[tabpos] |= elt << slotpos;
+        if (spillbits > 0) {
+            ++tabpos;
+            table[tabpos] &= ~LOW_MASK(spillbits);
+            table[tabpos] |= elt >>> (ELEMENT_BITS - spillbits);
+        }
+    }
+
+    long incrementIndex(long idx) {
+        return (idx + 1) & INDEX_MASK;
+    }
+
+    long decrementIndex(long idx) {
+        return (idx - 1) & INDEX_MASK;
+    }
+
     long hashToQuotient(long hash) {
         return (hash >>> REMAINDER_BITS) & INDEX_MASK;
     }
@@ -316,13 +313,11 @@ public class QuotientFilter implements Iterable<Long> {
         while (b != fq) {
             do {
                 s = incrementIndex(s);
-            }
-            while (isElementContinuation(getElement(s)));
+            } while (isElementContinuation(getElement(s)));
 
             do {
                 b = incrementIndex(b);
-            }
-            while (!isElementOccupied(getElement(b)));
+            } while (!isElementOccupied(getElement(b)));
         }
         return s;
     }
@@ -347,32 +342,26 @@ public class QuotientFilter implements Iterable<Long> {
             setElement(s, curr);
             curr = prev;
             s = incrementIndex(s);
-        }
-        while (!empty);
+        } while (!empty);
     }
 
     public boolean overflowed() {
         return overflowed;
     }
 
-//    public void insert(byte[] data)
-//    {
-//        insert(data, 0, data.length);
-//    }
-//
-//    public void insert(byte[] data, int offset, int length) {
-//        insert(hashFactory.hash64().hash(data, offset, length, 0));
-//    }
+    //    public void insert(byte[] data)
+    //    {
+    //        insert(data, 0, data.length);
+    //    }
+    //
+    //    public void insert(byte[] data, int offset, int length) {
+    //        insert(hashFactory.hash64().hash(data, offset, length, 0));
+    //    }
 
     private long hash(byte[] bytes) {
-        return (bytes[0] & 0xFFL) << 56 |
-                (bytes[1] & 0xFFL) << 48 |
-                (bytes[2] & 0xFFL) << 40 |
-                (bytes[3] & 0xFFL) << 32 |
-                (bytes[4] & 0xFFL) << 24 |
-                (bytes[5] & 0xFFL) << 16 |
-                (bytes[6] & 0xFFL) << 8 |
-                (bytes[7] & 0xFFL);
+        return (bytes[0] & 0xFFL) << 56 | (bytes[1] & 0xFFL) << 48 | (bytes[2] & 0xFFL) << 40 |
+                (bytes[3] & 0xFFL) << 32 | (bytes[4] & 0xFFL) << 24 | (bytes[5] & 0xFFL) << 16 |
+                (bytes[6] & 0xFFL) << 8 | (bytes[7] & 0xFFL);
     }
 
     public synchronized void insert(byte[] hash) {
@@ -380,7 +369,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     public synchronized void insert(long hash) {
-        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) return;
+        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) { return; }
         if (entries >= MAX_INSERTIONS | overflowed) {
             //Can't safely process an after overflow
             //Only a buggy program would attempt it
@@ -425,8 +414,7 @@ public class QuotientFilter implements Iterable<Long> {
                     break;
                 }
                 s = incrementIndex(s);
-            }
-            while (isElementContinuation(getElement(s)));
+            } while (isElementContinuation(getElement(s)));
 
             if (s == start) {
                 /* The old start-of-run becomes a continuation. */
@@ -494,8 +482,7 @@ public class QuotientFilter implements Iterable<Long> {
                 return false;
             }
             s = incrementIndex(s);
-        }
-        while (isElementContinuation(getElement(s)));
+        } while (isElementContinuation(getElement(s)));
         return false;
     }
 
@@ -526,8 +513,7 @@ public class QuotientFilter implements Iterable<Long> {
                 break;
             }
             s = incrementIndex(s);
-        }
-        while (isElementContinuation(getElement(s)));
+        } while (isElementContinuation(getElement(s)));
         return counter >= num;
     }
 
@@ -554,17 +540,14 @@ public class QuotientFilter implements Iterable<Long> {
                 if (isElementRunStart(next)) {
                     do {
                         quot = incrementIndex(quot);
-                    }
-                    while (!isElementOccupied(getElement(quot)));
+                    } while (!isElementOccupied(getElement(quot)));
 
                     if (curr_occupied && quot == s) {
                         updated_next = clearElementShifted(next);
                     }
                 }
 
-                setElement(s, curr_occupied ?
-                        setElementOccupied(updated_next) :
-                        clearElementOccupied(updated_next));
+                setElement(s, curr_occupied ? setElementOccupied(updated_next) : clearElementOccupied(updated_next));
                 s = sp;
                 sp = incrementIndex(sp);
                 curr = next;
@@ -577,7 +560,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     public synchronized void remove(long hash) {
-        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) return;
+        if (maybeContainsXTimes(hash, MAX_DUPLICATES)) { return; }
         //Can't safely process a remove after overflow
         //Only a buggy program would attempt it
         if (overflowed) {
@@ -647,37 +630,39 @@ public class QuotientFilter implements Iterable<Long> {
         --entries;
     }
 
-//    public static QuotientFilter merge(Collection<QuotientFilter> filters) {
-//        if (filters.stream().map(filter -> filter.REMAINDER_BITS + filter.QUOTIENT_BITS).distinct().count() != 1) {
-//            throw new IllegalArgumentException("All filters must have the same size fingerprint");
-//        }
-//
-//        long totalEntries = filters.stream().collect(Collectors.summingLong(filter -> filter.entries));
-//        int requiredQuotientBits = bitsForNumElementsWithLoadFactor(totalEntries);
-//        int fingerprintBits = filters.iterator().next().QUOTIENT_BITS + filters.iterator().next().REMAINDER_BITS;
-//        int remainderBits = fingerprintBits - requiredQuotientBits;
-//
-//        if (remainderBits < 1) {
-//            throw new IllegalArgumentException("Impossible to merge not enough fingerprint bits");
-//        }
-//
-//        QuotientFilter resultFilter = new QuotientFilter(requiredQuotientBits, remainderBits);
-//
-//        Iterable<QFIterator> iterators = (Iterable) filters.stream().map(filter -> filter.iterator()).collect(Collectors.toList());
-//        Iterator<Long> mergeQFIterator = Iterators.mergeSorted(iterators, Ordering.natural());
-//        while (mergeQFIterator.hasNext()) {
-//            resultFilter.insert(mergeQFIterator.next());
-//        }
-//        return resultFilter;
-//    }
+    //    public static QuotientFilter merge(Collection<QuotientFilter> filters) {
+    //        if (filters.stream().map(filter -> filter.REMAINDER_BITS + filter.QUOTIENT_BITS).distinct().count() !=
+    // 1) {
+    //            throw new IllegalArgumentException("All filters must have the same size fingerprint");
+    //        }
+    //
+    //        long totalEntries = filters.stream().collect(Collectors.summingLong(filter -> filter.entries));
+    //        int requiredQuotientBits = bitsForNumElementsWithLoadFactor(totalEntries);
+    //        int fingerprintBits = filters.iterator().next().QUOTIENT_BITS + filters.iterator().next().REMAINDER_BITS;
+    //        int remainderBits = fingerprintBits - requiredQuotientBits;
+    //
+    //        if (remainderBits < 1) {
+    //            throw new IllegalArgumentException("Impossible to merge not enough fingerprint bits");
+    //        }
+    //
+    //        QuotientFilter resultFilter = new QuotientFilter(requiredQuotientBits, remainderBits);
+    //
+    //        Iterable<QFIterator> iterators = (Iterable) filters.stream().map(filter -> filter.iterator()).collect
+    // (Collectors.toList());
+    //        Iterator<Long> mergeQFIterator = Iterators.mergeSorted(iterators, Ordering.natural());
+    //        while (mergeQFIterator.hasNext()) {
+    //            resultFilter.insert(mergeQFIterator.next());
+    //        }
+    //        return resultFilter;
+    //    }
 
-//    public QuotientFilter merge(QuotientFilter other) {
-//        return merge(ImmutableList.of(this, other));
-//    }
-//
-//    public QuotientFilter merge(QuotientFilter... filters) {
-//        return merge(Arrays.asList(filters));
-//    }
+    //    public QuotientFilter merge(QuotientFilter other) {
+    //        return merge(ImmutableList.of(this, other));
+    //    }
+    //
+    //    public QuotientFilter merge(QuotientFilter... filters) {
+    //        return merge(Arrays.asList(filters));
+    //    }
 
     /*
      * Resizes the filter return a filter with the same contents and space for the minimum specified number
@@ -716,6 +701,47 @@ public class QuotientFilter implements Iterable<Long> {
     public QFIterator iterator() {
         return new QFIterator();
     }
+
+    public interface LongIterator extends Iterator<Long> {
+
+
+        long nextPrimitive();
+
+        @Override
+        Long next();
+    }
+
+    //    @Override
+    //    public String toString() {
+    //        StringBuilder sb = new StringBuilder();
+    //
+    //        int pad = ((int) (Math.ceil(QUOTIENT_BITS / Math.log(10.0)))) + 1;
+    //
+    //        for (int i = 0; i < pad; ++i) {
+    //            sb.append(' ');
+    //        }
+    //
+    //        sb.append(String.format("| is_shifted | is_continuation | is_occupied | remainder"
+    //                + " nel=%d\n", entries));
+    //
+    //        for (long idx = 0; idx < MAX_SIZE; ++idx) {
+    //            String idxString = Long.toString(idx);
+    //            sb.append(idx);
+    //
+    //            int fillspace = pad - idxString.length();
+    //            for (int i = 0; i < fillspace; ++i) {
+    //                sb.append(' ');
+    //            }
+    //            sb.append("| ");
+    //
+    //            long elt = getElement(idx);
+    //            sb.append(String.format("%d          | ", isElementShifted(elt) == false ? 0 : 1));
+    //            sb.append(String.format("%d               | ", isElementContinuation(elt) == false ? 0 : 1));
+    //            sb.append(String.format("%d           | ", isElementOccupied(elt) == false ? 0 : 1));
+    //            sb.append(getElementRemainder(elt)).append(System.lineSeparator());
+    //        }
+    //        return sb.toString();
+    //    }
 
     class QFIterator implements LongIterator {
         long index;
@@ -769,8 +795,7 @@ public class QuotientFilter implements Iterable<Long> {
                         long quot = quotient;
                         do {
                             quot = incrementIndex(quot);
-                        }
-                        while (!isElementOccupied(getElement(quot)));
+                        } while (!isElementOccupied(getElement(quot)));
                         quotient = quot;
                     }
                 }
@@ -790,52 +815,11 @@ public class QuotientFilter implements Iterable<Long> {
         }
     }
 
-//    @Override
-//    public String toString() {
-//        StringBuilder sb = new StringBuilder();
-//
-//        int pad = ((int) (Math.ceil(QUOTIENT_BITS / Math.log(10.0)))) + 1;
-//
-//        for (int i = 0; i < pad; ++i) {
-//            sb.append(' ');
-//        }
-//
-//        sb.append(String.format("| is_shifted | is_continuation | is_occupied | remainder"
-//                + " nel=%d\n", entries));
-//
-//        for (long idx = 0; idx < MAX_SIZE; ++idx) {
-//            String idxString = Long.toString(idx);
-//            sb.append(idx);
-//
-//            int fillspace = pad - idxString.length();
-//            for (int i = 0; i < fillspace; ++i) {
-//                sb.append(' ');
-//            }
-//            sb.append("| ");
-//
-//            long elt = getElement(idx);
-//            sb.append(String.format("%d          | ", isElementShifted(elt) == false ? 0 : 1));
-//            sb.append(String.format("%d               | ", isElementContinuation(elt) == false ? 0 : 1));
-//            sb.append(String.format("%d           | ", isElementOccupied(elt) == false ? 0 : 1));
-//            sb.append(getElementRemainder(elt)).append(System.lineSeparator());
-//        }
-//        return sb.toString();
-//    }
-
     public class OverflowedError extends AssertionError {
 
     }
 
     public class NoSuchElementError extends AssertionError {
 
-    }
-
-    public interface LongIterator extends Iterator<Long> {
-
-
-        long nextPrimitive();
-
-        @Override
-        Long next();
     }
 }

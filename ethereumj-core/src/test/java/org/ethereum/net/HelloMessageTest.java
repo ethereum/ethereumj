@@ -17,24 +17,21 @@
  */
 package org.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhHandler;
-
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class HelloMessageTest {
 
@@ -44,7 +41,8 @@ public class HelloMessageTest {
     //Parsing from raw bytes
     @Test
     public void test1() {
-        String helloMessageRaw = "f87902a5457468657265756d282b2b292f76302e372e392f52656c656173652f4c696e75782f672b2bccc58365746827c583736868018203e0b8401fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646";
+        String helloMessageRaw =
+                "f87902a5457468657265756d282b2b292f76302e372e392f52656c656173652f4c696e75782f672b2bccc58365746827c583736868018203e0b8401fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646";
 
         byte[] payload = Hex.decode(helloMessageRaw);
         HelloMessage helloMessage = new HelloMessage(payload);
@@ -67,10 +65,9 @@ public class HelloMessageTest {
         //Init
         byte version = 2;
         String clientStr = "Ethereum(++)/v0.7.9/Release/Linux/g++";
-        List<Capability> capabilities = Arrays.asList(
-                new Capability(Capability.ETH, EthVersion.UPPER),
-                new Capability(Capability.SHH, ShhHandler.VERSION),
-                new Capability(Capability.P2P, P2pHandler.VERSION));
+        List<Capability> capabilities = Arrays.asList(new Capability(Capability.ETH, EthVersion.UPPER),
+                                                      new Capability(Capability.SHH, ShhHandler.VERSION),
+                                                      new Capability(Capability.P2P, P2pHandler.VERSION));
         int listenPort = 992;
         String peerId = "1fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a";
 
@@ -91,11 +88,11 @@ public class HelloMessageTest {
         //Init
         byte version = -1; //invalid version
         String clientStr = ""; //null id
-        List<Capability> capabilities = Arrays.asList(
-                new Capability(null, (byte) 0),
-                new Capability(null, (byte) 0),
-                null, //null here causes NullPointerException when using toString
-                new Capability(null, (byte) 0)); //encoding null capabilities
+        List<Capability> capabilities = Arrays.asList(new Capability(null, (byte) 0),
+                                                      new Capability(null, (byte) 0),
+                                                      null,
+                                                      //null here causes NullPointerException when using toString
+                                                      new Capability(null, (byte) 0)); //encoding null capabilities
         int listenPort = 99999; //invalid port
         String peerId = ""; //null id
 
