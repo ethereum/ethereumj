@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,6 @@ public class CLIInterface {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-
     public static void call(String[] args) {
         try {
             Map<String, Object> cliOptions = new HashMap<>();
@@ -50,25 +50,23 @@ public class CLIInterface {
 
                 processHelp(arg);
 
-                if (i + 1 < args.length) {
-                    if (processDbDirectory(arg, args[i + 1], cliOptions))
-                        continue;
-                    if (processListenPort(arg, args[i + 1], cliOptions))
-                        continue;
-                    if (processConnect(arg, args[i + 1], cliOptions))
-                        continue;
-                }
+                // process simple option
+                if (processConnectOnly(arg, cliOptions))
+                    continue;
 
-                if ("-connectOnly".equals(arg)) {
-                    cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
-                }
+                // possible additional parameter
+                if (i + 1 >= args.length)
+                    continue;
 
-                // override the listen port directory
-                if ("-reset".equals(arg) && i + 1 < args.length) {
-                    Boolean resetStr = interpret(args[i + 1]);
-                    logger.info("Resetting db set to [{}]", resetStr);
-                    cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetStr.toString());
-                }
+                // process options with additional parameter
+                if (processDbDirectory(arg, args[i + 1], cliOptions))
+                    continue;
+                if (processListenPort(arg, args[i + 1], cliOptions))
+                    continue;
+                if (processConnect(arg, args[i + 1], cliOptions))
+                    continue;
+                if (processDbReset(arg, args[i + 1], cliOptions))
+                    continue;
             }
 
             if (cliOptions.size() > 0) {
@@ -90,6 +88,15 @@ public class CLIInterface {
 
             System.exit(1);
         }
+    }
+
+    private static boolean processConnectOnly(String arg, Map<String, Object> cliOptions) {
+        if ("-connectOnly".equals(arg))
+            return false;
+
+        cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
+
+        return true;
     }
 
     // override the db directory
@@ -117,7 +124,7 @@ public class CLIInterface {
     }
 
     // override the connect host:port directory
-    private static boolean processConnect(String arg, String connectStr, Map<String, Object> cliOptions) {
+    private static boolean processConnect(String arg, String connectStr, Map<String, Object> cliOptions) throws URISyntaxException {
         if (!arg.startsWith("-connect"))
             return false;
 
@@ -130,6 +137,18 @@ public class CLIInterface {
         List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
 
         cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
+
+        return true;
+    }
+
+    // process database reset
+    private static boolean processDbReset(String arg, String reset, Map<String, Object> cliOptions) {
+        if (!"-reset".equals(arg))
+            return false;
+
+        Boolean resetFlag = interpret(reset);
+        logger.info("Resetting db set to [{}]", resetFlag);
+        cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetFlag.toString());
 
         return true;
     }
