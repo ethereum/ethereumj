@@ -66,7 +66,7 @@ public class TwoPeerTest {
 //            return new Eth62();
         }
 
-        static SystemProperties props = new SystemProperties();;
+        static SystemProperties props = new SystemProperties();
         @Bean
         public SystemProperties systemProperties() {
             return props;
