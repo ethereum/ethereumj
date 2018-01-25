@@ -51,7 +51,7 @@ public class GetNodeDataMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.nodeKeys = new ArrayList<>();
@@ -64,8 +64,7 @@ public class GetNodeDataMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (byte[] hash : nodeKeys)
-            encodedElements.add(RLP.encodeElement(hash));
+        for (byte[] hash : nodeKeys) { encodedElements.add(RLP.encodeElement(hash)); }
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
 
         this.encoded = RLP.encodeList(encodedElementArray);
@@ -73,7 +72,7 @@ public class GetNodeDataMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 

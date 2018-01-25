@@ -18,7 +18,6 @@
 package org.ethereum.db;
 
 import org.ethereum.util.FastByteComparisons;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.Serializable;
@@ -34,19 +33,15 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
     private int hashCode = 0;
 
     public ByteArrayWrapper(byte[] data) {
-        if (data == null)
-            throw new NullPointerException("Data must not be null");
+        if (data == null) { throw new NullPointerException("Data must not be null"); }
         this.data = data;
         this.hashCode = Arrays.hashCode(data);
     }
 
     public boolean equals(Object other) {
-        if (!(other instanceof ByteArrayWrapper))
-            return false;
+        if (!(other instanceof ByteArrayWrapper)) { return false; }
         byte[] otherData = ((ByteArrayWrapper) other).getData();
-        return FastByteComparisons.compareTo(
-                data, 0, data.length,
-                otherData, 0, otherData.length) == 0;
+        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length) == 0;
     }
 
     @Override
@@ -56,9 +51,7 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
 
     @Override
     public int compareTo(ByteArrayWrapper o) {
-        return FastByteComparisons.compareTo(
-                data, 0, data.length,
-                o.getData(), 0, o.getData().length);
+        return FastByteComparisons.compareTo(data, 0, data.length, o.getData(), 0, o.getData().length);
     }
 
     public byte[] getData() {

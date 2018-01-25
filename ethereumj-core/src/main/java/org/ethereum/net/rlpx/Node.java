@@ -17,21 +17,21 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.bytesToIp;
+import static org.ethereum.util.ByteUtil.hostToBytes;
+
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.bytesToIp;
-import static org.ethereum.util.ByteUtil.hostToBytes;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
@@ -41,28 +41,6 @@ public class Node implements Serializable {
     int port;
     // discovery endpoint doesn't have real nodeId for example
     private boolean isFakeNodeId = false;
-
-    /**
-     *  - create Node instance from enode if passed,
-     *  - otherwise fallback to random nodeId, if supplied with only "address:port"
-     * NOTE: validation is absent as method is not heavily used
-     */
-    public static Node instanceOf(String addressOrEnode) {
-        try {
-            URI uri = new URI(addressOrEnode);
-            if (uri.getScheme().equals("enode")) {
-                return new Node(addressOrEnode);
-            }
-        } catch (URISyntaxException e) {
-            // continue
-        }
-
-        final ECKey generatedNodeKey = ECKey.fromPrivate(sha3(addressOrEnode.getBytes()));
-        final String generatedNodeId = Hex.toHexString(generatedNodeKey.getNodeId());
-        final Node node = new Node("enode://" + generatedNodeId + "@" + addressOrEnode);
-        node.isFakeNodeId = true;
-        return node;
-    }
 
     public Node(String enodeURL) {
         try {
@@ -83,7 +61,6 @@ public class Node implements Serializable {
         this.host = host;
         this.port = port;
     }
-
 
     public Node(byte[] rlp) {
 
@@ -108,15 +85,44 @@ public class Node implements Serializable {
     }
 
     /**
+     * - create Node instance from enode if passed,
+     * - otherwise fallback to random nodeId, if supplied with only "address:port"
+     * NOTE: validation is absent as method is not heavily used
+     */
+    public static Node instanceOf(String addressOrEnode) {
+        try {
+            URI uri = new URI(addressOrEnode);
+            if (uri.getScheme().equals("enode")) {
+                return new Node(addressOrEnode);
+            }
+        } catch (URISyntaxException e) {
+            // continue
+        }
+
+        final ECKey generatedNodeKey = ECKey.fromPrivate(sha3(addressOrEnode.getBytes()));
+        final String generatedNodeId = Hex.toHexString(generatedNodeKey.getNodeId());
+        final Node node = new Node("enode://" + generatedNodeId + "@" + addressOrEnode);
+        node.isFakeNodeId = true;
+        return node;
+    }
+
+    /**
      * @return true if this node is endpoint for discovery loaded from config
      */
     public boolean isDiscoveryNode() {
         return isFakeNodeId;
     }
 
+    public void setDiscoveryNode(boolean isDiscoveryNode) {
+        isFakeNodeId = isDiscoveryNode;
+    }
 
     public byte[] getId() {
         return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
     public String getHexId() {
@@ -125,10 +131,6 @@ public class Node implements Serializable {
 
     public String getHexIdShort() {
         return Utils.getNodeIdShort(getHexId());
-    }
-
-    public void setId(byte[] id) {
-        this.id = id;
     }
 
     public String getHost() {
@@ -147,13 +149,10 @@ public class Node implements Serializable {
         this.port = port;
     }
 
-    public void setDiscoveryNode(boolean isDiscoveryNode) {
-        isFakeNodeId = isDiscoveryNode;
-    }
-
     /**
      * Full RLP
      * [host, udpPort, tcpPort, nodeId]
+     *
      * @return RLP-encoded node data
      */
     public byte[] getRLP() {
@@ -168,6 +167,7 @@ public class Node implements Serializable {
     /**
      * RLP without nodeId
      * [host, udpPort, tcpPort]
+     *
      * @return RLP-encoded node data
      */
     public byte[] getBriefRLP() {
@@ -180,11 +180,7 @@ public class Node implements Serializable {
 
     @Override
     public String toString() {
-        return "Node{" +
-                " host='" + host + '\'' +
-                ", port=" + port +
-                ", id=" + Hex.toHexString(id) +
-                '}';
+        return "Node{" + " host='" + host + '\'' + ", port=" + port + ", id=" + Hex.toHexString(id) + '}';
     }
 
     @Override

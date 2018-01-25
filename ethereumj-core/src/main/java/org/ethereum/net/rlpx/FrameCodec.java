@@ -17,6 +17,8 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.util.RLP.decode2OneItem;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
@@ -30,12 +32,15 @@ import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.ethereum.util.RLP.decode2OneItem;
 
 /**
  * Created by devrandom on 2015-04-11.
@@ -70,41 +75,6 @@ public class FrameCodec {
         return macc;
     }
 
-    public static class Frame {
-        long type;
-        int size;
-        InputStream payload;
-
-        int totalFrameSize = -1;
-        int contextId = -1;
-
-        public Frame(long type, int size, InputStream payload) {
-            this.type = type;
-            this.size = size;
-            this.payload = payload;
-        }
-
-        public Frame(int type, byte[] payload) {
-            this.type = type;
-            this.size = payload.length;
-            this.payload = new ByteArrayInputStream(payload);
-        }
-
-        public int getSize() {
-            return size;
-        }
-
-        public long getType() {return  type;}
-
-        public InputStream getStream() {
-            return payload;
-        }
-        public boolean isChunked() {
-            return contextId >= 0;
-        }
-
-    }
-
     public void writeFrame(Frame frame, ByteBuf buf) throws IOException {
         writeFrame(frame, new ByteBufOutputStream(buf));
     }
@@ -113,14 +83,14 @@ public class FrameCodec {
         byte[] headBuffer = new byte[32];
         byte[] ptype = RLP.encodeInt((int) frame.type); // FIXME encodeLong
         int totalSize = frame.size + ptype.length;
-        headBuffer[0] = (byte)(totalSize >> 16);
-        headBuffer[1] = (byte)(totalSize >> 8);
-        headBuffer[2] = (byte)(totalSize);
+        headBuffer[0] = (byte) (totalSize >> 16);
+        headBuffer[1] = (byte) (totalSize >> 8);
+        headBuffer[2] = (byte) (totalSize);
 
         List<byte[]> headerDataElems = new ArrayList<>();
         headerDataElems.add(RLP.encodeInt(0));
-        if (frame.contextId >= 0) headerDataElems.add(RLP.encodeInt(frame.contextId));
-        if (frame.totalFrameSize >= 0) headerDataElems.add(RLP.encodeInt(frame.totalFrameSize));
+        if (frame.contextId >= 0) { headerDataElems.add(RLP.encodeInt(frame.contextId)); }
+        if (frame.totalFrameSize >= 0) { headerDataElems.add(RLP.encodeInt(frame.totalFrameSize)); }
 
         byte[] headerData = RLP.encodeList(headerDataElems.toArray(new byte[0][]));
         System.arraycopy(headerData, 0, headBuffer, 3, headerData.length);
@@ -137,7 +107,7 @@ public class FrameCodec {
         egressMac.update(buff, 0, ptype.length);
         while (true) {
             int n = frame.payload.read(buff);
-            if (n <= 0) break;
+            if (n <= 0) { break; }
             enc.processBytes(buff, 0, n, buff, 0);
             egressMac.update(buff, 0, n);
             out.write(buff, 0, n);
@@ -196,7 +166,7 @@ public class FrameCodec {
         }
 
         int padding = 16 - (totalBodySize % 16);
-        if (padding == 16) padding = 0;
+        if (padding == 16) { padding = 0; }
         int macSize = 16;
         byte[] buffer = new byte[totalBodySize + padding + macSize];
         try {
@@ -225,7 +195,8 @@ public class FrameCodec {
         return Collections.singletonList(frame);
     }
 
-    private byte[] updateMac(KeccakDigest mac, byte[] seed, int offset, byte[] out, int outOffset, boolean egress) throws IOException {
+    private byte[] updateMac(KeccakDigest mac, byte[] seed, int offset, byte[] out, int outOffset, boolean egress)
+            throws IOException {
         byte[] aesBlock = new byte[mac.getDigestSize()];
         doSum(mac, aesBlock);
         makeMacCipher().processBlock(aesBlock, 0, aesBlock, 0);
@@ -252,6 +223,42 @@ public class FrameCodec {
     private void doSum(KeccakDigest mac, byte[] out) {
         // doFinal without resetting the MAC by using clone of digest state
         new KeccakDigest(mac).doFinal(out, 0);
+    }
+
+    public static class Frame {
+        long type;
+        int size;
+        InputStream payload;
+
+        int totalFrameSize = -1;
+        int contextId = -1;
+
+        public Frame(long type, int size, InputStream payload) {
+            this.type = type;
+            this.size = size;
+            this.payload = payload;
+        }
+
+        public Frame(int type, byte[] payload) {
+            this.type = type;
+            this.size = payload.length;
+            this.payload = new ByteArrayInputStream(payload);
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public long getType() {return type;}
+
+        public InputStream getStream() {
+            return payload;
+        }
+
+        public boolean isChunked() {
+            return contextId >= 0;
+        }
+
     }
 
 }

@@ -17,22 +17,27 @@
  */
 package org.ethereum.net.eth.handler;
 
+import static org.ethereum.net.eth.EthVersion.UPPER;
+import static org.ethereum.net.eth.EthVersion.fromCode;
+
 import com.google.common.util.concurrent.ListenableFuture;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;
 import java.util.List;
 
-import static org.ethereum.net.eth.EthVersion.*;
-
 /**
  * It's quite annoying to always check {@code if (eth != null)} before accessing it. <br>
- *
+ * <p>
  * This adapter helps to avoid such checks. It provides meaningful answers to Eth client
  * assuming that Eth hasn't been initialized yet. <br>
- *
+ * <p>
  * Check {@link org.ethereum.net.server.Channel} for example.
  *
  * @author Mikhail Kalinin
@@ -94,12 +99,14 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk, boolean reverse) {
+    public ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(long blockNumber, int maxBlocksAsk,
+                                                                   boolean reverse) {
         return null;
     }
 
     @Override
-    public ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip, boolean reverse) {
+    public ListenableFuture<List<BlockHeader>> sendGetBlockHeaders(byte[] blockHash, int maxBlocksAsk, int skip,
+                                                                   boolean reverse) {
         return null;
     }
 

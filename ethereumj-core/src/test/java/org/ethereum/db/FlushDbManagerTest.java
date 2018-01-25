@@ -17,9 +17,11 @@
  */
 package org.ethereum.db;
 
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
+import static org.ethereum.util.ByteUtil.intToBytes;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.datasource.WriteCache;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.junit.Assert;
@@ -27,9 +29,6 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
-
-import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
-import static org.ethereum.util.ByteUtil.intToBytes;
 
 /**
  * Created by Anton Nashatyrev on 23.12.2016.
@@ -47,7 +46,8 @@ public class FlushDbManagerTest {
         final WriteCache<byte[], byte[]> cache2 = new WriteCache.BytesKey<>(db2, WriteCache.CacheType.SIMPLE);
         cache2.withSizeEstimators(ByteArrayEstimator, ByteArrayEstimator);
 
-        final DbFlushManager dbFlushManager = new DbFlushManager(SystemProperties.getDefault(), Collections.<DbSource>emptySet(), null);
+        final DbFlushManager dbFlushManager =
+                new DbFlushManager(SystemProperties.getDefault(), Collections.<DbSource>emptySet(), null);
         dbFlushManager.addCache(cache1);
         dbFlushManager.addCache(cache2);
         dbFlushManager.setSizeThreshold(1);
@@ -115,9 +115,8 @@ public class FlushDbManagerTest {
         }).start();
 
 
-
         latch.await();
 
-        if (exception[0] != null) throw exception[0];
+        if (exception[0] != null) { throw exception[0]; }
     }
 }

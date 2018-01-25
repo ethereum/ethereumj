@@ -21,7 +21,11 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.VMTestSuite;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
@@ -30,7 +34,8 @@ import java.io.IOException;
 public class GitHubVMTest {
 
     static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "7429078cc0ae66034bbede7c9666c234dc76bc67";  // https://github.com/ethereum/tests/tree/develop/VMTests/
+    static String treeSHA = "7429078cc0ae66034bbede7c9666c234dc76bc67";
+            // https://github.com/ethereum/tests/tree/develop/VMTests/
 
     static VMTestSuite suite;
 

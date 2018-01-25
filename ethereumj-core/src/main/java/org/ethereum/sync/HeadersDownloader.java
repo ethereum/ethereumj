@@ -53,7 +53,8 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    @Autowired @Qualifier("headerSource")
+    @Autowired
+    @Qualifier("headerSource")
     DataSourceArray<BlockHeader> headerStore;
 
     @Autowired
@@ -61,7 +62,7 @@ public class HeadersDownloader extends BlockDownloader {
 
     byte[] genesisHash;
 
-    int headersLoaded  = 0;
+    int headersLoaded = 0;
 
     @Autowired
     public HeadersDownloader(BlockHeaderValidator headerValidator) {
@@ -89,7 +90,8 @@ public class HeadersDownloader extends BlockDownloader {
         if (headers.get(headers.size() - 1).getNumber() == 1) {
             genesisHash = headers.get(headers.size() - 1).getHeader().getParentHash();
         }
-        logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
+        logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " +
+                            headers.get(headers.size() - 1).getNumber());
         for (BlockHeaderWrapper header : headers) {
             headerStore.set((int) header.getNumber(), header.getHeader());
             headersLoaded++;

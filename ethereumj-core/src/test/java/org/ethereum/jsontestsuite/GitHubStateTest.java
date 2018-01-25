@@ -20,24 +20,28 @@ package org.ethereum.jsontestsuite;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.GeneralStateTestSuite;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
     static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "d1ece13ebfb2adb27061ae5a6155bd9ed9773d8f"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
-    static GitHubJSONTestSuite.Network[] targetNets = {
-            GitHubJSONTestSuite.Network.Frontier,
-            GitHubJSONTestSuite.Network.Homestead,
-            GitHubJSONTestSuite.Network.EIP150,
-            GitHubJSONTestSuite.Network.EIP158,
-            GitHubJSONTestSuite.Network.Byzantium
-    };
+    static String treeSHA = "d1ece13ebfb2adb27061ae5a6155bd9ed9773d8f";
+            // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
+    static GitHubJSONTestSuite.Network[] targetNets =
+            {GitHubJSONTestSuite.Network.Frontier, GitHubJSONTestSuite.Network.Homestead,
+                    GitHubJSONTestSuite.Network.EIP150, GitHubJSONTestSuite.Network.EIP158,
+                    GitHubJSONTestSuite.Network.Byzantium};
 
     static GeneralStateTestSuite suite;
 
@@ -58,8 +62,9 @@ public class GitHubStateTest {
     // omit GeneralStateTestSuite initialization when use this method
     // it reduces impact on GitHub API
     public void stSingleTest() throws IOException {
-        GeneralStateTestSuite.runSingle(
-                "stPreCompiledContracts2/modexpRandomInput.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+        GeneralStateTestSuite.runSingle("stPreCompiledContracts2/modexpRandomInput.json",
+                                        commitSHA,
+                                        GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
@@ -155,8 +160,10 @@ public class GitHubStateTest {
     @Ignore
     public void stMemoryStressTest() throws IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
-        excluded.add("mload32bitBound_return"); // The test extends memory to 4Gb which can't be handled with Java arrays
+        excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java
+        // arrays
+        excluded.add("mload32bitBound_return"); // The test extends memory to 4Gb which can't be handled with Java
+        // arrays
         excluded.add("mload32bitBound_Msize"); // The test extends memory to 4Gb which can't be handled with Java arrays
         suite.runAll("stMemoryStressTest", excluded);
     }
@@ -221,20 +228,19 @@ public class GitHubStateTest {
     @Test
     public void stTransactionTest() throws IOException {
         // TODO enable when zero sig Txes comes in
-        suite.runAll("stTransactionTest", new HashSet<>(Arrays.asList(
-                "zeroSigTransactionCreate",
-                "zeroSigTransactionCreatePrice0",
-                "zeroSigTransacrionCreatePrice0",
-                "zeroSigTransaction",
-                "zeroSigTransaction0Price",
-                "zeroSigTransactionInvChainID",
-                "zeroSigTransactionInvNonce",
-                "zeroSigTransactionInvNonce2",
-                "zeroSigTransactionOOG",
-                "zeroSigTransactionOrigin",
-                "zeroSigTransactionToZero",
-                "zeroSigTransactionToZero2"
-        )));
+        suite.runAll("stTransactionTest",
+                     new HashSet<>(Arrays.asList("zeroSigTransactionCreate",
+                                                 "zeroSigTransactionCreatePrice0",
+                                                 "zeroSigTransacrionCreatePrice0",
+                                                 "zeroSigTransaction",
+                                                 "zeroSigTransaction0Price",
+                                                 "zeroSigTransactionInvChainID",
+                                                 "zeroSigTransactionInvNonce",
+                                                 "zeroSigTransactionInvNonce2",
+                                                 "zeroSigTransactionOOG",
+                                                 "zeroSigTransactionOrigin",
+                                                 "zeroSigTransactionToZero",
+                                                 "zeroSigTransactionToZero2")));
     }
 
     @Test

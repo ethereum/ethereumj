@@ -19,7 +19,12 @@ package org.ethereum.net.rlpx.discover.table;
 
 import org.ethereum.net.rlpx.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by kest on 5/25/15.
@@ -48,12 +53,10 @@ public class NodeTable {
         return node;
     }
 
-    public final void initialize()
-    {
+    public final void initialize() {
         nodes = new ArrayList<>();
         buckets = new NodeBucket[KademliaOptions.BINS];
-        for (int i = 0; i < KademliaOptions.BINS; i++)
-        {
+        for (int i = 0; i < KademliaOptions.BINS; i++) {
             buckets[i] = new NodeBucket(i);
         }
     }
@@ -119,22 +122,19 @@ public class NodeTable {
         return nodes.size();
     }
 
-    public synchronized List<NodeEntry> getAllNodes()
-    {
+    public synchronized List<NodeEntry> getAllNodes() {
         List<NodeEntry> nodes = new ArrayList<>();
 
-        for (NodeBucket b : buckets)
-        {
-//            nodes.addAll(b.getNodes());
-            for (NodeEntry e : b.getNodes())
-            {
+        for (NodeBucket b : buckets) {
+            //            nodes.addAll(b.getNodes());
+            for (NodeEntry e : b.getNodes()) {
                 if (!e.getNode().equals(node)) {
                     nodes.add(e);
                 }
             }
         }
 
-//        boolean res = nodes.remove(node);
+        //        boolean res = nodes.remove(node);
         return nodes;
     }
 

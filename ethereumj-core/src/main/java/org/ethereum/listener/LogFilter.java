@@ -17,6 +17,8 @@
  */
 package org.ethereum.listener;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.ethereum.core.Bloom;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -24,8 +26,6 @@ import org.ethereum.vm.LogInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * Created by Anton Nashatyrev on 12.04.2016.
@@ -36,18 +36,18 @@ public class LogFilter {
     private byte[][] contractAddresses = new byte[0][];
     private Bloom[][] filterBlooms;
 
-    public LogFilter withContractAddress(byte[] ... orAddress) {
+    public LogFilter withContractAddress(byte[]... orAddress) {
         contractAddresses = orAddress;
         return this;
     }
 
-    public LogFilter withTopic(byte[] ... orTopic) {
+    public LogFilter withTopic(byte[]... orTopic) {
         topics.add(orTopic);
         return this;
     }
 
     private void initBlooms() {
-        if (filterBlooms != null) return;
+        if (filterBlooms != null) { return; }
 
         List<byte[][]> addrAndTopics = new ArrayList<>(topics);
         addrAndTopics.add(contractAddresses);
@@ -56,7 +56,7 @@ public class LogFilter {
         for (int i = 0; i < addrAndTopics.size(); i++) {
             byte[][] orTopics = addrAndTopics.get(i);
             if (orTopics == null || orTopics.length == 0) {
-                filterBlooms[i] = new Bloom[] {new Bloom()}; // always matches
+                filterBlooms[i] = new Bloom[]{new Bloom()}; // always matches
             } else {
                 filterBlooms[i] = new Bloom[orTopics.length];
                 for (int j = 0; j < orTopics.length; j++) {
@@ -76,7 +76,7 @@ public class LogFilter {
                     break;
                 }
             }
-            if (!orMatches) return false;
+            if (!orMatches) { return false; }
         }
         return true;
     }
@@ -84,17 +84,17 @@ public class LogFilter {
     public boolean matchesContractAddress(byte[] toAddr) {
         initBlooms();
         for (byte[] address : contractAddresses) {
-            if (Arrays.equals(address, toAddr)) return true;
+            if (Arrays.equals(address, toAddr)) { return true; }
         }
         return contractAddresses.length == 0;
     }
 
     public boolean matchesExactly(LogInfo logInfo) {
         initBlooms();
-        if (!matchesContractAddress(logInfo.getAddress())) return false;
+        if (!matchesContractAddress(logInfo.getAddress())) { return false; }
         List<DataWord> logTopics = logInfo.getTopics();
         for (int i = 0; i < this.topics.size(); i++) {
-            if (i >= logTopics.size()) return false;
+            if (i >= logTopics.size()) { return false; }
             byte[][] orTopics = topics.get(i);
             if (orTopics != null && orTopics.length > 0) {
                 boolean orMatches = false;
@@ -105,7 +105,7 @@ public class LogFilter {
                         break;
                     }
                 }
-                if (!orMatches) return false;
+                if (!orMatches) { return false; }
             }
         }
         return true;

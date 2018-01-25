@@ -41,6 +41,7 @@ public interface BlockStore {
     Block getChainBlockByNumber(long blockNumber);
 
     Block getBlockByHash(byte[] hash);
+
     boolean isBlockExist(byte[] hash);
 
     List<byte[]> getListHashesEndWith(byte[] hash, long qty);

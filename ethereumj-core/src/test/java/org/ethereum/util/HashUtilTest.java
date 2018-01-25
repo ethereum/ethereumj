@@ -17,13 +17,11 @@
  */
 package org.ethereum.util;
 
-import org.ethereum.crypto.HashUtil;
-
-import org.junit.Test;
-
-import org.spongycastle.util.encoders.Hex;
-
 import static org.junit.Assert.assertEquals;
+
+import org.ethereum.crypto.HashUtil;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 public class HashUtilTest {
 

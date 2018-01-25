@@ -17,19 +17,28 @@
  */
 package org.ethereum.manager;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.EventDispatchThread;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Repository;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -39,13 +48,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import javax.annotation.PostConstruct;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
@@ -105,9 +112,8 @@ public class WorldManager {
     private BlockStore blockStore;
 
     @Autowired
-    public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final Blockchain blockchain,
-                        final BlockStore blockStore) {
+    public WorldManager(final SystemProperties config, final Repository repository, final EthereumListener listener,
+                        final Blockchain blockchain, final BlockStore blockStore) {
         this.listener = listener;
         this.blockchain = blockchain;
         this.repository = repository;
@@ -148,7 +154,7 @@ public class WorldManager {
     }
 
     public org.ethereum.facade.Repository getRepository() {
-        return (org.ethereum.facade.Repository)repository;
+        return (org.ethereum.facade.Repository) repository;
     }
 
     public Blockchain getBlockchain() {
@@ -169,8 +175,7 @@ public class WorldManager {
 
     public void loadBlockchain() {
 
-        if (!config.databaseReset() || config.databaseResetBlock() != 0)
-            blockStore.load();
+        if (!config.databaseReset() || config.databaseResetBlock() != 0) { blockStore.load(); }
 
         if (blockStore.getBestBlock() == null) {
             logger.info("DB is empty - adding Genesis");
@@ -178,16 +183,21 @@ public class WorldManager {
             Genesis genesis = Genesis.getInstance(config);
             Genesis.populateRepository(repository, genesis);
 
-//            repository.commitBlock(genesis.getHeader());
+            //            repository.commitBlock(genesis.getHeader());
             repository.commit();
 
-            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
+            blockStore.saveBlock(Genesis.getInstance(config),
+                                 Genesis.getInstance(config).getCumulativeDifficulty(),
+                                 true);
 
             blockchain.setBestBlock(Genesis.getInstance(config));
             blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
 
-            listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
-//            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
+            listener.onBlock(new BlockSummary(Genesis.getInstance(config),
+                                              new HashMap<byte[], BigInteger>(),
+                                              new ArrayList<TransactionReceipt>(),
+                                              new ArrayList<TransactionExecutionSummary>()));
+            //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");
         } else {
@@ -201,15 +211,19 @@ public class WorldManager {
             Block bestBlock = blockStore.getBestBlock();
             if (config.databaseReset() && config.databaseResetBlock() > 0) {
                 if (config.databaseResetBlock() > bestBlock.getNumber()) {
-                    logger.error("*** Can't reset to block [{}] since block store is at block [{}].", config.databaseResetBlock(), bestBlock);
+                    logger.error("*** Can't reset to block [{}] since block store is at block [{}].",
+                                 config.databaseResetBlock(),
+                                 bestBlock);
                     throw new RuntimeException("Reset block ahead of block store.");
                 }
                 bestBlock = blockStore.getChainBlockByNumber(config.databaseResetBlock());
 
                 Repository snapshot = repository.getSnapshotTo(bestBlock.getStateRoot());
                 if (false) { // TODO: some way to tell if the snapshot hasn't been pruned
-                    logger.error("*** Could not reset database to block [{}] with stateRoot [{}], since state information is " +
-                            "unavailable.  It might have been pruned from the database.");
+                    logger.error(
+                            "*** Could not reset database to block [{}] with stateRoot [{}], since state information " +
+                                    "is " +
+                                    "unavailable.  It might have been pruned from the database.");
                     throw new RuntimeException("State unavailable for reset block.");
                 }
             }
@@ -220,9 +234,9 @@ public class WorldManager {
             blockchain.setTotalDifficulty(totalDifficulty);
 
             logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",
-                    blockchain.getBestBlock().getNumber(),
-                    blockchain.getTotalDifficulty().toString(),
-                    Hex.toHexString(blockchain.getBestBlock().getStateRoot()));
+                        blockchain.getBestBlock().getNumber(),
+                        blockchain.getTotalDifficulty().toString(),
+                        Hex.toHexString(blockchain.getBestBlock().getStateRoot()));
         }
 
         if (config.rootHashStart() != null) {

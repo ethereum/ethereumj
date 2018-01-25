@@ -30,13 +30,9 @@ public class AbiTest {
 
     @Test
     public void simpleTest() throws IOException {
-        String contractAbi = "[{"
-                + "\"name\":\"simpleFunction\","
-                + "\"constant\":true,"
-                + "\"payable\":true,"
-                + "\"type\":\"function\","
-                + "\"inputs\": [{\"name\":\"_in\", \"type\":\"bytes32\"}],"
-                + "\"outputs\":[{\"name\":\"_out\",\"type\":\"bytes32\"}]}]";
+        String contractAbi = "[{" + "\"name\":\"simpleFunction\"," + "\"constant\":true," + "\"payable\":true," +
+                "\"type\":\"function\"," + "\"inputs\": [{\"name\":\"_in\", \"type\":\"bytes32\"}]," +
+                "\"outputs\":[{\"name\":\"_out\",\"type\":\"bytes32\"}]}]";
 
         Abi abi = Abi.fromJson(contractAbi);
         assertEquals(abi.size(), 1);
@@ -51,12 +47,9 @@ public class AbiTest {
 
     @Test
     public void simpleLegacyTest() throws IOException {
-        String contractAbi = "[{"
-                + "\"name\":\"simpleFunction\","
-                + "\"constant\":true,"
-                + "\"type\":\"function\","
-                + "\"inputs\": [{\"name\":\"_in\", \"type\":\"bytes32\"}],"
-                + "\"outputs\":[{\"name\":\"_out\",\"type\":\"bytes32\"}]}]";
+        String contractAbi = "[{" + "\"name\":\"simpleFunction\"," + "\"constant\":true," + "\"type\":\"function\"," +
+                "\"inputs\": [{\"name\":\"_in\", \"type\":\"bytes32\"}]," +
+                "\"outputs\":[{\"name\":\"_out\",\"type\":\"bytes32\"}]}]";
 
         Abi abi = Abi.fromJson(contractAbi);
         assertEquals(abi.size(), 1);

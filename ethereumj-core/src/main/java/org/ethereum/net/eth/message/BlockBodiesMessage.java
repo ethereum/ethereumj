@@ -17,7 +17,6 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
@@ -28,9 +27,8 @@ import java.util.List;
 /**
  * Wrapper around an Ethereum BlockBodies message on the network
  *
- * @see EthMessageCodes#BLOCK_BODIES
- *
  * @author Mikhail Kalinin
+ * @see EthMessageCodes#BLOCK_BODIES
  * @since 04.09.2015
  */
 public class BlockBodiesMessage extends EthMessage {
@@ -47,7 +45,7 @@ public class BlockBodiesMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockBodies = new ArrayList<>();
@@ -60,8 +58,7 @@ public class BlockBodiesMessage extends EthMessage {
 
     private void encode() {
 
-        byte[][] encodedElementArray = blockBodies
-                .toArray(new byte[blockBodies.size()][]);
+        byte[][] encodedElementArray = blockBodies.toArray(new byte[blockBodies.size()][]);
 
         this.encoded = RLP.encodeList(encodedElementArray);
     }
@@ -69,7 +66,7 @@ public class BlockBodiesMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 

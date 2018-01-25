@@ -18,8 +18,6 @@
 package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
@@ -29,7 +27,6 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.DataWord;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -47,10 +44,7 @@ public class TransactionStoreTest {
 
     @Test
     public void simpleTest() {
-        String contractSrc =
-                "contract Adder {" +
-                "  function add(int a, int b) returns (int) {return a + b;}" +
-                "}";
+        String contractSrc = "contract Adder {" + "  function add(int a, int b) returns (int) {return a + b;}" + "}";
         HashMapDB<byte[]> txDb = new HashMapDB<>();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
@@ -86,11 +80,8 @@ public class TransactionStoreTest {
         // check that TransactionInfo is always returned from the main chain for
         // transaction which included into blocks from different forks
 
-        String contractSrc =
-                "contract Adder {" +
-                "  int public lastResult;" +
-                "  function add(int a, int b) returns (int) {lastResult = a + b; return lastResult; }" +
-                "}";
+        String contractSrc = "contract Adder {" + "  int public lastResult;" +
+                "  function add(int a, int b) returns (int) {lastResult = a + b; return lastResult; }" + "}";
         HashMapDB txDb = new HashMapDB();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();

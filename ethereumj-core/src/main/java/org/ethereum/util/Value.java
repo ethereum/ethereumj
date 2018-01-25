@@ -18,12 +18,10 @@
 package org.ethereum.util;
 
 import com.cedarsoftware.util.DeepEquals;
-
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,6 +36,21 @@ public class Value {
 
     private boolean decoded = false;
 
+    public Value() {
+    }
+
+    public Value(Object obj) {
+
+        this.decoded = true;
+        if (obj == null) { return; }
+
+        if (obj instanceof Value) {
+            this.value = ((Value) obj).asObj();
+        } else {
+            this.value = obj;
+        }
+    }
+
     public static Value fromRlpEncoded(byte[] data) {
 
         if (data != null && data.length != 0) {
@@ -48,23 +61,8 @@ public class Value {
         return null;
     }
 
-    public Value(){
-    }
-
-    public void init(byte[] rlp){
+    public void init(byte[] rlp) {
         this.rlp = rlp;
-    }
-
-    public Value(Object obj) {
-
-        this.decoded = true;
-        if (obj == null) return;
-
-        if (obj instanceof Value) {
-            this.value = ((Value) obj).asObj();
-        } else {
-            this.value = obj;
-        }
     }
 
     public Value withHash(byte[] hash) {
@@ -132,11 +130,11 @@ public class Value {
         return ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
-    public String getHex(){
+    public String getHex() {
         return Hex.toHexString(this.encode());
     }
 
-    public byte[] getData(){
+    public byte[] getData() {
         return this.encode();
     }
 
@@ -164,7 +162,7 @@ public class Value {
      *      Utility
      * *****************/
 
-    public void decode(){
+    public void decode() {
         if (!this.decoded) {
             this.value = RLP.decode(rlp, 0).getDecoded();
             this.decoded = true;
@@ -172,14 +170,12 @@ public class Value {
     }
 
     public byte[] encode() {
-        if (rlp == null)
-            rlp = RLP.encode(value);
+        if (rlp == null) { rlp = RLP.encode(value); }
         return rlp;
     }
 
-    public byte[] hash(){
-        if (sha3 == null)
-            sha3 = HashUtil.sha3(encode());
+    public byte[] hash() {
+        if (sha3 == null) { sha3 = HashUtil.sha3(encode()); }
         return sha3;
     }
 
@@ -233,7 +229,7 @@ public class Value {
         }
 
         for (byte aData : data) {
-            if (aData > 32 && aData < 126) ++readableChars;
+            if (aData > 32 && aData < 126) { ++readableChars; }
         }
 
         return (double) readableChars / (double) data.length > 0.55;
@@ -248,9 +244,7 @@ public class Value {
 
         for (byte aData : data) {
 
-            if ((aData >= 48 && aData <= 57)
-                    || (aData >= 97 && aData <= 102))
-                ++hexChars;
+            if ((aData >= 48 && aData <= 57) || (aData >= 97 && aData <= 102)) { ++hexChars; }
         }
 
         return (double) hexChars / (double) data.length > 0.9;
@@ -268,10 +262,10 @@ public class Value {
 
     public boolean isEmpty() {
         decode();
-        if (isNull()) return true;
-        if (isBytes() && asBytes().length == 0) return true;
-        if (isList() && asList().isEmpty()) return true;
-        if (isString() && asString().equals("")) return true;
+        if (isNull()) { return true; }
+        if (isBytes() && asBytes().length == 0) { return true; }
+        if (isList() && asList().isEmpty()) { return true; }
+        if (isString() && asString().equals("")) { return true; }
 
         return false;
     }
@@ -325,8 +319,7 @@ public class Value {
                 } else {
                     stringBuilder.append(val.toString());
                 }
-                if (i < list.length - 1)
-                    stringBuilder.append(", ");
+                if (i < list.length - 1) { stringBuilder.append(", "); }
             }
             stringBuilder.append("] ");
 

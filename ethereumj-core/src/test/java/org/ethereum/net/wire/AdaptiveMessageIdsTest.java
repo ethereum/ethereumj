@@ -17,6 +17,9 @@
  */
 package org.ethereum.net.wire;
 
+import static org.ethereum.net.eth.EthVersion.V62;
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
@@ -24,16 +27,11 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.rlpx.MessageCodesResolver;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
-import static org.ethereum.net.eth.EthVersion.*;
 
 /**
  * @author Roman Mandeleil
@@ -107,9 +105,8 @@ public class AdaptiveMessageIdsTest {
     @Test
     public void test4() {
 
-        List<Capability> capabilities = Arrays.asList(
-                new Capability(Capability.ETH, EthVersion.V62.getCode()),
-                new Capability(Capability.SHH, ShhHandler.VERSION));
+        List<Capability> capabilities = Arrays.asList(new Capability(Capability.ETH, EthVersion.V62.getCode()),
+                                                      new Capability(Capability.SHH, ShhHandler.VERSION));
 
         messageCodesResolver.init(capabilities);
 
@@ -130,9 +127,8 @@ public class AdaptiveMessageIdsTest {
     @Test // Capabilities should be read in alphabetical order
     public void test5() {
 
-        List<Capability> capabilities = Arrays.asList(
-                new Capability(Capability.SHH, ShhHandler.VERSION),
-                new Capability(Capability.ETH, EthVersion.V62.getCode()));
+        List<Capability> capabilities = Arrays.asList(new Capability(Capability.SHH, ShhHandler.VERSION),
+                                                      new Capability(Capability.ETH, EthVersion.V62.getCode()));
 
         messageCodesResolver.init(capabilities);
 

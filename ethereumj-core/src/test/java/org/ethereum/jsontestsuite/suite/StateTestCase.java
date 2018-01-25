@@ -20,9 +20,9 @@ package org.ethereum.jsontestsuite.suite;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
-import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;
 import org.ethereum.jsontestsuite.suite.model.EnvTck;
+import org.ethereum.jsontestsuite.suite.model.TransactionTck;
 
 import java.util.Map;
 

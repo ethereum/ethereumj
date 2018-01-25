@@ -17,6 +17,14 @@
  */
 package org.ethereum.core;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.ethereum.util.BIUtil.toBI;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -26,12 +34,12 @@ import org.ethereum.vm.program.InternalTransaction;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;
-import java.util.*;
-
-import static java.util.Collections.*;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-import static org.ethereum.util.BIUtil.toBI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TransactionExecutionSummary {
 
@@ -70,53 +78,8 @@ public class TransactionExecutionSummary {
         this.parsed = false;
     }
 
-    public void rlpParse() {
-        if (parsed) return;
-
-        RLPList decodedTxList = RLP.decode2(rlpEncoded);
-        RLPList summary = (RLPList) decodedTxList.get(0);
-
-        this.tx = new Transaction(summary.get(0).getRLPData());
-        this.value = decodeBigInteger(summary.get(1).getRLPData());
-        this.gasPrice = decodeBigInteger(summary.get(2).getRLPData());
-        this.gasLimit = decodeBigInteger(summary.get(3).getRLPData());
-        this.gasUsed = decodeBigInteger(summary.get(4).getRLPData());
-        this.gasLeftover = decodeBigInteger(summary.get(5).getRLPData());
-        this.gasRefund = decodeBigInteger(summary.get(6).getRLPData());
-        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(7));
-        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(8));
-        this.touchedStorage = decodeTouchedStorage(summary.get(9));
-        this.result = summary.get(10).getRLPData();
-        this.logs = decodeLogs((RLPList) summary.get(11));
-        byte[] failed = summary.get(12).getRLPData();
-        this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
-    }
-
     private static BigInteger decodeBigInteger(byte[] encoded) {
         return isEmpty(encoded) ? BigInteger.ZERO : new BigInteger(1, encoded);
-    }
-
-    public byte[] getEncoded() {
-        if (rlpEncoded != null) return rlpEncoded;
-
-
-        this.rlpEncoded = RLP.encodeList(
-                this.tx.getEncoded(),
-                RLP.encodeBigInteger(this.value),
-                RLP.encodeBigInteger(this.gasPrice),
-                RLP.encodeBigInteger(this.gasLimit),
-                RLP.encodeBigInteger(this.gasUsed),
-                RLP.encodeBigInteger(this.gasLeftover),
-                RLP.encodeBigInteger(this.gasRefund),
-                encodeDeletedAccounts(this.deletedAccounts),
-                encodeInternalTransactions(this.internalTransactions),
-                encodeTouchedStorage(this.touchedStorage),
-                RLP.encodeElement(this.result),
-                encodeLogs(this.logs),
-                RLP.encodeInt(this.failed ? 1 : 0)
-        );
-
-        return rlpEncoded;
     }
 
     public static byte[] encodeTouchedStorage(TransactionTouchedStorage touchedStorage) {
@@ -227,8 +190,55 @@ public class TransactionExecutionSummary {
         return result;
     }
 
+    public static Builder builderFor(Transaction transaction) {
+        return new Builder(transaction);
+    }
+
+    public void rlpParse() {
+        if (parsed) { return; }
+
+        RLPList decodedTxList = RLP.decode2(rlpEncoded);
+        RLPList summary = (RLPList) decodedTxList.get(0);
+
+        this.tx = new Transaction(summary.get(0).getRLPData());
+        this.value = decodeBigInteger(summary.get(1).getRLPData());
+        this.gasPrice = decodeBigInteger(summary.get(2).getRLPData());
+        this.gasLimit = decodeBigInteger(summary.get(3).getRLPData());
+        this.gasUsed = decodeBigInteger(summary.get(4).getRLPData());
+        this.gasLeftover = decodeBigInteger(summary.get(5).getRLPData());
+        this.gasRefund = decodeBigInteger(summary.get(6).getRLPData());
+        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(7));
+        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(8));
+        this.touchedStorage = decodeTouchedStorage(summary.get(9));
+        this.result = summary.get(10).getRLPData();
+        this.logs = decodeLogs((RLPList) summary.get(11));
+        byte[] failed = summary.get(12).getRLPData();
+        this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
+    }
+
+    public byte[] getEncoded() {
+        if (rlpEncoded != null) { return rlpEncoded; }
+
+
+        this.rlpEncoded = RLP.encodeList(this.tx.getEncoded(),
+                                         RLP.encodeBigInteger(this.value),
+                                         RLP.encodeBigInteger(this.gasPrice),
+                                         RLP.encodeBigInteger(this.gasLimit),
+                                         RLP.encodeBigInteger(this.gasUsed),
+                                         RLP.encodeBigInteger(this.gasLeftover),
+                                         RLP.encodeBigInteger(this.gasRefund),
+                                         encodeDeletedAccounts(this.deletedAccounts),
+                                         encodeInternalTransactions(this.internalTransactions),
+                                         encodeTouchedStorage(this.touchedStorage),
+                                         RLP.encodeElement(this.result),
+                                         encodeLogs(this.logs),
+                                         RLP.encodeInt(this.failed ? 1 : 0));
+
+        return rlpEncoded;
+    }
+
     public Transaction getTransaction() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return tx;
     }
 
@@ -241,88 +251,83 @@ public class TransactionExecutionSummary {
     }
 
     public BigInteger getFee() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return calcCost(gasLimit.subtract(gasLeftover.add(gasRefund)));
     }
 
     public BigInteger getRefund() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return calcCost(gasRefund);
     }
 
     public BigInteger getLeftover() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return calcCost(gasLeftover);
     }
 
     public BigInteger getGasPrice() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return gasPrice;
     }
 
     public BigInteger getGasLimit() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return gasLimit;
     }
 
     public BigInteger getGasUsed() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return gasUsed;
     }
 
     public BigInteger getGasLeftover() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return gasLeftover;
     }
 
     public BigInteger getValue() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return value;
     }
 
     public List<DataWord> getDeletedAccounts() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return deletedAccounts;
     }
 
     public List<InternalTransaction> getInternalTransactions() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return internalTransactions;
     }
 
     @Deprecated
-    /* Use getTouchedStorage().getAll() instead */
-    public Map<DataWord, DataWord> getStorageDiff() {
-        if (!parsed) rlpParse();
+    /* Use getTouchedStorage().getAll() instead */ public Map<DataWord, DataWord> getStorageDiff() {
+        if (!parsed) { rlpParse(); }
         return storageDiff;
     }
 
     public BigInteger getGasRefund() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return gasRefund;
     }
 
     public boolean isFailed() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return failed;
     }
 
     public byte[] getResult() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return result;
     }
 
     public List<LogInfo> getLogs() {
-        if (!parsed) rlpParse();
+        if (!parsed) { rlpParse(); }
         return logs;
     }
 
     public TransactionTouchedStorage getTouchedStorage() {
         return touchedStorage;
-    }
-
-    public static Builder builderFor(Transaction transaction) {
-        return new Builder(transaction);
     }
 
     public static class Builder {

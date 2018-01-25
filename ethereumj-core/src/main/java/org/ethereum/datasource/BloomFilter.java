@@ -24,12 +24,12 @@ import java.util.BitSet;
 
 /**
  * The class mostly borrowed from http://github.com/magnuss/java-bloomfilter
- *
+ * <p>
  * Implementation of a Bloom-filter, as described here:
  * http://en.wikipedia.org/wiki/Bloom_filter
- *
+ * <p>
  * For updates and bugfixes, see http://github.com/magnuss/java-bloomfilter
- *
+ * <p>
  * Inspired by the SimpleBloomFilter-class written by Ian Clarke. This
  * implementation provides a more evenly distributed Hash-function by
  * using a proper digest instead of the Java RNG. Many of the changes
@@ -58,22 +58,23 @@ public class BloomFilter implements Serializable {
         this.expectedNumberOfFilterElements = n;
         this.k = k;
         this.bitsPerElement = c;
-        this.bitSetSize = (int)Math.ceil(c * n);
+        this.bitSetSize = (int) Math.ceil(c * n);
         numberOfAddedElements = 0;
         this.bitset = new BitSet(bitSetSize);
     }
 
     /**
-     * Constructs an empty Bloom filter. The optimal number of hash functions (k) is estimated from the total size of the Bloom
+     * Constructs an empty Bloom filter. The optimal number of hash functions (k) is estimated from the total size of
+     * the Bloom
      * and the number of expected elements.
      *
-     * @param bitSetSize defines how many bits should be used in total for the filter.
+     * @param bitSetSize              defines how many bits should be used in total for the filter.
      * @param expectedNumberOElements defines the maximum number of elements the filter is expected to contain.
      */
     public BloomFilter(int bitSetSize, int expectedNumberOElements) {
-        this(bitSetSize / (double)expectedNumberOElements,
-                expectedNumberOElements,
-                (int) Math.round((bitSetSize / (double) expectedNumberOElements) * Math.log(2.0)));
+        this(bitSetSize / (double) expectedNumberOElements,
+             expectedNumberOElements,
+             (int) Math.round((bitSetSize / (double) expectedNumberOElements) * Math.log(2.0)));
     }
 
     /**
@@ -85,20 +86,23 @@ public class BloomFilter implements Serializable {
      * @param expectedNumberOfElements is the expected number of elements in the Bloom filter.
      */
     public BloomFilter(double falsePositiveProbability, int expectedNumberOfElements) {
-        this(Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2))) / Math.log(2), // c = k / ln(2)
-                expectedNumberOfElements,
-                (int)Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2)))); // k = ceil(-log_2(false prob.))
+        this(Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2))) / Math.log(2),
+             // c = k / ln(2)
+             expectedNumberOfElements,
+             (int) Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2)))); // k = ceil(-log_2(false prob.))
     }
 
     /**
      * Construct a new Bloom filter based on existing Bloom filter data.
      *
-     * @param bitSetSize defines how many bits should be used for the filter.
+     * @param bitSetSize                     defines how many bits should be used for the filter.
      * @param expectedNumberOfFilterElements defines the maximum number of elements the filter is expected to contain.
-     * @param actualNumberOfFilterElements specifies how many elements have been inserted into the <code>filterData</code> BitSet.
-     * @param filterData a BitSet representing an existing Bloom filter.
+     * @param actualNumberOfFilterElements   specifies how many elements have been inserted into the
+     *                                       <code>filterData</code> BitSet.
+     * @param filterData                     a BitSet representing an existing Bloom filter.
      */
-    public BloomFilter(int bitSetSize, int expectedNumberOfFilterElements, int actualNumberOfFilterElements, BitSet filterData) {
+    public BloomFilter(int bitSetSize, int expectedNumberOfFilterElements, int actualNumberOfFilterElements,
+                       BitSet filterData) {
         this(bitSetSize, expectedNumberOfFilterElements);
         this.bitset = filterData;
         this.numberOfAddedElements = actualNumberOfFilterElements;
@@ -136,6 +140,7 @@ public class BloomFilter implements Serializable {
 
     /**
      * Calculates a hash code for this class.
+     *
      * @return hash code representing the contents of an instance of this class.
      */
     @Override
@@ -173,8 +178,7 @@ public class BloomFilter implements Serializable {
      */
     public double getFalsePositiveProbability(double numberOfElements) {
         // (1 - e^(-k * n / m)) ^ k
-        return Math.pow((1 - Math.exp(-k * (double) numberOfElements
-                / (double) bitSetSize)), k);
+        return Math.pow((1 - Math.exp(-k * (double) numberOfElements / (double) bitSetSize)), k);
 
     }
 
@@ -210,7 +214,6 @@ public class BloomFilter implements Serializable {
     }
 
 
-
     /**
      * Adds an array of bytes to the Bloom filter.
      *
@@ -218,9 +221,8 @@ public class BloomFilter implements Serializable {
      */
     public synchronized void add(byte[] bytes) {
         int[] hashes = createHashes(bytes, k);
-        for (int hash : hashes)
-            bitset.set(Math.abs(hash % bitSetSize), true);
-        numberOfAddedElements ++;
+        for (int hash : hashes) { bitset.set(Math.abs(hash % bitSetSize), true); }
+        numberOfAddedElements++;
     }
 
     private int[] createHashes(byte[] bytes, int k) {
@@ -257,6 +259,7 @@ public class BloomFilter implements Serializable {
 
     /**
      * Read a single bit from the Bloom filter.
+     *
      * @param bit the bit to read.
      * @return true if the bit is set, false if it is not.
      */
@@ -266,7 +269,8 @@ public class BloomFilter implements Serializable {
 
     /**
      * Set a single bit in the Bloom filter.
-     * @param bit is the bit to set.
+     *
+     * @param bit   is the bit to set.
      * @param value If true, the bit is set. If false, the bit is cleared.
      */
     public synchronized void setBit(int bit, boolean value) {
@@ -275,6 +279,7 @@ public class BloomFilter implements Serializable {
 
     /**
      * Return the bit set used to store the Bloom filter.
+     *
      * @return bit set representing the Bloom filter.
      */
     public synchronized BitSet getBitSet() {
@@ -322,12 +327,13 @@ public class BloomFilter implements Serializable {
     }
 
     /**
-     * Get actual number of bits per element based on the number of elements that have currently been inserted and the length
+     * Get actual number of bits per element based on the number of elements that have currently been inserted and
+     * the length
      * of the Bloom filter. See also getExpectedBitsPerElement().
      *
      * @return number of bits per element.
      */
     public double getBitsPerElement() {
-        return this.bitSetSize / (double)numberOfAddedElements;
+        return this.bitSetSize / (double) numberOfAddedElements;
     }
 }

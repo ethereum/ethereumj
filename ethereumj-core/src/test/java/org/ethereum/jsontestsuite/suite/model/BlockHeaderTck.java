@@ -178,24 +178,12 @@ public class BlockHeaderTck {
 
     @Override
     public String toString() {
-        return "BlockHeader{" +
-                "bloom='" + bloom + '\'' +
-                ", coinbase='" + coinbase + '\'' +
-                ", difficulty='" + difficulty + '\'' +
-                ", extraData='" + extraData + '\'' +
-                ", gasLimit='" + gasLimit + '\'' +
-                ", gasUsed='" + gasUsed + '\'' +
-                ", hash='" + hash + '\'' +
-                ", mixHash='" + mixHash + '\'' +
-                ", nonce='" + nonce + '\'' +
-                ", number='" + number + '\'' +
-                ", parentHash='" + parentHash + '\'' +
-                ", receiptTrie='" + receiptTrie + '\'' +
-                ", seedHash='" + seedHash + '\'' +
-                ", stateRoot='" + stateRoot + '\'' +
-                ", timestamp='" + timestamp + '\'' +
-                ", transactionsTrie='" + transactionsTrie + '\'' +
-                ", uncleHash='" + uncleHash + '\'' +
-                '}';
+        return "BlockHeader{" + "bloom='" + bloom + '\'' + ", coinbase='" + coinbase + '\'' + ", difficulty='" +
+                difficulty + '\'' + ", extraData='" + extraData + '\'' + ", gasLimit='" + gasLimit + '\'' +
+                ", gasUsed='" + gasUsed + '\'' + ", hash='" + hash + '\'' + ", mixHash='" + mixHash + '\'' +
+                ", nonce='" + nonce + '\'' + ", number='" + number + '\'' + ", parentHash='" + parentHash + '\'' +
+                ", receiptTrie='" + receiptTrie + '\'' + ", seedHash='" + seedHash + '\'' + ", stateRoot='" +
+                stateRoot + '\'' + ", timestamp='" + timestamp + '\'' + ", transactionsTrie='" + transactionsTrie +
+                '\'' + ", uncleHash='" + uncleHash + '\'' + '}';
     }
 }

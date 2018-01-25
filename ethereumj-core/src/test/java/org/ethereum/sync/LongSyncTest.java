@@ -17,23 +17,40 @@
  */
 package org.ethereum.sync;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.util.FileUtil.recursiveDelete;
+import static org.junit.Assert.fail;
+import static org.spongycastle.util.encoders.Hex.decode;
+
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -45,13 +62,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.util.FileUtil.recursiveDelete;
-import static org.junit.Assert.fail;
-import static org.spongycastle.util.encoders.Hex.decode;
 
 /**
  * @author Mikhail Kalinin
@@ -73,24 +89,31 @@ public class LongSyncTest {
     @BeforeClass
     public static void setup() throws IOException, URISyntaxException {
 
-        nodeA = new Node("enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334");
+        nodeA = new Node(
+                "enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334");
 
-        SysPropConfigA.props.overrideParams(
-                "peer.listen.port", "30334",
-                "peer.privateKey", "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
-                // nodeId: 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
-                "genesis", "genesis-light-old.json"
-        );
+        SysPropConfigA.props.overrideParams("peer.listen.port",
+                                            "30334",
+                                            "peer.privateKey",
+                                            "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
+                                            // nodeId:
+                                            // 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
+                                            "genesis",
+                                            "genesis-light-old.json");
         SysPropConfigA.props.setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
 
-        SysPropConfigB.props.overrideParams(
-                "peer.listen.port", "30335",
-                "peer.privateKey", "6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec",
-                "genesis", "genesis-light-old.json",
-                "sync.enabled", "true",
-                "sync.max.hashes.ask", "3",
-                "sync.max.blocks.ask", "2"
-        );
+        SysPropConfigB.props.overrideParams("peer.listen.port",
+                                            "30335",
+                                            "peer.privateKey",
+                                            "6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec",
+                                            "genesis",
+                                            "genesis-light-old.json",
+                                            "sync.enabled",
+                                            "true",
+                                            "sync.max.hashes.ask",
+                                            "3",
+                                            "sync.max.blocks.ask",
+                                            "2");
         SysPropConfigB.props.setBlockchainConfig(StandaloneBlockchain.getEasyMiningConfig());
 
         /*
@@ -167,7 +190,7 @@ public class LongSyncTest {
         semaphore.await(40, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -181,9 +204,7 @@ public class LongSyncTest {
 
             @Override
             protected void processGetBlockBodies(GetBlockBodiesMessage msg) {
-                List<byte[]> bodies = Arrays.asList(
-                        mainB1B10.get(0).getEncodedBody()
-                );
+                List<byte[]> bodies = Arrays.asList(mainB1B10.get(0).getEncodedBody());
 
                 BlockBodiesMessage response = new BlockBodiesMessage(bodies);
                 sendMessage(response);
@@ -207,7 +228,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -227,12 +248,10 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
-                        mainB1B10.get(0).getHeader(),
-                        mainB1B10.get(1).getHeader(),
-                        mainB1B10.get(2).getHeader(),
-                        mainB1B10.get(3).getHeader()
-                );
+                List<BlockHeader> headers = Arrays.asList(mainB1B10.get(0).getHeader(),
+                                                          mainB1B10.get(1).getHeader(),
+                                                          mainB1B10.get(2).getHeader(),
+                                                          mainB1B10.get(3).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -257,7 +276,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -302,7 +321,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -322,11 +341,9 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
-                        mainB1B10.get(1).getHeader(),
-                        mainB1B10.get(2).getHeader(),
-                        mainB1B10.get(3).getHeader()
-                );
+                List<BlockHeader> headers = Arrays.asList(mainB1B10.get(1).getHeader(),
+                                                          mainB1B10.get(2).getHeader(),
+                                                          mainB1B10.get(3).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -351,7 +368,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -366,9 +383,7 @@ public class LongSyncTest {
             @Override
             protected void processGetBlockHeaders(GetBlockHeadersMessage msg) {
 
-                List<BlockHeader> headers = Collections.singletonList(
-                        mainB1B10.get(1).getHeader()
-                );
+                List<BlockHeader> headers = Collections.singletonList(mainB1B10.get(1).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -404,7 +419,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -424,11 +439,9 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
-                        mainB1B10.get(0).getHeader(),
-                        mainB1B10.get(2).getHeader(),
-                        mainB1B10.get(1).getHeader()
-                );
+                List<BlockHeader> headers = Arrays.asList(mainB1B10.get(0).getHeader(),
+                                                          mainB1B10.get(2).getHeader(),
+                                                          mainB1B10.get(1).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -453,7 +466,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -473,12 +486,20 @@ public class LongSyncTest {
                     return;
                 }
 
-                List<BlockHeader> headers = Arrays.asList(
-                        mainB1B10.get(0).getHeader(),
-                        new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
-                                2, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
-                        mainB1B10.get(2).getHeader()
-                );
+                List<BlockHeader> headers = Arrays.asList(mainB1B10.get(0).getHeader(),
+                                                          new BlockHeader(new byte[32],
+                                                                          new byte[32],
+                                                                          new byte[32],
+                                                                          new byte[32],
+                                                                          new byte[32],
+                                                                          2,
+                                                                          new byte[]{0},
+                                                                          0,
+                                                                          0,
+                                                                          new byte[0],
+                                                                          new byte[0],
+                                                                          new byte[0]),
+                                                          mainB1B10.get(2).getHeader());
 
                 BlockHeadersMessage response = new BlockHeadersMessage(headers);
                 sendMessage(response);
@@ -503,7 +524,7 @@ public class LongSyncTest {
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -520,7 +541,7 @@ public class LongSyncTest {
         for (Block b : mainB1B10) {
             ImportResult result = blockchainA.tryToConnect(b);
             Assert.assertEquals(result, ImportResult.IMPORTED_BEST);
-            if (b.equals(best)) break;
+            if (b.equals(best)) { break; }
         }
 
         // A == best
@@ -546,7 +567,7 @@ public class LongSyncTest {
         ethereumB.connect(nodeA);
 
         semaphore.await(10, SECONDS);
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("Failed to set up peers");
         }
     }
@@ -565,7 +586,7 @@ public class LongSyncTest {
         @Bean
         @Scope("prototype")
         public Eth62 eth62() throws IllegalAccessException, InstantiationException {
-            if (eth62 != null) return eth62;
+            if (eth62 != null) { return eth62; }
             return new Eth62();
         }
     }

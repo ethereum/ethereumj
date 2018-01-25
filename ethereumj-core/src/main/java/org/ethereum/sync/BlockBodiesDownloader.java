@@ -17,7 +17,10 @@
  */
 package org.ethereum.sync;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
@@ -43,17 +46,16 @@ import java.util.List;
 @Component
 @Scope("prototype")
 public class BlockBodiesDownloader extends BlockDownloader {
+    public final static byte[] EMPTY_BODY = new byte[]{-62, -64, -64};
     private final static Logger logger = LoggerFactory.getLogger("sync");
-
-    public final static byte[] EMPTY_BODY = new byte[] {-62, -64, -64};
-
     @Autowired
     SyncPool syncPool;
 
     @Autowired
     IndexedBlockStore blockStore;
 
-    @Autowired @Qualifier("headerSource")
+    @Autowired
+    @Qualifier("headerSource")
     DataSourceArray<BlockHeader> headerStore;
 
     @Autowired
@@ -89,7 +91,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
     private void headerLoop() {
         while (curBlockIdx < headerStore.size() && !Thread.currentThread().isInterrupted()) {
             List<BlockHeaderWrapper> wrappers = new ArrayList<>();
-            List<BlockHeader> emptyBodyHeaders =  new ArrayList<>();
+            List<BlockHeader> emptyBodyHeaders = new ArrayList<>();
             for (int i = 0; i < 10000 - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
                 BlockHeader header = headerStore.get(curBlockIdx++);
                 wrappers.add(new BlockHeaderWrapper(header, new byte[0]));
@@ -97,7 +99,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
                 // Skip bodies download for blocks with empty body
                 boolean emptyBody = FastByteComparisons.equal(header.getTxTrieRoot(), HashUtil.EMPTY_TRIE_HASH);
                 emptyBody &= FastByteComparisons.equal(header.getUnclesHash(), HashUtil.EMPTY_LIST_HASH);
-                if (emptyBody) emptyBodyHeaders.add(header);
+                if (emptyBody) { emptyBodyHeaders.add(header); }
             }
 
             synchronized (this) {
@@ -117,15 +119,14 @@ public class BlockBodiesDownloader extends BlockDownloader {
     }
 
     private void addEmptyBodyBlocks(List<BlockHeader> blockHeaders) {
-        logger.debug("Adding {} empty body blocks to sync queue: {} ... {}", blockHeaders.size(),
-                blockHeaders.get(0).getShortDescr(), blockHeaders.get(blockHeaders.size() - 1).getShortDescr());
+        logger.debug("Adding {} empty body blocks to sync queue: {} ... {}",
+                     blockHeaders.size(),
+                     blockHeaders.get(0).getShortDescr(),
+                     blockHeaders.get(blockHeaders.size() - 1).getShortDescr());
 
         List<Block> finishedBlocks = new ArrayList<>();
         for (BlockHeader header : blockHeaders) {
-            Block block = new Block.Builder()
-                    .withHeader(header)
-                    .withBody(EMPTY_BODY)
-                    .create();
+            Block block = new Block.Builder().withHeader(header).withBody(EMPTY_BODY).create();
             finishedBlocks.add(block);
         }
 
@@ -152,7 +153,8 @@ public class BlockBodiesDownloader extends BlockDownloader {
             long c = System.currentTimeMillis();
             if (c - t > 5000) {
                 t = c;
-                logger.info("FastSync: downloaded blocks. Last: " + blockWrappers.get(blockWrappers.size() - 1).getBlock().getShortDescr());
+                logger.info("FastSync: downloaded blocks. Last: " +
+                                    blockWrappers.get(blockWrappers.size() - 1).getBlock().getShortDescr());
             }
         }
     }

@@ -120,17 +120,8 @@ public class TransactionTck {
 
     @Override
     public String toString() {
-        return "TransactionTck{" +
-                "data='" + data + '\'' +
-                ", gasLimit='" + gasLimit + '\'' +
-                ", gasPrice='" + gasPrice + '\'' +
-                ", nonce='" + nonce + '\'' +
-                ", r='" + r + '\'' +
-                ", s='" + s + '\'' +
-                ", to='" + to + '\'' +
-                ", v='" + v + '\'' +
-                ", value='" + value + '\'' +
-                ", secretKey='" + secretKey + '\'' +
-                '}';
+        return "TransactionTck{" + "data='" + data + '\'' + ", gasLimit='" + gasLimit + '\'' + ", gasPrice='" +
+                gasPrice + '\'' + ", nonce='" + nonce + '\'' + ", r='" + r + '\'' + ", s='" + s + '\'' + ", to='" + to +
+                '\'' + ", v='" + v + '\'' + ", value='" + value + '\'' + ", secretKey='" + secretKey + '\'' + '}';
     }
 }

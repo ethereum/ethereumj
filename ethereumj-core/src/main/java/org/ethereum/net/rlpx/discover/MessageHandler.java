@@ -29,8 +29,7 @@ import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 
 
-public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
-        implements Consumer<DiscoveryEvent> {
+public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent> implements Consumer<DiscoveryEvent> {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
     public Channel channel;

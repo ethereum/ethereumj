@@ -17,6 +17,11 @@
  */
 package org.ethereum.datasource;
 
+import static java.math.BigInteger.ONE;
+import static java.math.BigInteger.valueOf;
+import static org.spongycastle.util.encoders.Hex.decode;
+import static org.spongycastle.util.encoders.Hex.toHexString;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.inmem.HashMapDB;
@@ -26,11 +31,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigInteger;
-
-import static java.math.BigInteger.ONE;
-import static java.math.BigInteger.valueOf;
-import static org.spongycastle.util.encoders.Hex.decode;
-import static org.spongycastle.util.encoders.Hex.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 12.10.2016.
@@ -53,7 +53,7 @@ public class RepoNewTest {
         System.out.println(repo.dumpStateTrie());
 
         System.out.println("Root: " + toHexString(root1));
-//        System.out.println("Storage size: " + stateDb.getStorage().size());
+        //        System.out.println("Storage size: " + stateDb.getStorage().size());
 
         RepositoryRoot repo1 = new RepositoryRoot(stateDb, root1);
         Assert.assertEquals(repo1.getBalance(addr1), valueOf(1));
@@ -64,7 +64,7 @@ public class RepoNewTest {
         byte[] root2 = repo.getRoot();
 
         System.out.println("Root: " + toHexString(root2));
-//        System.out.println("Storage size: " + stateDb.getStorage().size());
+        //        System.out.println("Storage size: " + stateDb.getStorage().size());
 
         RepositoryRoot repo2 = new RepositoryRoot(stateDb, root1);
         System.out.println(repo2.dumpStateTrie());
@@ -91,7 +91,7 @@ public class RepoNewTest {
         Assert.assertEquals(repo2.getBalance(addr1), valueOf(0));
         Assert.assertEquals(repo2.getBalance(addr2), valueOf(33));
         Assert.assertEquals(repo2.getBalance(addr3), valueOf(333));
-//        byte[] root21 = repo2.getRoot();
+        //        byte[] root21 = repo2.getRoot();
         repo2.commit();
         byte[] root22 = repo2.getRoot();
         Assert.assertEquals(repo2.getBalance(addr1), valueOf(0));

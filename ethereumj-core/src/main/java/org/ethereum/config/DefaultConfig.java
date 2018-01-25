@@ -17,7 +17,7 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;
@@ -31,9 +31,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 /**
- *
  * @author Roman Mandeleil
- * Created on: 27/01/2015 01:05
+ *         Created on: 27/01/2015 01:05
  */
 @Configuration
 @Import(CommonConfig.class)
@@ -54,7 +53,7 @@ public class DefaultConfig {
     }
 
     @Bean
-    public BlockStore blockStore(){
+    public BlockStore blockStore() {
         commonConfig.fastSyncCleanUp();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
         Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
@@ -73,8 +72,9 @@ public class DefaultConfig {
     @Bean
     public PruneManager pruneManager() {
         if (config.databasePruneDepth() >= 0) {
-            return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
-                    config.databasePruneDepth());
+            return new PruneManager((IndexedBlockStore) blockStore(),
+                                    commonConfig.stateSource().getJournalSource(),
+                                    config.databasePruneDepth());
         } else {
             return new PruneManager(null, null, -1); // dummy
         }

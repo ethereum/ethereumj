@@ -17,6 +17,8 @@
  */
 package org.ethereum.jsontestsuite;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import org.ethereum.core.BlockHeader;
 import org.ethereum.jsontestsuite.suite.EthashTestCase;
 import org.ethereum.jsontestsuite.suite.EthashTestSuite;
@@ -26,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * @author Mikhail Kalinin

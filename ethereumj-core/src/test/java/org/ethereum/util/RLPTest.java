@@ -17,48 +17,104 @@
  */
 package org.ethereum.util;
 
-import org.ethereum.crypto.HashUtil;
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.wrap;
+import static org.ethereum.util.RLP.decode;
+import static org.ethereum.util.RLP.decode2;
+import static org.ethereum.util.RLP.decode2OneItem;
+import static org.ethereum.util.RLP.decodeBigInteger;
+import static org.ethereum.util.RLP.decodeIP4Bytes;
+import static org.ethereum.util.RLP.decodeInt;
+import static org.ethereum.util.RLP.decodeLong;
+import static org.ethereum.util.RLP.decodeShort;
+import static org.ethereum.util.RLP.encode;
+import static org.ethereum.util.RLP.encodeBigInteger;
+import static org.ethereum.util.RLP.encodeByte;
+import static org.ethereum.util.RLP.encodeElement;
+import static org.ethereum.util.RLP.encodeInt;
+import static org.ethereum.util.RLP.encodeLength;
+import static org.ethereum.util.RLP.encodeList;
+import static org.ethereum.util.RLP.encodeListHeader;
+import static org.ethereum.util.RLP.encodeSet;
+import static org.ethereum.util.RLP.encodeShort;
+import static org.ethereum.util.RLP.encodeString;
+import static org.ethereum.util.RLP.fullTraverse;
+import static org.ethereum.util.RLP.getFirstListElement;
+import static org.ethereum.util.RLP.getNextElementIndex;
+import static org.ethereum.util.RlpTestData.expected14;
+import static org.ethereum.util.RlpTestData.expected16;
+import static org.ethereum.util.RlpTestData.result01;
+import static org.ethereum.util.RlpTestData.result02;
+import static org.ethereum.util.RlpTestData.result03;
+import static org.ethereum.util.RlpTestData.result04;
+import static org.ethereum.util.RlpTestData.result05;
+import static org.ethereum.util.RlpTestData.result06;
+import static org.ethereum.util.RlpTestData.result07;
+import static org.ethereum.util.RlpTestData.result08;
+import static org.ethereum.util.RlpTestData.result09;
+import static org.ethereum.util.RlpTestData.result10;
+import static org.ethereum.util.RlpTestData.result11;
+import static org.ethereum.util.RlpTestData.result12;
+import static org.ethereum.util.RlpTestData.result13;
+import static org.ethereum.util.RlpTestData.result14;
+import static org.ethereum.util.RlpTestData.result15;
+import static org.ethereum.util.RlpTestData.result16;
+import static org.ethereum.util.RlpTestData.test01;
+import static org.ethereum.util.RlpTestData.test02;
+import static org.ethereum.util.RlpTestData.test03;
+import static org.ethereum.util.RlpTestData.test04;
+import static org.ethereum.util.RlpTestData.test05;
+import static org.ethereum.util.RlpTestData.test06;
+import static org.ethereum.util.RlpTestData.test07;
+import static org.ethereum.util.RlpTestData.test08;
+import static org.ethereum.util.RlpTestData.test09;
+import static org.ethereum.util.RlpTestData.test10;
+import static org.ethereum.util.RlpTestData.test11;
+import static org.ethereum.util.RlpTestData.test12;
+import static org.ethereum.util.RlpTestData.test13;
+import static org.ethereum.util.RlpTestData.test14;
+import static org.ethereum.util.RlpTestData.test15;
+import static org.ethereum.util.RlpTestData.test16;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.cedarsoftware.util.DeepEquals;
-
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.swarm.Util;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-
 import java.math.BigInteger;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import java.util.*;
-
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.wrap;
-import static org.ethereum.util.RLP.*;
-import static org.junit.Assert.*;
-import static org.ethereum.util.RlpTestData.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 public class RLPTest {
 
     @Test
     public void test1() throws UnknownHostException {
 
-        String peersPacket = "F8 4E 11 F8 4B C5 36 81 " +
-                "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
+        String peersPacket = "F8 4E 11 F8 4B C5 36 81 " + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
                 "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 " +
                 "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 " +
-                "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " +
-                "17 08 9F EA F8 4C 21 B0";
+                "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " + "17 08 9F EA F8 4C 21 B0";
 
         byte[] payload = Hex.decode(peersPacket);
 
@@ -70,12 +126,10 @@ public class RLPTest {
     @Test
     public void test2() throws UnknownHostException {
 
-        String peersPacket = "F8 4E 11 F8 4B C5 36 81 " +
-                "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
+        String peersPacket = "F8 4E 11 F8 4B C5 36 81 " + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
                 "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 " +
                 "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 " +
-                "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " +
-                "17 08 9F EA F8 4C 21 B0";
+                "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " + "17 08 9F EA F8 4C 21 B0";
 
         byte[] payload = Hex.decode(peersPacket);
         int oneInt = decodeInt(payload, 11);
@@ -86,17 +140,14 @@ public class RLPTest {
     @Test
     public void test3() throws UnknownHostException {
 
-        String peersPacket = "F8 9A 11 F8 4B C5 36 81 " +
-                "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
+        String peersPacket = "F8 9A 11 F8 4B C5 36 81 " + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
                 "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 " +
                 "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 " +
-                "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " +
-                "17 08 9F EA F8 4C 21 B0 F8 4A C4 36 02 0A 29 " +
+                "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " + "17 08 9F EA F8 4C 21 B0 F8 4A C4 36 02 0A 29 " +
                 "82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C FC 03 13 " +
                 "EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 F7 82 FF " +
                 "A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 E0 DE 49 " +
-                "98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 17 08 9F " +
-                "EA F8 4C 21 B0 ";
+                "98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 17 08 9F " + "EA F8 4C 21 B0 ";
 
         byte[] payload = Hex.decode(peersPacket);
 
@@ -111,8 +162,8 @@ public class RLPTest {
         nextIndex = getNextElementIndex(payload, nextIndex);
         BigInteger peerId = decodeBigInteger(payload, nextIndex);
 
-        BigInteger expectedPeerId =
-                new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
+        BigInteger expectedPeerId = new BigInteger(
+                "11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
         assertEquals(expectedPeerId, peerId);
 
         nextIndex = getNextElementIndex(payload, nextIndex);
@@ -127,8 +178,8 @@ public class RLPTest {
         nextIndex = getNextElementIndex(payload, nextIndex);
         peerId = decodeBigInteger(payload, nextIndex);
 
-        expectedPeerId =
-                new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
+        expectedPeerId = new BigInteger(
+                "11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
 
         assertEquals(expectedPeerId, peerId);
 
@@ -138,8 +189,7 @@ public class RLPTest {
     }
 
     @Test
-    /** encode byte */
-    public void test4() {
+    /** encode byte */ public void test4() {
 
         byte[] expected = {(byte) 0x80};
         byte[] data = encodeByte((byte) 0);
@@ -155,8 +205,7 @@ public class RLPTest {
     }
 
     @Test
-    /** encode short */
-    public void test5() {
+    /** encode short */ public void test5() {
 
         byte[] expected = {(byte) 0x80};
         byte[] data = encodeShort((byte) 0);
@@ -166,7 +215,7 @@ public class RLPTest {
         data = encodeShort((byte) 120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = { (byte) 0x7F};
+        byte[] expected3 = {(byte) 0x7F};
         data = encodeShort((byte) 127);
         assertArrayEquals(expected3, data);
 
@@ -180,8 +229,7 @@ public class RLPTest {
     }
 
     @Test
-    /** encode int */
-    public void testEncodeInt() {
+    /** encode int */ public void testEncodeInt() {
 
         byte[] expected = {(byte) 0x80};
         byte[] data = encodeInt(0);
@@ -254,8 +302,7 @@ public class RLPTest {
     }
 
     @Test
-    /** encode BigInteger */
-    public void test6() {
+    /** encode BigInteger */ public void test6() {
 
         byte[] expected = new byte[]{(byte) 0x80};
         byte[] data = encodeBigInteger(BigInteger.ZERO);
@@ -263,15 +310,15 @@ public class RLPTest {
     }
 
     @Test
-    /** encode string */
-    public void test7() {
+    /** encode string */ public void test7() {
 
         byte[] data = encodeString("");
         assertArrayEquals(new byte[]{(byte) 0x80}, data);
 
-        byte[] expected = {(byte) 0x90, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
-                (byte) 0x75, (byte) 0x6D, (byte) 0x4A, (byte) 0x20, (byte) 0x43, (byte) 0x6C,
-                (byte) 0x69, (byte) 0x65, (byte) 0x6E, (byte) 0x74};
+        byte[] expected =
+                {(byte) 0x90, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65, (byte) 0x75,
+                        (byte) 0x6D, (byte) 0x4A, (byte) 0x20, (byte) 0x43, (byte) 0x6C, (byte) 0x69, (byte) 0x65,
+                        (byte) 0x6E, (byte) 0x74};
 
         String test = "EthereumJ Client";
         data = encodeString(test);
@@ -280,46 +327,46 @@ public class RLPTest {
 
         String test2 = "Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++";
 
-        byte[] expected2 = {(byte) 0xAD, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
-                (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
-                (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
-                (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
-                (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
-                (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
-                (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
+        byte[] expected2 =
+                {(byte) 0xAD, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65, (byte) 0x75,
+                        (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F, (byte) 0x5A,
+                        (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78, (byte) 0x2F,
+                        (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30, (byte) 0x2F,
+                        (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65, (byte) 0x73,
+                        (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78, (byte) 0x2F,
+                        (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
 
         data = encodeString(test2);
         assertArrayEquals(expected2, data);
 
         String test3 = "Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++";
 
-        byte[] expected3 = {(byte) 0xB8, (byte) 0x5A,
-                (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
-                (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
-                (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
-                (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
-                (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
-                (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
-                (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B,
+        byte[] expected3 =
+                {(byte) 0xB8, (byte) 0x5A, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
+                        (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
+                        (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
+                        (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
+                        (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
+                        (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
+                        (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B,
 
-                (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
-                (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
-                (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
-                (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
-                (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
-                (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
-                (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
+                        (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65, (byte) 0x75,
+                        (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F, (byte) 0x5A,
+                        (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78, (byte) 0x2F,
+                        (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30, (byte) 0x2F,
+                        (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65, (byte) 0x73,
+                        (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78, (byte) 0x2F,
+                        (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
 
         data = encodeString(test3);
         assertArrayEquals(expected3, data);
     }
 
     @Test
-    /** encode byte array */
-    public void test8() {
+    /** encode byte array */ public void test8() {
 
-        String byteArr = "ce73660a06626c1b3fda7b18ef7ba3ce17b6bf604f9541d3c6c654b7ae88b239"
-                + "407f659c78f419025d785727ed017b6add21952d7e12007373e321dbc31824ba";
+        String byteArr = "ce73660a06626c1b3fda7b18ef7ba3ce17b6bf604f9541d3c6c654b7ae88b239" +
+                "407f659c78f419025d785727ed017b6add21952d7e12007373e321dbc31824ba";
 
         byte[] byteArray = Hex.decode(byteArr);
 
@@ -329,32 +376,28 @@ public class RLPTest {
     }
 
     @Test
-    /** encode list */
-    public void test9() {
+    /** encode list */ public void test9() {
 
         byte[] actuals = encodeList();
         assertArrayEquals(new byte[]{(byte) 0xc0}, actuals);
     }
 
     @Test
-    /** encode null value */
-    public void testEncodeElementNull() {
+    /** encode null value */ public void testEncodeElementNull() {
 
         byte[] actuals = encodeElement(null);
         assertArrayEquals(new byte[]{(byte) 0x80}, actuals);
     }
 
     @Test
-    /** encode single byte 0x00 */
-    public void testEncodeElementZero() {
+    /** encode single byte 0x00 */ public void testEncodeElementZero() {
 
         byte[] actuals = encodeElement(new byte[]{0x00});
         assertArrayEquals(new byte[]{0x00}, actuals);
     }
 
     @Test
-    /** encode single byte 0x01 */
-    public void testEncodeElementOne() {
+    /** encode single byte 0x01 */ public void testEncodeElementOne() {
 
         byte[] actuals = encodeElement(new byte[]{0x01});
         assertArrayEquals(new byte[]{(byte) 0x01}, actuals);
@@ -362,15 +405,12 @@ public class RLPTest {
 
     @Test
     /** found bug encode list affects element value,
-     hhh... not really at  the end but keep the test */
-    public void test10() {
+     hhh... not really at  the end but keep the test */ public void test10() {
 
    /* 2 */
         byte[] prevHash =
-                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         prevHash = encodeElement(prevHash);
 
    /* 2 */
@@ -378,22 +418,22 @@ public class RLPTest {
 
    /* 3 */
         byte[] coinbase =
-                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00};
+                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00};
         coinbase = encodeElement(coinbase);
 
-        byte[] header = encodeList(
-                prevHash, uncleList, coinbase);
+        byte[] header = encodeList(prevHash, uncleList, coinbase);
 
-        assertEquals("f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
+        assertEquals(
+                "f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
                 Hex.toHexString(header));
     }
 
     @Test
     public void test11() {
-//        2240089100000070
-        String tx = "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
+        //        2240089100000070
+        String tx =
+                "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
         byte[] payload = Hex.decode(tx);
 
         Queue<Integer> index = new LinkedList<>();
@@ -405,7 +445,8 @@ public class RLPTest {
     @Test
     public void test12() {
 
-        String tx = "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
+        String tx =
+                "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
         byte[] payload = Hex.decode(tx);
 
         RLPList rlpList = decode2(payload);
@@ -414,8 +455,7 @@ public class RLPTest {
         // TODO: add some asserts in place of just printing the rlpList
     }
 
-    @Test /* very long peers msg */
-    public void test13() {
+    @Test /* very long peers msg */ public void test13() {
 
         String peers = "f9 14 90 11 f8 4c c6 81 83 68 81 fc 04 82 76 5f b8 40 07 7e 53 7a 8b 36 73 e8 f1 b6 25 db cc " +
                 "90 2e a7 d4 ce d9 40 2e 46 64 e8 73 67 95 12 cc 23 60 69 8e 53 42 56 52 a0 46 24 fc f7 8c db a1 a3 " +
@@ -585,10 +625,10 @@ public class RLPTest {
         // TODO: add some asserts in place of just printing the rlpList
     }
 
-    @Test /* very very very long blocks msg */
-    public void test14() {
+    @Test /* very very very long blocks msg */ public void test14() {
 
-        String blocksMsg = "f91c1c13f90150f8c4a07df3d35d4df0a56fcf1d6344d5315cb56b9bf83bb96ad17c7b96a9cd14133c5da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a064afb6284fa35f26d7b2c5a26afaa5483072fbcb575221b34ce002a991b7a223a04a8abe6d802797dc80b497584f898c2d4fd561cc185828cfa1b92f6f38ee348e833fbfe484533f201c80a000000000000000000000000000000000000000000000000000cfccb5cfd4667cf887f8850380942d0aceee7e5ab874e22ccf8d1a649f59106d74e88609184e72a000822710a047617600000000000000000000000000000000000000000000000000000000001ca08691ab40e258de3c4f55c868c0c34e780e747158a1d96ca50186dfd3305abd78a042269c981d048a7b791aafc8f4e644232740c1a1cceb5b6d05568827a64c0664c0f8c8f8c4a0637c8a6cdb907fac6f752334ab79065bcc4e46cd4f4358dbc2a653544a20eb31a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a022a36c1a1e807e6afc22e6bb53a31111f56e7ee7dbb2ee571cefb152b514db4da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcfd784533f1cf980a0000000000000000000000000000000000000000000000000e153d743fa040b18c0c0f8c8f8c4a07b2536237cbf114a043b0f9b27c76f84ac160ea5b87b53e42c7e76148964d450a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07a3be0ee10ece4b03097bf74aabac628aa0fae617377d30ab1b97376ee31f41aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fbfe884533f1ce880a0000000000000000000000000000000000000000000000000f3deea84969b6e95c0c0f8c8f8c4a0d2ae3f5dd931926de428d99611980e7cdd7c1b838273e43fcad1b94da987cfb8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a00b5b11fcf4ee12c6812f9d01cf0dff07c72cd7e02e48b35682f67c595407be14a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833faffd84533f1ce280a00000000000000000000000000000000000000000000000005fcbc97b2eb8ffb3c0c0f8c8f8c4a094d615d3cb4b306d20985028c78f0c8413d509a75e8bb84eda95f734debad2a0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a04b8fd1b98cf5758bd303ff86393eb6d944c1058124bddce5d4e04b5395254d5ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fbfec84533f1c7680a000000000000000000000000000000000000000000000000079fe3710116b32aac0c0f8c8f8c4a09424a07a0e4c05bb872906c40844a75b76f6517467b79c12fa9cc6d79ae09934a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a02dbe9ff9cbbc4c5a6ff26971f75b405891141f4e9bce3c2dc4200a305138e584a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcfdf84533f1c3b80a0000000000000000000000000000000000000000000000000e0a6f8cf1d56031bc0c0f8c8f8c4a009aabea60cf7eaa9df4afdf4e1b5f3e684dab34fc9a9180a050085a4131ceedfa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0436da067f9683029e717edf92da46c3443e8c342974f47a563302a0678efe702a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfd684533f1bfc80a00000000000000000000000000000000000000000000000005bc88c041662ffdac0c0f8c8f8c4a0f8b104093483b7c0182e1bba2ce3340d14469d3a3ee7646821223a676c680ac1a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0d482e71cde61190a33ca5aeb88b6b06276984e5a14253a98df232e8767167221a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefd184533f1bce80a00000000000000000000000000000000000000000000000004aeb31823f6a1950c0c0f8c8f8c4a0dd1f0aba02c2bb3b5a2b6cb1cc907ea70912bd46dc7a78577f2cae6cdbcbe5f3a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a058ab6df33d7cbeb6a735a7e4ccf4f28143e6a1742e45dda8f8cf48af43cb66c0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd084533f1b9f80a0000000000000000000000000000000000000000000000000577042b0858b510bc0c0f8c8f8c4a0a287bb7da30f04344976abe569bd719f69c1cbea65533e5311ca5862e6eaa504a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07e0537009c23cb1152caf84a52272431f74b6140866b15805622b7bcb607cd42a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934783400fd384533f1b6180a000000000000000000000000000000000000000000000000083d31378a0993e1ac0c0f8c8f8c4a063483cff8fbd489e6ce273326d8dc1d54a31c67f936ca84bf500e5419d3e9805a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07737d08564819d51f8f834a6ee4278c23a0c2f29a3f485b21002c1f24f04d8e4a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd484533f1b5780a0000000000000000000000000000000000000000000000000bb586fe6de016e14c0c0f8c8f8c4a0975c8ed0c9197b7c018e02e1c95f315acf82b25e4a812140f4515e8bc827650ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ad51229abead59e93c80db5ba160f0939bc49dcee65d1c081f6eb040ff1f571fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefd984533f1b4e80a0000000000000000000000000000000000000000000000000548f02c6ceb26fd4c0c0f8c8f8c4a05844082e41f7c1f34485c7902afa0aa0979a6a849100fc553cd946f4a663929ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a01bc726443437c4c062be18d052278e4ef735b8fe84387c8a4fc85fb70d5078e0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd884533f1b1080a0000000000000000000000000000000000000000000000000cc1e528f54f22bdac0c0f8c8f8c4a0ba06ba81c93faaf98ea2d83cbdc0788958d938b29a9eb2a92ffbd4a628b3d52ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a05053bfe1c0f1f0dd341c6df35e5a659989be041e8521027cc90f7605eb15fbb9a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefdd84533f1b0380a0000000000000000000000000000000000000000000000000bcf9df2fec615ecac0c0f8c8f8c4a083732d997db15109e90464c24b7c959a78881d827c55a0d668a66a2736be5d87a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a054f4012cba33a2b80b0dca9dd52f56b2c588133bd71700863f8cb95127176634a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffdc84533f1a4680a00000000000000000000000000000000000000000000000006920a1dc9d915d0ec0c0f8c8f8c4a052e2fba761c2d0643170ef041c017391e781190fe715ae87cdae8eee1d45d95ba01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ee2c82f77d7afd1f8dbe4f791df8477496c23e5504b9d66814172077f65f81f2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefe184533f1a3880a0000000000000000000000000000000000000000000000000ae86da9012398fc4c0c0f8c8f8c4a055703ba09544f386966b6d63bfc31033b761a4d1a6bb86b0cf49b4bb0526744ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a01684c03a675b53786f0077d1651c3d169a009b13a6ee2b5047be6dbbe6d957ffa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfea84533f1a2f80a00000000000000000000000000000000000000000000000003247320d0eb639dfc0c0f8c8f8c4a05109a79b33d81f4ee4814b550fb0002f03368d67570f6d4e6105fce2874d8b72a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ae72e8c60a3dcfd53deecdb2790d18f0cc710f77cf2c1ed76e7da829bde619dca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcff784533f1a1d80a000000000000000000000000000000000000000000000000040e0bc9bc9bcf295c0c0f8c8f8c4a03961e4bbba5c95fad3db0cffa3a16b9106f9ea3e8957993eab576b683c22f416a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0e9c6cf457bbe64d6bda67852a276cdbadb4f384a36d496e81801a496cfd9b7b5a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfee84533f19df80a0000000000000000000000000000000000000000000000000dbb3fd6c816776d8c0c0f8c8f8c4a06b8265a357cb3ad744e19f04eb15377f660c10c900cc352d24f9b09073a363d6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07ba07e1bc6a20ffa44ae6080d30982b9faa148faf6b1ec15e32d89ac853ac291a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefe984533f198d80a00000000000000000000000000000000000000000000000005171325b6a2f17f1c0c0f8c8f8c4a0dcdc0347bb87ce72d49ac2e4e11f89069509b129a2536bf3d57c6bca30894032a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ca24447aa0cedb4b561c7810461eef19b16a827c27352e5e01f914e9d7c78247a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffe884533f194680a0000000000000000000000000000000000000000000000000da4714cfed9d8bbcc0c0f8c8f8c4a047f2dd6c15ea4082b3e11e5cf6b925b27e51d9de68051a093e52ef465cffbb8ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a05a7206edddf50fcfeeaa97348a7112fc6edd0b5eacb44cf43d6a6c6b6609b459a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefed84533f193e80a0000000000000000000000000000000000000000000000000ffafba4bf8dc944ec0c0f8c8f8c4a04d5ad6d860772145872f6660ecefcb0b0b2056e0aa3509a48bf4c175459e5121a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a00f4659d09bb2ced56e7fd9c4d3d90daca8b4f471307b7c4385fd34a41016b0b2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdff684533f192580a000000000000000000000000000000000000000000000000090620e5e59a39fe5c0c0f8c8f8c4a0c1725c58d1bf023af468e0088db3cf642ae097cf2c58c2ece2fc746980acc7e6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0be19a182ea1584050deb0a79abdc11be896ce8d00a282bcfaf9ffcd65fd64d6aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833feff184533f189080a000000000000000000000000000000000000000000000000076f17f4199bccd12c0c0f8c8f8c4a0bd521a20a18ca6ca7115065065a1aa20067ee580fb11e2963d1e3a681e8302afa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a011be45633350e39475a1a07712ba72de4602d9eebf639ccd5422a389095ccaf1a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdffa84533f187b80a00000000000000000000000000000000000000000000000000c71b81c4a4cb82cc0c0f8c8f8c4a07c6d2d56e9c87f1553e4d06705af61a7c19a6046d2c39f8ed1417988783d3b1da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a012f5f0668063509e33a45a64eb6a072b2d84aa19f430f49f159be5008a786b2ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fd00684533f186080a0000000000000000000000000000000000000000000000000b3f962892cfec9e6c0c0f8c8f8c4a07154f0f8ecc7f791d22eec06ec86d87a44b2704f015b3d2cff3571a3d01ae0f6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a079536abf8e163cf8aa97f0d52866d04363902d591fd7c36aa35fc983d45fefd6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdffd84533f182f80a0000000000000000000000000000000000000000000000000736716e42499890fc0c0f8c8f8c4a0bf2fb1ee988ac4e17eae221a24176649774333fab25b6fc96c6081527fb6f121a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a041578daae7bcccd4976340aeb19e4132d2fe4193a0d92f87744c82bfe113502fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fd00984533f182b80a00000000000000000000000000000000000000000000000001c62fa76645942c6c0c0f8c8f8c4a07f84873e2679d40458b9dda9900478a78871044e08f6b47dad659b9b60ff8d48a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0597d3f4160770c0492333f90bad739dc05117d0e478a91f09573742e432904e8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fe00184533f17f680a0000000000000000000000000000000000000000000000000e24d8b1140fb34d5c0c0f8c8f8c4a0fd77bd13a8cde1766537febe751a27a2a31310a04638a1afcd5e8ad3c5485453a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0473b2b248d91010ba9aec2696ffc93c11c415ed132832be0fd0578f184862e13a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833feffc84533f17ca80a0000000000000000000000000000000000000000000000000fb5b65bac3f0d947c0c0f8c8f8c4a0518916dfb79c390bd7bff75712174512c2f96bec42a3f573355507ad1588ce0ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a08599d2ec9e95ec62f41a4975b655d8445d6767035f94eb235ed5ebea976fb9eaa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fe00484533f17b880a0000000000000000000000000000000000000000000000000bc27f4b8a201476bc0c0f90319f8c4a0ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cfa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0990dc3b5acbee04124361d958fe51acb582593613fc290683940a0769549d3eda09bfe4817d274ea3eb8672e9fe848c3885b53bbbd1d7c26e6039f90fb96b942b0833ff00084533f16b780a000000000000000000000000000000000000000000000000077377adff6c227dbf9024ff89d80809400000000000000000000000000000000000000008609184e72a000822710b3606956330c0d630000003359366000530a0d630000003359602060005301356000533557604060005301600054630000000c5884336069571ca07f6eb94576346488c6253197bde6a7e59ddc36f2773672c849402aa9c402c3c4a06d254e662bf7450dd8d835160cbb053463fed0b53f2cdd7f3ea8731919c8e8ccf9010501809400000000000000000000000000000000000000008609184e72a000822710b85336630000002e59606956330c0d63000000155933ff33560d63000000275960003356576000335700630000005358600035560d630000003a590033560d63000000485960003356573360003557600035335700b84a7f4e616d65526567000000000000000000000000000000000000000000000000003057307f4e616d655265670000000000000000000000000000000000000000000000000057336069571ba04af15a0ec494aeac5b243c8a2690833faa74c0f73db1f439d521c49c381513e9a05802e64939be5a1f9d4d614038fbd5479538c48795614ef9c551477ecbdb49d2f8a6028094ccdeac59d35627b7de09332e819d5159e7bb72508609184e72a000822710b84000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d0aceee7e5ab874e22ccf8d1a649f59106d74e81ba0d05887574456c6de8f7a0d172342c2cbdd4cf7afe15d9dbb8b75b748ba6791c9a01e87172a861f6c37b5a9e3a5d0d7393152a7fbe41530e5bb8ac8f35433e5931bc0";
+        String blocksMsg =
+                "f91c1c13f90150f8c4a07df3d35d4df0a56fcf1d6344d5315cb56b9bf83bb96ad17c7b96a9cd14133c5da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a064afb6284fa35f26d7b2c5a26afaa5483072fbcb575221b34ce002a991b7a223a04a8abe6d802797dc80b497584f898c2d4fd561cc185828cfa1b92f6f38ee348e833fbfe484533f201c80a000000000000000000000000000000000000000000000000000cfccb5cfd4667cf887f8850380942d0aceee7e5ab874e22ccf8d1a649f59106d74e88609184e72a000822710a047617600000000000000000000000000000000000000000000000000000000001ca08691ab40e258de3c4f55c868c0c34e780e747158a1d96ca50186dfd3305abd78a042269c981d048a7b791aafc8f4e644232740c1a1cceb5b6d05568827a64c0664c0f8c8f8c4a0637c8a6cdb907fac6f752334ab79065bcc4e46cd4f4358dbc2a653544a20eb31a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a022a36c1a1e807e6afc22e6bb53a31111f56e7ee7dbb2ee571cefb152b514db4da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcfd784533f1cf980a0000000000000000000000000000000000000000000000000e153d743fa040b18c0c0f8c8f8c4a07b2536237cbf114a043b0f9b27c76f84ac160ea5b87b53e42c7e76148964d450a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07a3be0ee10ece4b03097bf74aabac628aa0fae617377d30ab1b97376ee31f41aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fbfe884533f1ce880a0000000000000000000000000000000000000000000000000f3deea84969b6e95c0c0f8c8f8c4a0d2ae3f5dd931926de428d99611980e7cdd7c1b838273e43fcad1b94da987cfb8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a00b5b11fcf4ee12c6812f9d01cf0dff07c72cd7e02e48b35682f67c595407be14a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833faffd84533f1ce280a00000000000000000000000000000000000000000000000005fcbc97b2eb8ffb3c0c0f8c8f8c4a094d615d3cb4b306d20985028c78f0c8413d509a75e8bb84eda95f734debad2a0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a04b8fd1b98cf5758bd303ff86393eb6d944c1058124bddce5d4e04b5395254d5ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fbfec84533f1c7680a000000000000000000000000000000000000000000000000079fe3710116b32aac0c0f8c8f8c4a09424a07a0e4c05bb872906c40844a75b76f6517467b79c12fa9cc6d79ae09934a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a02dbe9ff9cbbc4c5a6ff26971f75b405891141f4e9bce3c2dc4200a305138e584a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcfdf84533f1c3b80a0000000000000000000000000000000000000000000000000e0a6f8cf1d56031bc0c0f8c8f8c4a009aabea60cf7eaa9df4afdf4e1b5f3e684dab34fc9a9180a050085a4131ceedfa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0436da067f9683029e717edf92da46c3443e8c342974f47a563302a0678efe702a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfd684533f1bfc80a00000000000000000000000000000000000000000000000005bc88c041662ffdac0c0f8c8f8c4a0f8b104093483b7c0182e1bba2ce3340d14469d3a3ee7646821223a676c680ac1a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0d482e71cde61190a33ca5aeb88b6b06276984e5a14253a98df232e8767167221a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefd184533f1bce80a00000000000000000000000000000000000000000000000004aeb31823f6a1950c0c0f8c8f8c4a0dd1f0aba02c2bb3b5a2b6cb1cc907ea70912bd46dc7a78577f2cae6cdbcbe5f3a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a058ab6df33d7cbeb6a735a7e4ccf4f28143e6a1742e45dda8f8cf48af43cb66c0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd084533f1b9f80a0000000000000000000000000000000000000000000000000577042b0858b510bc0c0f8c8f8c4a0a287bb7da30f04344976abe569bd719f69c1cbea65533e5311ca5862e6eaa504a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07e0537009c23cb1152caf84a52272431f74b6140866b15805622b7bcb607cd42a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934783400fd384533f1b6180a000000000000000000000000000000000000000000000000083d31378a0993e1ac0c0f8c8f8c4a063483cff8fbd489e6ce273326d8dc1d54a31c67f936ca84bf500e5419d3e9805a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07737d08564819d51f8f834a6ee4278c23a0c2f29a3f485b21002c1f24f04d8e4a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd484533f1b5780a0000000000000000000000000000000000000000000000000bb586fe6de016e14c0c0f8c8f8c4a0975c8ed0c9197b7c018e02e1c95f315acf82b25e4a812140f4515e8bc827650ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ad51229abead59e93c80db5ba160f0939bc49dcee65d1c081f6eb040ff1f571fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefd984533f1b4e80a0000000000000000000000000000000000000000000000000548f02c6ceb26fd4c0c0f8c8f8c4a05844082e41f7c1f34485c7902afa0aa0979a6a849100fc553cd946f4a663929ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a01bc726443437c4c062be18d052278e4ef735b8fe84387c8a4fc85fb70d5078e0a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffd884533f1b1080a0000000000000000000000000000000000000000000000000cc1e528f54f22bdac0c0f8c8f8c4a0ba06ba81c93faaf98ea2d83cbdc0788958d938b29a9eb2a92ffbd4a628b3d52ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a05053bfe1c0f1f0dd341c6df35e5a659989be041e8521027cc90f7605eb15fbb9a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefdd84533f1b0380a0000000000000000000000000000000000000000000000000bcf9df2fec615ecac0c0f8c8f8c4a083732d997db15109e90464c24b7c959a78881d827c55a0d668a66a2736be5d87a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a054f4012cba33a2b80b0dca9dd52f56b2c588133bd71700863f8cb95127176634a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffdc84533f1a4680a00000000000000000000000000000000000000000000000006920a1dc9d915d0ec0c0f8c8f8c4a052e2fba761c2d0643170ef041c017391e781190fe715ae87cdae8eee1d45d95ba01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ee2c82f77d7afd1f8dbe4f791df8477496c23e5504b9d66814172077f65f81f2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefe184533f1a3880a0000000000000000000000000000000000000000000000000ae86da9012398fc4c0c0f8c8f8c4a055703ba09544f386966b6d63bfc31033b761a4d1a6bb86b0cf49b4bb0526744ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a01684c03a675b53786f0077d1651c3d169a009b13a6ee2b5047be6dbbe6d957ffa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfea84533f1a2f80a00000000000000000000000000000000000000000000000003247320d0eb639dfc0c0f8c8f8c4a05109a79b33d81f4ee4814b550fb0002f03368d67570f6d4e6105fce2874d8b72a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ae72e8c60a3dcfd53deecdb2790d18f0cc710f77cf2c1ed76e7da829bde619dca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fcff784533f1a1d80a000000000000000000000000000000000000000000000000040e0bc9bc9bcf295c0c0f8c8f8c4a03961e4bbba5c95fad3db0cffa3a16b9106f9ea3e8957993eab576b683c22f416a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0e9c6cf457bbe64d6bda67852a276cdbadb4f384a36d496e81801a496cfd9b7b5a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdfee84533f19df80a0000000000000000000000000000000000000000000000000dbb3fd6c816776d8c0c0f8c8f8c4a06b8265a357cb3ad744e19f04eb15377f660c10c900cc352d24f9b09073a363d6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a07ba07e1bc6a20ffa44ae6080d30982b9faa148faf6b1ec15e32d89ac853ac291a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefe984533f198d80a00000000000000000000000000000000000000000000000005171325b6a2f17f1c0c0f8c8f8c4a0dcdc0347bb87ce72d49ac2e4e11f89069509b129a2536bf3d57c6bca30894032a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0ca24447aa0cedb4b561c7810461eef19b16a827c27352e5e01f914e9d7c78247a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fffe884533f194680a0000000000000000000000000000000000000000000000000da4714cfed9d8bbcc0c0f8c8f8c4a047f2dd6c15ea4082b3e11e5cf6b925b27e51d9de68051a093e52ef465cffbb8ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a05a7206edddf50fcfeeaa97348a7112fc6edd0b5eacb44cf43d6a6c6b6609b459a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fefed84533f193e80a0000000000000000000000000000000000000000000000000ffafba4bf8dc944ec0c0f8c8f8c4a04d5ad6d860772145872f6660ecefcb0b0b2056e0aa3509a48bf4c175459e5121a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a00f4659d09bb2ced56e7fd9c4d3d90daca8b4f471307b7c4385fd34a41016b0b2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdff684533f192580a000000000000000000000000000000000000000000000000090620e5e59a39fe5c0c0f8c8f8c4a0c1725c58d1bf023af468e0088db3cf642ae097cf2c58c2ece2fc746980acc7e6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0be19a182ea1584050deb0a79abdc11be896ce8d00a282bcfaf9ffcd65fd64d6aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833feff184533f189080a000000000000000000000000000000000000000000000000076f17f4199bccd12c0c0f8c8f8c4a0bd521a20a18ca6ca7115065065a1aa20067ee580fb11e2963d1e3a681e8302afa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a011be45633350e39475a1a07712ba72de4602d9eebf639ccd5422a389095ccaf1a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdffa84533f187b80a00000000000000000000000000000000000000000000000000c71b81c4a4cb82cc0c0f8c8f8c4a07c6d2d56e9c87f1553e4d06705af61a7c19a6046d2c39f8ed1417988783d3b1da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a012f5f0668063509e33a45a64eb6a072b2d84aa19f430f49f159be5008a786b2ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fd00684533f186080a0000000000000000000000000000000000000000000000000b3f962892cfec9e6c0c0f8c8f8c4a07154f0f8ecc7f791d22eec06ec86d87a44b2704f015b3d2cff3571a3d01ae0f6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a079536abf8e163cf8aa97f0d52866d04363902d591fd7c36aa35fc983d45fefd6a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fdffd84533f182f80a0000000000000000000000000000000000000000000000000736716e42499890fc0c0f8c8f8c4a0bf2fb1ee988ac4e17eae221a24176649774333fab25b6fc96c6081527fb6f121a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a041578daae7bcccd4976340aeb19e4132d2fe4193a0d92f87744c82bfe113502fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fd00984533f182b80a00000000000000000000000000000000000000000000000001c62fa76645942c6c0c0f8c8f8c4a07f84873e2679d40458b9dda9900478a78871044e08f6b47dad659b9b60ff8d48a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0597d3f4160770c0492333f90bad739dc05117d0e478a91f09573742e432904e8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fe00184533f17f680a0000000000000000000000000000000000000000000000000e24d8b1140fb34d5c0c0f8c8f8c4a0fd77bd13a8cde1766537febe751a27a2a31310a04638a1afcd5e8ad3c5485453a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0473b2b248d91010ba9aec2696ffc93c11c415ed132832be0fd0578f184862e13a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833feffc84533f17ca80a0000000000000000000000000000000000000000000000000fb5b65bac3f0d947c0c0f8c8f8c4a0518916dfb79c390bd7bff75712174512c2f96bec42a3f573355507ad1588ce0ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a08599d2ec9e95ec62f41a4975b655d8445d6767035f94eb235ed5ebea976fb9eaa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347833fe00484533f17b880a0000000000000000000000000000000000000000000000000bc27f4b8a201476bc0c0f90319f8c4a0ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cfa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347943854aaf203ba5f8d49b1ec221329c7aebcf050d3a0990dc3b5acbee04124361d958fe51acb582593613fc290683940a0769549d3eda09bfe4817d274ea3eb8672e9fe848c3885b53bbbd1d7c26e6039f90fb96b942b0833ff00084533f16b780a000000000000000000000000000000000000000000000000077377adff6c227dbf9024ff89d80809400000000000000000000000000000000000000008609184e72a000822710b3606956330c0d630000003359366000530a0d630000003359602060005301356000533557604060005301600054630000000c5884336069571ca07f6eb94576346488c6253197bde6a7e59ddc36f2773672c849402aa9c402c3c4a06d254e662bf7450dd8d835160cbb053463fed0b53f2cdd7f3ea8731919c8e8ccf9010501809400000000000000000000000000000000000000008609184e72a000822710b85336630000002e59606956330c0d63000000155933ff33560d63000000275960003356576000335700630000005358600035560d630000003a590033560d63000000485960003356573360003557600035335700b84a7f4e616d65526567000000000000000000000000000000000000000000000000003057307f4e616d655265670000000000000000000000000000000000000000000000000057336069571ba04af15a0ec494aeac5b243c8a2690833faa74c0f73db1f439d521c49c381513e9a05802e64939be5a1f9d4d614038fbd5479538c48795614ef9c551477ecbdb49d2f8a6028094ccdeac59d35627b7de09332e819d5159e7bb72508609184e72a000822710b84000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d0aceee7e5ab874e22ccf8d1a649f59106d74e81ba0d05887574456c6de8f7a0d172342c2cbdd4cf7afe15d9dbb8b75b748ba6791c9a01e87172a861f6c37b5a9e3a5d0d7393152a7fbe41530e5bb8ac8f35433e5931bc0";
         byte[] payload = Hex.decode(blocksMsg);
 
         RLPList rlpList = decode2(payload);
@@ -597,8 +637,7 @@ public class RLPTest {
         // TODO: add some asserts in place of just printing the rlpList
     }
 
-    @Test /* hello msg */
-    public void test15() {
+    @Test /* hello msg */ public void test15() {
 
         String helloMsg = "f8 91 80 0b 80 b8 46 45 74 68 65 72 65 75 6d 28 2b 2b 29 2f 5a 65 72 6f 47 6f 78 2e 70 72 " +
                 "69 63 6b 6c 79 5f 6d 6f 72 73 65 2f 76 30 2e 34 2e 32 2f 52 65 6c 65 61 73 65 2d 57 69 6e 33 32 2f " +
@@ -659,7 +698,8 @@ public class RLPTest {
     @Test
     public void testEncodeLongString() {
         String test = "Lorem ipsum dolor sit amet, consectetur adipisicing elit"; // length = 56
-        String expected = "b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
+        String expected =
+                "b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
         byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
@@ -760,7 +800,8 @@ public class RLPTest {
         String element1 = "cat";
         String element2 = "Lorem ipsum dolor sit amet, consectetur adipisicing elit";
         String[] test = new String[]{element1, element2};
-        String expected = "f83e83636174b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
+        String expected =
+                "f83e83636174b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
         byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
@@ -820,7 +861,8 @@ public class RLPTest {
     @Test
     public void testEncodeRepOfTwoListOfList() {
         //list: [ [], [[]], [ [], [[]] ] ]
-        Object[] test = new Object[]{new Object[]{}, new Object[]{new Object[]{}}, new Object[]{new Object[]{}, new Object[]{new Object[]{}}}};
+        Object[] test = new Object[]{new Object[]{}, new Object[]{new Object[]{}},
+                new Object[]{new Object[]{}, new Object[]{new Object[]{}}}};
         String expected = "c7c0c1c0c3c0c1c0";
         byte[] encoderesult = encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
@@ -954,7 +996,8 @@ public class RLPTest {
 
         try {
             encodedLength = encodeLength((int) maxLength, offset);
-            System.out.println("length: " + length + ", offset: " + offset + ", encoded: " + Arrays.toString(encodedLength));
+            System.out.println(
+                    "length: " + length + ", offset: " + offset + ", encoded: " + Arrays.toString(encodedLength));
 
             fail("Expecting RuntimeException: 'Input too long'");
         } catch (RuntimeException e) {
@@ -979,7 +1022,8 @@ public class RLPTest {
         boolean performanceEnabled = false;
 
         if (performanceEnabled) {
-            String blockRaw = "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+            String blockRaw =
+                    "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
             byte[] payload = Hex.decode(blockRaw);
 
             final int ITERATIONS = 10000000;
@@ -999,8 +1043,10 @@ public class RLPTest {
             }
             long end2 = System.currentTimeMillis();
 
-            System.out.println("Result RLP.decode()\t: " + (end1 - start1) + "ms and\t " + determineSize(result) + " bytes for each resulting object list");
-            System.out.println("Result RLP.decode2()\t: " + (end2 - start2) + "ms and\t " + determineSize(list) + " bytes for each resulting object list");
+            System.out.println("Result RLP.decode()\t: " + (end1 - start1) + "ms and\t " + determineSize(result) +
+                                       " bytes for each resulting object list");
+            System.out.println("Result RLP.decode2()\t: " + (end2 - start2) + "ms and\t " + determineSize(list) +
+                                       " bytes for each resulting object list");
         } else {
             System.out.println("Performance test for RLP.decode() disabled");
         }
@@ -1018,11 +1064,13 @@ public class RLPTest {
     @Test // found this with a bug - nice to keep
     public void encodeEdgeShortList() {
 
-        String expectedOutput = "f7c0c0b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557";
+        String expectedOutput =
+                "f7c0c0b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557";
 
         byte[] rlpKeysList = Hex.decode("c0");
         byte[] rlpValuesList = Hex.decode("c0");
-        byte[] rlpCode = Hex.decode("b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557");
+        byte[] rlpCode = Hex.decode(
+                "b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557");
         byte[] output = encodeList(rlpKeysList, rlpValuesList, rlpCode);
 
         assertEquals(expectedOutput, Hex.toHexString(output));
@@ -1038,7 +1086,7 @@ public class RLPTest {
     }
 
     @Test
-    public void testEncodeListHeader(){
+    public void testEncodeListHeader() {
 
         byte[] header = encodeListHeader(10);
         String expected_1 = "ca";
@@ -1055,7 +1103,7 @@ public class RLPTest {
 
 
     @Test
-    public void testEncodeSet_1(){
+    public void testEncodeSet_1() {
 
         Set<ByteArrayWrapper> data = new HashSet<>();
 
@@ -1080,7 +1128,7 @@ public class RLPTest {
     }
 
     @Test
-    public void testEncodeSet_2(){
+    public void testEncodeSet_2() {
 
         Set<ByteArrayWrapper> data = new HashSet<>();
         byte[] setEncoded = encodeSet(data);
@@ -1088,59 +1136,60 @@ public class RLPTest {
     }
 
     @Test
-    public void testEncodeInt_7f(){
-        String result =  Hex.toHexString(encodeInt(0x7f));
+    public void testEncodeInt_7f() {
+        String result = Hex.toHexString(encodeInt(0x7f));
         String expected = "7f";
         assertEquals(expected, result);
     }
 
     @Test
-    public void testEncodeInt_80(){
-        String result =  Hex.toHexString(encodeInt(0x80));
+    public void testEncodeInt_80() {
+        String result = Hex.toHexString(encodeInt(0x80));
         String expected = "8180";
         assertEquals(expected, result);
     }
 
 
     @Test
-    public void testEncode_ED(){
-        String result =  Hex.toHexString(encode(0xED));
+    public void testEncode_ED() {
+        String result = Hex.toHexString(encode(0xED));
         String expected = "81ed";
         assertEquals(expected, result);
     }
 
 
     @Test // capabilities: (eth:60, bzz:0, shh:2)
-    public void testEncodeHelloMessageCap0(){
+    public void testEncodeHelloMessageCap0() {
 
         List<Capability> capabilities = new ArrayList<>();
         capabilities.add(new Capability("eth", (byte) 0x60));
         capabilities.add(new Capability("shh", (byte) 0x02));
         capabilities.add(new Capability("bzz", (byte) 0x00));
 
-        HelloMessage helloMessage = new HelloMessage((byte)4,
-                "Geth/v0.9.29-4182e20e/windows/go1.4.2",
-                capabilities , 30303,
-                "a52205ce10b39be86507e28f6c3dc08ab4c3e8250e062ec47c6b7fa13cf4a4312d68d6c340315ef953ada7e19d69123a1b902ea84ec00aa5386e5d550e6c550e");
+        HelloMessage helloMessage = new HelloMessage((byte) 4,
+                                                     "Geth/v0.9.29-4182e20e/windows/go1.4.2",
+                                                     capabilities,
+                                                     30303,
+                                                     "a52205ce10b39be86507e28f6c3dc08ab4c3e8250e062ec47c6b7fa13cf4a4312d68d6c340315ef953ada7e19d69123a1b902ea84ec00aa5386e5d550e6c550e");
 
         byte[] rlp = helloMessage.getEncoded();
 
         HelloMessage helloMessage_ = new HelloMessage(rlp);
 
-        String eth    = helloMessage_.getCapabilities().get(0).getName();
-        byte   eth_60 = helloMessage_.getCapabilities().get(0).getVersion();
+        String eth = helloMessage_.getCapabilities().get(0).getName();
+        byte eth_60 = helloMessage_.getCapabilities().get(0).getVersion();
 
         assertEquals("eth", eth);
         assertEquals(0x60, eth_60);
 
-        String shh    = helloMessage_.getCapabilities().get(1).getName();
-        byte   shh_02 = helloMessage_.getCapabilities().get(1).getVersion();
+        String shh = helloMessage_.getCapabilities().get(1).getName();
+        byte shh_02 = helloMessage_.getCapabilities().get(1).getVersion();
 
         assertEquals("shh", shh);
         assertEquals(0x02, shh_02);
 
-        String bzz    = helloMessage_.getCapabilities().get(2).getName();
-        byte   bzz_00 = helloMessage_.getCapabilities().get(2).getVersion();
+        String bzz = helloMessage_.getCapabilities().get(2).getName();
+        byte bzz_00 = helloMessage_.getCapabilities().get(2).getVersion();
 
         assertEquals("bzz", bzz);
         assertEquals(0x00, bzz_00);
@@ -1155,16 +1204,17 @@ public class RLPTest {
     }
 
     @Test
-    public void shortStringRightBoundTest(){
+    public void shortStringRightBoundTest() {
         String testString = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"; //String of length 55
         byte[] rlpEncoded = encode(testString);
-        String res = new String((byte[])decode(rlpEncoded, 0).getDecoded());
+        String res = new String((byte[]) decode(rlpEncoded, 0).getDecoded());
         assertEquals(testString, res); //Fails
     }
 
     @Test
     public void encodeDecodeBigInteger() {
-        BigInteger expected = new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+        BigInteger expected = new BigInteger(
+                "9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
         byte[] encoded = encodeBigInteger(expected);
         BigInteger decoded = decodeBigInteger(encoded, 0);
         assertNotNull(decoded);

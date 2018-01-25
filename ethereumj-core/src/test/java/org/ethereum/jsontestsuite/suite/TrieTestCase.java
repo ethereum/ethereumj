@@ -17,6 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static org.ethereum.jsontestsuite.suite.Utils.parseData;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.ethereum.datasource.NoDeleteSource;
@@ -28,8 +30,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.ethereum.jsontestsuite.suite.Utils.parseData;
 
 /**
  * @author Mikhail Kalinin
@@ -81,7 +81,7 @@ public class TrieTestCase {
 
         if (in instanceof Map) {
 
-            for (Map.Entry<String, String> e : ((Map<String, String>)in).entrySet()) {
+            for (Map.Entry<String, String> e : ((Map<String, String>) in).entrySet()) {
 
                 byte[] key = e.getKey().startsWith("0x") ? parseData(e.getKey()) : e.getKey().getBytes();
                 byte[] value = null;
@@ -94,7 +94,7 @@ public class TrieTestCase {
 
         } else if (in instanceof List) {
 
-            for (List<String> pair : ((List<List<String>>)in)) {
+            for (List<String> pair : ((List<List<String>>) in)) {
 
                 byte[] key = pair.get(0).startsWith("0x") ? parseData(pair.get(0)) : pair.get(0).getBytes();
                 byte[] value = null;
@@ -114,10 +114,6 @@ public class TrieTestCase {
 
     @Override
     public String toString() {
-        return "TrieTestCase{" +
-                "name='" + name + '\'' +
-                ", in=" + in +
-                ", root='" + root + '\'' +
-                '}';
+        return "TrieTestCase{" + "name='" + name + '\'' + ", in=" + in + ", root='" + root + '\'' + '}';
     }
 }

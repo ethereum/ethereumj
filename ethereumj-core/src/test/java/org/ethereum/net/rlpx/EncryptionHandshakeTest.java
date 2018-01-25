@@ -17,12 +17,12 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Created by android on 4/8/15.
@@ -42,7 +42,7 @@ public class EncryptionHandshakeTest {
     @Test
     public void testCreateAuthInitiate() throws Exception {
         AuthInitiateMessage message = initiator.createAuthInitiate(new byte[32], myKey);
-        int expectedLength = 65+32+64+32+1;
+        int expectedLength = 65 + 32 + 64 + 32 + 1;
         byte[] buffer = message.encode();
         assertEquals(expectedLength, buffer.length);
     }

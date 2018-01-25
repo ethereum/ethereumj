@@ -17,7 +17,12 @@
  */
 package org.ethereum.config.net;
 
-import org.ethereum.config.blockchain.*;
+import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.Eip150HFConfig;
+import org.ethereum.config.blockchain.Eip160HFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
 
 /**
  * Created by Anton Nashatyrev on 25.02.2016.

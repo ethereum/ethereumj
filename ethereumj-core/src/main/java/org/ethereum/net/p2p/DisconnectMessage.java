@@ -17,13 +17,11 @@
  */
 package org.ethereum.net.p2p;
 
+import static org.ethereum.net.message.ReasonCode.UNKNOWN;
+
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-
-import static org.ethereum.net.message.ReasonCode.REQUESTED;
-import static org.ethereum.net.message.ReasonCode.UNKNOWN;
-import static org.ethereum.net.p2p.P2pMessageCodes.DISCONNECT;
 
 /**
  * Wrapper around an Ethereum Disconnect message on the network
@@ -48,10 +46,9 @@ public class DisconnectMessage extends P2pMessage {
 
         if (paramsList.size() > 0) {
             byte[] reasonBytes = paramsList.get(0).getRLPData();
-            if (reasonBytes == null)
-                this.reason = UNKNOWN;
-            else
+            if (reasonBytes == null) { this.reason = UNKNOWN; } else {
                 this.reason = ReasonCode.fromInt(reasonBytes[0]);
+            }
         } else {
             this.reason = UNKNOWN;
         }
@@ -66,7 +63,7 @@ public class DisconnectMessage extends P2pMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -81,12 +78,12 @@ public class DisconnectMessage extends P2pMessage {
     }
 
     public ReasonCode getReason() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return reason;
     }
 
     public String toString() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return "[" + this.getCommand().name() + " reason=" + reason + "]";
     }
 }

@@ -19,9 +19,15 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
-import org.ethereum.jsontestsuite.suite.model.*;
+import org.ethereum.jsontestsuite.suite.model.AccountTck;
+import org.ethereum.jsontestsuite.suite.model.EnvTck;
+import org.ethereum.jsontestsuite.suite.model.PostDataTck;
+import org.ethereum.jsontestsuite.suite.model.TransactionDataTck;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Mikhail Kalinin
@@ -70,7 +76,7 @@ public class StateTestDataEntry {
     public List<StateTestCase> getTestCases(GitHubJSONTestSuite.Network network) {
 
         List<PostDataTck> postData = post.get(network.name());
-        if (postData == null) return Collections.emptyList();
+        if (postData == null) { return Collections.emptyList(); }
 
         List<StateTestCase> testCases = new ArrayList<>();
         for (PostDataTck data : postData) {
@@ -84,7 +90,8 @@ public class StateTestDataEntry {
                 testCase.setLogs(new Logs("0x"));
             }
             if (data.getHash() != null) {
-                testCase.setPostStateRoot(data.getHash().startsWith("0x") ? data.getHash().substring(2) : data.getHash());
+                testCase.setPostStateRoot(
+                        data.getHash().startsWith("0x") ? data.getHash().substring(2) : data.getHash());
             }
             testCase.setTransaction(transaction.getTransaction(data.getIndexes()));
             testCase.setNetwork(network);

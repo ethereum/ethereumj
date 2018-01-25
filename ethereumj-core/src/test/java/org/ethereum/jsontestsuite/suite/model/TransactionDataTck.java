@@ -122,9 +122,15 @@ public class TransactionDataTck {
     public TransactionTck getTransaction(PostDataTck.Indexes idx) {
 
         // sanity check
-        if (idx.getValue() >= value.size()) throw new IllegalArgumentException("Fail to get Tx.value by idx: " + idx.getValue());
-        if (idx.getData() >= data.size()) throw new IllegalArgumentException("Fail to get Tx.data by idx: " + idx.getData());
-        if (idx.getGas() >= gasLimit.size()) throw new IllegalArgumentException("Fail to get Tx.gasLimit by idx: " + idx.getGas());
+        if (idx.getValue() >= value.size()) {
+            throw new IllegalArgumentException("Fail to get Tx.value by idx: " + idx.getValue());
+        }
+        if (idx.getData() >= data.size()) {
+            throw new IllegalArgumentException("Fail to get Tx.data by idx: " + idx.getData());
+        }
+        if (idx.getGas() >= gasLimit.size()) {
+            throw new IllegalArgumentException("Fail to get Tx.gasLimit by idx: " + idx.getGas());
+        }
 
         TransactionTck tx = new TransactionTck();
 

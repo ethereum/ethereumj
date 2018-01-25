@@ -17,20 +17,12 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.socket.DatagramPacket;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.net.rlpx.FindNodeMessage;
-import org.ethereum.net.rlpx.Message;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
-import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,15 +46,18 @@ public class DiscoverTask implements Runnable {
     public synchronized void discover(byte[] nodeId, int round, List<Node> prevTried) {
 
         try {
-//        if (!channel.isOpen() || round == KademliaOptions.MAX_STEPS) {
-//            logger.info("{}", String.format("Nodes discovered %d ", table.getAllNodes().size()));
-//            return;
-//        }
+            //        if (!channel.isOpen() || round == KademliaOptions.MAX_STEPS) {
+            //            logger.info("{}", String.format("Nodes discovered %d ", table.getAllNodes().size()));
+            //            return;
+            //        }
 
             if (round == KademliaOptions.MAX_STEPS) {
                 logger.debug("Node table contains [{}] peers", nodeManager.getTable().getNodesCount());
-                logger.debug("{}", String.format("(KademliaOptions.MAX_STEPS) Terminating discover after %d rounds.", round));
-                logger.trace("{}\n{}", String.format("Nodes discovered %d ", nodeManager.getTable().getNodesCount()), dumpNodes());
+                logger.debug("{}",
+                             String.format("(KademliaOptions.MAX_STEPS) Terminating discover after %d rounds.", round));
+                logger.trace("{}\n{}",
+                             String.format("Nodes discovered %d ", nodeManager.getTable().getNodesCount()),
+                             dumpNodes());
                 return;
             }
 
@@ -75,7 +70,7 @@ public class DiscoverTask implements Runnable {
                         nodeManager.getNodeHandler(n).sendFindNode(nodeId);
                         tried.add(n);
                         Thread.sleep(50);
-                    }catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                     } catch (Exception ex) {
                         logger.error("Unexpected Exception " + ex, ex);
                     }
@@ -85,11 +80,13 @@ public class DiscoverTask implements Runnable {
                 }
             }
 
-//            channel.flush();
+            //            channel.flush();
 
             if (tried.isEmpty()) {
                 logger.debug("{}", String.format("(tried.isEmpty()) Terminating discover after %d rounds.", round));
-                logger.trace("{}\n{}", String.format("Nodes discovered %d ", nodeManager.getTable().getNodesCount()), dumpNodes());
+                logger.trace("{}\n{}",
+                             String.format("Nodes discovered %d ", nodeManager.getTable().getNodesCount()),
+                             dumpNodes());
                 return;
             }
 

@@ -20,7 +20,6 @@ package org.ethereum.net.eth.message;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Value;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,8 +56,10 @@ public class NodeDataMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> dataListRLP = new ArrayList<>();
-        for (Value value: dataList) {
-            if (value == null) continue; // Bad sign
+        for (Value value : dataList) {
+            if (value == null) {
+                continue; // Bad sign
+            }
             dataListRLP.add(RLP.encodeElement(value.getData()));
         }
         byte[][] encodedElementArray = dataListRLP.toArray(new byte[dataListRLP.size()][]);
@@ -68,7 +69,7 @@ public class NodeDataMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 

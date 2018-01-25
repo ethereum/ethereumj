@@ -17,10 +17,7 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-import io.netty.channel.Channel;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +30,10 @@ public class RefreshTask extends DiscoverTask {
     public RefreshTask(NodeManager nodeManager) {
         super(nodeManager);
     }
-//
-//    RefreshTask(Channel channel, ECKey key, NodeTable table) {
-//        super(getNodeId(), channel, key, table);
-//    }
+    //
+    //    RefreshTask(Channel channel, ECKey key, NodeTable table) {
+    //        super(getNodeId(), channel, key, table);
+    //    }
 
     public static byte[] getNodeId() {
         Random gen = new Random();

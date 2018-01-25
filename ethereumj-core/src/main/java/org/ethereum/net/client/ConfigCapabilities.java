@@ -17,6 +17,11 @@
  */
 package org.ethereum.net.client;
 
+import static org.ethereum.net.client.Capability.BZZ;
+import static org.ethereum.net.client.Capability.ETH;
+import static org.ethereum.net.client.Capability.SHH;
+import static org.ethereum.net.eth.EthVersion.fromCode;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.shh.ShhHandler;
@@ -28,9 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import static org.ethereum.net.eth.EthVersion.fromCode;
-import static org.ethereum.net.client.Capability.*;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
@@ -47,10 +49,9 @@ public class ConfigCapabilities {
         this.config = config;
         if (config.syncVersion() != null) {
             EthVersion eth = fromCode(config.syncVersion());
-            if (eth != null) AllCaps.add(new Capability(ETH, eth.getCode()));
+            if (eth != null) { AllCaps.add(new Capability(ETH, eth.getCode())); }
         } else {
-            for (EthVersion v : EthVersion.supported())
-                AllCaps.add(new Capability(ETH, v.getCode()));
+            for (EthVersion v : EthVersion.supported()) { AllCaps.add(new Capability(ETH, v.getCode())); }
         }
 
         AllCaps.add(new Capability(SHH, ShhHandler.VERSION));

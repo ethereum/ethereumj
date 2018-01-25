@@ -81,8 +81,6 @@ public enum P2pMessageCodes {
     USER(0x0F);
 
 
-    private final int cmd;
-
     private static final Map<Integer, P2pMessageCodes> intToTypeMap = new HashMap<>();
 
     static {
@@ -90,6 +88,8 @@ public enum P2pMessageCodes {
             intToTypeMap.put(type.cmd, type);
         }
     }
+
+    private final int cmd;
 
     private P2pMessageCodes(int cmd) {
         this.cmd = cmd;

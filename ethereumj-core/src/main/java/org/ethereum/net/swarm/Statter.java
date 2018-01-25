@@ -24,10 +24,22 @@ package org.ethereum.net.swarm;
  * The implementation might be substituted to allow some advanced
  * information processing like streaming it to the database
  * or aggregating and displaying as graphics
- *
+ * <p>
  * Created by Anton Nashatyrev on 01.07.2015.
  */
 public abstract class Statter {
+
+    /**
+     * Used as a factory to create statters.
+     *
+     * @param name Normally the name is assumed to be a hierarchical path with '.' delimiters
+     *             similar to full Java class names.
+     */
+    public static Statter create(String name) {
+        return new SimpleStatter(name);
+    }
+
+    public abstract void add(double value);
 
     public static class SimpleStatter extends Statter {
 
@@ -68,16 +80,4 @@ public abstract class Statter {
         }
 
     }
-
-    /**
-     * Used as a factory to create statters.
-     * @param name Normally the name is assumed to be a hierarchical path with '.' delimiters
-     *             similar to full Java class names.
-     */
-    public static Statter create(String name) {
-        return new SimpleStatter(name);
-    }
-
-
-    public abstract void add(double value);
 }

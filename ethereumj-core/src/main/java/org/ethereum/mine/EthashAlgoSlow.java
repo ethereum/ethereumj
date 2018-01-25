@@ -17,6 +17,15 @@
  */
 package org.ethereum.mine;
 
+import static java.lang.System.arraycopy;
+import static java.math.BigInteger.valueOf;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.crypto.HashUtil.sha512;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
+import static org.spongycastle.util.Arrays.reverse;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigInteger;
@@ -24,23 +33,18 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Random;
 
-import static java.lang.System.arraycopy;
-import static java.math.BigInteger.valueOf;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.crypto.HashUtil.sha512;
-import static org.ethereum.util.ByteUtil.*;
-import static org.spongycastle.util.Arrays.reverse;
-
 /**
  * The Ethash algorithm described in https://github.com/ethereum/wiki/wiki/Ethash
- *
+ * <p>
  * This is the non-optimized Ethash implementation. It is left here for reference only
  * since the non-optimized version is slightly better for understanding the Ethash algorithm
- *
+ * <p>
  * Created by Anton Nashatyrev on 27.11.2015.
+ *
  * @deprecated Use a faster version {@link EthashAlgo}, this class is for reference only
  */
 public class EthashAlgoSlow {
+    private static final long FNV_PRIME = 0x01000193;
     EthashParams params;
 
     public EthashAlgoSlow() {
@@ -51,18 +55,19 @@ public class EthashAlgoSlow {
         this.params = params;
     }
 
-    public EthashParams getParams() {
-        return params;
-    }
-
     // Little-Endian !
     static long getWord(byte[] arr, int wordOff) {
         return ByteBuffer.wrap(arr, wordOff * 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt() & 0xFFFFFFFFL;
     }
+
     static void setWord(byte[] arr, int wordOff, long val) {
         ByteBuffer bb = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt((int) val);
         bb.rewind();
         bb.get(arr, wordOff * 4, 4);
+    }
+
+    public EthashParams getParams() {
+        return params;
     }
 
     public byte[][] makeCache(long cacheSize, byte[] seed) {
@@ -82,13 +87,12 @@ public class EthashAlgoSlow {
         return o;
     }
 
-    private static final long FNV_PRIME = 0x01000193;
     long fnv(long v1, long v2) {
         return ((v1 * FNV_PRIME) ^ v2) % (1L << 32);
     }
 
     byte[] fnv(byte[] b1, byte[] b2) {
-        if (b1.length != b2.length || b1.length % 4 != 0) throw new RuntimeException();
+        if (b1.length != b2.length || b1.length % 4 != 0) { throw new RuntimeException(); }
 
         byte[] ret = new byte[b1.length];
         for (int i = 0; i < b1.length / 4; i++) {
@@ -121,8 +125,9 @@ public class EthashAlgoSlow {
         return ret;
     }
 
-    public Pair<byte[], byte[]> hashimoto(byte[] blockHeaderTruncHash, byte[] nonce, long fullSize, DatasetLookup lookup) {
-//        if (nonce.length != 4) throw new RuntimeException("nonce.length != 4");
+    public Pair<byte[], byte[]> hashimoto(byte[] blockHeaderTruncHash, byte[] nonce, long fullSize,
+                                          DatasetLookup lookup) {
+        //        if (nonce.length != 4) throw new RuntimeException("nonce.length != 4");
 
         int w = params.getMIX_BYTES() / params.getWORD_BYTES();
         int mixhashes = params.getMIX_BYTES() / params.getHASH_BYTES();
@@ -155,7 +160,7 @@ public class EthashAlgoSlow {
     }
 
     public Pair<byte[], byte[]> hashimotoLight(long fullSize, final byte[][] cache, byte[] blockHeaderTruncHash,
-                                               byte[]  nonce) {
+                                               byte[] nonce) {
         return hashimoto(blockHeaderTruncHash, nonce, fullSize, new DatasetLookup() {
             @Override
             public byte[] lookup(int idx) {
@@ -165,7 +170,7 @@ public class EthashAlgoSlow {
     }
 
     public Pair<byte[], byte[]> hashimotoFull(long fullSize, final byte[][] dataset, byte[] blockHeaderTruncHash,
-                                              byte[]  nonce) {
+                                              byte[] nonce) {
         return hashimoto(blockHeaderTruncHash, nonce, fullSize, new DatasetLookup() {
             @Override
             public byte[] lookup(int idx) {
@@ -177,11 +182,11 @@ public class EthashAlgoSlow {
     public long mine(long fullSize, byte[][] dataset, byte[] blockHeaderTruncHash, long difficulty) {
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
         long nonce = new Random().nextLong();
-        while(!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoFull(fullSize, dataset, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
+            if (h.compareTo(target) < 0) { break; }
         }
         return nonce;
     }
@@ -193,11 +198,11 @@ public class EthashAlgoSlow {
     public long mineLight(long fullSize, final byte[][] cache, byte[] blockHeaderTruncHash, long difficulty) {
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
         long nonce = new Random().nextLong();
-        while(!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
+            if (h.compareTo(target) < 0) { break; }
         }
         return nonce;
     }

@@ -25,7 +25,7 @@ import org.ethereum.core.BlockHeader;
 import java.util.List;
 
 /**
- *  Checks if the block is from the right fork  
+ * Checks if the block is from the right fork
  */
 public class BlockHashRule extends BlockHeaderRule {
 
@@ -37,7 +37,8 @@ public class BlockHashRule extends BlockHeaderRule {
 
     @Override
     public ValidationResult validate(BlockHeader header) {
-        List<Pair<Long, BlockHeaderValidator>> validators = blockchainConfig.getConfigForBlock(header.getNumber()).headerValidators();
+        List<Pair<Long, BlockHeaderValidator>> validators =
+                blockchainConfig.getConfigForBlock(header.getNumber()).headerValidators();
         for (Pair<Long, BlockHeaderValidator> pair : validators) {
             if (header.getNumber() == pair.getLeft()) {
                 ValidationResult result = pair.getRight().validate(header);

@@ -22,9 +22,9 @@ import org.ethereum.util.ByteUtil;
 /**
  * When propagating changes to the backing Source XORs keys
  * with the specified value
- *
+ * <p>
  * May be useful for merging several Sources into a single
- *
+ * <p>
  * Created by Anton Nashatyrev on 18.02.2016.
  */
 public class XorDataSource<V> extends AbstractChainedSource<byte[], V, byte[], V> {

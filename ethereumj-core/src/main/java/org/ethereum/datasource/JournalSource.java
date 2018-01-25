@@ -32,68 +32,30 @@ import java.util.List;
  * delayed until 'persistUpdate' is called for the corresponding hash.
  * Also 'revertUpdate' might be called for a hash, in this case all inserts are removed
  * from the database.
- *
+ * <p>
  * Normally this class is used for State pruning: we need all the state nodes for last N
  * blocks to be able to get back to previous state for applying fork block
  * however we would like to delete 'zombie' nodes which are not referenced anymore by
  * calling 'persistUpdate' for the block CurrentBlockNumber - N and we would
  * also like to remove the updates made by the blocks which weren't too lucky
  * to remain on the main chain by calling revertUpdate for such blocks
- *
+ * <p>
  * NOTE: the backing Source should be <b>counting</b> for this class to work correctly
  * if e.g. some key is deleted in block 100 then added in block 200
  * then pruning of the block 100 would delete this key from the backing store
  * if it was non-counting
- *
+ * <p>
  * Created by Anton Nashatyrev on 08.11.2016.
  */
 public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V>
         implements HashedKeySource<byte[], V> {
 
-    private static class Update {
-        byte[] updateHash;
-        List<byte[]> insertedKeys = new ArrayList<>();
-        List<byte[]> deletedKeys = new ArrayList<>();
-
-        public Update() {
-        }
-
-        public Update(byte[] bytes) {
-            parse(bytes);
-        }
-
-        public byte[] serialize() {
-            byte[][] insertedBytes = new byte[insertedKeys.size()][];
-            for (int i = 0; i < insertedBytes.length; i++) {
-                insertedBytes[i] = RLP.encodeElement(insertedKeys.get(i));
-            }
-            byte[][] deletedBytes = new byte[deletedKeys.size()][];
-            for (int i = 0; i < deletedBytes.length; i++) {
-                deletedBytes[i] = RLP.encodeElement(deletedKeys.get(i));
-            }
-            return RLP.encodeList(RLP.encodeElement(updateHash),
-                    RLP.encodeList(insertedBytes), RLP.encodeList(deletedBytes));
-        }
-
-        private void parse(byte[] encoded) {
-            RLPList l = (RLPList) RLP.decode2(encoded).get(0);
-            updateHash = l.get(0).getRLPData();
-
-            for (RLPElement aRInserted : (RLPList) l.get(1)) {
-                insertedKeys.add(aRInserted.getRLPData());
-            }
-            for (RLPElement aRDeleted : (RLPList) l.get(2)) {
-                deletedKeys.add(aRDeleted.getRLPData());
-            }
-        }
-    }
-
-    private Update currentUpdate = new Update();
-
     Source<byte[], Update> journal = new HashMapDB<>();
+    private Update currentUpdate = new Update();
 
     /**
      * Constructs instance with the underlying backing Source
+     *
      * @param src the Source must implement counting semantics
      *            see e.g. {@link CountingBytesSource} or {@link WriteCache.CacheType#COUNTING}
      */
@@ -102,11 +64,11 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     }
 
     public void setJournalStore(Source<byte[], byte[]> journalSource) {
-        journal = new SourceCodec.BytesKey<>(journalSource,
-                new Serializer<Update, byte[]>() {
-                    public byte[] serialize(Update object) { return object.serialize(); }
-                    public Update deserialize(byte[] stream) { return stream == null ? null : new Update(stream); }
-                });
+        journal = new SourceCodec.BytesKey<>(journalSource, new Serializer<Update, byte[]>() {
+            public byte[] serialize(Update object) { return object.serialize(); }
+
+            public Update deserialize(byte[] stream) { return stream == null ? null : new Update(stream); }
+        });
     }
 
     /**
@@ -155,7 +117,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     }
 
     /**
-     *  Checks if the update with this hash key exists
+     * Checks if the update with this hash key exists
      */
     public synchronized boolean hasUpdate(byte[] updateHash) {
         return journal.get(updateHash) != null;
@@ -166,7 +128,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      */
     public synchronized void persistUpdate(byte[] updateHash) {
         Update update = journal.get(updateHash);
-        if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
+        if (update == null) { throw new RuntimeException("No update found: " + Hex.toHexString(updateHash)); }
         for (byte[] key : update.deletedKeys) {
             getSource().delete(key);
         }
@@ -178,7 +140,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
      */
     public synchronized void revertUpdate(byte[] updateHash) {
         Update update = journal.get(updateHash);
-        if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
+        if (update == null) { throw new RuntimeException("No update found: " + Hex.toHexString(updateHash)); }
         for (byte[] key : update.insertedKeys) {
             getSource().delete(key);
         }
@@ -189,5 +151,44 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     public synchronized boolean flushImpl() {
         journal.flush();
         return false;
+    }
+
+    private static class Update {
+        byte[] updateHash;
+        List<byte[]> insertedKeys = new ArrayList<>();
+        List<byte[]> deletedKeys = new ArrayList<>();
+
+        public Update() {
+        }
+
+        public Update(byte[] bytes) {
+            parse(bytes);
+        }
+
+        public byte[] serialize() {
+            byte[][] insertedBytes = new byte[insertedKeys.size()][];
+            for (int i = 0; i < insertedBytes.length; i++) {
+                insertedBytes[i] = RLP.encodeElement(insertedKeys.get(i));
+            }
+            byte[][] deletedBytes = new byte[deletedKeys.size()][];
+            for (int i = 0; i < deletedBytes.length; i++) {
+                deletedBytes[i] = RLP.encodeElement(deletedKeys.get(i));
+            }
+            return RLP.encodeList(RLP.encodeElement(updateHash),
+                                  RLP.encodeList(insertedBytes),
+                                  RLP.encodeList(deletedBytes));
+        }
+
+        private void parse(byte[] encoded) {
+            RLPList l = (RLPList) RLP.decode2(encoded).get(0);
+            updateHash = l.get(0).getRLPData();
+
+            for (RLPElement aRInserted : (RLPList) l.get(1)) {
+                insertedKeys.add(aRInserted.getRLPData());
+            }
+            for (RLPElement aRDeleted : (RLPList) l.get(2)) {
+                deletedKeys.add(aRDeleted.getRLPData());
+            }
+        }
     }
 }

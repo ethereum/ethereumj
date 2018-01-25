@@ -27,9 +27,8 @@ import java.util.List;
 /**
  * Wrapper around an Ethereum NewBlockHashes message on the network<br>
  *
- * @see EthMessageCodes#NEW_BLOCK_HASHES
- *
  * @author Mikhail Kalinin
+ * @see EthMessageCodes#NEW_BLOCK_HASHES
  * @since 05.09.2015
  */
 public class NewBlockHashesMessage extends EthMessage {
@@ -49,7 +48,7 @@ public class NewBlockHashesMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockIdentifiers = new ArrayList<>();
@@ -62,8 +61,7 @@ public class NewBlockHashesMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (BlockIdentifier identifier : blockIdentifiers)
-            encodedElements.add(identifier.getEncoded());
+        for (BlockIdentifier identifier : blockIdentifiers) { encodedElements.add(identifier.getEncoded()); }
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
@@ -71,7 +69,7 @@ public class NewBlockHashesMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 

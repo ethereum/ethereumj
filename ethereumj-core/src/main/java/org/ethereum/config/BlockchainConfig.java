@@ -18,7 +18,10 @@
 package org.ethereum.config;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -32,7 +35,7 @@ import java.util.List;
 
 /**
  * Describes constants and algorithms used for a specific blockchain at specific stage
- *
+ * <p>
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public interface BlockchainConfig {
@@ -69,8 +72,9 @@ public interface BlockchainConfig {
 
     /**
      * Validates transaction by the changes made by it in the repository
+     *
      * @param blockStore
-     * @param curBlock The block being imported
+     * @param curBlock        The block being imported
      * @param repositoryTrack The repository track changed by transaction
      * @return null if all is fine or String validation error
      */
@@ -105,7 +109,8 @@ public interface BlockchainConfig {
     /**
      * Calculates available gas to be passed for callee
      * Since EIP150
-     * @param op  Opcode
+     *
+     * @param op           Opcode
      * @param requestedGas amount of gas requested by the program
      * @param availableGas available gas
      * @throws Program.OutOfGasException If passed args doesn't conform to limitations

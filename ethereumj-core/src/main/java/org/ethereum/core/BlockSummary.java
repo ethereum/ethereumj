@@ -17,6 +17,9 @@
  */
 package org.ethereum.core;
 
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.ethereum.util.ByteUtil.toHexString;
+
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -27,9 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 public class BlockSummary {
 
@@ -56,57 +56,12 @@ public class BlockSummary {
         }
     }
 
-    public BlockSummary(Block block, Map<byte[], BigInteger> rewards, List<TransactionReceipt> receipts, List<TransactionExecutionSummary> summaries) {
+    public BlockSummary(Block block, Map<byte[], BigInteger> rewards, List<TransactionReceipt> receipts,
+                        List<TransactionExecutionSummary> summaries) {
         this.block = block;
         this.rewards = rewards;
         this.receipts = receipts;
         this.summaries = summaries;
-    }
-
-    public Block getBlock() {
-        return block;
-    }
-
-    public List<TransactionReceipt> getReceipts() {
-        return receipts;
-    }
-
-    public List<TransactionExecutionSummary> getSummaries() {
-        return summaries;
-    }
-
-    /**
-     * All the mining rewards paid out for this block, including the main block rewards, uncle rewards, and transaction fees.
-     */
-    public Map<byte[], BigInteger> getRewards() {
-        return rewards;
-    }
-
-    public void setTotalDifficulty(BigInteger totalDifficulty) {
-        this.totalDifficulty = totalDifficulty;
-    }
-
-    public BigInteger getTotalDifficulty() {
-        return totalDifficulty;
-    }
-
-    public byte[] getEncoded() {
-        return RLP.encodeList(
-                block.getEncoded(),
-                encodeRewards(rewards),
-                encodeSummaries(summaries),
-                encodeReceipts(receipts)
-        );
-    }
-
-    /**
-     * Whether this block could be new best block
-     * for the chain with provided old total difficulty
-     * @param oldTotDifficulty Total difficulty for the suggested chain
-     * @return True - best, False - not best
-     */
-    public boolean betterThan(BigInteger oldTotDifficulty) {
-        return getTotalDifficulty().compareTo(oldTotDifficulty) > 0;
     }
 
     private static <T> byte[] encodeList(List<T> entries, Function<T, byte[]> encoder) {
@@ -126,7 +81,8 @@ public class BlockSummary {
         return result;
     }
 
-    private static <K, V> byte[] encodeMap(Map<K, V> map, Function<K, byte[]> keyEncoder, Function<V, byte[]> valueEncoder) {
+    private static <K, V> byte[] encodeMap(Map<K, V> map, Function<K, byte[]> keyEncoder,
+                                           Function<V, byte[]> valueEncoder) {
         byte[][] result = new byte[map.size()][];
         int i = 0;
         for (Map.Entry<K, V> entry : map.entrySet()) {
@@ -137,7 +93,8 @@ public class BlockSummary {
         return RLP.encodeList(result);
     }
 
-    private static <K, V> Map<K, V> decodeMap(RLPList list, Function<byte[], K> keyDecoder, Function<byte[], V> valueDecoder) {
+    private static <K, V> Map<K, V> decodeMap(RLPList list, Function<byte[], K> keyDecoder,
+                                              Function<byte[], V> valueDecoder) {
         Map<K, V> result = new HashMap<>();
         for (RLPElement entry : list) {
             K key = keyDecoder.apply(((RLPList) entry).get(0).getRLPData());
@@ -173,8 +130,52 @@ public class BlockSummary {
     }
 
     private static Map<byte[], BigInteger> decodeRewards(RLPList rewards) {
-        return decodeMap(rewards, bytes -> bytes, bytes ->
-                isEmpty(bytes) ? BigInteger.ZERO : new BigInteger(1, bytes)
-        );
+        return decodeMap(rewards, bytes -> bytes, bytes -> isEmpty(bytes) ? BigInteger.ZERO : new BigInteger(1, bytes));
+    }
+
+    public Block getBlock() {
+        return block;
+    }
+
+    public List<TransactionReceipt> getReceipts() {
+        return receipts;
+    }
+
+    public List<TransactionExecutionSummary> getSummaries() {
+        return summaries;
+    }
+
+    /**
+     * All the mining rewards paid out for this block, including the main block rewards, uncle rewards, and
+     * transaction fees.
+     */
+    public Map<byte[], BigInteger> getRewards() {
+        return rewards;
+    }
+
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty;
+    }
+
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty = totalDifficulty;
+    }
+
+    public byte[] getEncoded() {
+        return RLP.encodeList(block.getEncoded(),
+                              encodeRewards(rewards),
+                              encodeSummaries(summaries),
+                              encodeReceipts(receipts));
+    }
+
+    /**
+     * Whether this block could be new best block
+     * for the chain with provided old total difficulty
+     *
+     * @param oldTotDifficulty Total difficulty for the suggested chain
+     * @return True - best, False - not best
+     */
+    public boolean betterThan(BigInteger oldTotDifficulty) {
+        return getTotalDifficulty().compareTo(oldTotDifficulty) > 0;
     }
 }

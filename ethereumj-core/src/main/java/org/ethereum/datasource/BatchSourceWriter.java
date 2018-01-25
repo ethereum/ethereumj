@@ -19,11 +19,10 @@ package org.ethereum.datasource;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Clue class between Source and BatchSource
- *
+ * <p>
  * Created by Anton Nashatyrev on 29.11.2016.
  */
 public class BatchSourceWriter<Key, Value> extends AbstractChainedSource<Key, Value, Key, Value> {

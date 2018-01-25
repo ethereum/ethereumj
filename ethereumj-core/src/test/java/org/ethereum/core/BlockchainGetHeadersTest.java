@@ -18,8 +18,8 @@
 package org.ethereum.core;
 
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.RepositoryRoot;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -31,72 +31,8 @@ import java.util.List;
  */
 public class BlockchainGetHeadersTest {
 
-    private class BlockStoreMock extends BlockStoreDummy {
-
-        private List<Block> dummyBlocks = new ArrayList<>();
-
-        public BlockStoreMock() {
-            byte [] emptyArray = new byte[0];
-            byte [] recentHash = emptyArray;
-
-            for (long i = 0; i < 10; ++i) {
-                BlockHeader blockHeader = new BlockHeader(recentHash, emptyArray, emptyArray, emptyArray, emptyArray,
-                        i, emptyArray, 0L, 0L, emptyArray, emptyArray, emptyArray);
-                recentHash = blockHeader.getHash();
-                Block block = new Block(blockHeader, new ArrayList<Transaction>(), new ArrayList<BlockHeader>());
-                dummyBlocks.add(block);
-            }
-        }
-
-        @Override
-        public Block getBlockByHash(byte[] hash) {
-            for (Block block: dummyBlocks) {
-                if (Arrays.equals(block.getHash(), hash)) {
-                    return block;
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        public Block getChainBlockByNumber(long blockNumber) {
-            return blockNumber < dummyBlocks.size() ? dummyBlocks.get((int) blockNumber) : null;
-        }
-
-        @Override
-        public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
-            List<BlockHeader> headers = new ArrayList<>();
-            Block start = getBlockByHash(hash);
-            if (start != null) {
-                long i = start.getNumber();
-                while (i >= 0 && headers.size() < qty) {
-                    headers.add(getChainBlockByNumber(i).getHeader());
-                    --i;
-                }
-            }
-
-            return headers;
-        }
-
-        @Override
-        public Block getBestBlock() {
-            return dummyBlocks.get(dummyBlocks.size() - 1);
-        }
-    }
-
-
-    private class BlockchainImplTester extends BlockchainImpl {
-
-        public BlockchainImplTester() {
-            blockStore = new BlockStoreMock();
-            setRepository(new RepositoryRoot(new HashMapDB<byte[]>()));
-            setBestBlock(blockStore.getChainBlockByNumber(9));
-        }
-    }
-
-
     private BlockchainImpl blockchain;
+
 
     public BlockchainGetHeadersTest() {
         blockchain = new BlockchainImplTester();
@@ -181,5 +117,78 @@ public class BlockchainGetHeadersTest {
         List<BlockHeader> headersMore = blockchain.getListOfHeadersStartFrom(identifierMore, skip, 3, false);
         assert headersMore.size() == 1;
         assert headersMore.get(0).getNumber() == 8L;
+    }
+
+    private class BlockStoreMock extends BlockStoreDummy {
+
+        private List<Block> dummyBlocks = new ArrayList<>();
+
+        public BlockStoreMock() {
+            byte[] emptyArray = new byte[0];
+            byte[] recentHash = emptyArray;
+
+            for (long i = 0; i < 10; ++i) {
+                BlockHeader blockHeader = new BlockHeader(recentHash,
+                                                          emptyArray,
+                                                          emptyArray,
+                                                          emptyArray,
+                                                          emptyArray,
+                                                          i,
+                                                          emptyArray,
+                                                          0L,
+                                                          0L,
+                                                          emptyArray,
+                                                          emptyArray,
+                                                          emptyArray);
+                recentHash = blockHeader.getHash();
+                Block block = new Block(blockHeader, new ArrayList<Transaction>(), new ArrayList<BlockHeader>());
+                dummyBlocks.add(block);
+            }
+        }
+
+        @Override
+        public Block getBlockByHash(byte[] hash) {
+            for (Block block : dummyBlocks) {
+                if (Arrays.equals(block.getHash(), hash)) {
+                    return block;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public Block getChainBlockByNumber(long blockNumber) {
+            return blockNumber < dummyBlocks.size() ? dummyBlocks.get((int) blockNumber) : null;
+        }
+
+        @Override
+        public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+            List<BlockHeader> headers = new ArrayList<>();
+            Block start = getBlockByHash(hash);
+            if (start != null) {
+                long i = start.getNumber();
+                while (i >= 0 && headers.size() < qty) {
+                    headers.add(getChainBlockByNumber(i).getHeader());
+                    --i;
+                }
+            }
+
+            return headers;
+        }
+
+        @Override
+        public Block getBestBlock() {
+            return dummyBlocks.get(dummyBlocks.size() - 1);
+        }
+    }
+
+    private class BlockchainImplTester extends BlockchainImpl {
+
+        public BlockchainImplTester() {
+            blockStore = new BlockStoreMock();
+            setRepository(new RepositoryRoot(new HashMapDB<byte[]>()));
+            setBestBlock(blockStore.getChainBlockByNumber(9));
+        }
     }
 }

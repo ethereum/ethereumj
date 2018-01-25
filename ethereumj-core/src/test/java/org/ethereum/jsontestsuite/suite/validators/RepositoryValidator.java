@@ -17,16 +17,16 @@
  */
 package org.ethereum.jsontestsuite.suite.validators;
 
+import static org.ethereum.util.ByteUtil.difference;
+
 import org.ethereum.core.AccountState;
-import org.ethereum.db.ContractDetails;
 import org.ethereum.core.Repository;
+import org.ethereum.db.ContractDetails;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static org.ethereum.util.ByteUtil.difference;
 
 public class RepositoryValidator {
 
@@ -45,9 +45,9 @@ public class RepositoryValidator {
 
         if (expectedKeys.size() != currentKeys.size()) {
 
-            String out =
-                    String.format("The size of the repository is invalid \n expected: %d, \n current: %d",
-                            expectedKeys.size(), currentKeys.size());
+            String out = String.format("The size of the repository is invalid \n expected: %d, \n current: %d",
+                                       expectedKeys.size(),
+                                       currentKeys.size());
             results.add(out);
         }
 
@@ -60,23 +60,20 @@ public class RepositoryValidator {
             ContractDetails postDetails = postRepository.getContractDetails(address);
 
             List<String> accountResult =
-                AccountValidator.valid(Hex.toHexString(address), postState, postDetails, state, details);
+                    AccountValidator.valid(Hex.toHexString(address), postState, postDetails, state, details);
 
             results.addAll(accountResult);
         }
 
         Set<byte[]> expectedButAbsent = difference(expectedKeys, currentKeys);
-        for (byte[] address : expectedButAbsent){
-            String formattedString = String.format("Account: %s: expected but doesn't exist",
-                    Hex.toHexString(address));
+        for (byte[] address : expectedButAbsent) {
+            String formattedString = String.format("Account: %s: expected but doesn't exist", Hex.toHexString(address));
             results.add(formattedString);
         }
 
         // Compare roots
-        results.addAll(validRoot(
-                Hex.toHexString(currentRepository.getRoot()),
-                Hex.toHexString(postRepository.getRoot()))
-        );
+        results.addAll(validRoot(Hex.toHexString(currentRepository.getRoot()),
+                                 Hex.toHexString(postRepository.getRoot())));
 
         return results;
     }
@@ -84,10 +81,10 @@ public class RepositoryValidator {
     public static List<String> validRoot(String currRoot, String postRoot) {
 
         List<String> results = new ArrayList<>();
-        if (!postRoot.equals(currRoot)){
+        if (!postRoot.equals(currRoot)) {
 
-            String formattedString = String.format("Root hash don't much: expected: %s current: %s",
-                    postRoot, currRoot);
+            String formattedString =
+                    String.format("Root hash don't much: expected: %s current: %s", postRoot, currRoot);
             results.add(formattedString);
         }
 

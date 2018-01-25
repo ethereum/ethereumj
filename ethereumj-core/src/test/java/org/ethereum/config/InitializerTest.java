@@ -17,6 +17,15 @@
  */
 package org.ethereum.config;
 
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.EXIT;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.IGNORE;
+import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.RESET;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -34,10 +43,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
-import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior;
-import static org.ethereum.config.Initializer.DatabaseVersionHandler.Behavior.*;
-import static org.junit.Assert.*;
 
 /**
  * Created by Stan Reshetnyk on 11.09.16.
@@ -163,8 +168,7 @@ public class InitializerTest {
 
     @Test
     public void helper_shouldPutVersion_afterDatabaseReset() throws IOException {
-        Config config = ConfigFactory.empty()
-                .withValue("database.reset", ConfigValueFactory.fromAnyRef(true));
+        Config config = ConfigFactory.empty().withValue("database.reset", ConfigValueFactory.fromAnyRef(true));
 
         SPO systemProperties = new SPO(config);
         systemProperties.setDataBaseDir(databaseDir);
@@ -232,7 +236,7 @@ public class InitializerTest {
 
         if (behavior != null) {
             config = config.withValue("database.incompatibleDatabaseBehavior",
-                    ConfigValueFactory.fromAnyRef(behavior.toString().toLowerCase()));
+                                      ConfigValueFactory.fromAnyRef(behavior.toString().toLowerCase()));
         }
 
 

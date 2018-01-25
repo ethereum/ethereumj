@@ -17,18 +17,27 @@
  */
 package org.ethereum.core;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
+import static org.ethereum.util.blockchain.EtherUtil.convert;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -39,11 +48,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
-import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
-import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
  * @author Mikhail Kalinin
@@ -59,50 +63,6 @@ public class PendingStateTest {
     @AfterClass
     public static void cleanup() {
         SystemProperties.resetToDefault();
-    }
-
-    static class PendingListener extends EthereumListenerAdapter {
-        public BlockingQueue<Pair<Block, List<TransactionReceipt>>> onBlock = new LinkedBlockingQueue<>();
-        public BlockingQueue<Object> onPendingStateChanged = new LinkedBlockingQueue<>();
-//        public BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>> onPendingTransactionUpdate = new LinkedBlockingQueue<>();
-
-        Map<ByteArrayWrapper, BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>>>
-                onPendingTransactionUpdate = new HashMap<>();
-
-        @Override
-        public void onBlock(Block block, List<TransactionReceipt> receipts) {
-            System.out.println("PendingStateTest.onBlock:" + "block = [" + block.getShortDescr() + "]");
-            onBlock.add(Pair.of(block, receipts));
-        }
-
-        @Override
-        public void onPendingStateChanged(PendingState pendingState) {
-            System.out.println("PendingStateTest.onPendingStateChanged.");
-            onPendingStateChanged.add(new Object());
-        }
-
-        @Override
-        public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
-            System.out.println("PendingStateTest.onPendingTransactionUpdate:" + "txReceipt.err = [" + txReceipt.getError() + "], state = [" + state + "], block: " + block.getShortDescr());
-            getQueueFor(txReceipt.getTransaction()).add(Triple.of(txReceipt, state, block));
-        }
-
-        public synchronized BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>> getQueueFor(Transaction tx) {
-            ByteArrayWrapper hashW = new ByteArrayWrapper(tx.getHash());
-            BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>> queue = onPendingTransactionUpdate.get(hashW);
-            if (queue == null) {
-                queue = new LinkedBlockingQueue<>();
-                onPendingTransactionUpdate.put(hashW, queue);
-            }
-            return queue;
-        }
-
-        public PendingTransactionState pollTxUpdateState(Transaction tx) throws InterruptedException {
-            return getQueueFor(tx).poll(5, SECONDS).getMiddle();
-        }
-        public Triple<TransactionReceipt, PendingTransactionState, Block> pollTxUpdate(Transaction tx) throws InterruptedException {
-            return getQueueFor(tx).poll(5, SECONDS);
-        }
     }
 
     @Test
@@ -167,7 +127,7 @@ public class PendingStateTest {
         for (int i = 0; i < SystemProperties.getDefault().txOutdatedThreshold() + 1; i++) {
             bc.createBlock();
             txUpd = l.pollTxUpdate(tx3);
-            if (txUpd.getMiddle() != PENDING) break;
+            if (txUpd.getMiddle() != PENDING) { break; }
         }
 
         // tx3 dropped due to timeout
@@ -196,7 +156,9 @@ public class PendingStateTest {
 
         Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
         pendingState.addPendingTransaction(tx1);
-        Transaction tx2 = bc.createTransaction(charlie, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);;
+        Transaction tx2 =
+                bc.createTransaction(charlie, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        ;
         pendingState.addPendingTransaction(tx2);
 
         Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
@@ -261,7 +223,9 @@ public class PendingStateTest {
 
         Transaction tx1 = bc.createTransaction(bob, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
         pendingState.addPendingTransaction(tx1);
-        Transaction tx2 = bc.createTransaction(charlie, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);;
+        Transaction tx2 =
+                bc.createTransaction(charlie, 0, alice.getAddress(), BigInteger.valueOf(1000000), new byte[0]);
+        ;
         pendingState.addPendingTransaction(tx2);
 
         Assert.assertEquals(l.pollTxUpdateState(tx1), NEW_PENDING);
@@ -479,11 +443,9 @@ public class PendingStateTest {
         ECKey alice = new ECKey();
         ECKey bob = new ECKey();
 
-        SolidityContract contract = bc.submitNewContract("contract A {" +
-                "  function getPrevBlockHash() returns (bytes32) {" +
-                "    return block.blockhash(block.number - 1);" +
-                "  }" +
-                "}");
+        SolidityContract contract = bc.submitNewContract(
+                "contract A {" + "  function getPrevBlockHash() returns (bytes32) {" +
+                        "    return block.blockhash(block.number - 1);" + "  }" + "}");
 
         bc.sendEther(bob.getAddress(), convert(100, ETHER));
 
@@ -625,7 +587,8 @@ public class PendingStateTest {
         final CountDownLatch txHandle = new CountDownLatch(1);
         PendingListener l = new PendingListener() {
             @Override
-            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state,
+                                                   Block block) {
                 assert !txReceipt.isSuccessful();
                 assert txReceipt.getError().toLowerCase().contains("invalid");
                 assert txReceipt.getError().toLowerCase().contains("receive address");
@@ -645,5 +608,57 @@ public class PendingStateTest {
         pendingState.addPendingTransaction(tx1);
 
         assert txHandle.await(3, TimeUnit.SECONDS);
+    }
+
+    static class PendingListener extends EthereumListenerAdapter {
+        public BlockingQueue<Pair<Block, List<TransactionReceipt>>> onBlock = new LinkedBlockingQueue<>();
+        public BlockingQueue<Object> onPendingStateChanged = new LinkedBlockingQueue<>();
+        //        public BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>>
+        // onPendingTransactionUpdate = new LinkedBlockingQueue<>();
+
+        Map<ByteArrayWrapper, BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>>>
+                onPendingTransactionUpdate = new HashMap<>();
+
+        @Override
+        public void onBlock(Block block, List<TransactionReceipt> receipts) {
+            System.out.println("PendingStateTest.onBlock:" + "block = [" + block.getShortDescr() + "]");
+            onBlock.add(Pair.of(block, receipts));
+        }
+
+        @Override
+        public void onPendingStateChanged(PendingState pendingState) {
+            System.out.println("PendingStateTest.onPendingStateChanged.");
+            onPendingStateChanged.add(new Object());
+        }
+
+        @Override
+        public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state,
+                                               Block block) {
+            System.out.println(
+                    "PendingStateTest.onPendingTransactionUpdate:" + "txReceipt.err = [" + txReceipt.getError() +
+                            "], state = [" + state + "], block: " + block.getShortDescr());
+            getQueueFor(txReceipt.getTransaction()).add(Triple.of(txReceipt, state, block));
+        }
+
+        public synchronized BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>> getQueueFor(
+                Transaction tx) {
+            ByteArrayWrapper hashW = new ByteArrayWrapper(tx.getHash());
+            BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>> queue =
+                    onPendingTransactionUpdate.get(hashW);
+            if (queue == null) {
+                queue = new LinkedBlockingQueue<>();
+                onPendingTransactionUpdate.put(hashW, queue);
+            }
+            return queue;
+        }
+
+        public PendingTransactionState pollTxUpdateState(Transaction tx) throws InterruptedException {
+            return getQueueFor(tx).poll(5, SECONDS).getMiddle();
+        }
+
+        public Triple<TransactionReceipt, PendingTransactionState, Block> pollTxUpdate(Transaction tx)
+                throws InterruptedException {
+            return getQueueFor(tx).poll(5, SECONDS);
+        }
     }
 }

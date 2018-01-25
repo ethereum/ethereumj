@@ -17,11 +17,11 @@
  */
 package org.ethereum.solidity.compiler;
 
+import static org.ethereum.solidity.compiler.ContractException.assembleError;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.ethereum.solidity.compiler.ContractException.assembleError;
 
 public class Sources {
 
@@ -43,7 +43,8 @@ public class Sources {
                     throw assembleError("can't resolve dependency: dependency '%s' not found.", dep);
                 }
                 src.injectDependency(depArtifact);
-            };
+            }
+            ;
         }
 
         for (SourceArtifact artifact : artifacts.values()) {
@@ -52,7 +53,7 @@ public class Sources {
             }
         }
     }
-    
+
     public String plainSource() {
         return artifacts.get(targetArtifact).plainSource();
     }

@@ -28,27 +28,32 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.handler.Eth;
 import org.ethereum.net.eth.handler.EthAdapter;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.eth.message.Eth63MessageFactory;
-import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.*;
-import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageFactory;
+import org.ethereum.net.rlpx.FrameCodec;
+import org.ethereum.net.rlpx.FrameCodecHandler;
+import org.ethereum.net.rlpx.HandshakeHandler;
+import org.ethereum.net.rlpx.MessageCodec;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.SnappyCodec;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageFactory;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.swarm.bzz.BzzMessageFactory;
+import org.ethereum.sync.SyncStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,7 +133,7 @@ public class Channel {
         isActive = remoteId != null && !remoteId.isEmpty();
 
         pipeline.addLast("readTimeoutHandler",
-                new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
+                         new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
         pipeline.addLast(stats.tcp);
         pipeline.addLast("handshakeHandler", handshakeHandler);
 
@@ -137,7 +142,7 @@ public class Channel {
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
             // unexpected disconnect
-//            handshakeHandler.generateTempKey();
+            //            handshakeHandler.generateTempKey();
         }
 
         handshakeHandler.setRemoteId(remoteId, this);
@@ -156,8 +161,8 @@ public class Channel {
         messageCodec.setBzzMessageFactory(new BzzMessageFactory());
     }
 
-    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec,
-                                            HelloMessage helloRemote) throws IOException, InterruptedException {
+    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote)
+            throws IOException, InterruptedException {
 
         logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
 
@@ -180,8 +185,8 @@ public class Channel {
         getNodeStatistics().rlpxHandshake.add();
     }
 
-    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec,
-                                 String nodeId) throws IOException, InterruptedException {
+    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId)
+            throws IOException, InterruptedException {
 
         final HelloMessage helloMessage = staticMessages.createHelloMessage(nodeId);
 
@@ -189,8 +194,9 @@ public class Channel {
         frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), helloMessage.getEncoded()), byteBufMsg);
         ctx.writeAndFlush(byteBufMsg).sync();
 
-        if (logger.isDebugEnabled())
+        if (logger.isDebugEnabled()) {
             logger.debug("To:   {}    Send:  {}", ctx.channel().remoteAddress(), helloMessage);
+        }
         getNodeStatistics().rlpxOutHello.add();
     }
 
@@ -215,9 +221,12 @@ public class Channel {
 
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
-            case V62:   return new Eth62MessageFactory();
-            case V63:   return new Eth63MessageFactory();
-            default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
+            case V62:
+                return new Eth62MessageFactory();
+            case V63:
+                return new Eth63MessageFactory();
+            default:
+                throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }
 
@@ -229,10 +238,6 @@ public class Channel {
     public void activateBzz(ChannelHandlerContext ctx) {
         ctx.pipeline().addLast(Capability.BZZ, bzzHandler);
         bzzHandler.activate();
-    }
-
-    public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
-        this.inetSocketAddress = inetSocketAddress;
     }
 
     public NodeStatistics getNodeStatistics() {
@@ -291,8 +296,8 @@ public class Channel {
     }
 
     public String getPeerIdShort() {
-        return node == null ? (remoteId != null && remoteId.length() >= 8 ? remoteId.substring(0,8) :remoteId)
-                : node.getHexIdShort();
+        return node == null ? (remoteId != null && remoteId.length() >= 8 ? remoteId.substring(0, 8) : remoteId) :
+                node.getHexIdShort();
     }
 
     public byte[] getNodeId() {
@@ -316,6 +321,10 @@ public class Channel {
 
     public InetSocketAddress getInetSocketAddress() {
         return inetSocketAddress;
+    }
+
+    public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
+        this.inetSocketAddress = inetSocketAddress;
     }
 
     public PeerStatistics getPeerStats() {
@@ -398,14 +407,15 @@ public class Channel {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         Channel channel = (Channel) o;
 
 
-        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
-        if (node != null ? !node.equals(channel.node) : channel.node != null) return false;
+        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) :
+                channel.inetSocketAddress != null) { return false; }
+        if (node != null ? !node.equals(channel.node) : channel.node != null) { return false; }
         return this == channel;
     }
 

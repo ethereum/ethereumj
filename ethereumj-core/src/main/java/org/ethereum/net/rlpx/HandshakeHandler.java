@@ -17,6 +17,9 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.net.rlpx.FrameCodec.Frame;
+import static org.ethereum.util.ByteUtil.bigEndianToShort;
+
 import com.google.common.io.ByteStreams;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -45,17 +48,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-import static org.ethereum.net.rlpx.FrameCodec.Frame;
-import static org.ethereum.util.ByteUtil.bigEndianToShort;
-
 /**
  * The Netty handler which manages initial negotiation with peer
  * (when either we initiating connection or remote peer initiates)
- *
+ * <p>
  * The initial handshake includes:
  * - first AuthInitiate -> AuthResponse messages when peers exchange with secrets
  * - second P2P Hello messages when P2P protocol and subprotocol capabilities are negotiated
- *
+ * <p>
  * After the handshake is done this handler reports secrets and other data to the Channel
  * which installs further handlers depending on the protocol parameters.
  * This handler is finally removed from the pipeline.
@@ -66,18 +66,16 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
-
-    private FrameCodec frameCodec;
     private final ECKey myKey;
+    private final SystemProperties config;
+    private final NodeManager nodeManager;
+    private FrameCodec frameCodec;
     private byte[] nodeId;
     private byte[] remoteId;
     private EncryptionHandshake handshake;
     private byte[] initiatePacket;
     private Channel channel;
     private boolean isHandshakeDone;
-
-    private final SystemProperties config;
-    private final NodeManager nodeManager;
 
     @Autowired
     public HandshakeHandler(final SystemProperties config, final NodeManager nodeManager) {
@@ -133,8 +131,9 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
         channel.getNodeStatistics().rlpxAuthMessagesSent.add();
 
-        if (loggerNet.isDebugEnabled())
+        if (loggerNet.isDebugEnabled()) {
             loggerNet.debug("To:   {}    Send:  {}", ctx.channel().remoteAddress(), msg);
+        }
     }
 
     // consume handshake, producing no resulting message to upper layers
@@ -144,8 +143,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
             if (frameCodec == null) {
 
                 byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
-                if (!buffer.isReadable(responsePacket.length))
-                    return;
+                if (!buffer.isReadable(responsePacket.length)) { return; }
                 buffer.readBytes(responsePacket);
 
                 try {
@@ -161,9 +159,10 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                     responsePacket = readEIP8Packet(buffer, responsePacket);
 
-                    if (responsePacket == null) return;
+                    if (responsePacket == null) { return; }
 
-                    AuthResponseMessageV4 response = handshake.handleAuthResponseV4(myKey, initiatePacket, responsePacket);
+                    AuthResponseMessageV4 response =
+                            handshake.handleAuthResponseV4(myKey, initiatePacket, responsePacket);
                     loggerNet.debug("From: {}    Recv:  {}", ctx.channel().remoteAddress(), response);
                 }
 
@@ -175,20 +174,19 @@ public class HandshakeHandler extends ByteToMessageDecoder {
             } else {
                 loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
                 List<Frame> frames = frameCodec.readFrames(buffer);
-                if (frames == null || frames.isEmpty())
-                    return;
+                if (frames == null || frames.isEmpty()) { return; }
                 Frame frame = frames.get(0);
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
                 if (frame.getType() == P2pMessageCodes.HELLO.asByte()) {
                     HelloMessage helloMessage = new HelloMessage(payload);
-                    if (loggerNet.isDebugEnabled())
+                    if (loggerNet.isDebugEnabled()) {
                         loggerNet.debug("From: {}    Recv:  {}", ctx.channel().remoteAddress(), helloMessage);
+                    }
                     isHandshakeDone = true;
                     this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage);
                 } else {
                     DisconnectMessage message = new DisconnectMessage(payload);
-                    if (loggerNet.isDebugEnabled())
-                        loggerNet.debug("From: {}    Recv:  {}", channel, message);
+                    if (loggerNet.isDebugEnabled()) { loggerNet.debug("From: {}    Recv:  {}", channel, message); }
                     channel.getNodeStatistics().nodeDisconnectedRemote(message.getReason());
                 }
             }
@@ -197,8 +195,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
             if (frameCodec == null) {
                 loggerWire.debug("FrameCodec == null");
                 byte[] authInitPacket = new byte[AuthInitiateMessage.getLength() + ECIESCoder.getOverhead()];
-                if (!buffer.isReadable(authInitPacket.length))
-                    return;
+                if (!buffer.isReadable(authInitPacket.length)) { return; }
                 buffer.readBytes(authInitPacket);
 
                 this.handshake = new EncryptionHandshake();
@@ -222,7 +219,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                         authInitPacket = readEIP8Packet(buffer, authInitPacket);
 
-                        if (authInitPacket == null) return;
+                        if (authInitPacket == null) { return; }
 
                         AuthInitiateMessageV4 initiateMessage = handshake.decryptAuthInitiateV4(authInitPacket, myKey);
                         loggerNet.debug("From: {}    Recv:  {}", ctx.channel().remoteAddress(), initiateMessage);
@@ -233,7 +230,8 @@ public class HandshakeHandler extends ByteToMessageDecoder {
 
                     } catch (InvalidCipherTextException ce) {
                         loggerNet.warn("Can't decrypt AuthInitiateMessage from " + ctx.channel().remoteAddress() +
-                                ". Most likely the remote peer used wrong public key (NodeID) to encrypt message.");
+                                               ". Most likely the remote peer used wrong public key (NodeID) to " +
+                                               "encrypt message.");
                         return;
                     }
                 }
@@ -255,12 +253,11 @@ public class HandshakeHandler extends ByteToMessageDecoder {
                 ctx.writeAndFlush(byteBufMsg).sync();
             } else {
                 List<Frame> frames = frameCodec.readFrames(buffer);
-                if (frames == null || frames.isEmpty())
-                    return;
+                if (frames == null || frames.isEmpty()) { return; }
                 Frame frame = frames.get(0);
 
                 Message message = new P2pMessageFactory().create((byte) frame.getType(),
-                        ByteStreams.toByteArray(frame.getStream()));
+                                                                 ByteStreams.toByteArray(frame.getStream()));
                 loggerNet.debug("From: {}    Recv:  {}", ctx.channel().remoteAddress(), message);
 
                 if (frame.getType() == P2pMessageCodes.DISCONNECT.asByte()) {
@@ -290,14 +287,12 @@ public class HandshakeHandler extends ByteToMessageDecoder {
     private byte[] readEIP8Packet(ByteBuf buffer, byte[] plainPacket) {
 
         int size = bigEndianToShort(plainPacket);
-        if (size < plainPacket.length)
-            throw new IllegalArgumentException("AuthResponse packet size is too low");
+        if (size < plainPacket.length) { throw new IllegalArgumentException("AuthResponse packet size is too low"); }
 
         int bytesLeft = size - plainPacket.length + 2;
         byte[] restBytes = new byte[bytesLeft];
 
-        if (!buffer.isReadable(restBytes.length))
-            return null;
+        if (!buffer.isReadable(restBytes.length)) { return null; }
 
         buffer.readBytes(restBytes);
 
@@ -308,7 +303,7 @@ public class HandshakeHandler extends ByteToMessageDecoder {
         return fullResponse;
     }
 
-    public void setRemoteId(String remoteId, Channel channel){
+    public void setRemoteId(String remoteId, Channel channel) {
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
     }

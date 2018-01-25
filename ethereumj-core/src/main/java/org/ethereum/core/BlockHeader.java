@@ -17,6 +17,10 @@
  */
 package org.ethereum.core;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.ByteUtil.toHexString;
+
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -29,10 +33,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.List;
-
-import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Block header is a value object containing
@@ -108,12 +108,10 @@ public class BlockHeader {
         this.stateRoot = rlpHeader.get(3).getRLPData();
 
         this.txTrieRoot = rlpHeader.get(4).getRLPData();
-        if (this.txTrieRoot == null)
-            this.txTrieRoot = EMPTY_TRIE_HASH;
+        if (this.txTrieRoot == null) { this.txTrieRoot = EMPTY_TRIE_HASH; }
 
         this.receiptTrieRoot = rlpHeader.get(5).getRLPData();
-        if (this.receiptTrieRoot == null)
-            this.receiptTrieRoot = EMPTY_TRIE_HASH;
+        if (this.receiptTrieRoot == null) { this.receiptTrieRoot = EMPTY_TRIE_HASH; }
 
         this.logsBloom = rlpHeader.get(6).getRLPData();
         this.difficulty = rlpHeader.get(7).getRLPData();
@@ -134,10 +132,9 @@ public class BlockHeader {
         this.nonce = rlpHeader.get(14).getRLPData();
     }
 
-    public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
-                       byte[] logsBloom, byte[] difficulty, long number,
-                       byte[] gasLimit, long gasUsed, long timestamp,
-                       byte[] extraData, byte[] mixHash, byte[] nonce) {
+    public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom, byte[] difficulty,
+                       long number, byte[] gasLimit, long gasUsed, long timestamp, byte[] extraData, byte[] mixHash,
+                       byte[] nonce) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
@@ -192,13 +189,13 @@ public class BlockHeader {
         return txTrieRoot;
     }
 
+    public byte[] getReceiptsRoot() {
+        return receiptTrieRoot;
+    }
+
     public void setReceiptsRoot(byte[] receiptTrieRoot) {
         this.receiptTrieRoot = receiptTrieRoot;
         hashCache = null;
-    }
-
-    public byte[] getReceiptsRoot() {
-        return receiptTrieRoot;
     }
 
     public void setTransactionsRoot(byte[] stateRoot) {
@@ -211,18 +208,22 @@ public class BlockHeader {
         return logsBloom;
     }
 
+    public void setLogsBloom(byte[] logsBloom) {
+        this.logsBloom = logsBloom;
+        hashCache = null;
+    }
+
     public byte[] getDifficulty() {
         return difficulty;
     }
 
-    public BigInteger getDifficultyBI() {
-        return new BigInteger(1, difficulty);
-    }
-
-
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;
         hashCache = null;
+    }
+
+    public BigInteger getDifficultyBI() {
+        return new BigInteger(1, difficulty);
     }
 
     public long getTimestamp() {
@@ -274,22 +275,17 @@ public class BlockHeader {
         return extraData;
     }
 
+    public void setExtraData(byte[] extraData) {
+        this.extraData = extraData;
+        hashCache = null;
+    }
+
     public byte[] getNonce() {
         return nonce;
     }
 
     public void setNonce(byte[] nonce) {
         this.nonce = nonce;
-        hashCache = null;
-    }
-
-    public void setLogsBloom(byte[] logsBloom) {
-        this.logsBloom = logsBloom;
-        hashCache = null;
-    }
-
-    public void setExtraData(byte[] extraData) {
-        this.extraData = extraData;
         hashCache = null;
     }
 
@@ -316,10 +312,10 @@ public class BlockHeader {
 
         byte[] stateRoot = RLP.encodeElement(this.stateRoot);
 
-        if (txTrieRoot == null) this.txTrieRoot = EMPTY_TRIE_HASH;
+        if (txTrieRoot == null) { this.txTrieRoot = EMPTY_TRIE_HASH; }
         byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
 
-        if (receiptTrieRoot == null) this.receiptTrieRoot = EMPTY_TRIE_HASH;
+        if (receiptTrieRoot == null) { this.receiptTrieRoot = EMPTY_TRIE_HASH; }
         byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
 
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
@@ -333,13 +329,35 @@ public class BlockHeader {
         if (withNonce) {
             byte[] mixHash = RLP.encodeElement(this.mixHash);
             byte[] nonce = RLP.encodeElement(this.nonce);
-            return RLP.encodeList(parentHash, unclesHash, coinbase,
-                    stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData, mixHash, nonce);
+            return RLP.encodeList(parentHash,
+                                  unclesHash,
+                                  coinbase,
+                                  stateRoot,
+                                  txTrieRoot,
+                                  receiptTrieRoot,
+                                  logsBloom,
+                                  difficulty,
+                                  number,
+                                  gasLimit,
+                                  gasUsed,
+                                  timestamp,
+                                  extraData,
+                                  mixHash,
+                                  nonce);
         } else {
-            return RLP.encodeList(parentHash, unclesHash, coinbase,
-                    stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData);
+            return RLP.encodeList(parentHash,
+                                  unclesHash,
+                                  coinbase,
+                                  stateRoot,
+                                  txTrieRoot,
+                                  receiptTrieRoot,
+                                  logsBloom,
+                                  difficulty,
+                                  number,
+                                  gasLimit,
+                                  gasUsed,
+                                  timestamp,
+                                  extraData);
         }
     }
 
@@ -395,10 +413,15 @@ public class BlockHeader {
         toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot)).append(suffix);
         toStringBuff.append("  difficulty=").append(toHexString(difficulty)).append(suffix);
         toStringBuff.append("  number=").append(number).append(suffix);
-//        toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
+        //        toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
         toStringBuff.append("  gasLimit=").append(toHexString(gasLimit)).append(suffix);
         toStringBuff.append("  gasUsed=").append(gasUsed).append(suffix);
-        toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp)).append(")").append(suffix);
+        toStringBuff.append("  timestamp=")
+                .append(timestamp)
+                .append(" (")
+                .append(Utils.longToDateTime(timestamp))
+                .append(")")
+                .append(suffix);
         toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
         toStringBuff.append("  mixHash=").append(toHexString(mixHash)).append(suffix);
         toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
@@ -410,14 +433,14 @@ public class BlockHeader {
     }
 
     public String getShortDescr() {
-        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
-                + Hex.toHexString(getParentHash()).substring(0,6) + ")";
+        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0, 6) + " <~ " +
+                Hex.toHexString(getParentHash()).substring(0, 6) + ")";
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
         BlockHeader that = (BlockHeader) o;
         return FastByteComparisons.equal(getHash(), that.getHash());
     }

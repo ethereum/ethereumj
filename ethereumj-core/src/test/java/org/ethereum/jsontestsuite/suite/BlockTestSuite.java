@@ -24,13 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class BlockTestSuite {
 
-    private Logger logger = LoggerFactory.getLogger("TCK-Test");
-
     Map<String, BlockTestCase> testCases = new HashMap<>();
+    private Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public BlockTestSuite(String json) throws IOException {
 
@@ -61,8 +64,6 @@ public class BlockTestSuite {
 
     @Override
     public String toString() {
-        return "BlockTestSuite{" +
-                "testCases=" + testCases +
-                '}';
+        return "BlockTestSuite{" + "testCases=" + testCases + '}';
     }
 }

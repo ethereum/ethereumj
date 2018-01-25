@@ -21,7 +21,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Mikhail Kalinin
@@ -52,8 +56,6 @@ public class DifficultyTestSuite {
 
     @Override
     public String toString() {
-        return "DifficultyTestSuite{" +
-                "testCases=" + testCases +
-                '}';
+        return "DifficultyTestSuite{" + "testCases=" + testCases + '}';
     }
 }

@@ -17,9 +17,9 @@
  */
 package org.ethereum.trie;
 
-import org.spongycastle.util.encoders.Hex;
-
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Created by Anton Nashatyrev on 13.02.2017.
@@ -30,6 +30,16 @@ public final class TrieKey {
     private final byte[] key;
     private final int off;
     private final boolean terminal;
+
+    public TrieKey(byte[] key, int off, boolean terminal) {
+        this.terminal = terminal;
+        this.off = off;
+        this.key = key;
+    }
+
+    private TrieKey(byte[] key) {
+        this(key, 0, true);
+    }
 
     public static TrieKey fromNormal(byte[] key) {
         return new TrieKey(key);
@@ -49,16 +59,6 @@ public final class TrieKey {
         return ret;
     }
 
-    public TrieKey(byte[] key, int off, boolean terminal) {
-        this.terminal = terminal;
-        this.off = off;
-        this.key = key;
-    }
-
-    private TrieKey(byte[] key) {
-        this(key, 0, true);
-    }
-
     public byte[] toPacked() {
         int flags = ((off & 1) != 0 ? ODD_OFFSET_FLAG : 0) | (terminal ? TERMINATOR_FLAG : 0);
         byte[] ret = new byte[getLength() / 2 + 1];
@@ -70,7 +70,9 @@ public final class TrieKey {
     }
 
     public byte[] toNormal() {
-        if ((off & 1) != 0) throw new RuntimeException("Can't convert a key with odd number of hexes to normal: " + this);
+        if ((off & 1) != 0) {
+            throw new RuntimeException("Can't convert a key with odd number of hexes to normal: " + this);
+        }
         int arrLen = key.length - off / 2;
         byte[] ret = new byte[arrLen];
         System.arraycopy(key, key.length - arrLen, ret, 0, arrLen);
@@ -94,11 +96,13 @@ public final class TrieKey {
         int prefixLen = 0;
         int thisLength = getLength();
         int kLength = k.getLength();
-        while (prefixLen < thisLength && prefixLen < kLength && getHex(prefixLen) == k.getHex(prefixLen))
+        while (prefixLen < thisLength && prefixLen < kLength && getHex(prefixLen) == k.getHex(prefixLen)) {
             prefixLen++;
+        }
         byte[] prefixKey = new byte[(prefixLen + 1) >> 1];
-        TrieKey ret = new TrieKey(prefixKey, (prefixLen & 1) == 0 ? 0 : 1,
-                prefixLen == getLength() && prefixLen == k.getLength() && terminal && k.isTerminal());
+        TrieKey ret = new TrieKey(prefixKey,
+                                  (prefixLen & 1) == 0 ? 0 : 1,
+                                  prefixLen == getLength() && prefixLen == k.getLength() && terminal && k.isTerminal());
         for (int i = 0; i < prefixLen; i++) {
             ret.setHex(i, k.getHex(i));
         }
@@ -108,22 +112,22 @@ public final class TrieKey {
     public TrieKey matchAndShift(TrieKey k) {
         int len = getLength();
         int kLen = k.getLength();
-        if (len < kLen) return null;
+        if (len < kLen) { return null; }
 
         if ((off & 1) == (k.off & 1)) {
             // optimization to compare whole keys bytes
             if ((off & 1) == 1) {
-                if (getHex(0) != k.getHex(0)) return null;
+                if (getHex(0) != k.getHex(0)) { return null; }
             }
             int idx1 = (off + 1) >> 1;
             int idx2 = (k.off + 1) >> 1;
             int l = kLen >> 1;
             for (int i = 0; i < l; i++, idx1++, idx2++) {
-                if (key[idx1] != k.key[idx2]) return null;
+                if (key[idx1] != k.key[idx2]) { return null; }
             }
         } else {
             for (int i = 0; i < kLen; i++) {
-                if (getHex(i) != k.getHex(i)) return null;
+                if (getHex(i) != k.getHex(i)) { return null; }
             }
         }
         return shift(kLen);
@@ -150,7 +154,7 @@ public final class TrieKey {
     }
 
     public TrieKey concat(TrieKey k) {
-        if (isTerminal()) throw new RuntimeException("Can' append to terminal key: " + this + " + " + k);
+        if (isTerminal()) { throw new RuntimeException("Can' append to terminal key: " + this + " + " + k); }
         int len = getLength();
         int kLen = k.getLength();
         int newLen = len + kLen;
@@ -170,10 +174,10 @@ public final class TrieKey {
         TrieKey k = (TrieKey) obj;
         int len = getLength();
 
-        if (len != k.getLength()) return false;
+        if (len != k.getLength()) { return false; }
         // TODO can be optimized
         for (int i = 0; i < len; i++) {
-            if (getHex(i) != k.getHex(i)) return false;
+            if (getHex(i) != k.getHex(i)) { return false; }
         }
         return isTerminal() == k.isTerminal();
     }

@@ -17,25 +17,23 @@
  */
 package org.ethereum.vm;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.core.Repository;
-
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Roman Mandeleil
@@ -54,14 +52,14 @@ public class VMComplexTest {
          *       #The code will run
          *       ------------------
 
-                 a = contract.storage[999]
-                 if a > 0:
-                     contract.storage[999] = a - 1
+         a = contract.storage[999]
+         if a > 0:
+         contract.storage[999] = a - 1
 
-                     # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
-                     send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
-                 else:
-                     stop
+         # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
+         send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
+         else:
+         stop
          */
 
         int expectedGas = 436;
@@ -80,8 +78,7 @@ public class VMComplexTest {
         byte[] codeB = Hex.decode(code);
 
         byte[] codeKey = HashUtil.sha3(codeB);
-        AccountState accountState = new AccountState(SystemProperties.getDefault())
-                .withCodeHash(codeKey);
+        AccountState accountState = new AccountState(SystemProperties.getDefault()).withCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractAddrB);
@@ -99,8 +96,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while (!program.isStopped())
-                vm.step(program);
+            while (!program.isStopped()) { vm.step(program); }
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
@@ -127,18 +123,18 @@ public class VMComplexTest {
          *       #The code will run
          *       ------------------
 
-                 contract A: 77045e71a7a2c50903d88e564cd72fab11e82051
-                 ---------------
-                     a = msg.data[0]
-                     b = msg.data[1]
+         contract A: 77045e71a7a2c50903d88e564cd72fab11e82051
+         ---------------
+         a = msg.data[0]
+         b = msg.data[1]
 
-                     contract.storage[a]
-                     contract.storage[b]
+         contract.storage[a]
+         contract.storage[b]
 
 
-                 contract B: 83c5541a6c8d2dbad642f385d8d06ca9b6c731ee
-                 -----------
-                     a = msg((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0, [11, 22, 33], 3, 6)
+         contract B: 83c5541a6c8d2dbad642f385d8d06ca9b6c731ee
+         -----------
+         a = msg((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0, [11, 22, 33], 3, 6)
 
          */
 
@@ -152,7 +148,8 @@ public class VMComplexTest {
         String contractB_addr = "83c5541a6c8d2dbad642f385d8d06ca9b6c731ee";
 
         String code_a = "60006020023560005260016020023560205260005160005560205160015500";
-        String code_b = "6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052";
+        String code_b =
+                "6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052";
 
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 
@@ -183,8 +180,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while (!program.isStopped())
-                vm.step(program);
+            while (!program.isStopped()) { vm.step(program); }
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
@@ -219,20 +215,20 @@ public class VMComplexTest {
          contract A: 77045e71a7a2c50903d88e564cd72fab11e82051
          ---------------
 
-           a = 11
-           b = 22
-           c = 33
-           d = 44
-           e = 55
-           f = 66
+         a = 11
+         b = 22
+         c = 33
+         d = 44
+         e = 55
+         f = 66
 
-           [asm  192 0 RETURN asm]
+         [asm  192 0 RETURN asm]
 
 
 
          contract B: 83c5541a6c8d2dbad642f385d8d06ca9b6c731ee
          -----------
-             a = msg((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0, [11, 22, 33], 3, 6)
+         a = msg((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0, [11, 22, 33], 3, 6)
 
          */
 
@@ -250,7 +246,8 @@ public class VMComplexTest {
         byte[] contractB_addr_bytes = Hex.decode("83c5541a6c8d2dbad642f385d8d06ca9b6c731ee");
 
         byte[] codeA = Hex.decode("600b60005260166020526021604052602c6060526037608052604260a05260c06000f2");
-        byte[] codeB = Hex.decode("6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052");
+        byte[] codeB = Hex.decode(
+                "6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052");
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
@@ -271,8 +268,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while (!program.isStopped())
-                vm.step(program);
+            while (!program.isStopped()) { vm.step(program); }
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
@@ -310,15 +306,15 @@ public class VMComplexTest {
          contract A: 77045e71a7a2c50903d88e564cd72fab11e82051
          -----------
 
-             a = 0x7f60c860005461012c6020540000000000000000000000000000000000000000
-             b = 0x0060005460206000f20000000000000000000000000000000000000000000000
-             create(100, 0 41)
+         a = 0x7f60c860005461012c6020540000000000000000000000000000000000000000
+         b = 0x0060005460206000f20000000000000000000000000000000000000000000000
+         create(100, 0 41)
 
 
          contract B: (the contract to be created the addr will be defined to: 8e45367623a2865132d9bf875d5cfa31b9a0cd94)
          -----------
-             a = 200
-             b = 300
+         a = 200
+         b = 300
 
          */
 
@@ -327,10 +323,9 @@ public class VMComplexTest {
 
         byte[] contractA_addr_bytes = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
 
-        byte[] codeA = Hex.decode("7f7f60c860005461012c602054000000000000" +
-                "00000000000000000000000000006000547e60" +
-                "005460206000f2000000000000000000000000" +
-                "0000000000000000000000602054602960006064f0");
+        byte[] codeA = Hex.decode("7f7f60c860005461012c602054000000000000" + "00000000000000000000000000006000547e60" +
+                                          "005460206000f2000000000000000000000000" +
+                                          "0000000000000000000000602054602960006064f0");
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractA_addr_bytes);
@@ -349,8 +344,7 @@ public class VMComplexTest {
         Program program = new Program(codeA, pi);
 
         try {
-            while (!program.isStopped())
-                vm.step(program);
+            while (!program.isStopped()) { vm.step(program); }
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
@@ -383,10 +377,10 @@ public class VMComplexTest {
 
          contract B: 0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6
          -----------
-             { (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
-               (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa)
-               [[ 0 ]] (CALLSTATELESS 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0)
-             }
+         { (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+         (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa)
+         [[ 0 ]] (CALLSTATELESS 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0)
+         }
          */
 
         // Set contract into Database
@@ -396,7 +390,8 @@ public class VMComplexTest {
         byte[] contractB_addr_bytes = Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6");
 
         byte[] codeA = Hex.decode("60003554156009570060203560003555");
-        byte[] codeB = Hex.decode("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000527faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020526000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600055");
+        byte[] codeB = Hex.decode(
+                "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000527faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020526000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600055");
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
@@ -421,8 +416,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while (!program.isStopped())
-                vm.step(program);
+            while (!program.isStopped()) { vm.step(program); }
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }

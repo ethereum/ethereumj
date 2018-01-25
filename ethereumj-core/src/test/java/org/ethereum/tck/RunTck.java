@@ -17,7 +17,9 @@
  */
 package org.ethereum.tck;
 
-import org.ethereum.jsontestsuite.suite.*;
+import org.ethereum.jsontestsuite.suite.JSONReader;
+import org.ethereum.jsontestsuite.suite.StateTestCase;
+import org.ethereum.jsontestsuite.suite.StateTestSuite;
 import org.ethereum.jsontestsuite.suite.runners.StateTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -37,7 +39,7 @@ public class RunTck {
 
     public static void main(String[] args) throws ParseException, IOException {
 
-        if (args.length > 0){
+        if (args.length > 0) {
 
             if (args[0].equals("filerun")) {
                 logger.info("TCK Running, file: " + args[1]);
@@ -69,19 +71,17 @@ public class RunTck {
             StateTestCase stateTestCase = testCases.get(testName);
             List<String> result = StateTestRunner.run(stateTestCase);
 
-            if (!result.isEmpty())
-                summary.put(testName, false);
-            else
-                summary.put(testName, true);
+            if (!result.isEmpty()) { summary.put(testName, false); } else { summary.put(testName, true); }
         }
 
         logger.info("Summary: ");
         logger.info("=========");
 
-        int fails = 0; int pass = 0;
-        for (String key : summary.keySet()){
+        int fails = 0;
+        int pass = 0;
+        for (String key : summary.keySet()) {
 
-            if (summary.get(key)) ++pass; else ++fails;
+            if (summary.get(key)) { ++pass; } else { ++fails; }
             String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "OK" : "FAIL")).
                     replace(' ', '.').
                     replace("^", " ");
@@ -90,13 +90,9 @@ public class RunTck {
 
         logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
 
-        if (fails > 0)
-            System.exit(1);
-        else
-            System.exit(0);
+        if (fails > 0) { System.exit(1); } else { System.exit(0); }
 
     }
-
 
 
     public static void runTest(String name) throws ParseException, IOException {

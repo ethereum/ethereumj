@@ -17,6 +17,16 @@
  */
 package org.ethereum.solidity;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+import static java.lang.String.format;
+import static org.apache.commons.collections4.ListUtils.select;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
+import static org.apache.commons.lang3.StringUtils.join;
+import static org.apache.commons.lang3.StringUtils.stripEnd;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.solidity.SolidityType.IntType.decodeInt;
+import static org.ethereum.solidity.SolidityType.IntType.encodeInt;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,20 +41,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
-import static java.lang.String.format;
-import static org.apache.commons.collections4.ListUtils.select;
-import static org.apache.commons.lang3.ArrayUtils.subarray;
-import static org.apache.commons.lang3.StringUtils.join;
-import static org.apache.commons.lang3.StringUtils.stripEnd;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.solidity.SolidityType.IntType.decodeInt;
-import static org.ethereum.solidity.SolidityType.IntType.encodeInt;
-
 public class Abi extends ArrayList<Abi.Entry> {
-    private final static ObjectMapper DEFAULT_MAPPER = new ObjectMapper()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
+    private final static ObjectMapper DEFAULT_MAPPER =
+            new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 
     public static Abi fromJson(String json) {
         try {
@@ -62,7 +62,8 @@ public class Abi extends ArrayList<Abi.Entry> {
         }
     }
 
-    private <T extends Abi.Entry> T find(Class<T> resultClass, final Abi.Entry.Type type, final Predicate<T> searchPredicate) {
+    private <T extends Abi.Entry> T find(Class<T> resultClass, final Abi.Entry.Type type,
+                                         final Predicate<T> searchPredicate) {
         return (T) CollectionUtils.find(this, entry -> entry.type == type && searchPredicate.evaluate((T) entry));
     }
 
@@ -87,41 +88,6 @@ public class Abi extends ArrayList<Abi.Entry> {
     @JsonInclude(Include.NON_NULL)
     public static abstract class Entry {
 
-        public enum Type {
-            constructor,
-            function,
-            event,
-            fallback
-        }
-
-        @JsonInclude(Include.NON_NULL)
-        public static class Param {
-            public Boolean indexed;
-            public String name;
-            public SolidityType type;
-
-            public static List<?> decodeList(List<Param> params, byte[] encoded) {
-                List<Object> result = new ArrayList<>(params.size());
-
-                int offset = 0;
-                for (Param param : params) {
-                    Object decoded = param.type.isDynamicType()
-                            ? param.type.decode(encoded, decodeInt(encoded, offset).intValue())
-                            : param.type.decode(encoded, offset);
-                    result.add(decoded);
-
-                    offset += param.type.getFixedSize();
-                }
-
-                return result;
-            }
-
-            @Override
-            public String toString() {
-                return format("%s%s%s", type.getCanonicalName(), (indexed != null && indexed) ? " indexed " : " ", name);
-            }
-        }
-
         public final Boolean anonymous;
         public final Boolean constant;
         public final String name;
@@ -129,9 +95,8 @@ public class Abi extends ArrayList<Abi.Entry> {
         public final List<Param> outputs;
         public final Type type;
         public final Boolean payable;
-
-
-        public Entry(Boolean anonymous, Boolean constant, String name, List<Param> inputs, List<Param> outputs, Type type, Boolean payable) {
+        public Entry(Boolean anonymous, Boolean constant, String name, List<Param> inputs, List<Param> outputs,
+                     Type type, Boolean payable) {
             this.anonymous = anonymous;
             this.constant = constant;
             this.name = name;
@@ -139,6 +104,29 @@ public class Abi extends ArrayList<Abi.Entry> {
             this.outputs = outputs;
             this.type = type;
             this.payable = payable;
+        }
+
+        @JsonCreator
+        public static Entry create(@JsonProperty("anonymous") boolean anonymous,
+                                   @JsonProperty("constant") boolean constant, @JsonProperty("name") String name,
+                                   @JsonProperty("inputs") List<Param> inputs,
+                                   @JsonProperty("outputs") List<Param> outputs, @JsonProperty("type") Type type,
+                                   @JsonProperty(value = "payable", required = false, defaultValue = "false")
+                                           Boolean payable) {
+            Entry result = null;
+            switch (type) {
+                case constructor:
+                    result = new Constructor(inputs, outputs);
+                    break;
+                case function:
+                    result = new Function(constant, name, inputs, outputs, payable);
+                    break;
+                case event:
+                    result = new Event(anonymous, name, inputs, outputs);
+                    break;
+            }
+
+            return result;
         }
 
         public String formatSignature() {
@@ -158,28 +146,42 @@ public class Abi extends ArrayList<Abi.Entry> {
             return fingerprintSignature();
         }
 
-        @JsonCreator
-        public static Entry create(@JsonProperty("anonymous") boolean anonymous,
-                                   @JsonProperty("constant") boolean constant,
-                                   @JsonProperty("name") String name,
-                                   @JsonProperty("inputs") List<Param> inputs,
-                                   @JsonProperty("outputs") List<Param> outputs,
-                                   @JsonProperty("type") Type type,
-                                   @JsonProperty(value = "payable", required = false, defaultValue = "false") Boolean payable) {
-            Entry result = null;
-            switch (type) {
-                case constructor:
-                    result = new Constructor(inputs, outputs);
-                    break;
-                case function:
-                    result = new Function(constant, name, inputs, outputs, payable);
-                    break;
-                case event:
-                    result = new Event(anonymous, name, inputs, outputs);
-                    break;
+        public enum Type {
+            constructor,
+            function,
+            event,
+            fallback
+        }
+
+        @JsonInclude(Include.NON_NULL)
+        public static class Param {
+            public Boolean indexed;
+            public String name;
+            public SolidityType type;
+
+            public static List<?> decodeList(List<Param> params, byte[] encoded) {
+                List<Object> result = new ArrayList<>(params.size());
+
+                int offset = 0;
+                for (Param param : params) {
+                    Object decoded = param.type.isDynamicType() ?
+                            param.type.decode(encoded, decodeInt(encoded, offset).intValue()) :
+                            param.type.decode(encoded, offset);
+                    result.add(decoded);
+
+                    offset += param.type.getFixedSize();
+                }
+
+                return result;
             }
 
-            return result;
+            @Override
+            public String toString() {
+                return format("%s%s%s",
+                              type.getCanonicalName(),
+                              (indexed != null && indexed) ? " indexed " : " ",
+                              name);
+            }
         }
     }
 
@@ -206,13 +208,18 @@ public class Abi extends ArrayList<Abi.Entry> {
             super(null, constant, name, inputs, outputs, Type.function, payable);
         }
 
+        public static byte[] extractSignature(byte[] data) {
+            return subarray(data, 0, ENCODED_SIGN_LENGTH);
+        }
+
         public byte[] encode(Object... args) {
             return ByteUtil.merge(encodeSignature(), encodeArguments(args));
         }
 
         private byte[] encodeArguments(Object... args) {
-            if (args.length > inputs.size())
+            if (args.length > inputs.size()) {
                 throw new RuntimeException("Too many arguments: " + args.length + " > " + inputs.size());
+            }
 
             int staticSize = 0;
             int dynamicCnt = 0;
@@ -253,10 +260,6 @@ public class Abi extends ArrayList<Abi.Entry> {
         @Override
         public byte[] encodeSignature() {
             return extractSignature(super.encodeSignature());
-        }
-
-        public static byte[] extractSignature(byte[] data) {
-            return subarray(data, 0, ENCODED_SIGN_LENGTH);
         }
 
         @Override

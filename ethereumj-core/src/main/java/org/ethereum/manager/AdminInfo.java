@@ -19,10 +19,9 @@ package org.ethereum.manager;
 
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import javax.annotation.PostConstruct;
 
 /**
  * @author Roman Mandeleil
@@ -54,26 +53,26 @@ public class AdminInfo {
         consensus = false;
     }
 
-    public void addBlockExecTime(long time){
+    public void addBlockExecTime(long time) {
         while (blockExecTime.size() > ExecTimeListLimit) {
             blockExecTime.remove(0);
         }
         blockExecTime.add(time);
     }
 
-    public Long getExecAvg(){
+    public Long getExecAvg() {
 
-        if (blockExecTime.isEmpty()) return 0L;
+        if (blockExecTime.isEmpty()) { return 0L; }
 
         long sum = 0;
-        for (int i = 0; i < blockExecTime.size(); ++i){
+        for (int i = 0; i < blockExecTime.size(); ++i) {
             sum += blockExecTime.get(i);
         }
 
         return sum / blockExecTime.size();
     }
 
-    public List<Long> getBlockExecTime(){
+    public List<Long> getBlockExecTime() {
         return blockExecTime;
     }
 }

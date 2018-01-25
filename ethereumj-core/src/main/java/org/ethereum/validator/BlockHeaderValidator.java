@@ -37,7 +37,7 @@ public class BlockHeaderValidator extends BlockHeaderRule {
         this.rules = rules;
     }
 
-    public BlockHeaderValidator(BlockHeaderRule ...rules) {
+    public BlockHeaderValidator(BlockHeaderRule... rules) {
         this.rules = Arrays.asList(rules);
     }
 

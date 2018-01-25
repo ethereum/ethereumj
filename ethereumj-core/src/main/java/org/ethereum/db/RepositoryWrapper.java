@@ -25,16 +25,16 @@ import org.ethereum.vm.DataWord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Repository delegating all calls to the last Repository
- *
+ * <p>
  * Created by Anton Nashatyrev on 22.12.2016.
  */
 @Component
@@ -182,7 +182,8 @@ public class RepositoryWrapper implements Repository {
     }
 
     @Override
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
+                            HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
         blockchain.getRepository().updateBatch(accountStates, contractDetailes);
     }
 
@@ -192,7 +193,8 @@ public class RepositoryWrapper implements Repository {
     }
 
     @Override
-    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+                            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         blockchain.getRepository().loadAccount(addr, cacheAccounts, cacheDetails);
     }
 

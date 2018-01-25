@@ -32,26 +32,27 @@ import java.util.List;
 public class HeaderMessageValidationTest {
 
     private byte[] EMPTY_ARRAY = new byte[0];
-
-    private class Eth62Tester extends Eth62 {
-
-        boolean blockHeaderMessageValid(BlockHeadersMessage msg, GetBlockHeadersMessageWrapper request) {
-            return super.isValid(msg, request);
-        }
-    }
-
     private Eth62Tester ethHandler;
 
     public HeaderMessageValidationTest() {
         ethHandler = new Eth62Tester();
     }
 
-
     @Test
     public void testSingleBlockResponse() {
         long blockNumber = 0L;
-        BlockHeader blockHeader = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                EMPTY_ARRAY, blockNumber, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
+        BlockHeader blockHeader = new BlockHeader(new byte[]{11, 12},
+                                                  EMPTY_ARRAY,
+                                                  EMPTY_ARRAY,
+                                                  EMPTY_ARRAY,
+                                                  EMPTY_ARRAY,
+                                                  blockNumber,
+                                                  EMPTY_ARRAY,
+                                                  1L,
+                                                  2L,
+                                                  EMPTY_ARRAY,
+                                                  EMPTY_ARRAY,
+                                                  EMPTY_ARRAY);
         List<BlockHeader> blockHeaders = new ArrayList<>();
         blockHeaders.add(blockHeader);
         BlockHeadersMessage msg = new BlockHeadersMessage(blockHeaders);
@@ -83,14 +84,34 @@ public class HeaderMessageValidationTest {
         List<BlockHeader> blockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        BlockHeader blockHeader1 = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
+        BlockHeader blockHeader1 = new BlockHeader(new byte[]{11, 12},
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   blockNumber1,
+                                                   EMPTY_ARRAY,
+                                                   1L,
+                                                   2L,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY);
         byte[] hash1 = blockHeader1.getHash();
         blockHeaders.add(blockHeader1);
 
         long blockNumber2 = 1L;
-        BlockHeader blockHeader2 = new BlockHeader(hash1, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
+        BlockHeader blockHeader2 = new BlockHeader(hash1,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   blockNumber2,
+                                                   EMPTY_ARRAY,
+                                                   1L,
+                                                   2L,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY);
         byte[] hash2 = blockHeader2.getHash();
         blockHeaders.add(blockHeader2);
 
@@ -118,18 +139,48 @@ public class HeaderMessageValidationTest {
         List<BlockHeader> blockHeaders = new ArrayList<>();
 
         long blockNumber1 = 0L;
-        BlockHeader blockHeader1 = new BlockHeader(new byte[] {11, 12}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                EMPTY_ARRAY, blockNumber1, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
+        BlockHeader blockHeader1 = new BlockHeader(new byte[]{11, 12},
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   blockNumber1,
+                                                   EMPTY_ARRAY,
+                                                   1L,
+                                                   2L,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY);
         blockHeaders.add(blockHeader1);
 
         long blockNumber2 = 16L;
-        BlockHeader blockHeader2 = new BlockHeader(new byte[] {12, 13}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                EMPTY_ARRAY, blockNumber2, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
+        BlockHeader blockHeader2 = new BlockHeader(new byte[]{12, 13},
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   blockNumber2,
+                                                   EMPTY_ARRAY,
+                                                   1L,
+                                                   2L,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY);
         blockHeaders.add(blockHeader2);
 
         long blockNumber3 = 32L;
-        BlockHeader blockHeader3 = new BlockHeader(new byte[] {14, 15}, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
-                EMPTY_ARRAY, blockNumber3, EMPTY_ARRAY, 1L, 2L, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY);
+        BlockHeader blockHeader3 = new BlockHeader(new byte[]{14, 15},
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   blockNumber3,
+                                                   EMPTY_ARRAY,
+                                                   1L,
+                                                   2L,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY,
+                                                   EMPTY_ARRAY);
         blockHeaders.add(blockHeader3);
 
         BlockHeadersMessage msg = new BlockHeadersMessage(blockHeaders);
@@ -148,5 +199,12 @@ public class HeaderMessageValidationTest {
         GetBlockHeadersMessage requestReverse = new GetBlockHeadersMessage(blockNumber3, null, 3, 15, true);
         GetBlockHeadersMessageWrapper wrapperReverse = new GetBlockHeadersMessageWrapper(requestReverse);
         assert ethHandler.blockHeaderMessageValid(msg, wrapperReverse);
+    }
+
+    private class Eth62Tester extends Eth62 {
+
+        boolean blockHeaderMessageValid(BlockHeadersMessage msg, GetBlockHeadersMessageWrapper request) {
+            return super.isValid(msg, request);
+        }
     }
 }

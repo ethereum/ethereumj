@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  Future completes when any of child futures completed. All others are cancelled
- *  upon completion.
+ * Future completes when any of child futures completed. All others are cancelled
+ * upon completion.
  */
 public class AnyFuture<V> extends AbstractFuture<V> {
     private List<ListenableFuture<V>> futures = new ArrayList<>();
@@ -35,19 +35,19 @@ public class AnyFuture<V> extends AbstractFuture<V> {
      * Add a Future delegate
      */
     public synchronized void add(final ListenableFuture<V> f) {
-        if (isCancelled() || isDone()) return;
+        if (isCancelled() || isDone()) { return; }
 
-        f.addListener(() -> futureCompleted(f),  MoreExecutors.sameThreadExecutor());
+        f.addListener(() -> futureCompleted(f), MoreExecutors.sameThreadExecutor());
         futures.add(f);
     }
 
     private synchronized void futureCompleted(ListenableFuture<V> f) {
-        if (isCancelled() || isDone()) return;
-        if (f.isCancelled()) return;
+        if (isCancelled() || isDone()) { return; }
+        if (f.isCancelled()) { return; }
 
         try {
             cancelOthers(f);
-            
+
             V v = f.get();
             postProcess(v);
             set(v);

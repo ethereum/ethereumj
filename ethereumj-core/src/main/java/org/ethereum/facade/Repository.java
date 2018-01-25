@@ -19,18 +19,18 @@ package org.ethereum.facade;
 
 import org.ethereum.vm.DataWord;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 public interface Repository {
 
     /**
      * @param addr - account to check
      * @return - true if account exist,
-     *           false otherwise
+     * false otherwise
      */
     boolean isExist(byte[] addr);
 
@@ -66,7 +66,7 @@ public interface Repository {
      * Retrieve storage value from an account for a given key
      *
      * @param addr of the account
-     * @param key associated with this value
+     * @param key  associated with this value
      * @return data in the form of a <code>DataWord</code>
      */
     DataWord getStorageValue(byte[] addr, DataWord key);

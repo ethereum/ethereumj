@@ -24,9 +24,9 @@ import org.ethereum.net.message.Message;
  */
 public abstract class BzzMessage extends Message {
 
+    protected long id = -1;
     // non-null for incoming messages
     private BzzProtocol peer;
-    protected long id = -1;
 
     protected BzzMessage() {
     }
@@ -49,15 +49,15 @@ public abstract class BzzMessage extends Message {
         return peer;
     }
 
+    void setPeer(BzzProtocol peer) {
+        this.peer = peer;
+    }
+
     /**
      * Message ID. Should be unique across all outgoing messages
      */
     public long getId() {
         return id;
-    }
-
-    void setPeer(BzzProtocol peer) {
-        this.peer = peer;
     }
 
     void setId(long id) {

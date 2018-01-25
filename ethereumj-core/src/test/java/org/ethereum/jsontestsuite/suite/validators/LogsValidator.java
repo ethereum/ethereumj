@@ -33,9 +33,10 @@ public class LogsValidator {
         int i = 0;
         for (LogInfo postLog : postLogs) {
 
-            if (origLogs == null || origLogs.size() - 1 < i){
+            if (origLogs == null || origLogs.size() - 1 < i) {
                 String formattedString = String.format("Log: %s: was expected but doesn't exist: address: %s",
-                        i, Hex.toHexString(postLog.getAddress()));
+                                                       i,
+                                                       Hex.toHexString(postLog.getAddress()));
                 results.add(formattedString);
 
                 continue;
@@ -48,8 +49,11 @@ public class LogsValidator {
 
             if (!postAddress.equals(realAddress)) {
 
-                String formattedString = String.format("Log: %s: has unexpected address, expected address: %s found address: %s",
-                        i, postAddress, realAddress);
+                String formattedString = String.format(
+                        "Log: %s: has unexpected address, expected address: %s found address: %s",
+                        i,
+                        postAddress,
+                        realAddress);
                 results.add(formattedString);
             }
 
@@ -59,7 +63,9 @@ public class LogsValidator {
             if (!postData.equals(realData)) {
 
                 String formattedString = String.format("Log: %s: has unexpected data, expected data: %s found data: %s",
-                        i, postData, realData);
+                                                       i,
+                                                       postData,
+                                                       realData);
                 results.add(formattedString);
             }
 
@@ -68,8 +74,11 @@ public class LogsValidator {
 
             if (!postData.equals(realData)) {
 
-                String formattedString = String.format("Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
-                        i, postBloom, realBloom);
+                String formattedString = String.format(
+                        "Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
+                        i,
+                        postBloom,
+                        realBloom);
                 results.add(formattedString);
             }
 
@@ -83,8 +92,12 @@ public class LogsValidator {
 
                 if (!postTopic.equals(realTopic)) {
 
-                    String formattedString = String.format("Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
-                            i, j, postTopic, realTopic);
+                    String formattedString = String.format(
+                            "Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
+                            i,
+                            j,
+                            postTopic,
+                            realTopic);
                     results.add(formattedString);
                 }
                 ++j;

@@ -39,10 +39,11 @@ public abstract class DependentBlockHeaderRule extends AbstractValidationRule {
     }
 
     public void logErrors(Logger logger) {
-        if (logger.isErrorEnabled())
+        if (logger.isErrorEnabled()) {
             for (String msg : errors) {
                 logger.warn("{} invalid: {}", getEntityClass().getSimpleName(), msg);
             }
+        }
     }
 
     @Override
@@ -53,7 +54,7 @@ public abstract class DependentBlockHeaderRule extends AbstractValidationRule {
     /**
      * Runs header validation and returns its result
      *
-     * @param header block's header
+     * @param header     block's header
      * @param dependency header of the dependency block
      * @return true if validation passed, false otherwise
      */

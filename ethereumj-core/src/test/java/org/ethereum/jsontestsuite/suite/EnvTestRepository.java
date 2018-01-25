@@ -17,7 +17,7 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Repository;
 import org.ethereum.db.RepositoryImpl;
 
 import java.math.BigInteger;
@@ -35,7 +35,7 @@ public class EnvTestRepository extends IterableTestRepository {
     }
 
     public BigInteger setNonce(byte[] addr, BigInteger nonce) {
-        if (!(src instanceof RepositoryImpl)) throw new RuntimeException("Not supported");
+        if (!(src instanceof RepositoryImpl)) { throw new RuntimeException("Not supported"); }
         return ((RepositoryImpl) src).setNonce(addr, nonce);
     }
 

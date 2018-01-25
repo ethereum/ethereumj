@@ -17,22 +17,19 @@
  */
 package org.ethereum.json;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.Repository;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.core.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,23 +37,23 @@ import java.util.List;
 /**
  * JSON Helper class to format data into ObjectNodes
  * to match PyEthereum blockstate output
- *
- *  Dump format:
- *  {
- *      "address":
- *      {
- *          "nonce": "n1",
- *          "balance": "b1",
- *          "stateRoot": "s1",
- *          "codeHash": "c1",
- *          "code": "c2",
- *          "storage":
- *          {
- *              "key1": "value1",
- *              "key2": "value2"
- *          }
- *      }
- *  }
+ * <p>
+ * Dump format:
+ * {
+ * "address":
+ * {
+ * "nonce": "n1",
+ * "balance": "b1",
+ * "stateRoot": "s1",
+ * "codeHash": "c1",
+ * "code": "c2",
+ * "storage":
+ * {
+ * "key1": "value1",
+ * "key2": "value2"
+ * }
+ * }
+ * }
  *
  * @author Roman Mandeleil
  * @since 26.06.2014
@@ -74,15 +71,19 @@ public class JSONHelper {
 
         for (DataWord key : storageKeys) {
             storage.put("0x" + Hex.toHexString(key.getData()),
-                    "0x" + Hex.toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
+                        "0x" + Hex.toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
         }
 
-        if (state == null)
-            state = new AccountState(SystemProperties.getDefault().getBlockchainConfig().getCommonConstants().getInitialNonce(),
-                    BigInteger.ZERO);
+        if (state == null) {
+            state = new AccountState(SystemProperties.getDefault()
+                                             .getBlockchainConfig()
+                                             .getCommonConstants()
+                                             .getInitialNonce(), BigInteger.ZERO);
+        }
 
         account.put("balance", state.getBalance() == null ? "0" : state.getBalance().toString());
-//        account.put("codeHash", details.getCodeHash() == null ? "0x" : "0x" + Hex.toHexString(details.getCodeHash()));
+        //        account.put("codeHash", details.getCodeHash() == null ? "0x" : "0x" + Hex.toHexString(details
+        // .getCodeHash()));
         account.put("code", details.getCode() == null ? "0x" : "0x" + Hex.toHexString(details.getCode()));
         account.put("nonce", state.getNonce() == null ? "0" : state.getNonce().toString());
         account.set("storage", storage);
@@ -91,9 +92,8 @@ public class JSONHelper {
         statesNode.set(address, account);
     }
 
-    public static void dumpBlock(ObjectNode blockNode, Block block,
-                                 long gasUsed, byte[] state, List<ByteArrayWrapper> keys,
-                                 Repository repository) {
+    public static void dumpBlock(ObjectNode blockNode, Block block, long gasUsed, byte[] state,
+                                 List<ByteArrayWrapper> keys, Repository repository) {
 
         blockNode.put("coinbase", Hex.toHexString(block.getCoinbase()));
         blockNode.put("difficulty", new BigInteger(1, block.getDifficulty()).toString());
@@ -121,8 +121,8 @@ public class JSONHelper {
         blockNode.put("tx_list_root", ByteUtil.toHexString(block.getTxTrieRoot()));
         blockNode.put("uncles_hash", "0x" + Hex.toHexString(block.getUnclesHash()));
 
-//      JSONHelper.dumpTransactions(blockNode,
-//              stateRoot, codeHash, code, storage);
+        //      JSONHelper.dumpTransactions(blockNode,
+        //              stateRoot, codeHash, code, storage);
     }
 
 }

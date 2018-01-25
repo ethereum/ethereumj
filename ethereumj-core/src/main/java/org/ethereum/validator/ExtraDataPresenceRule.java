@@ -42,11 +42,11 @@ public class ExtraDataPresenceRule extends BlockHeaderRule {
         final boolean extraDataMatches = FastByteComparisons.equal(extraData, data);
 
         if (required && !extraDataMatches) {
-            return fault("Block " + header.getNumber() + " is no-fork. Expected presence of: " +
-                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(extraData));
+            return fault("Block " + header.getNumber() + " is no-fork. Expected presence of: " + Hex.toHexString(data) +
+                                 ", in extra data: " + Hex.toHexString(extraData));
         } else if (!required && extraDataMatches) {
-            return fault("Block " + header.getNumber() + " is pro-fork. Expected no: " +
-                    Hex.toHexString(data) + ", in extra data: " + Hex.toHexString(extraData));
+            return fault("Block " + header.getNumber() + " is pro-fork. Expected no: " + Hex.toHexString(data) +
+                                 ", in extra data: " + Hex.toHexString(extraData));
         }
         return Success;
     }

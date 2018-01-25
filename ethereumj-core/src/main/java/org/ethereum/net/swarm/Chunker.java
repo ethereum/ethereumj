@@ -26,12 +26,12 @@ import java.util.Collection;
  * When calling Split, the caller provides a channel (chan *Chunk) on which it receives chunks to store.
  * The DPA delegates to storage layers (implementing ChunkStore interface). NewChunkstore(DB) is a convenience
  * wrapper with which all DBs (conforming to DB interface) can serve as ChunkStores. See chunkStore.go
- *
+ * <p>
  * After getting notified that all the data has been split (the error channel is closed), the caller can safely
  * read or save the root key. Optionally it times out if not all chunks get stored or not the entire stream
  * of data has been processed. By inspecting the errc channel the caller can check if any explicit errors
  * (typically IO read/write failures) occurred during splitting.
- *
+ * <p>
  * When calling Join with a root key, the caller gets returned a lazy reader. The caller again provides a channel
  * and receives an error channel. The chunk channel is the one on which the caller receives placeholder chunks with
  * missing data. The DPA is supposed to forward this to the chunk stores and notify the chunker if the data
@@ -47,7 +47,8 @@ public interface Chunker {
      * the root hash of the entire content will fill this once processing finishes.
      * New chunks to store are coming to caller via the chunk storage channel, which the caller provides.
      * wg is a Waitgroup (can be nil) that can be used to block until the local storage finishes
-     * The caller gets returned an error channel, if an error is encountered during splitting, it is fed to errC error channel.
+     * The caller gets returned an error channel, if an error is encountered during splitting, it is fed to errC
+     * error channel.
      * A closed error signals process completion at which point the key can be considered final if there were no errors.
      */
     Key split(SectionReader sectionReader, Collection<Chunk> consumer);

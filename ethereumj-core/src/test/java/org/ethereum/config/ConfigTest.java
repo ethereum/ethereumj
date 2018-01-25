@@ -17,7 +17,12 @@
  */
 package org.ethereum.config;
 
-import com.typesafe.config.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValue;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,8 +40,8 @@ public class ConfigTest {
         Config config = ConfigFactory.parseResources("ethereumj.conf");
         System.out.println(config.root().render(ConfigRenderOptions.defaults().setComments(false)));
         for (Map.Entry<String, ConfigValue> entry : config.entrySet()) {
-//            System.out.println("Name:  " + entry.getKey());
-//            System.out.println(entry);
+            //            System.out.println("Name:  " + entry.getKey());
+            //            System.out.println(entry);
         }
         System.out.println("peer.listen.port: " + config.getInt("peer.listen.port"));
         System.out.println("peer.discovery.ip.list: " + config.getAnyRefList("peer.discovery.ip.list"));
@@ -61,7 +66,7 @@ public class ConfigTest {
         Config config = ConfigFactory.load("ethereumj.conf");
         // Ignore this assertion since the SystemProperties are loaded by the static initializer
         // so if the ConfigFactory was used prior to this test the setProperty() has no effect
-//        Assert.assertEquals("bla-bla", config.getString("blocks.loader"));
+        //        Assert.assertEquals("bla-bla", config.getString("blocks.loader"));
         String string = config.getString("keyvalue.datasource");
         Assert.assertNotNull(string);
 

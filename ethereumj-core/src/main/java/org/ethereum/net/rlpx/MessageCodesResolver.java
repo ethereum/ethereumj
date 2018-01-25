@@ -17,6 +17,8 @@
  */
 package org.ethereum.net.rlpx;
 
+import static org.ethereum.net.eth.EthVersion.fromCode;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
@@ -28,8 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.ethereum.net.eth.EthVersion.*;
 
 /**
  * @author Mikhail Kalinin
@@ -88,7 +88,7 @@ public class MessageCodesResolver {
 
     public byte withOffset(byte code, String cap) {
         byte offset = getOffset(cap);
-        return (byte)(code + offset);
+        return (byte) (code + offset);
     }
 
     public byte resolveP2p(byte code) {
@@ -109,7 +109,7 @@ public class MessageCodesResolver {
 
     private byte resolve(byte code, String cap) {
         byte offset = getOffset(cap);
-        return (byte)(code - offset);
+        return (byte) (code - offset);
     }
 
     private byte getOffset(String cap) {

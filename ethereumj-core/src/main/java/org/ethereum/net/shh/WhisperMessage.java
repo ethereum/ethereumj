@@ -17,9 +17,18 @@
  */
 package org.ethereum.net.shh;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.net.swarm.Util.rlpDecodeInt;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
+
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.math.ec.ECPoint;
@@ -29,33 +38,30 @@ import org.spongycastle.util.encoders.Hex;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
-import java.util.*;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.net.swarm.Util.rlpDecodeInt;
-import static org.ethereum.util.ByteUtil.merge;
-import static org.ethereum.util.ByteUtil.xor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.
  */
 public class WhisperMessage extends ShhMessage {
-    private final static Logger logger = LoggerFactory.getLogger("net.shh");
-
     public static final int SIGNATURE_FLAG = 1;
     public static final int SIGNATURE_LENGTH = 65;
-
+    private final static Logger logger = LoggerFactory.getLogger("net.shh");
+    int nonce = 0;
     private Topic[] topics = new Topic[0];
     private byte[] payload;
     private byte flags;
     private byte[] signature;
     private String to;
     private ECKey from;
-
     private int expire;
     private int ttl;
-    int nonce = 0;
-
     private boolean encrypted = false;
     private long pow = 0;
     private byte[] messageBytes;
@@ -75,8 +81,20 @@ public class WhisperMessage extends ShhMessage {
         return topics;
     }
 
+    /***********   Encode routines   ************/
+
+    public WhisperMessage setTopics(Topic... topics) {
+        this.topics = topics != null ? topics : new Topic[0];
+        return this;
+    }
+
     public byte[] getPayload() {
         return payload;
+    }
+
+    public WhisperMessage setPayload(byte[] payload) {
+        this.payload = payload;
+        return this;
     }
 
     public int getExpire() {
@@ -87,6 +105,12 @@ public class WhisperMessage extends ShhMessage {
         return ttl;
     }
 
+    public WhisperMessage setTtl(int ttl) {
+        this.ttl = ttl;
+        expire = (int) (Utils.toUnixTime(System.currentTimeMillis()) + ttl);
+        return this;
+    }
+
     public long getPow() {
         return pow;
     }
@@ -95,8 +119,24 @@ public class WhisperMessage extends ShhMessage {
         return from == null ? null : WhisperImpl.toIdentity(from);
     }
 
+    public WhisperMessage setFrom(String from) {
+        this.from = WhisperImpl.fromIdentityToPub(from);
+        return this;
+    }
+
     public String getTo() {
         return to;
+    }
+
+    /**
+     * If set the message will be encrypted with the receiver public key
+     * If not the message will be encrypted as broadcast with Topics
+     *
+     * @param to public key
+     */
+    public WhisperMessage setTo(String to) {
+        this.to = to;
+        return this;
     }
 
     /***********   Decode routines   ************/
@@ -133,8 +173,11 @@ public class WhisperMessage extends ShhMessage {
                 throw new RuntimeException("Unable to open the envelope. First bit set but len(data) < len(signature)");
             }
             signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
-            System.arraycopy(payload, payload.length - WhisperMessage.SIGNATURE_LENGTH, signature, 0,
-                    WhisperMessage.SIGNATURE_LENGTH);
+            System.arraycopy(payload,
+                             payload.length - WhisperMessage.SIGNATURE_LENGTH,
+                             signature,
+                             0,
+                             WhisperMessage.SIGNATURE_LENGTH);
             byte[] msg = new byte[payload.length - WhisperMessage.SIGNATURE_LENGTH - 1];
             System.arraycopy(payload, 1, msg, 0, msg.length);
             payload = msg;
@@ -152,11 +195,11 @@ public class WhisperMessage extends ShhMessage {
         boolean ok = false;
         for (ECKey key : identities) {
             ok = decrypt(key);
-            if (ok) break;
+            if (ok) { break; }
         }
 
         if (!ok) {
-        // decrypting as broadcast
+            // decrypting as broadcast
             ok = openBroadcastMessage(knownTopics);
         }
 
@@ -166,7 +209,7 @@ public class WhisperMessage extends ShhMessage {
 
         // the message might be either not-encrypted or encrypted but we have no receivers
         // now way to know so just assuming that the message is broadcast and not encrypted
-//        setEncrypted(false);
+        //        setEncrypted(false);
         return false;
     }
 
@@ -218,8 +261,8 @@ public class WhisperMessage extends ShhMessage {
         byte[] s = new byte[32];
         byte v = signature[64];
 
-        if (v == 1) v = 28;
-        if (v == 0) v = 27;
+        if (v == 1) { v = 28; }
+        if (v == 0) { v = 27; }
 
         System.arraycopy(signature, 0, r, 0, 32);
         System.arraycopy(signature, 32, s, 0, 32);
@@ -229,7 +272,7 @@ public class WhisperMessage extends ShhMessage {
 
     private ECKey recover() {
         ECKey.ECDSASignature signature = decodeSignature();
-        if (signature == null) return null;
+        if (signature == null) { return null; }
 
         byte[] msgHash = hash();
 
@@ -255,50 +298,18 @@ public class WhisperMessage extends ShhMessage {
         return getFirstBitSet(sha3(d));
     }
 
-    /***********   Encode routines   ************/
-
-    public WhisperMessage setTopics(Topic ... topics) {
-        this.topics = topics != null ? topics : new Topic[0];
-        return this;
-    }
-
     public WhisperMessage setPayload(String payload) {
         this.payload = payload.getBytes(StandardCharsets.UTF_8);
         return this;
     }
 
-    public WhisperMessage setPayload(byte[] payload) {
-        this.payload = payload;
-        return this;
-    }
-
-    /**
-     * If set the message will be encrypted with the receiver public key
-     * If not the message will be encrypted as broadcast with Topics
-     * @param to public key
-     */
-    public WhisperMessage setTo(String to) {
-        this.to = to;
-        return this;
-    }
-
     /**
      * If set the message will be signed by the sender key
+     *
      * @param from sender key
      */
     public WhisperMessage setFrom(ECKey from) {
         this.from = from;
-        return this;
-    }
-
-    public WhisperMessage setFrom(String from) {
-        this.from = WhisperImpl.fromIdentityToPub(from);
-        return this;
-    }
-
-    public WhisperMessage setTtl(int ttl) {
-        this.ttl = ttl;
-        expire = (int) (Utils.toUnixTime(System.currentTimeMillis()) + ttl);
         return this;
     }
 
@@ -350,7 +361,7 @@ public class WhisperMessage extends ShhMessage {
 
         long then = System.currentTimeMillis() + pow;
         int nonce = 0;
-        for (int bestBit = 0; System.currentTimeMillis() < then;) {
+        for (int bestBit = 0; System.currentTimeMillis() < then; ) {
             for (int i = 0; i < 1024; ++i, ++nonce) {
                 byteBuffer.putInt(32, nonce);
                 int fbs = getFirstBitSet(sha3(d));
@@ -387,7 +398,7 @@ public class WhisperMessage extends ShhMessage {
                 ECKey key = WhisperImpl.fromIdentityToPub(to);
                 ECPoint pubKeyPoint = key.getPubKeyPoint();
                 payload = ECIESCoder.encryptSimple(pubKeyPoint, payload);
-            } else if (topics.length > 0){
+            } else if (topics.length > 0) {
                 // encrypting as broadcast message
                 byte[] topicKeys = new byte[topics.length * 64];
                 ECKey key = new ECKey();
@@ -419,13 +430,13 @@ public class WhisperMessage extends ShhMessage {
 
         byte v;
 
-        if (signature.v == 27) v = 0;
-        else if (signature.v == 28) v = 1;
-        else throw new RuntimeException("Invalid signature: " + signature);
+        if (signature.v == 27) { v = 0; } else if (signature.v == 28) { v = 1; } else {
+            throw new RuntimeException("Invalid signature: " + signature);
+        }
 
-        this.signature =
-                merge(BigIntegers.asUnsignedByteArray(32, signature.r),
-                        BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{v});
+        this.signature = merge(BigIntegers.asUnsignedByteArray(32, signature.r),
+                               BigIntegers.asUnsignedByteArray(32, signature.s),
+                               new byte[]{v});
     }
 
 
@@ -436,14 +447,10 @@ public class WhisperMessage extends ShhMessage {
 
     @Override
     public String toString() {
-        return "WhisperMessage[" +
-                "topics=" + Arrays.toString(topics) +
-                ", payload=" + (encrypted ? "<encrypted " + payload.length + " bytes>" : new String(payload)) +
-                ", to=" + (to == null ? "null" : to.substring(0, 16) + "...") +
-                ", from=" + (from == null ? "null" : Hex.toHexString(from.getPubKey()).substring(0,16) + "...") +
-                ", expire=" + expire +
-                ", ttl=" + ttl +
-                ", nonce=" + nonce +
-                ']';
+        return "WhisperMessage[" + "topics=" + Arrays.toString(topics) + ", payload=" +
+                (encrypted ? "<encrypted " + payload.length + " bytes>" : new String(payload)) + ", to=" +
+                (to == null ? "null" : to.substring(0, 16) + "...") + ", from=" +
+                (from == null ? "null" : Hex.toHexString(from.getPubKey()).substring(0, 16) + "...") + ", expire=" +
+                expire + ", ttl=" + ttl + ", nonce=" + nonce + ']';
     }
 }

@@ -17,18 +17,18 @@
  */
 package org.ethereum.vm.program;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.min;
+import static java.lang.String.format;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.oneByteToHexString;
+
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.ProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import static java.lang.Math.ceil;
-import static java.lang.Math.min;
-import static java.lang.String.format;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.oneByteToHexString;
 
 public class Memory implements ProgramListenerAware {
 
@@ -45,7 +45,7 @@ public class Memory implements ProgramListenerAware {
     }
 
     public byte[] read(int address, int size) {
-        if (size <= 0) return EMPTY_BYTE_ARRAY;
+        if (size <= 0) { return EMPTY_BYTE_ARRAY; }
 
         extend(address, size);
         byte[] data = new byte[size];
@@ -73,20 +73,17 @@ public class Memory implements ProgramListenerAware {
 
     public void write(int address, byte[] data, int dataSize, boolean limited) {
 
-        if (data.length < dataSize)
-            dataSize = data.length;
+        if (data.length < dataSize) { dataSize = data.length; }
 
-        if (!limited)
-            extend(address, dataSize);
+        if (!limited) { extend(address, dataSize); }
 
         int chunkIndex = address / CHUNK_SIZE;
         int chunkOffset = address % CHUNK_SIZE;
 
         int toCapture = 0;
-        if (limited)
-            toCapture = (address + dataSize > softSize) ? softSize - address : dataSize;
-        else
+        if (limited) { toCapture = (address + dataSize > softSize) ? softSize - address : dataSize; } else {
             toCapture = dataSize;
+        }
 
         int start = 0;
         while (toCapture > 0) {
@@ -101,7 +98,7 @@ public class Memory implements ProgramListenerAware {
             start += captured;
         }
 
-        if (programListener != null) programListener.onMemoryWrite(address, data, dataSize);
+        if (programListener != null) { programListener.onMemoryWrite(address, data, dataSize); }
     }
 
 
@@ -111,7 +108,7 @@ public class Memory implements ProgramListenerAware {
     }
 
     public void extend(int address, int size) {
-        if (size <= 0) return;
+        if (size <= 0) { return; }
 
         final int newSize = address + size;
 
@@ -125,7 +122,7 @@ public class Memory implements ProgramListenerAware {
             toAllocate = (int) ceil((double) toAllocate / WORD_SIZE) * WORD_SIZE;
             softSize += toAllocate;
 
-            if (programListener != null) programListener.onMemoryExtend(toAllocate);
+            if (programListener != null) { programListener.onMemoryExtend(toAllocate); }
         }
     }
 
@@ -165,7 +162,7 @@ public class Memory implements ProgramListenerAware {
                 memoryData.append("").append(tmp).append(" ");
                 memoryData.append(firstLine).append(" ");
                 memoryData.append(secondLine);
-                if (i + 1 < softSize) memoryData.append("\n");
+                if (i + 1 < softSize) { memoryData.append("\n"); }
                 firstLine.setLength(0);
                 secondLine.setLength(0);
             }

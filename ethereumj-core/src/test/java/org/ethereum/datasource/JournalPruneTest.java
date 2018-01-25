@@ -17,58 +17,27 @@
  */
 package org.ethereum.datasource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Anton Nashatyrev on 27.07.2016.
  */
 public class JournalPruneTest {
 
-    class StringJDS extends JournalSource<byte[]> {
-        final HashMapDB<byte[]> mapDB;
-        final Source<byte[], byte[]> db;
-
-        public StringJDS() {
-            this(new HashMapDB<byte[]>());
-        }
-
-        private StringJDS(HashMapDB<byte[]> mapDB) {
-            this(mapDB, new CountingBytesSource(mapDB));
-        }
-
-        private StringJDS(HashMapDB<byte[]> mapDB, Source<byte[], byte[]> db) {
-            super(db);
-            this.db = db;
-            this.mapDB = mapDB;
-        }
-
-        public synchronized void put(String key) {
-            super.put(key.getBytes(), key.getBytes());
-        }
-
-        public synchronized void delete(String key) {
-            super.delete(key.getBytes());
-        }
-
-        public String get(String key) {
-            return new String(super.get(key.getBytes()));
-        }
-    }
-
-    private void checkDb(StringJDS db, String ... keys) {
+    private void checkDb(StringJDS db, String... keys) {
         assertEquals(keys.length, db.mapDB.keys().size());
         for (String key : keys) {
             assertTrue(db.get(key.getBytes()) != null);
         }
     }
 
-    private void putKeys(StringJDS db, String ... keys) {
+    private void putKeys(StringJDS db, String... keys) {
         for (String key : keys) {
             db.put(key.getBytes(), key.getBytes());
         }
@@ -192,5 +161,36 @@ public class JournalPruneTest {
 
     public byte[] hashInt(int i) {
         return HashUtil.sha3(ByteUtil.intToBytes(i));
+    }
+
+    class StringJDS extends JournalSource<byte[]> {
+        final HashMapDB<byte[]> mapDB;
+        final Source<byte[], byte[]> db;
+
+        public StringJDS() {
+            this(new HashMapDB<byte[]>());
+        }
+
+        private StringJDS(HashMapDB<byte[]> mapDB) {
+            this(mapDB, new CountingBytesSource(mapDB));
+        }
+
+        private StringJDS(HashMapDB<byte[]> mapDB, Source<byte[], byte[]> db) {
+            super(db);
+            this.db = db;
+            this.mapDB = mapDB;
+        }
+
+        public synchronized void put(String key) {
+            super.put(key.getBytes(), key.getBytes());
+        }
+
+        public synchronized void delete(String key) {
+            super.delete(key.getBytes());
+        }
+
+        public String get(String key) {
+            return new String(super.get(key.getBytes()));
+        }
     }
 }

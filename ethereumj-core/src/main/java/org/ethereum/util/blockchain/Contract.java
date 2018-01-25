@@ -19,7 +19,7 @@ package org.ethereum.util.blockchain;
 
 /**
  * Abstract Ethereum contract
- *
+ * <p>
  * Created by Anton Nashatyrev on 01.04.2016.
  */
 public interface Contract {

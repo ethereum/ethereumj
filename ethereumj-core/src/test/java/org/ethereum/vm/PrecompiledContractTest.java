@@ -17,24 +17,24 @@
  */
 package org.ethereum.vm;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.Eip160HFConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
-
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
-import static org.junit.Assert.*;
 
 /**
  * @author Roman Mandeleil
@@ -114,7 +114,8 @@ public class PrecompiledContractTest {
     @Test
     public void ecRecoverTest1() {
 
-        byte[] data = Hex.decode("18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c000000000000000000000000000000000000000000000000000000000000001c73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75feeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
+        byte[] data = Hex.decode(
+                "18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c000000000000000000000000000000000000000000000000000000000000001c73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75feeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
         DataWord addr = new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
         PrecompiledContract contract = PrecompiledContracts.getContractForAddress(addr, eip160Config);
         String expected = "000000000000000000000000ae387fcfeb723c3f5964509af111cf5a67f30661";
@@ -137,13 +138,11 @@ public class PrecompiledContractTest {
         contract = PrecompiledContracts.getContractForAddress(addr, byzantiumConfig);
         assertNotNull(contract);
 
-        byte[] data1 = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000001" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "03" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
+        byte[] data1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000001" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" + "03" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
 
         assertEquals(13056, contract.getGasForData(data1));
 
@@ -151,12 +150,11 @@ public class PrecompiledContractTest {
         assertEquals(32, res1.length);
         assertEquals(BigInteger.ONE, bytesToBigInteger(res1));
 
-        byte[] data2 = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000000" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
+        byte[] data2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
 
         assertEquals(13056, contract.getGasForData(data2));
 
@@ -164,65 +162,60 @@ public class PrecompiledContractTest {
         assertEquals(32, res2.length);
         assertEquals(BigInteger.ZERO, bytesToBigInteger(res2));
 
-        byte[] data3 = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000000" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
+        byte[] data3 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" +
+                                          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
 
         // hardly imagine this value could be a real one
         assertEquals(3_674_950_435_109_146_392L, contract.getGasForData(data3));
 
-        byte[] data4 = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000001" +
-                "0000000000000000000000000000000000000000000000000000000000000002" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "03" +
-                "ffff" +
-                "8000000000000000000000000000000000000000000000000000000000000000" +
-                "07"); // "07" should be ignored by data parser
+        byte[] data4 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000001" +
+                                          "0000000000000000000000000000000000000000000000000000000000000002" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" + "03" +
+                                          "ffff" + "8000000000000000000000000000000000000000000000000000000000000000" +
+                                          "07"); // "07" should be ignored by data parser
 
         assertEquals(768, contract.getGasForData(data4));
 
         byte[] res4 = contract.execute(data4).getRight();
         assertEquals(32, res4.length);
-        assertEquals(new BigInteger("26689440342447178617115869845918039756797228267049433585260346420242739014315"), bytesToBigInteger(res4));
+        assertEquals(new BigInteger("26689440342447178617115869845918039756797228267049433585260346420242739014315"),
+                     bytesToBigInteger(res4));
 
-        byte[] data5 = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000001" +
-                "0000000000000000000000000000000000000000000000000000000000000002" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "03" +
-                "ffff" +
-                "80"); // "80" should be parsed as "8000000000000000000000000000000000000000000000000000000000000000"
-                       // cause call data is infinitely right-padded with zero bytes
+        byte[] data5 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000001" +
+                                          "0000000000000000000000000000000000000000000000000000000000000002" +
+                                          "0000000000000000000000000000000000000000000000000000000000000020" + "03" +
+                                          "ffff" +
+                                          "80"); // "80" should be parsed as
+        // "8000000000000000000000000000000000000000000000000000000000000000"
+        // cause call data is infinitely right-padded with zero bytes
 
         assertEquals(768, contract.getGasForData(data5));
 
         byte[] res5 = contract.execute(data5).getRight();
         assertEquals(32, res5.length);
-        assertEquals(new BigInteger("26689440342447178617115869845918039756797228267049433585260346420242739014315"), bytesToBigInteger(res5));
+        assertEquals(new BigInteger("26689440342447178617115869845918039756797228267049433585260346420242739014315"),
+                     bytesToBigInteger(res5));
 
         // check overflow handling in gas calculation
-        byte[] data6 = Hex.decode(
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "0000000000000000000000000000000020000000000000000000000000000000" +
-                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
+        byte[] data6 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000020" +
+                                          "0000000000000000000000000000000020000000000000000000000000000000" +
+                                          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
 
         assertEquals(Long.MAX_VALUE, contract.getGasForData(data6));
 
         // check rubbish data
-        byte[] data7 = Hex.decode(
-                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
-                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
-                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd" +
-                "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
+        byte[] data7 = Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
+                                          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
+                                          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd" +
+                                          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
 
         assertEquals(Long.MAX_VALUE, contract.getGasForData(data7));
 

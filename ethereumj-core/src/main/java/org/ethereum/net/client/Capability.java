@@ -49,14 +49,13 @@ public class Capability implements Comparable<Capability> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Capability)) return false;
+        if (this == obj) { return true; }
+        if (!(obj instanceof Capability)) { return false; }
 
         Capability other = (Capability) obj;
-        if (this.name == null)
-            return other.name == null;
-        else
+        if (this.name == null) { return other.name == null; } else {
             return this.name.equals(other.name) && this.version == other.version;
+        }
     }
 
     @Override

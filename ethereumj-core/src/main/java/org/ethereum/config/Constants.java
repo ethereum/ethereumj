@@ -21,7 +21,7 @@ import java.math.BigInteger;
 
 /**
  * Describes different constants specific for a blockchain
- *
+ * <p>
  * Created by Anton Nashatyrev on 25.02.2016.
  */
 public class Constants {
@@ -39,7 +39,15 @@ public class Constants {
 
     private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
 
-    private static final BigInteger SECP256K1N = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+    private static final BigInteger SECP256K1N =
+            new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+
+    /**
+     * Introduced in the Homestead release
+     */
+    public static BigInteger getSECP256K1N() {
+        return SECP256K1N;
+    }
 
     public int getDURATION_LIMIT() {
         return 8;
@@ -103,11 +111,4 @@ public class Constants {
      * exception
      */
     public boolean hasDelegateCallOpcode() {return false; }
-
-    /**
-     * Introduced in the Homestead release
-     */
-    public static BigInteger getSECP256K1N() {
-        return SECP256K1N;
-    }
 }

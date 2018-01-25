@@ -22,12 +22,12 @@ package org.ethereum.datasource;
  * When a child cache is not found in the local cache it is looked up in the backing Source
  * Based on this child backing cache (or null if not found) the new local cache is created
  * via create() method
- *
+ * <p>
  * When flushing children, each child is just flushed if it has backing Source or the whole
  * child cache is put to the MultiCache backing source
- *
+ * <p>
  * The primary goal if for caching contract storages in the child repositories (tracks)
- *
+ * <p>
  * Created by Anton Nashatyrev on 07.10.2016.
  */
 public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.BytesKey<V> {
@@ -60,7 +60,7 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
     @Override
     public synchronized boolean flushImpl() {
         boolean ret = false;
-        for (byte[] key: writeCache.getModified()) {
+        for (byte[] key : writeCache.getModified()) {
             V value = super.get(key);
             if (value == null) {
                 // cache was deleted
@@ -68,7 +68,7 @@ public abstract class MultiCache<V extends CachedSource> extends ReadWriteCache.
                 if (getSource() != null) {
                     getSource().delete(key);
                 }
-            } else if (value.getSource() != null){
+            } else if (value.getSource() != null) {
                 ret |= flushChild(key, value);
             } else {
                 getSource().put(key, value);

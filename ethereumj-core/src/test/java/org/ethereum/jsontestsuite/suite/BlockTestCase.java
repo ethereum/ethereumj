@@ -71,12 +71,12 @@ public class BlockTestCase {
         return pre;
     }
 
-    public String getGenesisRLP() {
-        return genesisRLP;
-    }
-
     public void setPre(Map<String, AccountTck> pre) {
         this.pre = pre;
+    }
+
+    public String getGenesisRLP() {
+        return genesisRLP;
     }
 
     public Map<String, AccountTck> getPostState() {
@@ -117,10 +117,7 @@ public class BlockTestCase {
 
     @Override
     public String toString() {
-        return "BlockTestCase{" +
-                "blocks=" + blocks +
-                ", genesisBlockHeader=" + genesisBlockHeader +
-                ", pre=" + pre +
+        return "BlockTestCase{" + "blocks=" + blocks + ", genesisBlockHeader=" + genesisBlockHeader + ", pre=" + pre +
                 '}';
     }
 }

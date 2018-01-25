@@ -20,6 +20,11 @@
 
 package org.ethereum.config.blockchain;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.DataWord;
@@ -28,11 +33,9 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.*;
-
 /**
  * <p>This unit test covers EIP-150:</p>
- *
+ * <p>
  * <pre>
  * EIP: 150
  * Title: Gas cost changes for IO-heavy operations
@@ -42,23 +45,23 @@ import static org.junit.Assert.*;
  * Status: Final
  * Created: 2016-09-24
  * </pre>
- *
+ * <p>
  * <pre>If block.number >= FORK_BLKNUM, then:</pre>
  * <ul>
- *     <li>Increase the gas cost of EXTCODESIZE to 700</li>
- *     <li>Increase the base gas cost of EXTCODECOPY to 700</li>
- *     <li>Increase the gas cost of BALANCE to 400</li>
- *     <li>Increase the gas cost of SLOAD to 200</li>
- *     <li>Increase the gas cost of CALL, DELEGATECALL, CALLCODE to 700</li>
- *     <li>Increase the gas cost of SELFDESTRUCT to 5000</li>
- *     <li>If SELFDESTRUCT hits a newly created account, it triggers an additional gas cost of 25000 (similar to CALLs)</li>
- *     <li>Increase the recommended gas limit target to 5.5 million</li>
- *     <li>Define "all but one 64th" of N as N - floor(N / 64)</li>
- *     <li>If a call asks for more gas than the maximum allowed amount (ie. total amount of gas remaining
- *     in the parent after subtracting the gas cost of the call and memory expansion), do not return an
- *     OOG error; instead, if a call asks for more gas than all but one 64th of the maximum allowed amount,
- *     call with all but one 64th of the maximum allowed amount of gas (this is equivalent to a version of
- *     #90 plus #114). CREATE only provides all but one 64th of the parent gas to the child call.</li>
+ * <li>Increase the gas cost of EXTCODESIZE to 700</li>
+ * <li>Increase the base gas cost of EXTCODECOPY to 700</li>
+ * <li>Increase the gas cost of BALANCE to 400</li>
+ * <li>Increase the gas cost of SLOAD to 200</li>
+ * <li>Increase the gas cost of CALL, DELEGATECALL, CALLCODE to 700</li>
+ * <li>Increase the gas cost of SELFDESTRUCT to 5000</li>
+ * <li>If SELFDESTRUCT hits a newly created account, it triggers an additional gas cost of 25000 (similar to CALLs)</li>
+ * <li>Increase the recommended gas limit target to 5.5 million</li>
+ * <li>Define "all but one 64th" of N as N - floor(N / 64)</li>
+ * <li>If a call asks for more gas than the maximum allowed amount (ie. total amount of gas remaining
+ * in the parent after subtracting the gas cost of the call and memory expansion), do not return an
+ * OOG error; instead, if a call asks for more gas than all but one 64th of the maximum allowed amount,
+ * call with all but one 64th of the maximum allowed amount of gas (this is equivalent to a version of
+ * #90 plus #114). CREATE only provides all but one 64th of the parent gas to the child call.</li>
  * </ul>
  * <p>Source -- https://github.com/ethereum/EIPs/blob/master/EIPS/eip-150.md</p>
  */
@@ -155,9 +158,11 @@ public class Eip150HFConfigTest {
         assertSame(eip150, eip150.getConfigForBlock(5_000_000));
         assertTrue(eip150.getGasCost() instanceof Eip150HFConfig.GasCostEip150HF);
 
-        Transaction txWithoutChainId = new Transaction(emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, null);
+        Transaction txWithoutChainId =
+                new Transaction(emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, null);
         assertTrue(eip150.acceptTransactionSignature(txWithoutChainId));
-        Transaction txWithChainId = new Transaction(emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, 1);
+        Transaction txWithChainId =
+                new Transaction(emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, emptyBytes, 1);
         assertFalse(eip150.acceptTransactionSignature(txWithChainId));
     }
 }

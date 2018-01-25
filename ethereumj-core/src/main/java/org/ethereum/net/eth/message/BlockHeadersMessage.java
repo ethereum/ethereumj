@@ -28,9 +28,8 @@ import java.util.List;
 /**
  * Wrapper around an Ethereum BlockHeaders message on the network
  *
- * @see EthMessageCodes#BLOCK_HEADERS
- *
  * @author Mikhail Kalinin
+ * @see EthMessageCodes#BLOCK_HEADERS
  * @since 04.09.2015
  */
 public class BlockHeadersMessage extends EthMessage {
@@ -50,7 +49,7 @@ public class BlockHeadersMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockHeaders = new ArrayList<>();
@@ -63,8 +62,7 @@ public class BlockHeadersMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (BlockHeader blockHeader : blockHeaders)
-            encodedElements.add(blockHeader.getEncoded());
+        for (BlockHeader blockHeader : blockHeaders) { encodedElements.add(blockHeader.getEncoded()); }
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
@@ -72,7 +70,7 @@ public class BlockHeadersMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -109,12 +107,18 @@ public class BlockHeadersMessage extends EthMessage {
             }
         } else {
             if (blockHeaders.size() > 0) {
-                payload.append("#").append(blockHeaders.get(0).getNumber()).append(" (")
-                        .append(Hex.toHexString(blockHeaders.get(0).getHash()).substring(0, 8)).append(")");
+                payload.append("#")
+                        .append(blockHeaders.get(0).getNumber())
+                        .append(" (")
+                        .append(Hex.toHexString(blockHeaders.get(0).getHash()).substring(0, 8))
+                        .append(")");
             }
             if (blockHeaders.size() > 1) {
-                payload.append(" ... #").append(blockHeaders.get(blockHeaders.size() - 1).getNumber()).append(" (")
-                        .append(Hex.toHexString(blockHeaders.get(blockHeaders.size() - 1).getHash()).substring(0, 8)).append(")");
+                payload.append(" ... #")
+                        .append(blockHeaders.get(blockHeaders.size() - 1).getNumber())
+                        .append(" (")
+                        .append(Hex.toHexString(blockHeaders.get(blockHeaders.size() - 1).getHash()).substring(0, 8))
+                        .append(")");
             }
         }
 

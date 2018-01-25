@@ -27,21 +27,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Serves as an interface to the Kademlia. Manages the database of Nodes reported
  * by all the peers and selects from DB the nearest nodes to the specified hash Key
- *
+ * <p>
  * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class Hive {
     private final static Logger LOG = LoggerFactory.getLogger("net.bzz");
-
-    private PeerAddress thisAddress;
     protected NodeTable nodeTable;
-
+    private PeerAddress thisAddress;
     private Map<Node, BzzProtocol> connectedPeers = new IdentityHashMap<>();
+    private Map<HiveTask, Object> hiveTasks = new IdentityHashMap<>();
 
     public Hive(PeerAddress thisAddress) {
         this.thisAddress = thisAddress;
@@ -49,6 +53,7 @@ public class Hive {
     }
 
     public void start() {}
+
     public void stop() {}
 
     public PeerAddress getSelfAddress() {
@@ -76,7 +81,7 @@ public class Hive {
         ArrayList<PeerAddress> ret = new ArrayList<>();
         for (Node node : closestNodes) {
             ret.add(new PeerAddress(node));
-            if (--max == 0) break;
+            if (--max == 0) { break; }
         }
         return ret;
     }
@@ -90,14 +95,15 @@ public class Hive {
         ArrayList<BzzProtocol> ret = new ArrayList<>();
         for (Node node : closestNodes) {
             // TODO connect to Node
-//            ret.add(thisPeer.getPeer(new PeerAddress(node)));
+            //            ret.add(thisPeer.getPeer(new PeerAddress(node)));
             BzzProtocol peer = connectedPeers.get(node);
             if (peer != null) {
                 ret.add(peer);
-                if (--maxCount == 0) break;
+                if (--maxCount == 0) { break; }
             } else {
                 LOG.info("Hive connects to node " + node);
-                NetStore.getInstance().worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
+                NetStore.getInstance().worldManager.getActivePeer()
+                        .connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
             }
         }
         return ret;
@@ -139,13 +145,13 @@ public class Hive {
     }
 
     /**
-     *  Adds a task with a search Key parameter. The task has a limited life time
-     *  ({@link org.ethereum.net.swarm.Hive.HiveTask#expireTime} and a limited number of
-     *  peers to process ({@link org.ethereum.net.swarm.Hive.HiveTask#maxPeers}).
-     *  Until the task is alive and new Peer(s) is discovered by the Hive this task
-     *  is invoked with another one closest Peer.
-     *  This task may complete synchronously (i.e. before the method return) if the
-     *  number of Peers in the Hive &gt;= maxPeers for that task.
+     * Adds a task with a search Key parameter. The task has a limited life time
+     * ({@link org.ethereum.net.swarm.Hive.HiveTask#expireTime} and a limited number of
+     * peers to process ({@link org.ethereum.net.swarm.Hive.HiveTask#maxPeers}).
+     * Until the task is alive and new Peer(s) is discovered by the Hive this task
+     * is invoked with another one closest Peer.
+     * This task may complete synchronously (i.e. before the method return) if the
+     * number of Peers in the Hive &gt;= maxPeers for that task.
      */
     public void addTask(HiveTask t) {
         if (t.peersAdded()) {
@@ -153,8 +159,6 @@ public class Hive {
             hiveTasks.put(t, null);
         }
     }
-
-    private Map<HiveTask, Object> hiveTasks = new IdentityHashMap<>();
 
     /**
      * The task to be executed when another one closest Peer is discovered
@@ -174,11 +178,12 @@ public class Hive {
 
         /**
          * Notifies the task that new peers were connected.
+         *
          * @return true if the task wants to wait further for another peers
          * false if the task is completed
          */
         public boolean peersAdded() {
-            if (Util.curTime() > expireTime) return false;
+            if (Util.curTime() > expireTime) { return false; }
             Collection<BzzProtocol> peers = getPeers(targetKey, maxPeers);
             for (BzzProtocol peer : peers) {
                 if (!processedPeers.containsKey(peer)) {

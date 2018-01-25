@@ -32,9 +32,9 @@ public interface Blockchain {
 
     Block getBlockByNumber(long blockNr);
 
-    void setBestBlock(Block block);
-
     Block getBestBlock();
+
+    void setBestBlock(Block block);
 
     boolean hasParentOnTheChain(Block block);
 

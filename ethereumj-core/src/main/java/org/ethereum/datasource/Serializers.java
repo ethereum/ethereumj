@@ -30,34 +30,20 @@ import org.ethereum.vm.DataWord;
 public class Serializers {
 
     /**
-     *  No conversion
-     */
-    public static class Identity<T> implements Serializer<T, T> {
-        @Override
-        public T serialize(T object) {
-            return object;
-        }
-        @Override
-        public T deserialize(T stream) {
-            return stream;
-        }
-    }
-
-    /**
      * Serializes/Deserializes AccountState instances from the State Trie (part of Ethereum spec)
      */
-    public final static Serializer<AccountState, byte[]> AccountStateSerializer = new Serializer<AccountState, byte[]>() {
-        @Override
-        public byte[] serialize(AccountState object) {
-            return object.getEncoded();
-        }
+    public final static Serializer<AccountState, byte[]> AccountStateSerializer =
+            new Serializer<AccountState, byte[]>() {
+                @Override
+                public byte[] serialize(AccountState object) {
+                    return object.getEncoded();
+                }
 
-        @Override
-        public AccountState deserialize(byte[] stream) {
-            return stream == null || stream.length == 0 ? null : new AccountState(stream);
-        }
-    };
-
+                @Override
+                public AccountState deserialize(byte[] stream) {
+                    return stream == null || stream.length == 0 ? null : new AccountState(stream);
+                }
+            };
     /**
      * Contract storage key serializer
      */
@@ -72,7 +58,6 @@ public class Serializers {
             return new DataWord(stream);
         }
     };
-
     /**
      * Contract storage value serializer (part of Ethereum spec)
      */
@@ -84,12 +69,11 @@ public class Serializers {
 
         @Override
         public DataWord deserialize(byte[] stream) {
-            if (stream == null || stream.length == 0) return null;
+            if (stream == null || stream.length == 0) { return null; }
             byte[] dataDecoded = RLP.decode2(stream).get(0).getRLPData();
             return new DataWord(dataDecoded);
         }
     };
-
     /**
      * Trie node serializer (part of Ethereum spec)
      */
@@ -104,7 +88,6 @@ public class Serializers {
             return Value.fromRlpEncoded(stream);
         }
     };
-
     /**
      * Trie node serializer (part of Ethereum spec)
      */
@@ -119,4 +102,19 @@ public class Serializers {
             return stream == null ? null : new BlockHeader(stream);
         }
     };
+
+    /**
+     * No conversion
+     */
+    public static class Identity<T> implements Serializer<T, T> {
+        @Override
+        public T serialize(T object) {
+            return object;
+        }
+
+        @Override
+        public T deserialize(T stream) {
+            return stream;
+        }
+    }
 }

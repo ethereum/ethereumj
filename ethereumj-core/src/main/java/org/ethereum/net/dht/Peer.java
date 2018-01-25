@@ -35,7 +35,7 @@ public class Peer {
     }
 
     public Peer(byte[] ip) {
-        this.id= ip;
+        this.id = ip;
     }
 
     public Peer() {
@@ -44,10 +44,7 @@ public class Peer {
 
     public byte nextBit(String startPattern) {
 
-        if (this.toBinaryString().startsWith(startPattern + "1"))
-            return 1;
-        else
-            return 0;
+        if (this.toBinaryString().startsWith(startPattern + "1")) { return 1; } else { return 0; }
     }
 
     public byte[] calcDistance(Peer toPeer) {

@@ -24,14 +24,10 @@ import java.util.Arrays;
 
 /**
  * Data key, just a wrapper for byte array. Normally the SHA(data)
- *
+ * <p>
  * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class Key {
-    public static Key zeroKey() {
-        return new Key(new byte[0]);
-    }
-
     private final byte[] bytes;
 
     public Key(byte[] bytes) {
@@ -42,22 +38,26 @@ public class Key {
         this(Hex.decode(hexKey));
     }
 
+    public static Key zeroKey() {
+        return new Key(new byte[0]);
+    }
+
     public byte[] getBytes() {
         return bytes;
     }
 
     public boolean isZero() {
-        if (bytes == null  || bytes.length == 0) return true;
-        for (byte b: bytes) {
-            if (b != 0) return false;
+        if (bytes == null || bytes.length == 0) { return true; }
+        for (byte b : bytes) {
+            if (b != 0) { return false; }
         }
         return true;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         Key key = (Key) o;
 

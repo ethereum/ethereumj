@@ -18,11 +18,11 @@
 package org.ethereum.net.rlpx.discover;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.WireTrafficStats;
 import org.slf4j.LoggerFactory;
@@ -36,25 +36,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-
 @Component
 public class UDPListener {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
-
+    @Autowired
+    SystemProperties config = SystemProperties.getDefault();
+    @Autowired
+    WireTrafficStats stats;
     private int port;
     private String address;
     private String[] bootPeers;
-
     @Autowired
     private NodeManager nodeManager;
-
-    @Autowired
-    SystemProperties config = SystemProperties.getDefault();
-
-    @Autowired
-    WireTrafficStats stats;
-
     private Channel channel;
     private volatile boolean shutdown = false;
     private DiscoveryExecutor discoveryExecutor;
@@ -95,8 +88,18 @@ public class UDPListener {
         int idx2 = s.indexOf(':');
         String id = s.substring(0, idx1);
         String host = s.substring(idx1 + 1, idx2);
-        int port = Integer.parseInt(s.substring(idx2+1));
+        int port = Integer.parseInt(s.substring(idx2 + 1));
         return new Node(Hex.decode(id), host, port);
+    }
+
+    public static void main(String[] args) throws Exception {
+        String address = "0.0.0.0";
+        int port = 30303;
+        if (args.length >= 2) {
+            address = args[0];
+            port = Integer.parseInt(args[1]);
+        }
+        new UDPListener(address, port).start(Arrays.copyOfRange(args, 2, args.length));
     }
 
     public void start(String[] args) throws Exception {
@@ -106,7 +109,7 @@ public class UDPListener {
 
         final List<Node> bootNodes = new ArrayList<>();
 
-        for (String boot: args) {
+        for (String boot : args) {
             // since discover IP list has no NodeIds we will generate random but persistent
             bootNodes.add(Node.instanceOf(boot));
         }
@@ -120,19 +123,16 @@ public class UDPListener {
 
             while (!shutdown) {
                 Bootstrap b = new Bootstrap();
-                b.group(group)
-                        .channel(NioDatagramChannel.class)
-                        .handler(new ChannelInitializer<NioDatagramChannel>() {
-                            @Override
-                            public void initChannel(NioDatagramChannel ch)
-                                    throws Exception {
-                                ch.pipeline().addLast(stats.udp);
-                                ch.pipeline().addLast(new PacketDecoder());
-                                MessageHandler messageHandler = new MessageHandler(ch, nodeManager);
-                                nodeManager.setMessageSender(messageHandler);
-                                ch.pipeline().addLast(messageHandler);
-                            }
-                        });
+                b.group(group).channel(NioDatagramChannel.class).handler(new ChannelInitializer<NioDatagramChannel>() {
+                    @Override
+                    public void initChannel(NioDatagramChannel ch) throws Exception {
+                        ch.pipeline().addLast(stats.udp);
+                        ch.pipeline().addLast(new PacketDecoder());
+                        MessageHandler messageHandler = new MessageHandler(ch, nodeManager);
+                        nodeManager.setMessageSender(messageHandler);
+                        ch.pipeline().addLast(messageHandler);
+                    }
+                });
 
                 channel = b.bind(address, port).sync().channel();
 
@@ -173,15 +173,5 @@ public class UDPListener {
                 logger.warn("Problems closing DiscoveryExecutor", e);
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        String address = "0.0.0.0";
-        int port = 30303;
-        if (args.length >= 2) {
-            address = args[0];
-            port = Integer.parseInt(args[1]);
-        }
-        new UDPListener(address, port).start(Arrays.copyOfRange(args, 2, args.length));
     }
 }

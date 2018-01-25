@@ -22,5 +22,4 @@ package org.ethereum.config;
  * Spring config autoscan mechanism
  * Created by Anton Nashatyrev on 08.10.2015.
  */
-public @interface NoAutoscan {
-}
+public @interface NoAutoscan {}

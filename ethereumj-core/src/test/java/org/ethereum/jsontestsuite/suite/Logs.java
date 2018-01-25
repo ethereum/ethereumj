@@ -18,19 +18,15 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.DeserializationContext;
 import org.codehaus.jackson.map.JsonDeserializer;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
@@ -51,13 +47,6 @@ public class Logs {
             this.logs = (List<LogInfo>) logs;
         } else {
             init((String) logs);
-        }
-    }
-
-    public static class Deserializer extends JsonDeserializer<Logs> {
-        @Override
-        public Logs deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-            return new Logs(jp.readValueAs(Object.class));
         }
     }
 
@@ -86,11 +75,9 @@ public class Logs {
         }
     }
 
-
     public Iterator<LogInfo> getIterator() {
         return logs.iterator();
     }
-
 
     public List<String> compareToReal(List<LogInfo> logResult) {
         List<String> results = new ArrayList<>();
@@ -102,7 +89,8 @@ public class Logs {
             byte[] logInfoListRLP = RLP.encodeList(logInfoListE);
             byte[] resHash = HashUtil.sha3(logInfoListRLP);
             if (!FastByteComparisons.equal(logsHash, resHash)) {
-                results.add("Logs hash doesn't match expected: " + Hex.toHexString(resHash) + " != " + Hex.toHexString(logsHash));
+                results.add("Logs hash doesn't match expected: " + Hex.toHexString(resHash) + " != " +
+                                    Hex.toHexString(logsHash));
             }
         } else {
             Iterator<LogInfo> postLogs = getIterator();
@@ -112,38 +100,37 @@ public class Logs {
                 LogInfo expectedLogInfo = postLogs.next();
 
                 LogInfo foundLogInfo = null;
-                if (logResult.size() > i)
-                    foundLogInfo = logResult.get(i);
+                if (logResult.size() > i) { foundLogInfo = logResult.get(i); }
 
                 if (foundLogInfo == null) {
-                    String output =
-                            String.format("Expected log [ %s ]", expectedLogInfo.toString());
+                    String output = String.format("Expected log [ %s ]", expectedLogInfo.toString());
                     results.add(output);
                 } else {
                     if (!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
-                        String output =
-                                String.format("Expected address [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getAddress()), Hex.toHexString(foundLogInfo.getAddress()));
+                        String output = String.format("Expected address [ %s ], found [ %s ]",
+                                                      Hex.toHexString(expectedLogInfo.getAddress()),
+                                                      Hex.toHexString(foundLogInfo.getAddress()));
                         results.add(output);
                     }
 
                     if (!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
-                        String output =
-                                String.format("Expected data [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getData()), Hex.toHexString(foundLogInfo.getData()));
+                        String output = String.format("Expected data [ %s ], found [ %s ]",
+                                                      Hex.toHexString(expectedLogInfo.getData()),
+                                                      Hex.toHexString(foundLogInfo.getData()));
                         results.add(output);
                     }
 
                     if (!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
-                        String output =
-                                String.format("Expected bloom [ %s ], found [ %s ]",
-                                        Hex.toHexString(expectedLogInfo.getBloom().getData()),
-                                        Hex.toHexString(foundLogInfo.getBloom().getData()));
+                        String output = String.format("Expected bloom [ %s ], found [ %s ]",
+                                                      Hex.toHexString(expectedLogInfo.getBloom().getData()),
+                                                      Hex.toHexString(foundLogInfo.getBloom().getData()));
                         results.add(output);
                     }
 
                     if (expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
-                        String output =
-                                String.format("Expected number of topics [ %d ], found [ %d ]",
-                                        expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
+                        String output = String.format("Expected number of topics [ %d ], found [ %d ]",
+                                                      expectedLogInfo.getTopics().size(),
+                                                      foundLogInfo.getTopics().size());
                         results.add(output);
                     } else {
                         int j = 0;
@@ -151,8 +138,9 @@ public class Logs {
                             byte[] foundTopic = foundLogInfo.getTopics().get(j).getData();
 
                             if (!Arrays.equals(topic.getData(), foundTopic)) {
-                                String output =
-                                        String.format("Expected topic [ %s ], found [ %s ]", Hex.toHexString(topic.getData()), Hex.toHexString(foundTopic));
+                                String output = String.format("Expected topic [ %s ], found [ %s ]",
+                                                              Hex.toHexString(topic.getData()),
+                                                              Hex.toHexString(foundTopic));
                                 results.add(output);
                             }
 
@@ -165,5 +153,12 @@ public class Logs {
             }
         }
         return results;
+    }
+
+    public static class Deserializer extends JsonDeserializer<Logs> {
+        @Override
+        public Logs deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+            return new Logs(jp.readValueAs(Object.class));
+        }
     }
 }

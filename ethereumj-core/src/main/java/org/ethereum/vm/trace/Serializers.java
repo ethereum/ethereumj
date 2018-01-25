@@ -36,31 +36,6 @@ public final class Serializers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("vmtrace");
 
-    public static class DataWordSerializer extends JsonSerializer<DataWord> {
-
-        @Override
-        public void serialize(DataWord gas, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-            jgen.writeString(gas.value().toString());
-        }
-    }
-
-    public static class ByteArraySerializer extends JsonSerializer<byte[]> {
-
-        @Override
-        public void serialize(byte[] memory, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-            jgen.writeString(Hex.toHexString(memory));
-        }
-    }
-
-    public static class OpCodeSerializer extends JsonSerializer<Byte> {
-
-        @Override
-        public void serialize(Byte op, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-            jgen.writeString(org.ethereum.vm.OpCode.code(op).name());
-        }
-    }
-
-
     public static String serializeFieldsOnly(Object value, boolean pretty) {
         try {
             ObjectMapper mapper = createMapper(pretty);
@@ -74,7 +49,8 @@ public final class Serializers {
     }
 
     private static VisibilityChecker<?> fieldsOnlyVisibilityChecker(ObjectMapper mapper) {
-        return mapper.getSerializationConfig().getDefaultVisibilityChecker()
+        return mapper.getSerializationConfig()
+                .getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
                 .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE);
@@ -86,5 +62,32 @@ public final class Serializers {
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
         }
         return mapper;
+    }
+
+    public static class DataWordSerializer extends JsonSerializer<DataWord> {
+
+        @Override
+        public void serialize(DataWord gas, JsonGenerator jgen, SerializerProvider provider)
+                throws IOException, JsonProcessingException {
+            jgen.writeString(gas.value().toString());
+        }
+    }
+
+    public static class ByteArraySerializer extends JsonSerializer<byte[]> {
+
+        @Override
+        public void serialize(byte[] memory, JsonGenerator jgen, SerializerProvider provider)
+                throws IOException, JsonProcessingException {
+            jgen.writeString(Hex.toHexString(memory));
+        }
+    }
+
+    public static class OpCodeSerializer extends JsonSerializer<Byte> {
+
+        @Override
+        public void serialize(Byte op, JsonGenerator jgen, SerializerProvider provider)
+                throws IOException, JsonProcessingException {
+            jgen.writeString(org.ethereum.vm.OpCode.code(op).name());
+        }
     }
 }

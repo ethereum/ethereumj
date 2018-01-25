@@ -4,7 +4,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss} [%c{1}]  %m%n</pattern>
+            <pattern>%d{HH:mm:ss} [%c{1}] %m%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
@@ -21,7 +21,7 @@
             <totalSizeCap>50GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{HH:mm:ss} [%c{1}]  %m%n</pattern>
+            <pattern>%d{HH:mm:ss} [%c{1}] %m%n</pattern>
         </encoder>
     </appender>
 

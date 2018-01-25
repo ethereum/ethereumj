@@ -32,7 +32,7 @@ public abstract class SolidityCallResult extends TransactionResult {
     }
 
     public Object[] getReturnValues() {
-        if (!isIncluded()) return null;
+        if (!isIncluded()) { return null; }
         byte[] executionResult = getReceipt().getExecutionResult();
         return getFunction().decodeResult(executionResult);
     }
@@ -47,9 +47,7 @@ public abstract class SolidityCallResult extends TransactionResult {
 
     @Override
     public String toString() {
-        String ret = "SolidityCallResult{" +
-                getFunction() + ": " +
-                (isIncluded() ? "EXECUTED" : "PENDING") + ", ";
+        String ret = "SolidityCallResult{" + getFunction() + ": " + (isIncluded() ? "EXECUTED" : "PENDING") + ", ";
         if (isIncluded()) {
             ret += isSuccessful() ? "SUCCESS" : ("ERR (" + getReceipt().getError() + ")");
             ret += ", ";

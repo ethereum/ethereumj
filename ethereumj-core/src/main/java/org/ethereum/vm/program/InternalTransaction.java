@@ -22,9 +22,6 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 import static org.ethereum.util.ByteUtil.toHexString;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
@@ -34,9 +31,6 @@ import org.ethereum.vm.DataWord;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
-import static org.apache.commons.lang3.ArrayUtils.*;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 public class InternalTransaction extends Transaction {
 
@@ -50,8 +44,9 @@ public class InternalTransaction extends Transaction {
         super(rawData);
     }
 
-    public InternalTransaction(byte[] parentHash, int deep, int index, byte[] nonce, DataWord gasPrice, DataWord gasLimit,
-                               byte[] sendAddress, byte[] receiveAddress, byte[] value, byte[] data, String note) {
+    public InternalTransaction(byte[] parentHash, int deep, int index, byte[] nonce, DataWord gasPrice,
+                               DataWord gasLimit, byte[] sendAddress, byte[] receiveAddress, byte[] value, byte[] data,
+                               String note) {
 
         super(nonce, getData(gasPrice), getData(gasLimit), receiveAddress, nullToEmpty(value), nullToEmpty(data));
 
@@ -67,10 +62,25 @@ public class InternalTransaction extends Transaction {
         return (gasPrice == null) ? ByteUtil.EMPTY_BYTE_ARRAY : gasPrice.getData();
     }
 
+    private static byte[] intToBytes(int value) {
+        return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array();
+    }
+
+    private static int bytesToInt(byte[] bytes) {
+        return isEmpty(bytes) ? 0 : ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    }
+
+    private static byte[] encodeInt(int value) {
+        return RLP.encodeElement(intToBytes(value));
+    }
+
+    private static int decodeInt(byte[] encoded) {
+        return bytesToInt(encoded);
+    }
+
     public void reject() {
         this.rejected = true;
     }
-
 
     public int getDeep() {
         rlpParse();
@@ -110,20 +120,18 @@ public class InternalTransaction extends Transaction {
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
-            this.rlpEncoded = RLP.encodeList(
-                    RLP.encodeElement(isEmptyNonce ? null : nonce),
-                    RLP.encodeElement(this.parentHash),
-                    RLP.encodeElement(getSender()),
-                    RLP.encodeElement(getReceiveAddress()),
-                    RLP.encodeElement(getValue()),
-                    RLP.encodeElement(getGasPrice()),
-                    RLP.encodeElement(getGasLimit()),
-                    RLP.encodeElement(getData()),
-                    RLP.encodeString(this.note),
-                    encodeInt(this.deep),
-                    encodeInt(this.index),
-                    encodeInt(this.rejected ? 1 : 0)
-            );
+            this.rlpEncoded = RLP.encodeList(RLP.encodeElement(isEmptyNonce ? null : nonce),
+                                             RLP.encodeElement(this.parentHash),
+                                             RLP.encodeElement(getSender()),
+                                             RLP.encodeElement(getReceiveAddress()),
+                                             RLP.encodeElement(getValue()),
+                                             RLP.encodeElement(getGasPrice()),
+                                             RLP.encodeElement(getGasLimit()),
+                                             RLP.encodeElement(getData()),
+                                             RLP.encodeString(this.note),
+                                             encodeInt(this.deep),
+                                             encodeInt(this.index),
+                                             encodeInt(this.rejected ? 1 : 0));
         }
 
         return rlpEncoded;
@@ -136,7 +144,7 @@ public class InternalTransaction extends Transaction {
 
     @Override
     public synchronized void rlpParse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
         RLPList transaction = (RLPList) decodedTxList.get(0);
 
@@ -156,26 +164,6 @@ public class InternalTransaction extends Transaction {
         this.parsed = true;
     }
 
-
-    private static byte[] intToBytes(int value) {
-        return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE)
-                .order(ByteOrder.LITTLE_ENDIAN)
-                .putInt(value)
-                .array();
-    }
-
-    private static int bytesToInt(byte[] bytes) {
-        return isEmpty(bytes) ? 0 : ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
-    }
-
-    private static byte[] encodeInt(int value) {
-        return RLP.encodeElement(intToBytes(value));
-    }
-
-    private static int decodeInt(byte[] encoded) {
-        return bytesToInt(encoded);
-    }
-
     @Override
     public ECKey getKey() {
         throw new UnsupportedOperationException("Cannot sign internal transaction.");
@@ -188,20 +176,11 @@ public class InternalTransaction extends Transaction {
 
     @Override
     public String toString() {
-        return "TransactionData [" +
-                "  parentHash=" + toHexString(getParentHash()) +
-                ", hash=" + toHexString(getHash()) +
-                ", nonce=" + toHexString(getNonce()) +
-                ", gasPrice=" + toHexString(getGasPrice()) +
-                ", gas=" + toHexString(getGasLimit()) +
-                ", sendAddress=" + toHexString(getSender()) +
-                ", receiveAddress=" + toHexString(getReceiveAddress()) +
-                ", value=" + toHexString(getValue()) +
-                ", data=" + toHexString(getData()) +
-                ", note=" + getNote() +
-                ", deep=" + getDeep() +
-                ", index=" + getIndex() +
-                ", rejected=" + isRejected() +
-                "]";
+        return "TransactionData [" + "  parentHash=" + toHexString(getParentHash()) + ", hash=" +
+                toHexString(getHash()) + ", nonce=" + toHexString(getNonce()) + ", gasPrice=" +
+                toHexString(getGasPrice()) + ", gas=" + toHexString(getGasLimit()) + ", sendAddress=" +
+                toHexString(getSender()) + ", receiveAddress=" + toHexString(getReceiveAddress()) + ", value=" +
+                toHexString(getValue()) + ", data=" + toHexString(getData()) + ", note=" + getNote() + ", deep=" +
+                getDeep() + ", index=" + getIndex() + ", rejected=" + isRejected() + "]";
     }
 }

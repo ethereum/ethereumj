@@ -37,14 +37,14 @@ public class NodeFilter {
 
     public boolean accept(Node node) {
         for (Entry entry : entries) {
-            if (entry.accept(node)) return true;
+            if (entry.accept(node)) { return true; }
         }
         return false;
     }
 
     public boolean accept(InetAddress nodeAddr) {
         for (Entry entry : entries) {
-            if (entry.accept(nodeAddr)) return true;
+            if (entry.accept(nodeAddr)) { return true; }
         }
         return false;
     }
@@ -71,8 +71,8 @@ public class NodeFilter {
 
         public boolean accept(Node node) {
             try {
-                return (nodeId == null || Arrays.equals(node.getId(), nodeId))
-                        && (hostIpPattern == null || accept(InetAddress.getByName(node.getHost())));
+                return (nodeId == null || Arrays.equals(node.getId(), nodeId)) &&
+                        (hostIpPattern == null || accept(InetAddress.getByName(node.getHost())));
             } catch (UnknownHostException e) {
                 return false;
             }

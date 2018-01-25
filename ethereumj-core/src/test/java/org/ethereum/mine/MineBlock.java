@@ -18,8 +18,11 @@
 package org.ethereum.mine;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.ImportLightTest;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.Transaction;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.PruneManager;
@@ -35,11 +38,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.spongycastle.util.encoders.Hex;
 
-import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Resource;
 
 /**
  * Created by Anton Nashatyrev on 10.12.2015.
@@ -51,8 +53,9 @@ public class MineBlock {
 
     @InjectMocks
     @Resource
-    BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
-            getClass().getResourceAsStream("/genesis/genesis-light.json")));
+    BlockchainImpl blockchain =
+            ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(getClass().getResourceAsStream(
+                    "/genesis/genesis-light.json")));
 
     @BeforeClass
     public static void setup() {
@@ -79,10 +82,15 @@ public class MineBlock {
 
         List<Transaction> pendingTx = new ArrayList<>();
 
-        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+        ECKey senderKey =
+                ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
         byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
-        Transaction tx = new Transaction(new byte[] {0}, new byte[] {1}, ByteUtil.longToBytesNoLeadZeroes(0xfffff),
-                receiverAddr, new byte[] {77}, new byte[0]);
+        Transaction tx = new Transaction(new byte[]{0},
+                                         new byte[]{1},
+                                         ByteUtil.longToBytesNoLeadZeroes(0xfffff),
+                                         receiverAddr,
+                                         new byte[]{77},
+                                         new byte[0]);
         tx.sign(senderKey);
         pendingTx.add(tx);
 

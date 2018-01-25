@@ -18,7 +18,10 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.jsontestsuite.suite.BlockchainTestSuite;
-import org.junit.*;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
@@ -27,7 +30,8 @@ import java.io.IOException;
 public class GitHubTestNetTest {
 
     static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "12ee51045ace4a3075e39fe58128fdaa74b3fbd0"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
+    static String treeSHA = "12ee51045ace4a3075e39fe58128fdaa74b3fbd0";
+            // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
 
     static BlockchainTestSuite suite;
 
@@ -42,8 +46,7 @@ public class GitHubTestNetTest {
     // this method is mostly for hands-on convenient testing
     // using this method turn off initializing of BlockchainTestSuite to avoid unnecessary GitHub API hits
     public void bcTransitionSingle() throws IOException {
-        BlockchainTestSuite.runSingle(
-                "TransitionTests/bcHomesteadToDao/DaoTransactions.json", commitSHA);
+        BlockchainTestSuite.runSingle("TransitionTests/bcHomesteadToDao/DaoTransactions.json", commitSHA);
     }
 
     @Test

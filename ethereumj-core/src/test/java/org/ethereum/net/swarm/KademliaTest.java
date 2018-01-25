@@ -22,12 +22,33 @@ import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 /**
  * Created by Admin on 01.07.2015.
  */
 public class KademliaTest {
+
+    static Random gen = new Random(0);
+
+    public static byte[] getNodeId() {
+        byte[] id = new byte[64];
+        gen.nextBytes(id);
+        return id;
+    }
+
+    public static Node getNode(int port) {
+        return new Node(getNodeId(), "127.0.0.1", port);
+    }
+
+    public static NodeTable getTestNodeTable() {
+        NodeTable testTable = new NodeTable(getNode(3333));
+        return testTable;
+    }
 
     @Ignore
     @Test
@@ -50,7 +71,7 @@ public class KademliaTest {
             int max = 16;
             for (Node closestNode : closestNodes) {
                 reachnodes.put(closestNode, null);
-                if (--max == 0) break;
+                if (--max == 0) { break; }
             }
         }
 
@@ -62,28 +83,12 @@ public class KademliaTest {
         }
 
         for (Map.Entry<Node, Set<Node>> entry : reachable.entrySet()) {
-            System.out.println("Node " + nameMap.get(entry.getKey())
-                    + " has " + entry.getValue().size() + " neighbours");
-//            for (Node nb : entry.getValue()) {
-//                System.out.println("    " + nameMap.get(nb));
-//            }
+            System.out.println(
+                    "Node " + nameMap.get(entry.getKey()) + " has " + entry.getValue().size() + " neighbours");
+            //            for (Node nb : entry.getValue()) {
+            //                System.out.println("    " + nameMap.get(nb));
+            //            }
         }
-    }
-
-    static Random gen = new Random(0);
-    public static byte[] getNodeId() {
-        byte[] id = new byte[64];
-        gen.nextBytes(id);
-        return id;
-    }
-
-    public static Node getNode(int port) {
-        return new Node(getNodeId(), "127.0.0.1", port);
-    }
-
-    public static NodeTable getTestNodeTable() {
-        NodeTable testTable = new NodeTable(getNode(3333));
-        return testTable;
     }
 
     private void addAll(Map<Node, Set<Node>> reachableMap, Set<Node> reachable, Set<Node> ret) {

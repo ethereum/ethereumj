@@ -17,19 +17,16 @@
  */
 package org.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.Peer;
-
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetAddress;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class PeerTest {
 
@@ -64,7 +61,8 @@ public class PeerTest {
         assertEquals("CC847F0000018203F2821010C0", Hex.toHexString(peer.getEncoded()).toUpperCase());
 
         //toString
-        assertEquals("[ip=" + address.getHostAddress() + " port=" + Integer.toString(port) + " peerId=" + peerId + "]", peer.toString());
+        assertEquals("[ip=" + address.getHostAddress() + " port=" + Integer.toString(port) + " peerId=" + peerId + "]",
+                     peer.toString());
 
         //equals
         assertEquals(true, peer.equals(peerCopy));

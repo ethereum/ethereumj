@@ -17,16 +17,15 @@
  */
 package org.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
-
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.junit.Assert.*;
 
 public class DisconnectMessageTest {
 
@@ -34,8 +33,7 @@ public class DisconnectMessageTest {
 
     /* DISCONNECT_MESSAGE */
 
-    @Test /* DisconnectMessage 1 - Requested */
-    public void test_1() {
+    @Test /* DisconnectMessage 1 - Requested */ public void test_1() {
 
         byte[] payload = Hex.decode("C100");
         DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
@@ -44,8 +42,7 @@ public class DisconnectMessageTest {
         assertEquals(disconnectMessage.getReason(), ReasonCode.REQUESTED);
     }
 
-    @Test /* DisconnectMessage 2 - TCP Error */
-    public void test_2() {
+    @Test /* DisconnectMessage 2 - TCP Error */ public void test_2() {
 
         byte[] payload = Hex.decode("C101");
         DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
@@ -54,8 +51,7 @@ public class DisconnectMessageTest {
         assertEquals(disconnectMessage.getReason(), ReasonCode.TCP_ERROR);
     }
 
-    @Test /* DisconnectMessage 2 - from constructor */
-    public void test_3() {
+    @Test /* DisconnectMessage 2 - from constructor */ public void test_3() {
 
         DisconnectMessage disconnectMessage = new DisconnectMessage(ReasonCode.NULL_IDENTITY);
 

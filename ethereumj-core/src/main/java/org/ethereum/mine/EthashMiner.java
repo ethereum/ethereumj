@@ -24,7 +24,7 @@ import org.ethereum.core.BlockHeader;
 
 /**
  * The adapter of Ethash for MinerIfc
- *
+ * <p>
  * Created by Anton Nashatyrev on 26.02.2016.
  */
 public class EthashMiner implements MinerIfc {
@@ -42,8 +42,7 @@ public class EthashMiner implements MinerIfc {
 
     @Override
     public ListenableFuture<MiningResult> mine(Block block) {
-        return fullMining ?
-                Ethash.getForBlock(config, block.getNumber()).mine(block, cpuThreads) :
+        return fullMining ? Ethash.getForBlock(config, block.getNumber()).mine(block, cpuThreads) :
                 Ethash.getForBlock(config, block.getNumber()).mineLight(block, cpuThreads);
     }
 

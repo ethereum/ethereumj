@@ -17,14 +17,22 @@
  */
 package org.ethereum.sync;
 
+import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
+import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
+import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
+import static org.ethereum.util.CompactEncoder.hasTerminator;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.BloomFilter;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -36,9 +44,10 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteArrayMap;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -48,21 +57,32 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
-import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
-import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
-import static org.ethereum.util.CompactEncoder.hasTerminator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.
  */
 @Component
 public class FastSyncManager {
+    public static final byte[] FASTSYNC_DB_KEY_SYNC_STAGE =
+            HashUtil.sha3("Key in state DB indicating fastsync stage in progress".getBytes());
+    public static final byte[] FASTSYNC_DB_KEY_PIVOT =
+            HashUtil.sha3("Key in state DB with encoded selected pivot block".getBytes());
     private final static Logger logger = LoggerFactory.getLogger("sync");
-
     private final static long REQUEST_TIMEOUT = 5 * 1000;
     private final static int REQUEST_MAX_NODES = 384;
     private final static int NODE_QUEUE_BEST_SIZE = 100_000;
@@ -70,66 +90,69 @@ public class FastSyncManager {
     private final static int FORCE_SYNC_TIMEOUT = 60 * 1000;
     private final static int PIVOT_DISTANCE_FROM_HEAD = 1024;
     private final static int MSX_DB_QUEUE_SIZE = 20000;
-
     private static final Capability ETH63_CAPABILITY = new Capability(Capability.ETH, (byte) 63);
-
-    public static final byte[] FASTSYNC_DB_KEY_SYNC_STAGE = HashUtil.sha3("Key in state DB indicating fastsync stage in progress".getBytes());
-    public static final byte[] FASTSYNC_DB_KEY_PIVOT = HashUtil.sha3("Key in state DB with encoded selected pivot block".getBytes());
-
-    @Autowired
-    private SystemProperties config;
-
-    @Autowired
-    private SyncPool pool;
-
-    @Autowired
-    private BlockchainImpl blockchain;
-
-    @Autowired
-    private IndexedBlockStore blockStore;
-
-    @Autowired
-    private SyncManager syncManager;
-
     @Autowired
     @Qualifier("blockchainDB")
     DbSource<byte[]> blockchainDB;
-
-    @Autowired
-    private StateSource stateSource;
-
     @Autowired
     DbFlushManager dbFlushManager;
-
     @Autowired
     FastSyncDownloader downloader;
-
     @Autowired
     CompositeEthereumListener listener;
-
     @Autowired
     ApplicationContext applicationContext;
-
     int nodesInserted = 0;
-
+    int stateNodesCnt = 0;
+    int codeNodesCnt = 0;
+    int storageNodesCnt = 0;
+    Deque<TrieNodeRequest> nodesQueue = new LinkedBlockingDeque<>();
+    ByteArrayMap<TrieNodeRequest> pendingNodes = new ByteArrayMap<>();
+    Long requestId = 0L;
+    long last = 0;
+    long lastNodeCount = 0;
+    @Autowired
+    private SystemProperties config;
+    @Autowired
+    private SyncPool pool;
+    @Autowired
+    private BlockchainImpl blockchain;
+    @Autowired
+    private IndexedBlockStore blockStore;
+    @Autowired
+    private SyncManager syncManager;
+    @Autowired
+    private StateSource stateSource;
     private boolean fastSyncInProgress = false;
-
     private BlockingQueue<TrieNodeRequest> dbWriteQueue = new LinkedBlockingQueue<>();
     private Thread dbWriterThread;
     private Thread fastSyncThread;
     private int dbQueueSizeMonitor = -1;
-
     private BlockHeader pivot;
     private HeadersDownloader headersDownloader;
     private BlockBodiesDownloader blockBodiesDownloader;
     private ReceiptsDownloader receiptsDownloader;
     private long forceSyncRemains;
 
+    private static List<byte[]> getChildHashes(List<Object> siblings) {
+        List<byte[]> ret = new ArrayList<>();
+        if (siblings.size() == 2) {
+            Value val = new Value(siblings.get(1));
+            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) { ret.add(val.asBytes()); }
+        } else {
+            for (int j = 0; j < 16; ++j) {
+                Value val = new Value(siblings.get(j));
+                if (val.isHashCode()) { ret.add(val.asBytes()); }
+            }
+        }
+        return ret;
+    }
+
     private void waitDbQueueSizeBelow(int size) {
         synchronized (this) {
             try {
                 dbQueueSizeMonitor = size;
-                while (dbWriteQueue.size() > size) wait();
+                while (dbWriteQueue.size() > size) { wait(); }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
@@ -137,7 +160,6 @@ public class FastSyncManager {
             }
         }
     }
-
 
     void init() {
         dbWriterThread = new Thread(() -> {
@@ -174,28 +196,33 @@ public class FastSyncManager {
     }
 
     public SyncStatus getSyncState() {
-        if (!isFastSyncInProgress()) return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
+        if (!isFastSyncInProgress()) { return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0); }
 
         if (pivot == null) {
             return new SyncStatus(SyncStatus.SyncStage.PivotBlock,
-                    (FORCE_SYNC_TIMEOUT - forceSyncRemains) / 1000, FORCE_SYNC_TIMEOUT / 1000);
+                                  (FORCE_SYNC_TIMEOUT - forceSyncRemains) / 1000,
+                                  FORCE_SYNC_TIMEOUT / 1000);
         }
 
         EthereumListener.SyncState syncStage = getSyncStage();
         switch (syncStage) {
             case UNSECURE:
-                return new SyncStatus(SyncStatus.SyncStage.StateNodes, nodesInserted,
-                        nodesQueue.size() + pendingNodes.size() + nodesInserted);
+                return new SyncStatus(SyncStatus.SyncStage.StateNodes,
+                                      nodesInserted,
+                                      nodesQueue.size() + pendingNodes.size() + nodesInserted);
             case SECURE:
-                return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
-                        pivot.getNumber());
+                return new SyncStatus(SyncStatus.SyncStage.Headers,
+                                      headersDownloader.getHeadersLoaded(),
+                                      pivot.getNumber());
             case COMPLETE:
                 if (receiptsDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.Receipts,
-                            receiptsDownloader.getDownloadedBlocksCount(), pivot.getNumber());
-                } else if (blockBodiesDownloader!= null) {
+                                          receiptsDownloader.getDownloadedBlocksCount(),
+                                          pivot.getNumber());
+                } else if (blockBodiesDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.BlockBodies,
-                            blockBodiesDownloader.getDownloadedCount(), pivot.getNumber());
+                                          blockBodiesDownloader.getDownloadedCount(),
+                                          pivot.getNumber());
                 } else {
                     return new SyncStatus(SyncStatus.SyncStage.BlockBodies, 0, pivot.getNumber());
                 }
@@ -203,107 +230,9 @@ public class FastSyncManager {
         return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
     }
 
-    enum TrieNodeType {
-        STATE,
-        STORAGE,
-        CODE
-    }
-
-    int stateNodesCnt = 0;
-    int codeNodesCnt = 0;
-    int storageNodesCnt = 0;
-
-    private class TrieNodeRequest {
-        TrieNodeType type;
-        byte[] nodeHash;
-        byte[] response;
-        final Map<Long, Long> requestSent = new HashMap<>();
-
-        TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
-            this.type = type;
-            this.nodeHash = nodeHash;
-
-            switch (type) {
-                case STATE: stateNodesCnt++; break;
-                case CODE: codeNodesCnt++; break;
-                case STORAGE: storageNodesCnt++; break;
-            }
-        }
-
-        List<TrieNodeRequest> createChildRequests() {
-            if (type == TrieNodeType.CODE) {
-                return Collections.emptyList();
-            }
-
-            List<Object> node = Value.fromRlpEncoded(response).asList();
-            List<TrieNodeRequest> ret = new ArrayList<>();
-            if (type == TrieNodeType.STATE) {
-                if (node.size() == 2 && hasTerminator((byte[]) node.get(0))) {
-                    byte[] nodeValue = (byte[]) node.get(1);
-                    AccountState state = new AccountState(nodeValue);
-
-                    if (!FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, state.getCodeHash())) {
-                        ret.add(new TrieNodeRequest(TrieNodeType.CODE, state.getCodeHash()));
-                    }
-                    if (!FastByteComparisons.equal(HashUtil.EMPTY_TRIE_HASH, state.getStateRoot())) {
-                        ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot()));
-                    }
-                    return ret;
-                }
-            }
-
-            List<byte[]> childHashes = getChildHashes(node);
-            for (byte[] childHash : childHashes) {
-                ret.add(new TrieNodeRequest(type, childHash));
-            }
-            return ret;
-        }
-
-        public void reqSent(Long requestId) {
-            synchronized (FastSyncManager.this) {
-                Long timestamp = System.currentTimeMillis();
-                requestSent.put(requestId, timestamp);
-            }
-        }
-
-        public Set<Long> requestIdsSnapshot() {
-            synchronized (FastSyncManager.this) {
-                return new HashSet<Long>(requestSent.keySet());
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "TrieNodeRequest{" +
-                    "type=" + type +
-                    ", nodeHash=" + Hex.toHexString(nodeHash) +
-                    '}';
-        }
-    }
-
-    private static List<byte[]> getChildHashes(List<Object> siblings) {
-        List<byte[]> ret = new ArrayList<>();
-        if (siblings.size() == 2) {
-            Value val = new Value(siblings.get(1));
-            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0)))
-                ret.add(val.asBytes());
-        } else {
-            for (int j = 0; j < 16; ++j) {
-                Value val = new Value(siblings.get(j));
-                if (val.isHashCode())
-                    ret.add(val.asBytes());
-            }
-        }
-        return ret;
-    }
-
-    Deque<TrieNodeRequest> nodesQueue = new LinkedBlockingDeque<>();
-    ByteArrayMap<TrieNodeRequest> pendingNodes = new ByteArrayMap<>();
-    Long requestId = 0L;
-
     private synchronized void purgePending(byte[] hash) {
         TrieNodeRequest request = pendingNodes.get(hash);
-        if (request.requestSent.isEmpty()) pendingNodes.remove(hash);
+        if (request.requestSent.isEmpty()) { pendingNodes.remove(hash); }
     }
 
     synchronized void processTimeouts() {
@@ -358,19 +287,23 @@ public class FastSyncManager {
             }
             if (hashes.size() > 0) {
                 logger.trace("Requesting " + hashes.size() + " nodes from peer: " + idle);
-                ListenableFuture<List<Pair<byte[], byte[]>>> nodes = ((Eth63) idle.getEthHandler()).requestTrieNodes(hashes);
+                ListenableFuture<List<Pair<byte[], byte[]>>> nodes =
+                        ((Eth63) idle.getEthHandler()).requestTrieNodes(hashes);
                 final long reqTime = System.currentTimeMillis();
                 Futures.addCallback(nodes, new FutureCallback<List<Pair<byte[], byte[]>>>() {
                     @Override
                     public void onSuccess(List<Pair<byte[], byte[]>> result) {
                         try {
                             synchronized (FastSyncManager.this) {
-                                logger.trace("Received " + result.size() + " nodes (of " + hashes.size() + ") from peer: " + idle);
+                                logger.trace(
+                                        "Received " + result.size() + " nodes (of " + hashes.size() + ") from peer: " +
+                                                idle);
                                 for (Pair<byte[], byte[]> pair : result) {
                                     TrieNodeRequest request = pendingNodes.get(pair.getKey());
                                     if (request == null) {
                                         long t = System.currentTimeMillis();
-                                        logger.debug("Received node which was not requested: " + Hex.toHexString(pair.getKey()) + " from " + idle);
+                                        logger.debug("Received node which was not requested: " +
+                                                             Hex.toHexString(pair.getKey()) + " from " + idle);
                                         return;
                                     }
                                     Set<Long> intersection = request.requestIdsSnapshot();
@@ -388,7 +321,8 @@ public class FastSyncManager {
 
                                 idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
                                 idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
+                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(
+                                        System.currentTimeMillis() - reqTime);
                             }
                         } catch (Exception e) {
                             logger.error("Unexpected error processing nodes", e);
@@ -401,7 +335,7 @@ public class FastSyncManager {
                         synchronized (FastSyncManager.this) {
                             for (byte[] hash : hashes) {
                                 final TrieNodeRequest request = pendingNodes.get(hash);
-                                if (request == null) continue;
+                                if (request == null) { continue; }
                                 Set<Long> intersection = request.requestIdsSnapshot();
                                 intersection.retainAll(sentRequestIds);
                                 if (!intersection.isEmpty()) {
@@ -417,7 +351,7 @@ public class FastSyncManager {
                 });
                 return true;
             } else {
-//                idle.getEthHandler().setStatus(SyncState.IDLE);
+                //                idle.getEthHandler().setStatus(SyncState.IDLE);
                 return false;
             }
         } else {
@@ -431,7 +365,7 @@ public class FastSyncManager {
                 try {
                     processTimeouts();
 
-                    while (requestNextNodes(REQUEST_MAX_NODES)) ;
+                    while (requestNextNodes(REQUEST_MAX_NODES)) { ; }
 
                     synchronized (this) {
                         wait(10);
@@ -454,17 +388,22 @@ public class FastSyncManager {
         }
     }
 
-    long last = 0;
-    long lastNodeCount = 0;
-
     private void logStat() {
         long cur = System.currentTimeMillis();
         if (cur - last > 5000) {
-            logger.info("FastSync: received: " + nodesInserted + ", known: " + nodesQueue.size() + ", pending: " + pendingNodes.size()
-                    + String.format(", nodes/sec: %1$.2f", 1000d * (nodesInserted - lastNodeCount) / (cur - last)));
+            logger.info("FastSync: received: " + nodesInserted + ", known: " + nodesQueue.size() + ", pending: " +
+                                pendingNodes.size() + String.format(", nodes/sec: %1$.2f",
+                                                                    1000d * (nodesInserted - lastNodeCount) /
+                                                                            (cur - last)));
             last = cur;
             lastNodeCount = nodesInserted;
         }
+    }
+
+    private EthereumListener.SyncState getSyncStage() {
+        byte[] bytes = blockchainDB.get(FASTSYNC_DB_KEY_SYNC_STAGE);
+        if (bytes == null) { return UNSECURE; }
+        return EthereumListener.SyncState.values()[bytes[0]];
     }
 
     private void setSyncStage(EthereumListener.SyncState stage) {
@@ -474,13 +413,6 @@ public class FastSyncManager {
             blockchainDB.put(FASTSYNC_DB_KEY_SYNC_STAGE, new byte[]{(byte) stage.ordinal()});
         }
     }
-
-    private EthereumListener.SyncState getSyncStage() {
-        byte[] bytes = blockchainDB.get(FASTSYNC_DB_KEY_SYNC_STAGE);
-        if (bytes == null) return UNSECURE;
-        return EthereumListener.SyncState.values()[bytes[0]];
-    }
-
 
     private void syncUnsecure(BlockHeader pivot) {
         byte[] pivotStateRoot = pivot.getStateRoot();
@@ -492,7 +424,8 @@ public class FastSyncManager {
 
         retrieveLoop();
 
-        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " +storageNodesCnt + ", code: " +codeNodesCnt + ")");
+        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " +
+                            storageNodesCnt + ", code: " + codeNodesCnt + ")");
         last = 0;
         logStat();
 
@@ -516,11 +449,11 @@ public class FastSyncManager {
         syncManager.initRegularSync(UNSECURE);
         logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
 
-//        try {
-//            syncDoneLatch.await();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
+        //        try {
+        //            syncDoneLatch.await();
+        //        } catch (InterruptedException e) {
+        //            throw new RuntimeException(e);
+        //        }
 
         blockchainDB.put(FASTSYNC_DB_KEY_PIVOT, pivot.getEncoded());
         dbFlushManager.commit();
@@ -532,14 +465,16 @@ public class FastSyncManager {
     private void syncSecure() {
         pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
-        logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" + pivot.getShortDescr() + ") is secure...");
+        logger.info("FastSync: downloading headers from pivot down to genesis block for ensure pivot block (" +
+                            pivot.getShortDescr() + ") is secure...");
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
         headersDownloader.init(pivot.getHash());
         setSyncStage(EthereumListener.SyncState.SECURE);
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
-                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
+                                 pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " +
+                                 Hex.toHexString(headersDownloader.getGenesisHash()));
             logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
             System.exit(-666);
         }
@@ -562,8 +497,7 @@ public class FastSyncManager {
 
         logger.info("FastSync: Downloading receipts...");
 
-        receiptsDownloader = applicationContext.getBean
-                (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
+        receiptsDownloader = applicationContext.getBean(ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
         receiptsDownloader.startImporting();
         receiptsDownloader.waitForStop();
 
@@ -574,7 +508,8 @@ public class FastSyncManager {
         synchronized (blockchain) {
             Block bestBlock = blockchain.getBestBlock();
             BigInteger totalDifficulty = blockchain.getTotalDifficulty();
-            logger.info("FastSync: totDifficulties updated: bestBlock: " + bestBlock.getShortDescr() + ", totDiff: " + totalDifficulty);
+            logger.info("FastSync: totDifficulties updated: bestBlock: " + bestBlock.getShortDescr() + ", totDiff: " +
+                                totalDifficulty);
         }
         setSyncStage(null);
         blockchainDB.delete(FASTSYNC_DB_KEY_PIVOT);
@@ -606,7 +541,9 @@ public class FastSyncManager {
                         syncUnsecure(pivot);  // regularSync should be inited here
                     case SECURE:
                         if (origSyncStage == SECURE) {
-                            logger.info("FastSync: UNSECURE sync was completed prior to this run, proceeding with next stage...");
+                            logger.info(
+                                    "FastSync: UNSECURE sync was completed prior to this run, proceeding with next " +
+                                            "stage...");
                             logger.info("Initializing regular sync");
                             syncManager.initRegularSync(EthereumListener.SyncState.UNSECURE);
                         }
@@ -616,7 +553,9 @@ public class FastSyncManager {
                         listener.onSyncDone(EthereumListener.SyncState.SECURE);
                     case COMPLETE:
                         if (origSyncStage == COMPLETE) {
-                            logger.info("FastSync: SECURE sync was completed prior to this run, proceeding with next stage...");
+                            logger.info(
+                                    "FastSync: SECURE sync was completed prior to this run, proceeding with next " +
+                                            "stage...");
                             logger.info("Initializing regular sync");
                             syncManager.initRegularSync(EthereumListener.SyncState.SECURE);
                         }
@@ -633,8 +572,8 @@ public class FastSyncManager {
                 pool.setNodesSelector(null);
             }
         } else {
-            logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
-                    "Continue with regular sync...");
+            logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() +
+                                "). " + "Continue with regular sync...");
             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
         }
     }
@@ -664,7 +603,8 @@ public class FastSyncManager {
                 if (allIdle.size() >= MIN_PEERS_FOR_PIVOT_SELECTION || forceSyncRemains < 0 && !allIdle.isEmpty()) {
                     Channel bestPeer = allIdle.get(0);
                     for (Channel channel : allIdle) {
-                        if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() < channel.getEthHandler().getBestKnownBlock().getNumber()) {
+                        if (bestPeer.getEthHandler().getBestKnownBlock().getNumber() <
+                                channel.getEthHandler().getBestKnownBlock().getNumber()) {
                             bestPeer = channel;
                         }
                     }
@@ -677,8 +617,9 @@ public class FastSyncManager {
 
                 long t = System.currentTimeMillis();
                 if (t - s > 5000) {
-                    logger.info("FastSync: waiting for at least " + MIN_PEERS_FOR_PIVOT_SELECTION + " peers or " + forceSyncRemains / 1000 + " sec to select pivot block... ("
-                            + allIdle.size() + " peers so far)");
+                    logger.info("FastSync: waiting for at least " + MIN_PEERS_FOR_PIVOT_SELECTION + " peers or " +
+                                        forceSyncRemains / 1000 + " sec to select pivot block... (" + allIdle.size() +
+                                        " peers so far)");
                     s = t;
                 }
 
@@ -709,7 +650,7 @@ public class FastSyncManager {
                     }
                 }
 
-                if (result != null) return result;
+                if (result != null) { return result; }
 
                 long t = System.currentTimeMillis();
                 if (t - s > 5000) {
@@ -741,7 +682,7 @@ public class FastSyncManager {
                         return ret;
                     }
                     logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
-                            Hex.toHexString(ret.getHash()) + " Dropping the peer.");
+                                        Hex.toHexString(ret.getHash()) + " Dropping the peer.");
                     bestIdle.disconnect(ReasonCode.USELESS_PEER);
                 } else {
                     logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");
@@ -760,10 +701,11 @@ public class FastSyncManager {
      * 1. Get pivotBlockNumber blocks from all peers
      * 2. Ensure that pivot block available from 50% + 1 peer
      * 3. Otherwise proposes new pivotBlockNumber (stepped back)
-     * @param pivotBlockNumber      Pivot block number
-     * @return     null - if no peers available
-     *             null, newPivotBlockNumber - if it's better to try other pivot block number
-     *             BlockHeader, null - if pivot successfully fetched and verified by majority of peers
+     *
+     * @param pivotBlockNumber Pivot block number
+     * @return null - if no peers available
+     * null, newPivotBlockNumber - if it's better to try other pivot block number
+     * BlockHeader, null - if pivot successfully fetched and verified by majority of peers
      */
     private Pair<BlockHeader, Long> getPivotHeaderByNumber(long pivotBlockNumber) throws Exception {
         List<Channel> allIdle = pool.getAllIdle();
@@ -801,8 +743,9 @@ public class FastSyncManager {
                 }
 
                 Long newPivotBlockNumber = Math.max(0, pivotBlockNumber - 1000);
-                logger.info("Current pivot candidate not verified by majority of peers, " +
-                        "stepping back to block #{}", newPivotBlockNumber);
+                logger.info(
+                        "Current pivot candidate not verified by majority of peers, " + "stepping back to block #{}",
+                        newPivotBlockNumber);
                 return Pair.of(null, newPivotBlockNumber);
             } catch (TimeoutException e) {
                 logger.debug("Timeout waiting for answer", e);
@@ -824,6 +767,83 @@ public class FastSyncManager {
             dbWriterThread.join(10 * 1000);
         } catch (Exception e) {
             logger.warn("Problems closing FastSyncManager", e);
+        }
+    }
+
+    enum TrieNodeType {
+        STATE,
+        STORAGE,
+        CODE
+    }
+
+    private class TrieNodeRequest {
+        final Map<Long, Long> requestSent = new HashMap<>();
+        TrieNodeType type;
+        byte[] nodeHash;
+        byte[] response;
+
+        TrieNodeRequest(TrieNodeType type, byte[] nodeHash) {
+            this.type = type;
+            this.nodeHash = nodeHash;
+
+            switch (type) {
+                case STATE:
+                    stateNodesCnt++;
+                    break;
+                case CODE:
+                    codeNodesCnt++;
+                    break;
+                case STORAGE:
+                    storageNodesCnt++;
+                    break;
+            }
+        }
+
+        List<TrieNodeRequest> createChildRequests() {
+            if (type == TrieNodeType.CODE) {
+                return Collections.emptyList();
+            }
+
+            List<Object> node = Value.fromRlpEncoded(response).asList();
+            List<TrieNodeRequest> ret = new ArrayList<>();
+            if (type == TrieNodeType.STATE) {
+                if (node.size() == 2 && hasTerminator((byte[]) node.get(0))) {
+                    byte[] nodeValue = (byte[]) node.get(1);
+                    AccountState state = new AccountState(nodeValue);
+
+                    if (!FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, state.getCodeHash())) {
+                        ret.add(new TrieNodeRequest(TrieNodeType.CODE, state.getCodeHash()));
+                    }
+                    if (!FastByteComparisons.equal(HashUtil.EMPTY_TRIE_HASH, state.getStateRoot())) {
+                        ret.add(new TrieNodeRequest(TrieNodeType.STORAGE, state.getStateRoot()));
+                    }
+                    return ret;
+                }
+            }
+
+            List<byte[]> childHashes = getChildHashes(node);
+            for (byte[] childHash : childHashes) {
+                ret.add(new TrieNodeRequest(type, childHash));
+            }
+            return ret;
+        }
+
+        public void reqSent(Long requestId) {
+            synchronized (FastSyncManager.this) {
+                Long timestamp = System.currentTimeMillis();
+                requestSent.put(requestId, timestamp);
+            }
+        }
+
+        public Set<Long> requestIdsSnapshot() {
+            synchronized (FastSyncManager.this) {
+                return new HashSet<Long>(requestSent.keySet());
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "TrieNodeRequest{" + "type=" + type + ", nodeHash=" + Hex.toHexString(nodeHash) + '}';
         }
     }
 }

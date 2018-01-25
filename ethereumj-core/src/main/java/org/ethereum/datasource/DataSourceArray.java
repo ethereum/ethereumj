@@ -24,12 +24,12 @@ import java.util.AbstractList;
 
 /**
  * Stores List structure in Source structure
- *
+ * <p>
  * Created by Anton Nashatyrev on 17.03.2016.
  */
 public class DataSourceArray<V> extends AbstractList<V> {
-    private ObjectDataSource<V> src;
     private static final byte[] SIZE_KEY = Hex.decode("FFFFFFFFFFFFFFFF");
+    private ObjectDataSource<V> src;
     private int size = -1;
 
     public DataSourceArray(ObjectDataSource<V> src) {
@@ -61,7 +61,7 @@ public class DataSourceArray<V> extends AbstractList<V> {
 
     @Override
     public synchronized V get(int idx) {
-        if (idx < 0 || idx >= size()) throw new IndexOutOfBoundsException(idx + " > " + size);
+        if (idx < 0 || idx >= size()) { throw new IndexOutOfBoundsException(idx + " > " + size); }
         return src.get(ByteUtil.intToBytes(idx));
     }
 

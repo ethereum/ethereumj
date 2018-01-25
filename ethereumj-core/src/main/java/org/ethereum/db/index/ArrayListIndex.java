@@ -17,7 +17,11 @@
  */
 package org.ethereum.db.index;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Mikhail Kalinin
@@ -91,7 +95,7 @@ public class ArrayListIndex implements Index {
     @Override
     public synchronized Long peekLast() {
 
-        if (index.isEmpty()) return null;
+        if (index.isEmpty()) { return null; }
         return index.get(index.size() - 1);
     }
 

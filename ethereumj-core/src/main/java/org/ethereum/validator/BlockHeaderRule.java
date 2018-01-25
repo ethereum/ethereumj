@@ -28,6 +28,8 @@ import org.slf4j.Logger;
  */
 public abstract class BlockHeaderRule extends AbstractValidationRule {
 
+    public static final ValidationResult Success = new ValidationResult(true, null);
+
     @Override
     public Class getEntityClass() {
         return BlockHeader.class;
@@ -43,8 +45,6 @@ public abstract class BlockHeaderRule extends AbstractValidationRule {
     protected ValidationResult fault(String error) {
         return new ValidationResult(false, error);
     }
-
-    public static final ValidationResult Success = new ValidationResult(true, null);
 
     public boolean validateAndLog(BlockHeader header, Logger logger) {
         ValidationResult result = validate(header);

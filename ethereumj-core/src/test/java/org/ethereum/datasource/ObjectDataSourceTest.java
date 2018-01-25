@@ -17,15 +17,15 @@
  */
 package org.ethereum.datasource;
 
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.vm.DataWord;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.vm.DataWord;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Test for {@link ObjectDataSource}
@@ -45,7 +45,7 @@ public class ObjectDataSourceTest {
     }
 
     private String str(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) { return null; }
 
         byte[] data;
         if (obj instanceof DataWord) {

@@ -42,22 +42,18 @@ public class Bucket {
 
     public void add(Peer peer) {
 
-        if (peer == null) throw new Error("Not a leaf");
+        if (peer == null) { throw new Error("Not a leaf"); }
 
-        if ( peers == null){
+        if (peers == null) {
 
-            if (peer.nextBit(name) == 1)
-                left.add(peer);
-            else
-                right.add(peer);
+            if (peer.nextBit(name) == 1) { left.add(peer); } else { right.add(peer); }
 
             return;
         }
 
         peers.add(peer);
 
-        if (peers.size() > MAX_KADEMLIA_K)
-            splitBucket();
+        if (peers.size() > MAX_KADEMLIA_K) { splitBucket(); }
     }
 
     public void splitBucket() {
@@ -65,10 +61,7 @@ public class Bucket {
         right = new Bucket(name + "0");
 
         for (Peer id : peers) {
-            if (id.nextBit(name) == 1)
-                left.add(id);
-            else
-                right.add(id);
+            if (id.nextBit(name) == 1) { left.add(id); } else { right.add(id); }
         }
 
         this.peers = null;
@@ -91,10 +84,9 @@ public class Bucket {
 
         sb.append(name).append("\n");
 
-        if (peers == null) return sb.toString();
+        if (peers == null) { return sb.toString(); }
 
-        for (Peer id : peers)
-            sb.append(id.toBinaryString()).append("\n");
+        for (Peer id : peers) { sb.append(id.toBinaryString()).append("\n"); }
 
         return sb.toString();
     }
@@ -102,15 +94,24 @@ public class Bucket {
 
     public void traverseTree(DoOnTree doOnTree) {
 
-        if (left  != null) left.traverseTree(doOnTree);
-        if (right != null) right.traverseTree(doOnTree);
+        if (left != null) { left.traverseTree(doOnTree); }
+        if (right != null) { right.traverseTree(doOnTree); }
 
         doOnTree.call(this);
     }
 
 
     /********************/
-     // tree operations //
+    // tree operations //
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Peer> getPeers() {
+        return peers;
+    }
+
     /********************/
 
     public interface DoOnTree {
@@ -118,14 +119,13 @@ public class Bucket {
         void call(Bucket bucket);
     }
 
-
     public static class SaveLeaf implements DoOnTree {
 
         List<Bucket> leafs = new ArrayList<>();
 
         @Override
         public void call(Bucket bucket) {
-            if (bucket.peers != null) leafs.add(bucket);
+            if (bucket.peers != null) { leafs.add(bucket); }
         }
 
         public List<Bucket> getLeafs() {
@@ -135,13 +135,5 @@ public class Bucket {
         public void setLeafs(List<Bucket> leafs) {
             this.leafs = leafs;
         }
-    }
-
-    public String getName(){
-        return name;
-    }
-
-    public List<Peer> getPeers() {
-        return peers;
     }
 }

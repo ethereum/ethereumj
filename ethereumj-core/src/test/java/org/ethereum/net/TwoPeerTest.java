@@ -17,17 +17,30 @@
  */
 package org.ethereum.net;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import com.typesafe.config.ConfigFactory;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;
@@ -45,52 +58,38 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static org.ethereum.crypto.HashUtil.sha3;
-
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
  */
 @Ignore
 public class TwoPeerTest {
 
-    @Configuration
-    @NoAutoscan
-    public static class SysPropConfig1 {
-        static Eth62 testHandler = null;
-        @Bean
-        @Scope("prototype")
-        public Eth62 eth62() {
-            return testHandler;
-//            return new Eth62();
-        }
-
-        static SystemProperties props = new SystemProperties();;
-        @Bean
-        public SystemProperties systemProperties() {
-            return props;
-        }
-    }
-    @Configuration
-    @NoAutoscan
-    public static class SysPropConfig2 {
-        static SystemProperties props= new SystemProperties();
-        @Bean
-        public SystemProperties systemProperties() {
-            return props;
-        }
-
+    public static void main(String[] args) throws Exception {
+        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec"));
+        System.out.println(Hex.toHexString(k.getPrivKeyBytes()));
+        System.out.println(Hex.toHexString(k.getAddress()));
+        System.out.println(Hex.toHexString(k.getNodeId()));
     }
 
     public Block createNextBlock(Block parent, String stateRoot, String extraData) {
-        Block b = new Block(parent.getHash(), sha3(RLP.encodeList()), parent.getCoinbase(), parent.getLogBloom(),
-                parent.getDifficulty(), parent.getNumber() + 1, parent.getGasLimit(), parent.getGasUsed(),
-                System.currentTimeMillis() / 1000, new byte[0], new byte[0], new byte[0],
-                parent.getReceiptsRoot(), parent.getTxTrieRoot(),
-                Hex.decode(stateRoot),
-//                    Hex.decode("7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a"),
-                Collections.<Transaction>emptyList(), Collections.<BlockHeader>emptyList());
+        Block b = new Block(parent.getHash(),
+                            sha3(RLP.encodeList()),
+                            parent.getCoinbase(),
+                            parent.getLogBloom(),
+                            parent.getDifficulty(),
+                            parent.getNumber() + 1,
+                            parent.getGasLimit(),
+                            parent.getGasUsed(),
+                            System.currentTimeMillis() / 1000,
+                            new byte[0],
+                            new byte[0],
+                            new byte[0],
+                            parent.getReceiptsRoot(),
+                            parent.getTxTrieRoot(),
+                            Hex.decode(stateRoot),
+                //                    Hex.decode("7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a"),
+                            Collections.<Transaction>emptyList(),
+                            Collections.<BlockHeader>emptyList());
         //        b.getHeader().setDifficulty(b.getHeader().calcDifficulty(bestBlock.getHeader()).toByteArray());
         if (extraData != null) {
             b.getHeader().setExtraData(extraData.getBytes());
@@ -101,36 +100,41 @@ public class TwoPeerTest {
     public Block addNextBlock(BlockchainImpl blockchain1, Block parent, String extraData) {
         Block b = createNextBlock(parent, "00", extraData);
         System.out.println("Adding block.");
-//        blockchain1.add(b, new Miner() {
-//            @Override
-//            public long mine(BlockHeader header) {
-//                return Ethash.getForBlock(header.getNumber()).mineLight(header);
-//            }
-//
-//            @Override
-//            public boolean validate(BlockHeader header) {
-//                return true;
-//            }
-//        });
+        //        blockchain1.add(b, new Miner() {
+        //            @Override
+        //            public long mine(BlockHeader header) {
+        //                return Ethash.getForBlock(header.getNumber()).mineLight(header);
+        //            }
+        //
+        //            @Override
+        //            public boolean validate(BlockHeader header) {
+        //                return true;
+        //            }
+        //        });
         return b;
     }
 
     @Test
     public void testTest() throws FileNotFoundException, InterruptedException {
-        SysPropConfig1.props.overrideParams(
-                "peer.listen.port", "30334",
-                "peer.privateKey", "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
-                // nodeId: 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
-                "genesis", "genesis-light.json",
-                "database.dir", "testDB-1");
+        SysPropConfig1.props.overrideParams("peer.listen.port",
+                                            "30334",
+                                            "peer.privateKey",
+                                            "3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c",
+                                            // nodeId:
+                                            // 3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6
+                                            "genesis",
+                                            "genesis-light.json",
+                                            "database.dir",
+                                            "testDB-1");
 
-        SysPropConfig2.props.overrideParams(ConfigFactory.parseString(
-                "peer.listen.port = 30335 \n" +
-                        "peer.privateKey = 6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec \n" +
-                        "peer.active = [{ url = \"enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334\" }] \n" +
-                        "sync.enabled = true \n" +
-                        "genesis = genesis-light.json \n" +
-                        "database.dir = testDB-2 \n"));
+        SysPropConfig2.props.overrideParams(ConfigFactory.parseString("peer.listen.port = 30335 \n" +
+                                                                              "peer.privateKey = " +
+                                                                              "6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec \n" +
+                                                                              "peer.active = [{ url = " +
+                                                                              "\"enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30334\" }] \n" +
+                                                                              "sync.enabled = true \n" +
+                                                                              "genesis = genesis-light.json \n" +
+                                                                              "database.dir = testDB-2 \n"));
 
         final List<Block> alternativeFork = new ArrayList<>();
         SysPropConfig1.testHandler = new Eth62() {
@@ -197,10 +201,12 @@ public class TwoPeerTest {
         Block b3 = addNextBlock(blockchain, b2, null);
         Block b4 = addNextBlock(blockchain, b3, null);
 
-        List<BlockHeader> listOfHeadersStartFrom = blockchain.getListOfHeadersStartFrom(new BlockIdentifier(null, 3), 0, 100, true);
+        List<BlockHeader> listOfHeadersStartFrom =
+                blockchain.getListOfHeadersStartFrom(new BlockIdentifier(null, 3), 0, 100, true);
 
-//        Block b1b = addNextBlock(blockchain, bGen, "chain B");
-        Block b1b = createNextBlock(bGen, "7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a", "chain B");
+        //        Block b1b = addNextBlock(blockchain, bGen, "chain B");
+        Block b1b =
+                createNextBlock(bGen, "7c22bebbe3e6cf5af810bef35ad7a7b8172e0a247eaeb44f63fffbce87285a7a", "chain B");
         Ethash.getForBlock(SystemProperties.getDefault(), b1b.getNumber()).mineLight(b1b);
         Block b2b = createNextBlock(b1b, Hex.toHexString(b2.getStateRoot()), "chain B");
         Ethash.getForBlock(SystemProperties.getDefault(), b2b.getNumber()).mineLight(b2b);
@@ -209,10 +215,10 @@ public class TwoPeerTest {
         alternativeFork.add(b1b);
         alternativeFork.add(b2b);
 
-//        byte[] root = ((RepositoryImpl) ethereum.getRepository()).getRoot();
-//        ((RepositoryImpl) ethereum.getRepository()).syncToRoot(root);
-//        byte[] root1 = ((RepositoryImpl) ethereum.getRepository()).getRoot();
-//        Block b2b = addNextBlock(blockchain, b1, "chain B");
+        //        byte[] root = ((RepositoryImpl) ethereum.getRepository()).getRoot();
+        //        ((RepositoryImpl) ethereum.getRepository()).syncToRoot(root);
+        //        byte[] root1 = ((RepositoryImpl) ethereum.getRepository()).getRoot();
+        //        Block b2b = addNextBlock(blockchain, b1, "chain B");
 
         System.out.println("Blocks added");
 
@@ -240,19 +246,19 @@ public class TwoPeerTest {
 
         System.out.println("======= Waiting for block #4");
         semaphore.await(60, TimeUnit.SECONDS);
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             throw new RuntimeException("4 blocks were not imported.");
         }
 
         System.out.println("======= Sending forked block without parent...");
-//        ((EthHandler) channel1[0].getEthHandler()).sendNewBlock(b2b);
+        //        ((EthHandler) channel1[0].getEthHandler()).sendNewBlock(b2b);
 
-//        Block b = b4;
-//        for (int i = 0; i < 10; i++) {
-//            Thread.sleep(3000);
-//            System.out.println("=====  Adding next block...");
-//            b = addNextBlock(blockchain, b, null);
-//        }
+        //        Block b = b4;
+        //        for (int i = 0; i < 10; i++) {
+        //            Thread.sleep(3000);
+        //            System.out.println("=====  Adding next block...");
+        //            b = addNextBlock(blockchain, b, null);
+        //        }
 
         Thread.sleep(10000000);
 
@@ -264,10 +270,35 @@ public class TwoPeerTest {
 
     }
 
-    public static void main(String[] args) throws Exception {
-        ECKey k = ECKey.fromPrivate(Hex.decode("6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec"));
-        System.out.println(Hex.toHexString(k.getPrivKeyBytes()));
-        System.out.println(Hex.toHexString(k.getAddress()));
-        System.out.println(Hex.toHexString(k.getNodeId()));
+    @Configuration
+    @NoAutoscan
+    public static class SysPropConfig1 {
+        static Eth62 testHandler = null;
+        static SystemProperties props = new SystemProperties();
+
+        @Bean
+        @Scope("prototype")
+        public Eth62 eth62() {
+            return testHandler;
+            //            return new Eth62();
+        }
+        ;
+
+        @Bean
+        public SystemProperties systemProperties() {
+            return props;
+        }
+    }
+
+    @Configuration
+    @NoAutoscan
+    public static class SysPropConfig2 {
+        static SystemProperties props = new SystemProperties();
+
+        @Bean
+        public SystemProperties systemProperties() {
+            return props;
+        }
+
     }
 }

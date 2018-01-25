@@ -57,6 +57,13 @@ public class EthashParams {
     //  number of accesses in hashimoto loop
     private final long ACCESSES = 64;
 
+    private static boolean isPrime(long num) {
+        if (num == 2) { return true; }
+        if (num % 2 == 0) { return false; }
+        for (int i = 3; i * i < num; i += 2) { if (num % i == 0) { return false; } }
+        return true;
+    }
+
     /**
      * The parameters for Ethash's cache and dataset depend on the block number.
      * The cache size and dataset size both grow linearly; however, we always take the highest
@@ -79,14 +86,6 @@ public class EthashParams {
             sz -= 2 * MIX_BYTES;
         }
         return sz;
-    }
-
-    private static boolean isPrime(long num) {
-        if (num == 2) return true;
-        if (num % 2 == 0) return false;
-        for (int i = 3; i * i < num; i += 2)
-            if (num % i == 0) return false;
-        return true;
     }
 
     public int getWORD_BYTES() {

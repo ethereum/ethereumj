@@ -17,13 +17,13 @@
  */
 package org.ethereum.db;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.intToBytes;
+
 import org.ethereum.datasource.QuotientFilter;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.intToBytes;
 
 /**
  * Created by Anton Nashatyrev on 13.03.2017.
@@ -39,7 +39,7 @@ public class QuotientFilterTest {
             f.insert(sha3(intToBytes(i)));
 
             // inserting duplicate slows down significantly
-            if (i % 10 == 0) f.insert(sha3(intToBytes(0)));
+            if (i % 10 == 0) { f.insert(sha3(intToBytes(0))); }
 
             if (i > 100_000 && i % 2 == 0) {
                 f.remove(sha3(intToBytes(i - 100_000)));

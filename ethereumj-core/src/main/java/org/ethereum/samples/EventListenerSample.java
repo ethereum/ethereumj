@@ -17,6 +17,8 @@
  */
 package org.ethereum.samples;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.PendingStateImpl;
@@ -53,150 +55,58 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-
 /**
  * Sample usage of events listener API.
  * {@link EventListener}        Contract events listener
  * {@link BlockReplay}          Listener wrapper for pushing old blocks to any listener in addition to live data
- *
- *  - getting free Ether assuming we are running in test network
- *  - deploying contract with event, which we are going to track
- *  - calling contract and catching corresponding events
- *  - alternatively you could provide address of already deployed contract and
- *      replay any number of blocks in the past to process old events
+ * <p>
+ * - getting free Ether assuming we are running in test network
+ * - deploying contract with event, which we are going to track
+ * - calling contract and catching corresponding events
+ * - alternatively you could provide address of already deployed contract and
+ * replay any number of blocks in the past to process old events
  */
 public class EventListenerSample extends TestNetSample {
-
-    @Autowired
-    SolidityCompiler compiler;
-
-    @Autowired
-    BlockStore blockStore;
-
-    @Autowired
-    TransactionStore transactionStore;
-
-    @Autowired
-    PendingStateImpl pendingState;
 
     // Change seed phrases
     protected final byte[] senderPrivateKey = sha3("cat".getBytes());
     protected final byte[] sender2PrivateKey = sha3("goat".getBytes());
-
+    @Autowired
+    SolidityCompiler compiler;
+    @Autowired
+    BlockStore blockStore;
+    @Autowired
+    TransactionStore transactionStore;
+    @Autowired
+    PendingStateImpl pendingState;
     // If no contractAddress provided, deploys new contract, otherwise
     // replays events from already deployed contract
     String contractAddress = null;
-//    String contractAddress = "cedf27de170a05cf1d1736f21e1f5ffc1cf22eef";
+    //    String contractAddress = "cedf27de170a05cf1d1736f21e1f5ffc1cf22eef";
 
     String contract =
-            "contract Sample {\n" +
-                    "  int i;\n" +
-                    "  event Inc(\n" +
-                    "      address _from,\n" +
-                    "      int _inc,\n" +
-                    "      int _total\n" +
-                    "  );  \n" +
-                    "  \n" +
-                    "  function inc(int n) {\n" +
-                    "    i = i + n;\n" +
-                    "    Inc(msg.sender, n, i);  \n" +
-                    "  }  \n" +
-                    "  \n" +
-                    "  function get() returns (int) {\n" +
-                    "    return i;  \n" +
-                    "  }\n" +
-                    "}  ";
+            "contract Sample {\n" + "  int i;\n" + "  event Inc(\n" + "      address _from,\n" + "      int _inc,\n" +
+                    "      int _total\n" + "  );  \n" + "  \n" + "  function inc(int n) {\n" + "    i = i + n;\n" +
+                    "    Inc(msg.sender, n, i);  \n" + "  }  \n" + "  \n" + "  function get() returns (int) {\n" +
+                    "    return i;  \n" + "  }\n" + "}  ";
 
     private Map<ByteArrayWrapper, TransactionReceipt> txWaiters =
             Collections.synchronizedMap(new HashMap<ByteArrayWrapper, TransactionReceipt>());
 
-    class IncEvent {
-        IncEvent(String address, Long inc, Long total) {
-            this.address = address;
-            this.inc = inc;
-            this.total = total;
-        }
+    public static void main(String[] args) throws Exception {
+        sLogger.info("Starting EthereumJ!");
 
-        String address;
-        Long inc;
-        Long total;
-
-        @Override
-        public String toString() {
-            return "IncEvent{" +
-                    "address='" + address + '\'' +
-                    ", inc=" + inc +
-                    ", total=" + total +
-                    '}';
-        }
-    }
-
-    class IncEventListener extends EventListener<IncEvent> {
-        /**
-         * Minimum required Tx block confirmations for the events
-         * from this Tx to be confirmed
-         * After this number of confirmations, event will fire {@link #processConfirmed(PendingEvent, IncEvent)}
-         * on each confirmation
-         */
-        protected int blocksToConfirm = 32;
-        /**
-         * Minimum required Tx block confirmations for this Tx to be purged
-         * from the tracking list
-         * After this number of confirmations, event will not fire {@link #processConfirmed(PendingEvent, IncEvent)}
-         */
-        protected int purgeFromPendingsConfirmations = 40;
-
-        public IncEventListener(PendingStateImpl pendingState) {
-            super(pendingState);
-        }
-
-        public IncEventListener(PendingStateImpl pendingState, String contractABI, byte[] contractAddress) {
-            super(pendingState);
-            initContractAddress(contractABI, contractAddress);
-            // Instead you can init with topic search,
-            // so you could get events from all contracts with the same code
-            // You could init listener only once
-//            initContractTopic(contractABI, sha3("Inc(address,int256,int256)".getBytes()));
-        }
-
-        @Override
-        protected IncEvent onEvent(CallTransaction.Invocation event, Block block, TransactionReceipt receipt, int txCount, EthereumListener.PendingTransactionState state) {
-            // Processing raw event data to fill our model IncEvent
-            if ("Inc".equals(event.function.name)) {
-                String address = Hex.toHexString((byte[]) event.args[0]);
-                Long inc = ((BigInteger) event.args[1]).longValue();
-                Long total = ((BigInteger) event.args[2]).longValue();
-
-                IncEvent incEvent = new IncEvent(address, inc, total);
-                logger.info("Pending event: {}", incEvent);
-                return incEvent;
-            } else {
-                logger.error("Unknown event: " + event);
+        class Config extends TestNetConfig {
+            @Override
+            @Bean
+            public TestNetSample sampleBean() {
+                return new EventListenerSample();
             }
-            return null;
         }
 
-        @Override
-        protected void pendingTransactionsUpdated() {
-        }
-
-        /**
-         * Events are fired here on every block since blocksToConfirm to purgeFromPendingsConfirmations
-         */
-        void processConfirmed(PendingEvent evt, IncEvent event) {
-            // +1 because on included block we have 1 confirmation
-            long numberOfConfirmations = evt.bestConfirmingBlock.getNumber() - evt.includedTo.getNumber() + 1;
-            logger.info("Confirmed event: {}, confirmations: {}", event, numberOfConfirmations);
-        }
-
-        @Override
-        protected boolean pendingTransactionUpdated(PendingEvent evt) {
-            if (evt.txStatus == TxStatus.REJECTED || evt.txStatus.confirmed >= blocksToConfirm) {
-                evt.eventData.forEach(d -> processConfirmed(evt, d));
-            }
-            return evt.txStatus == TxStatus.REJECTED || evt.txStatus.confirmed >= purgeFromPendingsConfirmations;
-        }
+        // Based on Config class the BasicSample would be created by Spring
+        // and its springInit() method would be called as an entry point
+        EthereumFactory.createEthereum(Config.class);
     }
 
     /**
@@ -206,7 +116,8 @@ public class EventListenerSample extends TestNetSample {
     public void onSyncDone() throws Exception {
         ethereum.addListener(new EthereumListenerAdapter() {
             @Override
-            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state,
+                                                   Block block) {
                 ByteArrayWrapper txHashW = new ByteArrayWrapper(txReceipt.getTransaction().getHash());
                 // Catching transaction errors
                 if (txWaiters.containsKey(txHashW) && !txReceipt.isSuccessful()) {
@@ -258,7 +169,7 @@ public class EventListenerSample extends TestNetSample {
         InputStream in = new BufferedInputStream(conn.getInputStream());
         String result = null;
         try (Scanner scanner = new Scanner(in, "UTF-8")) {
-            result =  scanner.useDelimiter("\\A").next();
+            result = scanner.useDelimiter("\\A").next();
         }
 
         in.close();
@@ -268,10 +179,12 @@ public class EventListenerSample extends TestNetSample {
     }
 
     private void waitForEther(byte[] address, BigInteger requiredBalance) throws InterruptedException {
-        while(true) {
+        while (true) {
             BigInteger balance = ethereum.getRepository().getBalance(address);
             if (balance.compareTo(requiredBalance) > 0) {
-                logger.info("Address {} successfully funded. Balance: {} wei", "0x" + Hex.toHexString(address), balance);
+                logger.info("Address {} successfully funded. Balance: {} wei",
+                            "0x" + Hex.toHexString(address),
+                            balance);
                 break;
             }
             synchronized (this) {
@@ -281,9 +194,9 @@ public class EventListenerSample extends TestNetSample {
     }
 
     /**
-     *  - Deploys contract
-     *  - Adds events listener
-     *  - Calls contract from 2 different addresses
+     * - Deploys contract
+     * - Adds events listener
+     * - Calls contract from 2 different addresses
      */
     private void deployContractAndTest() throws Exception {
         ethereum.addListener(new EthereumListenerAdapter() {
@@ -314,8 +227,7 @@ public class EventListenerSample extends TestNetSample {
         contractIncCall(senderPrivateKey, 777, metadata.abi, address);
         contractIncCall(sender2PrivateKey, 555, metadata.abi, address);
 
-        ProgramResult r = ethereum.callConstantFunction(Hex.toHexString(address),
-                contract.getByName("get"));
+        ProgramResult r = ethereum.callConstantFunction(Hex.toHexString(address), contract.getByName("get"));
         Object[] ret = contract.getByName("get").decodeResult(r.getHReturn());
         logger.info("Current contract data member value: " + ret[0]);
     }
@@ -329,16 +241,19 @@ public class EventListenerSample extends TestNetSample {
         CompilationResult.ContractMetadata metadata = compileContract();
         byte[] address = Hex.decode(contractAddress);
         IncEventListener eventListener = new IncEventListener(pendingState, metadata.abi, address);
-        BlockReplay blockReplay = new BlockReplay(blockStore, transactionStore, eventListener.listener,
-                blockStore.getMaxNumber() - 5000);
+        BlockReplay blockReplay =
+                new BlockReplay(blockStore, transactionStore, eventListener.listener, blockStore.getMaxNumber() - 5000);
         ethereum.addListener(blockReplay);
         blockReplay.replayAsync();
     }
 
     private CompilationResult.ContractMetadata compileContract() throws IOException {
         logger.info("Compiling contract...");
-        SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,
-                SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+        SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(),
+                                                             true,
+                                                             true,
+                                                             SolidityCompiler.Options.ABI,
+                                                             SolidityCompiler.Options.BIN);
         if (result.isFailed()) {
             throw new RuntimeException("Contract compilation failed:\n" + result.errors);
         }
@@ -354,8 +269,8 @@ public class EventListenerSample extends TestNetSample {
         return metadata;
     }
 
-    private void contractIncCall(byte[] privateKey, int incAmount,
-                                 String contractABI, byte[] contractAddress) throws InterruptedException {
+    private void contractIncCall(byte[] privateKey, int incAmount, String contractABI, byte[] contractAddress)
+            throws InterruptedException {
         logger.info("Calling the contract function 'inc'");
         CallTransaction.Contract contract = new CallTransaction.Contract(contractABI);
         CallTransaction.Function inc = contract.getByName("inc");
@@ -368,17 +283,16 @@ public class EventListenerSample extends TestNetSample {
         logger.info("Contract modified!");
     }
 
-    protected TransactionReceipt sendTxAndWait(byte[] receiveAddress,
-                                               byte[] data, byte[] privateKey) throws InterruptedException {
+    protected TransactionReceipt sendTxAndWait(byte[] receiveAddress, byte[] data, byte[] privateKey)
+            throws InterruptedException {
         BigInteger nonce = ethereum.getRepository().getNonce(ECKey.fromPrivate(privateKey).getAddress());
-        Transaction tx = new Transaction(
-                ByteUtil.bigIntegerToBytes(nonce),
-                ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                receiveAddress,
-                ByteUtil.longToBytesNoLeadZeroes(0),
-                data,
-                ethereum.getChainIdForNextBlock());
+        Transaction tx = new Transaction(ByteUtil.bigIntegerToBytes(nonce),
+                                         ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
+                                         ByteUtil.longToBytesNoLeadZeroes(3_000_000),
+                                         receiveAddress,
+                                         ByteUtil.longToBytesNoLeadZeroes(0),
+                                         data,
+                                         ethereum.getChainIdForNextBlock());
         tx.sign(ECKey.fromPrivate(privateKey));
 
         logger.info("<=== Sending transaction: " + tx);
@@ -403,17 +317,18 @@ public class EventListenerSample extends TestNetSample {
 
     protected TransactionReceipt waitForTx(ByteArrayWrapper txHashW) throws InterruptedException {
         long startBlock = ethereum.getBlockchain().getBestBlock().getNumber();
-        while(true) {
+        while (true) {
             TransactionReceipt receipt = txWaiters.get(txHashW);
             if (receipt != null) {
                 return receipt;
             } else {
                 long curBlock = ethereum.getBlockchain().getBestBlock().getNumber();
                 if (curBlock > startBlock + 16) {
-                    throw new RuntimeException("The transaction was not included during last 16 blocks: " + txHashW.toString().substring(0,8));
+                    throw new RuntimeException("The transaction was not included during last 16 blocks: " +
+                                                       txHashW.toString().substring(0, 8));
                 } else {
-                    logger.info("Waiting for block with transaction 0x" + txHashW.toString().substring(0,8) +
-                            " included (" + (curBlock - startBlock) + " blocks received so far) ...");
+                    logger.info("Waiting for block with transaction 0x" + txHashW.toString().substring(0, 8) +
+                                        " included (" + (curBlock - startBlock) + " blocks received so far) ...");
                 }
             }
             synchronized (this) {
@@ -422,19 +337,87 @@ public class EventListenerSample extends TestNetSample {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        sLogger.info("Starting EthereumJ!");
-
-        class Config extends TestNetConfig{
-            @Override
-            @Bean
-            public TestNetSample sampleBean() {
-                return new EventListenerSample();
-            }
+    class IncEvent {
+        String address;
+        Long inc;
+        Long total;
+        IncEvent(String address, Long inc, Long total) {
+            this.address = address;
+            this.inc = inc;
+            this.total = total;
         }
 
-        // Based on Config class the BasicSample would be created by Spring
-        // and its springInit() method would be called as an entry point
-        EthereumFactory.createEthereum(Config.class);
+        @Override
+        public String toString() {
+            return "IncEvent{" + "address='" + address + '\'' + ", inc=" + inc + ", total=" + total + '}';
+        }
+    }
+
+    class IncEventListener extends EventListener<IncEvent> {
+        /**
+         * Minimum required Tx block confirmations for the events
+         * from this Tx to be confirmed
+         * After this number of confirmations, event will fire {@link #processConfirmed(PendingEvent, IncEvent)}
+         * on each confirmation
+         */
+        protected int blocksToConfirm = 32;
+        /**
+         * Minimum required Tx block confirmations for this Tx to be purged
+         * from the tracking list
+         * After this number of confirmations, event will not fire {@link #processConfirmed(PendingEvent, IncEvent)}
+         */
+        protected int purgeFromPendingsConfirmations = 40;
+
+        public IncEventListener(PendingStateImpl pendingState) {
+            super(pendingState);
+        }
+
+        public IncEventListener(PendingStateImpl pendingState, String contractABI, byte[] contractAddress) {
+            super(pendingState);
+            initContractAddress(contractABI, contractAddress);
+            // Instead you can init with topic search,
+            // so you could get events from all contracts with the same code
+            // You could init listener only once
+            //            initContractTopic(contractABI, sha3("Inc(address,int256,int256)".getBytes()));
+        }
+
+        @Override
+        protected IncEvent onEvent(CallTransaction.Invocation event, Block block, TransactionReceipt receipt,
+                                   int txCount, EthereumListener.PendingTransactionState state) {
+            // Processing raw event data to fill our model IncEvent
+            if ("Inc".equals(event.function.name)) {
+                String address = Hex.toHexString((byte[]) event.args[0]);
+                Long inc = ((BigInteger) event.args[1]).longValue();
+                Long total = ((BigInteger) event.args[2]).longValue();
+
+                IncEvent incEvent = new IncEvent(address, inc, total);
+                logger.info("Pending event: {}", incEvent);
+                return incEvent;
+            } else {
+                logger.error("Unknown event: " + event);
+            }
+            return null;
+        }
+
+        @Override
+        protected void pendingTransactionsUpdated() {
+        }
+
+        /**
+         * Events are fired here on every block since blocksToConfirm to purgeFromPendingsConfirmations
+         */
+        void processConfirmed(PendingEvent evt, IncEvent event) {
+            // +1 because on included block we have 1 confirmation
+            long numberOfConfirmations = evt.bestConfirmingBlock.getNumber() - evt.includedTo.getNumber() + 1;
+            logger.info("Confirmed event: {}, confirmations: {}", event, numberOfConfirmations);
+        }
+
+        @Override
+        protected boolean pendingTransactionUpdated(PendingEvent evt) {
+            if (evt.txStatus == TxStatus.REJECTED || evt.txStatus.confirmed >= blocksToConfirm) {
+                evt.eventData.forEach(d -> processConfirmed(evt, d));
+            }
+            return evt.txStatus == TxStatus.REJECTED || evt.txStatus.confirmed >= purgeFromPendingsConfirmations;
+        }
     }
 }

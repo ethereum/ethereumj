@@ -17,12 +17,23 @@
  */
 package org.ethereum.config;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.ethereum.config.blockchain.OlympicConfig;
-import org.ethereum.config.net.*;
+import org.ethereum.config.net.MainNetConfig;
+import org.ethereum.config.net.MordenNetConfig;
+import org.ethereum.config.net.RopstenNetConfig;
+import org.ethereum.config.net.TestNetConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Genesis;
 import org.ethereum.db.ByteArrayWrapper;
@@ -38,7 +49,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.concurrent.NotThreadSafe;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -47,19 +57,53 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import static com.google.common.collect.Lists.newArrayList;
-import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.*;
+import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * Not thread safe - testUseOnlySprintConfig temporarily sets a static flag that may influence other tests.
- * Not thread safe - testGeneratedNodePrivateKey temporarily removes the nodeId.properties file which may influence other tests.
+ * Not thread safe - testGeneratedNodePrivateKey temporarily removes the nodeId.properties file which may influence
+ * other tests.
  */
 @SuppressWarnings("ConstantConditions")
 @NotThreadSafe
 public class SystemPropertiesTest {
     private final static Logger logger = LoggerFactory.getLogger(SystemPropertiesTest.class);
+
+    private static Config createActivePeersConfig(ActivePeer... activePeers) {
+        StringBuilder config = new StringBuilder("peer = {");
+        config.append("   active =[");
+
+        for (int i = 0; i < activePeers.length; i++) {
+            ActivePeer activePeer = activePeers[i];
+            config.append(activePeer.toString());
+            if (i < activePeers.length - 1) {
+                config.append(",");
+            }
+        }
+
+        config.append("   ]");
+        config.append("}");
+
+        return ConfigFactory.parseString(config.toString());
+    }
+
+    private static Config createTrustedPeersConfig(TrustedPeer... trustedPeers) {
+        StringBuilder config = new StringBuilder("peer = {");
+        config.append("   trusted =[");
+
+        for (int i = 0; i < trustedPeers.length; i++) {
+            TrustedPeer activePeer = trustedPeers[i];
+            config.append(activePeer.toString());
+            if (i < trustedPeers.length - 1) {
+                config.append(",");
+            }
+        }
+
+        config.append("   ]");
+        config.append("}");
+
+        return ConfigFactory.parseString(config.toString());
+    }
 
     @Test
     public void testPunchBindIp() {
@@ -102,7 +146,8 @@ public class SystemPropertiesTest {
         assertConfigNameResolvesToType("testnet", TestNetConfig.class);
     }
 
-    private <T extends BlockchainNetConfig> void assertConfigNameResolvesToType(String configName, Class<T> expectedConfigType) {
+    private <T extends BlockchainNetConfig> void assertConfigNameResolvesToType(String configName,
+                                                                                Class<T> expectedConfigType) {
         SystemProperties props = new SystemProperties();
         props.overrideParams("blockchain.config.name", configName);
         BlockchainNetConfig blockchainConfig = props.getBlockchainConfig();
@@ -188,18 +233,26 @@ public class SystemPropertiesTest {
     public void testRequireEitherNameOrClassConfiguration() {
         try {
             SystemProperties props = new SystemProperties();
-            props.overrideParams("blockchain.config.name", "test", "blockchain.config.class", "org.ethereum.config.net.TestNetConfig");
+            props.overrideParams("blockchain.config.name",
+                                 "test",
+                                 "blockchain.config.class",
+                                 "org.ethereum.config.net.TestNetConfig");
             props.getBlockchainConfig();
             fail("Should've thrown exception because not 'Only one of two options should be defined'");
         } catch (RuntimeException e) {
-            assertEquals("Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'", e.getMessage());
+            assertEquals(
+                    "Only one of two options should be defined: 'blockchain.config.name' and 'blockchain.config.class'",
+                    e.getMessage());
         }
     }
 
     @Test
     public void testRequireTypeBlockchainNetConfigOnManualClass() {
         SystemProperties props = new SystemProperties();
-        props.overrideParams("blockchain.config.name", null, "blockchain.config.class", "org.ethereum.config.net.TestNetConfig");
+        props.overrideParams("blockchain.config.name",
+                             null,
+                             "blockchain.config.class",
+                             "org.ethereum.config.net.TestNetConfig");
         assertTrue(props.getBlockchainConfig().getClass().isAssignableFrom(TestNetConfig.class));
     }
 
@@ -207,11 +260,17 @@ public class SystemPropertiesTest {
     public void testNonExistentBlockchainNetConfigClass() {
         SystemProperties props = new SystemProperties();
         try {
-            props.overrideParams("blockchain.config.name", null, "blockchain.config.class", "org.ethereum.config.net.NotExistsConfig");
+            props.overrideParams("blockchain.config.name",
+                                 null,
+                                 "blockchain.config.class",
+                                 "org.ethereum.config.net.NotExistsConfig");
             props.getBlockchainConfig();
             fail("Should throw exception for invalid class");
         } catch (RuntimeException expected) {
-            assertEquals("The class specified via blockchain.config.class 'org.ethereum.config.net.NotExistsConfig' not found", expected.getMessage());
+            assertEquals(
+                    "The class specified via blockchain.config.class 'org.ethereum.config.net.NotExistsConfig' not " +
+                            "found",
+                    expected.getMessage());
         }
     }
 
@@ -219,11 +278,17 @@ public class SystemPropertiesTest {
     public void testNotInstanceOfBlockchainForkConfig() {
         SystemProperties props = new SystemProperties(ConfigFactory.empty(), getClass().getClassLoader());
         try {
-            props.overrideParams("blockchain.config.name", null, "blockchain.config.class", "org.ethereum.config.NodeFilter");
+            props.overrideParams("blockchain.config.name",
+                                 null,
+                                 "blockchain.config.class",
+                                 "org.ethereum.config.NodeFilter");
             props.getBlockchainConfig();
             fail("Should throw exception for invalid class");
         } catch (RuntimeException expected) {
-            assertEquals("The class specified via blockchain.config.class 'org.ethereum.config.NodeFilter' is not instance of org.ethereum.config.BlockchainForkConfig", expected.getMessage());
+            assertEquals(
+                    "The class specified via blockchain.config.class 'org.ethereum.config.NodeFilter' is not instance" +
+                            " of org.ethereum.config.BlockchainForkConfig",
+                    expected.getMessage());
         }
     }
 
@@ -269,12 +334,8 @@ public class SystemPropertiesTest {
 
     @Test
     public void testUnexpectedElementInNodeConfigThrowsException() {
-        String nodeWithUnexpectedElement = "peer = {" +
-                "active = [{\n" +
-                "  port = 30303\n" +
-                "  nodeName = Test\n" +
-                "  unexpectedElement = 12345\n" +
-                "}]}";
+        String nodeWithUnexpectedElement = "peer = {" + "active = [{\n" + "  port = 30303\n" + "  nodeName = Test\n" +
+                "  unexpectedElement = 12345\n" + "}]}";
 
         Config invalidConfig = ConfigFactory.parseString(nodeWithUnexpectedElement);
 
@@ -296,8 +357,9 @@ public class SystemPropertiesTest {
         assertEquals(1, activePeers.size());
 
         Node peer = activePeers.get(0);
-        String expectedKeccak512HashOfNodeName = "fcaf073315aa0fe284dd6d76200ede5cc9277f3cb1fd7649ddab3b6a61e96ee91e957" +
-                "0b14932be6d6cd837027d50d9521923962909e5a9fdcdcabc3fe29408bb";
+        String expectedKeccak512HashOfNodeName =
+                "fcaf073315aa0fe284dd6d76200ede5cc9277f3cb1fd7649ddab3b6a61e96ee91e957" +
+                        "0b14932be6d6cd837027d50d9521923962909e5a9fdcdcabc3fe29408bb";
         String actualHexEncodedId = Hex.toHexString(peer.getId());
         assertEquals(expectedKeccak512HashOfNodeName, actualHexEncodedId);
     }
@@ -314,26 +376,8 @@ public class SystemPropertiesTest {
         } catch (RuntimeException ignore) { }
     }
 
-    private static Config createActivePeersConfig(ActivePeer... activePeers) {
-        StringBuilder config = new StringBuilder("peer = {");
-        config.append("   active =[");
-
-        for (int i = 0; i < activePeers.length; i++) {
-            ActivePeer activePeer = activePeers[i];
-            config.append(activePeer.toString());
-            if (i < activePeers.length - 1) {
-                config.append(",");
-            }
-        }
-
-        config.append("   ]");
-        config.append("}");
-
-        return ConfigFactory.parseString(config.toString());
-    }
-
     @Test
-    public void testPeerTrusted() throws Exception{
+    public void testPeerTrusted() throws Exception {
         TrustedPeer peer1 = TrustedPeer.asNode("node-1", "1.1.1.1");
         TrustedPeer peer2 = TrustedPeer.asNode("node-2", "2.1.1.*");
         TrustedPeer peer3 = TrustedPeer.asNode("node-2", "3.*");
@@ -350,24 +394,6 @@ public class SystemPropertiesTest {
         assertTrue(filter.accept(InetAddress.getByName("3.1.1.9")));
         assertTrue(filter.accept(InetAddress.getByName("3.9.1.9")));
         assertFalse(filter.accept(InetAddress.getByName("4.1.1.1")));
-    }
-
-    private static Config createTrustedPeersConfig(TrustedPeer... trustedPeers) {
-        StringBuilder config = new StringBuilder("peer = {");
-        config.append("   trusted =[");
-
-        for (int i = 0; i < trustedPeers.length; i++) {
-            TrustedPeer activePeer = trustedPeers[i];
-            config.append(activePeer.toString());
-            if (i < trustedPeers.length - 1) {
-                config.append(",");
-            }
-        }
-
-        config.append("   ]");
-        config.append("}");
-
-        return ConfigFactory.parseString(config.toString());
     }
 
     @Test
@@ -510,12 +536,26 @@ public class SystemPropertiesTest {
         String nodeId;
         String nodeName;
 
+        private ActivePeer(boolean asEnodeUrl, String node, String host, String nodeId, String nodeName) {
+            this.asEnodeUrl = asEnodeUrl;
+            this.node = node;
+            this.host = host;
+            this.nodeId = nodeId;
+            this.nodeName = nodeName;
+        }
+
         static ActivePeer asEnodeUrl(String node, String host) {
-            return new ActivePeer(true, node, host, "e437a4836b77ad9d9ffe73ee782ef2614e6d8370fcf62191a6e488276e23717147073a7ce0b444d485fff5a0c34c4577251a7a990cf80d8542e21b95aa8c5e6c", null);
+            return new ActivePeer(true,
+                                  node,
+                                  host,
+                                  "e437a4836b77ad9d9ffe73ee782ef2614e6d8370fcf62191a6e488276e23717147073a7ce0b444d485fff5a0c34c4577251a7a990cf80d8542e21b95aa8c5e6c",
+                                  null);
         }
 
         static ActivePeer asNode(String node, String host) {
-            return asNodeWithId(node, host, "e437a4836b77ad9d9ffe73ee782ef2614e6d8370fcf62191a6e488276e23717147073a7ce0b444d485fff5a0c34c4577251a7a990cf80d8542e21b95aa8c5e6c");
+            return asNodeWithId(node,
+                                host,
+                                "e437a4836b77ad9d9ffe73ee782ef2614e6d8370fcf62191a6e488276e23717147073a7ce0b444d485fff5a0c34c4577251a7a990cf80d8542e21b95aa8c5e6c");
         }
 
         static ActivePeer asNodeWithId(String node, String host, String nodeId) {
@@ -526,35 +566,17 @@ public class SystemPropertiesTest {
             return new ActivePeer(false, node, host, null, name);
         }
 
-        private ActivePeer(boolean asEnodeUrl, String node, String host, String nodeId, String nodeName) {
-            this.asEnodeUrl = asEnodeUrl;
-            this.node = node;
-            this.host = host;
-            this.nodeId = nodeId;
-            this.nodeName = nodeName;
-        }
-
         public String toString() {
             String hexEncodedNode = Hex.toHexString(node.getBytes());
             if (asEnodeUrl) {
-                return "{\n" +
-                        "  url = \"enode://" + hexEncodedNode + "@" + host + ".com:30303\" \n" +
-                        "}";
+                return "{\n" + "  url = \"enode://" + hexEncodedNode + "@" + host + ".com:30303\" \n" + "}";
             }
 
             if (StringUtils.hasText(nodeName)) {
-                return "{\n" +
-                        "  ip = " + host + "\n" +
-                        "  port = 30303\n" +
-                        "  nodeName = " + nodeName + "\n" +
-                        "}\n";
+                return "{\n" + "  ip = " + host + "\n" + "  port = 30303\n" + "  nodeName = " + nodeName + "\n" + "}\n";
             }
 
-            return "{\n" +
-                    "  ip = " + host + "\n" +
-                    "  port = 30303\n" +
-                    "  nodeId = " + nodeId + "\n" +
-                    "}\n";
+            return "{\n" + "  ip = " + host + "\n" + "  port = 30303\n" + "  nodeId = " + nodeId + "\n" + "}\n";
         }
     }
 
@@ -563,20 +585,17 @@ public class SystemPropertiesTest {
         String ip;
         String nodeId;
 
-        static TrustedPeer asNode(String nodeId, String ipPattern) {
-            return new TrustedPeer(nodeId, ipPattern);
-        }
-
         private TrustedPeer(String nodeId, String ipPattern) {
             this.ip = ipPattern;
             this.nodeId = Hex.toHexString(nodeId.getBytes());
         }
 
+        static TrustedPeer asNode(String nodeId, String ipPattern) {
+            return new TrustedPeer(nodeId, ipPattern);
+        }
+
         public String toString() {
-            return "{\n" +
-                    "  ip = \"" + ip + "\"\n" +
-                    "  nodeId = " + nodeId + "\n" +
-                    "}\n";
+            return "{\n" + "  ip = \"" + ip + "\"\n" + "  nodeId = " + nodeId + "\n" + "}\n";
         }
     }
 }

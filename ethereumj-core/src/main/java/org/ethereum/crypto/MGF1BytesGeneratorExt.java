@@ -41,10 +41,10 @@ public class MGF1BytesGeneratorExt implements DerivationFunction {
     }
 
     public void init(DerivationParameters param) {
-        if(!(param instanceof MGFParameters)) {
+        if (!(param instanceof MGFParameters)) {
             throw new IllegalArgumentException("MGF parameters required for MGF1Generator");
         } else {
-            MGFParameters p = (MGFParameters)param;
+            MGFParameters p = (MGFParameters) param;
             this.seed = p.getSeed();
         }
     }
@@ -54,14 +54,14 @@ public class MGF1BytesGeneratorExt implements DerivationFunction {
     }
 
     private void ItoOSP(int i, byte[] sp) {
-        sp[0] = (byte)(i >>> 24);
-        sp[1] = (byte)(i >>> 16);
-        sp[2] = (byte)(i >>> 8);
-        sp[3] = (byte)(i >>> 0);
+        sp[0] = (byte) (i >>> 24);
+        sp[1] = (byte) (i >>> 16);
+        sp[2] = (byte) (i >>> 8);
+        sp[3] = (byte) (i >>> 0);
     }
 
     public int generateBytes(byte[] out, int outOff, int len) throws DataLengthException, IllegalArgumentException {
-        if(out.length - len < outOff) {
+        if (out.length - len < outOff) {
             throw new DataLengthException("output buffer too small");
         } else {
             byte[] hashBuf = new byte[this.hLen];
@@ -69,7 +69,7 @@ public class MGF1BytesGeneratorExt implements DerivationFunction {
             int counter = 0;
             int hashCounter = counterStart;
             this.digest.reset();
-            if(len > this.hLen) {
+            if (len > this.hLen) {
                 do {
                     this.ItoOSP(hashCounter++, C);
                     this.digest.update(this.seed, 0, this.seed.length);
@@ -77,10 +77,10 @@ public class MGF1BytesGeneratorExt implements DerivationFunction {
                     this.digest.doFinal(hashBuf, 0);
                     System.arraycopy(hashBuf, 0, out, outOff + counter * this.hLen, this.hLen);
                     ++counter;
-                } while(counter < len / this.hLen);
+                } while (counter < len / this.hLen);
             }
 
-            if(counter * this.hLen < len) {
+            if (counter * this.hLen < len) {
                 this.ItoOSP(hashCounter, C);
                 this.digest.update(this.seed, 0, this.seed.length);
                 this.digest.update(C, 0, C.length);

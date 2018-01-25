@@ -39,10 +39,8 @@ public class ExtraDataRule extends BlockHeaderRule {
     @Override
     public ValidationResult validate(BlockHeader header) {
         if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
-            return fault(String.format(
-                    "#%d: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE",
-                    header.getNumber()
-            ));
+            return fault(String.format("#%d: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE",
+                                       header.getNumber()));
         }
 
         return Success;

@@ -39,22 +39,22 @@ import java.util.Collection;
 
 /**
  * Testing peers discovery.
- *
+ * <p>
  * The sample creates a small private net with three peers:
- *  - first is point for discovery;
- *  - two other ones will connect to first.
- *
+ * - first is point for discovery;
+ * - two other ones will connect to first.
+ * <p>
  * Peers run on same IP 127.0.0.1 and are different by ports.
- *
+ * <p>
  * After some time all peers should find each other. We use `peer.discovery.ip.list` config
  * option to point to discovery peer.
- *
+ * <p>
  * Created by Stan Reshetnyk on 06.10.2016.
  */
 public class PrivateNetworkDiscoverySample {
 
     /**
-     *  Creating 3 instances with different config classes
+     * Creating 3 instances with different config classes
      */
     public static void main(String[] args) throws Exception {
         BasicSample.sLogger.info("Starting main node to which others will connect to");
@@ -67,6 +67,28 @@ public class PrivateNetworkDiscoverySample {
         EthereumFactory.createEthereum(Node2Config.class);
     }
 
+    private static Config getConfig(int index, String discoveryNode) {
+        return ConfigFactory.empty()
+                .withValue("peer.discovery.enabled", value(true))
+                .withValue("peer.discovery.external.ip", value("127.0.0.1"))
+                .withValue("peer.discovery.bind.ip", value("127.0.0.1"))
+                .withValue("peer.discovery.persist", value("false"))
+
+                .withValue("peer.listen.port", value(20000 + index))
+                .withValue("peer.privateKey",
+                           value(Hex.toHexString(ECKey.fromPrivate(("" + index).getBytes()).getPrivKeyBytes())))
+                .withValue("peer.networkId", value(555))
+                .withValue("sync.enabled", value(true))
+                .withValue("database.incompatibleDatabaseBehavior", value("RESET"))
+                .withValue("genesis", value("sample-genesis.json"))
+                .withValue("database.dir", value("sampleDB-" + index))
+                .withValue("peer.discovery.ip.list",
+                           value(discoveryNode != null ? Arrays.asList(discoveryNode) : Arrays.asList()));
+    }
+
+    private static ConfigValue value(Object value) {
+        return ConfigValueFactory.fromAnyRef(value);
+    }
 
     /**
      * Spring configuration class for the Regular peer
@@ -102,18 +124,23 @@ public class PrivateNetworkDiscoverySample {
                                     if (channelManager != null) {
                                         final Collection<Channel> activePeers = channelManager.getActivePeers();
                                         final ArrayList<String> ports = new ArrayList<>();
-                                        for (Channel channel: activePeers) {
-                                            ports.add(channel.getInetSocketAddress().getHostName() + ":" + channel.getInetSocketAddress().getPort());
+                                        for (Channel channel : activePeers) {
+                                            ports.add(channel.getInetSocketAddress().getHostName() + ":" +
+                                                              channel.getInetSocketAddress().getPort());
                                         }
 
                                         final Collection<NodeEntry> nodes = nodeManager.getTable().getAllNodes();
                                         final ArrayList<String> nodesString = new ArrayList<>();
-                                        for (NodeEntry node: nodes) {
-                                            nodesString.add(node.getNode().getHost() + ":" + node.getNode().getPort() + "@" + node.getNode().getHexId().substring(0, 6) );
+                                        for (NodeEntry node : nodes) {
+                                            nodesString.add(
+                                                    node.getNode().getHost() + ":" + node.getNode().getPort() + "@" +
+                                                            node.getNode().getHexId().substring(0, 6));
                                         }
 
-                                        logger.info("channelManager.getActivePeers() " + activePeers.size() + " " + Joiner.on(", ").join(ports));
-                                        logger.info("nodeManager.getTable().getAllNodes() " + nodesString.size() + " " + Joiner.on(", ").join(nodesString));
+                                        logger.info("channelManager.getActivePeers() " + activePeers.size() + " " +
+                                                            Joiner.on(", ").join(ports));
+                                        logger.info("nodeManager.getTable().getAllNodes() " + nodesString.size() + " " +
+                                                            Joiner.on(", ").join(nodesString));
                                     } else {
                                         logger.info("Channel manager is null");
                                     }
@@ -182,7 +209,7 @@ public class PrivateNetworkDiscoverySample {
         }
     }
 
-    private static class Node2Config extends RegularConfig{
+    private static class Node2Config extends RegularConfig {
 
         public Node2Config() {
             super(2, "127.0.0.1:20000");
@@ -197,26 +224,5 @@ public class PrivateNetworkDiscoverySample {
         public BasicSample node() {
             return super.node();
         }
-    }
-
-    private static Config getConfig(int index, String discoveryNode) {
-        return ConfigFactory.empty()
-                .withValue("peer.discovery.enabled", value(true))
-                .withValue("peer.discovery.external.ip", value("127.0.0.1"))
-                .withValue("peer.discovery.bind.ip", value("127.0.0.1"))
-                .withValue("peer.discovery.persist", value("false"))
-
-                .withValue("peer.listen.port", value(20000 + index))
-                .withValue("peer.privateKey", value(Hex.toHexString(ECKey.fromPrivate(("" + index).getBytes()).getPrivKeyBytes())))
-                .withValue("peer.networkId", value(555))
-                .withValue("sync.enabled", value(true))
-                .withValue("database.incompatibleDatabaseBehavior", value("RESET"))
-                .withValue("genesis", value("sample-genesis.json"))
-                .withValue("database.dir", value("sampleDB-" + index))
-                .withValue("peer.discovery.ip.list", value(discoveryNode != null ? Arrays.asList(discoveryNode) : Arrays.asList()));
-    }
-
-    private static ConfigValue value(Object value) {
-        return ConfigValueFactory.fromAnyRef(value);
     }
 }

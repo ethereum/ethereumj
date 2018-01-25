@@ -37,9 +37,12 @@ public class EthHandlerFactoryImpl implements EthHandlerFactory {
     @Override
     public EthHandler create(EthVersion version) {
         switch (version) {
-            case V62:   return (EthHandler) ctx.getBean("Eth62");
-            case V63:   return (EthHandler) ctx.getBean("Eth63");
-            default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
+            case V62:
+                return (EthHandler) ctx.getBean("Eth62");
+            case V63:
+                return (EthHandler) ctx.getBean("Eth63");
+            default:
+                throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }
 }

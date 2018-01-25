@@ -20,7 +20,6 @@ package org.ethereum.solidity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
 import java.lang.reflect.Array;
@@ -37,6 +36,19 @@ public abstract class SolidityType {
         this.name = name;
     }
 
+    @JsonCreator
+    public static SolidityType getType(String typeName) {
+        if (typeName.contains("[")) { return ArrayType.getType(typeName); }
+        if ("bool".equals(typeName)) { return new BoolType(); }
+        if (typeName.startsWith("int") || typeName.startsWith("uint")) { return new IntType(typeName); }
+        if ("address".equals(typeName)) { return new AddressType(); }
+        if ("string".equals(typeName)) { return new StringType(); }
+        if ("bytes".equals(typeName)) { return new BytesType(); }
+        if ("function".equals(typeName)) { return new FunctionType(); }
+        if (typeName.startsWith("bytes")) { return new Bytes32Type(typeName); }
+        throw new RuntimeException("Unknown type: " + typeName);
+    }
+
     /**
      * The type name as it was specified in the interface description
      */
@@ -51,19 +63,6 @@ public abstract class SolidityType {
     @JsonValue
     public String getCanonicalName() {
         return getName();
-    }
-
-    @JsonCreator
-    public static SolidityType getType(String typeName) {
-        if (typeName.contains("[")) return ArrayType.getType(typeName);
-        if ("bool".equals(typeName)) return new BoolType();
-        if (typeName.startsWith("int") || typeName.startsWith("uint")) return new IntType(typeName);
-        if ("address".equals(typeName)) return new AddressType();
-        if ("string".equals(typeName)) return new StringType();
-        if ("bytes".equals(typeName)) return new BytesType();
-        if ("function".equals(typeName)) return new FunctionType();
-        if (typeName.startsWith("bytes")) return new Bytes32Type(typeName);
-        throw new RuntimeException("Unknown type: " + typeName);
     }
 
     /**
@@ -98,16 +97,6 @@ public abstract class SolidityType {
 
 
     public static abstract class ArrayType extends SolidityType {
-        public static ArrayType getType(String typeName) {
-            int idx1 = typeName.indexOf("[");
-            int idx2 = typeName.indexOf("]", idx1);
-            if (idx1 + 1 == idx2) {
-                return new DynamicArrayType(typeName);
-            } else {
-                return new StaticArrayType(typeName);
-            }
-        }
-
         SolidityType elementType;
 
         public ArrayType(String name) {
@@ -117,6 +106,16 @@ public abstract class SolidityType {
             int idx2 = name.indexOf("]", idx);
             String subDim = idx2 + 1 == name.length() ? "" : name.substring(idx2 + 1);
             elementType = SolidityType.getType(st + subDim);
+        }
+
+        public static ArrayType getType(String typeName) {
+            int idx1 = typeName.indexOf("[");
+            int idx2 = typeName.indexOf("]", idx1);
+            if (idx1 + 1 == idx2) {
+                return new DynamicArrayType(typeName);
+            } else {
+                return new StaticArrayType(typeName);
+            }
         }
 
         @Override
@@ -159,7 +158,9 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encodeList(List l) {
-            if (l.size() != size) throw new RuntimeException("List size (" + l.size() + ") != " + size + " for type " + getName());
+            if (l.size() != size) {
+                throw new RuntimeException("List size (" + l.size() + ") != " + size + " for type " + getName());
+            }
             byte[][] elems = new byte[size][];
             for (int i = 0; i < l.size(); i++) {
                 elems[i] = elementType.encode(l.get(i));
@@ -270,7 +271,7 @@ public abstract class SolidityType {
         @Override
         public Object decode(byte[] encoded, int offset) {
             int len = IntType.decodeInt(encoded, offset).intValue();
-            if (len == 0) return new byte[0];
+            if (len == 0) { return new byte[0]; }
             offset += 32;
             return Arrays.copyOfRange(encoded, offset, offset + len);
         }
@@ -288,8 +289,8 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encode(Object value) {
-            if (!(value instanceof String)) throw new RuntimeException("String value expected for type 'string'");
-            return super.encode(((String)value).getBytes(StandardCharsets.UTF_8));
+            if (!(value instanceof String)) { throw new RuntimeException("String value expected for type 'string'"); }
+            return super.encode(((String) value).getBytes(StandardCharsets.UTF_8));
         }
 
         @Override
@@ -336,7 +337,7 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encode(Object value) {
-            if (value instanceof String && !((String)value).startsWith("0x")) {
+            if (value instanceof String && !((String) value).startsWith("0x")) {
                 // address is supposed to be always in hex
                 value = "0x" + value;
             }
@@ -361,10 +362,22 @@ public abstract class SolidityType {
             super(name);
         }
 
+        public static BigInteger decodeInt(byte[] encoded, int offset) {
+            return new BigInteger(Arrays.copyOfRange(encoded, offset, offset + 32));
+        }
+
+        public static byte[] encodeInt(int i) {
+            return encodeInt(new BigInteger("" + i));
+        }
+
+        public static byte[] encodeInt(BigInteger bigInt) {
+            return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
+        }
+
         @Override
         public String getCanonicalName() {
-            if (getName().equals("int")) return "int256";
-            if (getName().equals("uint")) return "uint256";
+            if (getName().equals("int")) { return "int256"; }
+            if (getName().equals("uint")) { return "uint256"; }
             return super.getCanonicalName();
         }
 
@@ -373,24 +386,25 @@ public abstract class SolidityType {
             BigInteger bigInt;
 
             if (value instanceof String) {
-                String s = ((String)value).toLowerCase().trim();
+                String s = ((String) value).toLowerCase().trim();
                 int radix = 10;
                 if (s.startsWith("0x")) {
                     s = s.substring(2);
                     radix = 16;
-                } else if (s.contains("a") || s.contains("b") || s.contains("c") ||
-                        s.contains("d") || s.contains("e") || s.contains("f")) {
+                } else if (s.contains("a") || s.contains("b") || s.contains("c") || s.contains("d") ||
+                        s.contains("e") || s.contains("f")) {
                     radix = 16;
                 }
                 bigInt = new BigInteger(s, radix);
-            } else  if (value instanceof BigInteger) {
+            } else if (value instanceof BigInteger) {
                 bigInt = (BigInteger) value;
-            } else  if (value instanceof Number) {
+            } else if (value instanceof Number) {
                 bigInt = new BigInteger(value.toString());
-            } else  if (value instanceof byte[]) {
+            } else if (value instanceof byte[]) {
                 bigInt = ByteUtil.bytesToBigInteger((byte[]) value);
             } else {
-                throw new RuntimeException("Invalid value for type '" + this + "': " + value + " (" + value.getClass() + ")");
+                throw new RuntimeException(
+                        "Invalid value for type '" + this + "': " + value + " (" + value.getClass() + ")");
             }
             return encodeInt(bigInt);
         }
@@ -398,16 +412,6 @@ public abstract class SolidityType {
         @Override
         public Object decode(byte[] encoded, int offset) {
             return decodeInt(encoded, offset);
-        }
-
-        public static BigInteger decodeInt(byte[] encoded, int offset) {
-            return new BigInteger(Arrays.copyOfRange(encoded, offset, offset + 32));
-        }
-        public static byte[] encodeInt(int i) {
-            return encodeInt(new BigInteger("" + i));
-        }
-        public static byte[] encodeInt(BigInteger bigInt) {
-            return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
         }
     }
 
@@ -418,7 +422,7 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encode(Object value) {
-            if (!(value instanceof Boolean)) throw new RuntimeException("Wrong value for bool type: " + value);
+            if (!(value instanceof Boolean)) { throw new RuntimeException("Wrong value for bool type: " + value); }
             return super.encode(value == Boolean.TRUE ? 1 : 0);
         }
 
@@ -435,8 +439,8 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encode(Object value) {
-            if (!(value instanceof byte[])) throw new RuntimeException("Expected byte[] value for FunctionType");
-            if (((byte[]) value).length != 24) throw new RuntimeException("Expected byte[24] for FunctionType");
+            if (!(value instanceof byte[])) { throw new RuntimeException("Expected byte[] value for FunctionType"); }
+            if (((byte[]) value).length != 24) { throw new RuntimeException("Expected byte[24] for FunctionType"); }
             return super.encode(ByteUtil.merge((byte[]) value, new byte[8]));
         }
     }

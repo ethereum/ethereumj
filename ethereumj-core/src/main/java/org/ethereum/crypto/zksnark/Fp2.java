@@ -22,12 +22,13 @@ import java.math.BigInteger;
 /**
  * Arithmetic in F_p2 <br/>
  * <br/>
- *
+ * <p>
  * "p" equals 21888242871839275222246405745257275088696311157297823662689037894645226208583,
  * elements of F_p2 are represented as a polynomials "a * i + b" modulo "i^2 + 1" from the ring F_p[i] <br/>
  * <br/>
- *
- * Field arithmetic is ported from <a href="https://github.com/scipr-lab/libff/blob/master/libff/algebra/fields/fp2.tcc">libff</a> <br/>
+ * <p>
+ * Field arithmetic is ported from
+ * <a href="https://github.com/scipr-lab/libff/blob/master/libff/algebra/fields/fp2.tcc">libff</a> <br/>
  *
  * @author Mikhail Kalinin
  * @since 01.09.2017
@@ -35,13 +36,11 @@ import java.math.BigInteger;
 class Fp2 implements Field<Fp2> {
 
     static final Fp2 ZERO = new Fp2(Fp.ZERO, Fp.ZERO);
-    static final Fp2 _1  = new Fp2(Fp._1, Fp.ZERO);
+    static final Fp2 _1 = new Fp2(Fp._1, Fp.ZERO);
     static final Fp2 NON_RESIDUE = new Fp2(BigInteger.valueOf(9), BigInteger.ONE);
 
-    static final Fp[] FROBENIUS_COEFFS_B = new Fp[] {
-            new Fp(BigInteger.ONE),
-            new Fp(new BigInteger("21888242871839275222246405745257275088696311157297823662689037894645226208582"))
-    };
+    static final Fp[] FROBENIUS_COEFFS_B = new Fp[]{new Fp(BigInteger.ONE),
+            new Fp(new BigInteger("21888242871839275222246405745257275088696311157297823662689037894645226208582"))};
 
     Fp a;
     Fp b;
@@ -55,6 +54,22 @@ class Fp2 implements Field<Fp2> {
         this(new Fp(a), new Fp(b));
     }
 
+    static Fp2 create(BigInteger aa, BigInteger bb) {
+
+        Fp a = Fp.create(aa);
+        Fp b = Fp.create(bb);
+
+        return new Fp2(a, b);
+    }
+
+    static Fp2 create(byte[] aa, byte[] bb) {
+
+        Fp a = Fp.create(aa);
+        Fp b = Fp.create(bb);
+
+        return new Fp2(a, b);
+    }
+
     @Override
     public Fp2 squared() {
 
@@ -62,8 +77,10 @@ class Fp2 implements Field<Fp2> {
 
         Fp ab = a.mul(b);
 
-        Fp ra = a.add(b).mul(b.mul(Fp.NON_RESIDUE).add(a))
-                .sub(ab).sub(ab.mul(Fp.NON_RESIDUE)); // ra = (a + b)(a + NON_RESIDUE * b) - ab - NON_RESIDUE * b
+        Fp ra = a.add(b)
+                .mul(b.mul(Fp.NON_RESIDUE).add(a))
+                .sub(ab)
+                .sub(ab.mul(Fp.NON_RESIDUE)); // ra = (a + b)(a + NON_RESIDUE * b) - ab - NON_RESIDUE * b
         Fp rb = ab.dbl();
 
         return new Fp2(ra, rb);
@@ -125,30 +142,14 @@ class Fp2 implements Field<Fp2> {
         return a.isValid() && b.isValid();
     }
 
-    static Fp2 create(BigInteger aa, BigInteger bb) {
-
-        Fp a = Fp.create(aa);
-        Fp b = Fp.create(bb);
-
-        return new Fp2(a, b);
-    }
-
-    static Fp2 create(byte[] aa, byte[] bb) {
-
-        Fp a = Fp.create(aa);
-        Fp b = Fp.create(bb);
-
-        return new Fp2(a, b);
-    }
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         Fp2 fp2 = (Fp2) o;
 
-        if (a != null ? !a.equals(fp2.a) : fp2.a != null) return false;
+        if (a != null ? !a.equals(fp2.a) : fp2.a != null) { return false; }
         return !(b != null ? !b.equals(fp2.b) : fp2.b != null);
 
     }

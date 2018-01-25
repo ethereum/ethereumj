@@ -17,10 +17,17 @@
  */
 package org.ethereum.core;
 
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
+import static org.ethereum.util.blockchain.EtherUtil.convert;
+import static org.junit.Assert.assertTrue;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.CountingBytesSource;
+import org.ethereum.datasource.JournalSource;
+import org.ethereum.datasource.Source;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.SecureTrie;
@@ -28,26 +35,47 @@ import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.*;
-
-import static org.ethereum.util.ByteUtil.intToBytes;
-import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
-import static org.ethereum.util.blockchain.EtherUtil.convert;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Anton Nashatyrev on 05.07.2016.
  */
 public class PruneTest {
 
+    static HashMapDB<byte[]> stateDS;
+
     @AfterClass
     public static void cleanup() {
         SystemProperties.resetToDefault();
+    }
+
+    private static void put(Source<byte[], byte[]> db, String key) {
+        db.put(Hex.decode(key), Hex.decode(key));
+    }
+
+    private static void delete(Source<byte[], byte[]> db, String key) {
+        db.delete(Hex.decode(key));
+    }
+
+    private static void checkKeys(Map<byte[], byte[]> map, String... keys) {
+        Assert.assertEquals(keys.length, map.size());
+        for (String key : keys) {
+            assertTrue(map.containsKey(Hex.decode(key)));
+        }
+    }
+
+    static String getCount(String hash) {
+        byte[] bytes = stateDS.get(Hex.decode(hash));
+        return bytes == null ? "0" : "" + bytes[3];
     }
 
     @Test
@@ -101,35 +129,23 @@ public class PruneTest {
 
     }
 
-    private static void put(Source<byte[], byte[]> db, String key) {
-        db.put(Hex.decode(key), Hex.decode(key));
-    }
-    private static void delete(Source<byte[], byte[]> db, String key) {
-        db.delete(Hex.decode(key));
-    }
-
-    private static void checkKeys(Map<byte[], byte[]> map, String ... keys) {
-        Assert.assertEquals(keys.length, map.size());
-        for (String key : keys) {
-            assertTrue(map.containsKey(Hex.decode(key)));
-        }
-    }
-
-
     @Test
     public void simpleTest() throws Exception {
         final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount,
-                "mine.startNonce", "0");
+        SystemProperties.getDefault()
+                .overrideParams("database.prune.enabled",
+                                "true",
+                                "database.prune.maxDepth",
+                                "" + pruneCount,
+                                "mine.startNonce",
+                                "0");
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
 
         ECKey alice = ECKey.fromPrivate(BigInteger.ZERO);
         ECKey bob = ECKey.fromPrivate(BigInteger.ONE);
 
-//        System.out.println("Gen root: " + Hex.toHexString(bc.getBlockchain().getBestBlock().getStateRoot()));
+        //        System.out.println("Gen root: " + Hex.toHexString(bc.getBlockchain().getBestBlock().getStateRoot()));
         bc.createBlock();
         Block b0 = bc.getBlockchain().getBestBlock();
         bc.sendEther(alice.getAddress(), convert(3, ETHER));
@@ -200,12 +216,6 @@ public class PruneTest {
         }
     }
 
-    static HashMapDB<byte[]> stateDS;
-    static String getCount(String hash) {
-        byte[] bytes = stateDS.get(Hex.decode(hash));
-        return bytes == null ? "0" : "" + bytes[3];
-    }
-
     @Test
     public void contractTest() throws Exception {
         // checks that pruning doesn't delete the nodes which were 're-added' later
@@ -215,17 +225,13 @@ public class PruneTest {
         // we should avoid situations when the value V1 is back, the node K1 is also back to the trie
         // but erroneously deleted later as was in the prune list
         final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
+        SystemProperties.getDefault()
+                .overrideParams("database.prune.enabled", "true", "database.prune.maxDepth", "" + pruneCount);
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
 
         SolidityContract contr = bc.submitNewContract(
-                "contract Simple {" +
-                "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
-                "}");
+                "contract Simple {" + "  uint public n;" + "  function set(uint _n) { n = _n; } " + "}");
         bc.createBlock();
 
         // add/remove/add in the same block
@@ -247,8 +253,9 @@ public class PruneTest {
                 for (int k = 0; k < j; k++) {
                     bc.createBlock();
                 }
-                if (j > 0)
+                if (j > 0) {
                     Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr.callConstFunction("n")[0]);
+                }
 
                 contr.callFunction("set", 0xaaaaaaaaaaaaL);
 
@@ -274,16 +281,11 @@ public class PruneTest {
     @Test
     public void twoContractsTest() throws Exception {
         final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
+        SystemProperties.getDefault()
+                .overrideParams("database.prune.enabled", "true", "database.prune.maxDepth", "" + pruneCount);
 
-        String src =
-                "contract Simple {" +
-                "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
-                "  function inc() { n++; } " +
-                "}";
+        String src = "contract Simple {" + "  uint public n;" + "  function set(uint _n) { n = _n; } " +
+                "  function inc() { n++; } " + "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
 
@@ -292,8 +294,7 @@ public class PruneTest {
         SolidityContract contr1 = bc.submitNewContract(src);
         SolidityContract contr2 = bc.submitNewContract(src);
         Block b1 = bc.createBlock();
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b1.getStateRoot(), b0.getStateRoot());
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(), b1.getStateRoot(), b0.getStateRoot());
 
         // add/remove/add in the same block
         contr1.callFunction("set", 0xaaaaaaaaaaaaL);
@@ -301,86 +302,131 @@ public class PruneTest {
         Block b2 = bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
+        checkPruning(bc.getStateDS(), bc.getPruningStateDS(), b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
 
         contr2.callFunction("set", 0xbbbbbbbbbbbbL);
         Block b3 = bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b3.getStateRoot(), b2.getStateRoot(), b1.getStateRoot(), b0.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b3.getStateRoot(),
+                     b2.getStateRoot(),
+                     b1.getStateRoot(),
+                     b0.getStateRoot());
 
         // force prune
         Block b4 = bc.createBlock();
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b4.getStateRoot(), b3.getStateRoot(), b2.getStateRoot(), b1.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b4.getStateRoot(),
+                     b3.getStateRoot(),
+                     b2.getStateRoot(),
+                     b1.getStateRoot());
         Block b5 = bc.createBlock();
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b5.getStateRoot(), b4.getStateRoot(), b3.getStateRoot(), b2.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b5.getStateRoot(),
+                     b4.getStateRoot(),
+                     b3.getStateRoot(),
+                     b2.getStateRoot());
         Block b6 = bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b6.getStateRoot(), b5.getStateRoot(), b4.getStateRoot(), b3.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b6.getStateRoot(),
+                     b5.getStateRoot(),
+                     b4.getStateRoot(),
+                     b3.getStateRoot());
 
         contr1.callFunction("set", 0xaaaaaaaaaaaaL);
         contr2.callFunction("set", 0xaaaaaaaaaaaaL);
         Block b7 = bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot(), b4.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b7.getStateRoot(),
+                     b6.getStateRoot(),
+                     b5.getStateRoot(),
+                     b4.getStateRoot());
 
         contr1.callFunction("set", 0xbbbbbbbbbbbbL);
         Block b8 = bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b8.getStateRoot(), b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b8.getStateRoot(),
+                     b7.getStateRoot(),
+                     b6.getStateRoot(),
+                     b5.getStateRoot());
 
         contr2.callFunction("set", 0xbbbbbbbbbbbbL);
         Block b8_ = bc.createForkBlock(b7);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot(), b5.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b8.getStateRoot(),
+                     b8_.getStateRoot(),
+                     b7.getStateRoot(),
+                     b6.getStateRoot(),
+                     b5.getStateRoot());
         Block b9_ = bc.createForkBlock(b8_);
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b9_.getStateRoot(),
+                     b8.getStateRoot(),
+                     b8_.getStateRoot(),
+                     b7.getStateRoot(),
+                     b6.getStateRoot());
 
         Block b9 = bc.createForkBlock(b8);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b9.getStateRoot(), b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot(), b6.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b9.getStateRoot(),
+                     b9_.getStateRoot(),
+                     b8.getStateRoot(),
+                     b8_.getStateRoot(),
+                     b7.getStateRoot(),
+                     b6.getStateRoot());
         Block b10 = bc.createForkBlock(b9);
         Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b10.getStateRoot(), b9.getStateRoot(), b9_.getStateRoot(), b8.getStateRoot(), b8_.getStateRoot(), b7.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b10.getStateRoot(),
+                     b9.getStateRoot(),
+                     b9_.getStateRoot(),
+                     b8.getStateRoot(),
+                     b8_.getStateRoot(),
+                     b7.getStateRoot());
 
 
         Block b11 = bc.createForkBlock(b10);
         Assert.assertEquals(BigInteger.valueOf(0xbbbbbbbbbbbbL), contr1.callConstFunction("n")[0]);
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr2.callConstFunction("n")[0]);
 
-        checkPruning(bc.getStateDS(), bc.getPruningStateDS(),
-                b11.getStateRoot(), b10.getStateRoot(), b9.getStateRoot(), /*b9_.getStateRoot(),*/ b8.getStateRoot());
+        checkPruning(bc.getStateDS(),
+                     bc.getPruningStateDS(),
+                     b11.getStateRoot(),
+                     b10.getStateRoot(),
+                     b9.getStateRoot(), /*b9_.getStateRoot(),*/
+                     b8.getStateRoot());
     }
 
     @Test
     public void branchTest() throws Exception {
         final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
+        SystemProperties.getDefault()
+                .overrideParams("database.prune.enabled", "true", "database.prune.maxDepth", "" + pruneCount);
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
 
         SolidityContract contr = bc.submitNewContract(
-                "contract Simple {" +
-                "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
-                "}");
+                "contract Simple {" + "  uint public n;" + "  function set(uint _n) { n = _n; } " + "}");
         Block b1 = bc.createBlock();
         contr.callFunction("set", 0xaaaaaaaaaaaaL);
         Block b2 = bc.createBlock();
@@ -397,23 +443,23 @@ public class PruneTest {
     @Test
     public void storagePruneTest() throws Exception {
         final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "details.inmemory.storage.limit", "200",
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
+        SystemProperties.getDefault()
+                .overrideParams("details.inmemory.storage.limit",
+                                "200",
+                                "database.prune.enabled",
+                                "true",
+                                "database.prune.maxDepth",
+                                "" + pruneCount);
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         BlockchainImpl blockchain = (BlockchainImpl) bc.getBlockchain();
-//        RepositoryImpl repository = (RepositoryImpl) blockchain.getRepository();
-//        HashMapDB storageDS = new HashMapDB();
-//        repository.getDetailsDataStore().setStorageDS(storageDS);
+        //        RepositoryImpl repository = (RepositoryImpl) blockchain.getRepository();
+        //        HashMapDB storageDS = new HashMapDB();
+        //        repository.getDetailsDataStore().setStorageDS(storageDS);
 
         SolidityContract contr = bc.submitNewContract(
-                "contract Simple {" +
-                        "  uint public n;" +
-                        "  mapping(uint => uint) largeMap;" +
-                        "  function set(uint _n) { n = _n; } " +
-                        "  function put(uint k, uint v) { largeMap[k] = v; }" +
+                "contract Simple {" + "  uint public n;" + "  mapping(uint => uint) largeMap;" +
+                        "  function set(uint _n) { n = _n; } " + "  function put(uint k, uint v) { largeMap[k] = v; }" +
                         "}");
         Block b1 = bc.createBlock();
 
@@ -421,7 +467,7 @@ public class PruneTest {
 
         for (int i = 0; i < entriesForExtStorage; i++) {
             contr.callFunction("put", i, i);
-            if (i % 100 == 0) bc.createBlock();
+            if (i % 100 == 0) { bc.createBlock(); }
         }
         bc.createBlock();
         blockchain.flush();
@@ -444,9 +490,8 @@ public class PruneTest {
     @Test
     public void rewriteSameTrieNode() throws Exception {
         final int pruneCount = 3;
-        SystemProperties.getDefault().overrideParams(
-                "database.prune.enabled", "true",
-                "database.prune.maxDepth", "" + pruneCount);
+        SystemProperties.getDefault()
+                .overrideParams("database.prune.enabled", "true", "database.prune.maxDepth", "" + pruneCount);
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         byte[] receiver = Hex.decode("0000000000000000000000000000000000000000");
@@ -457,13 +502,10 @@ public class PruneTest {
             bc.sendEther(new ECKey().getAddress(), BigInteger.valueOf(i));
         }
 
-        SolidityContract contr = bc.submitNewContract(
-                "contract Stupid {" +
-                        "  function wrongAddress() { " +
-                        "    address addr = 0x0000000000000000000000000000000000000000; " +
-                        "    addr.call();" +
-                        "  } " +
-                        "}");
+        SolidityContract contr = bc.submitNewContract("contract Stupid {" + "  function wrongAddress() { " +
+                                                              "    address addr = " +
+                                                              "0x0000000000000000000000000000000000000000; " +
+                                                              "    addr.call();" + "  } " + "}");
         Block b1 = bc.createBlock();
         contr.callFunction("wrongAddress");
         Block b2 = bc.createBlock();
@@ -473,14 +515,15 @@ public class PruneTest {
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
     }
 
-    public void checkPruning(final HashMapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS, byte[] ... roots) {
+    public void checkPruning(final HashMapDB<byte[]> stateDS, final Source<byte[], byte[]> stateJournalDS,
+                             byte[]... roots) {
         System.out.println("Pruned storage size: " + stateDS.getStorage().size());
 
         Set<ByteArrayWrapper> allRefs = new HashSet<>();
         for (byte[] root : roots) {
 
             Set<ByteArrayWrapper> bRefs = getReferencedTrieNodes(stateJournalDS, true, root);
-            System.out.println("#" + Hex.toHexString(root).substring(0,8) + " refs: ");
+            System.out.println("#" + Hex.toHexString(root).substring(0, 8) + " refs: ");
             for (ByteArrayWrapper bRef : bRefs) {
                 System.out.println("    " + bRef.toString().substring(0, 8));
             }
@@ -494,16 +537,16 @@ public class PruneTest {
                     System.out.println("Extra node: " + Hex.toHexString(hash));
                 }
             }
-//            Assert.assertEquals(allRefs.size(), stateDS.getStorage().size());
+            //            Assert.assertEquals(allRefs.size(), stateDS.getStorage().size());
         }
 
         for (byte[] key : stateDS.getStorage().keySet()) {
-//            Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
+            //            Assert.assertTrue(allRefs.contains(new ByteArrayWrapper(key)));
         }
     }
 
-    public Set<ByteArrayWrapper> getReferencedTrieNodes(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
-                                                        byte[] ... roots) {
+    public Set<ByteArrayWrapper> getReferencedTrieNodes(final Source<byte[], byte[]> stateDS,
+                                                        final boolean includeAccounts, byte[]... roots) {
         final Set<ByteArrayWrapper> ret = new HashSet<>();
         for (byte[] root : roots) {
             SecureTrie trie = new SecureTrie(stateDS, root);
@@ -530,8 +573,7 @@ public class PruneTest {
         return ret;
     }
 
-    public String dumpState(final Source<byte[], byte[]> stateDS, final boolean includeAccounts,
-                                                        byte[] root) {
+    public String dumpState(final Source<byte[], byte[]> stateDS, final boolean includeAccounts, byte[] root) {
         final StringBuilder ret = new StringBuilder();
         SecureTrie trie = new SecureTrie(stateDS, root);
         trie.scanTree(new TrieImpl.ScanAction() {
@@ -543,7 +585,8 @@ public class PruneTest {
             public void doOnValue(byte[] nodeHash, TrieImpl.Node node, byte[] key, byte[] value) {
                 if (includeAccounts) {
                     AccountState accountState = new AccountState(value);
-                    ret.append(Hex.toHexString(nodeHash) + ": Account: " + Hex.toHexString(key) + ", Nonce: " + accountState.getNonce() + ", Balance: " + accountState.getBalance() + "\n");
+                    ret.append(Hex.toHexString(nodeHash) + ": Account: " + Hex.toHexString(key) + ", Nonce: " +
+                                       accountState.getNonce() + ", Balance: " + accountState.getBalance() + "\n");
                     if (!FastByteComparisons.equal(accountState.getCodeHash(), HashUtil.EMPTY_DATA_HASH)) {
                         ret.append("    CodeHash: " + Hex.toHexString(accountState.getCodeHash()) + "\n");
                     }
@@ -551,7 +594,8 @@ public class PruneTest {
                         ret.append(dumpState(stateDS, false, accountState.getStateRoot()));
                     }
                 } else {
-                    ret.append("    " + Hex.toHexString(nodeHash) + ": " + Hex.toHexString(key) + " = " + Hex.toHexString(value) + "\n");
+                    ret.append("    " + Hex.toHexString(nodeHash) + ": " + Hex.toHexString(key) + " = " +
+                                       Hex.toHexString(value) + "\n");
                 }
             }
         });

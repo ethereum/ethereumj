@@ -17,8 +17,6 @@
  */
 package org.ethereum.util;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -27,12 +25,12 @@ import java.util.TreeMap;
 public class MinMaxMap<V> extends TreeMap<Long, V> {
 
     public void clearAllAfter(long key) {
-        if (isEmpty()) return;
+        if (isEmpty()) { return; }
         navigableKeySet().subSet(key, false, getMax(), true).clear();
     }
 
     public void clearAllBefore(long key) {
-        if (isEmpty()) return;
+        if (isEmpty()) { return; }
         descendingKeySet().subSet(key, false, getMin(), true).clear();
     }
 

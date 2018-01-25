@@ -19,14 +19,14 @@ package org.ethereum.net;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToMessageCodec;
-import io.netty.handler.codec.MessageToMessageDecoder;
-import io.netty.handler.codec.MessageToMessageEncoder;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -47,8 +47,9 @@ public class NettyTest {
                 int i = in.readInt();
                 System.out.println("decoder2 read int (4 bytes): " + Integer.toHexString(i));
                 int2[0] = i;
-                if (i == 0) out.add("aaa");
+                if (i == 0) { out.add("aaa"); }
             }
+
             @Override
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
                 System.out.println("Decoder2 exception: " + cause);
@@ -105,6 +106,7 @@ public class NettyTest {
             public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
                 throw new RuntimeException("Test");
             }
+
             @Override
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
                 System.out.println("Exception caught: " + cause);
@@ -124,9 +126,9 @@ public class NettyTest {
         // Need the following for the exception in outbound handler to be fired
         // ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
-//        exception[0] = false;
-//        channel.writeOutbound("outMsg");
-//        Assert.assertTrue(exception[0]);
+        //        exception[0] = false;
+        //        channel.writeOutbound("outMsg");
+        //        Assert.assertTrue(exception[0]);
     }
 
 }

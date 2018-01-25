@@ -19,17 +19,19 @@ package org.ethereum.jsontestsuite.suite.runners;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.jsontestsuite.suite.Env;
 import org.ethereum.jsontestsuite.suite.StateTestCase;
 import org.ethereum.jsontestsuite.suite.TestProgramInvokeFactory;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.suite.builder.EnvBuilder;
-import org.ethereum.jsontestsuite.suite.builder.LogBuilder;
 import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.builder.TransactionBuilder;
-import org.ethereum.jsontestsuite.suite.validators.LogsValidator;
 import org.ethereum.jsontestsuite.suite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
 import org.ethereum.vm.LogInfo;
@@ -45,6 +47,16 @@ import java.util.List;
 public class StateTestRunner {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
+    protected StateTestCase stateTestCase;
+    protected Repository repository;
+    protected Transaction transaction;
+    protected BlockchainImpl blockchain;
+    protected Env env;
+    protected ProgramInvokeFactory invokeFactory;
+    protected Block block;
+    public StateTestRunner(StateTestCase stateTestCase) {
+        this.stateTestCase = stateTestCase;
+    }
 
     public static List<String> run(StateTestCase stateTestCase2) {
         try {
@@ -55,31 +67,22 @@ public class StateTestRunner {
         }
     }
 
-    protected StateTestCase stateTestCase;
-    protected Repository repository;
-    protected Transaction transaction;
-    protected BlockchainImpl blockchain;
-    protected Env env;
-    protected ProgramInvokeFactory invokeFactory;
-    protected Block block;
-
-    public StateTestRunner(StateTestCase stateTestCase) {
-        this.stateTestCase = stateTestCase;
-    }
-
     protected ProgramResult executeTransaction(Transaction tx) {
         Repository track = repository.startTracking();
 
-        TransactionExecutor executor =
-                new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
-                        invokeFactory, blockchain.getBestBlock());
+        TransactionExecutor executor = new TransactionExecutor(transaction,
+                                                               env.getCurrentCoinbase(),
+                                                               track,
+                                                               new BlockStoreDummy(),
+                                                               invokeFactory,
+                                                               blockchain.getBestBlock());
 
-        try{
+        try {
             executor.init();
             executor.execute();
             executor.go();
             executor.finalization();
-        } catch (StackOverflowError soe){
+        } catch (StackOverflowError soe) {
             logger.error(" !!! StackOverflowError: update your java run command with -Xss2M !!!");
             System.exit(-1);
         }
@@ -123,10 +126,8 @@ public class StateTestRunner {
 
             results.addAll(repoResults);
         } else if (stateTestCase.getPostStateRoot() != null) {
-            results.addAll(RepositoryValidator.validRoot(
-                    Hex.toHexString(repository.getRoot()),
-                    stateTestCase.getPostStateRoot()
-            ));
+            results.addAll(RepositoryValidator.validRoot(Hex.toHexString(repository.getRoot()),
+                                                         stateTestCase.getPostStateRoot()));
         }
 
         if (stateTestCase.getOut() != null) {

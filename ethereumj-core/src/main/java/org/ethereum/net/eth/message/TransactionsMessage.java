@@ -50,7 +50,7 @@ public class TransactionsMessage extends EthMessage {
     }
 
     private synchronized void parse() {
-        if (parsed) return;
+        if (parsed) { return; }
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         transactions = new ArrayList<>();
@@ -64,15 +64,14 @@ public class TransactionsMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        for (Transaction tx : transactions)
-            encodedElements.add(tx.getEncoded());
+        for (Transaction tx : transactions) { encodedElements.add(tx.getEncoded()); }
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -96,15 +95,13 @@ public class TransactionsMessage extends EthMessage {
         parse();
         final StringBuilder sb = new StringBuilder();
         if (transactions.size() < 4) {
-            for (Transaction transaction : transactions)
-                sb.append("\n   ").append(transaction.toString(128));
+            for (Transaction transaction : transactions) { sb.append("\n   ").append(transaction.toString(128)); }
         } else {
             for (int i = 0; i < 3; i++) {
                 sb.append("\n   ").append(transactions.get(i).toString(128));
             }
             sb.append("\n   ").append("[Skipped ").append(transactions.size() - 3).append(" transactions]");
         }
-        return "[" + getCommand().name() + " num:"
-                + transactions.size() + " " + sb.toString() + "]";
+        return "[" + getCommand().name() + " num:" + transactions.size() + " " + sb.toString() + "]";
     }
 }

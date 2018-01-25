@@ -17,6 +17,8 @@
  */
 package org.ethereum.net.server;
 
+import static org.ethereum.util.Utils.sizeToStr;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
@@ -24,32 +26,29 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.socket.DatagramPacket;
-import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static org.ethereum.util.Utils.sizeToStr;
+import javax.annotation.PreDestroy;
 
 /**
  * Created by Anton Nashatyrev on 27.02.2017.
  */
 @Component
-public class WireTrafficStats  implements Runnable  {
+public class WireTrafficStats implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger("net");
-
-    private ScheduledExecutorService executor;
     public final TrafficStatHandler tcp = new TrafficStatHandler();
     public final TrafficStatHandler udp = new TrafficStatHandler();
+    private ScheduledExecutorService executor;
 
     public WireTrafficStats() {
-        executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("WireTrafficStats-%d").build());
+        executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(
+                "WireTrafficStats-%d").build());
         executor.scheduleAtFixedRate(this, 10, 10, TimeUnit.SECONDS);
     }
 
@@ -86,9 +85,8 @@ public class WireTrafficStats  implements Runnable  {
             long outSpeed = out * 1000 / d;
             long inSpeed = in * 1000 / d;
             lastTime = curTime;
-            return "Speed in/out " + sizeToStr(inSpeed) + " / " + sizeToStr(outSpeed) +
-                    "(sec), packets in/out " + inPac + "/" + outPac +
-                    ", total in/out: " + sizeToStr(inSizeTot) + " / " + sizeToStr(outSizeTot);
+            return "Speed in/out " + sizeToStr(inSpeed) + " / " + sizeToStr(outSpeed) + "(sec), packets in/out " +
+                    inPac + "/" + outPac + ", total in/out: " + sizeToStr(inSizeTot) + " / " + sizeToStr(outSizeTot);
         }
 
 

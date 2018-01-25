@@ -21,11 +21,10 @@ import org.ethereum.core.Repository;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.RepositoryRoot;
 import org.ethereum.vm.DataWord;
-
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -34,12 +33,10 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class ProgramInvokeMockImpl implements ProgramInvoke {
 
+    private final byte[] contractAddress = Hex.decode("471fd3ad3e9eeadeec4608b92d16ce6b500704cc");
     private byte[] msgData;
-
     private Repository repository;
     private byte[] ownerAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-    private final byte[] contractAddress = Hex.decode("471fd3ad3e9eeadeec4608b92d16ce6b500704cc");
-
     // default for most tests. This can be overwritten by the test
     private long gasLimit = 1000000;
 
@@ -56,11 +53,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
         this.repository.createAccount(contractAddress);
         this.repository.saveCode(contractAddress,
-                Hex.decode("385E60076000396000605f556014600054601e60"
-                        + "205463abcddcba6040545b51602001600a525451"
-                        + "6040016014525451606001601e52545160800160"
-                        + "28525460a052546016604860003960166000f260"
-                        + "00603f556103e75660005460005360200235"));
+                                 Hex.decode("385E60076000396000605f556014600054601e60" +
+                                                    "205463abcddcba6040545b51602001600a525451" +
+                                                    "6040016014525451606001601e52545160800160" +
+                                                    "28525460a052546016604860003960166000f260" +
+                                                    "00603f556103e75660005460005360200235"));
     }
 
     public ProgramInvokeMockImpl(boolean defaults) {
@@ -71,6 +68,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     /*           ADDRESS op         */
     public DataWord getOwnerAddress() {
         return new DataWord(ownerAddress);
+    }
+
+    public void setOwnerAddress(byte[] ownerAddress) {
+        this.ownerAddress = ownerAddress;
     }
 
     /*           BALANCE op         */
@@ -110,14 +111,17 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(gasLimit);
     }
 
+    public void setGas(long gasLimit) {
+        this.gasLimit = gasLimit;
+    }
+
     @Override
     public long getGasLong() {
         return gasLimit;
     }
 
-    public void setGas(long gasLimit) {
-        this.gasLimit = gasLimit;
-    }
+    /*****************/
+    /***  msg data ***/
 
     /*          CALLVALUE op    */
     public DataWord getCallValue() {
@@ -125,8 +129,6 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(balance);
     }
 
-    /*****************/
-    /***  msg data ***/
     /**
      * *************
      */
@@ -139,9 +141,9 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         int index = indexData.value().intValue();
         int size = 32;
 
-        if (msgData == null) return new DataWord(data);
-        if (index > msgData.length) return new DataWord(data);
-        if (index + 32 > msgData.length) size = msgData.length - index;
+        if (msgData == null) { return new DataWord(data); }
+        if (index > msgData.length) { return new DataWord(data); }
+        if (index + 32 > msgData.length) { size = msgData.length - index; }
 
         System.arraycopy(msgData, index, data, 0, size);
 
@@ -151,7 +153,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     /*  CALLDATASIZE */
     public DataWord getDataSize() {
 
-        if (msgData == null || msgData.length == 0) return new DataWord(new byte[32]);
+        if (msgData == null || msgData.length == 0) { return new DataWord(new byte[32]); }
         int size = msgData.length;
         return new DataWord(size);
     }
@@ -164,9 +166,9 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
         byte[] data = new byte[length];
 
-        if (msgData == null) return data;
-        if (offset > msgData.length) return data;
-        if (offset + length > msgData.length) length = msgData.length - offset;
+        if (msgData == null) { return data; }
+        if (offset > msgData.length) { return data; }
+        if (offset + length > msgData.length) { length = msgData.length - offset; }
 
         System.arraycopy(msgData, offset, data, 0, length);
 
@@ -212,10 +214,6 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         this.gasLimit = gasLimit;
     }
 
-    public void setOwnerAddress(byte[] ownerAddress) {
-        this.ownerAddress = ownerAddress;
-    }
-
     @Override
     public boolean byTransaction() {
         return true;
@@ -236,13 +234,13 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return this.repository;
     }
 
+    public void setRepository(Repository repository) {
+        this.repository = repository;
+    }
+
     @Override
     public BlockStore getBlockStore() {
         return new BlockStoreDummy();
-    }
-
-    public void setRepository(Repository repository) {
-        this.repository = repository;
     }
 
     @Override

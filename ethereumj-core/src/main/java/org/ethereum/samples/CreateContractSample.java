@@ -34,7 +34,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Anton Nashatyrev on 03.03.2016.
@@ -44,19 +47,27 @@ public class CreateContractSample extends TestNetSample {
     @Autowired
     SolidityCompiler compiler;
 
-    String contract =
-            "contract Sample {" +
-            "  int i;" +
-            "  function inc(int n) {" +
-            "    i = i + n;" +
-            "  }" +
-            "  function get() returns (int) {" +
-            "    return i;" +
-            "  }" +
-            "}";
+    String contract = "contract Sample {" + "  int i;" + "  function inc(int n) {" + "    i = i + n;" + "  }" +
+            "  function get() returns (int) {" + "    return i;" + "  }" + "}";
 
     private Map<ByteArrayWrapper, TransactionReceipt> txWaiters =
             Collections.synchronizedMap(new HashMap<ByteArrayWrapper, TransactionReceipt>());
+
+    public static void main(String[] args) throws Exception {
+        sLogger.info("Starting EthereumJ!");
+
+        class Config extends TestNetConfig {
+            @Override
+            @Bean
+            public TestNetSample sampleBean() {
+                return new CreateContractSample();
+            }
+        }
+
+        // Based on Config class the BasicSample would be created by Spring
+        // and its springInit() method would be called as an entry point
+        EthereumFactory.createEthereum(Config.class);
+    }
 
     @Override
     public void onSyncDone() throws Exception {
@@ -69,8 +80,11 @@ public class CreateContractSample extends TestNetSample {
         });
 
         logger.info("Compiling contract...");
-        SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,
-                SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+        SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(),
+                                                             true,
+                                                             true,
+                                                             SolidityCompiler.Options.ABI,
+                                                             SolidityCompiler.Options.BIN);
         if (result.isFailed()) {
             throw new RuntimeException("Contract compilation failed:\n" + result.errors);
         }
@@ -105,22 +119,20 @@ public class CreateContractSample extends TestNetSample {
         }
         logger.info("Contract modified!");
 
-        ProgramResult r = ethereum.callConstantFunction(Hex.toHexString(contractAddress),
-                contract.getByName("get"));
+        ProgramResult r = ethereum.callConstantFunction(Hex.toHexString(contractAddress), contract.getByName("get"));
         Object[] ret = contract.getByName("get").decodeResult(r.getHReturn());
         logger.info("Current contract data member value: " + ret[0]);
     }
 
     protected TransactionReceipt sendTxAndWait(byte[] receiveAddress, byte[] data) throws InterruptedException {
         BigInteger nonce = ethereum.getRepository().getNonce(senderAddress);
-        Transaction tx = new Transaction(
-                ByteUtil.bigIntegerToBytes(nonce),
-                ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
-                ByteUtil.longToBytesNoLeadZeroes(3_000_000),
-                receiveAddress,
-                ByteUtil.longToBytesNoLeadZeroes(0),
-                data,
-                ethereum.getChainIdForNextBlock());
+        Transaction tx = new Transaction(ByteUtil.bigIntegerToBytes(nonce),
+                                         ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
+                                         ByteUtil.longToBytesNoLeadZeroes(3_000_000),
+                                         receiveAddress,
+                                         ByteUtil.longToBytesNoLeadZeroes(0),
+                                         data,
+                                         ethereum.getChainIdForNextBlock());
         tx.sign(ECKey.fromPrivate(senderPrivateKey));
         logger.info("<=== Sending transaction: " + tx);
         ethereum.submitTransaction(tx);
@@ -144,38 +156,23 @@ public class CreateContractSample extends TestNetSample {
         ByteArrayWrapper txHashW = new ByteArrayWrapper(txHash);
         txWaiters.put(txHashW, null);
         long startBlock = ethereum.getBlockchain().getBestBlock().getNumber();
-        while(true) {
+        while (true) {
             TransactionReceipt receipt = txWaiters.get(txHashW);
             if (receipt != null) {
                 return receipt;
             } else {
                 long curBlock = ethereum.getBlockchain().getBestBlock().getNumber();
                 if (curBlock > startBlock + 16) {
-                    throw new RuntimeException("The transaction was not included during last 16 blocks: " + txHashW.toString().substring(0,8));
+                    throw new RuntimeException("The transaction was not included during last 16 blocks: " +
+                                                       txHashW.toString().substring(0, 8));
                 } else {
-                    logger.info("Waiting for block with transaction 0x" + txHashW.toString().substring(0,8) +
-                            " included (" + (curBlock - startBlock) + " blocks received so far) ...");
+                    logger.info("Waiting for block with transaction 0x" + txHashW.toString().substring(0, 8) +
+                                        " included (" + (curBlock - startBlock) + " blocks received so far) ...");
                 }
             }
             synchronized (this) {
                 wait(20000);
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        sLogger.info("Starting EthereumJ!");
-
-        class Config extends TestNetConfig{
-            @Override
-            @Bean
-            public TestNetSample sampleBean() {
-                return new CreateContractSample();
-            }
-        }
-
-        // Based on Config class the BasicSample would be created by Spring
-        // and its springInit() method would be called as an entry point
-        EthereumFactory.createEthereum(Config.class);
     }
 }

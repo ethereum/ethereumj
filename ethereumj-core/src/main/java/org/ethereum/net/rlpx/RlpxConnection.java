@@ -22,7 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by devrandom on 2015-04-12.
@@ -52,8 +55,9 @@ public class RlpxConnection {
     public void handleNextMessage() throws IOException {
         FrameCodec.Frame frame = codec.readFrames(inp).get(0);
         if (handshakeMessage == null) {
-            if (frame.type != HandshakeMessage.HANDSHAKE_MESSAGE_TYPE)
+            if (frame.type != HandshakeMessage.HANDSHAKE_MESSAGE_TYPE) {
                 throw new IOException("expected handshake or disconnect");
+            }
             // TODO handle disconnect
             byte[] wire = new byte[frame.size];
             frame.payload.read(wire);

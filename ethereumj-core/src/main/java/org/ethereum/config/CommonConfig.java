@@ -17,22 +17,56 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.core.*;
+import static java.util.Arrays.asList;
+
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.AbstractCachedSource;
+import org.ethereum.datasource.AsyncWriteCache;
+import org.ethereum.datasource.BatchSourceWriter;
+import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.MemSizeEstimator;
+import org.ethereum.datasource.ObjectDataSource;
+import org.ethereum.datasource.Serializer;
+import org.ethereum.datasource.Serializers;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.SourceCodec;
+import org.ethereum.datasource.WriteCache;
+import org.ethereum.datasource.XorDataSource;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
-import org.ethereum.db.*;
+import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.PeerSource;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.db.RepositoryWrapper;
+import org.ethereum.db.StateSource;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
-import org.ethereum.validator.*;
+import org.ethereum.validator.BlockHashRule;
+import org.ethereum.validator.BlockHeaderRule;
+import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
+import org.ethereum.validator.DifficultyRule;
+import org.ethereum.validator.ExtraDataRule;
+import org.ethereum.validator.GasLimitRule;
+import org.ethereum.validator.GasValueRule;
+import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.validator.ParentGasLimitRule;
+import org.ethereum.validator.ParentNumberRule;
+import org.ethereum.validator.ProofOfWorkRule;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
@@ -40,18 +74,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
-
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(
-        basePackages = "org.ethereum",
-        excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
+@ComponentScan(basePackages = "org.ethereum", excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
-    private Set<DbSource> dbSources = new HashSet<>();
-
     private static CommonConfig defaultInstance;
+    private Set<DbSource> dbSources = new HashSet<>();
 
     public static CommonConfig getDefault() {
         if (defaultInstance == null && !SystemProperties.isUseOnlySpringConfig()) {
@@ -76,7 +105,8 @@ public class CommonConfig {
     }
 
 
-    @Bean @Primary
+    @Bean
+    @Primary
     public Repository repository() {
         return new RepositoryWrapper();
     }
@@ -86,7 +116,8 @@ public class CommonConfig {
         return new RepositoryRoot(stateSource(), null);
     }
 
-    @Bean @Scope("prototype")
+    @Bean
+    @Scope("prototype")
     public Repository repository(byte[] stateRoot) {
         return new RepositoryRoot(stateSource(), stateRoot);
     }
@@ -96,7 +127,9 @@ public class CommonConfig {
     public StateSource stateSource() {
         fastSyncCleanUp();
         StateSource stateSource = new StateSource(blockchainSource("state"),
-                systemProperties().databasePruneDepth() >= 0, systemProperties().getConfig().getInt("cache.maxStateBloomSize") << 20);
+                                                  systemProperties().databasePruneDepth() >= 0,
+                                                  systemProperties().getConfig().getInt("cache.maxStateBloomSize") <<
+                                                          20);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
 
@@ -106,7 +139,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
+        AbstractCachedSource<byte[], byte[]> writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -127,8 +160,8 @@ public class CommonConfig {
 
     @Bean
     public AbstractCachedSource<byte[], byte[]> blockchainDbCache() {
-        WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(
-                new BatchSourceWriter<>(blockchainDB()), WriteCache.CacheType.SIMPLE);
+        WriteCache.BytesKey<byte[]> ret =
+                new WriteCache.BytesKey<>(new BatchSourceWriter<>(blockchainDB()), WriteCache.CacheType.SIMPLE);
         ret.setFlushSource(true);
         return ret;
     }
@@ -163,7 +196,9 @@ public class CommonConfig {
 
     public void fastSyncCleanUp() {
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
-        if (fastsyncStageBytes == null) return; // no uncompleted fast sync
+        if (fastsyncStageBytes == null) {
+            return; // no uncompleted fast sync
+        }
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
 
@@ -192,10 +227,12 @@ public class CommonConfig {
     public DataSourceArray<BlockHeader> headerSource() {
         DbSource<byte[]> dataSource = keyValueDataSource("headers");
         BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
+        WriteCache.BytesKey<byte[]> writeCache =
+                new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
         writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
         writeCache.setFlushSource(true);
-        ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
+        ObjectDataSource<BlockHeader> objectDataSource =
+                new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
         DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
         return dataSourceArray;
     }
@@ -204,23 +241,24 @@ public class CommonConfig {
     public Source<byte[], ProgramPrecompile> precompileSource() {
 
         StateSource source = stateSource();
-        return new SourceCodec<byte[], ProgramPrecompile, byte[], byte[]>(source,
-                new Serializer<byte[], byte[]>() {
-                    public byte[] serialize(byte[] object) {
-                        DataWord ret = new DataWord(object);
-                        ret.add(new DataWord(1));
-                        return ret.getLast20Bytes();
-                    }
-                    public byte[] deserialize(byte[] stream) {
-                        throw new RuntimeException("Shouldn't be called");
-                    }
-                }, new Serializer<ProgramPrecompile, byte[]>() {
-                    public byte[] serialize(ProgramPrecompile object) {
-                        return object == null ? null : object.serialize();
-                    }
-                    public ProgramPrecompile deserialize(byte[] stream) {
-                        return stream == null ? null : ProgramPrecompile.deserialize(stream);
-                    }
+        return new SourceCodec<byte[], ProgramPrecompile, byte[], byte[]>(source, new Serializer<byte[], byte[]>() {
+            public byte[] serialize(byte[] object) {
+                DataWord ret = new DataWord(object);
+                ret.add(new DataWord(1));
+                return ret.getLast20Bytes();
+            }
+
+            public byte[] deserialize(byte[] stream) {
+                throw new RuntimeException("Shouldn't be called");
+            }
+        }, new Serializer<ProgramPrecompile, byte[]>() {
+            public byte[] serialize(ProgramPrecompile object) {
+                return object == null ? null : object.serialize();
+            }
+
+            public ProgramPrecompile deserialize(byte[] stream) {
+                return stream == null ? null : ProgramPrecompile.deserialize(stream);
+            }
         });
     }
 
@@ -237,13 +275,11 @@ public class CommonConfig {
     @Bean
     public BlockHeaderValidator headerValidator() {
 
-        List<BlockHeaderRule> rules = new ArrayList<>(asList(
-                new GasValueRule(),
-                new ExtraDataRule(systemProperties()),
-                new ProofOfWorkRule(),
-                new GasLimitRule(systemProperties()),
-                new BlockHashRule(systemProperties())
-        ));
+        List<BlockHeaderRule> rules = new ArrayList<>(asList(new GasValueRule(),
+                                                             new ExtraDataRule(systemProperties()),
+                                                             new ProofOfWorkRule(),
+                                                             new GasLimitRule(systemProperties()),
+                                                             new BlockHashRule(systemProperties())));
 
         return new BlockHeaderValidator(rules);
     }
@@ -251,11 +287,9 @@ public class CommonConfig {
     @Bean
     public ParentBlockHeaderValidator parentHeaderValidator() {
 
-        List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
-                new ParentNumberRule(),
-                new DifficultyRule(systemProperties()),
-                new ParentGasLimitRule(systemProperties())
-        ));
+        List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(new ParentNumberRule(),
+                                                                      new DifficultyRule(systemProperties()),
+                                                                      new ParentGasLimitRule(systemProperties())));
 
         return new ParentBlockHeaderValidator(rules);
     }

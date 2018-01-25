@@ -17,14 +17,18 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
+import static java.util.Collections.unmodifiableMap;
+
 import org.ethereum.db.ContractDetails;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 
-import java.util.*;
-
-import static java.util.Collections.unmodifiableMap;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Roman Mandeleil
@@ -32,9 +36,8 @@ import static java.util.Collections.unmodifiableMap;
  */
 public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
-    private Map<DataWord, DataWord> storage = new HashMap<>();
-
     ContractDetails origContract;
+    private Map<DataWord, DataWord> storage = new HashMap<>();
 
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
@@ -57,18 +60,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     public DataWord get(DataWord key) {
 
         DataWord value = storage.get(key);
-        if (value != null)
-            value = value.clone();
-        else{
-            if (origContract == null) return null;
+        if (value != null) { value = value.clone(); } else {
+            if (origContract == null) { return null; }
             value = origContract.get(key);
             storage.put(key.clone(), value == null ? DataWord.ZERO.clone() : value.clone());
         }
 
-        if (value == null || value.isZero())
-            return null;
-        else
-            return value;
+        if (value == null || value.isZero()) { return null; } else { return value; }
     }
 
     @Override
@@ -80,8 +78,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
             DataWord value = storage.get(key);
 
-            storageTrie.put(key.getData(),
-                    RLP.encodeElement(value.getNoLeadZeroesData()));
+            storageTrie.put(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
         }
 
         return storageTrie.getRootHash();
@@ -103,8 +100,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     }
 
     @Override
+    public void setStorage(Map<DataWord, DataWord> storage) {
+        this.storage = storage;
+    }
+
+    @Override
     public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-        if (keys == null) return getStorage();
+        if (keys == null) { return getStorage(); }
 
         Map<DataWord, DataWord> result = new HashMap<>();
         for (DataWord key : keys) {
@@ -115,45 +117,35 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     @Override
     public int getStorageSize() {
-        return (origContract == null)
-                ? storage.size()
-                : origContract.getStorageSize();
+        return (origContract == null) ? storage.size() : origContract.getStorageSize();
     }
 
     @Override
     public Set<DataWord> getStorageKeys() {
-        return (origContract == null)
-                ? storage.keySet()
-                : origContract.getStorageKeys();
+        return (origContract == null) ? storage.keySet() : origContract.getStorageKeys();
     }
 
     @Override
     public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
 
-        for (int i = 0; i < storageKeys.size(); ++i){
+        for (int i = 0; i < storageKeys.size(); ++i) {
 
-            DataWord key   = storageKeys.get(i);
+            DataWord key = storageKeys.get(i);
             DataWord value = storageValues.get(i);
 
-            if (value.isZero())
-                storage.put(key, null);
+            if (value.isZero()) { storage.put(key, null); }
         }
 
     }
 
     @Override
-    public void setStorage(Map<DataWord, DataWord> storage) {
-        this.storage = storage;
-    }
-
-    @Override
     public byte[] getAddress() {
-         return (origContract == null) ? null : origContract.getAddress();
+        return (origContract == null) ? null : origContract.getAddress();
     }
 
     @Override
     public void setAddress(byte[] address) {
-        if (origContract != null) origContract.setAddress(address);
+        if (origContract != null) { origContract.setAddress(address); }
     }
 
     @Override
@@ -161,21 +153,21 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
         ContractDetailsCacheImpl contractDetails = new ContractDetailsCacheImpl(origContract);
 
-        Object storageClone = ((HashMap<DataWord, DataWord>)storage).clone();
+        Object storageClone = ((HashMap<DataWord, DataWord>) storage).clone();
 
         contractDetails.setCode(this.getCode());
-        contractDetails.setStorage( (HashMap<DataWord, DataWord>) storageClone);
+        contractDetails.setStorage((HashMap<DataWord, DataWord>) storageClone);
         return contractDetails;
     }
 
     @Override
     public void syncStorage() {
-        if (origContract != null) origContract.syncStorage();
+        if (origContract != null) { origContract.syncStorage(); }
     }
 
-    public void commit(){
+    public void commit() {
 
-        if (origContract == null) return;
+        if (origContract == null) { return; }
 
         for (DataWord key : storage.keySet()) {
             origContract.put(key, storage.get(key));

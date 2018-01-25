@@ -17,14 +17,16 @@
  */
 package org.ethereum.datasource;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.vm.DataWord;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.longToBytes;
-import static org.junit.Assert.*;
 
 /**
  * Testing {@link ReadCache}
@@ -40,7 +42,7 @@ public class ReadCacheTest {
     }
 
     private String str(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) { return null; }
         return Hex.toHexString((byte[]) obj);
     }
 

@@ -19,7 +19,14 @@ package org.ethereum.config.net;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.blockchain.*;
+import org.ethereum.config.blockchain.AbstractDaoConfig;
+import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.DaoNoHFConfig;
+import org.ethereum.config.blockchain.Eip150HFConfig;
+import org.ethereum.config.blockchain.Eip160HFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.core.genesis.GenesisConfig;
 
 import java.util.ArrayList;
@@ -35,7 +42,7 @@ public class JsonNetConfig extends BaseNetConfig {
 
     /**
      * We convert all string keys to lowercase before processing.
-     *
+     * <p>
      * Homestead block is 0 if not specified.
      * If Homestead block is specified then Frontier will be used for 0 block.
      *
@@ -54,9 +61,9 @@ public class JsonNetConfig extends BaseNetConfig {
             candidates.add(lastCandidate);
 
             if (config.daoForkBlock != null) {
-                AbstractDaoConfig daoConfig = config.daoForkSupport ?
-                        new DaoHFConfig(lastCandidate.getRight(), config.daoForkBlock) :
-                        new DaoNoHFConfig(lastCandidate.getRight(), config.daoForkBlock);
+                AbstractDaoConfig daoConfig =
+                        config.daoForkSupport ? new DaoHFConfig(lastCandidate.getRight(), config.daoForkBlock) :
+                                new DaoNoHFConfig(lastCandidate.getRight(), config.daoForkBlock);
                 lastCandidate = Pair.of(config.daoForkBlock, daoConfig);
                 candidates.add(lastCandidate);
             }
@@ -70,7 +77,9 @@ public class JsonNetConfig extends BaseNetConfig {
                 int block;
                 if (config.eip155Block != null) {
                     if (config.eip158Block != null && !config.eip155Block.equals(config.eip158Block)) {
-                        throw new RuntimeException("Unable to build config with different blocks for EIP155 (" + config.eip155Block + ") and EIP158 (" + config.eip158Block + ")");
+                        throw new RuntimeException(
+                                "Unable to build config with different blocks for EIP155 (" + config.eip155Block +
+                                        ") and EIP158 (" + config.eip158Block + ")");
                     }
                     block = config.eip155Block;
                 } else {

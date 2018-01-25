@@ -19,7 +19,12 @@ package org.ethereum.util;
 
 import org.ethereum.db.ByteArrayWrapper;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Anton Nashatyrev on 06.10.2016.

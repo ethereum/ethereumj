@@ -17,20 +17,26 @@
  */
 package org.ethereum.core.genesis;
 
+import static org.ethereum.util.FastByteComparisons.equal;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.*;
+import org.ethereum.config.blockchain.AbstractDaoConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.config.blockchain.Eip150HFConfig;
+import org.ethereum.config.blockchain.Eip160HFConfig;
+import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.core.Genesis;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-
-import static org.ethereum.util.FastByteComparisons.equal;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -41,11 +47,10 @@ import java.net.URL;
 import java.nio.file.Path;
 
 
-
 /**
  * Testing system exit
  * http://stackoverflow.com/questions/309396/java-how-to-test-methods-that-call-system-exit
- *
+ * <p>
  * Created by Stan Reshetnyk on 17.09.16.
  */
 public class GenesisLoadTest {
@@ -110,8 +115,8 @@ public class GenesisLoadTest {
 
     @Test
     public void shouldLoadGenesis_withCodeAndNonceInAlloc() {
-        final Genesis genesis = GenesisLoader.loadGenesis(
-                getClass().getResourceAsStream("/genesis/genesis-alloc.json"));
+        final Genesis genesis =
+                GenesisLoader.loadGenesis(getClass().getResourceAsStream("/genesis/genesis-alloc.json"));
         final StandaloneBlockchain bc = new StandaloneBlockchain();
 
         bc.withGenesis(genesis);
@@ -152,12 +157,10 @@ public class GenesisLoadTest {
         Config config = ConfigFactory.empty();
 
         if (genesisResource != null) {
-            config = config.withValue("genesis",
-                    ConfigValueFactory.fromAnyRef(genesisResource));
+            config = config.withValue("genesis", ConfigValueFactory.fromAnyRef(genesisResource));
         }
         if (genesisFile != null) {
-            config = config.withValue("genesisFile",
-                    ConfigValueFactory.fromAnyRef(genesisFile));
+            config = config.withValue("genesisFile", ConfigValueFactory.fromAnyRef(genesisFile));
         }
 
         SystemProperties properties = new SystemProperties(config);

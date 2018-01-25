@@ -18,9 +18,7 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.util.ByteUtil;
-
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -71,15 +69,13 @@ public class Exec {
         this.address = Utils.parseData(address);
         this.caller = Utils.parseData(caller);
 
-        if (code != null && code.length() > 2)
-            this.code = Utils.parseData(code);
-        else
+        if (code != null && code.length() > 2) { this.code = Utils.parseData(code); } else {
             this.code = ByteUtil.EMPTY_BYTE_ARRAY;
+        }
 
-        if (data != null && data.length() > 2)
-            this.data = Utils.parseData(data);
-        else
+        if (data != null && data.length() > 2) { this.data = Utils.parseData(data); } else {
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
+        }
 
         this.gas = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(gas));
         this.gasPrice = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(gasPrice));
@@ -124,15 +120,9 @@ public class Exec {
 
     @Override
     public String toString() {
-        return "Exec{" +
-                "address=" + Hex.toHexString(address) +
-                ", caller=" + Hex.toHexString(caller) +
-                ", data=" + Hex.toHexString(data) +
-                ", code=" + Hex.toHexString(data) +
-                ", gas=" + Hex.toHexString(gas) +
-                ", gasPrice=" + Hex.toHexString(gasPrice) +
-                ", origin=" + Hex.toHexString(origin) +
-                ", value=" + Hex.toHexString(value) +
-                '}';
+        return "Exec{" + "address=" + Hex.toHexString(address) + ", caller=" + Hex.toHexString(caller) + ", data=" +
+                Hex.toHexString(data) + ", code=" + Hex.toHexString(data) + ", gas=" + Hex.toHexString(gas) +
+                ", gasPrice=" + Hex.toHexString(gasPrice) + ", origin=" + Hex.toHexString(origin) + ", value=" +
+                Hex.toHexString(value) + '}';
     }
 }

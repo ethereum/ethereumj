@@ -32,6 +32,17 @@ public class BloomFilter implements Cloneable {
     private BloomFilter() {
     }
 
+    public BloomFilter(Topic topic) {
+        addTopic(topic);
+    }
+
+    public BloomFilter(byte[] bloomMask) {
+        if (bloomMask.length != BLOOM_BYTES) {
+            throw new RuntimeException("Invalid bloom filter array length: " + bloomMask.length);
+        }
+        mask = BitSet.valueOf(bloomMask);
+    }
+
     public static BloomFilter createNone() {
         return new BloomFilter();
     }
@@ -42,30 +53,21 @@ public class BloomFilter implements Cloneable {
         return bloomFilter;
     }
 
-    public BloomFilter(Topic topic) {
-        addTopic(topic);
-    }
-
-    public BloomFilter(byte[] bloomMask) {
-        if (bloomMask.length != BLOOM_BYTES) throw new RuntimeException("Invalid bloom filter array length: " + bloomMask.length);
-        mask = BitSet.valueOf(bloomMask);
-    }
-
     private void incCounters(BitSet bs) {
         int idx = -1;
-        while(true) {
+        while (true) {
             idx = bs.nextSetBit(idx + 1);
-            if (idx < 0) break;
+            if (idx < 0) { break; }
             counters[idx]++;
         }
     }
 
     private void decCounters(BitSet bs) {
         int idx = -1;
-        while(true) {
+        while (true) {
             idx = bs.nextSetBit(idx + 1);
-            if (idx < 0) break;
-            if (counters[idx] > 0) counters[idx]--;
+            if (idx < 0) { break; }
+            if (counters[idx] > 0) { counters[idx]--; }
         }
     }
 
@@ -91,10 +93,10 @@ public class BloomFilter implements Cloneable {
         BitSet topicMask = getTopicMask(topic);
         decCounters(topicMask);
         int idx = -1;
-        while(true) {
+        while (true) {
             idx = topicMask.nextSetBit(idx + 1);
-            if (idx < 0) break;
-            if (counters[idx] == 0) mask.clear(idx);
+            if (idx < 0) { break; }
+            if (counters[idx] == 0) { mask.clear(idx); }
         }
     }
 

@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * The Netty handler responsible for decrypting/encrypting RLPx frames
  * with the FrameCodec crated during HandshakeHandler initial work
- *
+ * <p>
  * Created by Anton Nashatyrev on 15.10.2015.
  */
 public class FrameCodecHandler extends NettyByteToMessageCodec<FrameCodec.Frame> {
@@ -55,7 +55,7 @@ public class FrameCodecHandler extends NettyByteToMessageCodec<FrameCodec.Frame>
 
 
         // Check if a full frame was available.  If not, we'll try later when more bytes come in.
-        if (frames == null || frames.isEmpty()) return;
+        if (frames == null || frames.isEmpty()) { return; }
 
         for (int i = 0; i < frames.size(); i++) {
             FrameCodec.Frame frame = frames.get(i);

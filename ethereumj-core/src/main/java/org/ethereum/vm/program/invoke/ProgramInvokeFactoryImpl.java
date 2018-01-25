@@ -17,8 +17,9 @@
  */
 package org.ethereum.vm.program.invoke;
 
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+
 import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
@@ -28,12 +29,9 @@ import org.ethereum.vm.program.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 /**
  * @author Roman Mandeleil
@@ -97,41 +95,43 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         byte[] gaslimit = block.getGasLimit();
 
         if (logger.isInfoEnabled()) {
-            logger.info("Top level call: \n" +
-                            "address={}\n" +
-                            "origin={}\n" +
-                            "caller={}\n" +
-                            "balance={}\n" +
-                            "gasPrice={}\n" +
-                            "gas={}\n" +
-                            "callValue={}\n" +
-                            "data={}\n" +
-                            "lastHash={}\n" +
-                            "coinbase={}\n" +
-                            "timestamp={}\n" +
-                            "blockNumber={}\n" +
-                            "difficulty={}\n" +
-                            "gaslimit={}\n",
+            logger.info("Top level call: \n" + "address={}\n" + "origin={}\n" + "caller={}\n" + "balance={}\n" +
+                                "gasPrice={}\n" + "gas={}\n" + "callValue={}\n" + "data={}\n" + "lastHash={}\n" +
+                                "coinbase={}\n" + "timestamp={}\n" + "blockNumber={}\n" + "difficulty={}\n" +
+                                "gaslimit={}\n",
 
-                    Hex.toHexString(address),
-                    Hex.toHexString(origin),
-                    Hex.toHexString(caller),
-                    ByteUtil.bytesToBigInteger(balance),
-                    ByteUtil.bytesToBigInteger(gasPrice),
-                    ByteUtil.bytesToBigInteger(gas),
-                    ByteUtil.bytesToBigInteger(callValue),
-                    Hex.toHexString(data),
-                    Hex.toHexString(lastHash),
-                    Hex.toHexString(coinbase),
-                    timestamp,
-                    number,
-                    Hex.toHexString(difficulty),
-                    gaslimit);
+                        Hex.toHexString(address),
+                        Hex.toHexString(origin),
+                        Hex.toHexString(caller),
+                        ByteUtil.bytesToBigInteger(balance),
+                        ByteUtil.bytesToBigInteger(gasPrice),
+                        ByteUtil.bytesToBigInteger(gas),
+                        ByteUtil.bytesToBigInteger(callValue),
+                        Hex.toHexString(data),
+                        Hex.toHexString(lastHash),
+                        Hex.toHexString(coinbase),
+                        timestamp,
+                        number,
+                        Hex.toHexString(difficulty),
+                        gaslimit);
         }
 
-        return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
-                lastHash, coinbase, timestamp, number, difficulty, gaslimit,
-                repository, blockStore);
+        return new ProgramInvokeImpl(address,
+                                     origin,
+                                     caller,
+                                     balance,
+                                     gasPrice,
+                                     gas,
+                                     callValue,
+                                     data,
+                                     lastHash,
+                                     coinbase,
+                                     timestamp,
+                                     number,
+                                     difficulty,
+                                     gaslimit,
+                                     repository,
+                                     blockStore);
     }
 
     /**
@@ -139,10 +139,9 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
      */
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
-                                             DataWord inValue, DataWord inGas,
-                                             BigInteger balanceInt, byte[] dataIn,
-                                             Repository repository, BlockStore blockStore,
-                                             boolean isStaticCall, boolean byTestingSuite) {
+                                             DataWord inValue, DataWord inGas, BigInteger balanceInt, byte[] dataIn,
+                                             Repository repository, BlockStore blockStore, boolean isStaticCall,
+                                             boolean byTestingSuite) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
@@ -162,39 +161,44 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         DataWord gasLimit = program.getGasLimit();
 
         if (logger.isInfoEnabled()) {
-            logger.info("Internal call: \n" +
-                            "address={}\n" +
-                            "origin={}\n" +
-                            "caller={}\n" +
-                            "balance={}\n" +
-                            "gasPrice={}\n" +
-                            "gas={}\n" +
-                            "callValue={}\n" +
-                            "data={}\n" +
-                            "lastHash={}\n" +
-                            "coinbase={}\n" +
-                            "timestamp={}\n" +
-                            "blockNumber={}\n" +
-                            "difficulty={}\n" +
-                            "gaslimit={}\n",
-                    Hex.toHexString(address.getLast20Bytes()),
-                    Hex.toHexString(origin.getLast20Bytes()),
-                    Hex.toHexString(caller.getLast20Bytes()),
-                    balance.toString(),
-                    gasPrice.longValue(),
-                    gas.longValue(),
-                    Hex.toHexString(callValue.getNoLeadZeroesData()),
-                    data == null ? "" : Hex.toHexString(data),
-                    Hex.toHexString(lastHash.getData()),
-                    Hex.toHexString(coinbase.getLast20Bytes()),
-                    timestamp.longValue(),
-                    number.longValue(),
-                    Hex.toHexString(difficulty.getNoLeadZeroesData()),
-                    gasLimit.bigIntValue());
+            logger.info("Internal call: \n" + "address={}\n" + "origin={}\n" + "caller={}\n" + "balance={}\n" +
+                                "gasPrice={}\n" + "gas={}\n" + "callValue={}\n" + "data={}\n" + "lastHash={}\n" +
+                                "coinbase={}\n" + "timestamp={}\n" + "blockNumber={}\n" + "difficulty={}\n" +
+                                "gaslimit={}\n",
+                        Hex.toHexString(address.getLast20Bytes()),
+                        Hex.toHexString(origin.getLast20Bytes()),
+                        Hex.toHexString(caller.getLast20Bytes()),
+                        balance.toString(),
+                        gasPrice.longValue(),
+                        gas.longValue(),
+                        Hex.toHexString(callValue.getNoLeadZeroesData()),
+                        data == null ? "" : Hex.toHexString(data),
+                        Hex.toHexString(lastHash.getData()),
+                        Hex.toHexString(coinbase.getLast20Bytes()),
+                        timestamp.longValue(),
+                        number.longValue(),
+                        Hex.toHexString(difficulty.getNoLeadZeroesData()),
+                        gasLimit.bigIntValue());
         }
 
-        return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
-                data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, program.getCallDeep() + 1, blockStore, isStaticCall, byTestingSuite);
+        return new ProgramInvokeImpl(address,
+                                     origin,
+                                     caller,
+                                     balance,
+                                     gasPrice,
+                                     gas,
+                                     callValue,
+                                     data,
+                                     lastHash,
+                                     coinbase,
+                                     timestamp,
+                                     number,
+                                     difficulty,
+                                     gasLimit,
+                                     repository,
+                                     program.getCallDeep() + 1,
+                                     blockStore,
+                                     isStaticCall,
+                                     byTestingSuite);
     }
 }

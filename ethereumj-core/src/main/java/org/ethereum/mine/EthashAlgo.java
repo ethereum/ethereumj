@@ -17,6 +17,16 @@
  */
 package org.ethereum.mine;
 
+import static java.lang.System.arraycopy;
+import static java.math.BigInteger.valueOf;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.bytesToInts;
+import static org.ethereum.util.ByteUtil.intsToBytes;
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
+import static org.spongycastle.util.Arrays.reverse;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.Arrays;
@@ -26,18 +36,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Random;
 
-import static java.lang.System.arraycopy;
-import static java.math.BigInteger.valueOf;
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.*;
-import static org.spongycastle.util.Arrays.reverse;
-
 /**
  * The Ethash algorithm described in https://github.com/ethereum/wiki/wiki/Ethash
- *
+ * <p>
  * Created by Anton Nashatyrev on 27.11.2015.
  */
 public class EthashAlgo {
+    private static final int FNV_PRIME = 0x01000193;
     EthashParams params;
 
     public EthashAlgo() {
@@ -46,10 +51,6 @@ public class EthashAlgo {
 
     public EthashAlgo(EthashParams params) {
         this.params = params;
-    }
-
-    public EthashParams getParams() {
-        return params;
     }
 
     // Little-Endian !
@@ -80,6 +81,13 @@ public class EthashAlgo {
         return dividend >= 0 || dividend < divisor ? dividend : dividend - divisor;
     }
 
+    private static int fnv(int v1, int v2) {
+        return (v1 * FNV_PRIME) ^ v2;
+    }
+
+    public EthashParams getParams() {
+        return params;
+    }
 
     private byte[][] makeCacheBytes(long cacheSize, byte[] seed) {
         int n = (int) (cacheSize / params.getHASH_BYTES());
@@ -107,11 +115,6 @@ public class EthashAlgo {
             arraycopy(ints, 0, ret, i * ints.length, ints.length);
         }
         return ret;
-    }
-
-    private static final int FNV_PRIME = 0x01000193;
-    private static int fnv(int v1, int v2) {
-        return (v1 * FNV_PRIME) ^ v2;
     }
 
     int[] sha512(int[] arr, boolean bigEndian) {
@@ -154,7 +157,7 @@ public class EthashAlgo {
 
     public Pair<byte[], byte[]> hashimoto(byte[] blockHeaderTruncHash, byte[] nonce, long fullSize,
                                           int[] cacheOrDataset, boolean full) {
-        if (nonce.length != 8) throw new RuntimeException("nonce.length != 8");
+        if (nonce.length != 8) { throw new RuntimeException("nonce.length != 8"); }
 
         int hashWords = params.getHASH_BYTES() / 4;
         int w = params.getMIX_BYTES() / params.getWORD_BYTES();
@@ -196,12 +199,12 @@ public class EthashAlgo {
     }
 
     public Pair<byte[], byte[]> hashimotoLight(long fullSize, final int[] cache, byte[] blockHeaderTruncHash,
-                                               byte[]  nonce) {
+                                               byte[] nonce) {
         return hashimoto(blockHeaderTruncHash, nonce, fullSize, cache, false);
     }
 
     public Pair<byte[], byte[]> hashimotoFull(long fullSize, final int[] dataset, byte[] blockHeaderTruncHash,
-                                              byte[]  nonce) {
+                                              byte[] nonce) {
         return hashimoto(blockHeaderTruncHash, nonce, fullSize, dataset, true);
     }
 
@@ -216,7 +219,7 @@ public class EthashAlgo {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoFull(fullSize, dataset, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
+            if (h.compareTo(target) < 0) { break; }
         }
         return nonce;
     }
@@ -229,14 +232,15 @@ public class EthashAlgo {
         return mineLight(fullSize, cache, blockHeaderTruncHash, difficulty, new Random().nextLong());
     }
 
-    public long mineLight(long fullSize, final int[] cache, byte[] blockHeaderTruncHash, long difficulty, long startNonce) {
+    public long mineLight(long fullSize, final int[] cache, byte[] blockHeaderTruncHash, long difficulty,
+                          long startNonce) {
         long nonce = startNonce;
         BigInteger target = valueOf(2).pow(256).divide(valueOf(difficulty));
-        while(!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
+            if (h.compareTo(target) < 0) { break; }
         }
         return nonce;
     }

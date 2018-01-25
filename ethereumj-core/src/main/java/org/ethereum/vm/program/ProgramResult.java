@@ -17,6 +17,10 @@
  */
 package org.ethereum.vm.program;
 
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.CallCreate;
 import org.ethereum.vm.DataWord;
@@ -26,10 +30,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.size;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * @author Roman Mandeleil
@@ -55,6 +55,12 @@ public class ProgramResult {
      */
     private List<CallCreate> callCreateList;
 
+    public static ProgramResult createEmpty() {
+        ProgramResult result = new ProgramResult();
+        result.setHReturn(EMPTY_BYTE_ARRAY);
+        return result;
+    }
+
     public void spendGas(long gas) {
         gasUsed += gas;
     }
@@ -71,25 +77,25 @@ public class ProgramResult {
         gasUsed -= gas;
     }
 
+    public byte[] getHReturn() {
+        return hReturn;
+    }
+
     public void setHReturn(byte[] hReturn) {
         this.hReturn = hReturn;
 
-    }
-
-    public byte[] getHReturn() {
-        return hReturn;
     }
 
     public RuntimeException getException() {
         return exception;
     }
 
-    public long getGasUsed() {
-        return gasUsed;
-    }
-
     public void setException(RuntimeException exception) {
         this.exception = exception;
+    }
+
+    public long getGasUsed() {
+        return gasUsed;
     }
 
     public Set<DataWord> getDeleteAccounts() {
@@ -158,9 +164,20 @@ public class ProgramResult {
         return internalTransactions;
     }
 
-    public InternalTransaction addInternalTransaction(byte[] parentHash, int deep, byte[] nonce, DataWord gasPrice, DataWord gasLimit,
-                                                      byte[] senderAddress, byte[] receiveAddress, byte[] value, byte[] data, String note) {
-        InternalTransaction transaction = new InternalTransaction(parentHash, deep, size(internalTransactions), nonce, gasPrice, gasLimit, senderAddress, receiveAddress, value, data, note);
+    public InternalTransaction addInternalTransaction(byte[] parentHash, int deep, byte[] nonce, DataWord gasPrice,
+                                                      DataWord gasLimit, byte[] senderAddress, byte[] receiveAddress,
+                                                      byte[] value, byte[] data, String note) {
+        InternalTransaction transaction = new InternalTransaction(parentHash,
+                                                                  deep,
+                                                                  size(internalTransactions),
+                                                                  nonce,
+                                                                  gasPrice,
+                                                                  gasLimit,
+                                                                  senderAddress,
+                                                                  receiveAddress,
+                                                                  value,
+                                                                  data,
+                                                                  note);
         getInternalTransactions().add(transaction);
         return transaction;
     }
@@ -195,11 +212,5 @@ public class ProgramResult {
             addFutureRefund(another.getFutureRefund());
             addTouchAccounts(another.getTouchedAccounts());
         }
-    }
-    
-    public static ProgramResult createEmpty() {
-        ProgramResult result = new ProgramResult();
-        result.setHReturn(EMPTY_BYTE_ARRAY);
-        return result;
     }
 }

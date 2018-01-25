@@ -17,19 +17,6 @@
  */
 package org.ethereum.net.shh;
 
-import org.junit.Assert;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-import org.junit.Test;
-
-import java.math.BigInteger;
-import org.spongycastle.util.encoders.Hex;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author by Konstantin Shabalin
  */
@@ -129,9 +116,11 @@ public class ShhTest {
 
     @Test
     public void test5() {
-        ECKey fromKey = ECKey.fromPrivate(Hex.decode("ba43d10d069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8"));
+        ECKey fromKey = ECKey.fromPrivate(Hex.decode
+        ("ba43d10d069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8"));
         ECKey toKey = ECKey.fromPrivate(Hex.decode("00000000069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8"));
-//        System.out.println("Sending from: " + Hex.toHexString(fromKey.getPubKey()) + "\n to: " + Hex.toHexString(toKey.getPubKey()));
+//        System.out.println("Sending from: " + Hex.toHexString(fromKey.getPubKey()) + "\n to: " + Hex.toHexString
+(toKey.getPubKey()));
         byte[] bytes = post(fromKey, Hex.toHexString(toKey.getPubKey()), new String[]{"myTopic"}, "Hello all!", 1, 1);
 
         ShhEnvelopeMessage envelope = new ShhEnvelopeMessage(bytes);

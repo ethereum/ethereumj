@@ -26,9 +26,15 @@ import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.DataWord;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
@@ -230,7 +236,8 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
+                            HashMap<ByteArrayWrapper, ContractDetails> contractDetailes) {
         src.updateBatch(accountStates, contractDetailes);
         for (ByteArrayWrapper wrapper : accountStates.keySet()) {
             addAccount(wrapper.getData());
@@ -249,7 +256,8 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
-    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+                            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         src.loadAccount(addr, cacheAccounts, cacheDetails);
     }
 
@@ -292,14 +300,14 @@ public class IterableTestRepository implements Repository {
         }
 
         @Override
-        public byte[] getCode(byte[] codeHash) {
-            return src.getCode(codeHash);
-        }
-
-        @Override
         public void setCode(byte[] code) {
             addAccount(getAddress());
             src.setCode(code);
+        }
+
+        @Override
+        public byte[] getCode(byte[] codeHash) {
+            return src.getCode(codeHash);
         }
 
         @Override
@@ -313,23 +321,23 @@ public class IterableTestRepository implements Repository {
         }
 
         @Override
-        public void setDirty(boolean dirty) {
-            src.setDirty(dirty);
-        }
-
-        @Override
-        public void setDeleted(boolean deleted) {
-            src.setDeleted(deleted);
-        }
-
-        @Override
         public boolean isDirty() {
             return src.isDirty();
         }
 
         @Override
+        public void setDirty(boolean dirty) {
+            src.setDirty(dirty);
+        }
+
+        @Override
         public boolean isDeleted() {
             return src.isDeleted();
+        }
+
+        @Override
+        public void setDeleted(boolean deleted) {
+            src.setDeleted(deleted);
         }
 
         @Override
@@ -358,7 +366,7 @@ public class IterableTestRepository implements Repository {
             Map<DataWord, DataWord> ret = new HashMap<>();
             Set<DataWord> set = storageKeys.get(getAddress());
 
-            if (set == null) return Collections.emptyMap();
+            if (set == null) { return Collections.emptyMap(); }
 
             for (DataWord key : set) {
                 DataWord val = get(key);
@@ -370,13 +378,13 @@ public class IterableTestRepository implements Repository {
         }
 
         @Override
-        public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
-            src.setStorage(storageKeys, storageValues);
+        public void setStorage(Map<DataWord, DataWord> storage) {
+            src.setStorage(storage);
         }
 
         @Override
-        public void setStorage(Map<DataWord, DataWord> storage) {
-            src.setStorage(storage);
+        public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+            src.setStorage(storageKeys, storageValues);
         }
 
         @Override

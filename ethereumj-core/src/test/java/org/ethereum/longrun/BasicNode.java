@@ -17,6 +17,8 @@
  */
 package org.ethereum.longrun;
 
+import static java.lang.Thread.sleep;
+
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -35,54 +37,65 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
-import javax.annotation.PostConstruct;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
-import static java.lang.Thread.sleep;
+import javax.annotation.PostConstruct;
 
 /**
  * BasicNode of ethereum instance
  */
 class BasicNode implements Runnable {
     static final Logger sLogger = LoggerFactory.getLogger("sample");
-
-    private String loggerName;
     public Logger logger;
-
     @Autowired
     protected Ethereum ethereum;
-
     @Autowired
     protected SystemProperties config;
-
     @Autowired
     protected SyncPool syncPool;
-
     @Autowired
     protected CommonConfig commonConfig;
-
     @Autowired
     protected DbFlushManager dbFlushManager;
-
-    // Spring config class which add this sample class as a bean to the components collections
-    // and make it possible for autowiring other components
-    private static class Config {
-        @Bean
-        public BasicNode basicSample() {
-            return new BasicNode();
+    protected Map<Node, StatusMessage> ethNodes = new Hashtable<>();
+    protected List<Node> syncPeers = new Vector<>();
+    protected Block bestBlock = null;
+    EthereumListener.SyncState syncState = null;
+    boolean syncComplete = false;
+    /**
+     * The main EthereumJ callback.
+     */
+    EthereumListener listener = new EthereumListenerAdapter() {
+        @Override
+        public void onSyncDone(SyncState state) {
+            syncState = state;
+            if (state.equals(SyncState.COMPLETE)) { syncComplete = true; }
+            onSyncDoneImpl(state);
         }
-    }
 
-    public static void main(String[] args) throws Exception {
-        sLogger.info("Starting EthereumJ!");
+        @Override
+        public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
+            ethNodes.put(channel.getNode(), statusMessage);
+        }
 
-        // Based on Config class the BasicNode would be created by Spring
-        // and its springInit() method would be called as an entry point
-        EthereumFactory.createEthereum(Config.class);
-    }
+        @Override
+        public void onPeerAddedToSyncPool(Channel peer) {
+            syncPeers.add(peer.getNode());
+        }
+
+        @Override
+        public void onBlock(Block block, List<TransactionReceipt> receipts) {
+            bestBlock = block;
+
+            if (syncComplete) {
+                logger.info("New block: " + block.getShortDescr());
+            }
+        }
+    };
+    private String loggerName;
+
 
     public BasicNode() {
         this("sample");
@@ -94,6 +107,14 @@ class BasicNode implements Runnable {
      */
     public BasicNode(String loggerName) {
         this.loggerName = loggerName;
+    }
+
+    public static void main(String[] args) throws Exception {
+        sLogger.info("Starting EthereumJ!");
+
+        // Based on Config class the BasicNode would be created by Spring
+        // and its springInit() method would be called as an entry point
+        EthereumFactory.createEthereum(Config.class);
     }
 
     /**
@@ -121,7 +142,9 @@ class BasicNode implements Runnable {
             logger.info("Sample worker thread started.");
 
             if (!config.peerDiscovery()) {
-                logger.info("Peer discovery disabled. We should actively connect to another peers or wait for incoming connections");
+                logger.info(
+                        "Peer discovery disabled. We should actively connect to another peers or wait for incoming " +
+                                "connections");
             }
 
             waitForSync();
@@ -133,13 +156,13 @@ class BasicNode implements Runnable {
         }
     }
 
-
     /**
      * Waits until the whole blockchain sync is complete
      */
     public void waitForSync() throws Exception {
-        logger.info("Waiting for the whole blockchain sync (will take up to an hour on fast sync for the whole chain)...");
-        while(true) {
+        logger.info(
+                "Waiting for the whole blockchain sync (will take up to an hour on fast sync for the whole chain)...");
+        while (true) {
             sleep(10000);
             if (syncComplete) {
                 logger.info("[v] Sync complete! The best block: " + bestBlock.getShortDescr());
@@ -159,42 +182,12 @@ class BasicNode implements Runnable {
         logger.info("onSyncDone: " + state);
     }
 
-    protected Map<Node, StatusMessage> ethNodes = new Hashtable<>();
-    protected List<Node> syncPeers = new Vector<>();
-
-    protected Block bestBlock = null;
-
-    EthereumListener.SyncState syncState = null;
-    boolean syncComplete = false;
-
-    /**
-     * The main EthereumJ callback.
-     */
-    EthereumListener listener = new EthereumListenerAdapter() {
-        @Override
-        public void onSyncDone(SyncState state) {
-            syncState = state;
-            if (state.equals(SyncState.COMPLETE)) syncComplete = true;
-            onSyncDoneImpl(state);
+    // Spring config class which add this sample class as a bean to the components collections
+    // and make it possible for autowiring other components
+    private static class Config {
+        @Bean
+        public BasicNode basicSample() {
+            return new BasicNode();
         }
-
-        @Override
-        public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-            ethNodes.put(channel.getNode(), statusMessage);
-        }
-
-        @Override
-        public void onPeerAddedToSyncPool(Channel peer) {
-            syncPeers.add(peer.getNode());
-        }
-
-        @Override
-        public void onBlock(Block block, List<TransactionReceipt> receipts) {
-            bestBlock = block;
-
-            if (syncComplete) {
-                logger.info("New block: " + block.getShortDescr());
-            }
-        }
-    };
+    }
 }

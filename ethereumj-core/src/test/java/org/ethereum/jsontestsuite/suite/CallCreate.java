@@ -18,9 +18,7 @@
 package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.util.ByteUtil;
-
 import org.json.simple.JSONObject;
-
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -49,10 +47,9 @@ public class CallCreate {
         String gasLimit = callCreateJSON.get("gasLimit").toString();
         String value = callCreateJSON.get("value").toString();
 
-        if (data != null && data.length() > 2)
-            this.data = Utils.parseData(data);
-        else
+        if (data != null && data.length() > 2) { this.data = Utils.parseData(data); } else {
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
+        }
 
         this.destination = Utils.parseData(destination);
         this.gasLimit = ByteUtil.bigIntegerToBytes(TestCase.toBigInt(gasLimit));
@@ -77,11 +74,7 @@ public class CallCreate {
 
     @Override
     public String toString() {
-        return "CallCreate{" +
-                "data=" + Hex.toHexString(data) +
-                ", destination=" + Hex.toHexString(destination) +
-                ", gasLimit=" + Hex.toHexString(gasLimit) +
-                ", value=" + Hex.toHexString(value) +
-                '}';
+        return "CallCreate{" + "data=" + Hex.toHexString(data) + ", destination=" + Hex.toHexString(destination) +
+                ", gasLimit=" + Hex.toHexString(gasLimit) + ", value=" + Hex.toHexString(value) + '}';
     }
 }

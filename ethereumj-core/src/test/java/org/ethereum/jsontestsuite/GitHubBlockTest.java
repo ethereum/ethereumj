@@ -32,14 +32,12 @@ import java.util.HashSet;
 public class GitHubBlockTest {
 
     static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "3f6a1117be5c0d6f801875118c7c580dc4200712"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
-    static GitHubJSONTestSuite.Network[] targetNets = {
-            GitHubJSONTestSuite.Network.Frontier,
-            GitHubJSONTestSuite.Network.Homestead,
-            GitHubJSONTestSuite.Network.EIP150,
-            GitHubJSONTestSuite.Network.EIP158,
-            GitHubJSONTestSuite.Network.Byzantium
-    };
+    static String treeSHA = "3f6a1117be5c0d6f801875118c7c580dc4200712";
+            // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
+    static GitHubJSONTestSuite.Network[] targetNets =
+            {GitHubJSONTestSuite.Network.Frontier, GitHubJSONTestSuite.Network.Homestead,
+                    GitHubJSONTestSuite.Network.EIP150, GitHubJSONTestSuite.Network.EIP158,
+                    GitHubJSONTestSuite.Network.Byzantium};
 
     static BlockchainTestSuite suite;
 
@@ -53,8 +51,9 @@ public class GitHubBlockTest {
     // this method is mostly for hands-on convenient testing
     // do not initialize BlockchainTestSuite to avoid unnecessary GitHub API hits
     public void bcSingleTest() throws IOException {
-        BlockchainTestSuite.runSingle(
-                "bcWalletTest/wallet2outOf3txs2.json", commitSHA, GitHubJSONTestSuite.Network.Byzantium);
+        BlockchainTestSuite.runSingle("bcWalletTest/wallet2outOf3txs2.json",
+                                      commitSHA,
+                                      GitHubJSONTestSuite.Network.Byzantium);
     }
 
 
@@ -65,9 +64,10 @@ public class GitHubBlockTest {
 
     @Test
     public void bcExploitTest() throws IOException {
-        suite.runAll("bcExploitTest", new HashSet<>(Arrays.asList(
-                "SuicideIssue" // it was checked once, but it's too heavy to hit it each time
-        )));
+        suite.runAll("bcExploitTest",
+                     new HashSet<>(Arrays.asList("SuicideIssue"
+                                                 // it was checked once, but it's too heavy to hit it each time
+                     )));
     }
 
     @Test

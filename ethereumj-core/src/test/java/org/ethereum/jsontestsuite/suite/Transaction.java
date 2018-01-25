@@ -17,9 +17,11 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.json.simple.JSONObject;
-import java.math.BigInteger;
 import static org.ethereum.util.ByteUtil.toHexString;
+
+import org.json.simple.JSONObject;
+
+import java.math.BigInteger;
 
 /**
  * @author Roman Mandeleil
@@ -96,14 +98,8 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction{" +
-                "data=" + toHexString(data) +
-                ", gasLimit=" + gasLimit +
-                ", gasPrice=" + gasPrice +
-                ", nonce=" + nonce +
-                ", secretKey=" + toHexString(secretKey) +
-                ", to=" + toHexString(to) +
-                ", value=" + value +
-                '}';
+        return "Transaction{" + "data=" + toHexString(data) + ", gasLimit=" + gasLimit + ", gasPrice=" + gasPrice +
+                ", nonce=" + nonce + ", secretKey=" + toHexString(secretKey) + ", to=" + toHexString(to) + ", value=" +
+                value + '}';
     }
 }

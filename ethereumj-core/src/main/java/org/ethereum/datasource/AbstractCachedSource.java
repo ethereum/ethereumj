@@ -20,37 +20,16 @@ package org.ethereum.datasource;
 /**
  * Abstract cache implementation which tracks the cache size with
  * supplied key and value MemSizeEstimator's
- *
+ * <p>
  * Created by Anton Nashatyrev on 01.12.2016.
  */
-public abstract class AbstractCachedSource <Key, Value>
-        extends AbstractChainedSource<Key, Value, Key, Value>
+public abstract class AbstractCachedSource<Key, Value> extends AbstractChainedSource<Key, Value, Key, Value>
         implements CachedSource<Key, Value> {
 
     private final Object lock = new Object();
-
-    /**
-     * Like the Optional interface represents either the value cached
-     * or null cached (i.e. cache knows that underlying storage contain null)
-     */
-    public interface Entry<V> {
-        V value();
-    }
-
-    static final class SimpleEntry<V> implements Entry<V> {
-        private V val;
-        public SimpleEntry(V val) {
-            this.val = val;
-        }
-        public V value() {
-            return val;
-        }
-    }
-
     protected MemSizeEstimator<Key> keySizeEstimator;
     protected MemSizeEstimator<Value> valueSizeEstimator;
     private int size = 0;
-
     public AbstractCachedSource(Source<Key, Value> source) {
         super(source);
     }
@@ -58,8 +37,9 @@ public abstract class AbstractCachedSource <Key, Value>
     /**
      * Returns the cached value if exist.
      * Method doesn't look into the underlying storage
+     *
      * @return The value Entry if it cached (Entry may has null value if null value is cached),
-     *        or null if no information in the cache for this key
+     * or null if no information in the cache for this key
      */
     abstract Entry<Value> getCached(Key key);
 
@@ -106,7 +86,8 @@ public abstract class AbstractCachedSource <Key, Value>
     /**
      * Sets the key/value size estimators
      */
-    public AbstractCachedSource <Key, Value> withSizeEstimators(MemSizeEstimator<Key> keySizeEstimator, MemSizeEstimator<Value> valueSizeEstimator) {
+    public AbstractCachedSource<Key, Value> withSizeEstimators(MemSizeEstimator<Key> keySizeEstimator,
+                                                               MemSizeEstimator<Value> valueSizeEstimator) {
         this.keySizeEstimator = keySizeEstimator;
         this.valueSizeEstimator = valueSizeEstimator;
         return this;
@@ -115,5 +96,25 @@ public abstract class AbstractCachedSource <Key, Value>
     @Override
     public long estimateCacheSize() {
         return size;
+    }
+
+    /**
+     * Like the Optional interface represents either the value cached
+     * or null cached (i.e. cache knows that underlying storage contain null)
+     */
+    public interface Entry<V> {
+        V value();
+    }
+
+    static final class SimpleEntry<V> implements Entry<V> {
+        private V val;
+
+        public SimpleEntry(V val) {
+            this.val = val;
+        }
+
+        public V value() {
+            return val;
+        }
     }
 }

@@ -27,12 +27,12 @@ import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.listener.ProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 public class Storage implements Repository, ProgramListenerAware {
 
@@ -67,7 +67,7 @@ public class Storage implements Repository, ProgramListenerAware {
 
     @Override
     public void delete(byte[] addr) {
-        if (canListenTrace(addr)) programListener.onStorageClear();
+        if (canListenTrace(addr)) { programListener.onStorageClear(); }
         repository.delete(addr);
     }
 
@@ -113,7 +113,7 @@ public class Storage implements Repository, ProgramListenerAware {
 
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-        if (canListenTrace(addr)) programListener.onStoragePut(key, value);
+        if (canListenTrace(addr)) { programListener.onStoragePut(key, value); }
         repository.addStorageRow(addr, key, value);
     }
 
@@ -193,9 +193,10 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetails) {
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
+                            HashMap<ByteArrayWrapper, ContractDetails> contractDetails) {
         for (ByteArrayWrapper address : contractDetails.keySet()) {
-            if (!canListenTrace(address.getData())) return;
+            if (!canListenTrace(address.getData())) { return; }
 
             ContractDetails details = contractDetails.get(address);
             if (details.isDeleted()) {
@@ -215,7 +216,8 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     @Override
-    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+                            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         repository.loadAccount(addr, cacheAccounts, cacheDetails);
     }
 

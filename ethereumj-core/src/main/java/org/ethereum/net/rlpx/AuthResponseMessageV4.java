@@ -71,10 +71,7 @@ public class AuthResponseMessageV4 {
 
     @Override
     public String toString() {
-        return "AuthResponseMessage{" +
-                "\n  ephemeralPublicKey=" + ephemeralPublicKey +
-                "\n  nonce=" + Hex.toHexString(nonce) +
-                "\n  version=" + version +
-                '}';
+        return "AuthResponseMessage{" + "\n  ephemeralPublicKey=" + ephemeralPublicKey + "\n  nonce=" +
+                Hex.toHexString(nonce) + "\n  version=" + version + '}';
     }
 }

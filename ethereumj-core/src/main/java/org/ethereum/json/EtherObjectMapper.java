@@ -36,8 +36,7 @@ import java.io.IOException;
 public class EtherObjectMapper extends ObjectMapper {
 
     @Override
-    public String writeValueAsString(Object value)
-            throws JsonProcessingException {
+    public String writeValueAsString(Object value) throws JsonProcessingException {
         // alas, we have to pull the recycler directly here...
         SegmentedStringWriter sw = new SegmentedStringWriter(_jsonFactory._getBufferRecycler());
         try {
@@ -68,8 +67,7 @@ public class EtherObjectMapper extends ObjectMapper {
         }
 
         @Override
-        public void writeObjectFieldValueSeparator(JsonGenerator jg)
-                throws IOException, JsonGenerationException {
+        public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException, JsonGenerationException {
             /**
              * Custom object separator (Default is " : ") to make it easier to compare state dumps with other
              * ethereum client implementations

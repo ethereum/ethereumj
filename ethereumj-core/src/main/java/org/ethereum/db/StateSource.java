@@ -19,7 +19,18 @@ package org.ethereum.db;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.AbstractCachedSource;
+import org.ethereum.datasource.AsyncWriteCache;
+import org.ethereum.datasource.BloomedSource;
+import org.ethereum.datasource.CountingBytesSource;
+import org.ethereum.datasource.HashedKeySource;
+import org.ethereum.datasource.JournalSource;
+import org.ethereum.datasource.MemSizeEstimator;
+import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.ReadCache;
+import org.ethereum.datasource.Source;
+import org.ethereum.datasource.SourceChainBox;
+import org.ethereum.datasource.WriteCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,14 +62,16 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
         INST = this;
         add(bloomedSource = new BloomedSource(src, maxBloomSize));
         bloomedSource.setFlushSource(false);
-        add(readCache = new ReadCache.BytesKey<>(bloomedSource).withMaxCapacity(16 * 1024 * 1024 / 512)); // 512 - approx size of a node
+        add(readCache = new ReadCache.BytesKey<>(bloomedSource).withMaxCapacity(
+                16 * 1024 * 1024 / 512)); // 512 - approx size of a node
         readCache.setFlushSource(true);
         add(countingSource = new CountingBytesSource(readCache, true));
         countingSource.setFlushSource(true);
         writeCache = new AsyncWriteCache<byte[], byte[]>(countingSource) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
-                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING);
+                WriteCache.BytesKey<byte[]> ret =
+                        new WriteCache.BytesKey<byte[]>(source, WriteCache.CacheType.COUNTING);
                 ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
                 ret.setFlushSource(true);
                 return ret;

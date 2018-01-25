@@ -44,7 +44,7 @@ import java.util.Set;
 /**
  * A thread-safe version of {@link Map} in which all operations that change the
  * Map are implemented by making a new copy of the underlying Map.
- *
+ * <p>
  * While the creation of a new Map can be expensive, this class is designed for
  * cases in which the primary function is to read data from the Map, not to
  * modify the Map.  Therefore the operations that do not cause a change to this
@@ -58,7 +58,6 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>, Cloneable {
 
     /**
      * Creates a new instance of CopyOnWriteMap.
-     *
      */
     public CopyOnWriteMap() {
         internalMap = new HashMap<K, V>();
@@ -67,8 +66,7 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>, Cloneable {
     /**
      * Creates a new instance of CopyOnWriteMap with the specified initial size
      *
-     * @param initialCapacity
-     *  The initial size of the Map.
+     * @param initialCapacity The initial size of the Map.
      */
     public CopyOnWriteMap(int initialCapacity) {
         internalMap = new HashMap<K, V>(initialCapacity);
@@ -79,9 +77,8 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>, Cloneable {
      * initial data being held by this map is contained in
      * the supplied map.
      *
-     * @param data
-     *  A Map containing the initial contents to be placed into
-     *  this class.
+     * @param data A Map containing the initial contents to be placed into
+     *             this class.
      */
     public CopyOnWriteMap(Map<K, V> data) {
         internalMap = new HashMap<K, V>(data);
@@ -144,6 +141,7 @@ public class CopyOnWriteMap<K, V> implements Map<K, V>, Cloneable {
     // 
     //  Below are methods that do not modify 
     //          the internal Maps            
+
     /**
      * Returns the number of key/value pairs in this map.
      *

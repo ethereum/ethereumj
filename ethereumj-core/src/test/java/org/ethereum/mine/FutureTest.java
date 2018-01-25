@@ -22,7 +22,14 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Anton Nashatyrev on 17.12.2015.
@@ -33,15 +40,15 @@ public class FutureTest {
     public void interruptTest() throws InterruptedException {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
         final ListenableFuture<Object> future = executor.submit(() -> {
-//                try {
-                System.out.println("Waiting");
-                Thread.sleep(10000);
-                System.out.println("Complete");
-                return null;
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    throw e;
-//                }
+            //                try {
+            System.out.println("Waiting");
+            Thread.sleep(10000);
+            System.out.println("Complete");
+            return null;
+            //                } catch (Exception e) {
+            //                    e.printStackTrace();
+            //                    throw e;
+            //                }
         });
         future.addListener(() -> {
             System.out.println("Listener: " + future.isCancelled() + ", " + future.isDone());
@@ -60,10 +67,9 @@ public class FutureTest {
 
     @Test
     public void guavaExecutor() throws ExecutionException, InterruptedException {
-//        ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-//                new ThreadPoolExecutor(2, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
-        ExecutorService executor =
-                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1));
+        //        ListeningExecutorService executor = MoreExecutors.listeningDecorator(
+        //                new ThreadPoolExecutor(2, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
+        ExecutorService executor = new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1));
         Future<Object> future = null;
         for (int i = 0; i < 4; i++) {
             final int ii = i;
@@ -84,8 +90,11 @@ public class FutureTest {
 
     @Test
     public void anyFutureTest() throws ExecutionException, InterruptedException {
-        ListeningExecutorService executor = MoreExecutors.listeningDecorator(
-                new ThreadPoolExecutor(16, 16, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>()));
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(16,
+                                                                                                    16,
+                                                                                                    1L,
+                                                                                                    TimeUnit.SECONDS,
+                                                                                                    new LinkedBlockingQueue<>()));
         AnyFuture<Integer> anyFuture = new AnyFuture<Integer>() {
             @Override
             protected void postProcess(Integer integer) {
@@ -124,6 +133,7 @@ public class FutureTest {
             anyFuture.add(future);
         }
         System.out.println("Getting anyFuture...");
-        System.out.println("anyFuture.get(): " + anyFuture.get() + ", " + anyFuture.isCancelled() + ", " + anyFuture.isDone());
+        System.out.println(
+                "anyFuture.get(): " + anyFuture.get() + ", " + anyFuture.isCancelled() + ", " + anyFuture.isDone());
     }
 }

@@ -17,15 +17,15 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
 
 /**
  * Checks {@link BlockHeader#gasLimit} against {@link Constants#getMIN_GAS_LIMIT}. <br>
- *
+ * <p>
  * This check is NOT run in Frontier
  *
  * @author Mikhail Kalinin

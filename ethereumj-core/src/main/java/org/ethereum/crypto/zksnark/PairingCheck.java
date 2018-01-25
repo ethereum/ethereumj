@@ -17,34 +17,37 @@
  */
 package org.ethereum.crypto.zksnark;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.ethereum.crypto.zksnark.Params.B_Fp2;
 import static org.ethereum.crypto.zksnark.Params.PAIRING_FINAL_EXPONENT_Z;
 import static org.ethereum.crypto.zksnark.Params.TWIST;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Implementation of a Pairing Check operation over points of two twisted Barreto–Naehrig curves {@link BN128Fp}, {@link BN128Fp2}<br/>
+ * Implementation of a Pairing Check operation over points of two twisted Barreto–Naehrig curves {@link BN128Fp},
+ * {@link BN128Fp2}<br/>
  * <br/>
- *
+ * <p>
  * The Pairing itself is a transformation of the form G1 x G2 -> Gt, <br/>
  * where G1 and G2 are members of {@link BN128G1} {@link BN128G2} respectively, <br/>
  * Gt is a subgroup of roots of unity in {@link Fp12} field, root degree equals to {@link Params#R} <br/>
  * <br/>
- *
- * Pairing Check input is a sequence of point pairs, the result is either 1 or 0, 1 is considered as success, 0 as fail <br/>
+ * <p>
+ * Pairing Check input is a sequence of point pairs, the result is either 1 or 0, 1 is considered as success, 0 as
+ * fail <br/>
  * <br/>
- *
+ * <p>
  * Usage:
  * <ul>
- *      <li>add pairs sequentially with {@link #addPair(BN128G1, BN128G2)}</li>
- *      <li>run check with {@link #run()} after all paris have been added</li>
- *      <li>get result with {@link #result()}</li>
+ * <li>add pairs sequentially with {@link #addPair(BN128G1, BN128G2)}</li>
+ * <li>run check with {@link #run()} after all paris have been added</li>
+ * <li>get result with {@link #result()}</li>
  * </ul>
- *
- * Arithmetic has been ported from <a href="https://github.com/scipr-lab/libff/blob/master/libff/algebra/curves/alt_bn128/alt_bn128_pairing.cpp">libff</a>
+ * <p>
+ * Arithmetic has been ported from
+ * <a href="https://github.com/scipr-lab/libff/blob/master/libff/algebra/curves/alt_bn128/alt_bn128_pairing.cpp">libff</a>
  * Ate pairing algorithms
  *
  * @author Mikhail Kalinin
@@ -63,28 +66,6 @@ public class PairingCheck {
         return new PairingCheck();
     }
 
-    public void addPair(BN128G1 g1, BN128G2 g2) {
-        pairs.add(Pair.of(g1, g2));
-    }
-
-    public void run() {
-
-        for (Pair pair : pairs) {
-
-            Fp12 miller = pair.millerLoop();
-
-            if (!miller.equals(Fp12._1))    // run mul code only if necessary
-                product = product.mul(miller);
-        }
-
-        // finalize
-        product = finalExponentiation(product);
-    }
-
-    public int result() {
-        return product.equals(Fp12._1) ? 1 : 0;
-    }
-
     private static Fp12 millerLoop(BN128G1 g1, BN128G2 g2) {
 
         // convert to affine coordinates
@@ -98,7 +79,7 @@ public class PairingCheck {
         int idx = 0;
 
         // for each bit except most significant one
-        for (int i = LOOP_COUNT.bitLength() - 2; i >=0; i--) {
+        for (int i = LOOP_COUNT.bitLength() - 2; i >= 0; i--) {
 
             EllCoeffs c = coeffs.get(idx++);
             f = f.squared();
@@ -127,7 +108,7 @@ public class PairingCheck {
         BN128G2 addend = base;
 
         // for each bit except most significant one
-        for (int i = LOOP_COUNT.bitLength() - 2; i >=0; i--) {
+        for (int i = LOOP_COUNT.bitLength() - 2; i >= 0; i--) {
 
             Precomputed doubling = flippedMillerLoopDoubling(addend);
 
@@ -144,7 +125,7 @@ public class PairingCheck {
         BN128G2 q1 = base.mulByP();
         BN128G2 q2 = q1.mulByP();
 
-        q2 = new BN128G2(q2.x, q2.y.negate(), q2.z) ; // q2.y = -q2.y
+        q2 = new BN128G2(q2.x, q2.y.negate(), q2.z); // q2.y = -q2.y
 
         Precomputed addition = flippedMillerLoopMixedAddition(q1, addend);
         addend = addition.g2;
@@ -157,7 +138,7 @@ public class PairingCheck {
     }
 
     private static Precomputed flippedMillerLoopMixedAddition(BN128G2 base, BN128G2 addend) {
-        
+
         Fp2 x1 = addend.x, y1 = addend.y, z1 = addend.z;
         Fp2 x2 = base.x, y2 = base.y;
 
@@ -177,10 +158,7 @@ public class PairingCheck {
         Fp2 ellVV = e.negate();                             // ell_VV = -e
         Fp2 ellVW = d;                                      // ell_VW = d
 
-        return Precomputed.of(
-                new BN128G2(x3, y3, z3),
-                new EllCoeffs(ell0, ellVW, ellVV)
-        );
+        return Precomputed.of(new BN128G2(x3, y3, z3), new EllCoeffs(ell0, ellVW, ellVV));
     }
 
     private static Precomputed flippedMillerLoopDoubling(BN128G2 g2) {
@@ -207,10 +185,7 @@ public class PairingCheck {
         Fp2 ellVW = h.negate();         // ell_VW = -h
         Fp2 ellVV = j.add(j).add(j);    // ell_VV = 3 * j
 
-        return Precomputed.of(
-                new BN128G2(rx, ry, rz),
-                new EllCoeffs(ell0, ellVW, ellVV)
-        );
+        return Precomputed.of(new BN128G2(rx, ry, rz), new EllCoeffs(ell0, ellVW, ellVV));
     }
 
     public static Fp12 finalExponentiation(Fp12 el) {
@@ -249,18 +224,40 @@ public class PairingCheck {
         return v;
     }
 
+    public void addPair(BN128G1 g1, BN128G2 g2) {
+        pairs.add(Pair.of(g1, g2));
+    }
+
+    public void run() {
+
+        for (Pair pair : pairs) {
+
+            Fp12 miller = pair.millerLoop();
+
+            if (!miller.equals(Fp12._1))    // run mul code only if necessary
+            { product = product.mul(miller); }
+        }
+
+        // finalize
+        product = finalExponentiation(product);
+    }
+
+    public int result() {
+        return product.equals(Fp12._1) ? 1 : 0;
+    }
+
     static class Precomputed {
 
         BN128G2 g2;
         EllCoeffs coeffs;
 
-        static Precomputed of(BN128G2 g2, EllCoeffs coeffs) {
-            return new Precomputed(g2, coeffs);
-        }
-
         Precomputed(BN128G2 g2, EllCoeffs coeffs) {
             this.g2 = g2;
             this.coeffs = coeffs;
+        }
+
+        static Precomputed of(BN128G2 g2, EllCoeffs coeffs) {
+            return new Precomputed(g2, coeffs);
         }
     }
 
@@ -269,20 +266,20 @@ public class PairingCheck {
         BN128G1 g1;
         BN128G2 g2;
 
-        static Pair of(BN128G1 g1, BN128G2 g2) {
-            return new Pair(g1, g2);
-        }
-
         Pair(BN128G1 g1, BN128G2 g2) {
             this.g1 = g1;
             this.g2 = g2;
         }
 
+        static Pair of(BN128G1 g1, BN128G2 g2) {
+            return new Pair(g1, g2);
+        }
+
         Fp12 millerLoop() {
 
             // miller loop result equals "1" if at least one of the points is zero
-            if (g1.isZero()) return Fp12._1;
-            if (g2.isZero()) return Fp12._1;
+            if (g1.isZero()) { return Fp12._1; }
+            if (g2.isZero()) { return Fp12._1; }
 
             return PairingCheck.millerLoop(g1, g2);
         }

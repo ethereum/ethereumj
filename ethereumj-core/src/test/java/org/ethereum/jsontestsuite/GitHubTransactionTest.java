@@ -21,7 +21,11 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.jsontestsuite.suite.TxTestSuite;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
@@ -32,7 +36,8 @@ import java.util.HashSet;
 public class GitHubTransactionTest {
 
     static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "1405e8a09a6f695e843259b9029b04a3fc4da3fa";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
+    static String treeSHA = "1405e8a09a6f695e843259b9029b04a3fc4da3fa";
+            // https://github.com/ethereum/tests/tree/develop/TransactionTests/
 
     static TxTestSuite suite;
 
@@ -74,15 +79,13 @@ public class GitHubTransactionTest {
 
     @Test
     public void ttFrontier() throws IOException, ParseException {
-        suite.run("ttFrontier", new HashSet<>(Arrays.asList(
-                "String10MbData"    // too big to run it each time
+        suite.run("ttFrontier", new HashSet<>(Arrays.asList("String10MbData"    // too big to run it each time
         )));
     }
 
     @Test
     public void ttHomestead() throws IOException, ParseException {
-        suite.run("ttHomestead", new HashSet<>(Arrays.asList(
-                "String10MbData"    // too big to run it each time
+        suite.run("ttHomestead", new HashSet<>(Arrays.asList("String10MbData"    // too big to run it each time
         )));
     }
 

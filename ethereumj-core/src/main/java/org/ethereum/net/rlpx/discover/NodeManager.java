@@ -22,7 +22,12 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.PeerSource;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.rlpx.*;
+import org.ethereum.net.rlpx.FindNodeMessage;
+import org.ethereum.net.rlpx.Message;
+import org.ethereum.net.rlpx.NeighborsMessage;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.PingMessage;
+import org.ethereum.net.rlpx.PongMessage;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
 import org.slf4j.LoggerFactory;
@@ -32,68 +37,66 @@ import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static java.lang.Math.min;
-
 /**
  * The central class for Peer Discovery machinery.
- *
+ * <p>
  * The NodeManager manages info on all the Nodes discovered by the peer discovery
  * protocol, routes protocol messages to the corresponding NodeHandlers and
  * supplies the info about discovered Nodes and their usage statistics
- *
+ * <p>
  * Created by Anton Nashatyrev on 16.07.2015.
  */
 @Component
-public class NodeManager implements Consumer<DiscoveryEvent>{
+public class NodeManager implements Consumer<DiscoveryEvent> {
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
-
-    private final boolean PERSIST;
-
-    private static final long LISTENER_REFRESH_RATE = 1000;
-    private static final long DB_COMMIT_RATE = 1 * 60 * 1000;
     static final int MAX_NODES = 2000;
     static final int NODES_TRIM_THRESHOLD = 3000;
-
+    private static final long LISTENER_REFRESH_RATE = 1000;
+    private static final long DB_COMMIT_RATE = 1 * 60 * 1000;
+    final ECKey key;
+    final Node homeNode;
+    private final boolean PERSIST;
     PeerConnectionTester peerConnectionManager;
     PeerSource peerSource;
     EthereumListener ethereumListener;
     SystemProperties config = SystemProperties.getDefault();
-
     Consumer<DiscoveryEvent> messageSender;
-
     NodeTable table;
-    private Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
-    final ECKey key;
-    final Node homeNode;
-    private List<Node> bootNodes;
-
     // option to handle inbounds only from known peers (i.e. which were discovered by ourselves)
     boolean inboundOnlyFromKnownNodes = false;
-
+    private Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
+    private List<Node> bootNodes;
     private boolean discoveryEnabled;
 
     private Map<DiscoverListener, ListenerHandler> listeners = new IdentityHashMap<>();
 
     private boolean inited = false;
     private Timer logStatsTimer = new Timer();
-    private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");;
+    private Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");
+    ;
     private ScheduledExecutorService pongTimer;
 
     @Autowired
-    public NodeManager(SystemProperties config, EthereumListener ethereumListener,
-                       ApplicationContext ctx, PeerConnectionTester peerConnectionManager) {
+    public NodeManager(SystemProperties config, EthereumListener ethereumListener, ApplicationContext ctx,
+                       PeerConnectionTester peerConnectionManager) {
         this.config = config;
         this.ethereumListener = ethereumListener;
         this.peerConnectionManager = peerConnectionManager;
 
         PERSIST = config.peerDiscoveryPersist();
-        if (PERSIST) peerSource = ctx.getBean(PeerSource.class);
+        if (PERSIST) { peerSource = ctx.getBean(PeerSource.class); }
         discoveryEnabled = config.peerDiscovery();
 
         key = config.getMyKey();
@@ -194,7 +197,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
         NodeHandler ret = nodeHandlerMap.get(key);
         if (ret == null) {
             trimTable();
-            ret = new NodeHandler(n ,this);
+            ret = new NodeHandler(n, this);
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret + " " + n);
             if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
@@ -222,7 +225,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
 
             for (NodeHandler handler : sorted) {
                 nodeHandlerMap.remove(getKey(handler.getNode()));
-                if (nodeHandlerMap.size() <= MAX_NODES) break;
+                if (nodeHandlerMap.size() <= MAX_NODES) { break; }
             }
         }
     }
@@ -278,14 +281,18 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
 
     public void sendOutbound(DiscoveryEvent discoveryEvent) {
         if (discoveryEnabled && messageSender != null) {
-            logger.trace(" <===({}) {} [{}] {}", discoveryEvent.getAddress(),
-                    discoveryEvent.getMessage().getClass().getSimpleName(), this, discoveryEvent.getMessage());
+            logger.trace(" <===({}) {} [{}] {}",
+                         discoveryEvent.getAddress(),
+                         discoveryEvent.getMessage().getClass().getSimpleName(),
+                         this,
+                         discoveryEvent.getMessage());
             messageSender.accept(discoveryEvent);
         }
     }
 
     public void stateChanged(NodeHandler nodeHandler, NodeHandler.State oldState, NodeHandler.State newState) {
-        if (discoveryEnabled && peerConnectionManager != null) {  // peerConnectionManager can be null if component not inited yet
+        if (discoveryEnabled &&
+                peerConnectionManager != null) {  // peerConnectionManager can be null if component not inited yet
             peerConnectionManager.nodeStatusChanged(nodeHandler);
         }
     }
@@ -305,13 +312,10 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
      * The nodes are sorted then by their totalDifficulties
      *
      * @param predicate only those nodes which are satisfied to its condition are included in results
-     * @param limit max size of returning list
-     *
+     * @param limit     max size of returning list
      * @return list of nodes matching criteria
      */
-    public List<NodeHandler> getNodes(
-            Predicate<NodeHandler> predicate,
-            int limit    ) {
+    public List<NodeHandler> getNodes(Predicate<NodeHandler> predicate, int limit) {
         ArrayList<NodeHandler> filtered = new ArrayList<>();
         synchronized (this) {
             for (NodeHandler handler : nodeHandlerMap.values()) {
@@ -320,8 +324,9 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
                 }
             }
         }
-        filtered.sort((o1, o2) -> o2.getNodeStatistics().getEthTotalDifficulty().compareTo(
-                o1.getNodeStatistics().getEthTotalDifficulty()));
+        filtered.sort((o1, o2) -> o2.getNodeStatistics()
+                .getEthTotalDifficulty()
+                .compareTo(o1.getNodeStatistics().getEthTotalDifficulty()));
         return CollectionUtils.truncate(filtered, limit);
     }
 
@@ -358,7 +363,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
                 sb.append(nodeHandler).append("\t").append(nodeHandler.getNodeStatistics()).append("\n");
             } else {
                 zeroReputCount++;
-        }
+            }
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();

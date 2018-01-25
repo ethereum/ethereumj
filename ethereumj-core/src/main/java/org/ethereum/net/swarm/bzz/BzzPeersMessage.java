@@ -33,8 +33,8 @@ import java.util.List;
  */
 public class BzzPeersMessage extends BzzMessage {
 
-    private List<PeerAddress> peers;
     long timeout;
+    private List<PeerAddress> peers;
     // optional
     private Key key;
 
@@ -62,12 +62,14 @@ public class BzzPeersMessage extends BzzMessage {
         for (RLPElement a : addrs) {
             peers.add(PeerAddress.parse((RLPList) a));
         }
-        timeout = ByteUtil.byteArrayToLong(paramsList.get(1).getRLPData());;
+        timeout = ByteUtil.byteArrayToLong(paramsList.get(1).getRLPData());
+        ;
         if (paramsList.size() > 2) {
             key = new Key(paramsList.get(2).getRLPData());
         }
         if (paramsList.size() > 3) {
-            id = ByteUtil.byteArrayToLong(paramsList.get(3).getRLPData());;
+            id = ByteUtil.byteArrayToLong(paramsList.get(3).getRLPData());
+            ;
         }
 
         parsed = true;
@@ -85,16 +87,14 @@ public class BzzPeersMessage extends BzzMessage {
         if (key == null) {
             this.encoded = RLP.encodeList(bPeersList, bTimeout);
         } else {
-            this.encoded = RLP.encodeList(bPeersList,
-                    bTimeout,
-                    RLP.encodeElement(key.getBytes()),
-                    RLP.encodeInt((int) id));
+            this.encoded =
+                    RLP.encodeList(bPeersList, bTimeout, RLP.encodeElement(key.getBytes()), RLP.encodeInt((int) id));
         }
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
@@ -122,10 +122,6 @@ public class BzzPeersMessage extends BzzMessage {
 
     @Override
     public String toString() {
-        return "BzzPeersMessage{" +
-                "peers=" + peers +
-                ", key=" + key +
-                ", id=" + id +
-                '}';
+        return "BzzPeersMessage{" + "peers=" + peers + ", key=" + key + ", id=" + id + '}';
     }
 }

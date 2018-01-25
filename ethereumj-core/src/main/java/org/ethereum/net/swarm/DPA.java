@@ -20,7 +20,7 @@ package org.ethereum.net.swarm;
 /**
  * Distributed Preimage Archive
  * Acts as a high-level API to the Swarm
- *
+ * <p>
  * From Go implementation:
  * DPA provides the client API entrypoints Store and Retrieve to store and retrieve
  * It can store anything that has a byte slice representation, so files or serialised objects etc.
@@ -31,12 +31,12 @@ package org.ethereum.net.swarm;
  * i.e. the chunks needed to reconstruct a large file are only fetched and processed if that particular part
  * of the document is actually read.
  * As the chunker produces chunks, DPA dispatches them to the chunk store for storage or retrieval.
- *  The ChunkStore interface is implemented by :
- *  - memStore: a memory cache
+ * The ChunkStore interface is implemented by :
+ * - memStore: a memory cache
  * - dbStore: local disk/db store
  * - localStore: a combination (sequence of) memStore and dbStore
  * - netStore: dht storage
- *
+ * <p>
  * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class DPA {

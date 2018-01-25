@@ -17,9 +17,8 @@
  */
 package org.ethereum.net.swarm.bzz;
 
-import com.google.common.base.Joiner;
-import org.apache.commons.codec.binary.StringUtils;
-import org.ethereum.net.p2p.Peer;
+import static org.ethereum.crypto.HashUtil.sha3;
+
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.Util;
@@ -32,11 +31,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-
 /**
  * Class similar for {@link Node} used in the swarm
- *
+ * <p>
  * Created by Admin on 25.06.2015.
  */
 public class PeerAddress {
@@ -63,6 +60,14 @@ public class PeerAddress {
         this.ip = ip;
         this.port = port;
         this.id = id;
+    }
+
+    static PeerAddress parse(RLPList l) {
+        PeerAddress ret = new PeerAddress();
+        ret.ip = l.get(0).getRLPData();
+        ret.port = ByteUtil.byteArrayToInt(l.get(1).getRLPData());
+        ret.id = l.get(2).getRLPData();
+        return ret;
     }
 
     public Node toNode() {
@@ -95,28 +100,18 @@ public class PeerAddress {
         return id;
     }
 
-    static PeerAddress parse(RLPList l) {
-        PeerAddress ret = new PeerAddress();
-        ret.ip = l.get(0).getRLPData();
-        ret.port = ByteUtil.byteArrayToInt(l.get(1).getRLPData());
-        ret.id = l.get(2).getRLPData();
-        return ret;
-    }
-
     byte[] encodeRlp() {
-        return RLP.encodeList(RLP.encodeElement(ip),
-                RLP.encodeInt(port),
-                RLP.encodeElement(id));
+        return RLP.encodeList(RLP.encodeElement(ip), RLP.encodeInt(port), RLP.encodeElement(id));
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         PeerAddress that = (PeerAddress) o;
 
-        if (port != that.port) return false;
+        if (port != that.port) { return false; }
         return Arrays.equals(ip, that.ip);
 
     }
@@ -130,10 +125,7 @@ public class PeerAddress {
 
     @Override
     public String toString() {
-        return "PeerAddress{" +
-                "ip=" + Util.ipBytesToString(ip) +
-                ", port=" + port +
-                ", id=" + Hex.toHexString(id) +
+        return "PeerAddress{" + "ip=" + Util.ipBytesToString(ip) + ", port=" + port + ", id=" + Hex.toHexString(id) +
                 '}';
     }
 }

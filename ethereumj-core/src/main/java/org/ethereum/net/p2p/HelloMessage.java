@@ -17,6 +17,8 @@
  */
 package org.ethereum.net.p2p;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import com.google.common.base.Joiner;
 import org.ethereum.net.client.Capability;
 import org.ethereum.util.ByteUtil;
@@ -28,8 +30,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * Wrapper around an Ethereum HelloMessage on the network
@@ -64,8 +64,8 @@ public class HelloMessage extends P2pMessage {
         super(encoded);
     }
 
-    public HelloMessage(byte p2pVersion, String clientId,
-                        List<Capability> capabilities, int listenPort, String peerId) {
+    public HelloMessage(byte p2pVersion, String clientId, List<Capability> capabilities, int listenPort,
+                        String peerId) {
         this.p2pVersion = p2pVersion;
         this.clientId = clientId;
         this.capabilities = capabilities;
@@ -111,56 +111,54 @@ public class HelloMessage extends P2pMessage {
         byte[][] capabilities = new byte[this.capabilities.size()][];
         for (int i = 0; i < this.capabilities.size(); i++) {
             Capability capability = this.capabilities.get(i);
-            capabilities[i] = RLP.encodeList(
-                    RLP.encodeElement(capability.getName().getBytes()),
-                    RLP.encodeInt(capability.getVersion()));
+            capabilities[i] = RLP.encodeList(RLP.encodeElement(capability.getName().getBytes()),
+                                             RLP.encodeInt(capability.getVersion()));
         }
         byte[] capabilityList = RLP.encodeList(capabilities);
         byte[] peerPort = RLP.encodeInt(this.listenPort);
         byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
 
-        this.encoded = RLP.encodeList(p2pVersion, clientId,
-                capabilityList, peerPort, peerId);
+        this.encoded = RLP.encodeList(p2pVersion, clientId, capabilityList, peerPort, peerId);
     }
 
     @Override
     public byte[] getEncoded() {
-        if (encoded == null) encode();
+        if (encoded == null) { encode(); }
         return encoded;
     }
 
     public byte getP2PVersion() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return p2pVersion;
     }
 
     public String getClientId() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return clientId;
     }
 
     public List<Capability> getCapabilities() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return capabilities;
     }
 
     public int getListenPort() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return listenPort;
     }
 
     public String getPeerId() {
-        if (!parsed) parse();
+        if (!parsed) { parse(); }
         return peerId;
+    }
+
+    public void setPeerId(String peerId) {
+        this.peerId = peerId;
     }
 
     @Override
     public P2pMessageCodes getCommand() {
         return P2pMessageCodes.HELLO;
-    }
-
-    public void setPeerId(String peerId) {
-        this.peerId = peerId;
     }
 
     public void setP2pVersion(byte p2pVersion) {
@@ -173,11 +171,9 @@ public class HelloMessage extends P2pMessage {
     }
 
     public String toString() {
-        if (!parsed) parse();
-        return "[" + this.getCommand().name() + " p2pVersion="
-                + this.p2pVersion + " clientId=" + this.clientId
-                + " capabilities=[" + Joiner.on(" ").join(this.capabilities)
-                + "]" + " peerPort=" + this.listenPort + " peerId="
-                + this.peerId + "]";
+        if (!parsed) { parse(); }
+        return "[" + this.getCommand().name() + " p2pVersion=" + this.p2pVersion + " clientId=" + this.clientId +
+                " capabilities=[" + Joiner.on(" ").join(this.capabilities) + "]" + " peerPort=" + this.listenPort +
+                " peerId=" + this.peerId + "]";
     }
 }

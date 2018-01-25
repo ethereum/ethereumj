@@ -20,6 +20,8 @@
 
 package org.ethereum.config.blockchain;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.Constants;
@@ -34,8 +36,6 @@ import org.ethereum.validator.BlockHeaderValidator;
 
 import java.math.BigInteger;
 import java.util.List;
-
-import static com.google.common.collect.Lists.newArrayList;
 
 @SuppressWarnings("WeakerAccess")
 class TestBlockchainConfig extends AbstractConfig {
@@ -96,7 +96,8 @@ class TestBlockchainConfig extends AbstractConfig {
     }
 
     @Override
-    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx, Repository repository) {
+    public String validateTransactionChanges(BlockStore blockStore, Block curBlock, Transaction tx,
+                                             Repository repository) {
         return validateTransactionChanges;
     }
 

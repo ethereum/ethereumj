@@ -22,13 +22,6 @@ import static org.ethereum.listener.EthereumListener.PendingTransactionState.INC
 import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
 import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -47,6 +40,12 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
 /**
  * Keeps logic providing pending state management
  *
@@ -56,60 +55,36 @@ import org.springframework.stereotype.Component;
 @Component
 public class PendingStateImpl implements PendingState {
 
-    public static class TransactionSortedSet extends TreeSet<Transaction> {
-        public TransactionSortedSet() {
-            super((tx1, tx2) -> {
-                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
-                        ByteUtil.byteArrayToLong(tx2.getNonce());
-                if (nonceDiff != 0) {
-                    return nonceDiff > 0 ? 1 : -1;
-                }
-                return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
-            });
-        }
-    }
-
     private static final Logger logger = LoggerFactory.getLogger("pending");
-
-    @Autowired
-    private SystemProperties config = SystemProperties.getDefault();
-
-    @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
-
-    @Autowired
-    private EthereumListener listener;
-
-    @Autowired
-    private BlockchainImpl blockchain;
-
-    @Autowired
-    private BlockStore blockStore;
-
-    @Autowired
-    private TransactionStore transactionStore;
-
-    @Autowired
-    private ProgramInvokeFactory programInvokeFactory;
-
-//    private Repository repository;
-
     private final List<PendingTransaction> pendingTransactions = new ArrayList<>();
-
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
     private final Map<ByteArrayWrapper, Object> receivedTxs = new LRUMap<>(100000);
     private final Object dummyObject = new Object();
+    @Autowired
+    CommonConfig commonConfig = CommonConfig.getDefault();
+    @Autowired
+    private SystemProperties config = SystemProperties.getDefault();
+    @Autowired
+    private EthereumListener listener;
+    @Autowired
+    private BlockchainImpl blockchain;
+    @Autowired
+    private BlockStore blockStore;
 
+    //    private Repository repository;
+    @Autowired
+    private TransactionStore transactionStore;
+    @Autowired
+    private ProgramInvokeFactory programInvokeFactory;
     private Repository pendingState;
-
     private Block best = null;
 
     @Autowired
     public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
         this.listener = listener;
         this.blockchain = blockchain;
-//        this.repository = blockchain.getRepository();
+        //        this.repository = blockchain.getRepository();
         this.blockStore = blockchain.getBlockStore();
         this.programInvokeFactory = blockchain.getProgramInvokeFactory();
         this.transactionStore = blockchain.getTransactionStore();
@@ -172,8 +147,13 @@ public class PendingStateImpl implements PendingState {
             }
         }
 
-        logger.debug("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
-                transactions.size(), unknownTx, newPending, receivedTxs.size());
+        logger.debug(
+                "Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known " +
+                        "txs: {})",
+                transactions.size(),
+                unknownTx,
+                newPending,
+                receivedTxs.size());
 
         if (!newPending.isEmpty()) {
             listener.onPendingTransactionsReceived(newPending);
@@ -202,10 +182,12 @@ public class PendingStateImpl implements PendingState {
     private void fireTxUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]",
-                    getPendingTransactions().size(),
-                    state, Hex.toHexString(txReceipt.getTransaction().getSender()).substring(0, 8),
-                    ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
-                    block.getShortDescr(), txReceipt.getError()));
+                                       getPendingTransactions().size(),
+                                       state,
+                                       Hex.toHexString(txReceipt.getTransaction().getSender()).substring(0, 8),
+                                       ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
+                                       block.getShortDescr(),
+                                       txReceipt.getError()));
         }
         listener.onPendingTransactionUpdate(txReceipt, state, block);
     }
@@ -213,7 +195,8 @@ public class PendingStateImpl implements PendingState {
     /**
      * Executes pending tx on the latest best block
      * Fires pending state update
-     * @param tx    Transaction
+     *
+     * @param tx Transaction
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
     private boolean addPendingTransactionImpl(final Transaction tx) {
@@ -261,7 +244,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private Block findCommonAncestor(Block b1, Block b2) {
-        while(!b1.isEqual(b2)) {
+        while (!b1.isEqual(b2)) {
             if (b1.getNumber() >= b2.getNumber()) {
                 b1 = blockchain.getBlockByHash(b1.getParentHash());
             }
@@ -285,13 +268,14 @@ public class PendingStateImpl implements PendingState {
 
             Block commonAncestor = findCommonAncestor(getBestBlock(), newBlock);
 
-            if (logger.isDebugEnabled()) logger.debug("New best block from another fork: "
-                    + newBlock.getShortDescr() + ", old best: " + getBestBlock().getShortDescr()
-                    + ", ancestor: " + commonAncestor.getShortDescr());
+            if (logger.isDebugEnabled()) {
+                logger.debug("New best block from another fork: " + newBlock.getShortDescr() + ", old best: " +
+                                     getBestBlock().getShortDescr() + ", ancestor: " + commonAncestor.getShortDescr());
+            }
 
             // first return back the transactions from forked blocks
             Block rollback = getBestBlock();
-            while(!rollback.isEqual(commonAncestor)) {
+            while (!rollback.isEqual(commonAncestor)) {
                 List<PendingTransaction> blockTxs = new ArrayList<>();
                 for (Transaction tx : rollback.getTransactionsList()) {
                     logger.trace("Returning transaction back to pending: " + tx);
@@ -307,7 +291,7 @@ public class PendingStateImpl implements PendingState {
             // next process blocks from new fork
             Block main = newBlock;
             List<Block> mainFork = new ArrayList<>();
-            while(!main.isEqual(commonAncestor)) {
+            while (!main.isEqual(commonAncestor)) {
                 mainFork.add(main);
                 main = blockchain.getBlockByHash(main.getParentHash());
             }
@@ -343,20 +327,20 @@ public class PendingStateImpl implements PendingState {
                 outdated.add(tx);
 
                 fireTxUpdate(createDroppedReceipt(tx.getTransaction(),
-                        "Tx was not included into last " + config.txOutdatedThreshold() + " blocks"),
-                        DROPPED, getBestBlock());
+                                                  "Tx was not included into last " + config.txOutdatedThreshold() +
+                                                          " blocks"), DROPPED, getBestBlock());
             }
         }
 
-        if (outdated.isEmpty()) return;
+        if (outdated.isEmpty()) { return; }
 
-        if (logger.isDebugEnabled())
-            for (PendingTransaction tx : outdated)
-                logger.trace(
-                        "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
-                        tx.getBlockNumber(),
-                        Hex.toHexString(tx.getHash())
-                );
+        if (logger.isDebugEnabled()) {
+            for (PendingTransaction tx : outdated) {
+                logger.trace("Clear outdated pending transaction, block.number: [{}] hash: [{}]",
+                             tx.getBlockNumber(),
+                             Hex.toHexString(tx.getHash()));
+            }
+        }
 
         pendingTransactions.removeAll(outdated);
     }
@@ -378,7 +362,8 @@ public class PendingStateImpl implements PendingState {
                     }
                     fireTxUpdate(receipt, INCLUDED, block);
                 } catch (Exception e) {
-                    logger.error("Exception creating onPendingTransactionUpdate (block: " + block.getShortDescr() + ", tx: " + i, e);
+                    logger.error("Exception creating onPendingTransactionUpdate (block: " + block.getShortDescr() +
+                                         ", tx: " + i, e);
                 }
             }
         }
@@ -407,10 +392,14 @@ public class PendingStateImpl implements PendingState {
 
         Block best = getBestBlock();
 
-        TransactionExecutor executor = new TransactionExecutor(
-                tx, best.getCoinbase(), getRepository(),
-                blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
-                .withCommonConfig(commonConfig);
+        TransactionExecutor executor = new TransactionExecutor(tx,
+                                                               best.getCoinbase(),
+                                                               getRepository(),
+                                                               blockStore,
+                                                               programInvokeFactory,
+                                                               createFakePendingBlock(),
+                                                               new EthereumListenerAdapter(),
+                                                               0).withCommonConfig(commonConfig);
 
         executor.init();
         executor.execute();
@@ -422,27 +411,36 @@ public class PendingStateImpl implements PendingState {
 
     private Block createFakePendingBlock() {
         // creating fake lightweight calculated block with no hashes calculations
-        Block block = new Block(best.getHash(),
-                BlockchainImpl.EMPTY_LIST_HASH, // uncleHash
-                new byte[32],
-                new byte[32], // log bloom - from tx receipts
-                new byte[0], // difficulty computed right after block creation
-                best.getNumber() + 1,
-                ByteUtil.longToBytesNoLeadZeroes(Long.MAX_VALUE), // max Gas Limit
-                0,  // gas used
-                best.getTimestamp() + 1,  // block time
-                new byte[0],  // extra data
-                new byte[0],  // mixHash (to mine)
-                new byte[0],  // nonce   (to mine)
-                new byte[32],  // receiptsRoot
-                new byte[32],    // TransactionsRoot
-                new byte[32], // stateRoot
-                Collections.<Transaction>emptyList(), // tx list
-                Collections.<BlockHeader>emptyList());  // uncle list
+        Block block = new Block(best.getHash(), BlockchainImpl.EMPTY_LIST_HASH, // uncleHash
+                                new byte[32], new byte[32], // log bloom - from tx receipts
+                                new byte[0], // difficulty computed right after block creation
+                                best.getNumber() + 1, ByteUtil.longToBytesNoLeadZeroes(Long.MAX_VALUE), // max Gas Limit
+                                0,  // gas used
+                                best.getTimestamp() + 1,  // block time
+                                new byte[0],  // extra data
+                                new byte[0],  // mixHash (to mine)
+                                new byte[0],  // nonce   (to mine)
+                                new byte[32],  // receiptsRoot
+                                new byte[32],    // TransactionsRoot
+                                new byte[32], // stateRoot
+                                Collections.<Transaction>emptyList(), // tx list
+                                Collections.<BlockHeader>emptyList());  // uncle list
         return block;
     }
 
     public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
+    }
+
+    public static class TransactionSortedSet extends TreeSet<Transaction> {
+        public TransactionSortedSet() {
+            super((tx1, tx2) -> {
+                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) - ByteUtil.byteArrayToLong(tx2.getNonce());
+                if (nonceDiff != 0) {
+                    return nonceDiff > 0 ? 1 : -1;
+                }
+                return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
+            });
+        }
     }
 }
