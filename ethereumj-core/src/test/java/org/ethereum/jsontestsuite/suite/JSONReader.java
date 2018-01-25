@@ -44,7 +44,26 @@ public class JSONReader {
 
     static ExecutorService threadPool;
 
+    private static int MAX_RETRIES = 3;
+
     public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit) {
+        List<String> result = null;
+        for (int i = 0; i < MAX_RETRIES; ++i) {
+            try {
+                result = loadJSONsFromCommitImpl(filenames, shacommit);
+                break;
+            } catch (Exception ex) {
+
+                logger.debug(String.format("Failed to retrieve %d files from sha commit %s, retry %d/%d",
+                        filenames.size(), shacommit, (i + 1), MAX_RETRIES), ex);
+            }
+        }
+        if (result == null) throw new RuntimeException("Failed to retrieve files from commit");
+
+        return result;
+    }
+
+    public static List<String> loadJSONsFromCommitImpl(List<String> filenames, final String shacommit) {
 
         int threads = 64;
         if (threadPool == null) {
@@ -88,6 +107,21 @@ public class JSONReader {
     }
 
     public static String getFromUrl(String urlToRead) {
+        String result = null;
+        for (int i = 0; i < MAX_RETRIES; ++i) {
+            try {
+                result = getFromUrlImpl(urlToRead);
+                break;
+            } catch (Exception ex) {
+                logger.debug(String.format("Failed to retrieve %s, retry %d/%d", urlToRead, (i + 1), MAX_RETRIES), ex);
+            }
+        }
+        if (result == null) throw new RuntimeException("Failed to retrieve file from url");
+
+        return result;
+    }
+
+    public static String getFromUrlImpl(String urlToRead) throws Exception {
         URL url;
         HttpURLConnection conn;
         BufferedReader rd;
@@ -108,7 +142,8 @@ public class JSONReader {
             }
             rd.close();
         } catch (Throwable e) {
-            e.printStackTrace();
+            logger.debug("Failed to retrieve file.", e);
+            throw e;
         }
         return result.toString();
     }
