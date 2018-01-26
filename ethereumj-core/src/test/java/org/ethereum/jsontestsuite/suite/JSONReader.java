@@ -47,25 +47,8 @@ public class JSONReader {
     private static int MAX_RETRIES = 3;
 
     public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit) {
-        List<String> result = null;
-        for (int i = 0; i < MAX_RETRIES; ++i) {
-            try {
-                result = loadJSONsFromCommitImpl(filenames, shacommit);
-                break;
-            } catch (Exception ex) {
 
-                logger.debug(String.format("Failed to retrieve %d files from sha commit %s, retry %d/%d",
-                        filenames.size(), shacommit, (i + 1), MAX_RETRIES), ex);
-            }
-        }
-        if (result == null) throw new RuntimeException("Failed to retrieve files from commit");
-
-        return result;
-    }
-
-    public static List<String> loadJSONsFromCommitImpl(List<String> filenames, final String shacommit) {
-
-        int threads = 4;
+        int threads = 16;
         if (threadPool == null) {
             threadPool = Executors.newFixedThreadPool(threads);
         }
@@ -81,7 +64,8 @@ public class JSONReader {
             try {
                 ret.add(f.get());
             } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(String.format("Failed to retrieve %d files from commit %s",
+                        filenames.size(), shacommit), e);
             }
         }
 
@@ -116,12 +100,12 @@ public class JSONReader {
                 logger.debug(String.format("Failed to retrieve %s, retry %d/%d", urlToRead, (i + 1), MAX_RETRIES), ex);
             }
         }
-        if (result == null) throw new RuntimeException("Failed to retrieve file from url");
+        if (result == null) throw new RuntimeException(String.format("Failed to retrieve file from url %s", urlToRead));
 
         return result;
     }
 
-    public static String getFromUrlImpl(String urlToRead) throws Exception {
+    private static String getFromUrlImpl(String urlToRead) throws Exception {
         URL url;
         HttpURLConnection conn;
         BufferedReader rd;
