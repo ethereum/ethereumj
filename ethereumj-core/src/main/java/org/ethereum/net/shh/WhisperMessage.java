@@ -85,11 +85,7 @@ public class WhisperMessage extends ShhMessage {
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(topics);
-        result = 31 * result + Arrays.hashCode(payload);
-        result = 31 * result + (to != null ? to.hashCode() : 0);
-        result = 31 * result + (from != null ? from.hashCode() : 0);
-        return result;
+        return Arrays.hashCode(getEncoded());
     }
 
     @Override
@@ -97,12 +93,7 @@ public class WhisperMessage extends ShhMessage {
         if (this == obj) return true;
         if (!(obj instanceof WhisperMessage)) return false;
         WhisperMessage msg = (WhisperMessage) obj;
-        if (msg.from == null && msg.from != this.from) return false;
-        if (msg.from != null && !msg.from.equals(this.from)) return false;
-        if (msg.to == null && msg.to != this.to) return false;
-        if (msg.to != null && !msg.to.equals(this.to)) return false;
-        if (msg.topics.length != topics.length || !Arrays.asList(msg.topics).containsAll(Arrays.asList(topics))) return false;
-        return Hex.toHexString(msg.hash()).equals(Hex.toHexString(this.hash()));
+        return Hex.toHexString(msg.getEncoded()).equals(Hex.toHexString(this.getEncoded()));
     }
 
     public Topic[] getTopics() {
