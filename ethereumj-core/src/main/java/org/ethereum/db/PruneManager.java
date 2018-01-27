@@ -67,7 +67,7 @@ public class PruneManager {
         this.blockStore = blockStore;
         this.journalSource = journalSource;
         this.pruneBlocksCnt = pruneBlocksCnt;
-        this.segmentOptimalSize = Math.min(SEGMENT_MAX_SIZE, pruneBlocksCnt / 4);
+        this.segmentOptimalSize = Math.min(SEGMENT_MAX_SIZE, pruneBlocksCnt);
 
         if (journalSource != null && pruneStorage != null)
             this.pruner = new Pruner(journalSource.getJournal(), pruneStorage);
