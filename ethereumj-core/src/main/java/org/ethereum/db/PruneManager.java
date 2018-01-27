@@ -79,9 +79,7 @@ public class PruneManager {
         pruner = new Pruner(journalSource.getJournal(), stateSource.getNoJournalSource());
     }
 
-    public long storageTime = 0;
     public void blockCommitted(BlockHeader block) {
-        storageTime = 0;
         if (pruneBlocksCnt < 0) return; // pruning disabled
 
         journalSource.commitUpdates(block.getHash());
@@ -107,7 +105,6 @@ public class PruneManager {
             List<byte[]> upcoming = upcomingBlockHashes(segment.getMaxNumber());
             pruner.prune(segment, upcoming);
             segment = new Segment(chainBlock);
-            storageTime = pruner.storageTime;
         }
     }
 

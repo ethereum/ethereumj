@@ -50,12 +50,8 @@ public class Pruner {
         this.journal = journal;
     }
 
-    public long storageTime = 0;
-
     public void prune(Segment segment, List<byte[]> upcoming) {
         assert segment.isComplete();
-
-        storageTime = 0;
 
         logger.trace("prune " + segment + " segment");
 
@@ -73,9 +69,7 @@ public class Pruner {
             if (logger.isTraceEnabled())
                 logger.trace("<~ propagating: " + strSample(pruning.propagating));
 
-            long track = System.nanoTime();
             pruning.propagating.forEach(storage::delete);
-            storageTime = System.nanoTime() - track;
         }
 
         // delete updates
