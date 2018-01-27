@@ -18,41 +18,34 @@
 package org.ethereum.datasource;
 
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.prune.JournalAction;
-import org.ethereum.datasource.prune.PruneEntry;
-import org.ethereum.db.PruneRuleSet;
+import org.ethereum.db.prune.Pruner;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
-
-import static org.ethereum.datasource.prune.JournalAction.DELETION;
-import static org.ethereum.datasource.prune.JournalAction.INSERTION;
-import static org.ethereum.db.PruneRule.ReleaseUpdate;
 
 /**
  * The JournalSource records all the changes which were made before each commitUpdate
  * Unlike 'put' deletes are not propagated to the backing Source immediately but are
- * delayed until 'processUpdate' accepts and persists changes for the corresponding hash.
- * Also 'processUpdate' might be called to revert inserts made under given updates hash.
+ * delayed until {@link Pruner} accepts and persists changes for the corresponding hash.
  *
- * Normally this class is used for State pruning: we need all the state nodes for last N
+ * Normally this class is used together with State pruning: we need all the state nodes for last N
  * blocks to be able to get back to previous state for applying fork block
  * however we would like to delete 'zombie' nodes which are not referenced anymore by
  * persisting update for the block CurrentBlockNumber - N and we would
  * also like to remove the updates made by the blocks which weren't too lucky
  * to remain on the main chain by reverting update for such blocks
  *
+ * @see Pruner
+ *
  * Created by Anton Nashatyrev on 08.11.2016.
  */
 public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V>
         implements HashedKeySource<byte[], V> {
 
-    private static class Update {
+    public static class Update {
         byte[] updateHash;
         List<byte[]> insertedKeys = new ArrayList<>();
         List<byte[]> deletedKeys = new ArrayList<>();
@@ -88,12 +81,19 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
                 deletedKeys.add(aRDeleted.getRLPData());
             }
         }
+
+        public List<byte[]> getInsertedKeys() {
+            return insertedKeys;
+        }
+
+        public List<byte[]> getDeletedKeys() {
+            return deletedKeys;
+        }
     }
 
     private Update currentUpdate = new Update();
 
     Source<byte[], Update> journal = new HashMapDB<>();
-    Source<byte[], PruneEntry> pruning = new HashMapDB<>();
 
     /**
      * Constructs instance with the underlying backing Source
@@ -110,14 +110,10 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
                 });
     }
 
-    public void setPruningStore(Source<byte[], PruneEntry> src) {
-        pruning = src;
-    }
-
     /**
      * Inserts are immediately propagated to the backing Source
      * though are still recorded to the current update
-     * The insert might later be reverted due to revertUpdate call
+     * The insert might later be reverted by {@link Pruner}
      */
     @Override
     public synchronized void put(byte[] key, V val) {
@@ -128,7 +124,6 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
 
         getSource().put(key, val);
         currentUpdate.insertedKeys.add(key);
-        track(key, INSERTION);
     }
 
     /**
@@ -139,18 +134,6 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     @Override
     public synchronized void delete(byte[] key) {
         currentUpdate.deletedKeys.add(key);
-        track(key, DELETION);
-    }
-
-    /**
-     * Tracks action made on the node for pruning purposes
-     */
-    private void track(byte[] key, JournalAction action) {
-        PruneEntry entry = pruning.get(key);
-        if (entry == null) {
-            pruning.put(key, entry = PruneEntry.create());
-        }
-        entry.track(action);
     }
 
     @Override
@@ -170,54 +153,13 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
         currentUpdate = new Update();
     }
 
-    /**
-     *  Checks if the update with this hash key exists
-     */
-    public synchronized boolean hasUpdate(byte[] updateHash) {
-        return journal.get(updateHash) != null;
-    }
-
-    /**
-     * Fires pruning rules for each insertion and deletion made under given update hash
-     * and propagates pruning result to the storage, it also removes update if requested
-     */
-    public synchronized void processUpdate(byte[] updateHash, PruneRuleSet... sets) {
-
-        Update update = journal.get(updateHash);
-        if (update == null) throw new RuntimeException("No update found: " + Hex.toHexString(updateHash));
-
-        for (PruneRuleSet set : sets) {
-            if (set.isApplicableTo(INSERTION))
-                update.insertedKeys.forEach(key -> invokePruning(key, INSERTION, set::apply));
-            if (set.isApplicableTo(DELETION))
-                update.deletedKeys.forEach(key -> invokePruning(key, DELETION, set::apply));
-            if (set.has(ReleaseUpdate))
-                journal.delete(updateHash);
-        }
-    }
-
-    /**
-     * Invokes pruning process for given node,
-     * if pruning function returns true then node is deleted from backing Source,
-     * it also recycles pruning entries
-     */
-    private void invokePruning(byte[] key, JournalAction action, BiFunction<PruneEntry, JournalAction, Boolean> prune) {
-        PruneEntry entry = pruning.get(key);
-        if (entry == null) {
-            return;
-        }
-        if (prune.apply(entry, action)) {
-            getSource().delete(key);
-        }
-        if (entry.isRecycled()) {
-            pruning.delete(key);
-        }
+    public Source<byte[], Update> getJournal() {
+        return journal;
     }
 
     @Override
     public synchronized boolean flushImpl() {
         journal.flush();
-        pruning.flush();
         return false;
     }
 }

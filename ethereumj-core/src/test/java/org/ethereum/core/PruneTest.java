@@ -23,6 +23,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.prune.Pruner;
+import org.ethereum.db.prune.Segment;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
@@ -34,9 +36,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.ethereum.db.PruneRuleSet.AcceptChanges;
-import static org.ethereum.db.PruneRuleSet.PropagateDeletions;
-import static org.ethereum.db.PruneRuleSet.RevertChanges;
 import static org.ethereum.util.ByteUtil.intToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
@@ -56,6 +55,7 @@ public class PruneTest {
     public void testJournal1() throws Exception {
         HashMapDB<byte[]> db = new HashMapDB<>();
         JournalSource<byte[]> journalDB = new JournalSource<>(db);
+        Pruner pruner = new Pruner(journalDB.getJournal(), db);
 
         put(journalDB, "11");
         put(journalDB, "22");
@@ -69,10 +69,16 @@ public class PruneTest {
         journalDB.commitUpdates(intToBytes(2));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(1), AcceptChanges, PropagateDeletions);
-        checkKeys(db.getStorage(), "11", "22", "33", "44");
+        journalDB.commitUpdates(intToBytes(12));
 
-        journalDB.processUpdate(intToBytes(2), RevertChanges);
+        Segment segment = new Segment(0, intToBytes(0), intToBytes(0));
+        segment.startTracking()
+                .addMain(1, intToBytes(1), intToBytes(0))
+                .addItem(1, intToBytes(2), intToBytes(0))
+                .addMain(2, intToBytes(12), intToBytes(1))
+                .commit();
+        pruner.prune(segment);
+
         checkKeys(db.getStorage(), "11", "22", "33");
 
         put(journalDB, "22");
@@ -87,10 +93,20 @@ public class PruneTest {
         journalDB.commitUpdates(intToBytes(4));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(3), AcceptChanges, PropagateDeletions);
+        segment = new Segment(0, intToBytes(0), intToBytes(0));
+        segment.startTracking()
+                .addMain(1, intToBytes(3), intToBytes(0))
+                .commit();
+        pruner.prune(segment, intToBytes(4));
+
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.processUpdate(intToBytes(4), AcceptChanges, PropagateDeletions);
+        segment = new Segment(0, intToBytes(0), intToBytes(0));
+        segment.startTracking()
+                .addMain(1, intToBytes(4), intToBytes(0))
+                .commit();
+        pruner.prune(segment);
+
         checkKeys(db.getStorage(), "11", "33");
 
     }

@@ -17,108 +17,108 @@
  */
 package org.ethereum.db;
 
-import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.JournalSource;
+import org.ethereum.datasource.Source;
+import org.ethereum.db.prune.Segment;
+import org.ethereum.db.prune.Pruner;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Manages pruning by keeping updates and applying certain pruning rule sets to them.
+ * Manages state pruning part of block processing.
  *
- * <ul>
- *     There are two possible scenarios
- *
- * <li>
- *     RevertChanges:
- *     triggered when it's a known fact that block is not a part of main chain
- *     it reverts all state changes made during processing of that block;
- *     it is triggered at the end of fork management window (usually 192 blocks away from the head)
- *
- * <li>
- *     ApplyChanges followed by PropagateDeletions:
- *     applying changes is an alternative action to the revert,
- *     it must be done for changes made by the main chain block
- *     to finalize fork management part (usually 192 blocks away from the head);
- *     ApplyChanges rule set does not propagates deletions to the storage,
- *     it postpones them until PropagateDeletions is called for the same changes;
- *     thus fork management is separated from main pruning part cause
- *     pruning window can be much larger than the window required for fork management,
- *     such two step pruning scenario can save a plenty of resources
- *
- * </ul>
+ * <p>
+ *     Constructs chain segments and prune them
+ *     when they are complete
  *
  * Created by Anton Nashatyrev on 10.11.2016.
  *
- * @see JournalSource
- * @see PruneRuleSet
+ * @see Segment
+ * @see Pruner
  */
 public class PruneManager {
 
-    private JournalSource journal;
+    private JournalSource<?> journalSource;
 
     @Autowired
     private IndexedBlockStore blockStore;
 
     private int pruneBlocksCnt;
-    private int forkDepth;
+
+    private Segment segment;
+    private Pruner pruner;
+
+    private static final int SEGMENT_MAX_SIZE = 64;
+    private int segmentOptimalSize;
 
     @Autowired
     private PruneManager(SystemProperties config) {
         pruneBlocksCnt = config.databasePruneDepth();
-        forkDepth = forkDepth();
     }
 
-    public PruneManager(IndexedBlockStore blockStore, JournalSource journal, int pruneBlocksCnt) {
+    public PruneManager(IndexedBlockStore blockStore, JournalSource<?> journalSource,
+                        Source<byte[], ?> pruneStorage, int pruneBlocksCnt) {
         this.blockStore = blockStore;
-        this.journal = journal;
+        this.journalSource = journalSource;
         this.pruneBlocksCnt = pruneBlocksCnt;
-        this.forkDepth = forkDepth();
-    }
+        this.segmentOptimalSize = Math.min(SEGMENT_MAX_SIZE, pruneBlocksCnt / 4);
 
-    private int forkDepth() {
-        return pruneBlocksCnt < Constants.getMAX_FORK_BLOCKS() ? pruneBlocksCnt : Constants.getMAX_FORK_BLOCKS();
+        if (journalSource != null && pruneStorage != null)
+            this.pruner = new Pruner(journalSource.getJournal(), pruneStorage);
     }
 
     @Autowired
     public void setStateSource(StateSource stateSource) {
-        journal = stateSource.getJournalSource();
+        journalSource = stateSource.getJournalSource();
+        pruner = new Pruner(journalSource.getJournal(), stateSource.getNoJournalSource());
     }
 
+    public long storageTime = 0;
     public void blockCommitted(BlockHeader block) {
+        storageTime = 0;
         if (pruneBlocksCnt < 0) return; // pruning disabled
 
-        journal.commitUpdates(block.getHash());
+        journalSource.commitUpdates(block.getHash());
 
-        // fork management
-        long forkBlockNum = block.getNumber() - forkDepth;
-        if (forkBlockNum < 0) return;
-
-        List<Block> pruneBlocks = blockStore.getBlocksByNumber(forkBlockNum);
-        Block chainBlock = blockStore.getChainBlockByNumber(forkBlockNum);
-        for (Block pruneBlock : pruneBlocks) {
-            if (journal.hasUpdate(pruneBlock.getHash())) {
-                if (chainBlock.isEqual(pruneBlock)) {
-                    journal.processUpdate(pruneBlock.getHash(), PruneRuleSet.AcceptChanges);
-                } else {
-                    journal.processUpdate(pruneBlock.getHash(), PruneRuleSet.RevertChanges);
-                }
-            }
-        }
-
-        // main chain pruning
         long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
         if (pruneBlockNum < 0) return;
 
-        if (pruneBlockNum != forkBlockNum) {
-            chainBlock = blockStore.getChainBlockByNumber(pruneBlockNum);
+        List<Block> pruneBlocks = blockStore.getBlocksByNumber(pruneBlockNum);
+        Block chainBlock = blockStore.getChainBlockByNumber(pruneBlockNum);
+
+        if (segment == null) {
+            if (pruneBlocks.size() == 1)    // wait for a single chain
+                segment = new Segment(chainBlock);
+            return;
         }
 
-        if (journal.hasUpdate(chainBlock.getHash())) {
-            journal.processUpdate(chainBlock.getHash(), PruneRuleSet.PropagateDeletions);
+        Segment.Tracker tracker = segment.startTracking();
+        tracker.addMain(chainBlock);
+        tracker.addAll(pruneBlocks);
+        tracker.commit();
+
+        if (segment.size() >= segmentOptimalSize && segment.isComplete()) {
+            List<byte[]> upcoming = upcomingBlockHashes(segment.getMaxNumber());
+            pruner.prune(segment, upcoming);
+            segment = new Segment(chainBlock);
+            storageTime = pruner.storageTime;
         }
+    }
+
+    private List<byte[]> upcomingBlockHashes(long fromBlock) {
+        List<byte[]> upcomingHashes = new ArrayList<>();
+        long max = blockStore.getMaxNumber();
+        for (long num = fromBlock; num <= max; num++) {
+            List<Block> blocks = blockStore.getBlocksByNumber(num);
+            List<byte[]> hashes = blocks.stream().map(Block::getHash).collect(Collectors.toList());
+            upcomingHashes.addAll(hashes);
+        }
+        return upcomingHashes;
     }
 }

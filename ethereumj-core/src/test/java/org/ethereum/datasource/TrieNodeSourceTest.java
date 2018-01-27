@@ -20,9 +20,10 @@ package org.ethereum.datasource;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.PruneRuleSet;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.StateSource;
+import org.ethereum.db.prune.Pruner;
+import org.ethereum.db.prune.Segment;
 import org.ethereum.vm.DataWord;
 import org.junit.Before;
 import org.junit.Test;
@@ -146,7 +147,13 @@ public class TrieNodeSourceTest {
     private void flushChanges() throws ExecutionException, InterruptedException {
         repository.commit();
         stateSource.getJournalSource().commitUpdates(HashUtil.EMPTY_DATA_HASH);
-        stateSource.getJournalSource().processUpdate(HashUtil.EMPTY_DATA_HASH, PruneRuleSet.AcceptChanges, PruneRuleSet.PropagateDeletions);
+
+        Pruner pruner = new Pruner(stateSource.getJournalSource().getJournal(), stateSource.getNoJournalSource());
+        Segment segment = new Segment(0, HashUtil.EMPTY_DATA_HASH, HashUtil.EMPTY_DATA_HASH);
+        segment.startTracking()
+                .addMain(1, HashUtil.EMPTY_DATA_HASH, HashUtil.EMPTY_DATA_HASH)
+                .commit();
+        pruner.prune(segment);
 
         stateWriteCache.flipStorage();
         stateWriteCache.flushAsync().get();

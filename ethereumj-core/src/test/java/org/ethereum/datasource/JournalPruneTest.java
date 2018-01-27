@@ -19,12 +19,11 @@ package org.ethereum.datasource;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.prune.Pruner;
+import org.ethereum.db.prune.Segment;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
 
-import static org.ethereum.db.PruneRuleSet.AcceptChanges;
-import static org.ethereum.db.PruneRuleSet.PropagateDeletions;
-import static org.ethereum.db.PruneRuleSet.RevertChanges;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -79,6 +78,7 @@ public class JournalPruneTest {
     @Test
     public void simpleTest() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
 
         putKeys(jds, "a1", "a2");
 
@@ -91,24 +91,40 @@ public class JournalPruneTest {
         jds.delete("a2");
         jds.commitUpdates(hashInt(3));
 
-        jds.processUpdate(hashInt(1), AcceptChanges, PropagateDeletions);
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+             .addMain(1, hashInt(1), hashInt(0))
+             .commit();
+        pruner.prune(segment, hashInt(2), hashInt(3));
+
         checkDb(jds, "a1", "a2", "a3");
 
-        jds.processUpdate(hashInt(2), AcceptChanges, PropagateDeletions);
+        segment = new Segment(1, hashInt(1), hashInt(0));
+        segment.startTracking()
+                .addMain(2, hashInt(2), hashInt(1))
+                .commit();
+        pruner.prune(segment, hashInt(3));
+
         checkDb(jds, "a1", "a2");
 
-        jds.processUpdate(hashInt(3), AcceptChanges, PropagateDeletions);
+        segment = new Segment(2, hashInt(2), hashInt(1));
+        segment.startTracking()
+                .addMain(3, hashInt(3), hashInt(2))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
-        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     @Test
     public void forkTest1() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
 
         putKeys(jds, "a1", "a2", "a3");
+        jds.commitUpdates(hashInt(0));
 
         jds.put("a4");
         jds.put("a1");
@@ -119,20 +135,33 @@ public class JournalPruneTest {
         jds.put("a2");
         jds.put("a1");
         jds.commitUpdates(hashInt(2));
+        jds.commitUpdates(hashInt(3)); // complete segment
 
         checkDb(jds, "a1", "a2", "a3", "a4", "a5");
 
-        jds.processUpdate(hashInt(2), RevertChanges);
-        jds.processUpdate(hashInt(1), AcceptChanges, PropagateDeletions);
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(0, hashInt(0), hashInt(0))
+                .commit();
+        pruner.prune(segment);
+
+        segment = new Segment(0, hashInt(0), hashInt(-1));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addMain(2, hashInt(3), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a3", "a4");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
-        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     @Test
     public void forkTest2() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
 
         putKeys(jds, "a1", "a2", "a3");
 
@@ -147,30 +176,49 @@ public class JournalPruneTest {
         jds.commitUpdates(hashInt(4));
         jds.put("a4");
         jds.commitUpdates(hashInt(5));
-        jds.put("a3");
         jds.commitUpdates(hashInt(6));
+        jds.commitUpdates(hashInt(7));
+        jds.put("a3");
+        jds.commitUpdates(hashInt(8));
 
         checkDb(jds, "a1", "a2", "a3", "a4");
 
-        jds.processUpdate(hashInt(1), AcceptChanges, PropagateDeletions);
-        jds.processUpdate(hashInt(2), RevertChanges);
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addMain(2, hashInt(3), hashInt(1))
+                .commit();
+        pruner.prune(segment, hashInt(4), hashInt(5), hashInt(6));
+
         checkDb(jds, "a1", "a2", "a3", "a4");
 
-        jds.processUpdate(hashInt(3), AcceptChanges, PropagateDeletions);
-        jds.processUpdate(hashInt(4), RevertChanges);
-        jds.processUpdate(hashInt(5), RevertChanges);
+        segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(6), hashInt(0))
+                .addItem(1, hashInt(4), hashInt(0))
+                .addItem(1, hashInt(5), hashInt(0))
+                .addMain(2, hashInt(7), hashInt(6))
+                .commit();
+        pruner.prune(segment, hashInt(8));
+
         checkDb(jds, "a2", "a3");
 
-        jds.processUpdate(hashInt(6), AcceptChanges, PropagateDeletions);
+        segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(8), hashInt(0))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a2", "a3");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
-        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     @Test
     public void forkTest3() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
 
         putKeys(jds, "a1");
 
@@ -184,16 +232,22 @@ public class JournalPruneTest {
         jds.put("a2");
         jds.put("a3");
         jds.commitUpdates(hashInt(3));
+        jds.commitUpdates(hashInt(4));
 
         checkDb(jds, "a1", "a2", "a3");
 
-        jds.processUpdate(hashInt(1), AcceptChanges, PropagateDeletions);
-        jds.processUpdate(hashInt(2), RevertChanges);
-        jds.processUpdate(hashInt(3), RevertChanges);
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addItem(1, hashInt(3), hashInt(0))
+                .addMain(2, hashInt(4), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a2");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
-        assertEquals(0, ((HashMapDB) jds.pruning).getStorage().size());
     }
 
     public byte[] hashInt(int i) {

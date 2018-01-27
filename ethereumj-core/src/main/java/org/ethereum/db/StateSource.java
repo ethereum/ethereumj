@@ -71,7 +71,6 @@ public class StateSource extends SourceChainBox<byte[], byte[], byte[], byte[]>
     public void setCommonConfig(CommonConfig commonConfig) {
         if (journalSource != null) {
             journalSource.setJournalStore(commonConfig.cachedDbSource("journal"));
-            journalSource.setPruningStore(commonConfig.pruneSource());
         }
     }
 
