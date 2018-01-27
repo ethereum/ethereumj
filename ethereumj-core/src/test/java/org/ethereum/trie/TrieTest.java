@@ -1106,6 +1106,31 @@ public class TrieTest {
         assertEquals("36e350d9a1d9c02d5bc4539a05e51890784ea5d2b675a0b26725dbbdadb4d6e2", Hex.toHexString(trie.getRootHash()));
     }
 
+    @Test
+    public void testBugFix3() throws ParseException, IOException, URISyntaxException {
+
+        HashMapDB<byte[]> src = new HashMapDB<>();
+
+        // Scenario:
+        // create trie with subtrie: ... -> kvNodeNode -> BranchNode() -> kvNodeValue1, kvNodeValue2
+        // remove kvNodeValue2, in that way kvNodeNode and kvNodeValue1 are going to be merged in a new kvNodeValue3
+
+        // BUG: kvNodeNode is not deleted from storage after the merge
+
+        TrieImpl trie = new TrieImpl(src);
+        trie.put(Hex.decode("0000000000000000000000000000000000000000000000000000000000011133"),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000033"));
+        trie.put(Hex.decode("0000000000000000000000000000000000000000000000000000000000021244"),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000044"));
+        trie.put(Hex.decode("0000000000000000000000000000000000000000000000000000000000011255"),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000055"));
+        trie.flush();
+
+        trie.delete(Hex.decode("0000000000000000000000000000000000000000000000000000000000011255"));
+
+        assertFalse(src.getStorage().containsKey(Hex.decode("5152f9274abb8e61f3956ccd08d31e38bfa2913afd23bc13b5e7bb709ce7f603")));
+    }
+
     @Ignore
     @Test
     public void perfTestGet() {
