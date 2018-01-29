@@ -54,7 +54,7 @@ public class PruneManager {
     private Segment segment;
     private Pruner pruner;
 
-    private static final int SEGMENT_MAX_SIZE = 64;
+    private static final int SEGMENT_MAX_SIZE = 192;
     private int segmentOptimalSize;
 
     @Autowired
