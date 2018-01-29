@@ -76,7 +76,8 @@ public class PruneManager {
     @Autowired
     public void setStateSource(StateSource stateSource) {
         journalSource = stateSource.getJournalSource();
-        pruner = new Pruner(journalSource.getJournal(), stateSource.getNoJournalSource());
+        if (journalSource != null)
+            pruner = new Pruner(journalSource.getJournal(), stateSource.getNoJournalSource());
     }
 
     public void blockCommitted(BlockHeader block) {
