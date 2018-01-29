@@ -534,4 +534,11 @@ public class ByteUtilTest {
         assertEquals(64, n7);
 
     }
+
+    @Test
+    public void nullArrayToNumber() {
+        assertEquals(BigInteger.ZERO, ByteUtil.bytesToBigInteger(null));
+        assertEquals(0L, ByteUtil.byteArrayToLong(null));
+        assertEquals(0, ByteUtil.byteArrayToInt(null));
+    }
 }
