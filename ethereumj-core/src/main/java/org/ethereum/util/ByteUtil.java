@@ -103,6 +103,13 @@ public class ByteUtil {
         return data;
     }
 
+    /**
+     * Cast hex encoded value from byte[] to BigInteger
+     * null is parsed like byte[0]
+     *
+     * @param bb byte array contains the values
+     * @return unsigned positive BigInteger value.
+     */
     public static BigInteger bytesToBigInteger(byte[] bb) {
         return (bb == null || bb.length == 0) ? BigInteger.ZERO : new BigInteger(1, bb);
     }
@@ -226,6 +233,7 @@ public class ByteUtil {
 
     /**
      * Cast hex encoded value from byte[] to int
+     * null is parsed like byte[0]
      *
      * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
      *
@@ -239,9 +247,10 @@ public class ByteUtil {
     }
 
     /**
-     * Cast hex encoded value from byte[] to int
+     * Cast hex encoded value from byte[] to long
+     * null is parsed like byte[0]
      *
-     * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+     * Limited to Long.MAX_VALUE: 2<sup>63</sup>-1 (8 bytes)
      *
      * @param b array contains the values
      * @return unsigned positive long value.
