@@ -17,7 +17,7 @@ ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.5.0-RELEASE</version>
+     <version>1.6.3-RELEASE</version>
    </dependency>
 ```
 
@@ -27,7 +27,15 @@ ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level
    repositories {
        mavenCentral()
    }
-   compile "org.ethereum:ethereumj-core:1.5.+"
+   compile "org.ethereum:ethereumj-core:1.6.+"
+```
+
+##### or your SBT project: 
+
+```
+resolvers += "Ethereum repository" at "https://dl.bintray.com/ethereum/maven"
+
+libraryDependencies += "org.ethereum" % "ethereumj-core" % "1.6.3-RELEASE"
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
