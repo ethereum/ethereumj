@@ -82,6 +82,12 @@ public class Segment {
     }
 
     private void connectFork(ChainItem item) {
+
+        for (Chain fork : forks) {
+            if (fork.contains(item))
+                return;
+        }
+
         if (root.isParentOf(item)) {
             branch(item);
         } else {

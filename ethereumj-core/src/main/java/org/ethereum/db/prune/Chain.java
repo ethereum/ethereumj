@@ -49,6 +49,14 @@ public class Chain {
         return other.topNumber() < this.topNumber();
     }
 
+    boolean contains(ChainItem other) {
+        for (ChainItem item : items) {
+            if (item.equals(other))
+                return true;
+        }
+        return false;
+    }
+
     boolean connect(ChainItem item) {
         if (top().isParentOf(item)) {
             items.add(item);
