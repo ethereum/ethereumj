@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.test;
+package org.ethereum.vm;
 
 import org.ethereum.vm.OpCode;
 import org.spongycastle.util.encoders.Hex;

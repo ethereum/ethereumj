@@ -18,8 +18,6 @@
 package org.ethereum.vm;
 
 import org.ethereum.core.Repository;
-import org.ethereum.test.BytecodeCompiler;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Program.BadJumpDestinationException;
 import org.ethereum.vm.program.Program.StackTooSmallException;
