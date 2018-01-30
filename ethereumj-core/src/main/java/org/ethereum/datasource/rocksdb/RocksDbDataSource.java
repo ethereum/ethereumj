@@ -122,6 +122,22 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                     final Path dbPath = getPath();
                     if (!Files.isSymbolicLink(dbPath.getParent())) Files.createDirectories(dbPath.getParent());
 
+                    if (config.databaseFromBackup() && backupPath().toFile().canWrite()) {
+                        logger.debug("Restoring database from backup: '{}'", name);
+                        try (BackupableDBOptions backupOptions = new BackupableDBOptions(backupPath().toString());
+                             RestoreOptions restoreOptions = new RestoreOptions(false);
+                             BackupEngine backups = BackupEngine.open(Env.getDefault(), backupOptions)) {
+
+                            if (!backups.getBackupInfo().isEmpty()) {
+                                backups.restoreDbFromLatestBackup(getPath().toString(), getPath().toString(),
+                                        restoreOptions);
+                            }
+
+                        } catch (RocksDBException e) {
+                            logger.error("Failed to restore database '{}' from backup", name, e);
+                        }
+                    }
+
                     logger.debug("Initializing new or existing database: '{}'", name);
                     try {
                         db = RocksDB.open(options, dbPath.toString());
@@ -142,6 +158,29 @@ public class RocksDbDataSource implements DbSource<byte[]> {
         } finally {
             resetDbLock.writeLock().unlock();
         }
+    }
+
+    public void backup() {
+        resetDbLock.readLock().lock();
+        if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.backup(): " + name);
+        Path path = backupPath();
+        path.toFile().mkdirs();
+        try (BackupableDBOptions backupOptions = new BackupableDBOptions(path.toString());
+             BackupEngine backups = BackupEngine.open(Env.getDefault(), backupOptions)) {
+
+            backups.createNewBackup(db, true);
+
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.backup(): " + name + " done");
+        } catch (RocksDBException e) {
+            logger.error("Failed to backup database '{}'", name, e);
+            throw new RuntimeException(e);
+        } finally {
+            resetDbLock.readLock().unlock();
+        }
+    }
+
+    private Path backupPath() {
+        return Paths.get(config.databaseDir(), "backup", name);
     }
 
     @Override

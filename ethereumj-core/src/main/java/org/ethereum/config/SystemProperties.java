@@ -421,6 +421,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean databaseFromBackup() {
+        return config.getBoolean("database.fromBackup");
+    }
+
+    @ValidateMe
     public int databasePruneDepth() {
         return config.getBoolean("database.prune.enabled") ? config.getInt("database.prune.maxDepth") : -1;
     }
