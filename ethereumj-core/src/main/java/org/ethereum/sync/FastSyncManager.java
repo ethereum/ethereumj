@@ -26,6 +26,7 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
+import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
@@ -576,6 +577,14 @@ public class FastSyncManager {
         headersDownloader = applicationContext.getBean(HeadersDownloader.class);
         headersDownloader.init(pivot.getHash());
         setSyncStage(EthereumListener.SyncState.SECURE);
+
+        if (config.fastSyncBackupState()) {
+            if (blockchainDB instanceof RocksDbDataSource) {
+                dbFlushManager.flushSync();
+                ((RocksDbDataSource) blockchainDB).backup();
+            }
+        }
+
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +

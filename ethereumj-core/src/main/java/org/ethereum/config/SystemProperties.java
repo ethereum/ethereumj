@@ -791,6 +791,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean fastSyncBackupState() {
+        return config.getBoolean("sync.fast.backupState");
+    }
+
+    @ValidateMe
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
 
     @ValidateMe
