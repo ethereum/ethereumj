@@ -27,6 +27,8 @@ import org.ethereum.net.swarm.Key;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -47,6 +49,8 @@ public class TrieImpl implements Trie<byte[]> {
     private final static Object NULL_NODE = new Object();
     private final static int MIN_BRANCHES_CONCURRENTLY = 3;
     private static ExecutorService executor;
+
+    private static final Logger logger = LoggerFactory.getLogger("state");
 
     public static ExecutorService getExecutor() {
         if (executor == null) {
@@ -108,6 +112,7 @@ public class TrieImpl implements Trie<byte[]> {
 
         private void resolve() {
             if (!resolveCheck()) {
+                logger.error("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
                 throw new RuntimeException("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
             }
         }
