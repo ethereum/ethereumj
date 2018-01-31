@@ -10,6 +10,7 @@ import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -49,9 +50,35 @@ public abstract class TrieTraversal  {
         return new StateTraversal(src, root, includeAccounts);
     }
 
+    public static TrieTraversal ofStorage(final Source<byte[], byte[]> src, final byte[] stateRoot, final byte[] address) {
+
+        TrieImpl stateTrie = new SecureTrie(src, stateRoot);
+        byte[] encoded = stateTrie.get(address);
+        if (encoded == null) {
+            logger.error("Account {} does not exist", Hex.toHexString(address));
+            throw new RuntimeException("Account does not exist");
+        }
+
+        AccountState state = new AccountState(encoded);
+        if (FastByteComparisons.equal(state.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
+            logger.error("Storage of account {} is empty", Hex.toHexString(address));
+            throw new RuntimeException("Account storage is empty");
+        }
+
+        final NodeKeyCompositor nodeKeyCompositor = new NodeKeyCompositor(address);
+        return new StorageTraversal(
+                new SourceCodec.KeyOnly<>(src, nodeKeyCompositor),
+                state.getStateRoot(),
+                new TraversalStats(),
+                address,
+                true
+        );
+    }
+
     public int go() {
 
         onStartImpl();
+        stats.startedAt = System.currentTimeMillis();
 
         SecureTrie trie = new SecureTrie(src, root);
         trie.scanTree(new TrieImpl.ScanAction() {
@@ -230,31 +257,58 @@ public abstract class TrieTraversal  {
 
     static class StorageTraversal extends TrieTraversal {
 
-        final byte[] stateAddressHash;
+        final byte[] stateAddressOrHash;
+        boolean logStats = false;
 
-        private StorageTraversal(final Source<byte[], byte[]> src, final byte[] root, TraversalStats stats, final byte[] stateAddressHash) {
+        private StorageTraversal(final Source<byte[], byte[]> src, final byte[] root,
+                                 TraversalStats stats, final byte[] stateAddressOrHash) {
             super(src, root, stats);
-            this.stateAddressHash = stateAddressHash;
+            this.stateAddressOrHash = stateAddressOrHash;
+        }
+
+        private StorageTraversal(final Source<byte[], byte[]> src, final byte[] root,
+                                 TraversalStats stats, final byte[] stateAddressOrHash, boolean logStats) {
+            super(src, root, stats);
+            this.stateAddressOrHash = stateAddressOrHash;
+            this.logStats = logStats;
         }
 
         @Override
         protected void onNodeImpl(byte[] hash, TrieImpl.Node node) {
+            logStatsImpl();
         }
 
         @Override
         protected void onValueImpl(byte[] nodeHash, TrieImpl.Node node, byte[] key, byte[] value) {
+            logStatsImpl();
+        }
+
+        private void logStatsImpl() {
+            if (!logStats) return;
+
+            if (stats.passed % 10000 == 0 && stats.passed > stats.checkpoint) {
+                long cur = System.currentTimeMillis();
+                logger.info("Validating storage " + HashUtil.shortHash(stateAddressOrHash) +
+                        ": running for " + ((cur - stats.startedAt) / 1000) + " sec, " + stats.passed + " passed, " +
+                        String.format("%.2f nodes/sec", (double) (stats.passed - stats.checkpoint) / (cur - stats.updatedAt) * 1000));
+                stats.checkpoint = stats.passed;
+                stats.updatedAt = cur;
+            }
         }
 
         @Override
         protected void onStartImpl() {
             logger.trace("Validating nodes: start traversing {} storage",
-                    stateAddressHash != null ? HashUtil.shortHash(stateAddressHash) : "unknown");
+                    stateAddressOrHash != null ? HashUtil.shortHash(stateAddressOrHash) : "unknown");
         }
 
         @Override
         protected void onEndImpl() {
             logger.trace("Validating nodes: end traversing {} storage",
-                    stateAddressHash != null ? HashUtil.shortHash(stateAddressHash) : "unknown");
+                    stateAddressOrHash != null ? HashUtil.shortHash(stateAddressOrHash) : "unknown");
+            if (logStats)
+                logger.info("Validating storage " + HashUtil.shortHash(stateAddressOrHash) +
+                        ": completed in " + ((System.currentTimeMillis() - stats.startedAt) / 1000) + " sec, " + stats.passed + " nodes passed");
         }
     }
 }
