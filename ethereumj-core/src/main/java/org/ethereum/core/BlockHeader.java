@@ -19,10 +19,7 @@ package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
+import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -123,11 +120,11 @@ public class BlockHeader {
         byte[] guBytes = rlpHeader.get(10).getRLPData();
         byte[] tsBytes = rlpHeader.get(11).getRLPData();
 
-        this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
+        this.number = ByteUtil.byteArrayToLong(nrBytes);
 
         this.gasLimit = glBytes;
-        this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
-        this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
+        this.gasUsed = ByteUtil.byteArrayToLong(guBytes);
+        this.timestamp = ByteUtil.byteArrayToLong(tsBytes);
 
         this.extraData = rlpHeader.get(12).getRLPData();
         this.mixHash = rlpHeader.get(13).getRLPData();

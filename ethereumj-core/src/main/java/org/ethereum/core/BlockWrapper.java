@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -160,8 +161,8 @@ public class BlockWrapper {
         byte[] newBlockBytes = wrapper.get(3).getRLPData();
 
         this.block = new Block(blockBytes);
-        this.importFailedAt = importFailedBytes == null ? 0 : new BigInteger(1, importFailedBytes).longValue();
-        this.receivedAt = receivedAtBytes == null ? 0 : new BigInteger(1, receivedAtBytes).longValue();
+        this.importFailedAt = ByteUtil.byteArrayToLong(importFailedBytes);
+        this.receivedAt = ByteUtil.byteArrayToLong(receivedAtBytes);
         byte newBlock = newBlockBytes == null ? 0 : new BigInteger(1, newBlockBytes).byteValue();
         this.newBlock = newBlock == 1;
         this.nodeId = wrapper.get(4).getRLPData();

@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 public class BlockSummary {
@@ -174,7 +174,7 @@ public class BlockSummary {
 
     private static Map<byte[], BigInteger> decodeRewards(RLPList rewards) {
         return decodeMap(rewards, bytes -> bytes, bytes ->
-                isEmpty(bytes) ? BigInteger.ZERO : new BigInteger(1, bytes)
+                ByteUtil.bytesToBigInteger(bytes)
         );
     }
 }
