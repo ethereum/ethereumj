@@ -19,9 +19,9 @@ import static org.junit.Assert.assertEquals;
 
 public class ErpExecutorTest
 {
-    private static byte[] account1 = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
-    private static byte[] account2 = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
-    private static byte[] account3 = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5E");
+    private static byte[] account1 = Hex.decode("11113D9F938E13CD947EC05ABC7FE734DF8DD826");
+    private static byte[] account2 = Hex.decode("22228AEE95F38490E9769C39B2773ED763D9CD5F");
+    private static byte[] account3 = Hex.decode("33338AEE95F38490E9769C39B2773ED763D9CD5E");
     private ErpExecutor executor;
     private RepositoryRoot repo;
 

@@ -31,6 +31,11 @@ import java.util.List;
 public class ErpLoader {
     public static final String SCO_EXTENSION = ".sco.json";
     private static final FilenameFilter SCO_FILE_FILTER = (dir, name) -> name.endsWith(SCO_EXTENSION);
+    private final String resourceDir;
+
+    public ErpLoader(String resourceDir) {
+        this.resourceDir = resourceDir;
+    }
 
     /**
      * A lightweight object that can be held in memory
@@ -74,15 +79,14 @@ public class ErpLoader {
      * This method returns a collection of lightweight objects, but it parses each
      * file to pull out the erpId and the target block as well as sanity check the actions
      *
-     * @param erpResourceDir The resource directory where ERP objects are stored
      * @return A collection of ERPs that are available
      * @throws IOException if any of the ERP files could not be loaded
      */
-    public Collection<ErpMetadata> loadErpMetadata(String erpResourceDir) throws IOException {
+    public Collection<ErpMetadata> loadErpMetadata() throws IOException {
         // this is somewhat inefficient, but the goal is to ensure that all important
         // data is loaded from the SCO object itself
         List<ErpMetadata> allMetadata = new LinkedList<>();
-        for (File f : loadERPResourceFiles(erpResourceDir)) {
+        for (File f : loadERPResourceFiles(this.resourceDir)) {
             final StateChangeObject sco = loadStateChangeObject(f);
             allMetadata.add(new ErpMetadata(sco.erpId, sco.targetBlock, f));
         }

@@ -52,16 +52,19 @@ public class ErpConfig extends FrontierConfig {
 
     private BlockchainConfig parent;
     private Map<Long, ErpMetadata> erpDataByTargetBlock;
-    private ErpLoader erpLoader = new ErpLoader();
-    private ErpExecutor erpExecutor = new ErpExecutor();
+    private ErpLoader erpLoader;
+    private ErpExecutor erpExecutor;
 
     public ErpConfig() {
-        this(new HomesteadConfig(), "/erps");
+        this(new HomesteadConfig(), new ErpLoader("/erps"), new ErpExecutor());
     }
 
-    public ErpConfig(BlockchainConfig parent, String erpResourceDir) {
+    public ErpConfig(BlockchainConfig parent, ErpLoader erpLoader, ErpExecutor erpExecutor) {
+        this.erpLoader = erpLoader;
+        this.erpExecutor = erpExecutor;
+
         try {
-            initErpConfig(parent, erpResourceDir);
+            initErpConfig(parent);
         } catch (IOException e) {
             // TODO: not sure what to do here.
             logger.error("Failed to load the ERPConfig", e);
@@ -69,12 +72,12 @@ public class ErpConfig extends FrontierConfig {
         }
     }
 
-    void initErpConfig(BlockchainConfig parent, String erpResourceDir) throws IOException {
+    void initErpConfig(BlockchainConfig parent) throws IOException {
         this.parent = parent;
         this.constants = parent.getConstants();
 
         // load the config block numbers
-        final Collection<ErpMetadata> allErps = erpLoader.loadErpMetadata(erpResourceDir);
+        final Collection<ErpMetadata> allErps = erpLoader.loadErpMetadata();
         this.erpDataByTargetBlock = allErps
             .stream()
             .collect(toMap(ErpMetadata::getTargetBlock, Function.identity()));
@@ -103,9 +106,13 @@ public class ErpConfig extends FrontierConfig {
 
     @Override
     public void hardForkTransfers(Block block, Repository repo) {
-        final ErpMetadata erpMetadata = erpDataByTargetBlock.get(block.getNumber());
+        hardForkTransfers(block.getNumber(), repo);
+    }
+
+    void hardForkTransfers(long blockNumber, Repository repo) {
+        final ErpMetadata erpMetadata = erpDataByTargetBlock.get(blockNumber);
         if (erpMetadata != null) {
-            logger.info("Found ERP %s for block %d", erpMetadata.getId(), block.getNumber());
+            logger.info("Found ERP %s for block %d", erpMetadata.getId(), blockNumber);
             final StateChangeObject sco;
             try {
                 sco = erpLoader.loadStateChangeObject(erpMetadata);
@@ -119,15 +126,15 @@ public class ErpConfig extends FrontierConfig {
             try {
                 erpExecutor.applyStateChanges(sco, repo);
                 track.commit();
-                logger.info("Successfully applied ERP '%s' to block %d", erpMetadata.getId(), block.getNumber());
+                logger.info("Successfully applied ERP '%s' to block %d", erpMetadata.getId(), blockNumber);
             }
             catch (ErpExecutor.ErpExecutionException e) {
                 track.rollback();
-                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), block.getNumber(), e);
+                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), blockNumber, e);
             }
             catch (Exception e) {
                 track.rollback();
-                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), block.getNumber(), e);
+                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), blockNumber, e);
                 throw e;
             }
             finally {

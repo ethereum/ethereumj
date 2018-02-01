@@ -22,6 +22,7 @@ import org.ethereum.erp.RawStateChangeObject.RawStateChangeAction;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.util.ByteUtil.hexStringToBytes;
 
 public class StateChangeObject {
@@ -57,7 +58,9 @@ public class StateChangeObject {
             result.toAddress = hexStringToBytes(raw.toAddress);
             result.valueInWei = BigInteger.valueOf(raw.valueInWei);
             result.code = hexStringToBytes(raw.code);
-            result.expectedCodeHash = hexStringToBytes(raw.expectedCodeHash);
+            result.expectedCodeHash = raw.expectedCodeHash == null || raw.expectedCodeHash.isEmpty()
+                    ? EMPTY_DATA_HASH
+                    : hexStringToBytes(raw.expectedCodeHash);
             return result;
         }
     }

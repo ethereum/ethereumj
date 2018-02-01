@@ -20,13 +20,13 @@ public class ErpLoaderTest
 
     @Before
     public void setUp() throws Exception {
-        this.loader = new ErpLoader();
+        this.loader = new ErpLoader("/erps");
     }
 
 
     @Test
     public void loadErpMetadata() throws IOException {
-        final Collection<ErpMetadata> erpMetadata = loader.loadErpMetadata("/erps");
+        final Collection<ErpMetadata> erpMetadata = loader.loadErpMetadata();
         assertEquals(2, erpMetadata.size());
 
         final Iterator<ErpMetadata> iterator = erpMetadata.iterator();
