@@ -19,6 +19,7 @@ package org.ethereum.net.shh;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +41,8 @@ public class WhisperImpl extends Whisper {
     private Set<MessageWatcher> filters = new HashSet<>();
     private List<Topic> knownTopics = new ArrayList<>();
 
-    private Map<WhisperMessage, ?> known = new LRUMap<>(1024); // essentially Set
+    private Map<WhisperMessage, ?> known = Collections.synchronizedMap(
+            new LRUMap<WhisperMessage, Object>(1024)); // essentially Set
 
     private Map<String, ECKey> identities = new HashMap<>();
 
