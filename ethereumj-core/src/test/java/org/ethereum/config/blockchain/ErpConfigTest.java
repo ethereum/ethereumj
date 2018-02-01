@@ -4,12 +4,17 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
+import org.ethereum.erp.ErpExecutor;
+import org.ethereum.erp.ErpLoader;
+import org.ethereum.erp.RawStateChangeObject;
+import org.ethereum.erp.StateChangeObject;
 import org.ethereum.util.ByteUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -40,6 +45,15 @@ public class ErpConfigTest
         assertArrayEquals(minerData, this.config.getExtraData(minerData, 7_000_000));
     }
 
+    @Test(expected = RuntimeException.class)
+    public void failedInitThrows() throws IOException {
+        ErpLoader failingLoader = Mockito.mock(ErpLoader.class);
+
+        Mockito.when(failingLoader.loadErpMetadata()).thenThrow(new IOException("Test"));
+
+        new ErpConfig(new HomesteadConfig(), failingLoader, new ErpExecutor());
+    }
+
     @Test
     public void getExtraData_targetBlock() {
         final byte[] minerData = Hex.decode("deadbeef");
@@ -63,9 +77,6 @@ public class ErpConfigTest
 
         assertArrayEquals(ByteUtil.hexStringToBytes("0xdeadbeef3"), repo.getCode(account3));
         assertArrayEquals(ByteUtil.hexStringToBytes("0xdeadbeef4"), repo.getCode(account4));
-
-        Mockito.verify(spyRepo, Mockito.times(2)).saveCode(Mockito.any(), Mockito.any());
-        Mockito.verify(spyRepo, Mockito.times(2)).addBalance(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -85,8 +96,40 @@ public class ErpConfigTest
 
         assertArrayEquals(ByteUtil.hexStringToBytes("0xdada"), repo.getCode(account3));
         assertArrayEquals(EMPTY_BYTE_ARRAY, repo.getCode(account4));
+    }
 
-        Mockito.verify(spyRepo, Mockito.never()).saveCode(Mockito.any(), Mockito.any());
-        Mockito.verify(spyRepo, Mockito.never()).addBalance(Mockito.any(), Mockito.any());
+    @Test(expected = RuntimeException.class)
+    public void hardForkTransfers_failingScoLoadThrows() throws IOException {
+        final Block block = Mockito.mock(Block.class);
+        Mockito.when(block.getNumber()).thenReturn(6000000L);
+
+        ErpLoader mockLoader = Mockito.mock(ErpLoader.class);
+        ErpLoader actualLoader = new ErpLoader("/erps");
+        Mockito.when(mockLoader.loadErpMetadata()).thenReturn(actualLoader.loadErpMetadata());
+        Mockito.when(mockLoader.loadStateChangeObject(Mockito.any())).thenThrow(new IOException("Test"));
+
+        ErpConfig config = new ErpConfig(new HomesteadConfig(), mockLoader, new ErpExecutor());
+        config.hardForkTransfers(block, repo);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void hardForkTransfers_failingAction() throws IOException {
+        final Block block = Mockito.mock(Block.class);
+        Mockito.when(block.getNumber()).thenReturn(6000000L);
+
+        StateChangeObject badStageChangeObject = new StateChangeObject();
+        badStageChangeObject.erpId = "eip-123";
+        badStageChangeObject.targetBlock = 6000000L;
+        RawStateChangeObject.RawStateChangeAction badAction = new RawStateChangeObject.RawStateChangeAction();
+        badAction.type = "nonsense";
+        badStageChangeObject.actions = new StateChangeObject.StateChangeAction[]{StateChangeObject.StateChangeAction.parse(badAction)};
+
+        ErpLoader mockLoader = Mockito.mock(ErpLoader.class);
+        ErpLoader actualLoader = new ErpLoader("/erps");
+        Mockito.when(mockLoader.loadErpMetadata()).thenReturn(actualLoader.loadErpMetadata());
+        Mockito.when(mockLoader.loadStateChangeObject(Mockito.any())).thenReturn(badStageChangeObject);
+
+        ErpConfig config = new ErpConfig(new HomesteadConfig(), mockLoader, new ErpExecutor());
+        config.hardForkTransfers(block, repo);
     }
 }

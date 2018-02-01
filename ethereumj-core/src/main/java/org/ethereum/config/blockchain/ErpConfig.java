@@ -124,17 +124,17 @@ public class ErpConfig extends FrontierConfig {
             // TODO: Is this the right way to apply changes in  batch?
             final Repository track = repo.startTracking();
             try {
-                erpExecutor.applyStateChanges(sco, repo);
+                erpExecutor.applyStateChanges(sco, track);
                 track.commit();
-                logger.info("Successfully applied ERP '%s' to block %d", erpMetadata.getId(), blockNumber);
+                logger.info("Successfully applied ERP '{}' to block {}", erpMetadata.getId(), blockNumber);
             }
             catch (ErpExecutor.ErpExecutionException e) {
                 track.rollback();
-                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), blockNumber, e);
+                logger.error("Failed to apply ERP '{}' to block {}", erpMetadata.getId(), blockNumber, e);
             }
             catch (Exception e) {
                 track.rollback();
-                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), blockNumber, e);
+                logger.error("Failed to apply ERP '{}' to block {}", erpMetadata.getId(), blockNumber, e);
                 throw e;
             }
             finally {
