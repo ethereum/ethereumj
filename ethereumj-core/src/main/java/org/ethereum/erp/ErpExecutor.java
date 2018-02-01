@@ -19,11 +19,12 @@ package org.ethereum.erp;
 
 import org.ethereum.core.Repository;
 import org.ethereum.erp.StateChangeObject.StateChangeAction;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.util.ByteUtil;
 
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * The ERP Executor applies State Change Actions to a Repository.
@@ -56,7 +57,7 @@ public class ErpExecutor {
             throw new IllegalArgumentException("storeCode cannot store code at an empty address");
 
         if (!Arrays.equals(action.expectedCodeHash, repo.getCodeHash(action.toAddress)))
-            throw new IllegalStateException(String.format("ERP storeCode did not find the expected hash.  Expected %s, found %s", Hex.toHexString(action.expectedCodeHash), Hex.toHexString(repo.getCodeHash(action.toAddress))));
+            throw new IllegalStateException(String.format("ERP storeCode did not find the expected hash.  Expected %s, found %s", toHexString(action.expectedCodeHash), toHexString(repo.getCodeHash(action.toAddress))));
 
         repo.saveCode(action.toAddress, action.code);
     }
