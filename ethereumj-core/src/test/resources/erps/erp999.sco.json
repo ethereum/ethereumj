@@ -1,0 +1,18 @@
+{
+  "erpId": "erp-999",
+  "targetBlock": 5000000,
+  "actions": [
+    {
+      "type": "weiTransfer",
+      "fromAddress": "CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826",
+      "toAddress": "13978AEE95F38490E9769C39B2773ED763D9CD5F",
+      "valueInWei": 1234
+    },
+    {
+      "type": "storeCode",
+      "toAddress": "13978AEE95F38490E9769C39B2773ED763D9CD5F",
+      "expectedCodeHash": "0xF38490",
+      "code": "0xdeadbeef"
+    }
+  ]
+}
