@@ -12,13 +12,16 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.erp.ErpExecutor.ErpExecutionException;
+import static org.ethereum.erp.ErpExecutor.STORE_CODE;
+import static org.ethereum.erp.ErpExecutor.WEI_TRANSFER;
 import static org.junit.Assert.assertEquals;
 
 public class ErpExecutorTest
 {
-    static byte[] account1   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
-    static byte[] account2 = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
-    static byte[] account3 = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5E");
+    private static byte[] account1 = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+    private static byte[] account2 = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+    private static byte[] account3 = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5E");
     private ErpExecutor executor;
     private RepositoryRoot repo;
 
@@ -34,7 +37,7 @@ public class ErpExecutorTest
     }
 
     @Test
-    public void applyStateChanges() {
+    public void applyStateChanges() throws ErpExecutionException {
         byte[] existingCode = Hex.decode("deadbeef");
         repo.saveCode(account3, existingCode);
         repo.addBalance(account1, BigInteger.TEN);
@@ -87,8 +90,8 @@ public class ErpExecutorTest
 
 
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void applyStateChanges_failsWithUnkOp() {
+    @Test(expected = ErpExecutor.ErpExecutionException.class)
+    public void applyStateChanges_failsWithUnkOp() throws ErpExecutionException {
         byte[] existingCode = Hex.decode("deadbeef");
         repo.saveCode(account3, existingCode);
         repo.addBalance(account1, BigInteger.TEN);
@@ -191,7 +194,7 @@ public class ErpExecutorTest
         final StateChangeAction action = new StateChangeAction();
         action.toAddress = toAddress;
         action.fromAddress = fromAddress;
-        action.type = ErpExecutor.WEI_TRANSFER;
+        action.type = WEI_TRANSFER;
         action.valueInWei = value;
         return action;
     }
@@ -199,7 +202,7 @@ public class ErpExecutorTest
     private static StateChangeAction createStoreCodeAction(byte[] toAddress, byte[] expectedHash, byte[] code) {
         final StateChangeAction action = new StateChangeAction();
         action.toAddress = toAddress;
-        action.type = ErpExecutor.STORE_CODE;
+        action.type = STORE_CODE;
         action.code = code;
         action.expectedCodeHash = expectedHash;
         return action;

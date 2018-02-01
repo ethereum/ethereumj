@@ -19,7 +19,6 @@ package org.ethereum.erp;
 
 import org.ethereum.core.Repository;
 import org.ethereum.erp.StateChangeObject.StateChangeAction;
-import org.ethereum.util.ByteUtil;
 
 import java.util.Arrays;
 
@@ -33,9 +32,20 @@ public class ErpExecutor {
     public static final String WEI_TRANSFER = "weiTransfer";
     public static final String STORE_CODE = "storeCode";
 
-    public void applyStateChanges(StateChangeObject sco, Repository repo) {
-        for (StateChangeAction action : sco.actions) {
-            applyStateChangeAction(action, repo);
+    public static class ErpExecutionException extends Exception {
+        ErpExecutionException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    public void applyStateChanges(StateChangeObject sco, Repository repo) throws ErpExecutionException {
+        try {
+            for (StateChangeAction action : sco.actions) {
+                applyStateChangeAction(action, repo);
+            }
+        }
+        catch (IllegalArgumentException | UnsupportedOperationException e) {
+            throw new ErpExecutionException(e);
         }
     }
 

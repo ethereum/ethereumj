@@ -39,7 +39,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -122,9 +121,14 @@ public class ErpConfig extends FrontierConfig {
                 track.commit();
                 logger.info("Successfully applied ERP '%s' to block %d", erpMetadata.getId(), block.getNumber());
             }
+            catch (ErpExecutor.ErpExecutionException e) {
+                track.rollback();
+                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), block.getNumber(), e);
+            }
             catch (Exception e) {
                 track.rollback();
-                logger.info("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), block.getNumber(), e);
+                logger.error("Failed to apply ERP '%s' to block %d", erpMetadata.getId(), block.getNumber(), e);
+                throw e;
             }
             finally {
                 track.close();
