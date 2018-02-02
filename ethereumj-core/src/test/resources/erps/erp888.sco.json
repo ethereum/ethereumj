@@ -8,19 +8,19 @@
   "actions": [
     {
       "type": "weiTransfer",
-      "fromAddress": "11113D9F938E13CD947EC05ABC7FE734DF8DD826",
-      "toAddress": "22228AEE95F38490E9769C39B2773ED763D9CD5F",
+      "fromAddress": "0x11113D9F938E13CD947EC05ABC7FE734DF8DD826",
+      "toAddress": "0x22228AEE95F38490E9769C39B2773ED763D9CD5F",
       "valueInWei": 1234
     },
     {
       "type": "storeCode",
-      "toAddress": "33338AEE95F38490E9769C39B2773ED763D9CD5E",
-      "expectedCodeHash": "880dc19d7dcdd8b388fe5f987bb2495eea5f4ca1cb2879eecdacf2bc48a34265",
+      "toAddress": "0x33338AEE95F38490E9769C39B2773ED763D9CD5E",
+      "expectedCodeHash": "0x880dc19d7dcdd8b388fe5f987bb2495eea5f4ca1cb2879eecdacf2bc48a34265",
       "code": "0xdeadbeef3"
     },
     {
       "type": "storeCode",
-      "toAddress": "44448AEE95F38490E9769C39B2773ED763D9CD5E",
+      "toAddress": "0x44448AEE95F38490E9769C39B2773ED763D9CD5E",
       "expectedCodeHash": "",
       "code": "0xdeadbeef4"
     }
