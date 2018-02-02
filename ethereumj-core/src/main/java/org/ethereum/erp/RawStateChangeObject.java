@@ -23,6 +23,7 @@ package org.ethereum.erp;
 public class RawStateChangeObject {
     public String erpId;
     public long targetBlock;
+    public RawMetadata metadata;
     public RawStateChangeAction[] actions;
 
     public static class RawStateChangeAction {
@@ -32,6 +33,11 @@ public class RawStateChangeObject {
         public long valueInWei;
         public String code;
         public String expectedCodeHash;
+    }
+
+    public static class RawMetadata {
+        public long sourceBlock;
+        public String version;
     }
 }
 

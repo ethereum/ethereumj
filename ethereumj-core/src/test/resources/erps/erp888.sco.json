@@ -1,6 +1,10 @@
 {
   "erpId": "erp-888",
   "targetBlock": 6000000,
+  "metadata": {
+    "sourceBlock": 5000000,
+    "version": "1.0.0"
+  },
   "actions": [
     {
       "type": "weiTransfer",
