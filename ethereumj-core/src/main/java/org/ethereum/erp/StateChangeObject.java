@@ -62,6 +62,9 @@ public class StateChangeObject {
                     ? new BigInteger(raw.valueInWei)
                     : BigInteger.ZERO;
 
+            if (!result.valueInWei.abs().equals(result.valueInWei))
+                throw new IllegalArgumentException("valueInWei cannot be negative: " + raw.valueInWei);
+
             result.code = hexStringToBytes(raw.code);
             result.expectedCodeHash = raw.expectedCodeHash == null || raw.expectedCodeHash.isEmpty()
                     ? EMPTY_DATA_HASH
