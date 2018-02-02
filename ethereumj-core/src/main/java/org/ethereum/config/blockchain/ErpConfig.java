@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Created by Dan Phifer, 2018-02-01.
  */
-public class ErpConfig extends FrontierConfig {
+public class ErpConfig extends FrontierConfig /* TODO: Is FrontierConfig correct? */  {
 
     private final long EXTRA_DATA_AFFECTS_BLOCKS_NUMBER = 10;
     public static final Logger logger = LoggerFactory.getLogger("config");
@@ -86,7 +86,7 @@ public class ErpConfig extends FrontierConfig {
 
         // add the header validators for each known ERP
         final List<Pair<Long, BlockHeaderValidator>> headerValidators = headerValidators();
-        erpDataByTargetBlock.forEach((targetBlock, erpMetadata) -> {
+        allErps.forEach(erpMetadata -> {
             BlockHeaderRule rule = new ExtraDataPresenceRule(erpMetadata.getErpMarker(), true);
             headerValidators.add(Pair.of(erpMetadata.getTargetBlock(), new BlockHeaderValidator(rule)));
         });
@@ -106,42 +106,50 @@ public class ErpConfig extends FrontierConfig {
 
     @Override
     public void hardForkTransfers(Block block, Repository repo) {
-        hardForkTransfers(block.getNumber(), repo);
-    }
-
-    void hardForkTransfers(long blockNumber, Repository repo) {
-        final ErpMetadata erpMetadata = erpDataByTargetBlock.get(blockNumber);
+        final ErpMetadata erpMetadata = erpDataByTargetBlock.get(block.getNumber());
         if (erpMetadata != null) {
-            logger.info("Found ERP %s for block %d", erpMetadata.getId(), blockNumber);
-            final StateChangeObject sco;
-            try {
-                sco = erpLoader.loadStateChangeObject(erpMetadata);
-            } catch (IOException e) {
-                logger.error("Failed to load state change object for " + erpMetadata.getId(), e);
-                throw new RuntimeException("Failed to load state change object for " + erpMetadata.getId(), e);
-            }
-
-            // TODO: Is this the right way to apply changes in  batch?
-            final Repository track = repo.startTracking();
-            try {
-                erpExecutor.applyStateChanges(sco, track);
-                track.commit();
-                logger.info("Successfully applied ERP '{}' to block {}", erpMetadata.getId(), blockNumber);
-            }
-            catch (ErpExecutor.ErpExecutionException e) {
-                track.rollback();
-                logger.error("Failed to apply ERP '{}' to block {}", erpMetadata.getId(), blockNumber, e);
-            }
-            catch (Exception e) {
-                track.rollback();
-                logger.error("Failed to apply ERP '{}' to block {}", erpMetadata.getId(), blockNumber, e);
-                throw e;
-            }
-            finally {
-                track.close();
-            }
+            logger.info("Found ERP %s for block %d", erpMetadata.getId(), erpMetadata.getTargetBlock());
+            doHardForkTransfers(erpMetadata, repo);
         }
     }
+
+    void doHardForkTransfers(ErpMetadata erpMetadata, Repository repo) {
+        final StateChangeObject sco;
+        try {
+            sco = erpLoader.loadStateChangeObject(erpMetadata);
+        } catch (IOException e) {
+            logger.error("Failed to load state change object for " + erpMetadata.getId(), e);
+            throw new RuntimeException("Failed to load state change object for " + erpMetadata.getId(), e);
+        }
+
+        // TODO: Is this the right way to apply changes in  batch?
+        final Repository track = repo.startTracking();
+        try {
+            erpExecutor.applyStateChanges(sco, track);
+            track.commit();
+            logger.info("Successfully applied ERP '{}' to block {}", erpMetadata.getId(), erpMetadata.getTargetBlock());
+        }
+        catch (ErpExecutor.ErpExecutionException e) {
+            track.rollback();
+            logger.error("Failed to apply ERP '{}' to block {}", erpMetadata.getId(), erpMetadata.getTargetBlock(), e);
+        }
+        catch (Exception e) {
+            track.rollback();
+            logger.error("Failed to apply ERP '{}' to block {}", erpMetadata.getId(), erpMetadata.getTargetBlock(), e);
+            throw e;
+        }
+        finally {
+            track.close();
+        }
+    }
+
+
+    //////////////////////////////////////////////
+    // TODO: These methods we included in DaoHFConfig, so I have included them here as well.
+    // I don't know enough about the Config setup to understand if they are needed or
+    // if other methods are needed as well.
+    //////////////////////////////////////////////
+
 
     @Override
     public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {

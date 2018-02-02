@@ -16,10 +16,14 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Collections;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ErpConfigTest
 {
@@ -34,7 +38,7 @@ public class ErpConfigTest
     @Before
     public void setUp() throws Exception {
         this.config = new ErpConfig();
-        this.repo = new RepositoryRoot(new HashMapDB<>());
+        this.repo = Mockito.spy(new RepositoryRoot(new HashMapDB<>()));
     }
 
     @Test
@@ -47,9 +51,9 @@ public class ErpConfigTest
 
     @Test(expected = RuntimeException.class)
     public void failedInitThrows() throws IOException {
-        ErpLoader failingLoader = Mockito.mock(ErpLoader.class);
+        ErpLoader failingLoader = mock(ErpLoader.class);
 
-        Mockito.when(failingLoader.loadErpMetadata()).thenThrow(new IOException("Test"));
+        when(failingLoader.loadErpMetadata()).thenThrow(new IOException("Test"));
 
         new ErpConfig(new HomesteadConfig(), failingLoader, new ErpExecutor());
     }
@@ -66,8 +70,8 @@ public class ErpConfigTest
         repo.addBalance(account1, BigInteger.valueOf(1234L));
         repo.saveCode(account3, ByteUtil.hexStringToBytes("0xdada"));
 
-        final Block block = Mockito.mock(Block.class);
-        Mockito.when(block.getNumber()).thenReturn(6000000L);
+        final Block block = mock(Block.class);
+        when(block.getNumber()).thenReturn(6000000L);
         Repository spyRepo = Mockito.spy(repo);
 
         this.config.hardForkTransfers(block, spyRepo);
@@ -84,12 +88,10 @@ public class ErpConfigTest
         repo.addBalance(account1, BigInteger.valueOf(1234L));
         repo.saveCode(account3, ByteUtil.hexStringToBytes("0xdada"));
 
-        final Block block = Mockito.mock(Block.class);
-        Mockito.when(block.getNumber()).thenReturn(456L);
+        final Block block = mock(Block.class);
+        when(block.getNumber()).thenReturn(456L);
 
-        Repository spyRepo = Mockito.spy(repo);
-
-        this.config.hardForkTransfers(block, spyRepo);
+        this.config.hardForkTransfers(block, repo);
 
         assertEquals(BigInteger.valueOf(1234L), repo.getBalance(account1));
         assertEquals(BigInteger.ZERO, repo.getBalance(account2));
@@ -100,36 +102,91 @@ public class ErpConfigTest
 
     @Test(expected = RuntimeException.class)
     public void hardForkTransfers_failingScoLoadThrows() throws IOException {
-        final Block block = Mockito.mock(Block.class);
-        Mockito.when(block.getNumber()).thenReturn(6000000L);
+        final Block block = mock(Block.class);
+        when(block.getNumber()).thenReturn(6000000L);
 
-        ErpLoader mockLoader = Mockito.mock(ErpLoader.class);
+        ErpLoader mockLoader = mock(ErpLoader.class);
         ErpLoader actualLoader = new ErpLoader("/erps");
-        Mockito.when(mockLoader.loadErpMetadata()).thenReturn(actualLoader.loadErpMetadata());
-        Mockito.when(mockLoader.loadStateChangeObject(Mockito.any())).thenThrow(new IOException("Test"));
+        when(mockLoader.loadErpMetadata()).thenReturn(actualLoader.loadErpMetadata());
+        when(mockLoader.loadStateChangeObject(Mockito.any())).thenThrow(new IOException("Test"));
 
         ErpConfig config = new ErpConfig(new HomesteadConfig(), mockLoader, new ErpExecutor());
         config.hardForkTransfers(block, repo);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void hardForkTransfers_failingAction() throws IOException {
-        final Block block = Mockito.mock(Block.class);
-        Mockito.when(block.getNumber()).thenReturn(6000000L);
+    @Test
+    public void doHardForkTransfers_failingAction() throws IOException, ErpExecutor.ErpExecutionException {
+        ErpLoader mockLoader = mock(ErpLoader.class);
+        ErpLoader.ErpMetadata metadata = mock(ErpLoader.ErpMetadata.class);
+        ErpExecutor mockExecutor = mock(ErpExecutor.class);
+        Repository mockRepo = mock(Repository.class);
+        Repository track = mock(Repository.class);
+        StateChangeObject sco = mock(StateChangeObject.class);
 
-        StateChangeObject badStageChangeObject = new StateChangeObject();
-        badStageChangeObject.erpId = "eip-123";
-        badStageChangeObject.targetBlock = 6000000L;
-        RawStateChangeObject.RawStateChangeAction badAction = new RawStateChangeObject.RawStateChangeAction();
-        badAction.type = "nonsense";
-        badStageChangeObject.actions = new StateChangeObject.StateChangeAction[]{StateChangeObject.StateChangeAction.parse(badAction)};
+        when(mockLoader.loadErpMetadata()).thenReturn(Collections.emptyList());
+        when(mockLoader.loadStateChangeObject(Mockito.eq(metadata))).thenReturn(sco);
+        when(metadata.getId()).thenReturn("mockErp");
+        when(metadata.getTargetBlock()).thenReturn(1L);
 
-        ErpLoader mockLoader = Mockito.mock(ErpLoader.class);
-        ErpLoader actualLoader = new ErpLoader("/erps");
-        Mockito.when(mockLoader.loadErpMetadata()).thenReturn(actualLoader.loadErpMetadata());
-        Mockito.when(mockLoader.loadStateChangeObject(Mockito.any())).thenReturn(badStageChangeObject);
+        doThrow(mock(ErpExecutor.ErpExecutionException.class))
+                .when(mockExecutor)
+                .applyStateChanges(Mockito.eq(sco), Mockito.eq(track));
 
-        ErpConfig config = new ErpConfig(new HomesteadConfig(), mockLoader, new ErpExecutor());
-        config.hardForkTransfers(block, repo);
+        when(mockRepo.startTracking())
+                .thenReturn(track)
+                .thenThrow(new RuntimeException("Did not expect another call to startTracking"));
+
+        ErpConfig config = new ErpConfig(new HomesteadConfig(), mockLoader, mockExecutor);
+        config.doHardForkTransfers(metadata, mockRepo);
+
+        // Verify the right interactions occurred
+        Mockito.verify(mockExecutor, Mockito.times(1)).applyStateChanges(Mockito.eq(sco), Mockito.eq(track));
+
+        Mockito.verify(track, Mockito.never()).commit();
+        Mockito.verify(track, Mockito.times(1)).rollback();
+        Mockito.verify(track, Mockito.times(1)).close();
+
+        Mockito.verify(mockRepo, Mockito.never()).commit();
+        Mockito.verify(mockRepo, Mockito.never()).rollback();
+        Mockito.verify(mockRepo, Mockito.never()).close();
+    }
+
+    @Test
+    public void doHardForkTransfers_rethrowsOtherExceptions() throws IOException, ErpExecutor.ErpExecutionException {
+        ErpLoader mockLoader = mock(ErpLoader.class);
+        ErpLoader.ErpMetadata metadata = mock(ErpLoader.ErpMetadata.class);
+        ErpExecutor mockExecutor = mock(ErpExecutor.class);
+        Repository mockRepo = mock(Repository.class);
+        Repository track = mock(Repository.class);
+        StateChangeObject sco = mock(StateChangeObject.class);
+
+        when(mockLoader.loadErpMetadata()).thenReturn(Collections.emptyList());
+        when(mockLoader.loadStateChangeObject(Mockito.eq(metadata))).thenReturn(sco);
+        when(metadata.getId()).thenReturn("mockErp");
+        when(metadata.getTargetBlock()).thenReturn(1L);
+
+        doThrow(new RuntimeException("Something bad happened"))
+                .when(mockExecutor)
+                .applyStateChanges(Mockito.eq(sco), Mockito.eq(track));
+
+        when(mockRepo.startTracking())
+                .thenReturn(track)
+                .thenThrow(new RuntimeException("Did not expect another call to startTracking"));
+
+        ErpConfig config = new ErpConfig(new HomesteadConfig(), mockLoader, mockExecutor);
+        try {
+            config.doHardForkTransfers(metadata, mockRepo);
+            throw new Exception("Unknown exceptions should be rethrown");
+        } catch (Exception e) {
+            // Expected
+        }
+
+        Mockito.verify(track, Mockito.never()).commit();
+        Mockito.verify(track, Mockito.times(1)).rollback();
+        Mockito.verify(track, Mockito.times(1)).close();
+
+        Mockito.verify(mockRepo, Mockito.never()).commit();
+        Mockito.verify(mockRepo, Mockito.never()).rollback();
+        Mockito.verify(mockRepo, Mockito.never()).close();
     }
 }

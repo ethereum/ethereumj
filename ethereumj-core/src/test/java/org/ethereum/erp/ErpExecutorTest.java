@@ -1,5 +1,6 @@
 package org.ethereum.erp;
 
+import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
@@ -8,6 +9,8 @@ import org.ethereum.util.ByteUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
