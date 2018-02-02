@@ -74,7 +74,7 @@ public class ErpExecutor {
 
     void applyWeiTransfer(StateChangeAction action, Repository repo) {
         if (Arrays.equals(action.toAddress, EMPTY_BYTE_ARRAY))
-            throw new IllegalArgumentException("weiTransfer cannot transfer to the an empty address");
+            throw new IllegalArgumentException("weiTransfer cannot transfer to an empty address");
 
         // is this needed here?  Seems like this check should happen at a lower level (i.e. in the repo)
         if (repo.getBalance(action.fromAddress).compareTo(action.valueInWei) < 0)

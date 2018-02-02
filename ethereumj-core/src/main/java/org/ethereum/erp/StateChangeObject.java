@@ -17,6 +17,7 @@
  */
 package org.ethereum.erp;
 
+import org.apache.commons.lang3.StringUtils;
 import org.ethereum.erp.RawStateChangeObject.RawStateChangeAction;
 
 import java.math.BigInteger;
@@ -56,7 +57,11 @@ public class StateChangeObject {
             result.type = raw.type;
             result.fromAddress = hexStringToBytes(raw.fromAddress);
             result.toAddress = hexStringToBytes(raw.toAddress);
-            result.valueInWei = BigInteger.valueOf(raw.valueInWei);
+
+            result.valueInWei = StringUtils.isNotBlank(raw.valueInWei)
+                    ? new BigInteger(raw.valueInWei)
+                    : BigInteger.ZERO;
+
             result.code = hexStringToBytes(raw.code);
             result.expectedCodeHash = raw.expectedCodeHash == null || raw.expectedCodeHash.isEmpty()
                     ? EMPTY_DATA_HASH

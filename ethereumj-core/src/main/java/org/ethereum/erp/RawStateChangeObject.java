@@ -30,7 +30,7 @@ public class RawStateChangeObject {
         public String type;
         public String fromAddress;
         public String toAddress;
-        public long valueInWei;
+        public String valueInWei;
         public String code;
         public String expectedCodeHash;
     }
