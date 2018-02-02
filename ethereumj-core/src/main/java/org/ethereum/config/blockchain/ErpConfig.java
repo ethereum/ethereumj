@@ -107,7 +107,7 @@ public class ErpConfig extends FrontierConfig /* TODO: Is FrontierConfig correct
     public void hardForkTransfers(Block block, Repository repo) {
         final ErpMetadata erpMetadata = erpDataByTargetBlock.get(block.getNumber());
         if (erpMetadata != null) {
-            logger.info("Found ERP %s for block %d", erpMetadata.getId(), erpMetadata.getTargetBlock());
+            logger.info("Found ERP {} for block {}", erpMetadata.getId(), erpMetadata.getTargetBlock());
             doHardForkTransfers(erpMetadata, repo);
         }
     }
@@ -117,7 +117,7 @@ public class ErpConfig extends FrontierConfig /* TODO: Is FrontierConfig correct
         try {
             sco = erpLoader.loadStateChangeObject(erpMetadata);
         } catch (IOException e) {
-            logger.error("Failed to load state change object for " + erpMetadata.getId(), e);
+            logger.error("Failed to load state change object for {}", erpMetadata.getId(), e);
             throw new RuntimeException("Failed to load state change object for " + erpMetadata.getId(), e);
         }
 

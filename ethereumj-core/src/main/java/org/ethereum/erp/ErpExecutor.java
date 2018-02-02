@@ -63,7 +63,7 @@ public class ErpExecutor {
     }
 
     void applyStoreCode(StateChangeAction action, Repository repo) {
-        if (action.toAddress == EMPTY_BYTE_ARRAY)
+        if (Arrays.equals(action.toAddress , EMPTY_BYTE_ARRAY))
             throw new IllegalArgumentException("storeCode cannot store code at an empty address");
 
         if (!Arrays.equals(action.expectedCodeHash, repo.getCodeHash(action.toAddress)))
@@ -73,7 +73,7 @@ public class ErpExecutor {
     }
 
     void applyWeiTransfer(StateChangeAction action, Repository repo) {
-        if (action.toAddress == EMPTY_BYTE_ARRAY)
+        if (Arrays.equals(action.toAddress , EMPTY_BYTE_ARRAY))
             throw new IllegalArgumentException("weiTransfer cannot transfer to the an empty address");
 
         // is this needed here?  Seems like this check should happen at a lower level (i.e. in the repo)
