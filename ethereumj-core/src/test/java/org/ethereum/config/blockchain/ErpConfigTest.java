@@ -1,7 +1,10 @@
 package org.ethereum.config.blockchain;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.erp.ErpExecutor;
@@ -188,5 +191,32 @@ public class ErpConfigTest
         Mockito.verify(mockRepo, Mockito.never()).commit();
         Mockito.verify(mockRepo, Mockito.never()).rollback();
         Mockito.verify(mockRepo, Mockito.never()).close();
+    }
+
+    /**
+     * Not sure if these delegate methods are needed (or if more are needed).  However, adding this here
+     * to indicate that whatever delegate method calls should be supported, they should be covered in the
+     * test cases.
+     * @throws IOException
+     */
+    @Test
+    public void delegateMethodCalls() throws IOException {
+        BlockchainConfig parent = mock(BlockchainConfig.class);
+        ErpLoader mockLoader = mock(ErpLoader.class);
+        ErpExecutor mockExecutor = mock(ErpExecutor.class);
+        BlockHeader header1 = mock(BlockHeader.class);
+        BlockHeader header2 = mock(BlockHeader.class);
+        Transaction tx = mock(Transaction.class);
+
+        when(mockLoader.loadErpMetadata()).thenReturn(Collections.emptyList());
+
+        ErpConfig config = new ErpConfig(parent, mockLoader, mockExecutor);
+        config.calcDifficulty(header1, header2);
+        config.getTransactionCost(tx);
+        config.acceptTransactionSignature(tx);
+
+        Mockito.verify(parent, Mockito.times(1)).calcDifficulty(header1, header2);
+        Mockito.verify(parent, Mockito.times(1)).getTransactionCost(tx);
+        Mockito.verify(parent, Mockito.times(1)).acceptTransactionSignature(tx);
     }
 }

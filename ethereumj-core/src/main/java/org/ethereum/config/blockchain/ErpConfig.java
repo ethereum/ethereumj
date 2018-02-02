@@ -62,9 +62,11 @@ public class ErpConfig extends FrontierConfig /* TODO: Is FrontierConfig correct
     public ErpConfig(BlockchainConfig parent, ErpLoader erpLoader, ErpExecutor erpExecutor) {
         this.erpLoader = erpLoader;
         this.erpExecutor = erpExecutor;
+        this.parent = parent;
+        this.constants = parent.getConstants();
 
         try {
-            initErpConfig(parent);
+            initErpConfig();
         } catch (IOException e) {
             // TODO: not sure what to do here.
             logger.error("Failed to load the ERPConfig", e);
@@ -72,10 +74,7 @@ public class ErpConfig extends FrontierConfig /* TODO: Is FrontierConfig correct
         }
     }
 
-    void initErpConfig(BlockchainConfig parent) throws IOException {
-        this.parent = parent;
-        this.constants = parent.getConstants();
-
+    void initErpConfig() throws IOException {
         // load the config block numbers
         final Collection<ErpMetadata> allErps = erpLoader.loadErpMetadata();
         this.erpDataByTargetBlock = allErps
