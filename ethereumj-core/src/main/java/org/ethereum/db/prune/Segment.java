@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
  * Provides an interface for building and tracking chain segment.
  *
  * <p>
- *     Chain segment is a fragment of the blockchain including all its forks.
- *     Segment always have a 'root' item which must belong to the main chain,
+ *     Chain segment is a fragment of the blockchain, it includes both forks and main chain.
+ *     Segment always has a 'root' item which must belong to the main chain,
  *     anyway 'root' item itself is not treated as a part of the segment.
  *
  * <p>
