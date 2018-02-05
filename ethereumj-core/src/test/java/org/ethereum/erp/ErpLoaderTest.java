@@ -7,11 +7,15 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static java.util.stream.Collectors.toMap;
+import static org.junit.Assert.*;
 
 public class ErpLoaderTest
 {
@@ -29,21 +33,25 @@ public class ErpLoaderTest
         final Collection<ErpMetadata> erpMetadata = loader.loadErpMetadata();
         assertEquals(2, erpMetadata.size());
 
-        final Iterator<ErpMetadata> iterator = erpMetadata.iterator();
-        ErpMetadata metadata1 = iterator.next();
-        ErpMetadata metadata2 = iterator.next();
+        final Map<String, ErpMetadata> erpsById = erpMetadata.stream()
+                .collect(toMap(ErpMetadata::getId, Function.identity()));
 
-        assertEquals(6000000, metadata1.getTargetBlock());
-        assertEquals("erp-888", metadata1.getId());
-        assertArrayEquals(ByteUtil.hexStringToBytes("6572702d383838"), metadata1.getErpMarker());
+        ErpMetadata erp888 = erpsById.get("erp-888");
+        ErpMetadata erp999 = erpsById.get("erp-999");
+        assertNotNull("Did not find erp888", erp888);
+        assertNotNull("Did not find erp999", erp999);
+
+        assertEquals(6000000, erp888.getTargetBlock());
+        assertArrayEquals(ByteUtil.hexStringToBytes("6572702d383838"), erp888.getErpMarker());
     }
 
     @Test
     public void loadERPResourceFiles() throws IOException {
         final File[] files = loader.loadERPResourceFiles("/erps");
         assertEquals(2, files.length);
-        assertEquals("erp888.sco.json", files[0].getName());
-        assertEquals("erp999.sco.json", files[1].getName());
+        List<String> fileNames = Arrays.stream(files).map(File::getName).collect(Collectors.toList());
+        assertTrue(fileNames.contains("erp888.sco.json"));
+        assertTrue(fileNames.contains("erp999.sco.json"));
     }
 
     @Test(expected = IOException.class)
