@@ -87,7 +87,7 @@ public class Pruner {
         String sample = hashes.stream().limit(3)
                 .map(HashUtil::shortHash).collect(Collectors.joining(", "));
         if (hashes.size() > 3) {
-            sample += ", ...";
+            sample += ", ... (" + hashes.size() + " total)";
         }
         return sample;
     }
