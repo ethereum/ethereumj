@@ -204,7 +204,7 @@ public class PruneTest {
 
         {
             // this state should be pruned already
-            Block b1 = bc.getBlockchain().getBlockByNumber(bestBlockNum - 4);
+            Block b1 = bc.getBlockchain().getBlockByNumber(bestBlockNum - 6);
             Repository r1 = bc.getBlockchain().getRepository().getSnapshotTo(b1.getStateRoot());
             Assert.assertEquals(BigInteger.ZERO, r1.getBalance(alice.getAddress()));
             Assert.assertEquals(BigInteger.ZERO, r1.getBalance(bob.getAddress()));
@@ -246,6 +246,10 @@ public class PruneTest {
         bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
         // force prune
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
         bc.createBlock();
         bc.createBlock();
         bc.createBlock();
@@ -398,6 +402,10 @@ public class PruneTest {
         contr.callFunction("set", 0xbbbbbbbbbbbbL);
         Block b2_ = bc.createForkBlock(b1);
         bc.createForkBlock(b2);
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
         bc.createBlock();
         bc.createBlock();
         bc.createBlock();
