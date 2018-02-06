@@ -103,16 +103,15 @@ public class PruneManager {
         tracker.commit();
 
         if (segment.size() >= segmentOptimalSize && segment.isComplete()) {
-            List<byte[]> upcoming = upcomingBlockHashes(segment.getMaxNumber());
+            List<byte[]> upcoming = getUpcomingHashes(segment.getMaxNumber() + 1);
             pruner.prune(segment, upcoming);
             segment = new Segment(chainBlock);
         }
     }
 
-    private List<byte[]> upcomingBlockHashes(long fromBlock) {
+    private List<byte[]> getUpcomingHashes(long fromBlock) {
         List<byte[]> upcomingHashes = new ArrayList<>();
-        long max = blockStore.getMaxNumber();
-        for (long num = fromBlock; num <= max; num++) {
+        for (long num = fromBlock; num <= blockStore.getMaxNumber(); num++) {
             List<Block> blocks = blockStore.getBlocksByNumber(num);
             List<byte[]> hashes = blocks.stream().map(Block::getHash).collect(Collectors.toList());
             upcomingHashes.addAll(hashes);
