@@ -844,13 +844,17 @@ public class Program {
                     getContractDetails(getOwnerAddress().getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
             if (contractDetails != null) {
-                List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
-                Collections.sort(storageKeys);
-                for (DataWord key : storageKeys) {
-                    storageData.append(" ").append(key).append(" -> ").
-                            append(contractDetails.getStorage().get(key)).append("\n");
+                try {
+                    List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
+                    Collections.sort(storageKeys);
+                    for (DataWord key : storageKeys) {
+                        storageData.append(" ").append(key).append(" -> ").
+                                append(contractDetails.getStorage().get(key)).append("\n");
+                    }
+                    if (storageData.length() > 0) storageData.insert(0, "\n");
+                } catch (java.lang.Exception e) {
+                    storageData.append("Failed to print storage: ").append(e.getMessage());
                 }
-                if (storageData.length() > 0) storageData.insert(0, "\n");
             }
 
             StringBuilder memoryData = new StringBuilder();
