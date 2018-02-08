@@ -1183,7 +1183,7 @@ public class Program {
         } else {
 
             if (logger.isDebugEnabled())
-                logger.debug("Call to {} with data {}", contract.getClass().getSimpleName(), Hex.toHexString(data));
+                logger.debug("Call {}(data = {})", contract.getClass().getSimpleName(), Hex.toHexString(data));
 
             Pair<Boolean, byte[]> out = contract.execute(data);
 
