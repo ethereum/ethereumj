@@ -98,6 +98,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         if (logger.isInfoEnabled()) {
             logger.info("Top level call: \n" +
+                            "tx.hash={}\n" +
                             "address={}\n" +
                             "origin={}\n" +
                             "caller={}\n" +
@@ -113,6 +114,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                             "difficulty={}\n" +
                             "gaslimit={}\n",
 
+                    Hex.toHexString(tx.getHash()),
                     Hex.toHexString(address),
                     Hex.toHexString(origin),
                     Hex.toHexString(caller),
