@@ -1182,6 +1182,9 @@ public class Program {
             track.rollback();
         } else {
 
+            if (logger.isDebugEnabled())
+                logger.debug("Call to {} with data {}", contract.getClass().getSimpleName(), Hex.toHexString(data));
+
             Pair<Boolean, byte[]> out = contract.execute(data);
 
             if (out.getLeft()) { // success
