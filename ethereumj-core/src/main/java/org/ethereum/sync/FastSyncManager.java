@@ -600,23 +600,31 @@ public class FastSyncManager {
     private void syncBlocksReceipts() {
         pivot = new BlockHeader(blockchainDB.get(FASTSYNC_DB_KEY_PIVOT));
 
-        logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
+        if (!config.fastSyncSkipHistory()) {
+            logger.info("FastSync: Downloading Block bodies up to pivot block (" + pivot.getShortDescr() + ")...");
 
-        blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
-        setSyncStage(EthereumListener.SyncState.COMPLETE);
-        blockBodiesDownloader.startImporting();
-        blockBodiesDownloader.waitForStop();
+            blockBodiesDownloader = applicationContext.getBean(BlockBodiesDownloader.class);
+            setSyncStage(EthereumListener.SyncState.COMPLETE);
+            blockBodiesDownloader.startImporting();
+            blockBodiesDownloader.waitForStop();
 
-        logger.info("FastSync: Block bodies downloaded");
+            logger.info("FastSync: Block bodies downloaded");
+        } else {
+            logger.info("FastSync: skip bodies downloading");
+        }
 
-        logger.info("FastSync: Downloading receipts...");
+        if (!config.fastSyncSkipHistory()) {
+            logger.info("FastSync: Downloading receipts...");
 
-        receiptsDownloader = applicationContext.getBean
-                (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
-        receiptsDownloader.startImporting();
-        receiptsDownloader.waitForStop();
+            receiptsDownloader = applicationContext.getBean
+                    (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
+            receiptsDownloader.startImporting();
+            receiptsDownloader.waitForStop();
 
-        logger.info("FastSync: receipts downloaded");
+            logger.info("FastSync: receipts downloaded");
+        } else {
+            logger.info("FastSync: skip receipts downloading");
+        }
 
         logger.info("FastSync: updating totDifficulties starting from the pivot block...");
         blockchain.updateBlockTotDifficulties((int) pivot.getNumber());
