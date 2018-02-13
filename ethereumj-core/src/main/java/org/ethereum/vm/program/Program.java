@@ -84,7 +84,7 @@ public class Program {
     private ProgramStorageChangeListener storageDiffListener = new ProgramStorageChangeListener();
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
-    private Stack stack;
+    private DefaultStack stack;
     private Memory memory;
     private Storage storage;
     private byte[] returnDataBuffer;
@@ -130,7 +130,7 @@ public class Program {
 
         traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
-        this.stack = setupProgramListener(new Stack());
+        this.stack = setupProgramListener(new DefaultStack());
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
@@ -238,7 +238,7 @@ public class Program {
         stack.push(stackWord);
     }
 
-    public Stack getStack() {
+    public DefaultStack getStack() {
         return this.stack;
     }
 

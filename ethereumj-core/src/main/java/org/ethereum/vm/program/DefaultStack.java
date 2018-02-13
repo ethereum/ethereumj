@@ -21,7 +21,7 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.ProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 
-public class Stack extends java.util.Stack<DataWord> implements ProgramListenerAware {
+public class DefaultStack extends java.util.Stack<DataWord> implements ProgramListenerAware {
 
     private ProgramListener programListener;
 

@@ -11,7 +11,7 @@ import org.junit.Test;
 public class StackTest {
     @Test
     public void testPush() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	assertEquals(0, stack.size());
 	
 	stack.push(new DataWord());
@@ -20,7 +20,7 @@ public class StackTest {
     
     @Test
     public void testPushWithListener() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	stack.setProgramListener(new CompositeProgramListener());
 	
 	assertEquals(0, stack.size());
@@ -31,7 +31,7 @@ public class StackTest {
     
     @Test
     public void testPop() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	DataWord a = new DataWord();
 	DataWord b = new DataWord();
 	
@@ -48,7 +48,7 @@ public class StackTest {
     
     @Test
     public void testPopWithListener() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	stack.setProgramListener(new CompositeProgramListener());
 	DataWord a = new DataWord();
 	DataWord b = new DataWord();
@@ -66,7 +66,7 @@ public class StackTest {
     
     @Test(expected = EmptyStackException.class)
     public void testPopOutofBounds() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	
 	assertEquals(0, stack.size());
 	stack.pop();
@@ -74,7 +74,7 @@ public class StackTest {
     
     @Test(expected = EmptyStackException.class)
     public void testPopOutofBoundsWithListener() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	stack.setProgramListener(new CompositeProgramListener());
 	
 	assertEquals(0, stack.size());
@@ -83,7 +83,7 @@ public class StackTest {
     
     @Test
     public void testSwap() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	
 	DataWord a = new DataWord();
 	DataWord b = new DataWord();
@@ -98,7 +98,7 @@ public class StackTest {
     
     @Test
     public void testSwapWithListener() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	stack.setProgramListener(new CompositeProgramListener());
 	
 	DataWord a = new DataWord();
@@ -114,7 +114,7 @@ public class StackTest {
     
     @Test
     public void testNotValidSwap() {
-	Stack stack = new Stack();
+	DefaultStack stack = new DefaultStack();
 	DataWord a = new DataWord();
 	DataWord b = new DataWord();
 	
