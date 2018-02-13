@@ -85,7 +85,7 @@ public class Program {
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private DefaultStack stack;
-    private DefaultMemory memory;
+    private Memory memory = new NullMemory();
     private Storage storage;
     private byte[] returnDataBuffer;
 

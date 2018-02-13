@@ -51,7 +51,7 @@ public class MemoryTest {
     }
 
     private static void checkMemoryExtend(int dataSize) {
-        DefaultMemory memory = new DefaultMemory();
+        Memory memory = new DefaultMemory();
         memory.extend(0, dataSize);
         assertEquals(calcSize(dataSize, CHUNK_SIZE), memory.internalSize());
         assertEquals(calcSize(dataSize, WORD_SIZE), memory.size());
@@ -64,7 +64,7 @@ public class MemoryTest {
     @Test
     public void memorySave_1() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         byte[] data = {1, 1, 1, 1};
 
         memoryBuffer.write(0, data, data.length, false);
@@ -84,7 +84,7 @@ public class MemoryTest {
     @Test
     public void memorySave_2() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         byte[] data = Hex.decode("0101010101010101010101010101010101010101010101010101010101010101");
 
         memoryBuffer.write(0, data, data.length, false);
@@ -105,7 +105,7 @@ public class MemoryTest {
     @Test
     public void memorySave_3() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         byte[] data = Hex.decode("010101010101010101010101010101010101010101010101010101010101010101");
 
         memoryBuffer.write(0, data, data.length, false);
@@ -127,7 +127,7 @@ public class MemoryTest {
     @Test
     public void memorySave_4() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         byte[] data = new byte[1024];
         Arrays.fill(data, (byte) 1);
 
@@ -148,7 +148,7 @@ public class MemoryTest {
     @Test
     public void memorySave_5() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data = new byte[1025];
         Arrays.fill(data, (byte) 1);
@@ -174,7 +174,7 @@ public class MemoryTest {
     @Test
     public void memorySave_6() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[1024];
         Arrays.fill(data1, (byte) 1);
@@ -207,7 +207,7 @@ public class MemoryTest {
     @Test
     public void memorySave_7() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[1024];
         Arrays.fill(data1, (byte) 1);
@@ -247,7 +247,7 @@ public class MemoryTest {
     @Test
     public void memorySave_8() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[128];
         Arrays.fill(data1, (byte) 1);
@@ -269,7 +269,7 @@ public class MemoryTest {
     @Test
     public void memoryLoad_1() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         DataWord value = memoryBuffer.readWord(100);
         assertEquals(0, value.intValue());
         assertEquals(1, memoryBuffer.getChunks().size());
@@ -279,7 +279,7 @@ public class MemoryTest {
     @Test
     public void memoryLoad_2() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         DataWord value = memoryBuffer.readWord(2015);
         assertEquals(0, value.intValue());
         assertEquals(2, memoryBuffer.getChunks().size());
@@ -289,7 +289,7 @@ public class MemoryTest {
     @Test
     public void memoryLoad_3() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         DataWord value = memoryBuffer.readWord(2016);
         assertEquals(0, value.intValue());
         assertEquals(2, memoryBuffer.getChunks().size());
@@ -299,7 +299,7 @@ public class MemoryTest {
     @Test
     public void memoryLoad_4() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         DataWord value = memoryBuffer.readWord(2017);
         assertEquals(0, value.intValue());
         assertEquals(3, memoryBuffer.getChunks().size());
@@ -309,7 +309,7 @@ public class MemoryTest {
     @Test
     public void memoryLoad_5() {
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[1024];
         Arrays.fill(data1, (byte) 1);
@@ -344,7 +344,7 @@ public class MemoryTest {
 
     @Test
     public void memoryChunk_1(){
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[32];
         Arrays.fill(data1, (byte) 1);
@@ -369,7 +369,7 @@ public class MemoryTest {
 
     @Test
     public void memoryChunk_2(){
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[32];
         Arrays.fill(data1, (byte) 1);
@@ -391,7 +391,7 @@ public class MemoryTest {
     @Test
     public void memoryChunk_3(){
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[1024];
         Arrays.fill(data1, (byte) 1);
@@ -417,7 +417,7 @@ public class MemoryTest {
     @Test
     public void memoryChunk_4(){
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
 
         byte[] data1 = new byte[1024];
         Arrays.fill(data1, (byte) 1);
@@ -446,7 +446,7 @@ public class MemoryTest {
     @Test
     public void memoryWriteLimited_1(){
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         memoryBuffer.extend(0, 3072);
 
         byte[] data1 = new byte[6272];
@@ -476,7 +476,7 @@ public class MemoryTest {
     @Test
     public void memoryWriteLimited_2(){
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         memoryBuffer.extend(0, 3072);
 
         byte[] data1 = new byte[6272];
@@ -506,7 +506,7 @@ public class MemoryTest {
     @Test
     public void memoryWriteLimited_3(){
 
-        DefaultMemory memoryBuffer = new DefaultMemory();
+        Memory memoryBuffer = new DefaultMemory();
         memoryBuffer.extend(0, 128);
 
         byte[] data1 = new byte[20];
@@ -536,7 +536,7 @@ public class MemoryTest {
     @Test
     public void toStringTest1() {
 	// Contract: Test if toString crashes works on empty input.
-	DefaultMemory memory = new DefaultMemory();
+	Memory memory = new DefaultMemory();
 	
 	assertEquals("", memory.toString());
 	
@@ -549,7 +549,7 @@ public class MemoryTest {
     @Test
     public void toStringTest2() {
 	// Contract: Test if toString crashes during runtime.
-	DefaultMemory memory = new DefaultMemory();
+	Memory memory = new DefaultMemory();
 	
 	assertEquals("", memory.toString());
 	
