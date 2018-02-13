@@ -404,7 +404,7 @@ public class PendingStateImpl implements PendingState {
             fireTxUpdate(receipt, PENDING, block);
         }
 
-        logger.debug("Successfully processed {}, time: {}", block.getShortDescr(),
+        logger.debug("Successfully processed #{}, txs: {}, time: {}", block.getNumber(), pendingTransactions.size(),
                 String.format("%.3f", (System.nanoTime() - t) / 1_000_000d));
     }
 
