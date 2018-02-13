@@ -397,10 +397,15 @@ public class PendingStateImpl implements PendingState {
 
         pendingState = getOrigRepository().startTracking();
 
+        long t = System.nanoTime();
+
         for (PendingTransaction tx : pendingTransactions) {
             TransactionReceipt receipt = executeTx(tx.getTransaction());
             fireTxUpdate(receipt, PENDING, block);
         }
+
+        logger.debug("Successfully processed {}, time: {}", block.getShortDescr(),
+                String.format("%.3f", (System.nanoTime() - t) / 1_000_000d));
     }
 
     private TransactionReceipt executeTx(Transaction tx) {
