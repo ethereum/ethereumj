@@ -85,7 +85,7 @@ public class Program {
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
     private DefaultStack stack;
-    private Memory memory;
+    private DefaultMemory memory;
     private Storage storage;
     private byte[] returnDataBuffer;
 
@@ -129,7 +129,7 @@ public class Program {
         this.ops = nullToEmpty(ops);
 
         traceListener = new ProgramTraceListener(config.vmTrace());
-        this.memory = setupProgramListener(new Memory());
+        this.memory = setupProgramListener(new DefaultMemory());
         this.stack = setupProgramListener(new DefaultStack());
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);

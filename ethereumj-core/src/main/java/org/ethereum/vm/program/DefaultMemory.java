@@ -30,7 +30,7 @@ import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.oneByteToHexString;
 
-public class Memory implements ProgramListenerAware {
+public class DefaultMemory implements ProgramListenerAware {
 
     private static final int CHUNK_SIZE = 1024;
     private static final int WORD_SIZE = 32;
