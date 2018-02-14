@@ -134,7 +134,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     private DependentBlockHeaderRule parentHeaderValidator;
 
-    @Autowired @Qualifier("asyncPendingState")
+    @Autowired
     private PendingState pendingState;
 
     @Autowired
@@ -456,7 +456,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
-                pendingState.processBest(block, summary.getReceipts());
+                eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
             }
         }
 

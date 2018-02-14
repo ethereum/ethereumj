@@ -262,12 +262,6 @@ public class WorldManager {
         activePeer.close();
         logger.info("close: shutting down event dispatch thread used by EventBus ...");
         eventDispatchThread.shutdown();
-        PendingState blockchainPS = ((BlockchainImpl) blockchain).getPendingState();
-        if (blockchainPS instanceof AsyncPendingState) {
-            logger.info("close: shutting down AsyncPendingState's thread ...");
-            ((AsyncPendingState) blockchainPS).shutdown();
-        }
-        eventDispatchThread.shutdown();
         logger.info("close: closing Blockchain instance ...");
         blockchain.close();
         logger.info("close: closing main repository ...");
