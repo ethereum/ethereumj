@@ -27,9 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import static java.util.stream.Collectors.toList;
 
 @Component
@@ -57,11 +59,11 @@ public class SolidityCompiler {
         public static final OutputOption ASTJSON = OutputOption.ASTJSON;
     }
 
-    private static class ListOption implements Option {
+    public static class ListOption implements Option {
         private String name;
         private List values;
 
-        ListOption(String name, List values) {
+        public ListOption(String name, List values) {
             this.name = name;
             this.values = values;
         }
@@ -71,6 +73,14 @@ public class SolidityCompiler {
             for (Object value : values) {
                 if (OutputOption.class.isAssignableFrom(value.getClass())) {
                     result.append((result.length() == 0) ? ((OutputOption) value).getName() : ',' + ((OutputOption) value).getName());
+                } else if (Path.class.isAssignableFrom(value.getClass())) {
+                    result.append((result.length() == 0) ? ((Path) value).toAbsolutePath().toString() : ',' + ((Path) value).toAbsolutePath().toString());
+                } else if (File.class.isAssignableFrom(value.getClass())) {
+                    result.append((result.length() == 0) ? ((File) value).getAbsolutePath() : ',' + ((File) value).getAbsolutePath());
+                } else if (String.class.isAssignableFrom(value.getClass())) {
+                    result.append((result.length() == 0) ? value : "," + value);
+                } else {
+                    throw new UnsupportedOperationException("Unexpected type, value '" + value + "' cannot be retrieved.");
                 }
             }
             return result.toString();
@@ -219,10 +229,12 @@ public class SolidityCompiler {
             commandParts.add(combinedJsonOption.getValue());
         } else {
             for (Option option : getElementsOf(OutputOption.class, options)) {
-                if (option.getClass().isEnum()) {
-                    commandParts.add("--" + option.getName());
-                }
+                commandParts.add("--" + option.getName());
             }
+        }
+        for (Option option : getElementsOf(ListOption.class, options)) {
+            commandParts.add("--" + option.getName());
+            commandParts.add(option.getValue());
         }
         return commandParts;
     }
