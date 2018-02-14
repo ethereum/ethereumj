@@ -66,8 +66,8 @@ public class CompilerTest {
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
-        if (result.contracts.get("a") != null)
-            System.out.println(result.contracts.get("a").bin);
+        if (result.contracts.get("<stdin>:a") != null)
+            System.out.println(result.contracts.get("<stdin>:a").bin);
         else
             Assert.fail();
     }
@@ -86,7 +86,7 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get("a");
+        CompilationResult.ContractMetadata a = result.contracts.get("<stdin>:a");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.printf(contract.functions[0].toString());
     }
@@ -102,7 +102,7 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get("test1");
+        CompilationResult.ContractMetadata a = result.contracts.get(source.getAbsolutePath() + ":test1");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.printf(contract.functions[0].toString());
     }

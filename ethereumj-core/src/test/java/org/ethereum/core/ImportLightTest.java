@@ -372,7 +372,7 @@ public class ImportLightTest {
                 "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
-        SolidityContract parent = bc.submitNewContract(contractSrc, "Parent");
+        SolidityContract parent = bc.submitNewContract(contractSrc, "<stdin>:Parent");
         Block b1 = bc.createBlock();
         Block b2 = bc.createBlock();
         parent.callFunction("createChild", 100);
@@ -380,7 +380,7 @@ public class ImportLightTest {
         byte[] childAddress = (byte[]) parent.callConstFunction("child")[0];
         parent.callFunction("createChild", 200);
         Block b2_ = bc.createForkBlock(b1);
-        SolidityContract child = bc.createExistingContractFromSrc(contractSrc, "Child", childAddress);
+        SolidityContract child = bc.createExistingContractFromSrc(contractSrc, "<stdin>:Child", childAddress);
         child.callFunction("sum");
         Block b4 = bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(100 + 333 + 100 + 444), child.callConstFunction("c")[0]);
@@ -407,9 +407,9 @@ public class ImportLightTest {
             StandaloneBlockchain bc = new StandaloneBlockchain();
             Block b1 = bc.createBlock();
             Block b2 = bc.createBlock();
-            SolidityContract a = bc.submitNewContract(contractSrc, "A");
+            SolidityContract a = bc.submitNewContract(contractSrc, "<stdin>:A");
             Block b3 = bc.createBlock();
-            SolidityContract b = bc.submitNewContract(contractSrc, "B");
+            SolidityContract b = bc.submitNewContract(contractSrc, "<stdin>:B");
             Block b2_ = bc.createForkBlock(b1);
             Assert.assertEquals(BigInteger.valueOf(333), a.callConstFunction("a")[0]);
             Assert.assertEquals(BigInteger.valueOf(111), b.callConstFunction(b2_, "a")[0]);
@@ -441,11 +441,11 @@ public class ImportLightTest {
                 "    }\n" +
                 "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
-        SolidityContract a = bc.submitNewContract(contract, "A");
+        SolidityContract a = bc.submitNewContract(contract, "<stdin>:A");
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10_000));
         a.callFunction(10, "create");
         byte[] childAddress = (byte[]) a.callConstFunction("child")[0];
-        SolidityContract b = bc.createExistingContractFromSrc(contract, "B", childAddress);
+        SolidityContract b = bc.createExistingContractFromSrc(contract, "<stdin>:B", childAddress);
         BigInteger val = (BigInteger) b.callConstFunction("valReceived")[0];
         Assert.assertEquals(20, val.longValue());
     }
@@ -502,7 +502,7 @@ public class ImportLightTest {
         StandaloneBlockchain bc = new StandaloneBlockchain()
                 .withGasPrice(1)
                 .withGasLimit(5_000_000L);
-        SolidityContract a = bc.submitNewContract(contractA, "A");
+        SolidityContract a = bc.submitNewContract(contractA, "<stdin>:A");
         bc.createBlock();
 
         {
@@ -514,7 +514,7 @@ public class ImportLightTest {
 
             // checking balance of not existed address should take
             // less that gas limit
-            Assert.assertEquals(21508, spent);
+            Assert.assertEquals(21512, spent);
         }
 
         {
@@ -558,7 +558,7 @@ public class ImportLightTest {
                 "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
-        SolidityContract a = bc.submitNewContract(contractA, "A");
+        SolidityContract a = bc.submitNewContract(contractA, "<stdin>:A");
         bc.createBlock();
         a.callFunction("recursive");
         bc.createBlock();
@@ -647,7 +647,7 @@ public class ImportLightTest {
         StandaloneBlockchain bc = new StandaloneBlockchain()
                 .withGasLimit(1_000_000_000L)
                 .withDbDelay(0);
-        SolidityContract a = bc.submitNewContract(contractSrc, "A");
+        SolidityContract a = bc.submitNewContract(contractSrc, "<stdin>:A");
         bc.createBlock();
         a.callFunction("f");
         bc.createBlock();
@@ -770,7 +770,7 @@ public class ImportLightTest {
                         "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
-        SolidityContract a = bc.submitNewContract(contractA, "A");
+        SolidityContract a = bc.submitNewContract(contractA, "<stdin>:A");
         bc.createBlock();
         final BigInteger[] refund = new BigInteger[1];
         bc.addEthereumListener(new EthereumListenerAdapter() {
@@ -803,7 +803,7 @@ public class ImportLightTest {
                         "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
-        SolidityContract a = bc.submitNewContract(contractA, "A");
+        SolidityContract a = bc.submitNewContract(contractA, "<stdin>:A");
         bc.createBlock();
         final List<LogInfo> logs = new ArrayList<>();
         bc.addEthereumListener(new EthereumListenerAdapter() {
@@ -838,7 +838,7 @@ public class ImportLightTest {
                         "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
-        SolidityContract a = bc.submitNewContract(contractA, "A");
+        SolidityContract a = bc.submitNewContract(contractA, "<stdin>:A");
         bc.createBlock();
 
         ECKey key = ECKey.fromPrivate(BigInteger.ONE);
