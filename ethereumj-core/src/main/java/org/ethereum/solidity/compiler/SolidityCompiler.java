@@ -17,14 +17,20 @@
  */
 package org.ethereum.solidity.compiler;
 
-import com.google.common.base.Joiner;
 import org.ethereum.config.SystemProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import static java.util.stream.Collectors.toList;
 
 @Component
 public class SolidityCompiler {
@@ -38,30 +44,75 @@ public class SolidityCompiler {
         solc = new Solc(config);
     }
 
-    public static Result compile(File sourceDirectory, boolean combinedJson, Options... options) throws IOException {
+    public static Result compile(File sourceDirectory, boolean combinedJson, Option... options) throws IOException {
         return getInstance().compileSrc(sourceDirectory, false, combinedJson, options);
     }
 
-    public enum Options {
+    public static final class Options {
+        public static final OutputOption AST = OutputOption.AST;
+        public static final OutputOption BIN = OutputOption.BIN;
+        public static final OutputOption INTERFACE = OutputOption.INTERFACE;
+        public static final OutputOption ABI = OutputOption.ABI;
+        public static final OutputOption METADATA = OutputOption.METADATA;
+        public static final OutputOption ASTJSON = OutputOption.ASTJSON;
+    }
+
+    private static class ListOption implements Option {
+        private String name;
+        private List values;
+
+        ListOption(String name, List values) {
+            this.name = name;
+            this.values = values;
+        }
+
+        @Override public String getValue() {
+            StringBuilder result = new StringBuilder();
+            for (Object value : values) {
+                if (OutputOption.class.isAssignableFrom(value.getClass())) {
+                    result.append((result.length() == 0) ? ((OutputOption) value).getName() : ',' + ((OutputOption) value).getName());
+                }
+            }
+            return result.toString();
+        }
+        @Override public String getName() { return name; }
+        @Override public String toString() { return name; }
+    }
+
+    private enum NameOnlyOption implements Option {
+        OPTIMIZE("optimize"),
+        VERSION("version");
+
+        private String name;
+
+        NameOnlyOption(String name) {
+            this.name = name;
+        }
+
+        @Override public String getValue() { return ""; }
+        @Override public String getName() { return name; }
+        @Override public String toString() {
+            return name;
+        }
+    }
+
+    private enum OutputOption implements Option {
         AST("ast"),
         BIN("bin"),
         INTERFACE("interface"),
         ABI("abi"),
-        METADATA("metadata"), 
+        METADATA("metadata"),
         ASTJSON("ast-json");
 
         private String name;
 
-        Options(String name) {
+        OutputOption(String name) {
             this.name = name;
         }
 
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String toString() {
+        @Override public String getValue() { return ""; }
+        @Override public String getName() { return name; }
+        @Override public String toString() {
             return name;
         }
     }
@@ -69,7 +120,7 @@ public class SolidityCompiler {
     public static class Result {
         public String errors;
         public String output;
-        private boolean success = false;
+        private boolean success;
 
         public Result(String errors, String output, boolean success) {
             this.errors = errors;
@@ -125,11 +176,11 @@ public class SolidityCompiler {
         }
     }
 
-    public static Result compile(byte[] source, boolean combinedJson, Options... options) throws IOException {
+    public static Result compile(byte[] source, boolean combinedJson, Option... options) throws IOException {
         return getInstance().compileSrc(source, false, combinedJson, options);
     }
 
-    public Result compileSrc(File source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+    public Result compileSrc(File source, boolean optimize, boolean combinedJson, Option... options) throws IOException {
         List<String> commandParts = prepareCommandOptions(optimize, combinedJson, options);
 
         commandParts.add(source.getAbsolutePath());
@@ -156,24 +207,31 @@ public class SolidityCompiler {
         return new Result(error.getContent(), output.getContent(), success);
     }
 
-    private List<String> prepareCommandOptions(boolean optimize, boolean combinedJson, Options[] options) throws IOException {
+    private List<String> prepareCommandOptions(boolean optimize, boolean combinedJson, Option... options) throws IOException {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(solc.getExecutable().getCanonicalPath());
         if (optimize) {
-            commandParts.add("--optimize");
+            commandParts.add("--" + NameOnlyOption.OPTIMIZE.getName());
         }
         if (combinedJson) {
-            commandParts.add("--combined-json");
-            commandParts.add(Joiner.on(',').join(options));
+            ListOption combinedJsonOption = new ListOption("combined-json", getElementsOf(OutputOption.class, options));
+            commandParts.add("--" + combinedJsonOption.getName());
+            commandParts.add(combinedJsonOption.getValue());
         } else {
-            for (Options option : options) {
-                commandParts.add("--" + option.getName());
+            for (Option option : getElementsOf(OutputOption.class, options)) {
+                if (option.getClass().isEnum()) {
+                    commandParts.add("--" + option.getName());
+                }
             }
         }
         return commandParts;
     }
 
-    public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Options... options) throws IOException {
+    private static <T> List<T> getElementsOf(Class<T> clazz, Option... options) {
+        return Arrays.stream(options).filter(clazz::isInstance).map(clazz::cast).collect(toList());
+    }
+
+    public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Option... options) throws IOException {
         List<String> commandParts = prepareCommandOptions(optimize, combinedJson, options);
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
@@ -205,7 +263,7 @@ public class SolidityCompiler {
     public static String runGetVersionOutput() throws IOException {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(getInstance().solc.getExecutable().getCanonicalPath());
-        commandParts.add("--version");
+        commandParts.add("--" + NameOnlyOption.VERSION.getName());
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
                 .directory(getInstance().solc.getExecutable().getParentFile());
@@ -230,8 +288,6 @@ public class SolidityCompiler {
 
         throw new RuntimeException("Problem getting solc version: " + error.getContent());
     }
-
-
 
     public static SolidityCompiler getInstance() {
         if (INSTANCE == null) {
