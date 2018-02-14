@@ -17,6 +17,7 @@
  */
 package org.ethereum.cli;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,10 +155,7 @@ public class CLIInterface {
     }
 
     private static Boolean interpret(String arg) {
-        if ("on".equals(arg) || "true".equals(arg) || "yes".equals(arg)) return true;
-        if ("off".equals(arg) || "false".equals(arg) || "no".equals(arg)) return false;
-
-        throw new Error("Can't interpret the answer: " + arg);
+        return BooleanUtils.toBooleanObject(arg);
     }
 
     private static void printHelp() {
