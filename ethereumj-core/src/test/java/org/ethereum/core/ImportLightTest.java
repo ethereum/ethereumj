@@ -514,7 +514,7 @@ public class ImportLightTest {
 
             // checking balance of not existed address should take
             // less that gas limit
-            Assert.assertEquals(21512, spent);
+            Assert.assertEquals(21532, spent);
         }
 
         {
@@ -831,7 +831,7 @@ public class ImportLightTest {
                         "      mstore(0x120, v)" +
                         "      mstore(0x140, r)" +
                         "      mstore(0x160, s)" +
-                        "      callcode(0x50000, 0x01, 0x0, 0x100, 0x80, 0x200, 0x220)" + // call ecrecover
+                        "      let ret := callcode(0x50000, 0x01, 0x0, 0x100, 0x80, 0x200, 0x220)" + // call ecrecover
                         "      return(0x200, 0x20)" +
                         "    }" +
                         "  }" +
