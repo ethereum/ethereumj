@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class SolidityCompiler {
         public static final OutputOption ASTJSON = OutputOption.ASTJSON;
     }
 
-    public interface Option {
+    public interface Option extends Serializable {
         String getValue();
         String getName();
     }
