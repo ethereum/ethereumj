@@ -59,6 +59,11 @@ public class SolidityCompiler {
         public static final OutputOption ASTJSON = OutputOption.ASTJSON;
     }
 
+    public interface Option {
+        String getValue();
+        String getName();
+    }
+
     public static class ListOption implements Option {
         private String name;
         private List values;
