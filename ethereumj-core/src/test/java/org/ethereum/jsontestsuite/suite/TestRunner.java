@@ -41,7 +41,7 @@ import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
-import org.ethereum.vm.trace.ProgramTrace;
+import org.ethereum.vm.trace.DefaultProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -64,7 +64,7 @@ import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
 public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("TCK-Test");
-    private ProgramTrace trace = null;
+    private DefaultProgramTrace trace = null;
     private boolean setNewStateRoot;
     private String bestStateRoot;
 
@@ -520,7 +520,7 @@ public class TestRunner {
     }
 
 
-    public ProgramTrace getTrace() {
+    public DefaultProgramTrace getTrace() {
         return trace;
     }
 }

@@ -39,7 +39,7 @@ import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 import org.ethereum.vm.program.listener.ProgramStorageChangeListener;
 import org.ethereum.vm.trace.ProgramTraceListener;
-import org.ethereum.vm.trace.ProgramTrace;
+import org.ethereum.vm.trace.DefaultProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -90,7 +90,7 @@ public class Program {
     private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
-    private ProgramTrace trace = new ProgramTrace();
+    private DefaultProgramTrace trace = new DefaultProgramTrace();
 
     private byte[] codeHash;
     private byte[] ops;
@@ -132,7 +132,7 @@ public class Program {
         this.memory = setupProgramListener(new DefaultMemory());
         this.stack = setupProgramListener(new DefaultStack());
         this.storage = setupProgramListener(new Storage(programInvoke));
-        this.trace = new ProgramTrace(config, programInvoke);
+        this.trace = new DefaultProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
     }
 
@@ -934,7 +934,7 @@ public class Program {
         }
     }
 
-    public ProgramTrace getTrace() {
+    public DefaultProgramTrace getTrace() {
         return trace;
     }
 

@@ -17,11 +17,11 @@ import org.junit.Test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-public class ProgramTraceTest {
+public class DefaultProgramTraceTest {
 
     /**
      * contract:
-     * {@link ProgramTrace#ProgramTrace(org.ethereum.config.SystemProperties, org.ethereum.vm.program.invoke.ProgramInvoke)}
+     * {@link DefaultProgramTrace#ProgramTrace(org.ethereum.config.SystemProperties, org.ethereum.vm.program.invoke.ProgramInvoke)}
      * constructor set the contract address value if program invoke was not null and
      * vmTrace was true
      * 
@@ -32,7 +32,7 @@ public class ProgramTraceTest {
 	ProgramInvoke programInvoke = new ProgramInvokeMockImpl();
 	SystemProperties systemProperties = SystemProperties.getDefault();
 
-	ProgramTrace trace = new ProgramTrace(systemProperties, programInvoke);
+	DefaultProgramTrace trace = new DefaultProgramTrace(systemProperties, programInvoke);
 	assertNull(trace.getContractAddress());
 
 	Map<String, Boolean> cliOptions = new HashMap<>();
@@ -40,59 +40,59 @@ public class ProgramTraceTest {
 	Config config = ConfigFactory.parseMap(cliOptions);
 	systemProperties = new SystemProperties(config);
 
-	trace = new ProgramTrace(systemProperties, programInvoke);
+	trace = new DefaultProgramTrace(systemProperties, programInvoke);
 	assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", trace.getContractAddress());
 
     }
 
     /**
-     * contract: {@link ProgramTrace#result(byte[])} method converts the byte array
+     * contract: {@link DefaultProgramTrace#result(byte[])} method converts the byte array
      * to a HEX string and set it in the "result" instance variable
      * 
      */
     @Test
     public void testResult() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	byte[] result = { 0x41, 0x42, 0x43 };
 	trace.result(result);
 	assertEquals("414243", trace.getResult());
     }
 
     /**
-     * contract: {@link ProgramTrace#result(byte[])} method sets the result to an
+     * contract: {@link DefaultProgramTrace#result(byte[])} method sets the result to an
      * empty string if the byte array is null
      * 
      * 
      */
     @Test
     public void testResultWithNull() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	trace.setResult("414243");
 	trace.result(null);
 	assertTrue(trace.getResult().isEmpty());
     }
 
     /**
-     * contract: {@link ProgramTrace#error(Exception)} method sets the instance
+     * contract: {@link DefaultProgramTrace#error(Exception)} method sets the instance
      * variable "error" to "ExceptionClass: Message"
      * 
      */
     @Test
     public void testError() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	Exception error = new RuntimeException("error occured");
 	trace.error(error);
 	assertEquals("class java.lang.RuntimeException: error occured", trace.getError());
     }
 
     /**
-     * contract: {@link ProgramTrace#error(Exception)} method sets the instance
+     * contract: {@link DefaultProgramTrace#error(Exception)} method sets the instance
      * variable "error" to empty string if the exception passed was null
      * 
      */
     @Test
     public void testErrorWithNull() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	trace.setError("Some initial error");
 	trace.error(null);
 	assertTrue(trace.getError().isEmpty());
@@ -100,13 +100,13 @@ public class ProgramTraceTest {
 
     /**
      * contract:
-     * {@link ProgramTrace#addOp(byte, int, int, org.ethereum.vm.DataWord, OpActions)}
+     * {@link DefaultProgramTrace#addOp(byte, int, int, org.ethereum.vm.DataWord, OpActions)}
      * method creates a new {@link Op} object and add it to the "ops" list
      * 
      */
     @Test
     public void testAddOp() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	assertEquals(0, trace.getOps().size());
 	DataWord gas = new DataWord();
 	OpActions actions = new OpActions();
@@ -121,20 +121,20 @@ public class ProgramTraceTest {
     }
 
     /**
-     * contract: {@link ProgramTrace#merge(ProgramTrace)} method the items in "ops"
-     * list of the send ProgramTrace object to the "ops" list of this object
+     * contract: {@link DefaultProgramTrace#merge(DefaultProgramTrace)} method the items in "ops"
+     * list of the send DefaultProgramTrace object to the "ops" list of this object
      * 
      */
     @Test
     public void testMerge() {
-	ProgramTrace trace1 = new ProgramTrace();
+	DefaultProgramTrace trace1 = new DefaultProgramTrace();
 	List<Op> ops1 = new ArrayList<>();
 	ops1.add(new Op());
 	ops1.add(new Op());
 	ops1.add(new Op());
 	trace1.setOps(ops1);
 
-	ProgramTrace trace2 = new ProgramTrace();
+	DefaultProgramTrace trace2 = new DefaultProgramTrace();
 	List<Op> ops2 = new ArrayList<>();
 	ops2.add(new Op());
 	ops2.add(new Op());
@@ -149,13 +149,13 @@ public class ProgramTraceTest {
     }
 
     /**
-     * contract: {@link ProgramTrace#asJsonString(boolean)} method converts the
-     * ProgramTrace to a json string
+     * contract: {@link DefaultProgramTrace#asJsonString(boolean)} method converts the
+     * DefaultProgramTrace to a json string
      * 
      */
     @Test
     public void testAsJsonString() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	trace.setError("Error");
 	trace.setContractAddress("Contract Address");
 	trace.setResult("Result");
@@ -178,13 +178,13 @@ public class ProgramTraceTest {
     }
 
     /**
-     * contract: {@link ProgramTrace#toString()} method return a formatted json
+     * contract: {@link DefaultProgramTrace#toString()} method return a formatted json
      * string
      * 
      */
     @Test
     public void testToString() {
-	ProgramTrace trace = new ProgramTrace();
+	DefaultProgramTrace trace = new DefaultProgramTrace();
 	trace.setError("Error");
 	trace.setContractAddress("Contract Address");
 	trace.setResult("Result");

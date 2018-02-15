@@ -30,18 +30,18 @@ import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
-public class ProgramTrace {
+public class DefaultProgramTrace {
 
     private List<Op> ops = new ArrayList<>();
     private String result;
     private String error;
     private String contractAddress;
 
-    public ProgramTrace() {
+    public DefaultProgramTrace() {
         this(null, null);
     }
 
-    public ProgramTrace(SystemProperties config, ProgramInvoke programInvoke) {
+    public DefaultProgramTrace(SystemProperties config, ProgramInvoke programInvoke) {
         if (programInvoke != null && config.vmTrace()) {
             contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
         }
@@ -79,12 +79,12 @@ public class ProgramTrace {
         this.contractAddress = contractAddress;
     }
 
-    public ProgramTrace result(byte[] result) {
+    public DefaultProgramTrace result(byte[] result) {
         setResult(toHexString(result));
         return this;
     }
 
-    public ProgramTrace error(Exception error) {
+    public DefaultProgramTrace error(Exception error) {
         setError(error == null ? "" : format("%s: %s", error.getClass(), error.getMessage()));
         return this;
     }
@@ -105,7 +105,7 @@ public class ProgramTrace {
     /**
      * Used for merging sub calls execution.
      */
-    public void merge(ProgramTrace programTrace) {
+    public void merge(DefaultProgramTrace programTrace) {
         this.ops.addAll(programTrace.ops);
     }
 
