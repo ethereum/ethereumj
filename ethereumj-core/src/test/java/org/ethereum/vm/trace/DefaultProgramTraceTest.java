@@ -121,7 +121,7 @@ public class DefaultProgramTraceTest {
     }
 
     /**
-     * contract: {@link DefaultProgramTrace#merge(DefaultProgramTrace)} method the items in "ops"
+     * contract: {@link DefaultProgramTrace#merge(ProgramTrace)} method the items in "ops"
      * list of the send DefaultProgramTrace object to the "ops" list of this object
      * 
      */
