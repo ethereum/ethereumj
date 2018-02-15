@@ -32,7 +32,7 @@ public class DefaultProgramTraceTest {
 	ProgramInvoke programInvoke = new ProgramInvokeMockImpl();
 	SystemProperties systemProperties = SystemProperties.getDefault();
 
-	DefaultProgramTrace trace = new DefaultProgramTrace(systemProperties, programInvoke);
+	ProgramTrace trace = new DefaultProgramTrace(systemProperties, programInvoke);
 	assertNull(trace.getContractAddress());
 
 	Map<String, Boolean> cliOptions = new HashMap<>();
@@ -52,7 +52,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testResult() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	byte[] result = { 0x41, 0x42, 0x43 };
 	trace.result(result);
 	assertEquals("414243", trace.getResult());
@@ -66,7 +66,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testResultWithNull() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	trace.setResult("414243");
 	trace.result(null);
 	assertTrue(trace.getResult().isEmpty());
@@ -79,7 +79,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testError() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	Exception error = new RuntimeException("error occured");
 	trace.error(error);
 	assertEquals("class java.lang.RuntimeException: error occured", trace.getError());
@@ -92,7 +92,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testErrorWithNull() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	trace.setError("Some initial error");
 	trace.error(null);
 	assertTrue(trace.getError().isEmpty());
@@ -106,7 +106,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testAddOp() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	assertEquals(0, trace.getOps().size());
 	DataWord gas = new DataWord();
 	OpActions actions = new OpActions();
@@ -127,7 +127,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testMerge() {
-	DefaultProgramTrace trace1 = new DefaultProgramTrace();
+	ProgramTrace trace1 = new DefaultProgramTrace();
 	List<Op> ops1 = new ArrayList<>();
 	ops1.add(new Op());
 	ops1.add(new Op());
@@ -155,7 +155,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testAsJsonString() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	trace.setError("Error");
 	trace.setContractAddress("Contract Address");
 	trace.setResult("Result");
@@ -184,7 +184,7 @@ public class DefaultProgramTraceTest {
      */
     @Test
     public void testToString() {
-	DefaultProgramTrace trace = new DefaultProgramTrace();
+	ProgramTrace trace = new DefaultProgramTrace();
 	trace.setError("Error");
 	trace.setContractAddress("Contract Address");
 	trace.setResult("Result");

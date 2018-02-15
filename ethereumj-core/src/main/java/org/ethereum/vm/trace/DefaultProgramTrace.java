@@ -30,7 +30,7 @@ import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
-public class DefaultProgramTrace {
+public class DefaultProgramTrace implements ProgramTrace {
 
     private List<Op> ops = new ArrayList<>();
     private String result;
@@ -105,8 +105,8 @@ public class DefaultProgramTrace {
     /**
      * Used for merging sub calls execution.
      */
-    public void merge(DefaultProgramTrace programTrace) {
-        this.ops.addAll(programTrace.ops);
+    public void merge(ProgramTrace programTrace) {
+        this.ops.addAll(programTrace.getOps());
     }
 
     public String asJsonString(boolean formatted) {
