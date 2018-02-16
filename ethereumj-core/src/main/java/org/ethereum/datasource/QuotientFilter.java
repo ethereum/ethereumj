@@ -364,7 +364,7 @@ public class QuotientFilter implements Iterable<Long> {
 //        insert(hashFactory.hash64().hash(data, offset, length, 0));
 //    }
 
-    private long hash(byte[] bytes) {
+    protected long hash(byte[] bytes) {
         return (bytes[0] & 0xFFL) << 56 |
                 (bytes[1] & 0xFFL) << 48 |
                 (bytes[2] & 0xFFL) << 40 |
