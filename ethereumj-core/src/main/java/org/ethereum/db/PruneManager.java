@@ -69,15 +69,19 @@ public class PruneManager {
         this.pruneBlocksCnt = pruneBlocksCnt;
         this.segmentOptimalSize = Math.min(SEGMENT_MAX_SIZE, pruneBlocksCnt);
 
-        if (journalSource != null && pruneStorage != null)
+        if (journalSource != null && pruneStorage != null) {
             this.pruner = new Pruner(journalSource.getJournal(), pruneStorage);
+            journalSource.addFilter(pruner.getFilter());
+        }
     }
 
     @Autowired
     public void setStateSource(StateSource stateSource) {
         journalSource = stateSource.getJournalSource();
-        if (journalSource != null)
+        if (journalSource != null) {
             pruner = new Pruner(journalSource.getJournal(), stateSource.getNoJournalSource());
+            journalSource.addFilter(pruner.getFilter());
+        }
     }
 
     public void blockCommitted(BlockHeader block) {

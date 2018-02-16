@@ -58,6 +58,14 @@ public class CountingQuotientFilter extends QuotientFilter {
         return counters.size();
     }
 
+    public long getEntryNumber() {
+        return entries;
+    }
+
+    public long getMaxInsertions() {
+        return MAX_INSERTIONS;
+    }
+
     private void addRef(long hash) {
         long fp = fingerprint(hash);
         Counter cnt = counters.get(fp);

@@ -1,6 +1,7 @@
 package org.ethereum.db.prune;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.CountingQuotientFilter;
 import org.ethereum.datasource.JournalSource;
 import org.ethereum.datasource.Source;
 import org.ethereum.util.ByteArraySet;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -44,10 +46,12 @@ public class Pruner {
 
     Source<byte[], JournalSource.Update> journal;
     Source<byte[], ?> storage;
+    PruneFilter filter;
 
     public Pruner(Source<byte[], JournalSource.Update> journal, Source<byte[], ?> storage) {
         this.storage = storage;
         this.journal = journal;
+        this.filter = new PruneFilter(1_000_000);
     }
 
     public void prune(Segment segment, List<byte[]> upcoming) {
@@ -72,6 +76,9 @@ public class Pruner {
             pruning.propagating.forEach(storage::delete);
         }
 
+        // fuzzy pruning
+        fuzzyPruning(segment, upcoming, pruning);
+
         // delete updates
         segment.main.getHashes().forEach(journal::delete);
         for (Chain chain : segment.forks) {
@@ -79,8 +86,70 @@ public class Pruner {
         }
     }
 
+    private void fuzzyPruning(Segment segment, List<byte[]> upcoming, Pruning pruning) {
+        if (!filter.init) {
+            final List<byte[]> hashes = new ArrayList<>();
+            segment.forks.forEach(fork -> hashes.addAll(fork.getHashes())); // add all forks
+            hashes.addAll(segment.main.getHashes()); // add main
+            hashes.addAll(upcoming); // add all upcoming
+            if (!filter.init(journal, hashes)) return;
+        }
+
+        // <~ revert forks
+        logger.trace("<~ fuzzy: revert forks");
+        int fuzzyCounter = 0;
+        List<JournalSource.Update> forkUpdates = new ArrayList<>();
+        for (Chain fork : segment.forks) {
+            fork.getHashes().forEach(hash -> forkUpdates.add(journal.get(hash)));
+        }
+        // clean filter from inserts made in forks
+        for (JournalSource.Update update : forkUpdates) {
+            update.getInsertedKeys().forEach(filter::remove);
+        }
+        // only now we can try to deleted reverted nodes
+        for (JournalSource.Update update : forkUpdates) {
+            for (byte[] key : update.getInsertedKeys()) {
+                if (!filter.maybeContains(key)) {
+                    ++fuzzyCounter;
+                    if (!pruning.propagating.contains(key)) {
+                        logger.error("fuzzy fork: removed live node: " + Hex.toHexString(key));
+                    }
+                }
+            }
+        }
+
+        // <~ persist main
+        logger.trace("<~ fuzzy: persist main");
+        for (byte[] hash : segment.main.getHashes()) {
+            JournalSource.Update update = journal.get(hash);
+            // propagate deletions
+            for (byte[] key : update.getDeletedKeys()) {
+                if (!filter.maybeContains(key)) {
+                    ++fuzzyCounter;
+                    if (!pruning.propagating.contains(key)) {
+                        logger.error("fuzzy main chain: removed live node: " + Hex.toHexString(key));
+                    }
+                }
+            }
+            // clean up filter
+            update.getInsertedKeys().forEach(filter::remove);
+        }
+
+        logger.info("fuzzy pruning: propagated {}/{}, ratio {}, filter load: {}/{}: {}, distinct collisions: {}",
+                fuzzyCounter, pruning.propagating.size(),
+                String.format("%.4f", (double) fuzzyCounter / pruning.propagating.size()),
+                ((CountingQuotientFilter) filter.quotient).getEntryNumber(), ((CountingQuotientFilter) filter.quotient).getMaxInsertions(),
+                String.format("%.4f", (double) ((CountingQuotientFilter) filter.quotient).getEntryNumber() / ((CountingQuotientFilter) filter.quotient).getMaxInsertions()),
+                ((CountingQuotientFilter) filter.quotient).getCollisionNumber());
+
+    }
+
     public void prune(Segment segment, byte[] ... upcoming) {
         prune(segment, Arrays.asList(upcoming));
+    }
+
+    public PruneFilter getFilter() {
+        return filter;
     }
 
     private String strSample(Collection<byte[]> hashes) {

@@ -18,6 +18,7 @@
 package org.ethereum.datasource;
 
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.prune.PruneFilter;
 import org.ethereum.db.prune.Pruner;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -94,6 +95,7 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
     private Update currentUpdate = new Update();
 
     Source<byte[], Update> journal = new HashMapDB<>();
+    List<PruneFilter> filters = new ArrayList<>();
 
     /**
      * Constructs instance with the underlying backing Source
@@ -124,6 +126,8 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
 
         getSource().put(key, val);
         currentUpdate.insertedKeys.add(key);
+
+        filters.forEach(filter -> filter.insert(key));
     }
 
     /**
@@ -151,6 +155,10 @@ public class JournalSource<V> extends AbstractChainedSource<byte[], V, byte[], V
         currentUpdate.updateHash = updateHash;
         journal.put(updateHash, currentUpdate);
         currentUpdate = new Update();
+    }
+
+    public void addFilter(PruneFilter filter) {
+        filters.add(filter);
     }
 
     public Source<byte[], Update> getJournal() {
