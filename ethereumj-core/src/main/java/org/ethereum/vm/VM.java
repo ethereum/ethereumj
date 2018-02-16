@@ -21,7 +21,7 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.program.Program;
-import org.ethereum.vm.program.DefaultStack;
+import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -179,7 +179,7 @@ public class VM {
             program.verifyStackOverflow(op.require(), op.ret()); //Check not exceeding stack limits
 
             long oldMemSize = program.getMemSize();
-            DefaultStack stack = program.getStack();
+            Stack stack = program.getStack();
 
             String hint = "";
             long callGas = 0, memWords = 0; // parameters for logging

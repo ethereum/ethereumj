@@ -101,7 +101,7 @@ public class Program {
     private ProgramStorageChangeListener storageDiffListener = new ProgramStorageChangeListener();
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
-    private DefaultStack stack;
+    private Stack stack = new NullStack();
     private Memory memory = new NullMemory();
     private Storage storage;
     private byte[] returnDataBuffer;
@@ -255,7 +255,7 @@ public class Program {
         stack.push(stackWord);
     }
 
-    public DefaultStack getStack() {
+    public Stack getStack() {
         return this.stack;
     }
 

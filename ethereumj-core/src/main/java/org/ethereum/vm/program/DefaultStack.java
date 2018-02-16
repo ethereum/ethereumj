@@ -19,50 +19,63 @@ package org.ethereum.vm.program;
 
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.ProgramListener;
-import org.ethereum.vm.program.listener.ProgramListenerAware;
 
-public class DefaultStack extends java.util.Stack<DataWord> implements Stack {	
+public class DefaultStack extends java.util.Stack<DataWord> implements Stack {
+    private static final long serialVersionUID = 6781732396941066820L;
     private ProgramListener programListener;
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Stack#setProgramListener(org.ethereum.vm.program.listener.ProgramListener)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.ethereum.vm.program.Stack#setProgramListener(org.ethereum.vm.program.
+     * listener.ProgramListener)
      */
     @Override
     public void setProgramListener(ProgramListener listener) {
-        this.programListener = listener;
+	this.programListener = listener;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Stack#pop()
      */
     @Override
     public synchronized DataWord pop() {
-        if (programListener != null) programListener.onStackPop();
-        return super.pop();
+	if (programListener != null)
+	    programListener.onStackPop();
+	return super.pop();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Stack#push(org.ethereum.vm.DataWord)
      */
     @Override
     public DataWord push(DataWord item) {
-        if (programListener != null) programListener.onStackPush(item);
-        return super.push(item);
+	if (programListener != null)
+	    programListener.onStackPush(item);
+	return super.push(item);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Stack#swap(int, int)
      */
     @Override
     public void swap(int from, int to) {
-        if (isAccessible(from) && isAccessible(to) && (from != to)) {
-            if (programListener != null) programListener.onStackSwap(from, to);
-            DataWord tmp = get(from);
-            set(from, set(to, tmp));
-        }
+	if (isAccessible(from) && isAccessible(to) && (from != to)) {
+	    if (programListener != null)
+		programListener.onStackSwap(from, to);
+	    DataWord tmp = get(from);
+	    set(from, set(to, tmp));
+	}
     }
 
     private boolean isAccessible(int from) {
-        return from >= 0 && from < size();
+	return from >= 0 && from < size();
     }
 }
