@@ -52,6 +52,7 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramFactory;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
@@ -228,7 +229,10 @@ public class TestRunner {
             /* 3. Create Program - exec.code */
             /* 4. run VM */
             VM vm = new VM();
-            Program program = new Program(exec.getCode(), programInvoke);
+            Program program = ProgramFactory.create()
+        	    .withOps(exec.getCode())
+        	    .withProgramInvoke(programInvoke)
+        	    .getProgram();
             boolean vmDidThrowAnEception = false;
             RuntimeException e = null;
             try {

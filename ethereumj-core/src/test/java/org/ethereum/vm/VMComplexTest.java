@@ -23,6 +23,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.core.Repository;
 
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -96,7 +97,10 @@ public class VMComplexTest {
 
         // Play the program
         VM vm = new VM();
-        Program program = new Program(codeB, pi);
+        Program program = ProgramFactory.create()
+        	.withOps(codeB)
+        	.withProgramInvoke(pi)
+        	.getProgram();
 
         try {
             while (!program.isStopped())
@@ -180,7 +184,10 @@ public class VMComplexTest {
         //  Play the program  //
         // ****************** //
         VM vm = new VM();
-        Program program = new Program(codeB, pi);
+        Program program = ProgramFactory.create()
+        	.withOps(codeB)
+        	.withProgramInvoke(pi)
+        	.getProgram();
 
         try {
             while (!program.isStopped())
@@ -268,7 +275,10 @@ public class VMComplexTest {
         //  Play the program  //
         // ****************** //
         VM vm = new VM();
-        Program program = new Program(codeB, pi);
+        Program program = ProgramFactory.create()
+        	.withOps(codeB)
+        	.withProgramInvoke(pi)
+        	.getProgram();
 
         try {
             while (!program.isStopped())
@@ -346,7 +356,10 @@ public class VMComplexTest {
         //  Play the program  //
         // ****************** //
         VM vm = new VM();
-        Program program = new Program(codeA, pi);
+        Program program = ProgramFactory.create()
+        	.withOps(codeA)
+        	.withProgramInvoke(pi)
+        	.getProgram();
 
         try {
             while (!program.isStopped())
@@ -418,7 +431,10 @@ public class VMComplexTest {
         //  Play the program  //
         // ****************** //
         VM vm = new VM();
-        Program program = new Program(codeB, pi);
+        Program program = ProgramFactory.create()
+        	.withOps(codeB)
+        	.withProgramInvoke(pi)
+        	.getProgram();
 
         try {
             while (!program.isStopped())

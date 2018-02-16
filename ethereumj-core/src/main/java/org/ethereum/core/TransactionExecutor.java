@@ -28,6 +28,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.*;
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramFactory;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -282,7 +283,13 @@ public class TransactionExecutor {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
             this.vm = new VM(config);
-            this.program = new Program(tx.getData(), programInvoke, tx, config).withCommonConfig(commonConfig);
+            this.program = ProgramFactory.create()
+        	    .withOps(tx.getData())
+        	    .withProgramInvoke(programInvoke)
+        	    .withTransaction(tx)
+        	    .withConfig(config)
+        	    .getProgram()
+        	    .withCommonConfig(commonConfig);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network

@@ -20,6 +20,7 @@ package org.ethereum.vm;
 import org.ethereum.util.ByteUtil;
 
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -37,7 +38,10 @@ public class ProgramMemoryTest {
 
     @Before
     public void createProgram() {
-        program = new Program(ByteUtil.EMPTY_BYTE_ARRAY, pi);
+        program = ProgramFactory.create()
+        	.withOps(ByteUtil.EMPTY_BYTE_ARRAY)
+        	.withProgramInvoke(pi)
+        	.getProgram();
     }
 
     @Test
