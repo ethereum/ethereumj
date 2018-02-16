@@ -34,13 +34,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Storage implements Repository, ProgramListenerAware {
+public class DefaultStorage implements Repository, ProgramListenerAware {
 
     private final Repository repository;
     private final DataWord address;
     private ProgramListener programListener;
 
-    public Storage(ProgramInvoke programInvoke) {
+    public DefaultStorage(ProgramInvoke programInvoke) {
         this.address = programInvoke.getOwnerAddress();
         this.repository = programInvoke.getRepository();
     }
