@@ -96,38 +96,33 @@ public class Pruner {
         }
 
         // <~ revert forks
-        logger.trace("<~ fuzzy: revert forks");
         int fuzzyCounter = 0;
-        List<JournalSource.Update> forkUpdates = new ArrayList<>();
         for (Chain fork : segment.forks) {
-            fork.getHashes().forEach(hash -> forkUpdates.add(journal.get(hash)));
-        }
-        // clean filter from inserts made in forks
-        for (JournalSource.Update update : forkUpdates) {
-            update.getInsertedKeys().forEach(filter::remove);
-        }
-        // only now we can try to deleted reverted nodes
-        for (JournalSource.Update update : forkUpdates) {
-            for (byte[] key : update.getInsertedKeys()) {
-                if (!filter.maybeContains(key)) {
-                    ++fuzzyCounter;
-                    if (!pruning.propagating.contains(key)) {
-                        logger.error("fuzzy fork: removed live node: " + Hex.toHexString(key));
+            for (byte[] hash : fork.getHashes()) {
+                JournalSource.Update update = journal.get(hash);
+                update.getInsertedKeys().forEach(filter::remove); // remove keys from filter
+                for (byte[] key : update.getInsertedKeys()) {     // remove keys from storage
+                    if (!filter.maybeContains(key)) {
+                        if (!pruning.propagating.contains(key)) {
+                            logger.error("fuzzy fork: removed live node: " + Hex.toHexString(key));
+                        } else {
+                            ++fuzzyCounter;
+                        }
                     }
                 }
             }
         }
 
         // <~ persist main
-        logger.trace("<~ fuzzy: persist main");
         for (byte[] hash : segment.main.getHashes()) {
             JournalSource.Update update = journal.get(hash);
             // propagate deletions
             for (byte[] key : update.getDeletedKeys()) {
                 if (!filter.maybeContains(key)) {
-                    ++fuzzyCounter;
                     if (!pruning.propagating.contains(key)) {
                         logger.error("fuzzy main chain: removed live node: " + Hex.toHexString(key));
+                    } else {
+                        ++fuzzyCounter;
                     }
                 }
             }
