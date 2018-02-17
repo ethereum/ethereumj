@@ -32,6 +32,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Repository;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.listener.ProgramListener;
@@ -40,8 +41,8 @@ public class NullStorage implements Storage {
 
     private final Repository repository;
 
-    public NullStorage(ProgramInvoke programInvoke) {
-	this.repository = programInvoke.getRepository();
+    public NullStorage() {
+      repository = new RepositoryImpl();
     }
 
     /*

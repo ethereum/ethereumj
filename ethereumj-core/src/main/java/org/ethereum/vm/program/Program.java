@@ -103,7 +103,7 @@ public class Program {
 
     private Stack stack = new NullStack();
     private Memory memory = new NullMemory();
-    private DefaultStorage storage;
+    private Storage storage = new NullStorage();
     private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
