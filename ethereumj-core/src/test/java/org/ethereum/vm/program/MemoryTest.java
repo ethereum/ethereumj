@@ -17,20 +17,16 @@
  */
 package org.ethereum.vm.program;
 
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.program.DefaultMemory;
-import org.ethereum.vm.program.listener.CompositeProgramListener;
-import org.ethereum.vm.program.listener.ProgramListener;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
 import static java.lang.Math.ceil;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+
+import org.ethereum.vm.DataWord;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 public class MemoryTest {
 
