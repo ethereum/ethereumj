@@ -342,9 +342,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public Set<byte[]> getAccountsKeys() {
-        @SuppressWarnings("unchecked")
-        Set<byte[]> nullImp = (Set<byte[]>) new Object();
-        return nullImp;
+        return new HashSet<>();
     }
 
     /*
@@ -510,9 +508,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public Set<DataWord> getStorageKeys(byte[] addr) {
-        @SuppressWarnings("unchecked")
-        Set<DataWord> nullImp = (Set<DataWord>) new Object();
-        return nullImp;
+        return new HashSet<>();
     }
 
     /*
@@ -522,8 +518,6 @@ public class NullStorage implements Storage {
      */
     @Override
     public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
-        @SuppressWarnings("unchecked")
-        Map<DataWord, DataWord> nullImp = (Map<DataWord, DataWord>) new Object();
-        return nullImp;
+        return new HashMap<>();
     }
 }
