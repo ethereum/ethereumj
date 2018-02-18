@@ -42,7 +42,7 @@ public class NullStorage implements Storage {
     private final Repository repository;
 
     public NullStorage() {
-      repository = new RepositoryImpl();
+        repository = new RepositoryImpl();
     }
 
     /*
@@ -54,7 +54,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void setProgramListener(ProgramListener listener) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -64,7 +64,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public AccountState createAccount(byte[] addr) {
-	return new AccountState(new BigInteger("0"), new BigInteger("0"));
+        return new AccountState(new BigInteger("0"), new BigInteger("0"));
     }
 
     /*
@@ -74,7 +74,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public boolean isExist(byte[] addr) {
-	return true;
+        return true;
     }
 
     /*
@@ -84,7 +84,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public AccountState getAccountState(byte[] addr) {
-	return new AccountState(new BigInteger("0"), new BigInteger("0"));
+        return new AccountState(new BigInteger("0"), new BigInteger("0"));
     }
 
     /*
@@ -94,7 +94,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void delete(byte[] addr) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -104,7 +104,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public BigInteger increaseNonce(byte[] addr) {
-	return new BigInteger("0");
+        return new BigInteger("0");
     }
 
     /*
@@ -114,7 +114,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public BigInteger setNonce(byte[] addr, BigInteger nonce) {
-	return new BigInteger("0");
+        return new BigInteger("0");
     }
 
     /*
@@ -124,7 +124,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public BigInteger getNonce(byte[] addr) {
-	return new BigInteger("0");
+        return new BigInteger("0");
     }
 
     /*
@@ -134,122 +134,122 @@ public class NullStorage implements Storage {
      */
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
-	return new ContractDetails() {
-	    @Override
-	    public ContractDetails clone() {
-		return this;
-	    }
+        return new ContractDetails() {
+            @Override
+            public ContractDetails clone() {
+                return this;
+            }
 
-	    @Override
-	    public void syncStorage() {
-		// Intentionally left blank
-	    }
+            @Override
+            public void syncStorage() {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void setStorage(Map<DataWord, DataWord> storage) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void setStorage(Map<DataWord, DataWord> storage) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void setDirty(boolean dirty) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void setDirty(boolean dirty) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void setDeleted(boolean deleted) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void setDeleted(boolean deleted) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void setCode(byte[] code) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void setCode(byte[] code) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void setAddress(byte[] address) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void setAddress(byte[] address) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public void put(DataWord key, DataWord value) {
-		// Intentionally left blank
-	    }
+            @Override
+            public void put(DataWord key, DataWord value) {
+                // Intentionally left blank
+            }
 
-	    @Override
-	    public boolean isDirty() {
-		return false;
-	    }
+            @Override
+            public boolean isDirty() {
+                return false;
+            }
 
-	    @Override
-	    public boolean isDeleted() {
-		return false;
-	    }
+            @Override
+            public boolean isDeleted() {
+                return false;
+            }
 
-	    @Override
-	    public int getStorageSize() {
-		return 0;
-	    }
+            @Override
+            public int getStorageSize() {
+                return 0;
+            }
 
-	    @Override
-	    public Set<DataWord> getStorageKeys() {
-		return new HashSet<>();
-	    }
+            @Override
+            public Set<DataWord> getStorageKeys() {
+                return new HashSet<>();
+            }
 
-	    @Override
-	    public byte[] getStorageHash() {
-		return new byte[0];
-	    }
+            @Override
+            public byte[] getStorageHash() {
+                return new byte[0];
+            }
 
-	    @Override
-	    public Map<DataWord, DataWord> getStorage() {
-		return new HashMap<>();
-	    }
+            @Override
+            public Map<DataWord, DataWord> getStorage() {
+                return new HashMap<>();
+            }
 
-	    @Override
-	    public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-		return new HashMap<>();
-	    }
+            @Override
+            public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
+                return new HashMap<>();
+            }
 
-	    @Override
-	    public ContractDetails getSnapshotTo(byte[] hash) {
-		return this;
-	    }
+            @Override
+            public ContractDetails getSnapshotTo(byte[] hash) {
+                return this;
+            }
 
-	    @Override
-	    public byte[] getEncoded() {
-		return new byte[0];
-	    }
+            @Override
+            public byte[] getEncoded() {
+                return new byte[0];
+            }
 
-	    @Override
-	    public byte[] getCode(byte[] codeHash) {
-		return new byte[0];
-	    }
+            @Override
+            public byte[] getCode(byte[] codeHash) {
+                return new byte[0];
+            }
 
-	    @Override
-	    public byte[] getCode() {
-		return new byte[0];
-	    }
+            @Override
+            public byte[] getCode() {
+                return new byte[0];
+            }
 
-	    @Override
-	    public byte[] getAddress() {
-		return new byte[0];
-	    }
+            @Override
+            public byte[] getAddress() {
+                return new byte[0];
+            }
 
-	    @Override
-	    public DataWord get(DataWord key) {
-		return key;
-	    }
+            @Override
+            public DataWord get(DataWord key) {
+                return key;
+            }
 
-	    @Override
-	    public void decode(byte[] rlpCode) {
-		// Intentionally left blank
-	    }
-	};
+            @Override
+            public void decode(byte[] rlpCode) {
+                // Intentionally left blank
+            }
+        };
     }
 
     /*
@@ -259,7 +259,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public boolean hasContractDetails(byte[] addr) {
-	return true;
+        return true;
     }
 
     /*
@@ -269,7 +269,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void saveCode(byte[] addr, byte[] code) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -279,8 +279,8 @@ public class NullStorage implements Storage {
      */
     @Override
     public byte[] getCode(byte[] addr) {
-	byte[] nullImp = { 0 };
-	return nullImp;
+        byte[] nullImp = { 0 };
+        return nullImp;
     }
 
     /*
@@ -290,8 +290,8 @@ public class NullStorage implements Storage {
      */
     @Override
     public byte[] getCodeHash(byte[] addr) {
-	byte[] nullImp = { 0 };
-	return nullImp;
+        byte[] nullImp = { 0 };
+        return nullImp;
     }
 
     /*
@@ -302,7 +302,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -313,7 +313,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
-	return new DataWord();
+        return new DataWord();
     }
 
     /*
@@ -323,7 +323,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public BigInteger getBalance(byte[] addr) {
-	return new BigInteger("0");
+        return new BigInteger("0");
     }
 
     /*
@@ -333,7 +333,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public BigInteger addBalance(byte[] addr, BigInteger value) {
-	return new BigInteger("0");
+        return new BigInteger("0");
     }
 
     /*
@@ -343,9 +343,9 @@ public class NullStorage implements Storage {
      */
     @Override
     public Set<byte[]> getAccountsKeys() {
-	@SuppressWarnings("unchecked")
-	Set<byte[]> nullImp = (Set<byte[]>) new Object();
-	return nullImp;
+        @SuppressWarnings("unchecked")
+        Set<byte[]> nullImp = (Set<byte[]>) new Object();
+        return nullImp;
     }
 
     /*
@@ -356,7 +356,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -366,7 +366,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public Repository startTracking() {
-	return repository;
+        return repository;
     }
 
     /*
@@ -376,7 +376,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void flush() {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -386,7 +386,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void flushNoReconnect() {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -396,7 +396,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void commit() {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -406,7 +406,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void rollback() {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -416,7 +416,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void syncToRoot(byte[] root) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -426,7 +426,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public boolean isClosed() {
-	return true;
+        return true;
     }
 
     /*
@@ -436,7 +436,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void close() {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -446,7 +446,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public void reset() {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     /*
@@ -457,8 +457,8 @@ public class NullStorage implements Storage {
      */
     @Override
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
-	    HashMap<ByteArrayWrapper, ContractDetails> contractDetails) {
-	// Intentionally left blank
+            HashMap<ByteArrayWrapper, ContractDetails> contractDetails) {
+        // Intentionally left blank
     }
 
     /*
@@ -468,8 +468,8 @@ public class NullStorage implements Storage {
      */
     @Override
     public byte[] getRoot() {
-	byte[] nullImp = { 0 };
-	return nullImp;
+        byte[] nullImp = { 0 };
+        return nullImp;
     }
 
     /*
@@ -480,8 +480,8 @@ public class NullStorage implements Storage {
      */
     @Override
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
-	    HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
-	// Intentionally left blank
+            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+        // Intentionally left blank
     }
 
     /*
@@ -491,7 +491,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public Repository getSnapshotTo(byte[] root) {
-	return repository;
+        return repository;
     }
 
     /*
@@ -501,7 +501,7 @@ public class NullStorage implements Storage {
      */
     @Override
     public int getStorageSize(byte[] addr) {
-	return 0;
+        return 0;
     }
 
     /*
@@ -511,9 +511,9 @@ public class NullStorage implements Storage {
      */
     @Override
     public Set<DataWord> getStorageKeys(byte[] addr) {
-	@SuppressWarnings("unchecked")
-	Set<DataWord> nullImp = (Set<DataWord>) new Object();
-	return nullImp;
+        @SuppressWarnings("unchecked")
+        Set<DataWord> nullImp = (Set<DataWord>) new Object();
+        return nullImp;
     }
 
     /*
@@ -523,8 +523,8 @@ public class NullStorage implements Storage {
      */
     @Override
     public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
-	@SuppressWarnings("unchecked")
-	Map<DataWord, DataWord> nullImp = (Map<DataWord, DataWord>) new Object();
-	return nullImp;
+        @SuppressWarnings("unchecked")
+        Map<DataWord, DataWord> nullImp = (Map<DataWord, DataWord>) new Object();
+        return nullImp;
     }
 }

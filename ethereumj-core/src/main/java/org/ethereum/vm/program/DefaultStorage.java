@@ -45,15 +45,21 @@ public class DefaultStorage implements Storage {
         this.repository = programInvoke.getRepository();
     }
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Storage#setProgramListener(org.ethereum.vm.program.listener.ProgramListener)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.ethereum.vm.program.Storage#setProgramListener(org.ethereum.vm.program.
+     * listener.ProgramListener)
      */
     @Override
     public void setProgramListener(ProgramListener listener) {
         this.programListener = listener;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#createAccount(byte[])
      */
     @Override
@@ -61,7 +67,9 @@ public class DefaultStorage implements Storage {
         return repository.createAccount(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#isExist(byte[])
      */
     @Override
@@ -69,7 +77,9 @@ public class DefaultStorage implements Storage {
         return repository.isExist(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getAccountState(byte[])
      */
     @Override
@@ -77,16 +87,21 @@ public class DefaultStorage implements Storage {
         return repository.getAccountState(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#delete(byte[])
      */
     @Override
     public void delete(byte[] addr) {
-        if (canListenTrace(addr)) programListener.onStorageClear();
+        if (canListenTrace(addr))
+            programListener.onStorageClear();
         repository.delete(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#increaseNonce(byte[])
      */
     @Override
@@ -94,7 +109,9 @@ public class DefaultStorage implements Storage {
         return repository.increaseNonce(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#setNonce(byte[], java.math.BigInteger)
      */
     @Override
@@ -102,7 +119,9 @@ public class DefaultStorage implements Storage {
         return repository.setNonce(addr, nonce);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getNonce(byte[])
      */
     @Override
@@ -110,7 +129,9 @@ public class DefaultStorage implements Storage {
         return repository.getNonce(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getContractDetails(byte[])
      */
     @Override
@@ -118,7 +139,9 @@ public class DefaultStorage implements Storage {
         return repository.getContractDetails(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#hasContractDetails(byte[])
      */
     @Override
@@ -126,7 +149,9 @@ public class DefaultStorage implements Storage {
         return repository.hasContractDetails(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#saveCode(byte[], byte[])
      */
     @Override
@@ -134,7 +159,9 @@ public class DefaultStorage implements Storage {
         repository.saveCode(addr, code);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getCode(byte[])
      */
     @Override
@@ -142,7 +169,9 @@ public class DefaultStorage implements Storage {
         return repository.getCode(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getCodeHash(byte[])
      */
     @Override
@@ -150,12 +179,16 @@ public class DefaultStorage implements Storage {
         return repository.getCodeHash(addr);
     }
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Storage#addStorageRow(byte[], org.ethereum.vm.DataWord, org.ethereum.vm.DataWord)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.ethereum.vm.program.Storage#addStorageRow(byte[],
+     * org.ethereum.vm.DataWord, org.ethereum.vm.DataWord)
      */
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-        if (canListenTrace(addr)) programListener.onStoragePut(key, value);
+        if (canListenTrace(addr))
+            programListener.onStoragePut(key, value);
         repository.addStorageRow(addr, key, value);
     }
 
@@ -163,15 +196,20 @@ public class DefaultStorage implements Storage {
         return (programListener != null) && this.address.equals(new DataWord(address));
     }
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Storage#getStorageValue(byte[], org.ethereum.vm.DataWord)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.ethereum.vm.program.Storage#getStorageValue(byte[],
+     * org.ethereum.vm.DataWord)
      */
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
         return repository.getStorageValue(addr, key);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getBalance(byte[])
      */
     @Override
@@ -179,7 +217,9 @@ public class DefaultStorage implements Storage {
         return repository.getBalance(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#addBalance(byte[], java.math.BigInteger)
      */
     @Override
@@ -187,7 +227,9 @@ public class DefaultStorage implements Storage {
         return repository.addBalance(addr, value);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getAccountsKeys()
      */
     @Override
@@ -195,15 +237,20 @@ public class DefaultStorage implements Storage {
         return repository.getAccountsKeys();
     }
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Storage#dumpState(org.ethereum.core.Block, long, int, byte[])
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.ethereum.vm.program.Storage#dumpState(org.ethereum.core.Block, long,
+     * int, byte[])
      */
     @Override
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
         repository.dumpState(block, gasUsed, txNumber, txHash);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#startTracking()
      */
     @Override
@@ -211,7 +258,9 @@ public class DefaultStorage implements Storage {
         return repository.startTracking();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#flush()
      */
     @Override
@@ -219,7 +268,9 @@ public class DefaultStorage implements Storage {
         repository.flush();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#flushNoReconnect()
      */
     @Override
@@ -227,8 +278,9 @@ public class DefaultStorage implements Storage {
         throw new UnsupportedOperationException();
     }
 
-
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#commit()
      */
     @Override
@@ -236,7 +288,9 @@ public class DefaultStorage implements Storage {
         repository.commit();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#rollback()
      */
     @Override
@@ -244,7 +298,9 @@ public class DefaultStorage implements Storage {
         repository.rollback();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#syncToRoot(byte[])
      */
     @Override
@@ -252,7 +308,9 @@ public class DefaultStorage implements Storage {
         repository.syncToRoot(root);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#isClosed()
      */
     @Override
@@ -260,7 +318,9 @@ public class DefaultStorage implements Storage {
         return repository.isClosed();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#close()
      */
     @Override
@@ -268,7 +328,9 @@ public class DefaultStorage implements Storage {
         repository.close();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#reset()
      */
     @Override
@@ -276,13 +338,18 @@ public class DefaultStorage implements Storage {
         repository.reset();
     }
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Storage#updateBatch(java.util.HashMap, java.util.HashMap)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.ethereum.vm.program.Storage#updateBatch(java.util.HashMap,
+     * java.util.HashMap)
      */
     @Override
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates, HashMap<ByteArrayWrapper, ContractDetails> contractDetails) {
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
+            HashMap<ByteArrayWrapper, ContractDetails> contractDetails) {
         for (ByteArrayWrapper address : contractDetails.keySet()) {
-            if (!canListenTrace(address.getData())) return;
+            if (!canListenTrace(address.getData()))
+                return;
 
             ContractDetails details = contractDetails.get(address);
             if (details.isDeleted()) {
@@ -296,7 +363,9 @@ public class DefaultStorage implements Storage {
         repository.updateBatch(accountStates, contractDetails);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getRoot()
      */
     @Override
@@ -304,15 +373,21 @@ public class DefaultStorage implements Storage {
         return repository.getRoot();
     }
 
-    /* (non-Javadoc)
-     * @see org.ethereum.vm.program.Storage#loadAccount(byte[], java.util.HashMap, java.util.HashMap)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.ethereum.vm.program.Storage#loadAccount(byte[], java.util.HashMap,
+     * java.util.HashMap)
      */
     @Override
-    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         repository.loadAccount(addr, cacheAccounts, cacheDetails);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getSnapshotTo(byte[])
      */
     @Override
@@ -320,7 +395,9 @@ public class DefaultStorage implements Storage {
         throw new UnsupportedOperationException();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getStorageSize(byte[])
      */
     @Override
@@ -328,7 +405,9 @@ public class DefaultStorage implements Storage {
         return repository.getStorageSize(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getStorageKeys(byte[])
      */
     @Override
@@ -336,7 +415,9 @@ public class DefaultStorage implements Storage {
         return repository.getStorageKeys(addr);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.ethereum.vm.program.Storage#getStorage(byte[], java.util.Collection)
      */
     @Override
