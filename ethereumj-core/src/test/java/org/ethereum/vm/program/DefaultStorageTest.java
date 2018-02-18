@@ -22,7 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class StorageTest {
+public class DefaultStorageTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
