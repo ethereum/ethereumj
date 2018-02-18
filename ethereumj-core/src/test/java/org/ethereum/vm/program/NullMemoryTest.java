@@ -27,7 +27,7 @@ public class NullMemoryTest {
      */
     @Test
     public void setProgramListenerDoesNotThrowException() throws Exception {
-	memory.setProgramListener(new ProgramTraceListener(false));
+        memory.setProgramListener(new ProgramTraceListener(false));
     }
 
     /**
@@ -35,12 +35,12 @@ public class NullMemoryTest {
      */
     @Test
     public void readDoesNotReturnNull() {
-	assertNotNull(memory.read(0, 0));
-	assertEquals(0, memory.read(0, 0).length);
-	assertNotNull(memory.read(-10, 65));
-	assertEquals(65, memory.read(-10, 65).length);
-	assertNotNull(memory.read(0, 72));
-	assertEquals(72, memory.read(0, 72).length);
+        assertNotNull(memory.read(0, 0));
+        assertEquals(0, memory.read(0, 0).length);
+        assertNotNull(memory.read(-10, 65));
+        assertEquals(65, memory.read(-10, 65).length);
+        assertNotNull(memory.read(0, 72));
+        assertEquals(72, memory.read(0, 72).length);
     }
 
     /**
@@ -51,10 +51,10 @@ public class NullMemoryTest {
      */
     @Test
     public void writeDoesNotThrowException() throws Exception {
-	memory.write(0, null, 0, false);
-	memory.write(0, null, 0, true);
-	memory.write(10, null, 8, false);
-	memory.write(0, new byte[0], 0, true);
+        memory.write(0, null, 0, false);
+        memory.write(0, null, 0, true);
+        memory.write(10, null, 8, false);
+        memory.write(0, new byte[0], 0, true);
     }
 
     /**
@@ -65,9 +65,9 @@ public class NullMemoryTest {
      */
     @Test
     public void extendAndWriteDoesNotThrowException() throws Exception {
-	memory.extendAndWrite(0, 0, null);
-	memory.extendAndWrite(17, 1337, null);
-	memory.extendAndWrite(0, 0, new byte[0]);
+        memory.extendAndWrite(0, 0, null);
+        memory.extendAndWrite(17, 1337, null);
+        memory.extendAndWrite(0, 0, new byte[0]);
     }
 
     /**
@@ -77,11 +77,11 @@ public class NullMemoryTest {
      */
     @Test
     public void extendDoesNotThrowException() throws Exception {
-	memory.extend(0, 0);
-	memory.extend(10, 0);
-	memory.extend(0, 10);
-	memory.extend(-1, 0);
-	memory.extend(0, -1);
+        memory.extend(0, 0);
+        memory.extend(10, 0);
+        memory.extend(0, 10);
+        memory.extend(-1, 0);
+        memory.extend(0, -1);
     }
 
     /**
@@ -89,9 +89,9 @@ public class NullMemoryTest {
      */
     @Test
     public void readWordDoesNotReturnNull() {
-	assertNotNull(memory.readWord(0));
-	assertNotNull(memory.readWord(100));
-	assertNotNull(memory.readWord(-1));
+        assertNotNull(memory.readWord(0));
+        assertNotNull(memory.readWord(100));
+        assertNotNull(memory.readWord(-1));
     }
 
     /**
@@ -99,9 +99,9 @@ public class NullMemoryTest {
      */
     @Test
     public void readByteIsEqualToZero() {
-	assertEquals(0, memory.readByte(0));
-	assertEquals(0, memory.readByte(-1));
-	assertEquals(0, memory.readByte(1));
+        assertEquals(0, memory.readByte(0));
+        assertEquals(0, memory.readByte(-1));
+        assertEquals(0, memory.readByte(1));
     }
 
     /**
@@ -109,7 +109,7 @@ public class NullMemoryTest {
      */
     @Test
     public void sizeIsEqualToZero() {
-	assertEquals(0, memory.size());
+        assertEquals(0, memory.size());
     }
 
     /**
@@ -117,7 +117,7 @@ public class NullMemoryTest {
      */
     @Test
     public void internalSizeIsEqualToZero() {
-	assertEquals(0, memory.internalSize());
+        assertEquals(0, memory.internalSize());
     }
 
     /**
@@ -125,8 +125,8 @@ public class NullMemoryTest {
      */
     @Test
     public void getChunksIsAnEmptyList() {
-	List<byte[]> list = memory.getChunks();
-	assertEquals(0, list.size());
-	assertTrue(list.isEmpty());
+        List<byte[]> list = memory.getChunks();
+        assertEquals(0, list.size());
+        assertTrue(list.isEmpty());
     }
 }

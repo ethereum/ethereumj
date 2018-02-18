@@ -14,52 +14,52 @@ public class NullMemory implements Memory {
 
     @Override
     public void setProgramListener(ProgramListener traceListener) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     @Override
     public byte[] read(int address, int size) {
-	return new byte[size];
+        return new byte[size];
     }
 
     @Override
     public void write(int address, byte[] data, int dataSize, boolean limited) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     @Override
     public void extendAndWrite(int address, int allocSize, byte[] data) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     @Override
     public void extend(int address, int size) {
-	// Intentionally left blank
+        // Intentionally left blank
     }
 
     @Override
     public DataWord readWord(int address) {
-	return new DataWord();
+        return new DataWord();
     }
 
     @Override
     public byte readByte(int address) {
-	return 0;
+        return 0;
     }
 
     @Override
     public int size() {
-	return 0;
+        return 0;
     }
 
     @Override
     public int internalSize() {
-	return 0;
+        return 0;
     }
 
     @Override
     public List<byte[]> getChunks() {
-	return new ArrayList<>(0);
+        return new ArrayList<>(0);
     }
 
 }
