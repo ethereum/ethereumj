@@ -8,7 +8,7 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.junit.Test;
 
-public class StackTest {
+public class DefaultStackTest {
     @Test
     public void testPush() {
         DefaultStack stack = new DefaultStack();
