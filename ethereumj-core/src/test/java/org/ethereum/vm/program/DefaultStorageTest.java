@@ -27,6 +27,10 @@ public class DefaultStorageTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
+    /**
+     * Contract: Creating an account (state) should be the same as the account state
+     * returned by the storage.
+     */
     @Test
     public void createAccountTest() {
 
@@ -40,6 +44,9 @@ public class DefaultStorageTest {
         assertEquals(as, storage.getAccountState(addr));
     }
 
+    /**
+     * Contract: Creating an account should make it exist.
+     */
     @Test
     public void isExistTest() {
 
@@ -53,6 +60,9 @@ public class DefaultStorageTest {
         assertEquals(true, storage.isExist(addr));
     }
 
+    /**
+     * Contract: Deleting (an existing) account should make it not exist.
+     */
     @Test
     public void deleteTest() {
 
@@ -67,6 +77,10 @@ public class DefaultStorageTest {
         assertEquals(false, storage.isExist(addr));
     }
 
+    /**
+     * Contract: Deleting (an existing) account should make it not exist (and try to
+     * (wrong address) clear the storage of an existing listener).
+     */
     @Test
     public void deleteWithListenerTest() {
 
@@ -82,37 +96,48 @@ public class DefaultStorageTest {
         assertEquals(false, storage.isExist(addr));
     }
 
+    /**
+     * Contract: Deleting (an existing) account should make it not exist (and try
+     * to) clear the storage of an non-existing listener).
+     */
     @Test
     public void deleteWithSameAddressTest() {
 
         /* Setup storage. */
         ProgramInvokeMockImpl programInvoke = new ProgramInvokeMockImpl();
-        DataWord addr = new DataWord(1);
-        programInvoke.setOwnerAddress(addr.getData());
+        byte[] addr = { 0 };
+        programInvoke.setOwnerAddress(addr);
         Storage storage = new DefaultStorage(programInvoke);
 
         /* Test. */
-        storage.createAccount(addr.getData());
-        storage.delete(addr.getData());
-        assertEquals(false, storage.isExist(addr.getData()));
+        storage.createAccount(addr);
+        storage.delete(addr);
+        assertEquals(false, storage.isExist(addr));
     }
 
+    /**
+     * Contract: Deleting (an existing) account should make it not exist (and clear
+     * the storage of an existing listener).
+     */
     @Test
     public void deleteWithListenerWithSameAdressTest() {
 
         /* Setup storage. */
         ProgramInvokeMockImpl programInvoke = new ProgramInvokeMockImpl();
-        DataWord addr = new DataWord(1);
-        programInvoke.setOwnerAddress(addr.getData());
+        byte[] addr = { 0 };
+        programInvoke.setOwnerAddress(addr);
         Storage storage = new DefaultStorage(programInvoke);
         storage.setProgramListener(new CompositeProgramListener());
 
         /* Test. */
-        storage.createAccount(addr.getData());
-        storage.delete(addr.getData());
-        assertEquals(false, storage.isExist(addr.getData()));
+        storage.createAccount(addr);
+        storage.delete(addr);
+        assertEquals(false, storage.isExist(addr));
     }
 
+    /**
+     * Contract: The returned nonce should be that which it was set to.
+     */
     @Test
     public void setNonceTest() {
 
@@ -127,6 +152,9 @@ public class DefaultStorageTest {
         assertEquals(0, storage.getNonce(addr).compareTo(nonce));
     }
 
+    /**
+     * Contract: Increasing the nonce should make it bigger than what it was before.
+     */
     @Test
     public void increaseNonceTest() {
 
@@ -141,6 +169,9 @@ public class DefaultStorageTest {
         assertEquals(1, storage.getNonce(addr).compareTo(oldNonce));
     }
 
+    /**
+     * Contract: Asking for contract details will create them if they did not exist.
+     */
     @Test
     public void hasContractDetailsTest() {
 
@@ -154,6 +185,9 @@ public class DefaultStorageTest {
         assertTrue(storage.hasContractDetails(addr));
     }
 
+    /**
+     * Contract: Getting (creates) contract details which can be asked for.
+     */
     @Test
     public void getContractDetailsTest() {
 
@@ -168,6 +202,9 @@ public class DefaultStorageTest {
         assertTrue(storage.hasContractDetails(addr));
     }
 
+    /**
+     * Contract: Saving a code to an address, should have that code at that address.
+     */
     @Test
     public void saveCodeTest() {
 
@@ -182,6 +219,10 @@ public class DefaultStorageTest {
         assertEquals(code, storage.getCode(addr));
     }
 
+    /**
+     * Contract: A saved code hash should be the same as the code hash for the
+     * account state with the same address.
+     */
     @Test
     public void getCodeHashTest() {
 
@@ -197,6 +238,10 @@ public class DefaultStorageTest {
         assertEquals(as.getCodeHash(), storage.getCodeHash(addr));
     }
 
+    /**
+     * Contract: Adding a storage row to an address, should have that storage row at
+     * that address.
+     */
     @Test
     public void addStorageRowTest() {
 
@@ -212,23 +257,30 @@ public class DefaultStorageTest {
         assertEquals(value, storage.getStorageValue(addr, key));
     }
 
+    /**
+     * Contract: Adding a storage row to an address, should have that storage row at
+     * that address (and add the storage row to an existing listener).
+     */
     @Test
     public void addStorageRowWithListenerWithSameAddressTest() {
 
         /* Setup storage. */
         ProgramInvokeMockImpl programInvoke = new ProgramInvokeMockImpl();
-        DataWord addr = new DataWord(1);
-        programInvoke.setOwnerAddress(addr.getData());
+        byte[] addr = { 0 };
+        programInvoke.setOwnerAddress(addr);
         Storage storage = new DefaultStorage(programInvoke);
         storage.setProgramListener(new CompositeProgramListener());
 
         /* Test. */
         DataWord key = new DataWord();
         DataWord value = new DataWord(1); // Checks if zero and sets to null.
-        storage.addStorageRow(addr.getData(), key, value);
-        assertEquals(value, storage.getStorageValue(addr.getData(), key));
+        storage.addStorageRow(addr, key, value);
+        assertEquals(value, storage.getStorageValue(addr, key));
     }
 
+    /**
+     * Contract: The balance should initially be 0.
+     */
     @Test
     public void getBalanceTest() {
 
@@ -241,6 +293,10 @@ public class DefaultStorageTest {
         assertEquals(new BigInteger("0"), storage.getBalance(addr));
     }
 
+    /**
+     * Contract: Adding balance to an address, should have that balance at that
+     * address.
+     */
     @Test
     public void addBalanceTest() {
 
@@ -255,6 +311,12 @@ public class DefaultStorageTest {
         assertEquals(balance, storage.getBalance(addr));
     }
 
+    /**
+     * Contract: Getting accounts keys is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void getAccountsKeysNotSupportedTest() throws RuntimeException {
 
@@ -270,6 +332,12 @@ public class DefaultStorageTest {
         storage.getAccountsKeys(); // Can never run (always throws exception).
     }
 
+    /**
+     * Contract: Dumping the state is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void dumpStateNotSupportedTest() throws RuntimeException {
 
@@ -285,6 +353,10 @@ public class DefaultStorageTest {
         storage.dumpState(null, 0, 0, null); // Can never run (always throws exception).
     }
 
+    /**
+     * Contract: The concerned repository should be returned when tracking is
+     * started.
+     */
     @Test
     public void startTrackingTest() {
 
@@ -296,6 +368,10 @@ public class DefaultStorageTest {
         assertNotNull(storage.startTracking()); // Not null if started tracking.
     }
 
+    /**
+     * Contract: Flushing down values should alter the StateTrie from <empty> to
+     * non-empty.
+     */
     @Test
     public void flushTest() {
 
@@ -311,6 +387,12 @@ public class DefaultStorageTest {
         assertNotEquals("<empty>", repository.dumpStateTrie()); // Non <empty>.
     }
 
+    /**
+     * Contract: Flushing with no reconnect is an "Unsupported Operation".
+     * 
+     * @throws UnsupportedOperationException
+     *             Unsupported Operation
+     */
     @Test
     public void flushNoReconnectNotSupportedTest() throws UnsupportedOperationException {
 
@@ -325,6 +407,10 @@ public class DefaultStorageTest {
         storage.flushNoReconnect();
     }
 
+    /**
+     * Contract: Committing (flushing down) values should alter the StateTrie from
+     * <empty> to non-empty.
+     */
     @Test
     public void commitTest() {
 
@@ -342,6 +428,10 @@ public class DefaultStorageTest {
 
     /* Method "rollback" does not do anything, unable to test. */
 
+    /**
+     * Contract: Syncing the root (and flushing) to something should change the
+     * initial <empty> value for the StateTrie to some value.
+     */
     @Test
     public void syncToRootTest() {
 
@@ -358,6 +448,12 @@ public class DefaultStorageTest {
         assertNotNull(repository.dumpStateTrie());
     }
 
+    /**
+     * Contract: Asking if the storage is closed is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void isClosedNotSupportedTest() throws RuntimeException {
 
@@ -375,6 +471,12 @@ public class DefaultStorageTest {
 
     /* Method "close" does not do anything, unable to test. */
 
+    /**
+     * Contract: Resetting the storage is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void resetNotSupportedTest() throws RuntimeException {
 
@@ -390,34 +492,42 @@ public class DefaultStorageTest {
         storage.reset();
     }
 
+    /**
+     * Contract: Update Batch does not do anything (nothing to test) without a
+     * listener (added for branch coverage).
+     */
     @Test
     public void updateBatchTest() {
 
         /* Setup storage. */
         ProgramInvokeMockImpl programInvoke = new ProgramInvokeMockImpl();
         Storage storage = new DefaultStorage(programInvoke);
-        byte[] addr = { 0 };
+        ByteArrayWrapper addr = wrap(programInvoke.getOwnerAddress().getData());
         HashMap<ByteArrayWrapper, AccountState> stateBatch = new HashMap<>();
         HashMap<ByteArrayWrapper, ContractDetails> detailsBatch = new HashMap<>();
-        AccountState state = storage.createAccount(addr);
-        ContractDetails details = storage.getContractDetails(addr);
+        ContractDetails details = storage.getContractDetails(addr.getData());
+        AccountState state = storage.createAccount(addr.getData());
 
         /* Setup stateBatch. */
-        stateBatch.put(wrap(parseData("0")), state);
+        stateBatch.put(addr, state);
 
         /* Setup detailsBatch through detailsCache. */
         ContractDetailsCacheImpl detailsCache = new ContractDetailsCacheImpl(details);
         DataWord key = new DataWord(0);
         DataWord value = new DataWord(1);
         detailsCache.put(key, value);
-        detailsBatch.put(wrap(parseData("0")), detailsCache);
+        detailsBatch.put(addr, detailsCache);
 
         /* Test. */
         storage.updateBatch(stateBatch, detailsBatch);
-        byte[] c = detailsBatch.get(wrap(parseData("0"))).get(key).getData();
-        assertEquals(1, c[c.length - 1]);
     }
 
+    /**
+     * Contract: Updating a batch is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void updateBatchWithListenerWithSameAddressNotDeletedDirtyNotSupportedTest()
             throws RuntimeException {
@@ -454,6 +564,12 @@ public class DefaultStorageTest {
         // 3. ContractDetailsImpl.getStorageKeys -> Not supported.
     }
 
+    /**
+     * Contract: Updating a batch is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void updateBatchWithListenerWithSameAddressDeletedDirtyNotSupportedTest()
             throws RuntimeException {
@@ -493,6 +609,12 @@ public class DefaultStorageTest {
         // 3. ContractDetailsImpl.getStorageKeys -> Not supported.
     }
 
+    /**
+     * Contract: Updating a batch is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void updateBatchWithListenerWithSameAddressNotDeletedNotDirtyNotSupportedTest()
             throws RuntimeException {
@@ -532,6 +654,10 @@ public class DefaultStorageTest {
         // 3. ContractDetailsImpl.getStorageKeys -> Not supported.
     }
 
+    /**
+     * Contract: Synchronizing the root to an address, then the storage should have
+     * that root (address).
+     */
     @Test
     public void getRootTest() {
 
@@ -546,6 +672,12 @@ public class DefaultStorageTest {
         assertEquals(root.getData(), storage.getRoot());
     }
 
+    /**
+     * Contract: Loading accounts are "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void loadAccountTest() throws RuntimeException {
 
@@ -561,6 +693,12 @@ public class DefaultStorageTest {
         storage.loadAccount(null, null, null);
     }
 
+    /**
+     * Contract: Getting the snapshot to the root is an "Unsupported Operation".
+     * 
+     * @throws UnsupportedOperationException
+     *             Unsupported Operation
+     */
     @Test
     public void getSnapshotToTest() throws UnsupportedOperationException {
 
@@ -575,6 +713,12 @@ public class DefaultStorageTest {
         storage.getSnapshotTo(null);
     }
 
+    /**
+     * Contract: Getting the storage size is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void getStorageSizeTest() throws RuntimeException {
 
@@ -590,6 +734,12 @@ public class DefaultStorageTest {
         storage.getStorageSize(null);
     }
 
+    /**
+     * Contract: Getting the storage keys are "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void getStorageKeysTest() throws RuntimeException {
 
@@ -605,6 +755,12 @@ public class DefaultStorageTest {
         storage.getStorageKeys(null);
     }
 
+    /**
+     * Contract: Getting the storage is "Not supported".
+     * 
+     * @throws RuntimeException
+     *             Not supported
+     */
     @Test
     public void getStorageTest() throws RuntimeException {
 
