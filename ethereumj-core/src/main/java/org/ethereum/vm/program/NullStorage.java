@@ -34,7 +34,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.vm.DataWord;
-import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.listener.ProgramListener;
 
 public class NullStorage implements Storage {
