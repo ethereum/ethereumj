@@ -21,9 +21,9 @@ public class NullProgramTraceTest {
     @Test
     public void testContractAddress() {
 
-	ProgramTrace trace = new NullProgramTrace();
-	trace.setContractAddress("contact address");
-	assertTrue(trace.getContractAddress().isEmpty());
+        ProgramTrace trace = new NullProgramTrace();
+        trace.setContractAddress("contact address");
+        assertTrue(trace.getContractAddress().isEmpty());
     }
 
     /**
@@ -32,12 +32,12 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testResult() {
-	ProgramTrace trace = new NullProgramTrace();
-	byte[] result = { 0x41, 0x42, 0x43 };
-	trace.result(result);
-	assertTrue(trace.getResult().isEmpty());
-	trace.setResult("result");
-	assertTrue(trace.getResult().isEmpty());
+        ProgramTrace trace = new NullProgramTrace();
+        byte[] result = { 0x41, 0x42, 0x43 };
+        trace.result(result);
+        assertTrue(trace.getResult().isEmpty());
+        trace.setResult("result");
+        assertTrue(trace.getResult().isEmpty());
     }
 
     /**
@@ -48,9 +48,9 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testResultWithNull() {
-	ProgramTrace trace = new NullProgramTrace();
-	ProgramTrace trace2 = trace.result(null);
-	assertSame(trace, trace2);
+        ProgramTrace trace = new NullProgramTrace();
+        ProgramTrace trace2 = trace.result(null);
+        assertSame(trace, trace2);
     }
 
     /**
@@ -60,9 +60,9 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testError() {
-	ProgramTrace trace = new NullProgramTrace();
-	ProgramTrace trace2 = trace.error(null);
-	assertSame(trace, trace2);
+        ProgramTrace trace = new NullProgramTrace();
+        ProgramTrace trace2 = trace.error(null);
+        assertSame(trace, trace2);
     }
 
     /**
@@ -71,11 +71,11 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testErrorWithNull() {
-	ProgramTrace trace = new NullProgramTrace();
-	trace.error(new RuntimeException());
-	assertTrue(trace.getError().isEmpty());
-	trace.setError("Some initial error");
-	assertTrue(trace.getError().isEmpty());
+        ProgramTrace trace = new NullProgramTrace();
+        trace.error(new RuntimeException());
+        assertTrue(trace.getError().isEmpty());
+        trace.setError("Some initial error");
+        assertTrue(trace.getError().isEmpty());
     }
 
     /**
@@ -86,12 +86,12 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testAddOp() {
-	ProgramTrace trace = new NullProgramTrace();
-	DataWord gas = new DataWord();
-	OpActions actions = new OpActions();
-	Op op = trace.addOp((byte) 'c', 1, 2, gas, actions);
+        ProgramTrace trace = new NullProgramTrace();
+        DataWord gas = new DataWord();
+        OpActions actions = new OpActions();
+        Op op = trace.addOp((byte) 'c', 1, 2, gas, actions);
 
-	assertNotNull(op);
+        assertNotNull(op);
     }
 
     /**
@@ -100,22 +100,22 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testMerge() {
-	ProgramTrace trace = new NullProgramTrace();
-	List<Op> ops1 = new ArrayList<>();
-	ops1.add(new Op());
-	ops1.add(new Op());
-	ops1.add(new Op());
-	trace.setOps(ops1);
-	assertTrue(trace.getOps().isEmpty());
+        ProgramTrace trace = new NullProgramTrace();
+        List<Op> ops1 = new ArrayList<>();
+        ops1.add(new Op());
+        ops1.add(new Op());
+        ops1.add(new Op());
+        trace.setOps(ops1);
+        assertTrue(trace.getOps().isEmpty());
 
-	DefaultProgramTrace trace2 = new DefaultProgramTrace();
-	List<Op> ops2 = new ArrayList<>();
-	ops2.add(new Op());
-	ops2.add(new Op());
-	ops2.add(new Op());
-	trace2.setOps(ops2);
-	trace.merge(trace2);
-	assertTrue(trace.getOps().isEmpty());
+        DefaultProgramTrace trace2 = new DefaultProgramTrace();
+        List<Op> ops2 = new ArrayList<>();
+        ops2.add(new Op());
+        ops2.add(new Op());
+        ops2.add(new Op());
+        trace2.setOps(ops2);
+        trace.merge(trace2);
+        assertTrue(trace.getOps().isEmpty());
     }
 
     /**
@@ -125,37 +125,36 @@ public class NullProgramTraceTest {
      */
     @Test
     public void testAsJsonString() {
-	ProgramTrace trace = new NullProgramTrace();
-	trace.setError("Error");
-	trace.setContractAddress("Contract Address");
-	trace.setResult("Result");
-	List<Op> ops = new ArrayList<>();
-	ops.add(new Op());
-	ops.add(new Op());
-	ops.add(new Op());
-	trace.setOps(ops);
+        ProgramTrace trace = new NullProgramTrace();
+        trace.setError("Error");
+        trace.setContractAddress("Contract Address");
+        trace.setResult("Result");
+        List<Op> ops = new ArrayList<>();
+        ops.add(new Op());
+        ops.add(new Op());
+        ops.add(new Op());
+        trace.setOps(ops);
 
-	assertEquals("{}", trace.asJsonString(false));
-	assertEquals("{}", trace.asJsonString(true));
+        assertEquals("{}", trace.asJsonString(false));
+        assertEquals("{}", trace.asJsonString(true));
     }
-    
+
     /**
-     * contract: {@link NullProgramTrace#toString()} returns an empty
-     * json string
+     * contract: {@link NullProgramTrace#toString()} returns an empty json string
      * 
      */
     @Test
     public void testToString() {
-	ProgramTrace trace = new NullProgramTrace();
-	trace.setError("Error");
-	trace.setContractAddress("Contract Address");
-	trace.setResult("Result");
-	List<Op> ops = new ArrayList<>();
-	ops.add(new Op());
-	ops.add(new Op());
-	ops.add(new Op());
-	trace.setOps(ops);
+        ProgramTrace trace = new NullProgramTrace();
+        trace.setError("Error");
+        trace.setContractAddress("Contract Address");
+        trace.setResult("Result");
+        List<Op> ops = new ArrayList<>();
+        ops.add(new Op());
+        ops.add(new Op());
+        ops.add(new Op());
+        trace.setOps(ops);
 
-	assertEquals("{}", trace.toString());
+        assertEquals("{}", trace.toString());
     }
 }
