@@ -22,6 +22,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.trace.DefaultProgramTrace;
 import org.ethereum.vm.trace.ProgramTrace;
+import com.typesafe.config.Config;
 
 /**
  * Factory class for creating a {@link Program} instance. Methods are chainable.
@@ -77,10 +78,31 @@ public class ProgramFactory {
     private ProgramTrace programTrace = null;
 
     /**
-     * Internal constructor.
+     * Internal constructor. Loads memory, stack, storage, and program trace from
+     * {@link SystemProperties#getConfig()}.
      */
     private ProgramFactory() {
-        // Intentionally left blank to make factory private.
+        Config config = SystemProperties.getDefault().getConfig();
+
+        // Override memory from config.
+        if (config.hasPath(SystemProperties.PROPERTY_VM_PROGRAM_MEMORY)) {
+            memory = (Memory) config.getValue(SystemProperties.PROPERTY_VM_PROGRAM_MEMORY);
+        }
+
+        // Override stack from config.
+        if (config.hasPath(SystemProperties.PROPERTY_VM_PROGRAM_STACK)) {
+            stack = (Stack) config.getValue(SystemProperties.PROPERTY_VM_PROGRAM_STACK);
+        }
+
+        // Override storage from config.
+        if (config.hasPath(SystemProperties.PROPERTY_VM_PROGRAM_STORAGE)) {
+            storage = (Storage) config.getValue(SystemProperties.PROPERTY_VM_PROGRAM_STORAGE);
+        }
+
+        // Override program trace from config.
+        if (config.hasPath(SystemProperties.PROPERTY_VM_PROGRAM_TRACE)) {
+            programTrace = (ProgramTrace) config.getValue(SystemProperties.PROPERTY_VM_PROGRAM_TRACE);
+        }
     }
 
     /**
@@ -193,6 +215,10 @@ public class ProgramFactory {
 
     /**
      * Create a new factory for building {@link Program} instances.
+     * 
+     * This loads configuration options from {@link SystemProperties#getConfig()} if
+     * they are present. They must be set explicitly, so the default case is that no
+     * such options are present.
      * 
      * @return New program factory.
      */

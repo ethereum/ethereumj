@@ -82,6 +82,11 @@ public class SystemProperties {
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
     private final static String DEFAULT_BLOCKS_LOADER = "";
 
+    public static final String PROPERTY_VM_PROGRAM_MEMORY = "vm.program.memory";
+    public static final String PROPERTY_VM_PROGRAM_STACK = "vm.program.stack";
+    public static final String PROPERTY_VM_PROGRAM_STORAGE = "vm.program.storage";
+    public static final String PROPERTY_VM_PROGRAM_TRACE = "vm.program.trace";
+
     private static SystemProperties CONFIG;
     private static boolean useOnlySpringConfig = false;
     private String generatedNodePrivateKey;

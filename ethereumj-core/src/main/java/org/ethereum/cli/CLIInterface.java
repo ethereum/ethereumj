@@ -18,6 +18,10 @@
 package org.ethereum.cli;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.vm.program.NullMemory;
+import org.ethereum.vm.program.NullStack;
+import org.ethereum.vm.program.NullStorage;
+import org.ethereum.vm.trace.NullProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -49,6 +53,26 @@ public class CLIInterface {
 
                     printHelp();
                     System.exit(1);
+                }
+                
+                // start without memory
+                if (args[i].equals("--nomemory")) {
+                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_MEMORY, new NullMemory());
+                }
+                
+                // start without stack
+                if (args[i].equals("--nostack")) {
+                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STACK, new NullStack());
+                }
+                
+                // start without storage
+                if (args[i].equals("--nostorage")) {
+                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STORAGE, new NullStorage());
+                }
+                
+                // start without trace
+                if (args[i].equals("--notrace")) {
+                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_TRACE, new NullProgramTrace());
                 }
 
                 // override the db directory
@@ -110,6 +134,10 @@ public class CLIInterface {
     private static void printHelp() {
 
         System.out.println("--help                -- this help message ");
+        System.out.println("--nomemory            -- run vm without memory module ");
+        System.out.println("--nostack             -- run vm without stack module ");
+        System.out.println("--nostorage           -- run vm without storage module ");
+        System.out.println("--notrace             -- run vm without trace module ");
         System.out.println("-reset <yes/no>       -- reset yes/no the all database ");
         System.out.println("-db <db>              -- to setup the path for the database directory ");
         System.out.println("-listen  <port>       -- port to listen on for incoming connections ");
