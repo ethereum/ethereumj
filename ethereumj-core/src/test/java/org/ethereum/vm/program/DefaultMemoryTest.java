@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2016] [ <ether.camp> ]
+ * Copyright (c) [2018] [ <ether.camp> ]
  * This file is part of the ethereumJ library.
  *
  * The ethereumJ library is free software: you can redistribute it and/or modify
