@@ -79,23 +79,24 @@ public class JournalPruneTest {
     public void simpleTest() {
         StringJDS jds = new StringJDS();
         Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1", "a2");
 
         jds.put("a3");
         jds.delete("a2");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a2");
         jds.delete("a3");
-        jds.commitUpdates(hashInt(2));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
         jds.delete("a2");
-        jds.commitUpdates(hashInt(3));
+        pruner.feed(jds.commitUpdates(hashInt(3)));
 
         Segment segment = new Segment(0, hashInt(0), hashInt(0));
         segment.startTracking()
              .addMain(1, hashInt(1), hashInt(0))
              .commit();
-        pruner.prune(segment, hashInt(2), hashInt(3));
+        pruner.prune(segment);
 
         checkDb(jds, "a1", "a2", "a3");
 
@@ -103,7 +104,7 @@ public class JournalPruneTest {
         segment.startTracking()
                 .addMain(2, hashInt(2), hashInt(1))
                 .commit();
-        pruner.prune(segment, hashInt(3));
+        pruner.prune(segment);
 
         checkDb(jds, "a1", "a2");
 
@@ -122,20 +123,21 @@ public class JournalPruneTest {
     public void forkTest1() {
         StringJDS jds = new StringJDS();
         Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1", "a2", "a3");
-        jds.commitUpdates(hashInt(0));
+        pruner.feed(jds.commitUpdates(hashInt(0)));
 
         jds.put("a4");
         jds.put("a1");
         jds.delete("a2");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a5");
         jds.delete("a3");
         jds.put("a2");
         jds.put("a1");
-        jds.commitUpdates(hashInt(2));
-        jds.commitUpdates(hashInt(3)); // complete segment
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        pruner.feed(jds.commitUpdates(hashInt(3))); // complete segment
 
         checkDb(jds, "a1", "a2", "a3", "a4", "a5");
 
@@ -162,24 +164,25 @@ public class JournalPruneTest {
     public void forkTest2() {
         StringJDS jds = new StringJDS();
         Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1", "a2", "a3");
 
         jds.delete("a1");
         jds.delete("a3");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a4");
-        jds.commitUpdates(hashInt(2));
-        jds.commitUpdates(hashInt(3));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        pruner.feed(jds.commitUpdates(hashInt(3)));
         jds.put("a1");
         jds.delete("a2");
-        jds.commitUpdates(hashInt(4));
+        pruner.feed(jds.commitUpdates(hashInt(4)));
         jds.put("a4");
-        jds.commitUpdates(hashInt(5));
-        jds.commitUpdates(hashInt(6));
-        jds.commitUpdates(hashInt(7));
+        pruner.feed(jds.commitUpdates(hashInt(5)));
+        pruner.feed(jds.commitUpdates(hashInt(6)));
+        pruner.feed(jds.commitUpdates(hashInt(7)));
         jds.put("a3");
-        jds.commitUpdates(hashInt(8));
+        pruner.feed(jds.commitUpdates(hashInt(8)));
 
         checkDb(jds, "a1", "a2", "a3", "a4");
 
@@ -189,7 +192,7 @@ public class JournalPruneTest {
                 .addItem(1, hashInt(2), hashInt(0))
                 .addMain(2, hashInt(3), hashInt(1))
                 .commit();
-        pruner.prune(segment, hashInt(4), hashInt(5), hashInt(6));
+        pruner.prune(segment);
 
         checkDb(jds, "a1", "a2", "a3", "a4");
 
@@ -200,7 +203,7 @@ public class JournalPruneTest {
                 .addItem(1, hashInt(5), hashInt(0))
                 .addMain(2, hashInt(7), hashInt(6))
                 .commit();
-        pruner.prune(segment, hashInt(8));
+        pruner.prune(segment);
 
         checkDb(jds, "a2", "a3");
 
@@ -219,20 +222,21 @@ public class JournalPruneTest {
     public void forkTest3() {
         StringJDS jds = new StringJDS();
         Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1");
 
         jds.put("a2");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a1");
         jds.put("a2");
         jds.put("a3");
-        jds.commitUpdates(hashInt(2));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
         jds.put("a1");
         jds.put("a2");
         jds.put("a3");
-        jds.commitUpdates(hashInt(3));
-        jds.commitUpdates(hashInt(4));
+        pruner.feed(jds.commitUpdates(hashInt(3)));
+        pruner.feed(jds.commitUpdates(hashInt(4)));
 
         checkDb(jds, "a1", "a2", "a3");
 

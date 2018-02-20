@@ -149,6 +149,7 @@ public class TrieNodeSourceTest {
         stateSource.getJournalSource().commitUpdates(HashUtil.EMPTY_DATA_HASH);
 
         Pruner pruner = new Pruner(stateSource.getJournalSource().getJournal(), stateSource.getNoJournalSource());
+        pruner.init(HashUtil.EMPTY_DATA_HASH);
         Segment segment = new Segment(0, HashUtil.EMPTY_DATA_HASH, HashUtil.EMPTY_DATA_HASH);
         segment.startTracking()
                 .addMain(1, HashUtil.EMPTY_DATA_HASH, HashUtil.EMPTY_DATA_HASH)

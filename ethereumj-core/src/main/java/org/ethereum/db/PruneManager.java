@@ -34,8 +34,7 @@ import java.util.stream.Collectors;
  * Manages state pruning part of block processing.
  *
  * <p>
- *     Constructs chain segments and prune them
- *     when they are complete
+ *     Constructs chain segments and prune them when they are complete
  *
  * Created by Anton Nashatyrev on 10.11.2016.
  *
@@ -54,9 +53,6 @@ public class PruneManager {
     private Segment segment;
     private Pruner pruner;
 
-    private static final int SEGMENT_MAX_SIZE = 192;
-    private int segmentOptimalSize;
-
     @Autowired
     private PruneManager(SystemProperties config) {
         pruneBlocksCnt = config.databasePruneDepth();
@@ -67,27 +63,23 @@ public class PruneManager {
         this.blockStore = blockStore;
         this.journalSource = journalSource;
         this.pruneBlocksCnt = pruneBlocksCnt;
-        this.segmentOptimalSize = Math.min(SEGMENT_MAX_SIZE, pruneBlocksCnt);
 
-        if (journalSource != null && pruneStorage != null) {
+        if (journalSource != null && pruneStorage != null)
             this.pruner = new Pruner(journalSource.getJournal(), pruneStorage);
-            journalSource.addFilter(pruner.getFilter());
-        }
     }
 
     @Autowired
     public void setStateSource(StateSource stateSource) {
         journalSource = stateSource.getJournalSource();
-        if (journalSource != null) {
+        if (journalSource != null)
             pruner = new Pruner(journalSource.getJournal(), stateSource.getNoJournalSource());
-            journalSource.addFilter(pruner.getFilter());
-        }
     }
 
     public void blockCommitted(BlockHeader block) {
         if (pruneBlocksCnt < 0) return; // pruning disabled
 
-        journalSource.commitUpdates(block.getHash());
+        JournalSource.Update update = journalSource.commitUpdates(block.getHash());
+        pruner.feed(update);
 
         long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
         if (pruneBlockNum < 0) return;
@@ -106,9 +98,12 @@ public class PruneManager {
         tracker.addAll(pruneBlocks);
         tracker.commit();
 
-        if (segment.size() >= segmentOptimalSize && segment.isComplete()) {
-            List<byte[]> upcoming = getUpcomingHashes(segment.getMaxNumber() + 1);
-            pruner.prune(segment, upcoming);
+        if (segment.isComplete()) {
+            if (!pruner.isReady()) {
+                List<byte[]> upcoming = getUpcomingHashes(segment.getRootNumber() + 1);
+                pruner.init(upcoming);
+            }
+            pruner.prune(segment);
             segment = new Segment(chainBlock);
         }
     }

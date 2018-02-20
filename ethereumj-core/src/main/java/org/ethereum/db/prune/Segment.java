@@ -56,6 +56,10 @@ public class Segment {
         return true;
     }
 
+    public long getRootNumber() {
+        return root.number;
+    }
+
     public long getMaxNumber() {
         return main.topNumber();
     }

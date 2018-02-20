@@ -56,20 +56,21 @@ public class PruneTest {
         HashMapDB<byte[]> db = new HashMapDB<>();
         JournalSource<byte[]> journalDB = new JournalSource<>(db);
         Pruner pruner = new Pruner(journalDB.getJournal(), db);
+        pruner.init();
 
         put(journalDB, "11");
         put(journalDB, "22");
         put(journalDB, "33");
-        journalDB.commitUpdates(intToBytes(1));
+        pruner.feed(journalDB.commitUpdates(intToBytes(1)));
         checkKeys(db.getStorage(), "11", "22", "33");
 
         put(journalDB, "22");
         delete(journalDB, "33");
         put(journalDB, "44");
-        journalDB.commitUpdates(intToBytes(2));
+        pruner.feed(journalDB.commitUpdates(intToBytes(2)));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.commitUpdates(intToBytes(12));
+        pruner.feed(journalDB.commitUpdates(intToBytes(12)));
 
         Segment segment = new Segment(0, intToBytes(0), intToBytes(0));
         segment.startTracking()
@@ -84,20 +85,20 @@ public class PruneTest {
         put(journalDB, "22");
         delete(journalDB, "33");
         put(journalDB, "44");
-        journalDB.commitUpdates(intToBytes(3));
+        pruner.feed(journalDB.commitUpdates(intToBytes(3)));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
         delete(journalDB, "22");
         put(journalDB, "33");
         delete(journalDB, "44");
-        journalDB.commitUpdates(intToBytes(4));
+        pruner.feed(journalDB.commitUpdates(intToBytes(4)));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
         segment = new Segment(0, intToBytes(0), intToBytes(0));
         segment.startTracking()
                 .addMain(1, intToBytes(3), intToBytes(0))
                 .commit();
-        pruner.prune(segment, intToBytes(4));
+        pruner.prune(segment);
 
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
