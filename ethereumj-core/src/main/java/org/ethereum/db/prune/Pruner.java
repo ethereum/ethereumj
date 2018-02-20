@@ -51,6 +51,19 @@ public class Pruner {
     QuotientFilter filter;
     boolean ready = false;
 
+    private static class Stats {
+        int collisions = 0;
+        int deleted = 0;
+        double load = 0;
+        @Override
+        public String toString() {
+            return String.format("load %.4f, collisions %d, deleted %d", load, collisions, deleted);
+        }
+    }
+    Stats maxLoad = new Stats();
+    Stats maxCollisions = new Stats();
+    int statsTracker = 0;
+
     public Pruner(Source<byte[], JournalSource.Update> journal, Source<byte[], ?> storage) {
         this.storage = storage;
         this.journal = journal;
@@ -110,6 +123,27 @@ public class Pruner {
                 String.format("%.4f", (double) ((CountingQuotientFilter) filter).getEntryNumber() /
                         ((CountingQuotientFilter) filter).getMaxInsertions()),
                 ((CountingQuotientFilter) filter).getCollisionNumber());
+
+        if (logger.isDebugEnabled()) {
+            int collisions = ((CountingQuotientFilter) filter).getCollisionNumber();
+            double load = (double) ((CountingQuotientFilter) filter).getEntryNumber() /
+                    ((CountingQuotientFilter) filter).getMaxInsertions();
+            if (collisions > maxCollisions.collisions) {
+                maxCollisions.collisions = collisions;
+                maxCollisions.load = load;
+                maxCollisions.deleted = nodesDeleted;
+            }
+            if (load > maxLoad.load) {
+                maxLoad.load = load;
+                maxLoad.collisions = collisions;
+                maxLoad.deleted = nodesDeleted;
+            }
+
+            if (++statsTracker % 100 == 0) {
+                logger.debug("max load: " + maxLoad);
+                logger.debug("max collisions: " + maxCollisions);
+            }
+        }
 
         // delete updates
         segment.main.getHashes().forEach(journal::delete);
