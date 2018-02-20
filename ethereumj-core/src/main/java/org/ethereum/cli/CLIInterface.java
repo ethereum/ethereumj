@@ -148,6 +148,11 @@ public class CLIInterface {
             return false;
 
         Boolean resetFlag = interpret(reset);
+
+        if (resetFlag == null) {
+            throw new Error(String.format("Can't interpret DB reset arguments: %s %s", arg, reset));
+        }
+
         logger.info("Resetting db set to [{}]", resetFlag);
         cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetFlag.toString());
 
