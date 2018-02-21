@@ -105,9 +105,6 @@ public class FastSyncManager {
     DbFlushManager dbFlushManager;
 
     @Autowired
-    FastSyncDownloader downloader;
-
-    @Autowired
     CompositeEthereumListener listener;
 
     @Autowired
@@ -191,8 +188,12 @@ public class FastSyncManager {
                 return new SyncStatus(SyncStatus.SyncStage.StateNodes, nodesInserted,
                         nodesQueue.size() + pendingNodes.size() + nodesInserted);
             case SECURE:
-                return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
-                        pivot.getNumber());
+                if (headersDownloader != null) {
+                    return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
+                                pivot.getNumber());
+                } else {
+                    return new SyncStatus(SyncStatus.SyncStage.Headers, 0, pivot.getNumber());
+                }
             case COMPLETE:
                 if (receiptsDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.Receipts,
@@ -538,6 +539,7 @@ public class FastSyncManager {
         logStat();
 
         logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
+        FastSyncDownloader downloader = applicationContext.getBean(FastSyncDownloader.class);
         downloader.startImporting(pivot.getHash(), 260);
         downloader.waitForStop();
 
@@ -594,6 +596,7 @@ public class FastSyncManager {
         }
         dbFlushManager.commit();
         dbFlushManager.flush();
+        headersDownloader = null;
         logger.info("FastSync: all headers downloaded. The state is SECURE now.");
     }
 
@@ -607,6 +610,7 @@ public class FastSyncManager {
             setSyncStage(EthereumListener.SyncState.COMPLETE);
             blockBodiesDownloader.startImporting();
             blockBodiesDownloader.waitForStop();
+            blockBodiesDownloader = null;
 
             logger.info("FastSync: Block bodies downloaded");
         } else {
@@ -620,6 +624,7 @@ public class FastSyncManager {
                     (ReceiptsDownloader.class, 1, pivot.getNumber() + 1);
             receiptsDownloader.startImporting();
             receiptsDownloader.waitForStop();
+            receiptsDownloader = null;
 
             logger.info("FastSync: receipts downloaded");
         } else {
