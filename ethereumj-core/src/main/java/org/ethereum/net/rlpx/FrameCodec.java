@@ -33,7 +33,9 @@ import org.spongycastle.crypto.params.ParametersWithIV;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.ethereum.util.RLP.decode2OneItem;
 
@@ -51,6 +53,7 @@ public class FrameCodec {
     private int contextId = -1;
     private int totalFrameSize = -1;
     private int protocol;
+    private Map<Integer, Integer> contextFrameIndex = new HashMap<>();
 
     public FrameCodec(EncryptionHandshake.Secrets secrets) {
         this.mac = secrets.mac;
@@ -163,7 +166,7 @@ public class FrameCodec {
         }
     }
 
-    public List<Frame> readFrames(DataInput inp) throws IOException {
+    public synchronized List<Frame> readFrames(DataInput inp) throws IOException {
         if (!isHeadRead) {
             byte[] headBuffer = new byte[32];
             try {
@@ -189,6 +192,7 @@ public class FrameCodec {
                 contextId = Util.rlpDecodeInt(rlpList.get(1));
                 if (rlpList.size() > 2) {
                     totalFrameSize = Util.rlpDecodeInt(rlpList.get(2));
+                    contextFrameIndex.put(contextId, totalFrameSize);
                 }
             }
 
@@ -208,10 +212,31 @@ public class FrameCodec {
         ingressMac.update(buffer, 0, frameSize);
         dec.processBytes(buffer, 0, frameSize, buffer, 0);
         int pos = 0;
-        long type = RLP.decodeLong(buffer, pos);
-        pos = RLP.getNextElementIndex(buffer, pos);
+        long type = -1;
+        // According to frame specification only first frame comes with type and pos
+        if (totalFrameSize > 0 || contextFrameIndex.get(contextId) == null) {
+            type = RLP.decodeLong(buffer, pos);
+            pos = RLP.getNextElementIndex(buffer, pos);
+        }
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalBodySize - pos);
         int size = totalBodySize - pos;
+
+        // FIXME: 1 byte is lost in multi-frame, not sure, where is it
+        // this hack doesn't look normal
+        if (totalFrameSize > 0) {
+            size += pos;
+        }
+
+        if (contextFrameIndex.get(contextId) != null) {
+            int curSize = contextFrameIndex.get(contextId);
+            curSize -= size;
+            if (curSize > 0) {
+                contextFrameIndex.put(contextId, curSize);
+            } else {
+                contextFrameIndex.remove(contextId);
+            }
+        }
+
         byte[] macBuffer = new byte[ingressMac.getDigestSize()];
 
         // Frame MAC

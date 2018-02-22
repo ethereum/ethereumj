@@ -51,6 +51,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
@@ -154,6 +155,7 @@ public class SystemProperties {
     private Genesis genesis;
     private Boolean vmTrace;
     private Boolean recordInternalTransactionsData;
+    private byte[] casperAddress = null;
 
     private final ClassLoader classLoader;
 
@@ -341,6 +343,9 @@ public class SystemProperties {
                             break;
                         case "testnet":
                             blockchainConfig = new TestNetConfig();
+                            break;
+                        case "casper":
+                            blockchainConfig = new CasperTestNetConfig();
                             break;
                         default:
                             throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");
@@ -910,6 +915,77 @@ public class SystemProperties {
             genesis = GenesisLoader.parseGenesis(getBlockchainConfig(), getGenesisJson());
         }
         return genesis;
+    }
+
+    @ValidateMe
+    public String getConsensusStrategy() {
+        return config.getString("consensus.strategy");
+    }
+
+    public byte[] getCasperAddress() {
+        return casperAddress;
+    }
+
+    public void setCasperAddress(byte[] casperAddress) {
+        this.casperAddress = casperAddress;
+    }
+
+    public int getCasperEpochLength() {
+        return config.getInt("consensus.casper.epochLength");
+    }
+
+    public byte[] getCasperValidatorPrivateKey() {
+        String key = config.getString("consensus.casper.validator.privateKey");
+        if (key == null) return null;
+        return ByteUtil.hexStringToBytes(key);
+    }
+
+    public long getCasperValidatorDeposit() {
+        return config.getLong("consensus.casper.validator.deposit");
+    }
+
+    public Boolean getCasperValidatorEnabled() {
+        return config.getBoolean("consensus.casper.validator.enabled");
+    }
+
+    // TODO: Implement me
+    // How to trigger this when I need it w/o restart?
+    public boolean getCasperValidatorShouldLogout() {
+        return false;
+    }
+
+
+    public String getCasperAbi() {
+        final String abiLocation = config.getString("consensus.casper.contractAbi");
+        return readFile(abiLocation);
+    }
+
+    public String getCasperBin() {
+        final String binLocation = config.getString("consensus.casper.contractBin");
+        return readFile(binLocation);
+    }
+
+    private static String readFile(final String location) {
+        try {
+            InputStream is = SystemProperties.class.getResourceAsStream(location);
+
+            if (is != null) {
+                return readStream(is);
+            } else {
+                logger.error("File not found `{}`", location);
+                throw new RuntimeException(String.format("File not found `%s`", location));
+            }
+        } catch (Exception ex) {
+            String errorMsg = String.format("Error while reading file from %s", location);
+            logger.error(errorMsg, ex);
+            throw new RuntimeException(errorMsg, ex);
+        }
+    }
+
+    private static String readStream(InputStream input) throws IOException {
+        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input))) {
+            return buffer.lines().collect(Collectors.joining("\n"));
+        }
     }
 
     /**

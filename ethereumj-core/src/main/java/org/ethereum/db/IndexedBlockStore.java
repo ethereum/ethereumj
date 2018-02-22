@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.math.BigInteger.ZERO;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.spongycastle.util.Arrays.areEqual;
 
@@ -506,6 +507,14 @@ public class IndexedBlockStore extends AbstractBlockstore{
             if (areEqual(hash, blockInfo.getHash())) return blockInfo;
 
         return null;
+    }
+
+    public void saveMeta(String name, byte[] value) {
+        blocksDS.put(RLP.encode(sha3(name.getBytes())), value);
+    }
+
+    public byte[] loadMeta(String name) {
+        return blocksDS.get(RLP.encode(sha3(name.getBytes())));
     }
 
     @Override

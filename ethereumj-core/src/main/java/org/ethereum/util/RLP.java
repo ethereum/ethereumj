@@ -934,6 +934,15 @@ public class RLP {
         }
     }
 
+    public static byte[] encodeLong(long singleLong) {
+        if (singleLong <= Integer.MAX_VALUE) {
+            return encodeInt((int) singleLong);
+        } else {
+            // TODO: optimize me
+            return encodeBigInteger(BigInteger.valueOf(singleLong));
+        }
+    }
+
     public static byte[] encodeString(String srcString) {
         return encodeElement(srcString.getBytes());
     }
@@ -1121,6 +1130,36 @@ public class RLP {
         }
 
         return output;
+    }
+
+    public static byte[] encodeList(Object... elements) {
+
+        if (elements == null) {
+            return new byte[]{(byte) OFFSET_SHORT_LIST};
+        }
+
+        byte[][] encodedElems = new byte[elements.length][];
+        for (int i =0; i < elements.length; i++) {
+            // TODO: consider using {@link: encode(Object)}
+            if (elements[i] instanceof Byte) {
+                encodedElems[i] = encodeByte((Byte) elements[i]);
+            } else if (elements[i] instanceof Short) {
+                encodedElems[i] = encodeShort((Short) elements[i]);
+            } else if (elements[i] instanceof Integer) {
+                encodedElems[i] = encodeInt((Integer) elements[i]);
+            } else if (elements[i] instanceof Long) {
+                encodedElems[i] = encodeLong((Long) elements[i]);
+            } else if (elements[i] instanceof BigInteger) {
+                encodedElems[i] = encodeBigInteger((BigInteger) elements[i]);
+            } else if (elements[i] instanceof String) {
+                encodedElems[i] = encodeString((String) elements[i]);
+            } else if (elements[i] instanceof byte[]) {
+                encodedElems[i] = ((byte[]) elements[i]);
+            } else {
+                throw new RuntimeException("Unsupported object: " + elements[i]);
+            }
+        }
+        return RLP.encodeList(encodedElems);
     }
 
     public static byte[] encodeList(byte[]... elements) {

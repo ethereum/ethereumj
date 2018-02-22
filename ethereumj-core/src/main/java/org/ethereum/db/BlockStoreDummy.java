@@ -110,6 +110,16 @@ public class BlockStoreDummy implements BlockStore {
     }
 
     @Override
+    public void saveMeta(String name, byte[] value) {
+
+    }
+
+    @Override
+    public byte[] loadMeta(String name) {
+        return new byte[0];
+    }
+
+    @Override
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
         return null;
     }

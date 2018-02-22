@@ -19,13 +19,11 @@ package org.ethereum.core;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.NoDeleteSource;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -898,7 +896,7 @@ public class ImportLightTest {
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+                .withParentBlockHeaderValidator(new CommonConfig().consensusStrategy().getParentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 

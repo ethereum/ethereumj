@@ -23,6 +23,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
@@ -35,7 +36,6 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -85,6 +85,8 @@ public class Eth62 extends EthHandler {
     @Autowired
     protected NodeManager nodeManager;
 
+    private ConsensusStrategy strategy;
+
     protected EthState ethState = EthState.INIT;
 
     protected PeerState peerState = IDLE;
@@ -125,6 +127,11 @@ public class Eth62 extends EthHandler {
     }
 
     @Autowired
+    public Eth62(final SystemProperties config, final ConsensusStrategy consensusStrategy,
+                 final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
+        this(version, config, consensusStrategy.getBlockchain(), blockStore, ethereumListener);
+        this.strategy = consensusStrategy;
+    }
     public Eth62(final SystemProperties config, final Blockchain blockchain,
                  final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
         this(version, config, blockchain, blockStore, ethereumListener);
@@ -196,7 +203,7 @@ public class Eth62 extends EthHandler {
         }
 
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, strategy.getInitState().getInitGenesis().getHash());
         sendMessage(msg);
 
         ethState = EthState.STATUS_SENT;
@@ -321,7 +328,7 @@ public class Eth62 extends EthHandler {
 
         try {
 
-            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())) {
+            if (!Arrays.equals(msg.getGenesisHash(), strategy.getInitState().getInitGenesis().getHash())) {
                 if (!peerDiscoveryMode) {
                     loggerNet.debug("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 }

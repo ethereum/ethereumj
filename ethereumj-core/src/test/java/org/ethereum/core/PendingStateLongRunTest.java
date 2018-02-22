@@ -20,7 +20,6 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -126,7 +125,7 @@ public class PendingStateLongRunTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+                .withParentBlockHeaderValidator(new CommonConfig().consensusStrategy().getParentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 

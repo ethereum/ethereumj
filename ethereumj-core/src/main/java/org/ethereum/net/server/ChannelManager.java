@@ -82,8 +82,7 @@ public class ChannelManager {
     @Autowired
     SyncPool syncPool;
 
-    @Autowired
-    private Ethereum ethereum;
+    private Ethereum ethereum; // FIXME: Ethereum -> World -> Channel
 
     @Autowired
     private PendingState pendingState;
@@ -122,6 +121,10 @@ public class ChannelManager {
         // Resending pending txs to newly connected peers
         this.txDistributeThread = new Thread(this::newTxDistributeLoop, "NewPeersThread");
         this.txDistributeThread.start();
+    }
+
+    public void init(Ethereum ethereum) {
+        this.ethereum = ethereum;
     }
 
     public void connect(Node node) {

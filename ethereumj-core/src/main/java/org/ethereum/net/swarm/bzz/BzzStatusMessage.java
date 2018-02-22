@@ -78,9 +78,9 @@ public class BzzStatusMessage extends BzzMessage {
         byte[][] capabilities = new byte[this.capabilities.size()][];
         for (int i = 0; i < this.capabilities.size(); i++) {
             Capability capability = this.capabilities.get(i);
-            capabilities[i] = rlpEncodeList(capability.getName(),capability.getVersion());
+            capabilities[i] = RLP.encodeList(capability.getName(),capability.getVersion());
         }
-        this.encoded = rlpEncodeList(version, id, addr.encodeRlp(), networkId, rlpEncodeList(capabilities));
+        this.encoded = RLP.encodeList(version, id, addr.encodeRlp(), networkId, RLP.encodeList(capabilities));
     }
 
     @Override

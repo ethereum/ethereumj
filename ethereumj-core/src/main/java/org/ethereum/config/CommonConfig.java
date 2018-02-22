@@ -18,6 +18,9 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.core.consensus.ConsensusStrategy;
+import org.ethereum.core.consensus.PoWConsensusStrategy;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
@@ -31,13 +34,13 @@ import org.ethereum.vm.program.ProgramPrecompile;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
@@ -51,6 +54,12 @@ public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
     private Set<DbSource> dbSources = new HashSet<>();
 
+    private ConsensusStrategy consensusStrategy;
+
+
+    @Autowired
+    private ApplicationContext ctx;
+
     private static CommonConfig defaultInstance;
 
     public static CommonConfig getDefault() {
@@ -59,6 +68,11 @@ public class CommonConfig {
                 @Override
                 public Source<byte[], ProgramPrecompile> precompileSource() {
                     return null;
+                }
+
+                @Override
+                public ConsensusStrategy consensusStrategy() {
+                    return new PoWConsensusStrategy(systemProperties());
                 }
             };
         }
@@ -235,36 +249,27 @@ public class CommonConfig {
     }
 
     @Bean
-    public BlockHeaderValidator headerValidator() {
-
-        List<BlockHeaderRule> rules = new ArrayList<>(asList(
-                new GasValueRule(),
-                new ExtraDataRule(systemProperties()),
-                new ProofOfWorkRule(),
-                new GasLimitRule(systemProperties()),
-                new BlockHashRule(systemProperties())
-        ));
-
-        return new BlockHeaderValidator(rules);
-    }
-
-    @Bean
-    public ParentBlockHeaderValidator parentHeaderValidator() {
-
-        List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
-                new ParentNumberRule(),
-                new DifficultyRule(systemProperties()),
-                new ParentGasLimitRule(systemProperties())
-        ));
-
-        return new ParentBlockHeaderValidator(rules);
-    }
-
-    @Bean
     @Lazy
     public PeerSource peerSource() {
         DbSource<byte[]> dbSource = keyValueDataSource("peers");
         dbSources.add(dbSource);
         return new PeerSource(dbSource);
+    }
+
+    @Bean
+    public ConsensusStrategy consensusStrategy() {
+        if(consensusStrategy == null) {
+            switch (systemProperties().getConsensusStrategy()) {
+                case "pow":
+                    consensusStrategy = new PoWConsensusStrategy(systemProperties(), ctx);
+                    break;
+                case "casper-hybrid":
+                    consensusStrategy = new CasperHybridConsensusStrategy(systemProperties(), ctx);
+                    break;
+                default:
+                    throw new RuntimeException("Consensus strategy is not set. Breaking.");
+            }
+        }
+        return consensusStrategy;
     }
 }

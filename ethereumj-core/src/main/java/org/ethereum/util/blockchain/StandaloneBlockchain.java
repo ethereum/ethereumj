@@ -61,9 +61,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     Genesis genesis;
     byte[] coinbase;
-    BlockchainImpl blockchain;
-    PendingStateImpl pendingState;
-    CompositeEthereumListener listener;
+    protected BlockchainImpl blockchain;
+    protected PendingStateImpl pendingState;
+    protected CompositeEthereumListener listener;
     ECKey txSender;
     long gasPrice;
     long gasLimit;
@@ -77,11 +77,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long time = 0;
     long timeIncrement = 13;
 
-    private HashMapDB<byte[]> stateDS;
-    JournalSource<byte[]> pruningStateDS;
-    PruneManager pruneManager;
+    protected HashMapDB<byte[]> stateDS;
+    protected JournalSource<byte[]> pruningStateDS;
+    protected PruneManager pruneManager;
 
-    private BlockSummary lastSummary;
+    protected BlockSummary lastSummary;
 
     class PendingTx {
         ECKey sender;
@@ -228,6 +228,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return pendingState;
     }
 
+    public CompositeEthereumListener getListener() {
+        return listener;
+    }
+
     public void generatePendingTransactions() {
         pendingState.addPendingTransactions(new ArrayList<>(createTransactions(getBlockchain().getBestBlock()).values()));
     }
@@ -235,6 +239,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public Block createBlock() {
         return createForkBlock(getBlockchain().getBestBlock());
+    }
+
+    public Block createBlock(byte[] minerCoinbase) {
+        byte[] curCoinbase = coinbase;
+        getBlockchain().setMinerCoinbase(minerCoinbase);
+        Block block = createForkBlock(getBlockchain().getBestBlock());
+        getBlockchain().setMinerCoinbase(curCoinbase);
+        return block;
     }
 
     @Override
@@ -486,8 +498,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         listener = new CompositeEthereumListener();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withEthereumListener(listener)
-                .withSyncManager(new SyncManager());
+                .withEthereumListener(listener);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         blockchain.setPruneManager(pruneManager);

@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.solidity.SolidityType.IntType;
+import static org.ethereum.util.ByteUtil.hexStringToBytes;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
@@ -38,7 +39,6 @@ import org.ethereum.solidity.SolidityType;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * Creates a contract function call transaction.
@@ -57,7 +57,7 @@ public class CallTransaction {
         Transaction tx = new Transaction(longToBytesNoLeadZeroes(nonce),
                 longToBytesNoLeadZeroes(gasPrice),
                 longToBytesNoLeadZeroes(gasLimit),
-                toAddress == null ? null : Hex.decode(toAddress),
+                toAddress == null ? null : hexStringToBytes(toAddress),
                 longToBytesNoLeadZeroes(value),
                 data,
                 null);

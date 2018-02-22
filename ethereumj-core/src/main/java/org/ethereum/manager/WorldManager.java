@@ -17,11 +17,14 @@
  */
 package org.ethereum.manager;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.ConsensusStrategy;
+import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
@@ -94,6 +97,8 @@ public class WorldManager {
     @Autowired
     private ApplicationContext ctx;
 
+    private Ethereum ethereum;
+
     private SystemProperties config;
 
     private EthereumListener listener;
@@ -106,19 +111,26 @@ public class WorldManager {
 
     @Autowired
     public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final Blockchain blockchain,
+                        final EthereumListener listener, final ConsensusStrategy consensusStrategy,
                         final BlockStore blockStore) {
         this.listener = listener;
-        this.blockchain = blockchain;
+        this.blockchain = consensusStrategy.getBlockchain();
         this.repository = repository;
+        repository.setBlockchain(blockchain);
         this.blockStore = blockStore;
         this.config = config;
-        loadBlockchain();
     }
 
     @PostConstruct
     private void init() {
+        ConsensusStrategy strategy = ctx.getBean(CommonConfig.class).consensusStrategy();
+        loadBlockchain(strategy);
+        ethereum = ctx.getBean(Ethereum.class);
+        ethereum.setWorldManager(this);
+        channelManager.init(ethereum);
+        ((PendingStateImpl) pendingState).postConstruct();
         syncManager.init(channelManager, pool);
+        strategy.init();
     }
 
     public void addListener(EthereumListener listener) {
@@ -167,33 +179,22 @@ public class WorldManager {
         return pendingState;
     }
 
-    public void loadBlockchain() {
+    public void loadBlockchain(ConsensusStrategy strategy) {
 
         if (!config.databaseReset() || config.databaseResetBlock() != 0)
             blockStore.load();
 
+        StateInit stateInit = strategy.initState(Genesis.getInstance(config));
         if (blockStore.getBestBlock() == null) {
-            logger.info("DB is empty - adding Genesis");
 
-            Genesis genesis = Genesis.getInstance(config);
-            Genesis.populateRepository(repository, genesis);
-
-//            repository.commitBlock(genesis.getHeader());
-            repository.commit();
-
-            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
-
-            blockchain.setBestBlock(Genesis.getInstance(config));
-            blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
-
+            stateInit.initDB();
             listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
-            logger.info("Genesis block loaded");
         } else {
 
             if (!config.databaseReset() &&
-                    !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
+                    !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), stateInit.getInitGenesis().getHash())) {
                 // fatal exit
                 Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
             }

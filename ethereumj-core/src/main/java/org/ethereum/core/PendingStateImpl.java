@@ -24,10 +24,10 @@ import static org.ethereum.listener.EthereumListener.PendingTransactionState.PEN
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
@@ -80,8 +80,7 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     private EthereumListener listener;
 
-    @Autowired
-    private BlockchainImpl blockchain;
+    private Blockchain blockchain;
 
     @Autowired
     private BlockStore blockStore;
@@ -106,8 +105,21 @@ public class PendingStateImpl implements PendingState {
     private Block best = null;
 
     @Autowired
+    public PendingStateImpl(final EthereumListener listener) {
+        this.listener = listener;
+    }
+
     public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
         this.listener = listener;
+        this.blockchain = blockchain;
+//        this.repository = blockchain.getRepository();
+        this.blockStore = blockchain.getBlockStore();
+        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
+        this.transactionStore = blockchain.getTransactionStore();
+    }
+
+    public void postConstruct() {
+        BlockchainImpl blockchain = (BlockchainImpl) commonConfig.consensusStrategy().getBlockchain();
         this.blockchain = blockchain;
 //        this.repository = blockchain.getRepository();
         this.blockStore = blockchain.getBlockStore();
@@ -120,7 +132,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private Repository getOrigRepository() {
-        return blockchain.getRepositorySnapshot();
+        return ((BlockchainImpl) blockchain).getRepositorySnapshot();
     }
 
     @Override
@@ -160,13 +172,36 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
+    public void addPendingTransaction(Transaction tx, Consumer<Throwable> errorConsumer) {
+        int unknownTx = 0;
+        List<Transaction> newPending = new ArrayList<>();
+        if (addNewTxIfNotExist(tx)) {
+            unknownTx++;
+            TransactionReceipt receipt = addPendingTransactionImpl(tx);
+            if (receipt.isValid()) {
+                newPending.add(tx);
+            } else {
+                errorConsumer.accept(new Throwable("Tx execution simulation failed: " + receipt.getError()));
+            }
+        }
+
+        logger.debug("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
+                1, unknownTx, newPending, receivedTxs.size());
+
+        if (!newPending.isEmpty()) {
+            listener.onPendingTransactionsReceived(newPending);
+            listener.onPendingStateChanged(PendingStateImpl.this);
+        }
+    }
+
+    @Override
     public synchronized List<Transaction> addPendingTransactions(List<Transaction> transactions) {
         int unknownTx = 0;
         List<Transaction> newPending = new ArrayList<>();
         for (Transaction tx : transactions) {
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                if (addPendingTransactionImpl(tx)) {
+                if (addPendingTransactionImpl(tx).isValid()) {
                     newPending.add(tx);
                 }
             }
@@ -214,9 +249,9 @@ public class PendingStateImpl implements PendingState {
      * Executes pending tx on the latest best block
      * Fires pending state update
      * @param tx    Transaction
-     * @return True if transaction gets NEW_PENDING state, False if DROPPED
+     * @return execution receipt
      */
-    private boolean addPendingTransactionImpl(final Transaction tx) {
+    private TransactionReceipt addPendingTransactionImpl(final Transaction tx) {
         TransactionReceipt newReceipt = new TransactionReceipt();
         newReceipt.setTransaction(tx);
 
@@ -235,7 +270,7 @@ public class PendingStateImpl implements PendingState {
             pendingTransactions.add(new PendingTransaction(tx, getBestBlock().getNumber()));
             fireTxUpdate(txReceipt, NEW_PENDING, getBestBlock());
         }
-        return txReceipt.isValid();
+        return txReceipt;
     }
 
     private TransactionReceipt createDroppedReceipt(Transaction tx, String error) {

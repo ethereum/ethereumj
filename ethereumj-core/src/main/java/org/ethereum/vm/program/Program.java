@@ -843,15 +843,18 @@ public class Program {
             ContractDetails contractDetails = getStorage().
                     getContractDetails(getOwnerAddress().getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
-            if (contractDetails != null) {
-                List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
-                Collections.sort(storageKeys);
-                for (DataWord key : storageKeys) {
-                    storageData.append(" ").append(key).append(" -> ").
-                            append(contractDetails.getStorage().get(key)).append("\n");
+            // FIXME: fails
+            try {
+                if (contractDetails != null) {
+                    List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
+                    Collections.sort(storageKeys);
+                    for (DataWord key : storageKeys) {
+                        storageData.append(" ").append(key).append(" -> ").
+                                append(contractDetails.getStorage().get(key)).append("\n");
+                    }
+                    if (storageData.length() > 0) storageData.insert(0, "\n");
                 }
-                if (storageData.length() > 0) storageData.insert(0, "\n");
-            }
+            } catch (java.lang.Exception ex) {}
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();

@@ -19,6 +19,7 @@ package org.ethereum.vm.program;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
@@ -237,5 +238,10 @@ public class Storage implements Repository, ProgramListenerAware {
     @Override
     public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
         return repository.getStorage(addr, keys);
+    }
+
+    @Override
+    public void setBlockchain(Blockchain blockchain) {
+        // Not used in current implementation
     }
 }

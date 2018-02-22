@@ -21,10 +21,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.*;
 import org.ethereum.vm.program.Program;
@@ -36,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -129,7 +132,7 @@ public class TransactionExecutor {
      * will be ready to run the transaction at the end
      * set readyToExecute = true
      */
-    public void init() {
+    public void init() {  // TODO: probably we need consensus-specific validation
         basicTxCost = tx.transactionCost(config.getBlockchainConfig(), currentBlock);
 
         if (localCall) {
@@ -174,7 +177,7 @@ public class TransactionExecutor {
             return;
         }
 
-        if (!blockchainConfig.acceptTransactionSignature(tx)) {
+        if (!isCasperVote() && !blockchainConfig.acceptTransactionSignature(tx)) {
             execError("Transaction signature not accepted: " + tx.getSignature());
             return;
         }
@@ -186,7 +189,8 @@ public class TransactionExecutor {
 
         if (!readyToExecute) return;
 
-        if (!localCall) {
+        // FIXME: Additional logic should be refactored to take place only for Casper
+        if (!localCall && !isCasperVote()) {
             track.increaseNonce(tx.getSender());
 
             BigInteger txGasLimit = toBI(tx.getGasLimit());
@@ -385,6 +389,22 @@ public class TransactionExecutor {
                 tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress());
     }
 
+    // TODO: I shouldn't be here
+    private boolean isCasperVote() {
+        if (!(commonConfig.consensusStrategy() instanceof CasperHybridConsensusStrategy))
+            return false;
+        if (!Arrays.equals(tx.getSender(), Transaction.NULL_SENDER))
+            return false;
+        if (config.getCasperAddress() == null)
+            return false; // Not yet initialized
+        if (!Arrays.equals(tx.getReceiveAddress(), config.getCasperAddress()))
+            return false;
+
+        byte[] dataCopy = new byte[4];
+        System.arraycopy(tx.getData(), 0, dataCopy, 0, 4);
+        return Arrays.equals(dataCopy, new byte[] {(byte) 0xe9, (byte) 0xdc, 0x06, 0x14});
+    }
+
     public TransactionExecutionSummary finalization() {
         if (!readyToExecute) return null;
 
@@ -428,17 +448,23 @@ public class TransactionExecutor {
         track.addBalance(tx.getSender(), summary.getLeftover().add(summary.getRefund()));
         logger.info("Pay total refund to sender: [{}], refund val: [{}]", Hex.toHexString(tx.getSender()), summary.getRefund());
 
-        // Transfer fees to miner
-        track.addBalance(coinbase, summary.getFee());
-        touchedAccounts.add(coinbase);
-        logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), summary.getFee());
-
         if (result != null) {
             logs = result.getLogInfoList();
             // Traverse list of suicides
             for (DataWord address : result.getDeleteAccounts()) {
                 track.delete(address.getLast20Bytes());
             }
+        }
+
+        // TODO: We definitely need separate TransactionExecutor for Casper
+        if (getReceipt().isSuccessful() && isCasperVote()) {
+            track.addBalance(tx.getSender(), summary.getFee());
+            logger.info("Refunded successful Casper Vote from [{}]", Hex.toHexString(tx.getSender()));
+        } else {
+            // Transfer fees to miner
+            track.addBalance(coinbase, summary.getFee());
+            touchedAccounts.add(coinbase);
+            logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), summary.getFee());
         }
 
         if (blockchainConfig.eip161()) {
@@ -480,11 +506,15 @@ public class TransactionExecutor {
     public TransactionReceipt getReceipt() {
         if (receipt == null) {
             receipt = new TransactionReceipt();
-            long totalGasUsed = gasUsedInTheBlock + getGasUsed();
+            long gasUsed = getGasUsed();
+            if (isCasperVote() && execError == null) {  // Successful Casper vote
+                gasUsed = 0;
+            }
+            long totalGasUsed = gasUsedInTheBlock + gasUsed;
             receipt.setCumulativeGas(totalGasUsed);
             receipt.setTransaction(tx);
             receipt.setLogInfoList(getVMLogs());
-            receipt.setGasUsed(getGasUsed());
+            receipt.setGasUsed(gasUsed);
             receipt.setExecutionResult(getResult().getHReturn());
             receipt.setError(execError);
 //            receipt.setPostTxState(track.getRoot()); // TODO later when RepositoryTrack.getRoot() is implemented
@@ -501,7 +531,11 @@ public class TransactionExecutor {
     }
 
     public long getGasUsed() {
-        return toBI(tx.getGasLimit()).subtract(m_endGas).longValue();
+        long gasUsed = toBI(tx.getGasLimit()).subtract(m_endGas).longValue();
+        if (result != null && execError == null && isCasperVote()) {
+            gasUsed = 0;
+        }
+        return gasUsed;
     }
 
 }

@@ -23,6 +23,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -38,7 +39,6 @@ import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -71,9 +71,9 @@ public class Eth63 extends Eth62 {
     }
 
     @Autowired
-    public Eth63(final SystemProperties config, final Blockchain blockchain, BlockStore blockStore,
+    public Eth63(final SystemProperties config, final ConsensusStrategy consensusStrategy, BlockStore blockStore,
                  final CompositeEthereumListener ethereumListener) {
-        super(version, config, blockchain, blockStore, ethereumListener);
+        super(version, config, consensusStrategy.getBlockchain(), blockStore, ethereumListener);
     }
 
     @Override

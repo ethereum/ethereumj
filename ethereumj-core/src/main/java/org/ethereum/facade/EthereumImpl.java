@@ -17,7 +17,6 @@
  */
 package org.ethereum.facade;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -56,8 +55,10 @@ import org.springframework.util.concurrent.FutureAdapter;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /**
  * @author Roman Mandeleil
@@ -69,7 +70,6 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     private static final Logger logger = LoggerFactory.getLogger("facade");
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
-    @Autowired
     WorldManager worldManager;
 
     @Autowired
@@ -221,6 +221,37 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
+    public CompletableFuture<Transaction> sendTransaction(Transaction transaction) {
+        CompletableFuture<Transaction> future = new CompletableFuture<>();
+        final TransactionTask transactionTask = new TransactionTask(transaction, channelManager, future);
+
+        TransactionExecutor.instance.submitTransaction(transactionTask);
+
+        pendingState.addPendingTransaction(transaction);
+
+        return future;
+    }
+
+    @Override
+    public void sendTransaction(Transaction tx, Consumer<Transaction> successConsumer, Consumer<Throwable> errorConsumer,
+                                Consumer<Throwable> simErrorConsumer) {
+        CompletableFuture<Transaction> future = new CompletableFuture<>();
+        final TransactionTask transactionTask = new TransactionTask(tx, channelManager, future);
+
+        TransactionExecutor.instance.submitTransaction(transactionTask);
+
+        pendingState.addPendingTransaction(tx, simErrorConsumer);
+
+        future.whenComplete((transaction, throwable) -> {
+            if (throwable != null) {
+                errorConsumer.accept(throwable);
+            } else {
+                successConsumer.accept(transaction);
+            }
+        });
+    }
+
+    @Override
     public TransactionReceipt callConstant(Transaction tx, Block block) {
         if (tx.getSignature() == null) {
             tx.sign(ECKey.fromPrivate(new byte[32]));
@@ -300,6 +331,15 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     public ProgramResult callConstantFunction(String receiveAddress,
                                               CallTransaction.Function function, Object... funcArgs) {
         return callConstantFunction(receiveAddress, ECKey.fromPrivate(new byte[32]), function, funcArgs);
+    }
+
+    public ProgramResult callConstantFunction(Block block, String receiveAddress,
+                                              CallTransaction.Function function, Object... funcArgs) {
+        Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
+                receiveAddress, 0, function, funcArgs);
+        tx.sign(ECKey.fromPrivate(new byte[32]));
+
+        return callConstantImpl(tx, block).getResult();
     }
 
     @Override
@@ -390,6 +430,18 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         worldManager.initSyncing();
     }
 
+    @Override
+    public void setWorldManager(WorldManager worldManager) {
+        this.worldManager = worldManager;
+    }
+
+    public void setCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+    }
+
+    public void setProgramInvokeFactory(ProgramInvokeFactory programInvokeFactory) {
+        this.programInvokeFactory = programInvokeFactory;
+    }
 
     /**
      * For testing purposes and 'hackers'

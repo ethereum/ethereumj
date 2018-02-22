@@ -22,6 +22,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.Node;
@@ -32,7 +33,9 @@ import org.ethereum.vm.program.ProgramResult;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /**
  * @author Roman Mandeleil
@@ -92,8 +95,28 @@ public interface Ethereum {
      * @param transaction submit transaction to the net, return option to wait for net
      *                    return this transaction as approved
      */
+    @Deprecated
     Future<Transaction> submitTransaction(Transaction transaction);
 
+    /**
+     * Submit transaction to the net, return option to wait for net
+     * @param transaction
+     * @return future of waiting for net
+     */
+    CompletableFuture<Transaction> sendTransaction(Transaction transaction);
+
+    /**
+     * Submit transaction to the net, return option to wait for net
+     * @param tx                Transaction
+     * @param successConsumer   Fires when tx is sent to the net
+     * @param errorConsumer     Fires when tx is not sent to the net due to error
+     * @param simErrorConsumer  Runs tx on pending state one time and fires error if it fails,
+     *                          so transaction execution is simulated on the current state.
+     *                          Also though one tx broadcast is guaranteed no matter whether it's correct or not,
+     *                          tx is not broadcasted to more peers if it's execution on pending state failed.
+     */
+    void sendTransaction(Transaction tx, Consumer<Transaction> successConsumer, Consumer<Throwable> errorConsumer,
+                         Consumer<Throwable> simErrorConsumer);
 
     /**
      * Executes the transaction based on the specified block but doesn't change the blockchain state
@@ -144,6 +167,18 @@ public interface Ethereum {
      * and decoded with {@link org.ethereum.core.CallTransaction.Function#decodeResult(byte[])}.
      */
     ProgramResult callConstantFunction(String receiveAddress, ECKey senderPrivateKey,
+                                       CallTransaction.Function function, Object... funcArgs);
+
+    /**
+     * Call a contract function locally on the state defined by input block
+     * without sending transaction to the network and without changing contract storage.
+     * @param block block replicates state for transaction execution, so it should be in local blockchain
+     * @param receiveAddress hex encoded contract address
+     * @param function  contract function
+     * @param funcArgs  function arguments
+     * @return function result. The return value can be fetched via {@link ProgramResult#getHReturn()}
+     * and decoded with {@link org.ethereum.core.CallTransaction.Function#decodeResult(byte[])}.
+     */   ProgramResult callConstantFunction(Block block, String receiveAddress,
                                        CallTransaction.Function function, Object... funcArgs);
 
     /**
@@ -217,4 +252,6 @@ public interface Ethereum {
     Integer getChainIdForNextBlock();
 
     void exitOn(long number);
+
+    void setWorldManager(WorldManager worldManager);
 }

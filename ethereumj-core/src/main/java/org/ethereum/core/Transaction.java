@@ -53,6 +53,7 @@ public class Transaction {
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
     private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("21000");
+    public static final byte[] NULL_SENDER = Hex.decode("ffffffffffffffffffffffffffffffffffffffff");
 
     public static final int HASH_LENGTH = 32;
     public static final int ADDRESS_LENGTH = 20;
@@ -377,7 +378,8 @@ public class Transaction {
             if (sendAddress == null && getSignature() != null) {
                 sendAddress = ECKey.signatureToAddress(getRawHash(), getSignature());
             }
-            return sendAddress;
+            // FIXME: Casper votes, we shouldn't do it this for Transaction itself
+            return  sendAddress == null ? NULL_SENDER : sendAddress;
         } catch (SignatureException e) {
             logger.error(e.getMessage(), e);
         }

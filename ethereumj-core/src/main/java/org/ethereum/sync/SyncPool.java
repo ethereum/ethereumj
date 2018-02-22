@@ -19,6 +19,7 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -83,9 +84,9 @@ public class SyncPool {
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
-    public SyncPool(final SystemProperties config, final Blockchain blockchain) {
+    public SyncPool(final SystemProperties config, final ConsensusStrategy consensusStrategy) {
         this.config = config;
-        this.blockchain = blockchain;
+        this.blockchain = consensusStrategy.getBlockchain();
     }
 
     public void init(final ChannelManager channelManager) {
