@@ -100,9 +100,22 @@ public class Segment {
                     branch(item);
                 }
             }
+
             for (Chain fork : forks) {
-                fork.connect(item);
+                if (fork.connect(item)) {
+                    return;
+                }
             }
+
+            List<Chain> branchedForks = new ArrayList<>();
+            for (Chain fork : forks) {
+                for (ChainItem forkItem : fork.items) {
+                    if (forkItem.isParentOf(item)) {
+                        branchedForks.add(new Chain(item));
+                    }
+                }
+            }
+            forks.addAll(branchedForks);
         }
     }
 

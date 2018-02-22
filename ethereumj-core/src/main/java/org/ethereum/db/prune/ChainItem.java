@@ -3,6 +3,8 @@ package org.ethereum.db.prune;
 import org.ethereum.core.Block;
 import org.ethereum.util.FastByteComparisons;
 
+import java.util.Arrays;
+
 /**
  * Represents a block in the {@link Chain}
  *
@@ -36,6 +38,11 @@ class ChainItem {
         if (o == null || getClass() != o.getClass()) return false;
         ChainItem that = (ChainItem) o;
         return FastByteComparisons.equal(hash, that.hash);
+    }
+
+    @Override
+    public int hashCode() {
+        return hash != null ? Arrays.hashCode(hash) : 0;
     }
 
     @Override

@@ -45,6 +45,10 @@ public class Chain {
         return top() != null ? top().number : 0;
     }
 
+    long startNumber() {
+        return items.isEmpty() ? 0 : items.get(0).number;
+    }
+
     boolean isHigher(Chain other) {
         return other.topNumber() < this.topNumber();
     }
@@ -64,6 +68,33 @@ public class Chain {
         }
 
         return false;
+    }
+
+    static Chain fromItems(ChainItem ... items) {
+        if (items.length == 0) {
+            return NULL;
+        }
+
+        Chain chain = null;
+        for (ChainItem item : items) {
+            if (chain == null) {
+                chain = new Chain(item);
+            } else {
+                chain.connect(item);
+            }
+        }
+
+        return chain;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Chain chain = (Chain) o;
+
+        return !(items != null ? !items.equals(chain.items) : chain.items != null);
     }
 
     @Override
