@@ -5,6 +5,7 @@ import org.ethereum.datasource.CountingQuotientFilter;
 import org.ethereum.datasource.JournalSource;
 import org.ethereum.datasource.QuotientFilter;
 import org.ethereum.datasource.Source;
+import org.ethereum.util.ByteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -12,6 +13,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -62,6 +64,7 @@ public class Pruner {
     }
     Stats maxLoad = new Stats();
     Stats maxCollisions = new Stats();
+    int maxKeysInMemory = 0;
     int statsTracker = 0;
 
     public Pruner(Source<byte[], JournalSource.Update> journal, Source<byte[], ?> storage) {
@@ -111,14 +114,14 @@ public class Pruner {
         logger.trace("prune " + segment);
 
         long t = System.currentTimeMillis();
-        int nodesDeleted = 0;
-        for (Chain fork : segment.forks) {
-            nodesDeleted += revert(fork);
-        }
-        nodesDeleted += persist(segment.main);
+        Pruning pruning = new Pruning();
+        // important for fork management, check Pruning#insertedInMainChain and Pruning#insertedInForks for details
+        segment.forks.sort((f1, f2) -> Long.compare(f1.startNumber(), f2.startNumber()));
+        segment.forks.forEach(pruning::revert);
+        pruning.persist(segment.main);
 
-        if (logger.isTraceEnabled()) logger.trace("nodes deleted: {}, filter load: {}/{}: {}, distinct collisions: {}",
-                nodesDeleted,
+        if (logger.isTraceEnabled()) logger.trace("nodes deleted: {}, keys in mem: {}, filter load: {}/{}: {}, distinct collisions: {}",
+                pruning.nodesDeleted, pruning.insertedInForks.size() + pruning.insertedInMainChain.size(),
                 ((CountingQuotientFilter) filter).getEntryNumber(), ((CountingQuotientFilter) filter).getMaxInsertions(),
                 String.format("%.4f", (double) ((CountingQuotientFilter) filter).getEntryNumber() /
                         ((CountingQuotientFilter) filter).getMaxInsertions()),
@@ -131,17 +134,19 @@ public class Pruner {
             if (collisions > maxCollisions.collisions) {
                 maxCollisions.collisions = collisions;
                 maxCollisions.load = load;
-                maxCollisions.deleted = nodesDeleted;
+                maxCollisions.deleted = pruning.nodesDeleted;
             }
             if (load > maxLoad.load) {
                 maxLoad.load = load;
                 maxLoad.collisions = collisions;
-                maxLoad.deleted = nodesDeleted;
+                maxLoad.deleted = pruning.nodesDeleted;
             }
+            maxKeysInMemory = Math.max(maxKeysInMemory, pruning.insertedInForks.size() + pruning.insertedInMainChain.size());
 
             if (++statsTracker % 100 == 0) {
                 logger.debug("max load: " + maxLoad);
                 logger.debug("max collisions: " + maxCollisions);
+                logger.debug("max keys in mem: " + maxKeysInMemory);
             }
         }
 
@@ -154,56 +159,6 @@ public class Pruner {
         logger.trace(segment + " pruned in {}ms", System.currentTimeMillis() - t);
     }
 
-    private int revert(Chain chain) {
-        int nodesDeleted = 0;
-        if (logger.isTraceEnabled())
-            logger.trace("<~ reverting " + chain + ": " + strSample(chain.getHashes()));
-
-        for (byte[] hash : chain.getHashes()) {
-            JournalSource.Update update = journal.get(hash);
-            if (update == null) {
-                logger.debug("reverting chain " + chain + " failed: can't fetch update " + Hex.toHexString(hash));
-                return 0;
-            }
-            // clean up filter
-            update.getInsertedKeys().forEach(filter::remove);
-            // revert inserted keys
-            for (byte[] key : update.getInsertedKeys()) {
-                if (!filter.maybeContains(key)) {
-                    ++nodesDeleted;
-                    storage.delete(key);
-                }
-            }
-        }
-
-        return nodesDeleted;
-    }
-
-    private int persist(Chain chain) {
-        int nodesDeleted = 0;
-        if (logger.isTraceEnabled())
-            logger.trace("<~ persisting " + chain + ": " + strSample(chain.getHashes()));
-
-        for (byte[] hash : chain.getHashes()) {
-            JournalSource.Update update = journal.get(hash);
-            if (update == null) {
-                logger.debug("pruning failed: can't fetch update of main chain " + Hex.toHexString(hash));
-                return 0;
-            }
-            // persist deleted keys
-            for (byte[] key : update.getDeletedKeys()) {
-                if (!filter.maybeContains(key)) {
-                    ++nodesDeleted;
-                    storage.delete(key);
-                }
-            }
-            // clean up filter
-            update.getInsertedKeys().forEach(filter::remove);
-        }
-
-        return nodesDeleted;
-    }
-
     private String strSample(Collection<byte[]> hashes) {
         String sample = hashes.stream().limit(3)
                 .map(HashUtil::shortHash).collect(Collectors.joining(", "));
@@ -211,5 +166,70 @@ public class Pruner {
             sample += ", ... (" + hashes.size() + " total)";
         }
         return sample;
+    }
+
+    private class Pruning {
+
+        // track nodes inserted and deleted in forks
+        // to avoid deletion of those nodes which were originally inserted in the main chain
+        Set<byte[]> insertedInMainChain = new ByteArraySet();
+        Set<byte[]> insertedInForks = new ByteArraySet();
+        int nodesDeleted = 0;
+
+        private void revert(Chain chain) {
+            if (logger.isTraceEnabled())
+                logger.trace("<~ reverting " + chain + ": " + strSample(chain.getHashes()));
+
+            for (byte[] hash : chain.getHashes()) {
+                JournalSource.Update update = journal.get(hash);
+                if (update == null) {
+                    logger.debug("reverting chain " + chain + " failed: can't fetch update " + Hex.toHexString(hash));
+                    return;
+                }
+                // clean up filter
+                update.getInsertedKeys().forEach(filter::remove);
+                // node that was deleted in fork considered as a node that had earlier been inserted in main chain
+                update.getDeletedKeys().forEach(key -> {
+                    if (!insertedInForks.contains(key)) {
+                        insertedInMainChain.add(key);
+                    }
+                });
+                update.getInsertedKeys().forEach(key -> {
+                    if (!insertedInMainChain.contains(key)) {
+                        insertedInForks.add(key);
+                    }
+                });
+
+                // revert inserted keys
+                for (byte[] key : update.getInsertedKeys()) {
+                    if (!filter.maybeContains(key) && !insertedInMainChain.contains(key)) {
+                        ++nodesDeleted;
+                        storage.delete(key);
+                    }
+                }
+            }
+        }
+
+        private void persist(Chain chain) {
+            if (logger.isTraceEnabled())
+                logger.trace("<~ persisting " + chain + ": " + strSample(chain.getHashes()));
+
+            for (byte[] hash : chain.getHashes()) {
+                JournalSource.Update update = journal.get(hash);
+                if (update == null) {
+                    logger.debug("pruning failed: can't fetch update of main chain " + Hex.toHexString(hash));
+                    return;
+                }
+                // persist deleted keys
+                for (byte[] key : update.getDeletedKeys()) {
+                    if (!filter.maybeContains(key)) {
+                        ++nodesDeleted;
+                        storage.delete(key);
+                    }
+                }
+                // clean up filter
+                update.getInsertedKeys().forEach(filter::remove);
+            }
+        }
     }
 }
