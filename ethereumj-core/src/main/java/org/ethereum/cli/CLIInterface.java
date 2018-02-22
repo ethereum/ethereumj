@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2016] [ <ether.camp> ]
+ * Copyright (c) [2018] [ <ether.camp> ]
  * This file is part of the ethereumJ library.
  *
  * The ethereumJ library is free software: you can redistribute it and/or modify
@@ -17,6 +17,7 @@
  */
 package org.ethereum.cli;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.vm.program.NullMemory;
 import org.ethereum.vm.program.NullStack;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,82 +41,51 @@ import java.util.Map;
 @Component
 public class CLIInterface {
 
+    private CLIInterface() {
+    }
+
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-
     public static void call(String[] args) {
-
         try {
             Map<String, Object> cliOptions = new HashMap<>();
+
             for (int i = 0; i < args.length; ++i) {
+                String arg = args[i];
 
-                // override the db directory
-                if (args[i].equals("--help")) {
+                processHelp(arg);
 
-                    printHelp();
-                    System.exit(1);
-                }
-                
-                // start without memory
-                if (args[i].equals("--nomemory")) {
-                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_MEMORY, new NullMemory());
-                }
-                
-                // start without stack
-                if (args[i].equals("--nostack")) {
-                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STACK, new NullStack());
-                }
-                
-                // start without storage
-                if (args[i].equals("--nostorage")) {
-                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STORAGE, new NullStorage());
-                }
-                
-                // start without trace
-                if (args[i].equals("--notrace")) {
-                    cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_TRACE, new NullProgramTrace());
-                }
+                // process simple option
+                if (processConnectOnly(arg, cliOptions))
+                    continue;
+                if (processNoMemory(arg, cliOptions))
+                    continue;
+                if (processNoStack(arg, cliOptions))
+                    continue;
+                if (processNoStorage(arg, cliOptions))
+                    continue;
+                if (processNoTrace(arg, cliOptions))
+                    continue;
 
-                // override the db directory
-                if (args[i].equals("-db") && i + 1 < args.length) {
-                    String db = args[i + 1];
-                    logger.info("DB directory set to [{}]", db);
-                    cliOptions.put(SystemProperties.PROPERTY_DB_DIR, db);
-                }
+                // possible additional parameter
+                if (i + 1 >= args.length)
+                    continue;
 
-                // override the listen port directory
-                if (args[i].equals("-listen") && i + 1 < args.length) {
-                    String port = args[i + 1];
-                    logger.info("Listen port set to [{}]", port);
-                    cliOptions.put(SystemProperties.PROPERTY_LISTEN_PORT, port);
-                }
-
-                // override the connect host:port directory
-                if (args[i].startsWith("-connect") && i + 1 < args.length) {
-                    String connectStr = args[i + 1];
-                    logger.info("Connect URI set to [{}]", connectStr);
-                    URI uri = new URI(connectStr);
-                    if (!uri.getScheme().equals("enode"))
-                        throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
-                    List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
-                    cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
-                }
-
-                if (args[i].equals("-connectOnly")) {
-                    cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
-                }
-
-                // override the listen port directory
-                if (args[i].equals("-reset") && i + 1 < args.length) {
-                    Boolean resetStr = interpret(args[i + 1]);
-                    logger.info("Resetting db set to [{}]", resetStr);
-                    cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetStr.toString());
-                }
+                // process options with additional parameter
+                if (processDbDirectory(arg, args[i + 1], cliOptions))
+                    continue;
+                if (processListenPort(arg, args[i + 1], cliOptions))
+                    continue;
+                if (processConnect(arg, args[i + 1], cliOptions))
+                    continue;
+                if (processDbReset(arg, args[i + 1], cliOptions))
+                    continue;
             }
 
             if (cliOptions.size() > 0) {
-                logger.info("Overriding config file with CLI options: " + cliOptions);
+                logger.info("Overriding config file with CLI options: {}", cliOptions);
             }
+
             SystemProperties.getDefault().overrideParams(cliOptions);
 
         } catch (Throwable e) {
@@ -123,12 +94,149 @@ public class CLIInterface {
         }
     }
 
+    // show help
+    private static void processHelp(String arg) {
+        if ("--help".equals(arg)) {
+            printHelp();
+
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Run without memory if --nomemory is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoMemory(String arg, Map<String, Object> cliOptions) {
+        if (!"--nomemory".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_MEMORY, new NullMemory());
+        return true;
+    }
+
+    /**
+     * Run without stack if --nostack is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoStack(String arg, Map<String, Object> cliOptions) {
+        if (!"--nostack".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STACK, new NullStack());
+        return true;
+    }
+
+    /**
+     * Run without storage if --nostorage is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoStorage(String arg, Map<String, Object> cliOptions) {
+        if (!"--nostorage".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STORAGE, new NullStorage());
+        return true;
+    }
+
+    /**
+     * Run without trace if --notrace is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoTrace(String arg, Map<String, Object> cliOptions) {
+        if (!"--notrace".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_TRACE, new NullProgramTrace());
+        return true;
+    }
+
+    private static boolean processConnectOnly(String arg, Map<String, Object> cliOptions) {
+        if ("-connectOnly".equals(arg))
+            return false;
+
+        cliOptions.put(SystemProperties.PROPERTY_PEER_DISCOVERY_ENABLED, false);
+
+        return true;
+    }
+
+    // override the db directory
+    private static boolean processDbDirectory(String arg, String db, Map<String, Object> cliOptions) {
+        if (!"-db".equals(arg))
+            return false;
+
+        logger.info("DB directory set to [{}]", db);
+
+        cliOptions.put(SystemProperties.PROPERTY_DB_DIR, db);
+
+        return true;
+    }
+
+    // override the listen port directory
+    private static boolean processListenPort(String arg, String port, Map<String, Object> cliOptions) {
+        if (!"-listen".equals(arg))
+            return false;
+
+        logger.info("Listen port set to [{}]", port);
+
+        cliOptions.put(SystemProperties.PROPERTY_LISTEN_PORT, port);
+
+        return true;
+    }
+
+    // override the connect host:port directory
+    private static boolean processConnect(String arg, String connectStr, Map<String, Object> cliOptions) throws URISyntaxException {
+        if (!arg.startsWith("-connect"))
+            return false;
+
+        logger.info("Connect URI set to [{}]", connectStr);
+        URI uri = new URI(connectStr);
+
+        if (!"enode".equals(uri.getScheme()))
+            throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
+
+        List<Map<String, String>> peerActiveList = Collections.singletonList(Collections.singletonMap("url", connectStr));
+
+        cliOptions.put(SystemProperties.PROPERTY_PEER_ACTIVE, peerActiveList);
+
+        return true;
+    }
+
+    // process database reset
+    private static boolean processDbReset(String arg, String reset, Map<String, Object> cliOptions) {
+        if (!"-reset".equals(arg))
+            return false;
+
+        Boolean resetFlag = interpret(reset);
+
+        if (resetFlag == null) {
+            throw new Error(String.format("Can't interpret DB reset arguments: %s %s", arg, reset));
+        }
+
+        logger.info("Resetting db set to [{}]", resetFlag);
+        cliOptions.put(SystemProperties.PROPERTY_DB_RESET, resetFlag.toString());
+
+        return true;
+    }
+
     private static Boolean interpret(String arg) {
-
-        if (arg.equals("on") || arg.equals("true") || arg.equals("yes")) return true;
-        if (arg.equals("off") || arg.equals("false") || arg.equals("no")) return false;
-
-        throw new Error("Can't interpret the answer: " + arg);
+        return BooleanUtils.toBooleanObject(arg);
     }
 
     private static void printHelp() {
