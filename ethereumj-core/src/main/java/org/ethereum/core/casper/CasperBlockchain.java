@@ -274,7 +274,7 @@ public class CasperBlockchain extends BlockchainImpl {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
+            TransactionExecutor executor = strategy.createTransactionExecutor(tx, block.getCoinbase(),
                     txTrack, blockStore, getProgramInvokeFactory(), block, listener, totalGasUsed)
                     .withCommonConfig(commonConfig);
 
@@ -346,7 +346,7 @@ public class CasperBlockchain extends BlockchainImpl {
             track.addBalance(NULL_SENDER.getAddress(), BigInteger.valueOf(15).pow(18));
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(tx, genesis.getCoinbase(),
+            TransactionExecutor executor = strategy.createTransactionExecutor(tx, genesis.getCoinbase(),
                     txTrack, blockStore, getProgramInvokeFactory(), genesis, listener, 0)
                     .withCommonConfig(commonConfig);
 

@@ -207,8 +207,8 @@ public class SyncWithLoadTest {
                             .getSnapshotTo(block.getStateRoot())
                             .startTracking();
                     try {
-                        TransactionExecutor executor = new TransactionExecutor
-                                (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
+                        TransactionExecutor executor = ethereum.getConsensusStrategy().createTransactionExecutor(
+                                tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
                                         programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                                 .withCommonConfig(commonConfig)
                                 .setLocalCall(true);

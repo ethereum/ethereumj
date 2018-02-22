@@ -18,9 +18,11 @@
 package org.ethereum.util.blockchain;
 
 import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.*;
@@ -606,8 +608,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
 
             try {
-                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                        (tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
+                ConsensusStrategy strategy = CommonConfig.getDefault().consensusStrategy();
+                org.ethereum.core.TransactionExecutor executor = strategy.createTransactionExecutor(
+                        tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
                                 getBlockchain().getProgramInvokeFactory(), callBlock)
                         .setLocalCall(true);
 

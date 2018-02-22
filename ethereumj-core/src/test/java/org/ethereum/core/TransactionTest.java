@@ -437,7 +437,7 @@ public class TransactionTest {
 
                     Block bestBlock = block;
 
-                    TransactionExecutor executor = new TransactionExecutor
+                    TransactionExecutor executor = new CommonTransactionExecutor
                             (txConst, bestBlock.getCoinbase(), track, new BlockStoreDummy(),
                                     invokeFactory, bestBlock)
                             .setLocalCall(true);
@@ -691,7 +691,7 @@ public class TransactionTest {
 
     public TransactionExecutor executeTransaction(BlockchainImpl blockchain, Transaction tx) {
         Repository track = blockchain.getRepository().startTracking();
-        TransactionExecutor executor = new TransactionExecutor(tx, new byte[32], blockchain.getRepository(),
+        TransactionExecutor executor = new CommonTransactionExecutor(tx, new byte[32], blockchain.getRepository(),
                 blockchain.getBlockStore(), blockchain.getProgramInvokeFactory(), blockchain.getBestBlock());
 
         executor.init();

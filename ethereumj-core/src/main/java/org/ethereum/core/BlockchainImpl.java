@@ -878,7 +878,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
+            TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(tx, block.getCoinbase(),
                     txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
                     .withCommonConfig(commonConfig);
 

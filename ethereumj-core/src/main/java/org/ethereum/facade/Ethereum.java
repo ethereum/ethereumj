@@ -18,6 +18,7 @@
 package org.ethereum.facade;
 
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -54,6 +55,8 @@ public interface Ethereum {
     void connect(Node node);
 
     Blockchain getBlockchain();
+
+    ConsensusStrategy getConsensusStrategy();
 
     void addListener(EthereumListener listener);
 

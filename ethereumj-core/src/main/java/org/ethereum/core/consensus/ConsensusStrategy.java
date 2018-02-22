@@ -17,11 +17,18 @@
  */
 package org.ethereum.core.consensus;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.genesis.StateInit;
+import org.ethereum.db.BlockStore;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 
 public interface ConsensusStrategy {
     BlockHeaderValidator getHeaderValidator();
@@ -41,4 +48,11 @@ public interface ConsensusStrategy {
      * @return state initializer after state is initialized
      */
     StateInit getInitState();
+
+    TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                                                  ProgramInvokeFactory programInvokeFactory, Block currentBlock);
+
+    TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                                                  ProgramInvokeFactory programInvokeFactory, Block currentBlock,
+                                                  EthereumListener listener, long gasUsedInTheBlock);
 }

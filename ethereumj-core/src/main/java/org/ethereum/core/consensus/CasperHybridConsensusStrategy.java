@@ -22,12 +22,17 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.casper.CasperBlockchain;
+import org.ethereum.core.casper.CasperTransactionExecutor;
 import org.ethereum.core.genesis.CasperStateInit;
 import org.ethereum.core.genesis.StateInit;
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.CasperValidatorService;
 import org.ethereum.validator.BlockHashRule;
 import org.ethereum.validator.BlockHeaderRule;
@@ -42,6 +47,7 @@ import org.ethereum.validator.ParentGasLimitRule;
 import org.ethereum.validator.ParentNumberRule;
 import org.ethereum.validator.ProofOfWorkRule;
 import org.ethereum.vm.program.ProgramResult;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -138,6 +144,21 @@ public class CasperHybridConsensusStrategy implements ConsensusStrategy {
             throw new RuntimeException("State is not initialized");
         }
         return stateInit;
+    }
+
+    @Override
+    public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
+                                                         BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
+                                                         Block currentBlock) {
+        return new CasperTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock);
+    }
+
+    @Override
+    public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
+                                                         BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
+                                                         Block currentBlock, EthereumListener listener, long gasUsedInTheBlock) {
+        return new CasperTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
+                listener, gasUsedInTheBlock);
     }
 
     public CallTransaction.Contract getCasper() {

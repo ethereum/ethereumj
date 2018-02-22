@@ -23,6 +23,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
@@ -144,6 +145,11 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public org.ethereum.facade.Blockchain getBlockchain() {
         return (org.ethereum.facade.Blockchain) worldManager.getBlockchain();
+    }
+
+    @Override
+    public ConsensusStrategy getConsensusStrategy() {
+        return commonConfig.consensusStrategy();
     }
 
     public ImportResult addNewMinedBlock(Block block) {
@@ -278,7 +284,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
             for (Transaction tx : block.getTransactionsList()) {
 
                 Repository txTrack = track.startTracking();
-                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
+                org.ethereum.core.TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(
                         tx, block.getCoinbase(), txTrack, worldManager.getBlockStore(),
                         programInvokeFactory, block, worldManager.getListener(), 0)
                         .withCommonConfig(commonConfig);
@@ -310,8 +316,8 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                    (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
+            org.ethereum.core.TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(
+                    tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
                             programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                     .withCommonConfig(commonConfig)
                     .setLocalCall(true);

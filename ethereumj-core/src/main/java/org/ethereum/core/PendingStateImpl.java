@@ -442,7 +442,7 @@ public class PendingStateImpl implements PendingState {
 
         Block best = getBestBlock();
 
-        TransactionExecutor executor = new TransactionExecutor(
+        TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(
                 tx, best.getCoinbase(), getRepository(),
                 blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
                 .withCommonConfig(commonConfig);
