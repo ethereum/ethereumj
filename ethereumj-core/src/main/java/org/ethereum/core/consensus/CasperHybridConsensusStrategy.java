@@ -104,7 +104,6 @@ public class CasperHybridConsensusStrategy implements ConsensusStrategy {
 
         blockchain = ctx.getBean(CasperBlockchain.class);
         blockchain.setStrategy(this);
-        ethereum = ctx.getBean(Ethereum.class);
         this.ctx = ctx;
     }
 

@@ -20,6 +20,7 @@ package org.ethereum.manager;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
@@ -124,9 +125,13 @@ public class WorldManager {
     @PostConstruct
     private void init() {
         ConsensusStrategy strategy = ctx.getBean(CommonConfig.class).consensusStrategy();
-        loadBlockchain(strategy);
         ethereum = ctx.getBean(Ethereum.class);
         ethereum.setWorldManager(this);
+        // FIXME: Bad Spring fix
+        if (strategy instanceof CasperHybridConsensusStrategy) {
+            ((CasperHybridConsensusStrategy) strategy).setEthereum(ethereum);
+        }
+        loadBlockchain(strategy);
         channelManager.init(ethereum);
         ((PendingStateImpl) pendingState).postConstruct();
         syncManager.init(channelManager, pool);
