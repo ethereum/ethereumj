@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
@@ -30,6 +31,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -569,4 +571,18 @@ public class Transaction {
                 null,
                 chainId);
     }
+
+    public static final MemSizeEstimator<Transaction> MemEstimator = tx ->
+            ByteArrayEstimator.estimateSize(tx.hash) +
+            ByteArrayEstimator.estimateSize(tx.nonce) +
+            ByteArrayEstimator.estimateSize(tx.value) +
+            ByteArrayEstimator.estimateSize(tx.gasPrice) +
+            ByteArrayEstimator.estimateSize(tx.gasLimit) +
+            ByteArrayEstimator.estimateSize(tx.data) +
+            ByteArrayEstimator.estimateSize(tx.sendAddress) +
+            ByteArrayEstimator.estimateSize(tx.rlpEncoded) +
+            ByteArrayEstimator.estimateSize(tx.rawHash) +
+            (tx.chainId != null ? 24 : 0) +
+            (tx.signature != null ? 208 : 0) + // approximate size of signature
+            16; // Object header + ref
 }

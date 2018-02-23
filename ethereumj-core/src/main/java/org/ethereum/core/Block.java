@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.*;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information
@@ -517,4 +519,15 @@ public class Block {
             return block;
         }
     }
+
+    public static final MemSizeEstimator<Block> MemEstimator = block -> {
+        if (block == null) return 0;
+        long txSize = block.transactionsList.stream().mapToLong(Transaction.MemEstimator::estimateSize).sum() + 16;
+        return BlockHeader.MAX_HEADER_SIZE +
+                block.uncleList.size() * BlockHeader.MAX_HEADER_SIZE + 16 +
+                txSize +
+                ByteArrayEstimator.estimateSize(block.rlpEncoded) +
+                1 + // parsed flag
+                16; // Object header + ref
+    };
 }
