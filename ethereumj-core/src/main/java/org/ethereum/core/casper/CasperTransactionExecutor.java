@@ -16,6 +16,7 @@
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.ethereum.core.casper;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
@@ -78,15 +79,19 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     private boolean isCasperVote() {
         if (!(commonConfig.consensusStrategy() instanceof CasperHybridConsensusStrategy))
             return false;
-        if (!Arrays.equals(tx.getSender(), Transaction.NULL_SENDER))
+        return isCasperVote(tx, config.getCasperAddress());
+    }
+
+    public static boolean isCasperVote(Transaction transaction, byte[] casperAddress) {
+        if (!Arrays.equals(transaction.getSender(), Transaction.NULL_SENDER))
             return false;
-        if (config.getCasperAddress() == null)
-            return false; // Not yet initialized
-        if (!Arrays.equals(tx.getReceiveAddress(), config.getCasperAddress()))
+        if (casperAddress == null)
+            return false;
+        if (!Arrays.equals(transaction.getReceiveAddress(), casperAddress))
             return false;
 
         byte[] dataCopy = new byte[4];
-        System.arraycopy(tx.getData(), 0, dataCopy, 0, 4);
+        System.arraycopy(transaction.getData(), 0, dataCopy, 0, 4);
         return Arrays.equals(dataCopy, new byte[] {(byte) 0xe9, (byte) 0xdc, 0x06, 0x14});
     }
 

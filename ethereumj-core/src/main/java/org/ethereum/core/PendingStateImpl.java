@@ -32,6 +32,8 @@ import java.util.function.Consumer;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.casper.CasperTransactionExecutor;
+import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
@@ -288,6 +290,12 @@ public class PendingStateImpl implements PendingState {
             return String.format("Invalid transaction: %s", e.getMessage());
         }
 
+        // FIXME: Shouldn't be there
+        if ((commonConfig.consensusStrategy() instanceof CasperHybridConsensusStrategy)) {
+            if (CasperTransactionExecutor.isCasperVote(tx, config.getCasperAddress())) {
+                return null;  // Doesn't require more checks
+            }
+        }
         if (config.getMineMinGasPrice().compareTo(ByteUtil.bytesToBigInteger(tx.getGasPrice())) > 0) {
             return "Too low gas price for transaction: " + ByteUtil.bytesToBigInteger(tx.getGasPrice());
         }

@@ -22,6 +22,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.core.casper.CasperTransactionExecutor;
+import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
@@ -193,6 +195,13 @@ public class BlockMiner {
     }
 
     protected boolean isAcceptableTx(Transaction tx) {
+        // FIXME: Shouldn't be there
+        if ((ethereum.getConsensusStrategy() instanceof CasperHybridConsensusStrategy)) {
+            if (CasperTransactionExecutor.isCasperVote(tx, config.getCasperAddress())) {
+                return true;
+            }
+        }
+
         return minGasPrice.compareTo(new BigInteger(1, tx.getGasPrice())) <= 0;
     }
 
