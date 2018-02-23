@@ -17,7 +17,6 @@
  */
 package org.ethereum.manager;
 
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
@@ -98,6 +97,8 @@ public class WorldManager {
     @Autowired
     private ApplicationContext ctx;
 
+    private ConsensusStrategy strategy;
+
     private Ethereum ethereum;
 
     private SystemProperties config;
@@ -115,6 +116,7 @@ public class WorldManager {
                         final EthereumListener listener, final ConsensusStrategy consensusStrategy,
                         final BlockStore blockStore) {
         this.listener = listener;
+        this.strategy = consensusStrategy;
         this.blockchain = consensusStrategy.getBlockchain();
         this.repository = repository;
         repository.setBlockchain(blockchain);
@@ -124,7 +126,6 @@ public class WorldManager {
 
     @PostConstruct
     private void init() {
-        ConsensusStrategy strategy = ctx.getBean(CommonConfig.class).consensusStrategy();
         ethereum = ctx.getBean(Ethereum.class);
         ethereum.setWorldManager(this);
         // FIXME: Bad Spring fix
