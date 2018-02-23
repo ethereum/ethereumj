@@ -100,7 +100,7 @@ public class Transaction {
 
     /* Tx in encoded form */
     protected byte[] rlpEncoded;
-    private byte[] rlpRaw;
+    private byte[] rawHash;
     /* Indicates if this transaction has been parsed
      * from the RLP-encoded data */
     protected boolean parsed = false;
@@ -258,8 +258,9 @@ public class Transaction {
 
     public byte[] getRawHash() {
         rlpParse();
+        if (rawHash != null) return rawHash;
         byte[] plainMsg = this.getEncodedRaw();
-        return HashUtil.sha3(plainMsg);
+        return rawHash = HashUtil.sha3(plainMsg);
     }
 
 
@@ -438,7 +439,7 @@ public class Transaction {
     public byte[] getEncodedRaw() {
 
         rlpParse();
-        if (rlpRaw != null) return rlpRaw;
+        byte[] rlpRaw;
 
         // parse null as 0 for nonce
         byte[] nonce = null;
