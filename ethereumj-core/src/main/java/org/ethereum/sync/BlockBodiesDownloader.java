@@ -90,7 +90,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
         while (curBlockIdx < headerStore.size() && !Thread.currentThread().isInterrupted()) {
             List<BlockHeaderWrapper> wrappers = new ArrayList<>();
             List<BlockHeader> emptyBodyHeaders =  new ArrayList<>();
-            for (int i = 0; i < 10000 - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
+            for (int i = 0; i < 5000 - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
                 BlockHeader header = headerStore.get(curBlockIdx++);
                 wrappers.add(new BlockHeaderWrapper(header, new byte[0]));
 
@@ -172,7 +172,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-        return Integer.MAX_VALUE;
+        return getBlockQueueLimit();
     }
 
     public int getDownloadedCount() {
