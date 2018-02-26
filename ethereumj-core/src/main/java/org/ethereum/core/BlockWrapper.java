@@ -179,6 +179,10 @@ public class BlockWrapper {
         return block.isEqual(wrapper.block);
     }
 
+    public long estimateMemSize() {
+        return MemEstimator.estimateSize(this);
+    }
+
     public static final MemSizeEstimator<BlockWrapper> MemEstimator = wrapper ->
             Block.MemEstimator.estimateSize(wrapper.block) +
             MemSizeEstimator.ByteArrayEstimator.estimateSize(wrapper.nodeId) +
