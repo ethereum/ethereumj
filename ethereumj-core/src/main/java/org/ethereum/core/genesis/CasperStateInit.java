@@ -18,8 +18,10 @@
 package org.ethereum.core.genesis;
 
 import javafx.util.Pair;
+import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
@@ -35,13 +37,27 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 public class CasperStateInit implements StateInit {
+
     private static final Logger logger = LoggerFactory.getLogger("general");
+
+    public static final int WITHDRAWAL_DELAY = 5;
+    public static final double BASE_INTEREST_FACTOR = 0.1;
+    public static final double BASE_PENALTY_FACTOR = 0.0001;
+    public static final int MIN_DEPOSIT_ETH = 1500;
+
     private Genesis genesis;
+
     private Repository repository;
+
     private Blockchain blockchain;
+
     private SystemProperties systemProperties;
+
     private ApplicationContext ctx;
+
     private Genesis initGenesis;
 
     public final static ECKey NULL_SENDER = ECKey.fromPrivate(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
@@ -122,21 +138,37 @@ public class CasperStateInit implements StateInit {
             nonce = nonce.add(BigInteger.ONE);
         }
 
+        // 0 - fund, 1 - rlp, 2 - fund, 3 - sig hasher, 4 - fund, 5 - purity checker
+        byte[] sigHasherContract = txs.get(3).getContractAddress();
+        byte[] purityCheckerContract = txs.get(5).getContractAddress();
+
         // Casper!
-        // Currently there are hardcoded init args in bin, we should add it here instead
         try {
+            // Sources:
+            // https://github.com/ethereum/casper/blob/9106ad647857e6a545f55d7f6193bdc03bb9f5cd/casper/contracts/simple_casper.v.py
             String casperBinStr = systemProperties.getCasperBin();
-            // Currently inited with following params:
-            //  EPOCH_LENGTH=50, WITHDRAWAL_DELAY=5, BASE_INTEREST_FACTOR=0.1, BASE_PENALTY_FACTOR=0.0001
-            // TODO: Use only contract BIN and merge with init encode
             byte[] casperBin = ByteUtil.hexStringToBytes(casperBinStr);
+
+            CallTransaction.Contract contract = new CallTransaction.Contract(systemProperties.getCasperAbi());
+
+            byte[] casperInit = contract.getConstructor().encodeArguments(
+                    systemProperties.getCasperEpochLength(),  // Epoch length
+                    WITHDRAWAL_DELAY, // Withdrawal delay
+                    ECKey.fromPrivate(sha3("0".getBytes())).getAddress(),  // Owner
+                    sigHasherContract,  // Signature hasher contract
+                    purityCheckerContract,  // Purity checker contract
+                    BASE_INTEREST_FACTOR,  // Base interest factor
+                    BASE_PENALTY_FACTOR,  // Base penalty factor
+                    BigInteger.valueOf(MIN_DEPOSIT_ETH).multiply(BigInteger.TEN.pow(18)) // Minimum validator deposit in wei
+            );
+
             Transaction tx = new Transaction(
                     ByteUtil.bigIntegerToBytes(nonce),
                     ByteUtil.longToBytesNoLeadZeroes(gasPriceFund),
                     ByteUtil.longToBytesNoLeadZeroes(5_000_000),
                     new byte[0],
                     ByteUtil.longToBytesNoLeadZeroes(0),
-                    casperBin,
+                    ArrayUtils.addAll(casperBin, casperInit),  // Merge contract and constructor args
                     null);
             tx.sign(NULL_SENDER);
 

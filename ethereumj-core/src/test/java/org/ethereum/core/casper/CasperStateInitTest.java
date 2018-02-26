@@ -81,7 +81,7 @@ public class CasperStateInitTest {
     private StandaloneBlockchain bc;
 
     @Before
-    public void init() {
+    public void setup() {
         // Just trust me!
         // FIXME: Make it a little bit readable
         systemProperties.setBlockchainConfig(new CasperTestNetConfig());
@@ -109,7 +109,6 @@ public class CasperStateInitTest {
 
         this.ethereum = new EthereumImpl(systemProperties, defaultListener);
         ethereum.setCommonConfig(commonConfig);
-        Mockito.when(context.getBean(Ethereum.class)).thenReturn(ethereum);
         this.worldManager = Mockito.mock(WorldManager.class);
 
         this.bc = new StandaloneBlockchain() {
@@ -169,7 +168,7 @@ public class CasperStateInitTest {
         Mockito.when(worldManager.getBlockStore()).thenReturn(bc.getBlockchain().getBlockStore());
         ethereum.setWorldManager(worldManager);
         ethereum.setProgramInvokeFactory(new ProgramInvokeFactoryImpl());
-        commonConfig.consensusStrategy();
+        ((CasperHybridConsensusStrategy) commonConfig.consensusStrategy()).setEthereum(ethereum);
     }
 
     @Test
