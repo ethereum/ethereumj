@@ -54,9 +54,12 @@ public class FastSyncDownloader extends BlockDownloader {
     }
 
     public void startImporting(byte[] fromHash, int count) {
+        this.maxCount = count <= 0 ? Integer.MAX_VALUE : count;
+        setHeaderQueueLimit(maxCount);
+        setBlockQueueLimit(maxCount);
+
         SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
         init(syncQueueReverse, syncPool);
-        this.maxCount = count <= 0 ? Integer.MAX_VALUE : count;
     }
 
     @Override
@@ -87,7 +90,7 @@ public class FastSyncDownloader extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-        return Integer.MAX_VALUE;
+        return getBlockQueueLimit();
     }
 
     // TODO: receipts loading here
