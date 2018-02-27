@@ -281,7 +281,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             } catch (Throwable t) {
                 logger.error("Unhandled exception", t);
             }
-        }, 2, config.getProperty("peer.p2p.pingInterval", 5L), TimeUnit.SECONDS);
+        }, 2, config.getProperty("peer.p2p.pingInterval", 5), TimeUnit.SECONDS);
     }
 
     public void killTimers() {
