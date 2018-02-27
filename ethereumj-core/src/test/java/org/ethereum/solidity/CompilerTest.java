@@ -126,7 +126,7 @@ public class CompilerTest {
 
         Path source = Paths.get("src","test","resources","solidity","foo","file3.sol");
 
-        SolidityCompiler.ListOption allowPathsOption = new SolidityCompiler.ListOption("allow-paths", Collections.singletonList(source.getParent().getParent().toFile()));
+        SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().getParent().toFile()));
         SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA, allowPathsOption);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
@@ -141,7 +141,7 @@ public class CompilerTest {
 
         Path source = Paths.get("src","test","resources","solidity","foo","file3.sol");
 
-        SolidityCompiler.ListOption allowPathsOption = new SolidityCompiler.ListOption("allow-paths", Collections.singletonList(source.getParent().getParent().toAbsolutePath().toString()));
+        SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().getParent().toAbsolutePath().toString()));
         SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA, allowPathsOption);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
@@ -156,7 +156,7 @@ public class CompilerTest {
 
         Path source = Paths.get("src","test","resources","solidity","foo","file3.sol");
 
-        SolidityCompiler.ListOption allowPathsOption = new SolidityCompiler.ListOption("allow-paths", Collections.singletonList(source.getParent().getParent()));
+        SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().getParent()));
         SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA, allowPathsOption);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");

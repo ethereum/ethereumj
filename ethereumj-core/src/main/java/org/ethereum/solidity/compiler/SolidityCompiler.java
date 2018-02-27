@@ -51,6 +51,10 @@ public class SolidityCompiler {
         return getInstance().compileSrc(sourceDirectory, false, combinedJson, options);
     }
 
+    /**
+     * This class is mainly here for backwards compatibility; however we are now reusing it making it the solely public
+     * interface listing all the supported options.
+     */
     public static final class Options {
         public static final OutputOption AST = OutputOption.AST;
         public static final OutputOption BIN = OutputOption.BIN;
@@ -58,6 +62,20 @@ public class SolidityCompiler {
         public static final OutputOption ABI = OutputOption.ABI;
         public static final OutputOption METADATA = OutputOption.METADATA;
         public static final OutputOption ASTJSON = OutputOption.ASTJSON;
+
+        private static final NameOnlyOption OPTIMIZE = NameOnlyOption.OPTIMIZE;
+        private static final NameOnlyOption VERSION = NameOnlyOption.VERSION;
+
+        private static class CombinedJson extends ListOption {
+            private CombinedJson(List values) {
+                super("combined-json", values);
+            }
+        }
+        public static class AllowPaths extends ListOption {
+            public AllowPaths(List values) {
+                super("allow-paths", values);
+            }
+        }
     }
 
     public interface Option extends Serializable {
@@ -65,11 +83,11 @@ public class SolidityCompiler {
         String getName();
     }
 
-    public static class ListOption implements Option {
+    private static class ListOption implements Option {
         private String name;
         private List values;
 
-        public ListOption(String name, List values) {
+       private ListOption(String name, List values) {
             this.name = name;
             this.values = values;
         }
@@ -227,10 +245,10 @@ public class SolidityCompiler {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(solc.getExecutable().getCanonicalPath());
         if (optimize) {
-            commandParts.add("--" + NameOnlyOption.OPTIMIZE.getName());
+            commandParts.add("--" + Options.OPTIMIZE.getName());
         }
         if (combinedJson) {
-            ListOption combinedJsonOption = new ListOption("combined-json", getElementsOf(OutputOption.class, options));
+            Option combinedJsonOption = new Options.CombinedJson(getElementsOf(OutputOption.class, options));
             commandParts.add("--" + combinedJsonOption.getName());
             commandParts.add(combinedJsonOption.getValue());
         } else {
@@ -281,7 +299,7 @@ public class SolidityCompiler {
     public static String runGetVersionOutput() throws IOException {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(getInstance().solc.getExecutable().getCanonicalPath());
-        commandParts.add("--" + NameOnlyOption.VERSION.getName());
+        commandParts.add("--" + Options.VERSION.getName());
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
                 .directory(getInstance().solc.getExecutable().getParentFile());
