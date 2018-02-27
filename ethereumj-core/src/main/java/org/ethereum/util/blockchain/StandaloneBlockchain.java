@@ -273,7 +273,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
             }
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
-            for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
+            // FIXME: Not sure it's correct for non-casper cases
+            // The issue is that Casper has background txs. It's not included in txs but it affects receipts
+            for (int i = 0; i < pendingTxes.size(); i++) {
                 pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
                 pendingTxes.get(i).txResult.executionSummary = getTxSummary(lastSummary, i);
             }
