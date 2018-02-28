@@ -34,6 +34,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.casper.CasperTransactionExecutor;
 import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
@@ -180,7 +181,7 @@ public class PendingStateImpl implements PendingState {
         if (addNewTxIfNotExist(tx)) {
             unknownTx++;
             TransactionReceipt receipt = addPendingTransactionImpl(tx);
-            if (receipt.isValid()) {
+            if (receiptIsValid(receipt)) {
                 newPending.add(tx);
             } else {
                 errorConsumer.accept(new Throwable("Tx execution simulation failed: " + receipt.getError()));
@@ -203,7 +204,7 @@ public class PendingStateImpl implements PendingState {
         for (Transaction tx : transactions) {
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                if (addPendingTransactionImpl(tx).isValid()) {
+                if (receiptIsValid(addPendingTransactionImpl(tx))) {
                     newPending.add(tx);
                 }
             }
@@ -218,6 +219,22 @@ public class PendingStateImpl implements PendingState {
         }
 
         return newPending;
+    }
+
+    // TODO: Refactor me!!! Casper only
+    private boolean receiptIsValid(TransactionReceipt receipt) {
+        ConsensusStrategy strategy = commonConfig.consensusStrategy();
+        if (strategy instanceof CasperHybridConsensusStrategy &&
+                CasperTransactionExecutor.isCasperVote(receipt.getTransaction(), config.getCasperAddress())) {
+            // Gas not used, it's ok if it was successful vote, so let's check it
+            if (!receipt.isValid()) {
+                return receipt.isSuccessful();
+            } else {
+                return true; // Receipt is valid already
+            }
+        } else {
+            return receipt.isValid();
+        }
     }
 
     public synchronized void trackTransaction(Transaction tx) {
@@ -266,7 +283,7 @@ public class PendingStateImpl implements PendingState {
             txReceipt = executeTx(tx);
         }
 
-        if (!txReceipt.isValid()) {
+        if (!receiptIsValid(txReceipt)) {
             fireTxUpdate(txReceipt, DROPPED, getBestBlock());
         } else {
             pendingTransactions.add(new PendingTransaction(tx, getBestBlock().getNumber()));
