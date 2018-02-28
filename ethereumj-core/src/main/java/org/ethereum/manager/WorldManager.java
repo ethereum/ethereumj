@@ -27,6 +27,7 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.mine.MinerListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.sync.FastSyncManager;
@@ -137,6 +138,33 @@ public class WorldManager {
         ((PendingStateImpl) pendingState).postConstruct();
         syncManager.init(channelManager, pool);
         strategy.init();
+
+        ethereum.getBlockMiner().addListener(new MinerListener() {
+            @Override
+            public void miningStarted() {
+                syncManager.makeSyncDone();
+            }
+
+            @Override
+            public void miningStopped() {
+
+            }
+
+            @Override
+            public void blockMiningStarted(Block block) {
+
+            }
+
+            @Override
+            public void blockMined(Block block) {
+
+            }
+
+            @Override
+            public void blockMiningCanceled(Block block) {
+
+            }
+        });
     }
 
     public void addListener(EthereumListener listener) {

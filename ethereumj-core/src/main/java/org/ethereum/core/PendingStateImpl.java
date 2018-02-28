@@ -228,6 +228,7 @@ public class PendingStateImpl implements PendingState {
                 CasperTransactionExecutor.isCasperVote(receipt.getTransaction(), config.getCasperAddress())) {
             // Gas not used, it's ok if it was successful vote, so let's check it
             if (!receipt.isValid()) {
+                logger.debug("Casper vote validity checking {}, success={} ", receipt, receipt.isSuccessful());
                 return receipt.isSuccessful();
             } else {
                 return true; // Receipt is valid already
