@@ -74,7 +74,7 @@ public class HeadersDownloader extends BlockDownloader {
     public void init(byte[] startFromBlockHash) {
         logger.info("HeaderDownloader init: startHash = " + Hex.toHexString(startFromBlockHash));
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(startFromBlockHash, true);
-        super.init(syncQueue, syncPool);
+        super.init(syncQueue, syncPool, "HeadersDownloader");
         syncPool.init(channelManager);
     }
 
@@ -89,7 +89,7 @@ public class HeadersDownloader extends BlockDownloader {
         if (headers.get(headers.size() - 1).getNumber() == 1) {
             genesisHash = headers.get(headers.size() - 1).getHeader().getParentHash();
         }
-        logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
+        logger.info(name + ": " + headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
         for (BlockHeaderWrapper header : headers) {
             headerStore.set((int) header.getNumber(), header.getHeader());
             headersLoaded++;

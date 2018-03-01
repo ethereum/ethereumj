@@ -83,7 +83,7 @@ public class BlockBodiesDownloader extends BlockDownloader {
 
         setHeadersDownload(false);
 
-        init(syncQueue, syncPool);
+        init(syncQueue, syncPool, "BlockBodiesDownloader");
     }
 
     private void headerLoop() {

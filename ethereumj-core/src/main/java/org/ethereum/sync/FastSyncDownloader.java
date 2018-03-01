@@ -59,7 +59,7 @@ public class FastSyncDownloader extends BlockDownloader {
         setBlockQueueLimit(maxCount);
 
         SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
-        init(syncQueueReverse, syncPool);
+        init(syncQueueReverse, syncPool, "FastSync");
     }
 
     @Override
@@ -70,7 +70,7 @@ public class FastSyncDownloader extends BlockDownloader {
                 blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
                 counter++;
                 if (counter >= maxCount) {
-                    logger.info("All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
+                    logger.info("FastSync: All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
                     stop();
                     break;
                 }

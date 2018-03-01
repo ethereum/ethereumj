@@ -160,7 +160,7 @@ public class SyncManager extends BlockDownloader {
         this.syncDoneType = syncDoneType;
 
         syncQueue = new SyncQueueImpl(blockchain);
-        super.init(syncQueue, pool);
+        super.init(syncQueue, pool, "RegularSync");
 
         Runnable queueProducer = this::produceQueue;
 

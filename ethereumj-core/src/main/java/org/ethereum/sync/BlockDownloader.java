@@ -69,6 +69,8 @@ public abstract class BlockDownloader {
 
     private CountDownLatch stopLatch = new CountDownLatch(1);
 
+    protected String name = "BlockDownloader";
+
     public BlockDownloader(BlockHeaderValidator headerValidator) {
         this.headerValidator = headerValidator;
     }
@@ -91,11 +93,12 @@ public abstract class BlockDownloader {
         this.headersDownload = headersDownload;
     }
 
-    public void init(SyncQueueIfc syncQueue, final SyncPool pool) {
+    public void init(SyncQueueIfc syncQueue, final SyncPool pool, String name) {
         this.syncQueue = syncQueue;
         this.pool = pool;
+        this.name = name;
 
-        logger.info("Initializing BlockDownloader.");
+        logger.info("{}: Initializing BlockDownloader.", name);
 
         if (headersDownload) {
             getHeadersThread = new Thread(this::headerRetrieveLoop, "SyncThreadHeaders");
@@ -142,7 +145,7 @@ public abstract class BlockDownloader {
                         synchronized (this) {
                             hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, headerQueueLimit);
                             if (hReq == null) {
-                                logger.info("Headers download complete.");
+                                logger.info("{}: Headers download complete.", name);
                                 headersDownloadComplete = true;
                                 if (!blockBodiesDownload) {
                                     finishDownload();
@@ -150,7 +153,7 @@ public abstract class BlockDownloader {
                                 }
                                 return;
                             }
-                            String l = "##########  New header requests (" + hReq.size() + "):\n";
+                            String l = "##########  " + name + ": New header requests (" + hReq.size() + "):\n";
                             for (SyncQueueIfc.HeadersRequest request : hReq) {
                                 l += "    " + request + "\n";
                             }
@@ -164,10 +167,10 @@ public abstract class BlockDownloader {
                         final Channel any = getAnyPeer();
 
                         if (any == null) {
-                            logger.debug("headerRetrieveLoop: No IDLE peers found");
+                            logger.debug("{} headerRetrieveLoop: No IDLE peers found", name);
                             break;
                         } else {
-                            logger.debug("headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode());
+                            logger.debug("{} headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode(), name);
                             ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse()) :
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), headersRequest.getStep(), headersRequest.isReverse());
@@ -182,7 +185,7 @@ public abstract class BlockDownloader {
 
                                     @Override
                                     public void onFailure(Throwable t) {
-                                        logger.debug("Error receiving headers. Dropping the peer.", t);
+                                        logger.debug("{}: Error receiving headers. Dropping the peer.", name, t);
                                         any.getEthHandler().dropConnection();
                                     }
                                 });
@@ -218,7 +221,7 @@ public abstract class BlockDownloader {
 
             @Override
             public void onFailure(Throwable t) {
-                logger.debug("Error receiving Blocks. Dropping the peer.", t);
+                logger.debug("{}: Error receiving Blocks. Dropping the peer.", name, t);
                 peer.getEthHandler().dropConnection();
             }
         }
@@ -231,7 +234,7 @@ public abstract class BlockDownloader {
                 }
 
                 if (bReqs.isEmpty() && headersDownloadComplete) {
-                    logger.info("Block download complete.");
+                    logger.info("{}: Block download complete.", name);
                     finishDownload();
                     downloadComplete = true;
                     return;
@@ -266,10 +269,10 @@ public abstract class BlockDownloader {
                         SyncQueueIfc.BlocksRequest blocksRequest = it.next();
                         Channel any = getAnyPeer();
                         if (any == null) {
-                            logger.debug("blockRetrieveLoop: No IDLE peers found");
+                            logger.debug("{} blockRetrieveLoop: No IDLE peers found", name);
                             break;
                         } else {
-                            logger.debug("blockRetrieveLoop: Requesting " + blocksRequest.getBlockHeaders().size() + " blocks from " + any.getNode());
+                            logger.debug("{} blockRetrieveLoop: Requesting " + blocksRequest.getBlockHeaders().size() + " blocks from " + any.getNode(), name);
                             ListenableFuture<List<Block>> futureBlocks =
                                     any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
                             blocksRequested += blocksRequest.getBlockHeaders().size();
@@ -282,7 +285,7 @@ public abstract class BlockDownloader {
                     }
                     receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter - 2, 1));
                 } else {
-                    logger.debug("blockRetrieveLoop: BlockQueue is full");
+                    logger.debug("{} blockRetrieveLoop: BlockQueue is full", name);
                     receivedBlocksLatch = new CountDownLatch(1);
                 }
                 receivedBlocksLatch.await(200, TimeUnit.MILLISECONDS);
@@ -307,8 +310,8 @@ public abstract class BlockDownloader {
         }
 
         synchronized (this) {
-            logger.debug("Adding new " + blocks.size() + " blocks to sync queue: " +
-                    blocks.get(0).getShortDescr() + " ... " + blocks.get(blocks.size() - 1).getShortDescr());
+            logger.debug("{}: Adding new " + blocks.size() + " blocks to sync queue: " +
+                    blocks.get(0).getShortDescr() + " ... " + blocks.get(blocks.size() - 1).getShortDescr(), name);
 
             List<Block> newBlocks = syncQueue.addBlocks(blocks);
 
@@ -318,8 +321,8 @@ public abstract class BlockDownloader {
             }
 
 
-            logger.debug("Pushing " + wrappers.size() + " blocks to import queue: " + (wrappers.isEmpty() ? "" :
-                    wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()));
+            logger.debug("{}: Pushing " + wrappers.size() + " blocks to import queue: " + (wrappers.isEmpty() ? "" :
+                    wrappers.get(0).getBlock().getShortDescr() + " ... " + wrappers.get(wrappers.size() - 1).getBlock().getShortDescr()), name);
 
             pushBlocks(wrappers);
         }
@@ -327,8 +330,9 @@ public abstract class BlockDownloader {
         receivedBlocksLatch.countDown();
 
         if (logger.isDebugEnabled()) logger.debug(
-                "Blocks waiting to be proceed: lastBlock.number: [{}]",
-                blocks.get(blocks.size() - 1).getNumber()
+                "{}: Blocks waiting to be proceed: lastBlock.number: [{}]",
+                blocks.get(blocks.size() - 1).getNumber(),
+                name
         );
     }
 
@@ -354,7 +358,7 @@ public abstract class BlockDownloader {
             if (!isValid(header)) {
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Invalid header RLP: {}", Hex.toHexString(header.getEncoded()));
+                    logger.debug("{}: Invalid header RLP: {}", Hex.toHexString(header.getEncoded()), name);
                 }
 
                 return false;
@@ -372,7 +376,7 @@ public abstract class BlockDownloader {
 
         receivedHeadersLatch.countDown();
 
-        logger.debug("{} headers added", headers.size());
+        logger.debug("{}: {} headers added", name, headers.size());
 
         return true;
     }
