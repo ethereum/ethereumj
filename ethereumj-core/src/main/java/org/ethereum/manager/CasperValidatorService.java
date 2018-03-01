@@ -533,6 +533,17 @@ public class CasperValidatorService {
                 lastNonvoterRescale,
                 lastVoterRescale);
         logger.info(logStr);
+
+        long valIndex = getValidatorIndex();
+        BigDecimal myDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", valIndex)[0];
+        BigDecimal myDepositScaled = myDeposit.multiply(scaleFactor);
+        String myStr = String.format(
+                "MY VALIDATOR STATUS: epoch %d, index #%d, deposit: %.3f ETH",
+                curEpoch,
+                valIndex,
+                myDepositScaled.divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32)
+        );
+        logger.info(myStr);
     }
 
     private byte[] getRecommendedVoteData(long validatorIndex) {
