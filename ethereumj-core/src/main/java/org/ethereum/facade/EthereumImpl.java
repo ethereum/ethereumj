@@ -449,6 +449,14 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         this.programInvokeFactory = programInvokeFactory;
     }
 
+    public void setPendingState(PendingState pendingState) {
+        this.pendingState = pendingState;
+    }
+
+    public void setChannelManager(ChannelManager channelManager) {
+        this.channelManager = channelManager;
+    }
+
     /**
      * For testing purposes and 'hackers'
      */

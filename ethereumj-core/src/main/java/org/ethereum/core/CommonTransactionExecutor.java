@@ -127,7 +127,7 @@ public class CommonTransactionExecutor implements TransactionExecutor {
         return this;
     }
 
-    private void execError(String err) {
+    protected void execError(String err) {
         logger.warn(err);
         execError = err;
     }

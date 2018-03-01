@@ -49,6 +49,33 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     }
 
     @Override
+    public void init() {
+        super.init();
+        // Already failed on common validation
+        if (execError != null) {
+            return;
+        }
+
+        // More validations for Casper
+
+        // EIP 208
+        if (Arrays.equals(tx.getSender(), Transaction.NULL_SENDER) && toBI(tx.getNonce()).compareTo(BigInteger.ZERO) > 0) {
+            execError(String.format("Null sender transaction should use 0 nonce, %s instead", toBI(tx.getNonce())));
+
+            return;
+        }
+
+        // EIP 208
+        if (Arrays.equals(tx.getSender(), Transaction.NULL_SENDER) &&
+                (toBI(tx.getValue()).compareTo(BigInteger.ZERO) > 0 || toBI(tx.getGasPrice()).compareTo(BigInteger.ZERO) > 0)) {
+            execError(String.format("Null sender transaction should have 0 value (actual %s), " +
+                    "and 0 gasprice (actual: %s)", toBI(tx.getValue()), toBI(tx.getGasPrice())));
+
+            return;
+        }
+    }
+
+    @Override
     protected boolean isSignatureValid() {
         return isCasperVote() || super.isSignatureValid();
     }

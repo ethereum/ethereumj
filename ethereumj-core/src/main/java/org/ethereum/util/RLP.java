@@ -1132,6 +1132,12 @@ public class RLP {
         return output;
     }
 
+    /**
+     * Expects byte[] objects are already RLP-encoded while everything else is not
+     * @param elements  Any elements, supports Byte, Short, Integer, Long,
+     *                  BigInteger, String, byte[], ByteArrayWrapper
+     * @return RLP list byte encoded
+     */
     public static byte[] encodeList(Object... elements) {
 
         if (elements == null) {
@@ -1153,6 +1159,8 @@ public class RLP {
                 encodedElems[i] = encodeBigInteger((BigInteger) elements[i]);
             } else if (elements[i] instanceof String) {
                 encodedElems[i] = encodeString((String) elements[i]);
+            } else if (elements[i] instanceof ByteArrayWrapper) {
+                encodedElems[i] = encodeElement(((ByteArrayWrapper) elements[i]).getData());
             } else if (elements[i] instanceof byte[]) {
                 encodedElems[i] = ((byte[]) elements[i]);
             } else {

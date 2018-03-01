@@ -17,6 +17,7 @@
  */
 package org.ethereum.manager;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
@@ -33,6 +34,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -112,15 +114,27 @@ public class CasperValidatorService {
     }
 
     private byte[] makeVote(long validatorIndex, byte[] targetHash, long targetEpoch, long sourceEpoch, ECKey sender) {
-        byte[] sigHash = sha3(RLP.encodeList(validatorIndex, targetHash, targetEpoch, sourceEpoch));
+        byte[] sigHash = sha3(RLP.encodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch));
         ECKey.ECDSASignature signature = sender.sign(sigHash);
-        return RLP.encodeList(validatorIndex, targetHash, targetEpoch, sourceEpoch, signature.v, signature.r, signature.s);
+        byte[] v, r, s;  // encoding as 32-byte ints
+        v = BigIntegers.asUnsignedByteArray(32, BigInteger.valueOf(signature.v));  // FIXME: If we'll have chainId it would fail
+        r = BigIntegers.asUnsignedByteArray(32, signature.r);
+        s = BigIntegers.asUnsignedByteArray(32, signature.s);
+        byte[] vr = ArrayUtils.addAll(v, r);
+        byte[] vrs = ArrayUtils.addAll(vr, s);
+        return RLP.encodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch, new ByteArrayWrapper(vrs));
     }
 
     private byte[] makeLogout(long validatorIndex, long epoch, ECKey sender) {
         byte[] sigHash = sha3(RLP.encodeList(validatorIndex, epoch));
         ECKey.ECDSASignature signature = sender.sign(sigHash);
-        return RLP.encodeList(validatorIndex, epoch, signature.v, signature.r, signature.s);
+        byte[] v, r, s;  // encoding as 32-byte ints
+        v = BigIntegers.asUnsignedByteArray(32, BigInteger.valueOf(signature.v));  // FIXME: If we'll have chainId it would fail
+        r = BigIntegers.asUnsignedByteArray(32, signature.r);
+        s = BigIntegers.asUnsignedByteArray(32, signature.s);
+        byte[] vr = ArrayUtils.addAll(v, r);
+        byte[] vrs = ArrayUtils.addAll(vr, s);
+        return RLP.encodeList(validatorIndex, epoch, new ByteArrayWrapper(vrs));
     }
 
     public enum ValidatorState {
@@ -231,9 +245,6 @@ public class CasperValidatorService {
         if (nonce == null) {
             nonce = repository.getNonce(coinbase.getAddress());
         }
-        if (gasPrice == null) {
-            gasPrice = ByteUtil.bigIntegerToBytes(BigInteger.valueOf(110).multiply(BigInteger.valueOf(10).pow(9)));
-        }
         if (gasLimit == null) {
             gasLimit = ByteUtil.longToBytes(DEFAULT_GASLIMIT);
         }
@@ -245,6 +256,9 @@ public class CasperValidatorService {
         }
         if (signed == null) {
             signed = Boolean.TRUE;
+        }
+        if (gasPrice == null && signed) {
+            gasPrice = ByteUtil.bigIntegerToBytes(BigInteger.valueOf(110).multiply(BigInteger.TEN.pow(9)));
         }
 
         Transaction tx = new Transaction(
@@ -280,7 +294,8 @@ public class CasperValidatorService {
      * Wait for valcode contract to be included, then submit deposit
      */
     private void checkValcode(Object o) {
-        if (valContractAddress == null || repository.getCode(valContractAddress) == null) {
+        if (valContractAddress == null || repository.getCode(valContractAddress) == null ||
+                repository.getCode(valContractAddress).length == 0) {
             // Valcode still not deployed! or lost
             return;
         }
@@ -311,16 +326,16 @@ public class CasperValidatorService {
         byte[] functionCallBytes = strategy.getCasper().getByName("deposit").encode(
                 new ByteArrayWrapper(valContractAddress),
                 new ByteArrayWrapper(coinbaseAddress));
-        Transaction tx = makeTx(strategy.getCasperAddress(), deposit, functionCallBytes, null, ByteUtil.longToBytes(1000000),
+        Transaction tx = makeTx(strategy.getCasperAddress(), deposit, functionCallBytes, null, ByteUtil.longToBytes(1_000_000),
                 null, true);
         return tx;
 
     }
 
     private Transaction makeVoteTx(byte[] voteData) {
-        byte[] functionCallBytes = strategy.getCasper().getByName("vote").encode(new ByteArrayWrapper(voteData));
-        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null, ByteUtil.longToBytes(1000000),
-                null, true);
+        byte[] functionCallBytes = strategy.getCasper().getByName("vote").encode(voteData);
+        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null, ByteUtil.longToBytes(1_000_000),
+                BigInteger.ZERO, false);
         return tx;
 
     }
@@ -554,5 +569,9 @@ public class CasperValidatorService {
 
     public void setStrategy(CasperHybridConsensusStrategy strategy) {
         this.strategy = strategy;
+    }
+
+    public void setSyncManager(SyncManager syncManager) {
+        this.syncManager = syncManager;
     }
 }

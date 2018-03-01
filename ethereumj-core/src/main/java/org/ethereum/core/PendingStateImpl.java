@@ -506,4 +506,8 @@ public class PendingStateImpl implements PendingState {
     public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
     }
+
+    public void setCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+    }
 }

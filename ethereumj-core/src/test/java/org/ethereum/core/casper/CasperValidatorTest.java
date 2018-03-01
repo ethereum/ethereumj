@@ -25,18 +25,32 @@ import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.core.genesis.CasperStateInit;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.manager.CasperValidatorService;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.vm.GasCost;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 
-public class CasperEpochSwitchTest extends CasperBase {
+@Ignore
+public class CasperValidatorTest extends CasperBase {
 
     class CasperEasyConfig extends BaseNetConfig {
         class CasperGasCost extends Eip150HFConfig.GasCostEip150HF {
@@ -94,9 +108,10 @@ public class CasperEpochSwitchTest extends CasperBase {
     }
 
     @Test
-    public void epochStartTest() {
+    public void validatorTest() {
         // Init with Genesis
         final Genesis genesis = Genesis.getInstance(systemProperties);
+        final ECKey coinbase = new ECKey();
         final Genesis modifiedGenesis = new Genesis(
                 genesis.getParentHash(),
                 genesis.getUnclesHash(),
@@ -111,32 +126,58 @@ public class CasperEpochSwitchTest extends CasperBase {
                 genesis.getMixHash(),
                 genesis.getNonce()
         );
+
+        // We need money
+        Genesis.PremineAccount coinbaseAcc = new Genesis.PremineAccount();
+        coinbaseAcc.accountState = new AccountState(BigInteger.ZERO, EtherUtil.convert(2500, EtherUtil.Unit.ETHER));
+        genesis.getPremine().put(new ByteArrayWrapper(coinbase.getAddress()), coinbaseAcc);
         modifiedGenesis.setPremine(genesis.getPremine());
+
         CasperStateInit casperStateInit = (CasperStateInit) strategy.initState(modifiedGenesis);
         casperStateInit.initDB();
 
         BigInteger zeroEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
 
-        for (int i = 0; i < 50; ++i) {
+        systemProperties.overrideParams(
+                "consensus.casper.validator.enabled", "true",
+                "consensus.casper.validator.privateKey", Hex.toHexString(coinbase.getPrivKeyBytes()),
+                "consensus.casper.validator.deposit", "2000"
+        );
+
+
+        bc.createBlock();
+
+        CasperValidatorService service = new CasperValidatorService(ethereum, systemProperties);
+        service.setStrategy(strategy);
+        SyncManager syncManager = Mockito.mock(SyncManager.class);
+        Mockito.when(syncManager.isSyncDone()).thenReturn(true);
+        service.setSyncManager(syncManager);
+
+        ethereum.addListener(new EthereumListenerAdapter(){
+            @Override
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+                if (state.equals(PendingTransactionState.NEW_PENDING)) {
+                    bc.submitTransaction(txReceipt.getTransaction());
+                }
+            }
+        });
+
+        for (int i = 0; i < 10; ++i) {
             Block block = bc.createBlock();
         }
-
-        BigInteger firstEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
-        assertEquals(1, firstEpoch.longValue());
-
-        for (int i = 0; i < 50; ++i) {
+        // Deposit is scaled, so it's neither in wei nor in ETH. Should be 2000 ETH
+        // TODO: Convert to ETH or wei
+        BigDecimal curDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", 1)[0];
+        assertTrue(curDeposit.compareTo(new BigDecimal("200000000000")) == 0);
+        for (int i = 0; i < 500; ++i) {
             Block block = bc.createBlock();
         }
+        // We've earned some money on top of our deposit as premium for our votes, which finalized epochs!!
+        BigDecimal increasedDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", 1)[0];
+        assertTrue(increasedDeposit.compareTo(new BigDecimal("200000000000")) > 0);
 
-        // Epochs switches and they are finalized and justified because there no deposits yet [insta_finalize]
-        BigInteger secondEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
-        assertEquals(2, secondEpoch.longValue());
-
-        BigInteger lastFinalized = (BigInteger) strategy.constCallCasper("get_last_finalized_epoch")[0];
-        assertEquals(1, lastFinalized.longValue());
-
-        BigInteger lastJustified = (BigInteger) strategy.constCallCasper("get_last_justified_epoch")[0];
-        assertEquals(1, lastJustified.longValue());
+        // TODO: add more checking with listeners etc.
+        // TODO: add more validators and logout
     }
 }

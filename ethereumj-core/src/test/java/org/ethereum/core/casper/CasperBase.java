@@ -34,12 +34,15 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;
 import org.ethereum.db.RepositoryRoot;
+import org.ethereum.db.RepositoryWrapper;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.ProgramPrecompile;
@@ -50,7 +53,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.context.ApplicationContext;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CasperBase {
@@ -63,9 +70,9 @@ public class CasperBase {
 
     CasperBlockchain blockchain;
 
-    private WorldManager worldManager;
+    WorldManager worldManager;
 
-    private EthereumImpl ethereum;
+    EthereumImpl ethereum;
 
     private CompositeEthereumListener defaultListener = new CompositeEthereumListener();
 
@@ -149,6 +156,7 @@ public class CasperBase {
                 blockchain.byTest = true;
 
                 pendingState = new PendingStateImpl(listener, blockchain);
+                pendingState.setCommonConfig(commonConfig);
 
                 pendingState.setBlockchain(blockchain);
                 blockchain.setPendingState(pendingState);
@@ -159,10 +167,19 @@ public class CasperBase {
         this.blockchain = (CasperBlockchain) bc.getBlockchain();
         Mockito.when(context.getBean(CasperBlockchain.class)).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockchain()).thenReturn(blockchain);
-        Mockito.when(worldManager.getRepository()).thenReturn(bc.getBlockchain().getRepository());
-        Mockito.when(worldManager.getBlockStore()).thenReturn(bc.getBlockchain().getBlockStore());
+        Mockito.when(worldManager.getBlockStore()).thenReturn(blockchain.getBlockStore());
+        RepositoryWrapper wrapper = new RepositoryWrapper();
+        wrapper.setBlockchain(bc.getBlockchain());
+        Mockito.when(worldManager.getRepository()).thenReturn(wrapper);
+        doAnswer((Answer<Void>) invocation -> {
+            Object arg0 = invocation.getArgument(0);
+            defaultListener.addListener((EthereumListener) arg0);
+            return null;
+        }).when(worldManager).addListener(any(EthereumListener.class));
         ethereum.setWorldManager(worldManager);
         ethereum.setProgramInvokeFactory(new ProgramInvokeFactoryImpl());
+        ethereum.setPendingState(blockchain.getPendingState());
+        ethereum.setChannelManager(Mockito.mock(ChannelManager.class));
         ((CasperHybridConsensusStrategy) commonConfig.consensusStrategy()).setEthereum(ethereum);
     }
 

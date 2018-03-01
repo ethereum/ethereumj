@@ -208,7 +208,13 @@ public class StandaloneBlockchain implements LocalBlockchain {
                     BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
                     nonce = bcNonce.longValue();
                 }
-                nonces.put(senderW, nonce + 1);
+                // FIXME: Casper only
+                // Increase nonce only for non-casper txs
+                Long newNonce = nonce;
+                if (!Arrays.equals(tx.sender.getAddress(), Transaction.NULL_SENDER)) {
+                    ++newNonce;
+                }
+                nonces.put(senderW, newNonce);
 
                 byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
 
@@ -276,11 +282,12 @@ public class StandaloneBlockchain implements LocalBlockchain {
             // FIXME: Not sure it's correct for non-casper cases
             // The issue is that Casper has background txs. It's not included in txs but it affects receipts
             for (int i = 0; i < pendingTxes.size(); i++) {
-                pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
-                pendingTxes.get(i).txResult.executionSummary = getTxSummary(lastSummary, i);
+                final PendingTx currentTx = pendingTxes.get(i);
+                currentTx.txResult.receipt = lastSummary.getReceipts().get(i);
+                currentTx.txResult.executionSummary = getTxSummary(lastSummary, i);
+                submittedTxes.removeIf(tx -> Arrays.equals(tx.customTx.getHash(), currentTx.customTx.getHash()));
             }
 
-            submittedTxes.clear();
             return b;
         } catch (InterruptedException|ExecutionException e) {
             throw new RuntimeException(e);
