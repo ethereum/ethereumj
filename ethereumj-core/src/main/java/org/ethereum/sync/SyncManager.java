@@ -17,7 +17,6 @@
  */
 package org.ethereum.sync;
 
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Blockchain;
@@ -59,8 +58,8 @@ public class SyncManager extends BlockDownloader {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private long estimatedBlockSize = 0;
-    private final CircularFifoQueue<Long> lastBlockSizes = new CircularFifoQueue<>(5 * MAX_IN_REQUEST);
+    private final static AtomicLong blockQueueByteSize = new AtomicLong(0);
+    private final static int BLOCK_BYTES_ADDON = 4;
 
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
@@ -75,8 +74,8 @@ public class SyncManager extends BlockDownloader {
     private ExecutorPipeline<BlockWrapper, Void> exec2 = exec1.add(1, 1, new Consumer<BlockWrapper>() {
         @Override
         public void accept(BlockWrapper blockWrapper) {
+            blockQueueByteSize.addAndGet(estimateBlockSize(blockWrapper));
             blockQueue.add(blockWrapper);
-            estimateBlockSize(blockWrapper);
         }
     });
 
@@ -107,7 +106,7 @@ public class SyncManager extends BlockDownloader {
 
     private Thread syncQueueThread;
 
-    private long blockBytesLimit = 64 * 1024 * 1024;
+    private long blockBytesLimit = 32 * 1024 * 1024;
     private long lastKnownBlockNumber = 0;
     private boolean syncDone = false;
     private AtomicLong importIdleTime = new AtomicLong();
@@ -207,36 +206,23 @@ public class SyncManager extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-
-        if (estimatedBlockSize == 0) {
-            return MAX_IN_REQUEST; // seems to be the very beginning, accurately exploring the net
-        }
-
         int blockQueueSize = blockQueue.size();
-        long bytesInBlock = estimatedBlockSize;
+        long blockByteSize = blockQueueByteSize.get();
+        int availableBlockSpace = Math.max(0, getBlockQueueLimit() - blockQueueSize);
+        long availableBytesSpace = Math.max(0, blockBytesLimit - blockByteSize);
 
-        long availableBytes = Math.max(0, blockBytesLimit - bytesInBlock * blockQueueSize);
-        int availableByMem = (int) (availableBytes / bytesInBlock);
-        int availableByQty = Math.max(0, getBlockQueueLimit() - blockQueueSize);
-
-        int availableSlots = Math.min(availableByQty, availableByMem);
-
-        // mitigate processing delays caused by drained queue
-        if (availableSlots + blockQueueSize < MAX_IN_REQUEST) {
-            return MAX_IN_REQUEST;
+        int bytesSpaceInBlocks;
+        if (blockByteSize == 0 || blockQueueSize == 0) {
+            bytesSpaceInBlocks = Integer.MAX_VALUE;
         } else {
-            return availableSlots;
+            bytesSpaceInBlocks = (int) Math.floor(availableBytesSpace / (blockByteSize / blockQueueSize));
         }
+
+        return Math.min(bytesSpaceInBlocks, availableBlockSpace);
     }
 
-    private void estimateBlockSize(BlockWrapper blockWrapper) {
-        long blockSize = blockWrapper.estimateMemSize();
-
-        synchronized (lastBlockSizes) {
-            lastBlockSizes.add(blockSize);
-            estimatedBlockSize = lastBlockSizes.stream().mapToLong(Long::longValue).sum() / lastBlockSizes.size();
-        }
-        logger.debug("estimated block size: {}", estimatedBlockSize);
+    private long estimateBlockSize(BlockWrapper blockWrapper) {
+        return blockWrapper.getEncoded().length + BLOCK_BYTES_ADDON;
     }
 
     /**
@@ -254,6 +240,7 @@ public class SyncManager extends BlockDownloader {
 
                 long stale = !isSyncDone() && importStart > 0 && blockQueue.isEmpty() ? System.nanoTime() : 0;
                 wrapper = blockQueue.take();
+                blockQueueByteSize.addAndGet(-estimateBlockSize(wrapper));
 
                 if (stale > 0) {
                     importIdleTime.addAndGet((System.nanoTime() - stale) / 1_000_000);
