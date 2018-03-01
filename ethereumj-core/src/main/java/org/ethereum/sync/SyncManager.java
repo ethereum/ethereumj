@@ -20,7 +20,6 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Blockchain;
-import org.ethereum.db.BlockStore;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
@@ -86,9 +85,6 @@ public class SyncManager extends BlockDownloader {
 
     @Autowired
     private Blockchain blockchain;
-
-    @Autowired
-    private BlockStore blockStore;
 
     @Autowired
     private CompositeEthereumListener compositeEthereumListener;
@@ -324,12 +320,6 @@ public class SyncManager extends BlockDownloader {
         }
 
         lastKnownBlockNumber = block.getNumber();
-
-        // processing is far from the the top of the chain?
-        // don't waste memory
-        if (block.getNumber() - blockStore.getMaxNumber() > MAX_IN_REQUEST) {
-            return true;
-        }
 
         logger.debug("Adding new block to sync queue: " + block.getShortDescr());
         syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
