@@ -39,6 +39,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
@@ -94,6 +95,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @since 20.05.2014
  */
 @Lazy
+@Primary
 @Component
 public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchain {
 

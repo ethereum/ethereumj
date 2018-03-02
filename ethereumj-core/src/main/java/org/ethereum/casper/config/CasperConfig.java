@@ -15,9 +15,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.config;
+package org.ethereum.casper.config;
 
-import org.ethereum.datasource.*;
+import org.ethereum.config.CommonConfig;
+import org.ethereum.config.DefaultConfig;
+import org.ethereum.config.NoAutoscan;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;
@@ -32,40 +36,36 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 
-/**
- *
- * @author Roman Mandeleil
- * Created on: 27/01/2015 01:05
- */
 @Configuration
 @ComponentScan(
         basePackages = "org.ethereum",
         excludeFilters = {@ComponentScan.Filter(NoAutoscan.class),
-                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.ethereum\\.casper\\..*")}
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = {CommonConfig.class, DefaultConfig.class})},
+        includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = {CasperBeanConfig.class})}
 )
-@Import(CommonConfig.class)
-public class DefaultConfig {
+@Import(CasperBeanConfig.class)
+public class CasperConfig {
     private static Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
     ApplicationContext appCtx;
 
     @Autowired
-    CommonConfig commonConfig;
+    CasperBeanConfig beanConfig;
 
     @Autowired
     SystemProperties config;
 
-    public DefaultConfig() {
+    public CasperConfig() {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
     }
 
     @Bean
     public BlockStore blockStore(){
-        commonConfig.fastSyncCleanUp();
+        beanConfig.fastSyncCleanUp();
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
-        Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
+        Source<byte[], byte[]> block = beanConfig.cachedDbSource("block");
+        Source<byte[], byte[]> index = beanConfig.cachedDbSource("index");
         indexedBlockStore.init(index, block);
 
         return indexedBlockStore;
@@ -73,14 +73,14 @@ public class DefaultConfig {
 
     @Bean
     public TransactionStore transactionStore() {
-        commonConfig.fastSyncCleanUp();
-        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
+        beanConfig.fastSyncCleanUp();
+        return new TransactionStore(beanConfig.cachedDbSource("transactions"));
     }
 
     @Bean
     public PruneManager pruneManager() {
         if (config.databasePruneDepth() >= 0) {
-            return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
+            return new PruneManager((IndexedBlockStore) blockStore(), beanConfig.stateSource().getJournalSource(),
                     config.databasePruneDepth());
         } else {
             return new PruneManager(null, null, -1); // dummy

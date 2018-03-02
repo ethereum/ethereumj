@@ -18,7 +18,6 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.consensus.PoWConsensusStrategy;
 import org.ethereum.crypto.HashUtil;
@@ -28,10 +27,8 @@ import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
-import org.ethereum.validator.*;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,22 +40,14 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
-
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(
-        basePackages = "org.ethereum",
-        excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
     private Set<DbSource> dbSources = new HashSet<>();
 
-    private ConsensusStrategy consensusStrategy;
-
-
     @Autowired
-    private ApplicationContext ctx;
+    protected ApplicationContext ctx;
 
     private static CommonConfig defaultInstance;
 
@@ -258,18 +247,6 @@ public class CommonConfig {
 
     @Bean
     public ConsensusStrategy consensusStrategy() {
-        if(consensusStrategy == null) {
-            switch (systemProperties().getConsensusStrategy()) {
-                case "pow":
-                    consensusStrategy = new PoWConsensusStrategy(systemProperties(), ctx);
-                    break;
-                case "casper-hybrid":
-                    consensusStrategy = new CasperHybridConsensusStrategy(systemProperties(), ctx);
-                    break;
-                default:
-                    throw new RuntimeException("Consensus strategy is not set. Breaking.");
-            }
-        }
-        return consensusStrategy;
+        return new PoWConsensusStrategy(systemProperties(), ctx);
     }
 }

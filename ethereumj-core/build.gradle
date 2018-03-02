@@ -64,7 +64,7 @@ task runTest (type: JavaExec) {
 }
 
 task runCasper (type: JavaExec) {
-    main = mainClassName
+    main = 'org.ethereum.casper.Start'
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=casper.conf'
 }
