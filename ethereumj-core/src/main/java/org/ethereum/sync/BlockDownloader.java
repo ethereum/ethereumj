@@ -20,9 +20,9 @@ package org.ethereum.sync;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.ethereum.core.*;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.ByteArrayMap;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +71,9 @@ public abstract class BlockDownloader {
 
     protected String name = "BlockDownloader";
 
+    private long estimatedBlockSize = 0;
+    private final CircularFifoQueue<Long> lastBlockSizes = new CircularFifoQueue<>(10 * MAX_IN_REQUEST);
+
     public BlockDownloader(BlockHeaderValidator headerValidator) {
         this.headerValidator = headerValidator;
     }
@@ -78,6 +81,7 @@ public abstract class BlockDownloader {
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
     protected abstract void pushHeaders(List<BlockHeaderWrapper> headers);
     protected abstract int getBlockQueueFreeSize();
+    protected abstract int getTotalHeadersToRequest();
 
     protected void finishDownload() {}
 
@@ -133,6 +137,10 @@ public abstract class BlockDownloader {
         return blockQueueLimit;
     }
 
+    public int getHeaderQueueLimit() {
+        return headerQueueLimit;
+    }
+
     public void setBlockQueueLimit(int blockQueueLimit) {
         this.blockQueueLimit = blockQueueLimit;
     }
@@ -143,7 +151,7 @@ public abstract class BlockDownloader {
             try {
                     if (hReq.isEmpty()) {
                         synchronized (this) {
-                            hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, headerQueueLimit);
+                            hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, getTotalHeadersToRequest());
                             if (hReq == null) {
                                 logger.info("{}: Headers download complete.", name);
                                 headersDownloadComplete = true;
@@ -241,7 +249,7 @@ public abstract class BlockDownloader {
                 }
 
                 int blocksToAsk = getBlockQueueFreeSize();
-                if (blocksToAsk > MAX_IN_REQUEST) {
+                if (blocksToAsk >= MAX_IN_REQUEST) {
 //                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
 
                     if (bReqs.size() == 1 && bReqs.get(0).getBlockHeaders().size() <= 3) {
@@ -410,4 +418,32 @@ public abstract class BlockDownloader {
         }
     }
 
+    /**
+     * Estimates block size in bytes.
+     * Block memory size can depend on the underlying logic,
+     * hence ancestors should call this method on their own,
+     * preferably after actions that impact on block memory size (like RLP parsing, signature recover) are done
+     */
+    protected void estimateBlockSize(BlockWrapper blockWrapper) {
+        synchronized (lastBlockSizes) {
+            lastBlockSizes.add(blockWrapper.estimateMemSize());
+            estimatedBlockSize = lastBlockSizes.stream().mapToLong(Long::longValue).sum() / lastBlockSizes.size();
+        }
+        logger.debug("{}: estimated block size: {}", name, estimatedBlockSize);
+    }
+
+    protected void estimateBlockSize(Collection<BlockWrapper> blockWrappers) {
+        if (blockWrappers.isEmpty())
+            return;
+
+        synchronized (lastBlockSizes) {
+            blockWrappers.forEach(b -> lastBlockSizes.add(b.estimateMemSize()));
+            estimatedBlockSize = lastBlockSizes.stream().mapToLong(Long::longValue).sum() / lastBlockSizes.size();
+        }
+        logger.debug("{}: estimated block size: {}", name, estimatedBlockSize);
+    }
+
+    public long getEstimatedBlockSize() {
+        return estimatedBlockSize;
+    }
 }

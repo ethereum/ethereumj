@@ -93,6 +93,11 @@ public class FastSyncDownloader extends BlockDownloader {
         return getBlockQueueLimit();
     }
 
+    @Override
+    protected int getTotalHeadersToRequest() {
+        return getHeaderQueueLimit();
+    }
+
     // TODO: receipts loading here
 
     public int getDownloadedBlocksCount() {
