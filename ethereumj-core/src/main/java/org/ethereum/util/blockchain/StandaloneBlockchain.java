@@ -285,7 +285,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 final PendingTx currentTx = pendingTxes.get(i);
                 currentTx.txResult.receipt = lastSummary.getReceipts().get(i);
                 currentTx.txResult.executionSummary = getTxSummary(lastSummary, i);
-                submittedTxes.removeIf(tx -> Arrays.equals(tx.customTx.getHash(), currentTx.customTx.getHash()));
+                submittedTxes.removeIf(tx -> tx == currentTx);  // same object
             }
 
             return b;
