@@ -49,7 +49,7 @@ import java.math.BigInteger;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 
-@Ignore
+@Ignore  // Takes too long to run usually
 public class CasperValidatorTest extends CasperBase {
 
     class CasperEasyConfig extends BaseNetConfig {
@@ -154,15 +154,6 @@ public class CasperValidatorTest extends CasperBase {
         Mockito.when(syncManager.isSyncDone()).thenReturn(true);
         service.setSyncManager(syncManager);
 
-        ethereum.addListener(new EthereumListenerAdapter(){
-            @Override
-            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
-                if (state.equals(PendingTransactionState.NEW_PENDING)) {
-                    bc.submitTransaction(txReceipt.getTransaction());
-                }
-            }
-        });
-
         for (int i = 0; i < 10; ++i) {
             Block block = bc.createBlock();
         }
@@ -170,14 +161,25 @@ public class CasperValidatorTest extends CasperBase {
         // TODO: Convert to ETH or wei
         BigDecimal curDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", 1)[0];
         assertTrue(curDeposit.compareTo(new BigDecimal("200000000000")) == 0);
-        for (int i = 0; i < 500; ++i) {
+        for (int i = 0; i < 300; ++i) {
             Block block = bc.createBlock();
         }
         // We've earned some money on top of our deposit as premium for our votes, which finalized epochs!!
         BigDecimal increasedDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", 1)[0];
         assertTrue(increasedDeposit.compareTo(new BigDecimal("200000000000")) > 0);
 
+        // We've left less than 500 ETH
+        assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(EtherUtil.convert(500, EtherUtil.Unit.ETHER)) < 0);
+        // Let's logout
+        service.voteThenLogout();
+        // Withdrawal delay is 5 epochs + 1 vote epoch + overhead
+        for (int i = 0; i < 400; ++i) {
+            Block block = bc.createBlock();
+        }
+        // We should have more than 2500 ETH in the end
+        assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(EtherUtil.convert(2500, EtherUtil.Unit.ETHER)) > 0);
+
         // TODO: add more checking with listeners etc.
-        // TODO: add more validators and logout
+        // TODO: add more validators
     }
 }

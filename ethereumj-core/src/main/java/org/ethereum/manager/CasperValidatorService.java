@@ -160,7 +160,7 @@ public class CasperValidatorService {
 
     private ValidatorState state = UNINITIATED;
 
-    private Map<ValidatorState, Consumer<Object>> handlers = new HashMap<>();
+    private Map<ValidatorState, Runnable> handlers = new HashMap<>();
 
     @Autowired
     public CasperValidatorService(Ethereum ethereum, SystemProperties config) {
@@ -192,14 +192,22 @@ public class CasperValidatorService {
             if(!syncManager.isSyncDone()) return;
             logCasperInfo();
 
-            handlers.get(state).accept(block);
+            handlers.get(state).run();
         };
+    }
+
+    public void reLogin() {
+        if (!state.equals(LOGGED_OUT)) {
+            throw new RuntimeException(String.format("Validator is not logged, out, cannot relogin. " +
+                    "Current state: %s", state));
+        }
+        this.depositSize = EtherUtil.convert(config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
     }
 
     /**
      * Check if logged in, and if not deploy a valcode contract
      */
-    private void checkLoggedIn(Object o) {
+    private void checkLoggedIn() {
         Long validatorIndex = getValidatorIndex();
         // (1) Check if the validator has ever deposited funds
         if (validatorIndex == 0 && depositSize.compareTo(BigInteger.ZERO) > 0) {
@@ -293,7 +301,7 @@ public class CasperValidatorService {
     /**
      * Wait for valcode contract to be included, then submit deposit
      */
-    private void checkValcode(Object o) {
+    private void checkValcode() {
         if (valContractAddress == null || repository.getCode(valContractAddress) == null ||
                 repository.getCode(valContractAddress).length == 0) {
             // Valcode still not deployed! or lost
@@ -368,6 +376,7 @@ public class CasperValidatorService {
         return inCurrentDynasty || inPrevDynasty;
     }
 
+    // TODO: integrate with composite ethereum listener
     private void setState(ValidatorState newState) {
         logger.info("Changing validator state from {} to {}", state, newState);
         this.state = newState;
@@ -380,17 +389,17 @@ public class CasperValidatorService {
         return strategy.getBlockchain().getBlockByNumber(epoch * config.getCasperEpochLength() - 1).getHash();
     }
 
-    private void voteThenLogout(Object o) {
+    public void voteThenLogout() {
         long epoch = getEpoch();
         long validatorIndex = getValidatorIndex();
         // Verify that we are not already logged out
         if (!isLoggedIn(epoch, validatorIndex)) {
-            // If we logged out, start waiting for withdrawls
+            // If we logged out, start waiting for withdrawal
             logger.info("Validator logged out!");
             setState(WAITING_FOR_WITHDRAWABLE);
             return;
         }
-        vote(null);
+        vote();
         broadcastLogoutTx();
         setState(WAITING_FOR_LOGOUT);
     }
@@ -404,7 +413,7 @@ public class CasperValidatorService {
         return constCallCasperForLong("get_current_epoch");
     }
 
-    private boolean vote(Object o) {
+    private boolean vote() {
         long epoch = getEpoch();
 
         // NO DOUBLE VOTE: Don't vote if we have already
@@ -460,7 +469,7 @@ public class CasperValidatorService {
         );
     }
 
-    private void checkWithdrawable(Object o) {
+    private void checkWithdrawable() {
         long validatorIndex = getValidatorIndex();
         if (validatorIndex == 0) {
             logger.info("Validator is already deleted!");
@@ -486,7 +495,7 @@ public class CasperValidatorService {
         }
     }
 
-    private void checkWithdrawn(Object o) {
+    private void checkWithdrawn() {
         // Check that we have been withdrawn--validator index will now be zero
         if (constCallCasperForLong("get_validator_indexes", new ByteArrayWrapper(coinbase.getAddress())) == 0) {
             setState(LOGGED_OUT);

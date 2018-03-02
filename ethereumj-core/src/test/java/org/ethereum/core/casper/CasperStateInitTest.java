@@ -21,11 +21,13 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.genesis.CasperStateInit;
 import org.ethereum.db.ByteArrayWrapper;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import static junit.framework.TestCase.assertEquals;
 
+@Ignore  // Takes too long to run usually
 public class CasperStateInitTest extends CasperBase {
 
     /**

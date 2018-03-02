@@ -21,10 +21,12 @@ import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.CasperTestNetConfig;
+import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.datasource.CountingBytesSource;
@@ -181,6 +183,16 @@ public class CasperBase {
         ethereum.setPendingState(blockchain.getPendingState());
         ethereum.setChannelManager(Mockito.mock(ChannelManager.class));
         ((CasperHybridConsensusStrategy) commonConfig.consensusStrategy()).setEthereum(ethereum);
+
+        // Push pending txs in StandaloneBlockchain
+        ethereum.addListener(new EthereumListenerAdapter(){
+            @Override
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+                if (state.equals(PendingTransactionState.NEW_PENDING)) {
+                    bc.submitTransaction(txReceipt.getTransaction());
+                }
+            }
+        });
     }
 
     BlockchainNetConfig config() {
