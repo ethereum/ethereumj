@@ -50,7 +50,7 @@ public class StandaloneBlockchainTest {
                         "  uint public b;" +
                         "  function A(uint a_, uint b_) {a = a_; b = b_; }" +
                         "}",
-                "<stdin>:A", 555, 777
+                "A", 555, 777
         );
         Assert.assertEquals(BigInteger.valueOf(555), a.callConstFunction("a")[0]);
         Assert.assertEquals(BigInteger.valueOf(777), a.callConstFunction("b")[0]);
@@ -61,7 +61,7 @@ public class StandaloneBlockchainTest {
                         "  uint public b;" +
                         "  function A(string a_, uint b_) {a = a_; b = b_; }" +
                         "}",
-                "<stdin>:A", "This string is longer than 32 bytes...", 777
+                "A", "This string is longer than 32 bytes...", 777
         );
         Assert.assertEquals("This string is longer than 32 bytes...", b.callConstFunction("a")[0]);
         Assert.assertEquals(BigInteger.valueOf(777), b.callConstFunction("b")[0]);
@@ -98,7 +98,7 @@ public class StandaloneBlockchainTest {
                             "  address public c;" +
                             "  address public d;" +
                             "  function A(uint[2] arr, address a1, address a2) {a = arr[0]; b = arr[1]; c = a1; d = a2;}" +
-                            "}", "<stdin>:A",
+                            "}", "A",
                     new Integer[]{111, 222}, addr1.getAddress(), addr2.getAddress());
             Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("a")[0]);
             Assert.assertEquals(BigInteger.valueOf(222), a.callConstFunction("b")[0]);

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -68,8 +69,8 @@ public class CompilerTest {
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
-        if (result.contracts.get("<stdin>:a") != null)
-            System.out.println(result.contracts.get("<stdin>:a").bin);
+        if (result.getContract("a") != null)
+            System.out.println(result.getContract("a").bin);
         else
             Assert.fail();
     }
@@ -88,7 +89,7 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get("<stdin>:a");
+        CompilationResult.ContractMetadata a = result.getContract("a");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
     }
@@ -103,7 +104,10 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get(source.toAbsolutePath().toString() + ":test1");
+        Assert.assertEquals("test1", result.getContractName());
+        Assert.assertEquals(source.toAbsolutePath(), result.getContractPath());
+
+        CompilationResult.ContractMetadata a = result.getContract(source, "test1");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
     }
@@ -117,7 +121,13 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get(source.toAbsolutePath().toString() + ":test2");
+        HashMap<Path, String> expected = new HashMap<Path, String>() {{
+            put(source.getParent().resolve("file1.sol").toAbsolutePath(),"test1");
+            put(source.toAbsolutePath(),"test2");
+        }};
+        Assert.assertEquals(expected, result.getContractKeys());
+
+        CompilationResult.ContractMetadata a = result.getContract(source, "test2");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
     }
@@ -132,7 +142,7 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get(source.toAbsolutePath().toString() + ":test3");
+        CompilationResult.ContractMetadata a = result.getContract(source, "test3");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
     }
@@ -147,7 +157,7 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get(source.toAbsolutePath().toString() + ":test3");
+        CompilationResult.ContractMetadata a = result.getContract(source, "test3");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
     }
@@ -162,7 +172,7 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get(source.toAbsolutePath().toString() + ":test3");
+        CompilationResult.ContractMetadata a = result.getContract("test3");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
     }
