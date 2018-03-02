@@ -20,13 +20,13 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.ExecutorPipeline;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -83,6 +83,7 @@ public class SyncManager extends BlockDownloader {
      */
     private BlockingQueue<BlockWrapper> blockQueue = new LinkedBlockingQueue<>();
 
+    @Autowired
     private Blockchain blockchain;
 
     @Autowired
@@ -114,9 +115,8 @@ public class SyncManager extends BlockDownloader {
     }
 
     @Autowired
-    public SyncManager(final SystemProperties config, ConsensusStrategy consensusStrategy) {
-        super(consensusStrategy.getHeaderValidator());
-        this.blockchain = consensusStrategy.getBlockchain();
+    public SyncManager(final SystemProperties config, BlockHeaderValidator validator) {
+        super(validator);
         this.config = config;
         blockBytesLimit = config.blockQueueSize();
         setHeaderQueueLimit(config.headerQueueSize() / BlockHeader.MAX_HEADER_SIZE);

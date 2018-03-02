@@ -23,7 +23,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.db.DbFlushManager;
@@ -78,11 +77,10 @@ public class FastSyncManager {
     @Autowired
     private SystemProperties config;
 
-    private ConsensusStrategy consensusStrategy;
-
     @Autowired
     private SyncPool pool;
 
+    @Autowired
     private BlockchainImpl blockchain;
 
     @Autowired
@@ -140,9 +138,6 @@ public class FastSyncManager {
 
 
     void init() {
-        // FIXME: We could run fast sync on Casper too
-        blockchain = (BlockchainImpl) consensusStrategy.getBlockchain();
-
         dbWriterThread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
@@ -828,10 +823,5 @@ public class FastSyncManager {
         } catch (Exception e) {
             logger.warn("Problems closing FastSyncManager", e);
         }
-    }
-
-    @Autowired
-    public void setConsensusStrategy(ConsensusStrategy consensusStrategy) {
-        this.consensusStrategy = consensusStrategy;
     }
 }

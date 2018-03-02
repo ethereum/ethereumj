@@ -38,9 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -94,9 +91,6 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @author Nick Savers
  * @since 20.05.2014
  */
-@Lazy
-@Primary
-@Component
 public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchain {
 
 
@@ -129,6 +123,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     protected AdminInfo adminInfo;
 
+    @Autowired
     private DependentBlockHeaderRule parentHeaderValidator;
 
     @Autowired

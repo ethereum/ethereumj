@@ -19,7 +19,7 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
@@ -115,10 +115,10 @@ public class WorldManager {
     @Autowired
     public WorldManager(final SystemProperties config, final Repository repository,
                         final EthereumListener listener, final ConsensusStrategy consensusStrategy,
-                        final BlockStore blockStore) {
+                        final Blockchain blockchain, final BlockStore blockStore) {
         this.listener = listener;
         this.strategy = consensusStrategy;
-        this.blockchain = consensusStrategy.getBlockchain();
+        this.blockchain = blockchain;
         this.repository = repository;
         repository.setBlockchain(blockchain);
         this.blockStore = blockStore;
@@ -135,7 +135,6 @@ public class WorldManager {
         }
         loadBlockchain(strategy);
         channelManager.init(ethereum);
-        ((PendingStateImpl) pendingState).postConstruct();
         syncManager.init(channelManager, pool);
         strategy.init();
 

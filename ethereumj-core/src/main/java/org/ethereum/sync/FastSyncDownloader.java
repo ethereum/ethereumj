@@ -19,8 +19,8 @@ package org.ethereum.sync;
 
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +49,8 @@ public class FastSyncDownloader extends BlockDownloader {
     long t;
 
     @Autowired
-    public FastSyncDownloader(ConsensusStrategy consensusStrategy) {
-        super(consensusStrategy.getHeaderValidator());
+    public FastSyncDownloader(BlockHeaderValidator headerValidator) {
+        super(headerValidator);
     }
 
     public void startImporting(byte[] fromHash, int count) {

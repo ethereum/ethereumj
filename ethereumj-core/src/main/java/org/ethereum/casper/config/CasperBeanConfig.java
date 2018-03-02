@@ -18,8 +18,11 @@
 package org.ethereum.casper.config;
 
 import org.ethereum.config.CommonConfig;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.casper.CasperBlockchain;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -30,5 +33,11 @@ public class CasperBeanConfig extends CommonConfig {
     @Override
     public ConsensusStrategy consensusStrategy() {
         return new CasperHybridConsensusStrategy(systemProperties(), ctx);
+    }
+
+    @Override
+    @Bean
+    public Blockchain blockchain() {
+        return new CasperBlockchain(systemProperties());
     }
 }

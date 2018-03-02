@@ -16,13 +16,12 @@
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.ethereum.core.casper;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;

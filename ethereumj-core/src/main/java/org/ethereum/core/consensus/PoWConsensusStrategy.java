@@ -29,74 +29,28 @@ import org.ethereum.core.genesis.CommonStateInit;
 import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.validator.BlockHashRule;
-import org.ethereum.validator.BlockHeaderRule;
-import org.ethereum.validator.BlockHeaderValidator;
-import org.ethereum.validator.DependentBlockHeaderRule;
-import org.ethereum.validator.DifficultyRule;
-import org.ethereum.validator.ExtraDataRule;
-import org.ethereum.validator.GasLimitRule;
-import org.ethereum.validator.GasValueRule;
-import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.validator.ParentGasLimitRule;
-import org.ethereum.validator.ParentNumberRule;
-import org.ethereum.validator.ProofOfWorkRule;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Arrays.asList;
 
 public class PoWConsensusStrategy implements ConsensusStrategy {
     private SystemProperties systemProperties;
 
-    private BlockHeaderValidator blockHeaderValidator;
-    private ParentBlockHeaderValidator parentBlockHeaderValidator;
+    @Autowired
     private BlockchainImpl blockchain;
     private StateInit stateInit;
 
+    public PoWConsensusStrategy() {
+    }
+
     public PoWConsensusStrategy(SystemProperties systemProperties, ApplicationContext ctx) {
        this(systemProperties);
-        blockchain = ctx.getBean(BlockchainImpl.class);
     }
 
     public PoWConsensusStrategy(SystemProperties systemProperties) {
         this.systemProperties = systemProperties;
 
-        List<BlockHeaderRule> rules = new ArrayList<>(asList(
-                new GasValueRule(),
-                new ExtraDataRule(systemProperties),
-                new ProofOfWorkRule(),
-                new GasLimitRule(systemProperties),
-                new BlockHashRule(systemProperties)
-        ));
-        blockHeaderValidator = new BlockHeaderValidator(rules);
-
-
-        List<DependentBlockHeaderRule> parentRules = new ArrayList<>(asList(
-                new ParentNumberRule(),
-                new DifficultyRule(systemProperties),
-                new ParentGasLimitRule(systemProperties)
-        ));
-        parentBlockHeaderValidator = new ParentBlockHeaderValidator(parentRules);
         // TODO: Add default blockchainImpl when it's not provided
-    }
-
-    @Override
-    public BlockHeaderValidator getHeaderValidator() {
-        return blockHeaderValidator;
-    }
-
-    @Override
-    public ParentBlockHeaderValidator getParentHeaderValidator() {
-        return parentBlockHeaderValidator;
-    }
-
-    @Override
-    public BlockchainImpl getBlockchain() {
-        return blockchain;
     }
 
     @Override
@@ -135,10 +89,5 @@ public class PoWConsensusStrategy implements ConsensusStrategy {
                                                          Block currentBlock, EthereumListener listener, long gasUsedInTheBlock) {
         return new CommonTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
                 listener, gasUsedInTheBlock);
-    }
-
-    public void setBlockchain(BlockchainImpl blockchain) {
-        this.blockchain = blockchain;
-        blockchain.setParentHeaderValidator(parentBlockHeaderValidator);
     }
 }

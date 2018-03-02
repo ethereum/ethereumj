@@ -15,15 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.manager;
+package org.ethereum.casper.service;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -49,14 +52,14 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.LOGGED_OUT;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.UNINITIATED;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.VOTING;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.WAITING_FOR_LOGIN;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.WAITING_FOR_LOGOUT;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.WAITING_FOR_VALCODE;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.WAITING_FOR_WITHDRAWABLE;
-import static org.ethereum.manager.CasperValidatorService.ValidatorState.WAITING_FOR_WITHDRAWN;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.LOGGED_OUT;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.UNINITIATED;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.VOTING;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.WAITING_FOR_LOGIN;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.WAITING_FOR_LOGOUT;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.WAITING_FOR_VALCODE;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.WAITING_FOR_WITHDRAWABLE;
+import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.WAITING_FOR_WITHDRAWN;
 
 @Component
 @Lazy
@@ -66,8 +69,10 @@ public class CasperValidatorService {
     @Autowired
     private SyncManager syncManager;
 
-    @Autowired
     private CasperHybridConsensusStrategy strategy;
+
+    @Autowired
+    Blockchain blockchain;
 
     private Repository repository;
 
@@ -386,7 +391,7 @@ public class CasperValidatorService {
         if (epoch == 0) {
             return Hex.decode("0000000000000000000000000000000000000000000000000000000000000000");
         }
-        return strategy.getBlockchain().getBlockByNumber(epoch * config.getCasperEpochLength() - 1).getHash();
+        return blockchain.getBlockByNumber(epoch * config.getCasperEpochLength() - 1).getHash();
     }
 
     public void voteThenLogout() {
@@ -406,7 +411,7 @@ public class CasperValidatorService {
 
     // FIXME: WHY there are 2 methods for the same thing???
     private long getEpoch() {
-        return strategy.getBlockchain().getBestBlock().getNumber() / config.getCasperEpochLength(); // floor division
+        return blockchain.getBestBlock().getNumber() / config.getCasperEpochLength(); // floor division
     }
 
     private long getCurrentEpoch() {  // FIXME: WHY there are 2 methods for the same thing???
@@ -429,7 +434,7 @@ public class CasperValidatorService {
         }
 
         // Don't start too early
-        if (strategy.getBlockchain().getBestBlock().getNumber() % config.getCasperEpochLength() <= config.getCasperEpochLength() / 4) {
+        if (blockchain.getBestBlock().getNumber() % config.getCasperEpochLength() <= config.getCasperEpochLength() / 4) {
             return false;
         }
 
@@ -593,5 +598,10 @@ public class CasperValidatorService {
 
     public void setSyncManager(SyncManager syncManager) {
         this.syncManager = syncManager;
+    }
+
+    @Autowired
+    public void setStrategy(ConsensusStrategy strategy) {
+        this.strategy = (CasperHybridConsensusStrategy) strategy;
     }
 }

@@ -20,8 +20,6 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.core.consensus.ConsensusStrategy;
-import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.util.*;
 import org.ethereum.validator.BlockHeaderValidator;
@@ -44,31 +42,24 @@ import java.util.function.Function;
 public class BlockLoader {
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
+    @Autowired
     private BlockHeaderValidator headerValidator;
 
     @Autowired
     SystemProperties config;
 
-    private Blockchain blockchain;
-
-    private BlockStore blockStore;
+    @Autowired
+    private BlockchainImpl blockchain;
 
     @Autowired
     DbFlushManager dbFlushManager;
-
-    @Autowired
-    public BlockLoader(ConsensusStrategy consensusStrategy) {
-        this.blockchain = consensusStrategy.getBlockchain();
-        this.blockStore = ((org.ethereum.facade.Blockchain) blockchain).getBlockStore();
-        this.headerValidator = consensusStrategy.getHeaderValidator();
-    }
 
     Scanner scanner = null;
 
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
     private void blockWork(Block block) {
-        if (block.getNumber() >= blockStore.getBestBlock().getNumber() || blockStore.getBlockByHash(block.getHash()) == null) {
+        if (block.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber() || blockchain.getBlockStore().getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
@@ -95,7 +86,7 @@ public class BlockLoader {
 
     public void loadBlocks() {
         exec1 = new ExecutorPipeline(8, 1000, true, (Function<Block, Block>) b -> {
-            if (b.getNumber() >= blockStore.getBestBlock().getNumber()) {
+            if (b.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber()) {
                 for (Transaction tx : b.getTransactionsList()) {
                     tx.getSender();
                 }

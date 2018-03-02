@@ -33,6 +33,7 @@ import org.ethereum.jsontestsuite.suite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.VM;
@@ -99,14 +100,14 @@ public class TestRunner {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(CommonConfig.getDefault().consensusStrategy().getParentHeaderValidator());
+                .withParentBlockHeaderValidator(CommonConfig.getDefault().parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter());
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
-        blockchain.setParentHeaderValidator(new CommonConfig().consensusStrategy().getParentHeaderValidator());
+        blockchain.setParentHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
         blockchain.setPendingState(pendingState);

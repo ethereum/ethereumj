@@ -85,6 +85,7 @@ public class Eth62 extends EthHandler {
     @Autowired
     protected NodeManager nodeManager;
 
+    @Autowired
     private ConsensusStrategy strategy;
 
     protected EthState ethState = EthState.INIT;
@@ -127,11 +128,6 @@ public class Eth62 extends EthHandler {
     }
 
     @Autowired
-    public Eth62(final SystemProperties config, final ConsensusStrategy consensusStrategy,
-                 final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
-        this(version, config, consensusStrategy.getBlockchain(), blockStore, ethereumListener);
-        this.strategy = consensusStrategy;
-    }
     public Eth62(final SystemProperties config, final Blockchain blockchain,
                  final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
         this(version, config, blockchain, blockStore, ethereumListener);

@@ -30,7 +30,8 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.CasperStateInit;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
@@ -40,8 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -56,11 +55,8 @@ import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.INVALID_BLOCK;
 import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.core.genesis.CasperStateInit.NULL_SENDER;
-import static org.ethereum.manager.CasperValidatorService.DEFAULT_GASLIMIT;
+import static org.ethereum.casper.service.CasperValidatorService.DEFAULT_GASLIMIT;
 
-
-@Lazy
-@Component
 public class CasperBlockchain extends BlockchainImpl {
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
@@ -439,7 +435,8 @@ public class CasperBlockchain extends BlockchainImpl {
         return blockStore.getTotalDifficultyForHash(block.getHash());
     }
 
-    public void setStrategy(CasperHybridConsensusStrategy strategy) {
-        this.strategy = strategy;
+    @Autowired
+    public void setStrategy(ConsensusStrategy strategy) {
+        this.strategy = (CasperHybridConsensusStrategy) strategy;
     }
 }

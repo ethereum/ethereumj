@@ -23,8 +23,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.casper.CasperTransactionExecutor;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
-import org.ethereum.core.consensus.ConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -84,6 +83,7 @@ public class BlockMiner {
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
+    @Autowired
     public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
                       final Blockchain blockchain, final BlockStore blockStore,
                       final PendingState pendingState) {
@@ -117,13 +117,6 @@ public class BlockMiner {
             logger.info("Sync disabled, start mining now...");
             startMining();
         }
-    }
-
-    @Autowired
-    public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
-                      final ConsensusStrategy consensusStrategy, final BlockStore blockStore,
-                      final PendingState pendingState) {
-    this(config, listener, consensusStrategy.getBlockchain(), blockStore, pendingState);
     }
 
     public void setFullMining(boolean fullMining) {

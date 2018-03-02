@@ -27,7 +27,7 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.datasource.CountingBytesSource;
 import org.ethereum.datasource.JournalSource;
@@ -157,7 +157,7 @@ public abstract class CasperBase {
 
                 blockchain.byTest = true;
 
-                pendingState = new PendingStateImpl(listener, blockchain);
+                pendingState = new PendingStateImpl(listener);
                 pendingState.setCommonConfig(commonConfig);
 
                 pendingState.setBlockchain(blockchain);

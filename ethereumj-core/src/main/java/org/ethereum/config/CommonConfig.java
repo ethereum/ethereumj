@@ -27,6 +27,18 @@ import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.db.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sync.FastSyncManager;
+import org.ethereum.validator.BlockHashRule;
+import org.ethereum.validator.BlockHeaderRule;
+import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
+import org.ethereum.validator.DifficultyRule;
+import org.ethereum.validator.ExtraDataRule;
+import org.ethereum.validator.GasLimitRule;
+import org.ethereum.validator.GasValueRule;
+import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.validator.ParentGasLimitRule;
+import org.ethereum.validator.ParentNumberRule;
+import org.ethereum.validator.ProofOfWorkRule;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
 import org.slf4j.Logger;
@@ -37,8 +49,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import static java.util.Arrays.asList;
 
 @Configuration
 @EnableTransactionManagement
@@ -238,11 +254,42 @@ public class CommonConfig {
     }
 
     @Bean
+    public BlockHeaderValidator headerValidator() {
+
+        List<BlockHeaderRule> rules = new ArrayList<>(asList(
+                new GasValueRule(),
+                new ExtraDataRule(systemProperties()),
+                new ProofOfWorkRule(),
+                new GasLimitRule(systemProperties()),
+                new BlockHashRule(systemProperties())
+        ));
+
+        return new BlockHeaderValidator(rules);
+    }
+
+    @Bean
+    public ParentBlockHeaderValidator parentHeaderValidator() {
+
+        List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
+                new ParentNumberRule(),
+                new DifficultyRule(systemProperties()),
+                new ParentGasLimitRule(systemProperties())
+        ));
+
+        return new ParentBlockHeaderValidator(rules);
+    }
+
+    @Bean
     @Lazy
     public PeerSource peerSource() {
         DbSource<byte[]> dbSource = keyValueDataSource("peers");
         dbSources.add(dbSource);
         return new PeerSource(dbSource);
+    }
+
+    @Bean
+    public Blockchain blockchain() {
+        return new BlockchainImpl(systemProperties());
     }
 
     @Bean

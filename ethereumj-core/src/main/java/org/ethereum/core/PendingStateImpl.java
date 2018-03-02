@@ -33,7 +33,7 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.casper.CasperTransactionExecutor;
-import org.ethereum.core.consensus.CasperHybridConsensusStrategy;
+import org.ethereum.casper.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
@@ -83,15 +83,13 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     private EthereumListener listener;
 
+    @Autowired
     private Blockchain blockchain;
 
-    @Autowired
     private BlockStore blockStore;
 
-    @Autowired
     private TransactionStore transactionStore;
 
-    @Autowired
     private ProgramInvokeFactory programInvokeFactory;
 
 //    private Repository repository;
@@ -110,24 +108,7 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     public PendingStateImpl(final EthereumListener listener) {
         this.listener = listener;
-    }
-
-    public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
-        this.listener = listener;
-        this.blockchain = blockchain;
 //        this.repository = blockchain.getRepository();
-        this.blockStore = blockchain.getBlockStore();
-        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
-        this.transactionStore = blockchain.getTransactionStore();
-    }
-
-    public void postConstruct() {
-        BlockchainImpl blockchain = (BlockchainImpl) commonConfig.consensusStrategy().getBlockchain();
-        this.blockchain = blockchain;
-//        this.repository = blockchain.getRepository();
-        this.blockStore = blockchain.getBlockStore();
-        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
-        this.transactionStore = blockchain.getTransactionStore();
     }
 
     public void init() {
@@ -503,8 +484,12 @@ public class PendingStateImpl implements PendingState {
         return block;
     }
 
+    @Autowired
     public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
+        this.blockStore = blockchain.getBlockStore();
+        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
+        this.transactionStore = blockchain.getTransactionStore();
     }
 
     public void setCommonConfig(CommonConfig commonConfig) {

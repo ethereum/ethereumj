@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.core.consensus;
+package org.ethereum.casper;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -27,46 +27,26 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.casper.CasperBlockchain;
 import org.ethereum.core.casper.CasperTransactionExecutor;
+import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.CasperStateInit;
 import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
-import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.CasperValidatorService;
-import org.ethereum.validator.BlockHashRule;
-import org.ethereum.validator.BlockHeaderRule;
-import org.ethereum.validator.BlockHeaderValidator;
-import org.ethereum.validator.DependentBlockHeaderRule;
-import org.ethereum.validator.DifficultyRule;
-import org.ethereum.validator.ExtraDataRule;
-import org.ethereum.validator.GasLimitRule;
-import org.ethereum.validator.GasValueRule;
-import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.validator.ParentGasLimitRule;
-import org.ethereum.validator.ParentNumberRule;
-import org.ethereum.validator.ProofOfWorkRule;
+import org.ethereum.casper.service.CasperValidatorService;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Arrays.asList;
 
 public class CasperHybridConsensusStrategy implements ConsensusStrategy {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     private SystemProperties systemProperties;
-
-    private BlockHeaderValidator blockHeaderValidator;
-
-    private ParentBlockHeaderValidator parentBlockHeaderValidator;
 
     private CasperBlockchain blockchain;
 
@@ -82,44 +62,12 @@ public class CasperHybridConsensusStrategy implements ConsensusStrategy {
 
     private String casperAddress;  // FIXME: why should we have casper addresses in two places?. It's already in SystemProperties
 
+    public CasperHybridConsensusStrategy() {
+    }
+
     public CasperHybridConsensusStrategy(SystemProperties systemProperties, ApplicationContext ctx) {
         this.systemProperties = systemProperties;
-
-        List<BlockHeaderRule> rules = new ArrayList<>(asList(
-                new GasValueRule(),
-                new ExtraDataRule(systemProperties),
-                new ProofOfWorkRule(),
-                new GasLimitRule(systemProperties),
-                new BlockHashRule(systemProperties)
-        ));
-        blockHeaderValidator = new BlockHeaderValidator(rules);
-
-
-        List<DependentBlockHeaderRule> parentRules = new ArrayList<>(asList(
-                new ParentNumberRule(),
-                new DifficultyRule(systemProperties),
-                new ParentGasLimitRule(systemProperties)
-        ));
-        parentBlockHeaderValidator = new ParentBlockHeaderValidator(parentRules);
-
-        blockchain = ctx.getBean(CasperBlockchain.class);
-        blockchain.setStrategy(this);
         this.ctx = ctx;
-    }
-
-    @Override
-    public BlockHeaderValidator getHeaderValidator() {
-        return blockHeaderValidator;
-    }
-
-    @Override
-    public ParentBlockHeaderValidator getParentHeaderValidator() {
-        return parentBlockHeaderValidator;
-    }
-
-    @Override
-    public Blockchain getBlockchain() {
-        return blockchain;
     }
 
     @Override
@@ -204,14 +152,12 @@ public class CasperHybridConsensusStrategy implements ConsensusStrategy {
         return casperValidatorService;
     }
 
-    // FIXME: Magic
-    public void setBlockchain(CasperBlockchain blockchain) {
-        this.blockchain = blockchain;
-        blockchain.setParentHeaderValidator(parentBlockHeaderValidator);
-        blockchain.setStrategy(this);
-    }
-
     public void setEthereum(Ethereum ethereum) {
         this.ethereum = ethereum;
+    }
+
+    @Autowired
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = (CasperBlockchain) blockchain;
     }
 }
