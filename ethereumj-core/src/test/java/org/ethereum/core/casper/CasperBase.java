@@ -62,7 +62,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CasperBase {
+public abstract class CasperBase {
     @Mock
     ApplicationContext context;
 
