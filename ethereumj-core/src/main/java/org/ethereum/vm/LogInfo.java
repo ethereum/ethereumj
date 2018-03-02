@@ -39,9 +39,6 @@ public class LogInfo {
     List<DataWord> topics = new ArrayList<>();
     byte[] data = new byte[]{};
 
-    /* Log info in encoded form */
-    private byte[] rlpEncoded;
-
     public LogInfo(byte[] rlp) {
 
         RLPList params = RLP.decode2(rlp);
@@ -58,8 +55,6 @@ public class LogInfo {
             byte[] topic = topic1.getRLPData();
             this.topics.add(new DataWord(topic));
         }
-
-        rlpEncoded = rlp;
     }
 
     public LogInfo(byte[] address, List<DataWord> topics, byte[] data) {
