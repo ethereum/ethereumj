@@ -325,6 +325,11 @@ public class SyncManager extends BlockDownloader {
 
         lastKnownBlockNumber = block.getNumber();
 
+        // skip too distant blocks
+        if (block.getNumber() > syncQueue.maxNum + MAX_IN_REQUEST * 2) {
+            return true;
+        }
+
         logger.debug("Adding new block to sync queue: " + block.getShortDescr());
         syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
 
