@@ -19,6 +19,7 @@ package org.ethereum.vm;
 
 import org.ethereum.core.Bloom;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
@@ -28,6 +29,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 
 /**
  * @author Roman Mandeleil
@@ -124,5 +127,8 @@ public class LogInfo {
                 '}';
     }
 
-
+    public static final MemSizeEstimator<LogInfo> MemEstimator = log ->
+            ByteArrayEstimator.estimateSize(log.address) +
+            ByteArrayEstimator.estimateSize(log.data) +
+            log.topics.size() * DataWord.MEM_SIZE + 16;
 }

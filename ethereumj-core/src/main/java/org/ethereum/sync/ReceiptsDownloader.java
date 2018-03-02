@@ -20,6 +20,8 @@ package org.ethereum.sync;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
@@ -47,6 +49,9 @@ import java.util.concurrent.CountDownLatch;
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
+    private static final int MAX_IN_REQUEST = 100;
+    private int requestLimit = 2000;
+
     @Autowired
     SyncPool syncPool;
 
@@ -71,6 +76,10 @@ public class ReceiptsDownloader {
     Thread retrieveThread;
     private CountDownLatch stopLatch = new CountDownLatch(1);
 
+    private long blockBytesLimit = 32 * 1024 * 1024;
+    private long estimatedBlockSize = 0;
+    private final CircularFifoQueue<Long> lastBlockSizes = new CircularFifoQueue<>(requestLimit);
+
     public ReceiptsDownloader(long fromBlock, long toBlock) {
         this.fromBlock = fromBlock;
         this.toBlock = toBlock;
@@ -81,16 +90,16 @@ public class ReceiptsDownloader {
         retrieveThread.start();
     }
 
-    private List<List<byte[]>> getToDownload(int maxAskSize, int maxAsks) {
-        List<byte[]> toDownload = getToDownload(maxAskSize * maxAsks);
+    private List<List<byte[]>> getToDownload(int maxSize) {
+        List<byte[]> toDownload = getHashesForRequest(maxSize);
         List<List<byte[]>> ret = new ArrayList<>();
-        for (int i = 0; i < toDownload.size(); i += maxAskSize) {
-            ret.add(toDownload.subList(i, Math.min(toDownload.size(), i + maxAskSize)));
+        for (int i = 0; i < toDownload.size(); i += MAX_IN_REQUEST) {
+            ret.add(toDownload.subList(i, Math.min(toDownload.size(), i + MAX_IN_REQUEST)));
         }
         return ret;
     }
 
-    private synchronized List<byte[]> getToDownload(int maxSize) {
+    private synchronized List<byte[]> getHashesForRequest(int maxSize) {
         List<byte[]> ret = new ArrayList<>();
         for (long i = fromBlock; i < toBlock && maxSize > 0; i++) {
             if (!completedBlocks.contains(i)) {
@@ -121,6 +130,8 @@ public class ReceiptsDownloader {
 
             finalizeBlock(block.getNumber());
         }
+
+        estimateBlockSize(receipts);
     }
 
     private void finalizeBlock(Long blockNumber) {
@@ -147,7 +158,9 @@ public class ReceiptsDownloader {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 if (toDownload.isEmpty()) {
-                    toDownload = getToDownload(100, 20);
+                    int requestSize = getRequestSize();
+                    logger.debug("ReceiptsDownloader: queueing {} blocks for request", requestSize);
+                    toDownload = getToDownload(getRequestSize());
                 }
 
                 Channel idle = getAnyPeer();
@@ -180,6 +193,15 @@ public class ReceiptsDownloader {
         }
     }
 
+    private int getRequestSize() {
+        if (estimatedBlockSize == 0) {
+            return requestLimit;
+        }
+
+        int slotsLeft = Math.max((int) (blockBytesLimit / estimatedBlockSize), MAX_IN_REQUEST);
+        return Math.min(slotsLeft, requestLimit);
+    }
+
     /**
      * Download could block chain synchronization occupying all peers
      * Prevents this by leaving one peer without work
@@ -208,5 +230,21 @@ public class ReceiptsDownloader {
 
     protected void finishDownload() {
         stop();
+    }
+
+    private void estimateBlockSize(List<TransactionReceipt> receipts) {
+        if (receipts.isEmpty())
+            return;
+
+        synchronized (lastBlockSizes) {
+            receipts.forEach(r -> lastBlockSizes.add(r.estimateMemSize()));
+            estimatedBlockSize = lastBlockSizes.stream().mapToLong(Long::longValue).sum() / lastBlockSizes.size();
+        }
+        logger.debug("ReceiptsDownloader: estimated block size: {}", estimatedBlockSize);
+    }
+
+    @Autowired
+    public void setSystemProperties(final SystemProperties config) {
+        this.blockBytesLimit = config.blockQueueSize();
     }
 }

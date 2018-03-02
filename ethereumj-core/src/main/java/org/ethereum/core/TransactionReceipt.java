@@ -17,7 +17,12 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.*;
+import org.ethereum.datasource.MemSizeEstimator;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -28,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -282,4 +288,23 @@ public class TransactionReceipt {
                 ']';
     }
 
+    public long estimateMemSize() {
+        return MemEstimator.estimateSize(this);
+    }
+
+    public static final MemSizeEstimator<TransactionReceipt> MemEstimator = receipt -> {
+        if (receipt == null) {
+            return 0;
+        }
+        long logSize = receipt.logInfoList.stream().mapToLong(LogInfo.MemEstimator::estimateSize).sum() + 16;
+        return (receipt.transaction == null ? 0 : Transaction.MemEstimator.estimateSize(receipt.transaction)) +
+                (receipt.postTxState == EMPTY_BYTE_ARRAY ? 0 : ByteArrayEstimator.estimateSize(receipt.postTxState)) +
+                (receipt.cumulativeGas == EMPTY_BYTE_ARRAY ? 0 : ByteArrayEstimator.estimateSize(receipt.cumulativeGas)) +
+                (receipt.gasUsed == EMPTY_BYTE_ARRAY ? 0 : ByteArrayEstimator.estimateSize(receipt.gasUsed)) +
+                (receipt.executionResult == EMPTY_BYTE_ARRAY ? 0 : ByteArrayEstimator.estimateSize(receipt.executionResult)) +
+                ByteArrayEstimator.estimateSize(receipt.rlpEncoded) +
+                Bloom.MEM_SIZE +
+                receipt.error.getBytes().length + 40 +
+                logSize;
+    };
 }

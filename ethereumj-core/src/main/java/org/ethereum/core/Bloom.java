@@ -31,6 +31,8 @@ import java.util.Arrays;
 
 public class Bloom {
 
+    public static final long MEM_SIZE = 256 + 16;
+
     final static int _8STEPS = 8;
     final static int _3LOW_BITS = 7;
     final static int ENSURE_BYTE = 255;
