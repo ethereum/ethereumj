@@ -115,26 +115,26 @@ public class CasperValidatorService {
 
     private byte[] makeVote(long validatorIndex, byte[] targetHash, long targetEpoch, long sourceEpoch, ECKey sender) {
         byte[] sigHash = sha3(RLP.encodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch));
-        ECKey.ECDSASignature signature = sender.sign(sigHash);
-        byte[] v, r, s;  // encoding as 32-byte ints
-        v = BigIntegers.asUnsignedByteArray(32, BigInteger.valueOf(signature.v));  // FIXME: If we'll have chainId it would fail
-        r = BigIntegers.asUnsignedByteArray(32, signature.r);
-        s = BigIntegers.asUnsignedByteArray(32, signature.s);
-        byte[] vr = ArrayUtils.addAll(v, r);
-        byte[] vrs = ArrayUtils.addAll(vr, s);
+        byte[] vrs = make3IntSignature(sigHash, sender);
         return RLP.encodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch, new ByteArrayWrapper(vrs));
     }
 
     private byte[] makeLogout(long validatorIndex, long epoch, ECKey sender) {
         byte[] sigHash = sha3(RLP.encodeList(validatorIndex, epoch));
-        ECKey.ECDSASignature signature = sender.sign(sigHash);
+        byte[] vrs = make3IntSignature(sigHash, sender);
+        return RLP.encodeList(validatorIndex, epoch, new ByteArrayWrapper(vrs));
+    }
+
+    private byte[] make3IntSignature(byte[] data, ECKey signer) {
+        ECKey.ECDSASignature signature = signer.sign(data);
         byte[] v, r, s;  // encoding as 32-byte ints
         v = BigIntegers.asUnsignedByteArray(32, BigInteger.valueOf(signature.v));  // FIXME: If we'll have chainId it would fail
         r = BigIntegers.asUnsignedByteArray(32, signature.r);
         s = BigIntegers.asUnsignedByteArray(32, signature.s);
         byte[] vr = ArrayUtils.addAll(v, r);
         byte[] vrs = ArrayUtils.addAll(vr, s);
-        return RLP.encodeList(validatorIndex, epoch, new ByteArrayWrapper(vrs));
+
+        return vrs;
     }
 
     public enum ValidatorState {
