@@ -26,9 +26,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -121,13 +119,6 @@ public class CompilerTest {
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
-
-        List<String> expected = new ArrayList<String>() {{
-            // Interestingly the Solidity compiler returns a mishmash of path notations
-            add(source.getParent().resolve("file1.sol").toUri().getPath().substring(1) + ":test1");
-            add(source.toAbsolutePath() +":test2");
-        }};
-        Assert.assertEquals(expected, result.getContractKeys());
 
         CompilationResult.ContractMetadata a = result.getContract(source, "test2");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
