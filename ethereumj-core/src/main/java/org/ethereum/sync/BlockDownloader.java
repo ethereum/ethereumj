@@ -339,8 +339,8 @@ public abstract class BlockDownloader {
 
         if (logger.isDebugEnabled()) logger.debug(
                 "{}: Blocks waiting to be proceed: lastBlock.number: [{}]",
-                blocks.get(blocks.size() - 1).getNumber(),
-                name
+                name,
+                blocks.get(blocks.size() - 1).getNumber()
         );
     }
 
