@@ -25,10 +25,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CompilationResult {
@@ -50,7 +50,7 @@ public class CompilationResult {
 
     @JsonIgnore public Path getContractPath() {
         if (contracts.size() > 1) {
-            throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify the contract name. Available keys (" + getContractKeys().values() + ").");
+            throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify the contract name. Available keys (" + getContractKeys() + ").");
         } else {
             String key = contracts.keySet().iterator().next();
             return Paths.get(key.substring(0, key.lastIndexOf(':')));
@@ -59,25 +59,18 @@ public class CompilationResult {
 
     @JsonIgnore public String getContractName() {
         if (contracts.size() > 1) {
-            throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify the contract name. Available keys (" + getContractKeys().values() + ").");
+            throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify the contract name. Available keys (" + getContractKeys() + ").");
         } else {
             String key = contracts.keySet().iterator().next();
             return key.substring(key.lastIndexOf(':') + 1);
         }
     }
 
-    @JsonIgnore public Map<Path, String> getContractKeys() {
-        return contracts.keySet().stream().collect(Collectors.toMap(
-                key -> Paths.get(key.substring(0, key.lastIndexOf(':'))),
-                key -> key.substring(key.lastIndexOf(':') + 1)
-        ));
-    }
-
     @JsonIgnore public ContractMetadata getContract(String contractName) {
         if (contractName == null && contracts.size() == 1) {
             return contracts.values().iterator().next();
         } else if (contractName == null || contractName.isEmpty()) {
-            throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify the contract name. Available keys (" + getContractKeys().values() + ").");
+            throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify the contract name. Available keys (" + getContractKeys() + ").");
         }
         for (Map.Entry<String, ContractMetadata> entry : contracts.entrySet()) {
             String key = entry.getKey();
@@ -86,15 +79,19 @@ public class CompilationResult {
                 return entry.getValue();
             }
         }
-        throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify a valid contract name. Available keys (" + getContractKeys().values() + ").");
+        throw new UnsupportedOperationException("Source contains more than 1 contact. Please specify a valid contract name. Available keys (" + getContractKeys() + ").");
     }
 
     @JsonIgnore public ContractMetadata getContract(Path contractPath, String contractName) {
         return contracts.get(contractPath.toAbsolutePath().toString() + ':' + contractName);
     }
 
-    @JsonIgnore public Collection<ContractMetadata> getContracts() {
-        return contracts.values();
+    @JsonIgnore public List<ContractMetadata> getContracts() {
+        return new ArrayList<>(contracts.values());
+    }
+
+    @JsonIgnore public List<String> getContractKeys() {
+        return new ArrayList<>(contracts.keySet());
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
