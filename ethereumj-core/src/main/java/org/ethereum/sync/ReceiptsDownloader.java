@@ -236,8 +236,9 @@ public class ReceiptsDownloader {
         if (receipts.isEmpty())
             return;
 
+        long blockSize = receipts.stream().mapToLong(TransactionReceipt::estimateMemSize).sum();
         synchronized (lastBlockSizes) {
-            receipts.forEach(r -> lastBlockSizes.add(r.estimateMemSize()));
+            lastBlockSizes.add(blockSize);
             estimatedBlockSize = lastBlockSizes.stream().mapToLong(Long::longValue).sum() / lastBlockSizes.size();
         }
         logger.debug("ReceiptsDownloader: estimated block size: {}", estimatedBlockSize);
