@@ -224,15 +224,13 @@ public class FrameCodec {
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalBodySize - pos);
         int size = totalBodySize - pos;
 
-        // FIXME: 1 byte is lost in multi-frame, not sure, where is it
-        // this hack doesn't look normal
-        if (totalFrameSize > 0) {
-            size += pos;
-        }
-
         if (contextFrameIndex.get(contextId) != null) {
             int curSize = contextFrameIndex.get(contextId);
             curSize -= size;
+            if (type != -1) {  // Type is part of body too, so we should deduct it too
+                curSize -= RLP.encodeLong(type).length;
+            }
+
             if (curSize > 0) {
                 contextFrameIndex.put(contextId, curSize);
             } else {
