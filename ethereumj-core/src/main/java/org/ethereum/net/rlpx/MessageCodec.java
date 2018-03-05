@@ -199,14 +199,18 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             int newPos = min(curPos + maxFramePayloadSize, bytes.length);
             byte[] frameBytes = curPos == 0 && newPos == bytes.length ? bytes :
                     Arrays.copyOfRange(bytes, curPos, newPos);
-            ret.add(new Frame(code, frameBytes));
+            if (curPos == 0) {  // 1st frame needs type
+                ret.add(new Frame(code, frameBytes));
+            } else {    // Next frames don't need type
+                ret.add(new Frame(-1, frameBytes));
+            }
             curPos = newPos;
         }
 
         if (ret.size() > 1) {
             // frame has been split
             int contextId = contextIdCounter.getAndIncrement();
-            ret.get(0).totalFrameSize = bytes.length;
+            ret.get(0).totalFrameSize = bytes.length + 1; // type is 1 byte
             loggerWire.debug("Message (size " + bytes.length + ") split to " + ret.size() + " frames. Context-id: " + contextId);
             for (Frame frame : ret) {
                 frame.contextId = contextId;

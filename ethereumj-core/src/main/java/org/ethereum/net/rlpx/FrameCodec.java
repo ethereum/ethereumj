@@ -114,7 +114,10 @@ public class FrameCodec {
 
     public void writeFrame(Frame frame, OutputStream out) throws IOException {
         byte[] headBuffer = new byte[32];
-        byte[] ptype = RLP.encodeInt((int) frame.type); // FIXME encodeLong
+        byte[] ptype = new byte[0];
+        if (frame.type != -1) {  // Type is actual only for 1st frame
+            ptype = RLP.encodeLong(frame.type);
+        }
         int totalSize = frame.size + ptype.length;
         headBuffer[0] = (byte)(totalSize >> 16);
         headBuffer[1] = (byte)(totalSize >> 8);
