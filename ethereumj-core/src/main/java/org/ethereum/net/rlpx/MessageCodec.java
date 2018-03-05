@@ -34,6 +34,7 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
+import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -210,7 +211,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (ret.size() > 1) {
             // frame has been split
             int contextId = contextIdCounter.getAndIncrement();
-            ret.get(0).totalFrameSize = bytes.length + 1; // type is 1 byte
+            ret.get(0).totalFrameSize = bytes.length + RLP.encodeLong(code).length; // type is part of the body
             loggerWire.debug("Message (size " + bytes.length + ") split to " + ret.size() + " frames. Context-id: " + contextId);
             for (Frame frame : ret) {
                 frame.contextId = contextId;
