@@ -40,6 +40,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.
@@ -49,6 +50,7 @@ import java.util.concurrent.CountDownLatch;
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
+    private final static long REQUEST_TIMEOUT = 5 * 1000;
     private static final int MAX_IN_REQUEST = 100;
     private int requestLimit = 2000;
 
@@ -69,6 +71,9 @@ public class ReceiptsDownloader {
 
     long fromBlock, toBlock;
     Set<Long> completedBlocks = new HashSet<>();
+    Deque<List<byte[]>> toDownload = new LinkedBlockingDeque<>();
+    Map<Integer, ReceiptsRequest> pending = new HashMap<>();
+    int requests = 0;
 
     long t;
     int cnt;
@@ -154,41 +159,88 @@ public class ReceiptsDownloader {
     }
 
     private void retrieveLoop() {
-        List<List<byte[]>> toDownload = Collections.emptyList();
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                if (toDownload.isEmpty()) {
+
+                processTimeouts();
+
+                if (toDownload.isEmpty() && pending.isEmpty()) {
                     int requestSize = getRequestSize();
                     logger.debug("ReceiptsDownloader: queueing {} blocks for request", requestSize);
-                    toDownload = getToDownload(getRequestSize());
+                    toDownload.addAll(getToDownload(getRequestSize()));
                 }
 
                 Channel idle = getAnyPeer();
+                List<byte[]> list = null;
                 if (idle != null) {
-                    final List<byte[]> list = toDownload.remove(0);
-                    ListenableFuture<List<List<TransactionReceipt>>> future =
-                            ((Eth63) idle.getEthHandler()).requestReceipts(list);
-                    if (future != null) {
-                        Futures.addCallback(future, new FutureCallback<List<List<TransactionReceipt>>>() {
-                            @Override
-                            public void onSuccess(List<List<TransactionReceipt>> result) {
-                                for (int i = 0; i < result.size(); i++) {
-                                    processDownloaded(list.get(i), result.get(i));
+                    list = toDownload.poll();
+
+                    if (list != null) {
+
+                        int requestId;
+                        synchronized (this) {
+                            ReceiptsRequest req = new ReceiptsRequest(list);
+                            requestId = ++requests;
+                            pending.put(requestId, req);
+                        }
+
+                        ListenableFuture<List<List<TransactionReceipt>>> future =
+                                ((Eth63) idle.getEthHandler()).requestReceipts(list);
+                        if (future != null) {
+                            Futures.addCallback(future, new FutureCallback<List<List<TransactionReceipt>>>() {
+                                @Override
+                                public void onSuccess(List<List<TransactionReceipt>> result) {
+                                    try {
+                                        processResponse(requestId, result);
+                                    } catch (Throwable t) {
+                                        queueBack(requestId);
+                                    }
                                 }
-                            }
-                            @Override
-                            public void onFailure(Throwable t) {}
-                        });
+
+                                @Override
+                                public void onFailure(Throwable t) {
+                                    queueBack(requestId);
+                                }
+                            });
+                        }
                     }
-                } else {
+                }
+
+                if (idle == null || list == null) {
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(200);
                     } catch (InterruptedException e) {
                         break;
                     }
                 }
             } catch (Exception e) {
                 logger.warn("Unexpected during receipts downloading", e);
+            }
+        }
+    }
+
+    private synchronized void processResponse(int requestId, List<List<TransactionReceipt>> response) {
+        ReceiptsRequest req = pending.get(requestId);
+        if (req != null) {
+            for (int i = 0; i < response.size(); i++) {
+                processDownloaded(req.payload.get(i), response.get(i));
+            }
+            pending.remove(requestId);
+        }
+    }
+
+    private synchronized void queueBack(int requestId) {
+        ReceiptsRequest req = pending.remove(requestId);
+        if (req != null) toDownload.addFirst(req.payload);
+    }
+
+    private synchronized void processTimeouts() {
+        Iterator<ReceiptsRequest> iter = pending.values().iterator();
+        while (iter.hasNext()) {
+            ReceiptsRequest req = iter.next();
+            if (System.currentTimeMillis() - req.sentAt > REQUEST_TIMEOUT) {
+                iter.remove();
+                toDownload.addFirst(req.payload);
             }
         }
     }
@@ -247,5 +299,15 @@ public class ReceiptsDownloader {
     @Autowired
     public void setSystemProperties(final SystemProperties config) {
         this.blockBytesLimit = config.blockQueueSize();
+    }
+
+    private static class ReceiptsRequest {
+        long sentAt;
+        List<byte[]> payload;
+
+        public ReceiptsRequest(List<byte[]> payload) {
+            this.sentAt = System.currentTimeMillis();
+            this.payload = payload;
+        }
     }
 }
