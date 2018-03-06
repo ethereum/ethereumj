@@ -23,7 +23,6 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
@@ -84,9 +83,6 @@ public class Eth62 extends EthHandler {
 
     @Autowired
     protected NodeManager nodeManager;
-
-    @Autowired
-    private ConsensusStrategy strategy;
 
     protected EthState ethState = EthState.INIT;
 
@@ -198,8 +194,8 @@ public class Eth62 extends EthHandler {
             totalDifficulty = blockchain.getTotalDifficulty();
         }
 
-        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, strategy.getInitState().getInitGenesis().getHash());
+        StatusMessage msg = new StatusMessage(protocolVersion, networkId,  // Casper genesis from config is not final
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, blockstore.getBlockHashByNumber(0));
         sendMessage(msg);
 
         ethState = EthState.STATUS_SENT;
@@ -324,7 +320,7 @@ public class Eth62 extends EthHandler {
 
         try {
 
-            if (!Arrays.equals(msg.getGenesisHash(), strategy.getInitState().getInitGenesis().getHash())) {
+            if (!Arrays.equals(msg.getGenesisHash(), blockstore.getBlockHashByNumber(0))) {  // Casper genesis from config is not final
                 if (!peerDiscoveryMode) {
                     loggerNet.debug("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 }

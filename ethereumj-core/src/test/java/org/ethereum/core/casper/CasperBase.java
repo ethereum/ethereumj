@@ -61,12 +61,13 @@ import org.springframework.context.ApplicationContext;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
-@RunWith(MockitoJUnitRunner.class)
+// We have all mocks here and not all of them are used in every test, so strict stubs should be turned off
+@RunWith(MockitoJUnitRunner.Silent.class)
 public abstract class CasperBase {
     @Mock
     ApplicationContext context;
 
-    final SystemProperties systemProperties = SystemProperties.getDefault();
+    final SystemProperties systemProperties = new SystemProperties();
 
     private CommonConfig commonConfig;
 
@@ -183,6 +184,8 @@ public abstract class CasperBase {
         ethereum.setPendingState(blockchain.getPendingState());
         ethereum.setChannelManager(Mockito.mock(ChannelManager.class));
         ((CasperHybridConsensusStrategy) commonConfig.consensusStrategy()).setEthereum(ethereum);
+        strategy.setBlockchain(blockchain);
+        blockchain.setStrategy(strategy);
 
         // Push pending txs in StandaloneBlockchain
         ethereum.addListener(new EthereumListenerAdapter(){

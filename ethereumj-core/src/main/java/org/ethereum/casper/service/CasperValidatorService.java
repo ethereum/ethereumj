@@ -66,13 +66,11 @@ import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.
 public class CasperValidatorService {
     private static final Logger logger = LoggerFactory.getLogger("casper.validator");
 
-    @Autowired
     private SyncManager syncManager;
 
     private CasperHybridConsensusStrategy strategy;
 
-    @Autowired
-    Blockchain blockchain;
+    private Blockchain blockchain;
 
     private Repository repository;
 
@@ -594,10 +592,7 @@ public class CasperValidatorService {
         return ((BigInteger) res[0]).longValue();
     }
 
-    public void setStrategy(CasperHybridConsensusStrategy strategy) {
-        this.strategy = strategy;
-    }
-
+    @Autowired
     public void setSyncManager(SyncManager syncManager) {
         this.syncManager = syncManager;
     }
@@ -605,5 +600,10 @@ public class CasperValidatorService {
     @Autowired
     public void setStrategy(ConsensusStrategy strategy) {
         this.strategy = (CasperHybridConsensusStrategy) strategy;
+    }
+
+    @Autowired
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
     }
 }

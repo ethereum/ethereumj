@@ -148,6 +148,7 @@ public class CasperValidatorTest extends CasperBase {
 
         CasperValidatorService service = new CasperValidatorService(ethereum, systemProperties);
         service.setStrategy(strategy);
+        service.setBlockchain(blockchain);
         SyncManager syncManager = Mockito.mock(SyncManager.class);
         Mockito.when(syncManager.isSyncDone()).thenReturn(true);
         service.setSyncManager(syncManager);
