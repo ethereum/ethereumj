@@ -251,8 +251,9 @@ public class SyncManager extends BlockDownloader {
                 }
                 if (importStart == 0) importStart = System.currentTimeMillis();
 
-                logger.debug("BlockQueue size: {}, headers queue size: {}, blocks in mem: {}",
-                        blockQueue.size(), syncQueue.getHeadersCount(), blocksInMem.get());
+                logger.debug("BlockQueue size: {}, headers queue size: {}, blocks in mem: {} (~{}mb)",
+                        blockQueue.size(), syncQueue.getHeadersCount(), blocksInMem.get(),
+                        blocksInMem.get() * getEstimatedBlockSize() / 1024 / 1024);
 
                 long s = System.nanoTime();
                 long sl;
