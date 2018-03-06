@@ -136,7 +136,7 @@ public class ReceiptsDownloader {
             finalizeBlock(block.getNumber());
         }
 
-        estimateBlockSize(receipts);
+        estimateBlockSize(receipts, block.getNumber());
     }
 
     private void finalizeBlock(Long blockNumber) {
@@ -164,10 +164,14 @@ public class ReceiptsDownloader {
 
                 processTimeouts();
 
-                if (toDownload.isEmpty() && pending.isEmpty()) {
-                    int requestSize = getRequestSize();
-                    logger.debug("ReceiptsDownloader: queueing {} blocks for request", requestSize);
-                    toDownload.addAll(getToDownload(getRequestSize()));
+                if (toDownload.isEmpty()) {
+                    int slotsLeft = getRequestSize() - MAX_IN_REQUEST * (toDownload.size() + pending.size());
+                    if (slotsLeft >= MAX_IN_REQUEST) {
+                        List<List<byte[]>> toQueue = getToDownload(slotsLeft);
+                        toDownload.addAll(toQueue);
+                        logger.debug("ReceiptsDownloader: {} new requests added, queue grew up to {}, pending {}",
+                                toQueue.size(), toDownload.size(), pending.size());
+                    }
                 }
 
                 Channel idle = getAnyPeer();
@@ -179,14 +183,18 @@ public class ReceiptsDownloader {
 
                         int requestId;
                         synchronized (this) {
-                            ReceiptsRequest req = new ReceiptsRequest(list);
                             requestId = ++requests;
-                            pending.put(requestId, req);
+                            pending.put(requestId, new ReceiptsRequest(list));
                         }
 
                         ListenableFuture<List<List<TransactionReceipt>>> future =
                                 ((Eth63) idle.getEthHandler()).requestReceipts(list);
                         if (future != null) {
+                            if (requestId % 10 == 0) {
+                                logger.debug("ReceiptsDownloader: queue size {}, pending {}",
+                                        toDownload.size(), pending.size());
+                            }
+
                             Futures.addCallback(future, new FutureCallback<List<List<TransactionReceipt>>>() {
                                 @Override
                                 public void onSuccess(List<List<TransactionReceipt>> result) {
@@ -202,6 +210,8 @@ public class ReceiptsDownloader {
                                     queueBack(requestId);
                                 }
                             });
+                        } else {
+                            queueBack(requestId);
                         }
                     }
                 }
@@ -250,7 +260,7 @@ public class ReceiptsDownloader {
             return requestLimit;
         }
 
-        int slotsLeft = Math.max((int) (blockBytesLimit / estimatedBlockSize), MAX_IN_REQUEST);
+        int slotsLeft = Math.max((int) (blockBytesLimit / estimatedBlockSize), 2 * MAX_IN_REQUEST);
         return Math.min(slotsLeft, requestLimit);
     }
 
@@ -284,7 +294,7 @@ public class ReceiptsDownloader {
         stop();
     }
 
-    private void estimateBlockSize(List<TransactionReceipt> receipts) {
+    private void estimateBlockSize(List<TransactionReceipt> receipts, long number) {
         if (receipts.isEmpty())
             return;
 
@@ -293,7 +303,9 @@ public class ReceiptsDownloader {
             lastBlockSizes.add(blockSize);
             estimatedBlockSize = lastBlockSizes.stream().mapToLong(Long::longValue).sum() / lastBlockSizes.size();
         }
-        logger.debug("ReceiptsDownloader: estimated block size: {}", estimatedBlockSize);
+
+        if (number % 1000 == 0)
+            logger.debug("ReceiptsDownloader: estimated block size: {}", estimatedBlockSize);
     }
 
     @Autowired
