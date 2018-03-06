@@ -259,7 +259,7 @@ public class CasperValidatorService {
             nonce = repository.getNonce(coinbase.getAddress());
         }
         if (gasLimit == null) {
-            gasLimit = ByteUtil.longToBytes(DEFAULT_GASLIMIT);
+            gasLimit = ByteUtil.longToBytesNoLeadZeroes(DEFAULT_GASLIMIT);
         }
         if (value == null) {
             value = BigInteger.ZERO;
@@ -339,7 +339,8 @@ public class CasperValidatorService {
         byte[] functionCallBytes = strategy.getCasper().getByName("deposit").encode(
                 new ByteArrayWrapper(valContractAddress),
                 new ByteArrayWrapper(coinbaseAddress));
-        Transaction tx = makeTx(strategy.getCasperAddress(), deposit, functionCallBytes, null, ByteUtil.longToBytes(1_000_000),
+        Transaction tx = makeTx(strategy.getCasperAddress(), deposit, functionCallBytes, null,
+                ByteUtil.longToBytesNoLeadZeroes(1_000_000),
                 null, true);
         return tx;
 
@@ -347,7 +348,8 @@ public class CasperValidatorService {
 
     private Transaction makeVoteTx(byte[] voteData) {
         byte[] functionCallBytes = strategy.getCasper().getByName("vote").encode(voteData);
-        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null, ByteUtil.longToBytes(1_000_000),
+        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null,
+                ByteUtil.longToBytesNoLeadZeroes(1_000_000),
                 BigInteger.ZERO, false);
         return tx;
 

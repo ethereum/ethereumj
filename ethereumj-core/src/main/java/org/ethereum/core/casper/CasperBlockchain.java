@@ -257,7 +257,7 @@ public class CasperBlockchain extends BlockchainImpl {
             Transaction tx = new Transaction(
                     ByteUtil.bigIntegerToBytes(track.getNonce(NULL_SENDER.getAddress())),
                     new byte[0],
-                    ByteUtil.longToBytes(DEFAULT_GASLIMIT),
+                    ByteUtil.longToBytesNoLeadZeroes(DEFAULT_GASLIMIT),
                     strategy.getCasperAddress(),
                     new byte[0],
                     data
