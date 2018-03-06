@@ -225,11 +225,11 @@ public class FrameCodec {
         int size = totalBodySize - pos;
 
         if (contextFrameIndex.get(contextId) != null) {
+            if (type != -1) {  // Type is part of body too, so we should deduct it too
+                size += RLP.encodeLong(type).length;
+            }
             int curSize = contextFrameIndex.get(contextId);
             curSize -= size;
-            if (type != -1) {  // Type is part of body too, so we should deduct it too
-                curSize -= RLP.encodeLong(type).length;
-            }
 
             if (curSize > 0) {
                 contextFrameIndex.put(contextId, curSize);
