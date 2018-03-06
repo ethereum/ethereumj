@@ -220,10 +220,11 @@ artifactory {
 artifactoryPublish.onlyIf {
     (branchName != null) &&
             (!pullRequest || pullRequest == 'false') &&
-            project.version.endsWith('-SNAPSHOT') &&
+            (project.version.endsWith('-SNAPSHOT') || project.version.endsWith('-CASPER')) &&
             (branchName.startsWith('master') ||
                     branchName.startsWith('develop') ||
-                    branchName.startsWith('stage'))
+                    branchName.startsWith('stage') ||
+                    branchName.startsWith('research/casper'))
 }
 
 bintray {
@@ -243,7 +244,7 @@ bintray {
 
 bintrayUpload.onlyIf {
     // comment 'false' and uncomment the next line to publish next release
-    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT') && !project.version.endsWith('-CASPER')
 //     false
 }
 
