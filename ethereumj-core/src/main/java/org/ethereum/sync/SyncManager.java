@@ -209,7 +209,12 @@ public class SyncManager extends BlockDownloader {
     @Override
     protected int getTotalHeadersToRequest() {
         if (getEstimatedBlockSize() == 0) {
-            return 2 * MAX_IN_REQUEST; // accurately exploring the net
+            // accurately exploring the net
+            if (syncQueue.getHeadersCount() < 2 * MAX_IN_REQUEST) {
+                return 2 * MAX_IN_REQUEST;
+            } else {
+                return 0;
+            }
         }
 
         int inMem = blocksInMem.get();
