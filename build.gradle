@@ -27,7 +27,7 @@ subprojects {
     group = 'org.ethereum'
 
     version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" :
-            "research/casper" == gitCurBranch() ? "-CASPER" : "-SNAPSHOT")
+            "research/casper" == gitCurBranch() ? "-casper-SNAPSHOT" : "-SNAPSHOT")
 
     println("Building version: " + version + " (from branch " + gitCurBranch() + ")")
 

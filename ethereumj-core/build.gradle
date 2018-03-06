@@ -220,7 +220,7 @@ artifactory {
 artifactoryPublish.onlyIf {
     (branchName != null) &&
             (!pullRequest || pullRequest == 'false') &&
-            (project.version.endsWith('-SNAPSHOT') || project.version.endsWith('-CASPER')) &&
+            project.version.endsWith('-SNAPSHOT') &&
             (branchName.startsWith('master') ||
                     branchName.startsWith('develop') ||
                     branchName.startsWith('stage') ||
@@ -244,7 +244,7 @@ bintray {
 
 bintrayUpload.onlyIf {
     // comment 'false' and uncomment the next line to publish next release
-    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT') && !project.version.endsWith('-CASPER')
+    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
 //     false
 }
 
