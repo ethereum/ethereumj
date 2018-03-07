@@ -137,33 +137,6 @@ public class WorldManager {
         channelManager.init(ethereum);
         syncManager.init(channelManager, pool);
         strategy.init();
-
-        ethereum.getBlockMiner().addListener(new MinerListener() {
-            @Override
-            public void miningStarted() {
-                syncManager.makeSyncDone();
-            }
-
-            @Override
-            public void miningStopped() {
-
-            }
-
-            @Override
-            public void blockMiningStarted(Block block) {
-
-            }
-
-            @Override
-            public void blockMined(Block block) {
-
-            }
-
-            @Override
-            public void blockMiningCanceled(Block block) {
-
-            }
-        });
     }
 
     public void addListener(EthereumListener listener) {
