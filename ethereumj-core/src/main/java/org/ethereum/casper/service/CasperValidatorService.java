@@ -24,7 +24,7 @@ import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 

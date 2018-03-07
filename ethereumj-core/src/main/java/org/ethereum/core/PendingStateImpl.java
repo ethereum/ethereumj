@@ -32,8 +32,8 @@ import java.util.function.Consumer;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.casper.CasperTransactionExecutor;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.casper.core.CasperTransactionExecutor;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
@@ -449,7 +449,8 @@ public class PendingStateImpl implements PendingState {
 
         Block best = getBestBlock();
 
-        TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(
+        TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
+        TransactionExecutor executor = txFactory.createTransactionExecutor(
                 tx, best.getCoinbase(), getRepository(),
                 blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
                 .withCommonConfig(commonConfig);

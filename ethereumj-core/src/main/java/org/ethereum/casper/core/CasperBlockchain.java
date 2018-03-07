@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.core.casper;
+package org.ethereum.casper.core;
 
 import javafx.util.Pair;
 import org.ethereum.config.BlockchainConfig;
@@ -29,8 +29,9 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutor;
+import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.CasperStateInit;
 import org.ethereum.db.ByteArrayWrapper;
@@ -270,7 +271,8 @@ public class CasperBlockchain extends BlockchainImpl {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = strategy.createTransactionExecutor(tx, block.getCoinbase(),
+            TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
+            TransactionExecutor executor = txFactory.createTransactionExecutor(tx, block.getCoinbase(),
                     txTrack, blockStore, getProgramInvokeFactory(), block, listener, totalGasUsed)
                     .withCommonConfig(commonConfig);
 
@@ -342,8 +344,9 @@ public class CasperBlockchain extends BlockchainImpl {
             track.addBalance(NULL_SENDER.getAddress(), BigInteger.valueOf(15).pow(18));
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = strategy.createTransactionExecutor(tx, genesis.getCoinbase(),
-                    txTrack, blockStore, getProgramInvokeFactory(), genesis, listener, 0)
+            TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
+            TransactionExecutor executor = txFactory.createTransactionExecutor(tx,
+                    genesis.getCoinbase(), txTrack, blockStore, getProgramInvokeFactory(), genesis, listener, 0)
                     .withCommonConfig(commonConfig);
 
             executor.init();

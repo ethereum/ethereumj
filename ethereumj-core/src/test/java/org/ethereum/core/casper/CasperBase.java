@@ -17,6 +17,8 @@
  */
 package org.ethereum.core.casper;
 
+import org.ethereum.casper.config.CasperBeanConfig;
+import org.ethereum.casper.core.CasperBlockchain;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -26,9 +28,9 @@ import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
-import org.ethereum.core.consensus.ConsensusStrategy;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.datasource.CountingBytesSource;
 import org.ethereum.datasource.JournalSource;
 import org.ethereum.datasource.Source;
@@ -51,12 +53,16 @@ import org.ethereum.vm.program.ProgramPrecompile;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -67,51 +73,49 @@ public abstract class CasperBase {
     @Mock
     ApplicationContext context;
 
-    final SystemProperties systemProperties = new SystemProperties();
+    @InjectMocks
+    private CommonConfig commonConfig = new CasperBeanConfig() {
+        @Override
+        public Source<byte[], ProgramPrecompile> precompileSource() {
+            return null;
+        }
+    };
 
-    private CommonConfig commonConfig;
+    final SystemProperties systemProperties = commonConfig.systemProperties();
+
+    @Spy
+    private TransactionExecutorFactory transactionExecutorFactory = commonConfig.transactionExecutorFactory();
 
     CasperBlockchain blockchain;
 
     WorldManager worldManager;
 
-    EthereumImpl ethereum;
-
     private CompositeEthereumListener defaultListener = new CompositeEthereumListener();
+
+    @InjectMocks
+    EthereumImpl ethereum = new EthereumImpl(systemProperties, defaultListener);
 
     CasperHybridConsensusStrategy strategy;
 
     StandaloneBlockchain bc;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         // Just trust me!
         // FIXME: Make it a little bit readable
+
         systemProperties.setBlockchainConfig(config());
-        systemProperties.setGenesisInfo("casper.json");
+        Resource casperGenesis = new ClassPathResource("/genesis/casper.json");
+        systemProperties.useGenesis(casperGenesis.getInputStream());
         systemProperties.overrideParams(
                 "consensus.casper.epochLength", "50",
                 "consensus.casper.contractBin", "/casper/casper.bin",
                 "consensus.casper.contractAbi", "/casper/casper.abi"
                 );
+
         MockitoAnnotations.initMocks(this);
-        this.commonConfig = new CommonConfig() {
-            @Override
-            public Source<byte[], ProgramPrecompile> precompileSource() {
-                return null;
-            }
 
-            @Override
-            public ConsensusStrategy consensusStrategy() {
-                if (strategy == null) {
-                    strategy = new CasperHybridConsensusStrategy(systemProperties, context);
-                }
-                return strategy;
-            }
-        };
-
-        this.ethereum = new EthereumImpl(systemProperties, defaultListener);
-        ethereum.setCommonConfig(commonConfig);
+        this.ethereum.setCommonConfig(commonConfig);
         this.worldManager = Mockito.mock(WorldManager.class);
 
         this.bc = new StandaloneBlockchain() {
@@ -183,7 +187,8 @@ public abstract class CasperBase {
         ethereum.setProgramInvokeFactory(new ProgramInvokeFactoryImpl());
         ethereum.setPendingState(blockchain.getPendingState());
         ethereum.setChannelManager(Mockito.mock(ChannelManager.class));
-        ((CasperHybridConsensusStrategy) commonConfig.consensusStrategy()).setEthereum(ethereum);
+        this.strategy = (CasperHybridConsensusStrategy) commonConfig.consensusStrategy();
+        strategy.setEthereum(ethereum);
         strategy.setBlockchain(blockchain);
         blockchain.setStrategy(strategy);
 

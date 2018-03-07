@@ -617,8 +617,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
 
             try {
-                ConsensusStrategy strategy = CommonConfig.getDefault().consensusStrategy();
-                org.ethereum.core.TransactionExecutor executor = strategy.createTransactionExecutor(
+                TransactionExecutorFactory transactionExecutorFactory = CommonConfig.getDefault().transactionExecutorFactory();
+                org.ethereum.core.TransactionExecutor executor = transactionExecutorFactory.createTransactionExecutor(
                         tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
                                 getBlockchain().getProgramInvokeFactory(), callBlock)
                         .setLocalCall(true);

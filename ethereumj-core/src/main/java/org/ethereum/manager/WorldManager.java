@@ -19,7 +19,7 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;

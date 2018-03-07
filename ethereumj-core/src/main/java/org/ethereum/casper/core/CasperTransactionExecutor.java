@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.core.casper;
+package org.ethereum.casper.core;
 import org.ethereum.core.Block;
 import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;

@@ -18,10 +18,19 @@
 package org.ethereum.casper.config;
 
 import org.ethereum.config.CommonConfig;
+import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.casper.CasperBlockchain;
-import org.ethereum.casper.CasperHybridConsensusStrategy;
+import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
+import org.ethereum.core.TransactionExecutorFactory;
+import org.ethereum.casper.core.CasperBlockchain;
+import org.ethereum.casper.core.CasperHybridConsensusStrategy;
+import org.ethereum.casper.core.CasperTransactionExecutor;
 import org.ethereum.core.consensus.ConsensusStrategy;
+import org.ethereum.db.BlockStore;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -39,5 +48,29 @@ public class CasperBeanConfig extends CommonConfig {
     @Bean
     public Blockchain blockchain() {
         return new CasperBlockchain(systemProperties());
+    }
+
+    @Override
+    @Bean
+    public TransactionExecutorFactory transactionExecutorFactory() {
+        return new CasperTransactionExecutorFactory();
+    }
+
+    class CasperTransactionExecutorFactory implements TransactionExecutorFactory {
+
+        @Override
+        public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
+                                                             BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
+                                                             Block currentBlock) {
+            return new CasperTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock);
+        }
+
+        @Override
+        public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
+                                                             BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
+                                                             Block currentBlock, EthereumListener listener, long gasUsedInTheBlock) {
+            return new CasperTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
+                    listener, gasUsedInTheBlock);
+        }
     }
 }

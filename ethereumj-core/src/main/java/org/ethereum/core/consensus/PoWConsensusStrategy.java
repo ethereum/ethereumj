@@ -18,18 +18,10 @@
 package org.ethereum.core.consensus;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.genesis.CommonStateInit;
 import org.ethereum.core.genesis.StateInit;
-import org.ethereum.db.BlockStore;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -74,20 +66,5 @@ public class PoWConsensusStrategy implements ConsensusStrategy {
             throw new RuntimeException("State is not initialized");
         }
         return stateInit;
-    }
-
-    @Override
-    public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
-                                                         BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
-                                                         Block currentBlock) {
-        return new CommonTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock);
-    }
-
-    @Override
-    public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
-                                                         BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
-                                                         Block currentBlock, EthereumListener listener, long gasUsedInTheBlock) {
-        return new CommonTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
-                listener, gasUsedInTheBlock);
     }
 }

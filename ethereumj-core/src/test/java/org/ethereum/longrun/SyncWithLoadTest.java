@@ -27,9 +27,9 @@ import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
+import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
@@ -161,6 +161,9 @@ public class SyncWithLoadTest {
         @Autowired
         SyncManager syncManager;
 
+        @Autowired
+        TransactionExecutorFactory transactionExecutorFactory;
+
         /**
          * The main EthereumJ callback.
          */
@@ -207,7 +210,7 @@ public class SyncWithLoadTest {
                             .getSnapshotTo(block.getStateRoot())
                             .startTracking();
                     try {
-                        TransactionExecutor executor = ethereum.getConsensusStrategy().createTransactionExecutor(
+                        TransactionExecutor executor = transactionExecutorFactory.createTransactionExecutor(
                                 tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
                                         programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                                 .withCommonConfig(commonConfig)

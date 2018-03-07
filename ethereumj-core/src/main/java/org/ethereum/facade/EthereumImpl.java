@@ -284,7 +284,8 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
             for (Transaction tx : block.getTransactionsList()) {
 
                 Repository txTrack = track.startTracking();
-                org.ethereum.core.TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(
+                TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
+                org.ethereum.core.TransactionExecutor executor = txFactory.createTransactionExecutor(
                         tx, block.getCoinbase(), txTrack, worldManager.getBlockStore(),
                         programInvokeFactory, block, worldManager.getListener(), 0)
                         .withCommonConfig(commonConfig);
@@ -316,7 +317,8 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 .startTracking();
 
         try {
-            org.ethereum.core.TransactionExecutor executor = commonConfig.consensusStrategy().createTransactionExecutor(
+            TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
+            org.ethereum.core.TransactionExecutor executor = txFactory.createTransactionExecutor(
                     tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
                             programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                     .withCommonConfig(commonConfig)
