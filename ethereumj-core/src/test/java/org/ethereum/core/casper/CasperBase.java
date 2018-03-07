@@ -22,7 +22,7 @@ import org.ethereum.casper.core.CasperBlockchain;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.net.CasperTestNetConfig;
+import org.ethereum.casper.config.net.CasperTestNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;

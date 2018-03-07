@@ -22,6 +22,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.casper.config.net.CasperTestNetConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;

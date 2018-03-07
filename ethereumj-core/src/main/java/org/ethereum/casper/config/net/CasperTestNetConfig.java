@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.config.net;
+package org.ethereum.casper.config.net;
 
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
@@ -23,6 +23,7 @@ import org.ethereum.config.ConstantsAdapter;
 import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
+import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.vm.GasCost;
 
 import java.math.BigInteger;
