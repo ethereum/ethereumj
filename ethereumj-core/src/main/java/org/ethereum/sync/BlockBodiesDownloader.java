@@ -154,7 +154,8 @@ public class BlockBodiesDownloader extends BlockDownloader {
             dbFlushManager.commit();
 
             estimateBlockSize(blockWrappers);
-            logger.debug("{}: header queue size {}", name, syncQueue.getHeadersCount());
+            logger.debug("{}: header queue size {} (~{}mb)", name, syncQueue.getHeadersCount(),
+                    syncQueue.getHeadersCount() * getEstimatedBlockSize() / 1024 / 1024);
 
             long c = System.currentTimeMillis();
             if (c - t > 5000) {
