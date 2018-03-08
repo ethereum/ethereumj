@@ -18,6 +18,7 @@
 package org.ethereum.core.casper;
 
 import org.ethereum.casper.config.CasperBeanConfig;
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.casper.core.CasperBlockchain;
 import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.casper.core.CasperPendingStateImpl;
@@ -75,7 +76,7 @@ public abstract class CasperBase {
     ApplicationContext context;
 
     @Spy
-    final SystemProperties systemProperties = new SystemProperties();
+    final CasperProperties systemProperties = new CasperProperties();
 
     @InjectMocks
     private CommonConfig commonConfig = new CasperBeanConfig() {
@@ -122,9 +123,8 @@ public abstract class CasperBase {
         Resource casperGenesis = new ClassPathResource("/genesis/casper.json");
         systemProperties.useGenesis(casperGenesis.getInputStream());
         systemProperties.overrideParams(
-                "consensus.casper.epochLength", "50",
-                "consensus.casper.contractBin", "/casper/casper.bin",
-                "consensus.casper.contractAbi", "/casper/casper.abi"
+                "casper.contractBin", "/casper/casper.bin",
+                "casper.contractAbi", "/casper/casper.abi"
                 );
 
         MockitoAnnotations.initMocks(this);

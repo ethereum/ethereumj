@@ -17,6 +17,7 @@
  */
 package org.ethereum.casper.mine;
 
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.casper.core.CasperTransactionExecutor;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
@@ -34,7 +35,7 @@ public class CasperBlockMiner extends BlockMiner {
 
     @Override
     protected boolean isAcceptableTx(Transaction tx) {
-        if (CasperTransactionExecutor.isCasperVote(tx, config.getCasperAddress())) {
+        if (CasperTransactionExecutor.isCasperVote(tx, ((CasperProperties) config).getCasperAddress())) {
             return true;
         }
         return super.isAcceptableTx(tx);

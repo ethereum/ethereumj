@@ -19,7 +19,7 @@ package org.ethereum.core.casper;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.genesis.CasperStateInit;
+import org.ethereum.casper.core.genesis.CasperStateInit;
 import org.ethereum.db.ByteArrayWrapper;
 import org.junit.Ignore;
 import org.junit.Test;

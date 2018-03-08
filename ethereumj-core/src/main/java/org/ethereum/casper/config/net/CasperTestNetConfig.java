@@ -24,11 +24,22 @@ import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.vm.GasCost;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
 public class CasperTestNetConfig extends BaseNetConfig {
+
+    public static final int EPOCH_LENGTH = 50;
+    public static final int WITHDRAWAL_DELAY = 5;
+    public static final double BASE_INTEREST_FACTOR = 0.1;
+    public static final double BASE_PENALTY_FACTOR = 0.0001;
+    public static final int MIN_DEPOSIT_ETH = 1500;
+
+    public final static ECKey NULL_SIGN_SENDER = ECKey.fromPrivate(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+
     public static final CasperTestNetConfig INSTANCE = new CasperTestNetConfig();
 
     static class CasperGasCost extends Eip150HFConfig.GasCostEip150HF {

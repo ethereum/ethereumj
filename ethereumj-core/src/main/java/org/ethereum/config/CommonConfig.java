@@ -86,7 +86,7 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.getSpringDefault();
+        return SystemProperties.getDefault();
     }
 
     @Bean

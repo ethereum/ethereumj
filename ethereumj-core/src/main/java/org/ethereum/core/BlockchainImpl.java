@@ -102,6 +102,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private static final int MAGIC_REWARD_OFFSET = 8;
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
+    @Autowired @Qualifier("defaultRepository")
     private Repository repository;
 
     @Autowired
@@ -1107,11 +1108,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    // FIXME: Magic
-    @Autowired @Qualifier("defaultRepository")
     public void setRepository(Repository repository) {
         this.repository = repository;
-        repository.setBlockchain(this);
     }
 
     public void setProgramInvokeFactory(ProgramInvokeFactory factory) {

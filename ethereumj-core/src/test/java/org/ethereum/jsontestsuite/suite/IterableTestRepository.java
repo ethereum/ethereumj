@@ -410,9 +410,4 @@ public class IterableTestRepository implements Repository {
             return new IterableContractDetails(src.getSnapshotTo(hash));
         }
     }
-
-    @Override
-    public void setBlockchain(Blockchain blockchain) {
-        // Not used
-    }
 }

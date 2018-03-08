@@ -21,6 +21,7 @@ import org.ethereum.casper.core.CasperPendingStateImpl;
 import org.ethereum.casper.manager.CasperWorldManager;
 import org.ethereum.casper.mine.CasperBlockMiner;
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.PendingState;
@@ -91,5 +92,11 @@ public class CasperBeanConfig extends CommonConfig {
     public BlockMiner blockMiner() {
         return new CasperBlockMiner(systemProperties(), (CompositeEthereumListener) ethereumListener,
                 blockchain(), pendingState());
+    }
+
+    @Bean
+    @Override
+    public SystemProperties systemProperties() {
+        return CasperProperties.getDefault();
     }
 }

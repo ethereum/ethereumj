@@ -1133,12 +1133,13 @@ public class RLP {
     }
 
     /**
-     * Expects byte[] objects are already RLP-encoded while everything else is not
+     * NOTE: Expects byte[] objects are already RLP-encoded while everything else is not
+     *
      * @param elements  Any elements, supports Byte, Short, Integer, Long,
      *                  BigInteger, String, byte[], ByteArrayWrapper
      * @return RLP list byte encoded
      */
-    public static byte[] encodeList(Object... elements) {
+    public static byte[] smartEncodeList(Object... elements) {
 
         if (elements == null) {
             return new byte[]{(byte) OFFSET_SHORT_LIST};

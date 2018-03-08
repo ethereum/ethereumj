@@ -28,7 +28,7 @@ import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.genesis.CasperStateInit;
+import org.ethereum.casper.core.genesis.CasperStateInit;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.casper.service.CasperValidatorService;
@@ -140,9 +140,9 @@ public class CasperValidatorTest extends CasperBase {
         assertEquals(0, zeroEpoch.longValue());
 
         systemProperties.overrideParams(
-                "consensus.casper.validator.enabled", "true",
-                "consensus.casper.validator.privateKey", Hex.toHexString(coinbase.getPrivKeyBytes()),
-                "consensus.casper.validator.deposit", "2000"
+                "casper.validator.enabled", "true",
+                "casper.validator.privateKey", Hex.toHexString(coinbase.getPrivKeyBytes()),
+                "casper.validator.deposit", "2000"
         );
 
 

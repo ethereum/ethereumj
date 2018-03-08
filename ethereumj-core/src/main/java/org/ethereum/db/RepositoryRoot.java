@@ -129,7 +129,9 @@ public class RepositoryRoot extends RepositoryImpl {
 
     @Override
     public Repository getSnapshotTo(byte[] root) {
-        return new RepositoryRoot(stateDS, root);
+        RepositoryRoot repo = new RepositoryRoot(stateDS, root);
+        repo.config = this.config;
+        return repo;
     }
 
     @Override

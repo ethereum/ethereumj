@@ -17,6 +17,7 @@
  */
 package org.ethereum.casper.core;
 
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
@@ -34,7 +35,7 @@ public class CasperPendingStateImpl extends PendingStateImpl {
         boolean isValid = super.receiptIsValid(receipt);
         if (isValid) {
             return true;
-        } else if (CasperTransactionExecutor.isCasperVote(receipt.getTransaction(), config.getCasperAddress())) {
+        } else if (CasperTransactionExecutor.isCasperVote(receipt.getTransaction(), ((CasperProperties) config).getCasperAddress())) {
             return receipt.isSuccessful();
         }
 
@@ -49,7 +50,7 @@ public class CasperPendingStateImpl extends PendingStateImpl {
             return String.format("Invalid transaction: %s", e.getMessage());
         }
 
-        if (CasperTransactionExecutor.isCasperVote(tx, config.getCasperAddress())) {
+        if (CasperTransactionExecutor.isCasperVote(tx, ((CasperProperties) config).getCasperAddress())) {
             return null;  // Doesn't require more checks
         }
 

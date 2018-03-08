@@ -17,6 +17,7 @@
  */
 package org.ethereum.casper.core;
 
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -45,12 +46,12 @@ import java.util.List;
 import java.util.Map;
 
 import static java.math.BigInteger.ONE;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.NULL_SIGN_SENDER;
 import static org.ethereum.core.ImportResult.EXIST;
 import static org.ethereum.core.ImportResult.IMPORTED_BEST;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.INVALID_BLOCK;
 import static org.ethereum.core.ImportResult.NO_PARENT;
-import static org.ethereum.core.genesis.CasperStateInit.NULL_SENDER;
 import static org.ethereum.casper.service.CasperValidatorService.DEFAULT_GASLIMIT;
 
 public class CasperBlockchain extends BlockchainImpl {
@@ -247,19 +248,19 @@ public class CasperBlockchain extends BlockchainImpl {
         List<Transaction> txs = new ArrayList<>(block.getTransactionsList());
 
         // Initialize the next epoch in the Casper contract
-        int epochLength = config.getCasperEpochLength();
+        int epochLength = ((CasperProperties) config).getCasperEpochLength();
         if(block.getNumber() % epochLength == 0 && block.getNumber() != 0) {
             long startingEpoch = block.getNumber() / epochLength;
             byte[] data = casper.getContract().getByName("initialize_epoch").encode(startingEpoch);
             Transaction tx = new Transaction(
-                    ByteUtil.bigIntegerToBytes(track.getNonce(NULL_SENDER.getAddress())),
+                    ByteUtil.bigIntegerToBytes(track.getNonce(NULL_SIGN_SENDER.getAddress())),
                     new byte[0],
                     ByteUtil.longToBytesNoLeadZeroes(DEFAULT_GASLIMIT),
                     casper.getAddress(),
                     new byte[0],
                     data
             );
-            tx.sign(NULL_SENDER);
+            tx.sign(NULL_SIGN_SENDER);
             txs.add(0, tx);
         }
 
@@ -330,12 +331,12 @@ public class CasperBlockchain extends BlockchainImpl {
             return;
 
         List<Transaction> txs = casper.getInitTxs();
-        byte[] casperAddress = config.getCasperAddress();
+        byte[] casperAddress = ((CasperProperties) config).getCasperAddress();
         byte[] coinbase = blockStore.getChainBlockByNumber(0).getCoinbase();
 
         txs.forEach((tx) -> {
             // We need money!
-            track.addBalance(NULL_SENDER.getAddress(), BigInteger.valueOf(15).pow(18));
+            track.addBalance(NULL_SIGN_SENDER.getAddress(), BigInteger.valueOf(15).pow(18));
 
             Repository txTrack = track.startTracking();
             TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
@@ -358,8 +359,8 @@ public class CasperBlockchain extends BlockchainImpl {
             }
 
             txTrack.commit();
-            BigInteger restBalance = track.getBalance(NULL_SENDER.getAddress());
-            track.addBalance(NULL_SENDER.getAddress(), restBalance.negate());
+            BigInteger restBalance = track.getBalance(NULL_SIGN_SENDER.getAddress());
+            track.addBalance(NULL_SIGN_SENDER.getAddress(), restBalance.negate());
             track.addBalance(casperAddress, track.getBalance(casperAddress).negate());
             track.addBalance(casperAddress, BigInteger.valueOf(10).pow(25));
         });

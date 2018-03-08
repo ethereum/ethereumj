@@ -17,6 +17,7 @@
  */
 package org.ethereum.casper.core;
 
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
@@ -32,8 +33,7 @@ import java.util.List;
 @Component
 public class CasperFacade {
 
-    @Autowired
-    private SystemProperties systemProperties;
+    private CasperProperties systemProperties;
 
     private Ethereum ethereum;
 
@@ -87,5 +87,10 @@ public class CasperFacade {
 
     public void setEthereum(Ethereum ethereum) {
         this.ethereum = ethereum;
+    }
+
+    @Autowired
+    public void setSystemProperties(SystemProperties systemProperties) {
+        this.systemProperties = (CasperProperties) systemProperties;
     }
 }

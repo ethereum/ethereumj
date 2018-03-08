@@ -15,16 +15,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.core.genesis;
+package org.ethereum.casper.core.genesis;
 
 import javafx.util.Pair;
 import org.apache.commons.lang3.ArrayUtils;
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.genesis.StateInit;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.BlockStore;
 import org.ethereum.util.ByteUtil;
@@ -36,16 +38,16 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.casper.config.net.CasperTestNetConfig.BASE_INTEREST_FACTOR;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.BASE_PENALTY_FACTOR;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.MIN_DEPOSIT_ETH;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.NULL_SIGN_SENDER;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.WITHDRAWAL_DELAY;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 public class CasperStateInit implements StateInit {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
-
-    public static final int WITHDRAWAL_DELAY = 5;
-    public static final double BASE_INTEREST_FACTOR = 0.1;
-    public static final double BASE_PENALTY_FACTOR = 0.0001;
-    public static final int MIN_DEPOSIT_ETH = 1500;
 
     private Genesis genesis;
 
@@ -53,18 +55,16 @@ public class CasperStateInit implements StateInit {
 
     private Blockchain blockchain;
 
-    private SystemProperties systemProperties;
+    private CasperProperties systemProperties;
 
     private Genesis initGenesis;
-
-    public final static ECKey NULL_SENDER = ECKey.fromPrivate(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
     public CasperStateInit(Genesis genesis, Repository repository, Blockchain blockchain,
                            SystemProperties systemProperties) {
         this.genesis = genesis;
         this.repository = repository;
         this.blockchain = blockchain;
-        this.systemProperties = systemProperties;
+        this.systemProperties = (CasperProperties) systemProperties;
         init();
     }
 
@@ -108,7 +108,7 @@ public class CasperStateInit implements StateInit {
         txStrs.add(VIPER_RLP_DECODER_TX);
         txStrs.add(SIG_HASHER_TX);
         txStrs.add(PURITY_CHECKER_TX);
-        BigInteger nonce = repository.getNonce(NULL_SENDER.getAddress());
+        BigInteger nonce = repository.getNonce(NULL_SIGN_SENDER.getAddress());
         List<Transaction> txs = new ArrayList<>();
         final long gasPriceFund = 25_000_000_000L;
         for (int i = 0; i < txStrs.size(); ++i) {
@@ -128,7 +128,7 @@ public class CasperStateInit implements StateInit {
                     new byte[0],
                     null
             );
-            fundTx.sign(NULL_SENDER);
+            fundTx.sign(NULL_SIGN_SENDER);
             txs.add(fundTx);
             txs.add(deployTx);
             nonce = nonce.add(BigInteger.ONE);
@@ -166,7 +166,7 @@ public class CasperStateInit implements StateInit {
                     ByteUtil.longToBytesNoLeadZeroes(0),
                     ArrayUtils.addAll(casperBin, casperInit),  // Merge contract and constructor args
                     null);
-            tx.sign(NULL_SENDER);
+            tx.sign(NULL_SIGN_SENDER);
 
             // set casperAddress
             System.arraycopy(tx.getContractAddress(), 0, casperAddress, 0, 20);

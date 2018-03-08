@@ -235,6 +235,4 @@ public interface Repository extends org.ethereum.facade.Repository{
                      HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 
     Repository getSnapshotTo(byte[] root);
-
-    void setBlockchain(Blockchain blockchain);
 }

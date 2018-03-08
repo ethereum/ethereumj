@@ -23,6 +23,7 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -215,6 +216,7 @@ public class RepositoryWrapper implements Repository {
         return blockchain.getRepository().getStorage(addr, keys);
     }
 
+    @Autowired
     public void setBlockchain(Blockchain blockchain) {
         this.blockchain = (BlockchainImpl) blockchain;
     }

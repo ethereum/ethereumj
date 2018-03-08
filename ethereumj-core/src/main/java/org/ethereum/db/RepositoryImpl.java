@@ -20,7 +20,6 @@ package org.ethereum.db;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
@@ -427,8 +426,4 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         throw new RuntimeException("Not supported");
     }
 
-    @Override
-    public void setBlockchain(Blockchain blockchain) {
-        // Not used in current implementation
-    }
 }

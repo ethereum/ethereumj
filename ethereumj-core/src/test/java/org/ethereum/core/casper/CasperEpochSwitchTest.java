@@ -27,7 +27,7 @@ import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.genesis.CasperStateInit;
+import org.ethereum.casper.core.genesis.CasperStateInit;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.GasCost;
 import org.junit.Test;

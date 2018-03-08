@@ -18,6 +18,7 @@
 package org.ethereum.casper.service;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -70,7 +71,7 @@ public class CasperValidatorService {
 
     private Repository repository;
 
-    private SystemProperties config;
+    private CasperProperties config;
 
     private Ethereum ethereum;
 
@@ -115,15 +116,15 @@ public class CasperValidatorService {
     }
 
     private byte[] makeVote(long validatorIndex, byte[] targetHash, long targetEpoch, long sourceEpoch, ECKey sender) {
-        byte[] sigHash = sha3(RLP.encodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch));
+        byte[] sigHash = sha3(RLP.smartEncodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch));
         byte[] vrs = make3IntSignature(sigHash, sender);
-        return RLP.encodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch, new ByteArrayWrapper(vrs));
+        return RLP.smartEncodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch, new ByteArrayWrapper(vrs));
     }
 
     private byte[] makeLogout(long validatorIndex, long epoch, ECKey sender) {
-        byte[] sigHash = sha3(RLP.encodeList(validatorIndex, epoch));
+        byte[] sigHash = sha3(RLP.smartEncodeList(validatorIndex, epoch));
         byte[] vrs = make3IntSignature(sigHash, sender);
-        return RLP.encodeList(validatorIndex, epoch, new ByteArrayWrapper(vrs));
+        return RLP.smartEncodeList(validatorIndex, epoch, new ByteArrayWrapper(vrs));
     }
 
     private byte[] make3IntSignature(byte[] data, ECKey signer) {
@@ -166,9 +167,9 @@ public class CasperValidatorService {
     @Autowired
     public CasperValidatorService(Ethereum ethereum, SystemProperties config) {
         this.ethereum = ethereum;
-        this.config = config;
-        this.coinbase = ECKey.fromPrivate(config.getCasperValidatorPrivateKey());
-        this.depositSize = EtherUtil.convert(config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
+        this.config = (CasperProperties) config;
+        this.coinbase = ECKey.fromPrivate(this.config.getCasperValidatorPrivateKey());
+        this.depositSize = EtherUtil.convert(this.config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
 
         handlers.put(UNINITIATED, this::checkLoggedIn);
         handlers.put(WAITING_FOR_VALCODE, this::checkValcode);
@@ -235,11 +236,8 @@ public class CasperValidatorService {
             // The validator isn't logged in, so return!
             return;
         }
-        if (config.getCasperValidatorShouldLogout()) {
-            setState(WAITING_FOR_LOGOUT);
-        } else{
-            setState(VOTING);
-        }
+
+        setState(VOTING);
     }
 
     private void broadcastValcodeTx() {

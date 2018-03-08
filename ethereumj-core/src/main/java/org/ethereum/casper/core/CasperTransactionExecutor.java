@@ -16,6 +16,7 @@
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.ethereum.casper.core;
+import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
@@ -102,7 +103,7 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     }
 
     private boolean isCasperVote() {
-        return isCasperVote(tx, config.getCasperAddress());
+        return isCasperVote(tx, ((CasperProperties) config).getCasperAddress());
     }
 
     public static boolean isCasperVote(Transaction transaction, byte[] casperAddress) {

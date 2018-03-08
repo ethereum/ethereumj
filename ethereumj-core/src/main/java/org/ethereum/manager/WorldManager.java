@@ -114,7 +114,6 @@ public class WorldManager {
                         final Blockchain blockchain) {
         this.blockchain = blockchain;
         this.repository = repository;
-        repository.setBlockchain(blockchain);
         this.config = config;
     }
 
