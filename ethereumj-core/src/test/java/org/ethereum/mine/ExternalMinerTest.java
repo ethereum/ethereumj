@@ -66,7 +66,7 @@ public class ExternalMinerTest {
     @InjectMocks
     @Resource
     private BlockMiner blockMiner = new BlockMiner(SystemProperties.getDefault(), listener, bc.getBlockchain(),
-            bc.getBlockchain().getBlockStore(), bc.getPendingState());;
+            bc.getPendingState());;
 
     @Before
     public void setup() {

@@ -17,13 +17,11 @@
  */
 package org.ethereum.casper.core;
 
-import javafx.util.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.Genesis;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
@@ -31,9 +29,6 @@ import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
-import org.ethereum.core.consensus.ConsensusStrategy;
-import org.ethereum.core.genesis.CasperStateInit;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -60,13 +55,14 @@ import static org.ethereum.casper.service.CasperValidatorService.DEFAULT_GASLIMI
 
 public class CasperBlockchain extends BlockchainImpl {
 
+    @Autowired
+    private CasperFacade casper;
+
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
     private static final BigInteger PRETTY_BIG = BigInteger.valueOf(10).pow(40);
     private static final BigInteger NON_REVERT_MIN_DEPOSIT = BigInteger.valueOf(10).pow(18);
-
-    private CasperHybridConsensusStrategy strategy;
 
     public CasperBlockchain()  {
         throw new RuntimeException("Empty constructor not available");
@@ -119,7 +115,7 @@ public class CasperBlockchain extends BlockchainImpl {
     }
 
     private BigInteger getScore(final Block block) {
-        Object[] res = strategy.constCallCasper(block, "get_last_justified_epoch");
+        Object[] res = casper.constCall(block, "get_last_justified_epoch");
         return ((BigInteger) res[0]).multiply(PRETTY_BIG).add(getPoWDifficulty(block));
     }
 
@@ -208,19 +204,19 @@ public class CasperBlockchain extends BlockchainImpl {
      * Finalizes Casper epoch checkpoint if needed
      */
     private void finalizeCheckpoint(final Block block) {
-        Object[] res = strategy.constCallCasper(block, "get_last_finalized_epoch");
+        Object[] res = casper.constCall(block, "get_last_finalized_epoch");
         long finalizedEpoch = ((BigInteger) res[0]).longValue();
-        Object[] res2 = strategy.constCallCasper(block, "get_current_epoch");
+        Object[] res2 = casper.constCall(block, "get_current_epoch");
         long currentEpoch = ((BigInteger) res2[0]).longValue();
         if (finalizedEpoch == currentEpoch - 1) {
             // Actually one hash per epoch, just the getter for array
-            Object[] res3 = strategy.constCallCasper(block, "get_checkpoint_hashes", finalizedEpoch);
+            Object[] res3 = casper.constCall(block, "get_checkpoint_hashes", finalizedEpoch);
             byte[] checkpointHash = (byte[]) res3[0];
             if (!Arrays.areEqual(checkpointHash, new byte[32])) {  // new byte[32] == 00-filled
                 Block histBlock = getBlockByHash(checkpointHash);
-                Object[] res4 = strategy.constCallCasper(histBlock, "get_total_curdyn_deposits");
+                Object[] res4 = casper.constCall(histBlock, "get_total_curdyn_deposits");
                 BigInteger curDeposits = (BigInteger) res4[0];
-                Object[] res5 = strategy.constCallCasper(histBlock, "get_total_prevdyn_deposits");
+                Object[] res5 = casper.constCall(histBlock, "get_total_prevdyn_deposits");
                 BigInteger prevDeposits = (BigInteger) res5[0];
                 if (curDeposits.compareTo(NON_REVERT_MIN_DEPOSIT) > 0 &&
                         prevDeposits.compareTo(NON_REVERT_MIN_DEPOSIT) > 0) {
@@ -254,12 +250,12 @@ public class CasperBlockchain extends BlockchainImpl {
         int epochLength = config.getCasperEpochLength();
         if(block.getNumber() % epochLength == 0 && block.getNumber() != 0) {
             long startingEpoch = block.getNumber() / epochLength;
-            byte[] data = strategy.getCasper().getByName("initialize_epoch").encode(startingEpoch);
+            byte[] data = casper.getContract().getByName("initialize_epoch").encode(startingEpoch);
             Transaction tx = new Transaction(
                     ByteUtil.bigIntegerToBytes(track.getNonce(NULL_SENDER.getAddress())),
                     new byte[0],
                     ByteUtil.longToBytesNoLeadZeroes(DEFAULT_GASLIMIT),
-                    strategy.getCasperAddress(),
+                    casper.getAddress(),
                     new byte[0],
                     data
             );
@@ -333,11 +329,9 @@ public class CasperBlockchain extends BlockchainImpl {
         if (block.getNumber() != 1)
             return;
 
-
-        Pair<byte[], List<Transaction>> res = ((CasperStateInit) strategy.getInitState()).makeInitTxes();
-        List<Transaction> txs = res.getValue();
-        Genesis genesis = strategy.getInitState().getInitGenesis();
+        List<Transaction> txs = casper.getInitTxs();
         byte[] casperAddress = config.getCasperAddress();
+        byte[] coinbase = blockStore.getChainBlockByNumber(0).getCoinbase();
 
         txs.forEach((tx) -> {
             // We need money!
@@ -346,7 +340,7 @@ public class CasperBlockchain extends BlockchainImpl {
             Repository txTrack = track.startTracking();
             TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
             TransactionExecutor executor = txFactory.createTransactionExecutor(tx,
-                    genesis.getCoinbase(), txTrack, blockStore, getProgramInvokeFactory(), genesis, listener, 0)
+                    coinbase, txTrack, blockStore, getProgramInvokeFactory(), block, listener, 0)
                     .withCommonConfig(commonConfig);
 
             executor.init();
@@ -438,8 +432,7 @@ public class CasperBlockchain extends BlockchainImpl {
         return blockStore.getTotalDifficultyForHash(block.getHash());
     }
 
-    @Autowired
-    public void setStrategy(ConsensusStrategy strategy) {
-        this.strategy = (CasperHybridConsensusStrategy) strategy;
+    public void setCasper(CasperFacade casper) {
+        this.casper = casper;
     }
 }

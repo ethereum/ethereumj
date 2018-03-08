@@ -18,14 +18,15 @@
 package org.ethereum.config;
 
 import org.ethereum.core.*;
-import org.ethereum.core.consensus.ConsensusStrategy;
-import org.ethereum.core.consensus.PoWConsensusStrategy;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.mine.BlockMiner;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.BlockHashRule;
 import org.ethereum.validator.BlockHeaderRule;
@@ -66,6 +67,9 @@ public class CommonConfig {
     @Autowired
     protected ApplicationContext ctx;
 
+    @Autowired
+    protected EthereumListener ethereumListener;
+
     private static CommonConfig defaultInstance;
 
     public static CommonConfig getDefault() {
@@ -74,11 +78,6 @@ public class CommonConfig {
                 @Override
                 public Source<byte[], ProgramPrecompile> precompileSource() {
                     return null;
-                }
-
-                @Override
-                public ConsensusStrategy consensusStrategy() {
-                    return new PoWConsensusStrategy(systemProperties());
                 }
             };
         }
@@ -294,11 +293,6 @@ public class CommonConfig {
     }
 
     @Bean
-    public ConsensusStrategy consensusStrategy() {
-        return new PoWConsensusStrategy(systemProperties(), ctx);
-    }
-
-    @Bean
     public TransactionExecutorFactory transactionExecutorFactory() {
         return new CommonTransactionExecutorFactory();
     }
@@ -318,5 +312,20 @@ public class CommonConfig {
             return new CommonTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
                     listener, gasUsedInTheBlock);
         }
+    }
+
+    @Bean
+    public WorldManager worldManager() {
+        return new WorldManager(systemProperties(), repository(), blockchain());
+    }
+
+    @Bean
+    public PendingState pendingState() {
+        return new PendingStateImpl(ethereumListener);
+    }
+
+    @Bean
+    public BlockMiner blockMiner() {
+        return new BlockMiner(systemProperties(), (CompositeEthereumListener) ethereumListener, blockchain(), pendingState());
     }
 }

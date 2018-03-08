@@ -37,8 +37,10 @@ public class CasperStateInitTest extends CasperBase {
     public void genesisPlusBlock() {
         // Init with Genesis
         final Genesis genesis = Genesis.getInstance(systemProperties);
-        CasperStateInit casperStateInit = (CasperStateInit) strategy.initState(genesis);
+
+        CasperStateInit casperStateInit = new CasperStateInit(genesis, repository, blockchain, systemProperties);
         casperStateInit.initDB();
+        casper.setInitTxs(casperStateInit.makeInitTxes().getValue());
 
         // Check after genesis
         assertEquals(new ByteArrayWrapper(Hex.decode("f3f713c5ff3119287ae62861e3fd90d6afc94b57d06151007c409b86bf419d11")),

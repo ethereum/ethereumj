@@ -21,7 +21,6 @@ import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -103,8 +102,6 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     }
 
     private boolean isCasperVote() {
-        if (!(commonConfig.consensusStrategy() instanceof CasperHybridConsensusStrategy))
-            return false;
         return isCasperVote(tx, config.getCasperAddress());
     }
 

@@ -112,17 +112,20 @@ public class CasperEpochSwitchTest extends CasperBase {
                 genesis.getNonce()
         );
         modifiedGenesis.setPremine(genesis.getPremine());
-        CasperStateInit casperStateInit = (CasperStateInit) strategy.initState(modifiedGenesis);
+
+        CasperStateInit casperStateInit = new CasperStateInit(modifiedGenesis, repository, blockchain, systemProperties);
         casperStateInit.initDB();
 
-        BigInteger zeroEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
+        casper.setInitTxs(casperStateInit.makeInitTxes().getValue());
+
+        BigInteger zeroEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
 
         for (int i = 0; i < 50; ++i) {
             Block block = bc.createBlock();
         }
 
-        BigInteger firstEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
+        BigInteger firstEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
         assertEquals(1, firstEpoch.longValue());
 
         for (int i = 0; i < 50; ++i) {
@@ -130,13 +133,13 @@ public class CasperEpochSwitchTest extends CasperBase {
         }
 
         // Epochs switches and they are finalized and justified because there no deposits yet [insta_finalize]
-        BigInteger secondEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
+        BigInteger secondEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
         assertEquals(2, secondEpoch.longValue());
 
-        BigInteger lastFinalized = (BigInteger) strategy.constCallCasper("get_last_finalized_epoch")[0];
+        BigInteger lastFinalized = (BigInteger) casper.constCall("get_last_finalized_epoch")[0];
         assertEquals(1, lastFinalized.longValue());
 
-        BigInteger lastJustified = (BigInteger) strategy.constCallCasper("get_last_justified_epoch")[0];
+        BigInteger lastJustified = (BigInteger) casper.constCall("get_last_justified_epoch")[0];
         assertEquals(1, lastJustified.longValue());
     }
 }

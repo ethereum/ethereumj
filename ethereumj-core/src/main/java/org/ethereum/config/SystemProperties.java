@@ -918,11 +918,6 @@ public class SystemProperties {
         return genesis;
     }
 
-    @ValidateMe
-    public String getConsensusStrategy() {
-        return config.getString("consensus.strategy");
-    }
-
     public byte[] getCasperAddress() {
         return casperAddress;
     }

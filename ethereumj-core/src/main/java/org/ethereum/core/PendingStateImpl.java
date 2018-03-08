@@ -32,9 +32,6 @@ import java.util.function.Consumer;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.casper.core.CasperTransactionExecutor;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
@@ -48,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * Keeps logic providing pending state management
@@ -56,7 +52,6 @@ import org.springframework.stereotype.Component;
  * @author Mikhail Kalinin
  * @since 28.09.2015
  */
-@Component
 public class PendingStateImpl implements PendingState {
 
     public static class TransactionSortedSet extends TreeSet<Transaction> {
@@ -75,12 +70,11 @@ public class PendingStateImpl implements PendingState {
     private static final Logger logger = LoggerFactory.getLogger("pending");
 
     @Autowired
-    private SystemProperties config = SystemProperties.getDefault();
+    protected SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
-    @Autowired
     private EthereumListener listener;
 
     @Autowired
@@ -202,21 +196,8 @@ public class PendingStateImpl implements PendingState {
         return newPending;
     }
 
-    // TODO: Refactor me!!! Casper only
-    private boolean receiptIsValid(TransactionReceipt receipt) {
-        ConsensusStrategy strategy = commonConfig.consensusStrategy();
-        if (strategy instanceof CasperHybridConsensusStrategy &&
-                CasperTransactionExecutor.isCasperVote(receipt.getTransaction(), config.getCasperAddress())) {
-            // Gas not used, it's ok if it was successful vote, so let's check it
-            if (!receipt.isValid()) {
-                logger.debug("Casper vote validity checking {}, success={} ", receipt, receipt.isSuccessful());
-                return receipt.isSuccessful();
-            } else {
-                return true; // Receipt is valid already
-            }
-        } else {
-            return receipt.isValid();
-        }
+    protected boolean receiptIsValid(TransactionReceipt receipt) {
+        return receipt.isValid();
     }
 
     public synchronized void trackTransaction(Transaction tx) {
@@ -282,19 +263,13 @@ public class PendingStateImpl implements PendingState {
     }
 
     // validations which are not performed within executeTx
-    private String validate(Transaction tx) {
+    protected String validate(Transaction tx) {
         try {
             tx.verify();
         } catch (Exception e) {
             return String.format("Invalid transaction: %s", e.getMessage());
         }
 
-        // FIXME: Shouldn't be there
-        if ((commonConfig.consensusStrategy() instanceof CasperHybridConsensusStrategy)) {
-            if (CasperTransactionExecutor.isCasperVote(tx, config.getCasperAddress())) {
-                return null;  // Doesn't require more checks
-            }
-        }
         if (config.getMineMinGasPrice().compareTo(ByteUtil.bytesToBigInteger(tx.getGasPrice())) > 0) {
             return "Too low gas price for transaction: " + ByteUtil.bytesToBigInteger(tx.getGasPrice());
         }

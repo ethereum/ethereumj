@@ -31,7 +31,6 @@ import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.context.ApplicationContext;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -56,19 +55,16 @@ public class CasperStateInit implements StateInit {
 
     private SystemProperties systemProperties;
 
-    private ApplicationContext ctx;
-
     private Genesis initGenesis;
 
     public final static ECKey NULL_SENDER = ECKey.fromPrivate(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
     public CasperStateInit(Genesis genesis, Repository repository, Blockchain blockchain,
-                           ApplicationContext ctx, SystemProperties systemProperties) {
+                           SystemProperties systemProperties) {
         this.genesis = genesis;
         this.repository = repository;
         this.blockchain = blockchain;
         this.systemProperties = systemProperties;
-        this.ctx = ctx;
         init();
     }
 

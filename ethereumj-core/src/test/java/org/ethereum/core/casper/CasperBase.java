@@ -19,6 +19,8 @@ package org.ethereum.core.casper;
 
 import org.ethereum.casper.config.CasperBeanConfig;
 import org.ethereum.casper.core.CasperBlockchain;
+import org.ethereum.casper.core.CasperFacade;
+import org.ethereum.casper.core.CasperPendingStateImpl;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -27,10 +29,9 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.EventDispatchThread;
-import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.Repository;
 import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.datasource.CountingBytesSource;
 import org.ethereum.datasource.JournalSource;
 import org.ethereum.datasource.Source;
@@ -73,15 +74,22 @@ public abstract class CasperBase {
     @Mock
     ApplicationContext context;
 
+    @Spy
+    final SystemProperties systemProperties = new SystemProperties();
+
     @InjectMocks
     private CommonConfig commonConfig = new CasperBeanConfig() {
         @Override
         public Source<byte[], ProgramPrecompile> precompileSource() {
             return null;
         }
+
+        @Override
+        public SystemProperties systemProperties() {
+            return systemProperties;
+        }
     };
 
-    final SystemProperties systemProperties = commonConfig.systemProperties();
 
     @Spy
     private TransactionExecutorFactory transactionExecutorFactory = commonConfig.transactionExecutorFactory();
@@ -95,9 +103,15 @@ public abstract class CasperBase {
     @InjectMocks
     EthereumImpl ethereum = new EthereumImpl(systemProperties, defaultListener);
 
-    CasperHybridConsensusStrategy strategy;
+    @InjectMocks
+    CasperFacade casper = new CasperFacade();
+
+    @InjectMocks
+    CasperPendingStateImpl casperPendingState = new CasperPendingStateImpl(defaultListener);
 
     StandaloneBlockchain bc;
+
+    Repository repository;
 
     @Before
     public void setup() throws Exception {
@@ -158,11 +172,10 @@ public abstract class CasperBase {
                 blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
                 blockchain.setProgramInvokeFactory(programInvokeFactory);
                 blockchain.setPruneManager(pruneManager);
-                ((CasperBlockchain)blockchain).setStrategy(strategy);
 
                 blockchain.byTest = true;
 
-                pendingState = new PendingStateImpl(listener);
+                pendingState = casperPendingState;
                 pendingState.setCommonConfig(commonConfig);
 
                 pendingState.setBlockchain(blockchain);
@@ -172,11 +185,14 @@ public abstract class CasperBase {
         }.withNetConfig(systemProperties.getBlockchainConfig());
 
         this.blockchain = (CasperBlockchain) bc.getBlockchain();
+        casper.setEthereum(ethereum);
+        blockchain.setCasper(casper);
         Mockito.when(context.getBean(CasperBlockchain.class)).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockchain()).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockStore()).thenReturn(blockchain.getBlockStore());
         RepositoryWrapper wrapper = new RepositoryWrapper();
         wrapper.setBlockchain(bc.getBlockchain());
+        this.repository = wrapper;
         Mockito.when(worldManager.getRepository()).thenReturn(wrapper);
         doAnswer((Answer<Void>) invocation -> {
             Object arg0 = invocation.getArgument(0);
@@ -187,10 +203,6 @@ public abstract class CasperBase {
         ethereum.setProgramInvokeFactory(new ProgramInvokeFactoryImpl());
         ethereum.setPendingState(blockchain.getPendingState());
         ethereum.setChannelManager(Mockito.mock(ChannelManager.class));
-        this.strategy = (CasperHybridConsensusStrategy) commonConfig.consensusStrategy();
-        strategy.setEthereum(ethereum);
-        strategy.setBlockchain(blockchain);
-        blockchain.setStrategy(strategy);
 
         // Push pending txs in StandaloneBlockchain
         ethereum.addListener(new EthereumListenerAdapter(){

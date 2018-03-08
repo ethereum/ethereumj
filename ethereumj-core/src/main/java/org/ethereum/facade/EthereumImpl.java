@@ -23,7 +23,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
@@ -145,11 +144,6 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public org.ethereum.facade.Blockchain getBlockchain() {
         return (org.ethereum.facade.Blockchain) worldManager.getBlockchain();
-    }
-
-    @Override
-    public ConsensusStrategy getConsensusStrategy() {
-        return commonConfig.consensusStrategy();
     }
 
     public ImportResult addNewMinedBlock(Block block) {

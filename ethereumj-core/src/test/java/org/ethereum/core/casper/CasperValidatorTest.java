@@ -131,10 +131,12 @@ public class CasperValidatorTest extends CasperBase {
         genesis.getPremine().put(new ByteArrayWrapper(coinbase.getAddress()), coinbaseAcc);
         modifiedGenesis.setPremine(genesis.getPremine());
 
-        CasperStateInit casperStateInit = (CasperStateInit) strategy.initState(modifiedGenesis);
+        CasperStateInit casperStateInit = new CasperStateInit(modifiedGenesis, repository, blockchain, systemProperties);
         casperStateInit.initDB();
 
-        BigInteger zeroEpoch = (BigInteger) strategy.constCallCasper("get_current_epoch")[0];
+        casper.setInitTxs(casperStateInit.makeInitTxes().getValue());
+
+        BigInteger zeroEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
 
         systemProperties.overrideParams(
@@ -147,24 +149,25 @@ public class CasperValidatorTest extends CasperBase {
         bc.createBlock();
 
         CasperValidatorService service = new CasperValidatorService(ethereum, systemProperties);
-        service.setStrategy(strategy);
         service.setBlockchain(blockchain);
         SyncManager syncManager = Mockito.mock(SyncManager.class);
         Mockito.when(syncManager.isSyncDone()).thenReturn(true);
         service.setSyncManager(syncManager);
+        service.setCasper(casper);
+        service.start();
 
         for (int i = 0; i < 10; ++i) {
             Block block = bc.createBlock();
         }
         // Deposit is scaled, so it's neither in wei nor in ETH. Should be 2000 ETH
         // TODO: Convert to ETH or wei
-        BigDecimal curDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", 1)[0];
+        BigDecimal curDeposit = (BigDecimal) casper.constCall("get_validators__deposit", 1)[0];
         assertTrue(curDeposit.compareTo(new BigDecimal("200000000000")) == 0);
         for (int i = 0; i < 300; ++i) {
             Block block = bc.createBlock();
         }
         // We've earned some money on top of our deposit as premium for our votes, which finalized epochs!!
-        BigDecimal increasedDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", 1)[0];
+        BigDecimal increasedDeposit = (BigDecimal) casper.constCall("get_validators__deposit", 1)[0];
         assertTrue(increasedDeposit.compareTo(new BigDecimal("200000000000")) > 0);
 
         // We've left less than 500 ETH

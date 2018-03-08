@@ -18,14 +18,13 @@
 package org.ethereum.casper.service;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
@@ -39,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -61,13 +59,12 @@ import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.
 import static org.ethereum.casper.service.CasperValidatorService.ValidatorState.WAITING_FOR_WITHDRAWN;
 
 @Component
-@Lazy
 public class CasperValidatorService {
     private static final Logger logger = LoggerFactory.getLogger("casper.validator");
 
     private SyncManager syncManager;
 
-    private CasperHybridConsensusStrategy strategy;
+    private CasperFacade casper;
 
     private Blockchain blockchain;
 
@@ -88,6 +85,8 @@ public class CasperValidatorService {
     private Map<Long, byte[]> votes = new HashMap<>();
 
     private BigInteger depositSize;
+
+    private boolean started = false;
 
     private long latestTargetEpoch = -1;
     private long latestSourceEpoch = -1;
@@ -167,7 +166,6 @@ public class CasperValidatorService {
     @Autowired
     public CasperValidatorService(Ethereum ethereum, SystemProperties config) {
         this.ethereum = ethereum;
-        this.repository = (org.ethereum.core.Repository) ethereum.getRepository();
         this.config = config;
         this.coinbase = ECKey.fromPrivate(config.getCasperValidatorPrivateKey());
         this.depositSize = EtherUtil.convert(config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
@@ -180,13 +178,20 @@ public class CasperValidatorService {
         handlers.put(WAITING_FOR_WITHDRAWABLE, this::checkWithdrawable);
         handlers.put(WAITING_FOR_WITHDRAWN, this::checkWithdrawn);
         handlers.put(LOGGED_OUT, this::checkLoggedIn);
-        // FIXME: Actually we should listen only to HEAD changes
-        ethereum.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                newBlockConsumer().accept(blockSummary.getBlock());
-            }
-        });
+
+    }
+
+    public synchronized void start() {
+        if (!started) {
+            // FIXME: Actually we should listen only to HEAD changes
+            ethereum.addListener(new EthereumListenerAdapter() {
+                @Override
+                public void onBlock(BlockSummary blockSummary) {
+                    newBlockConsumer().accept(blockSummary.getBlock());
+                }
+            });
+            this.started = true;
+        }
     }
 
     private Consumer<Block> newBlockConsumer() {
@@ -293,7 +298,7 @@ public class CasperValidatorService {
     private void initValContractAddress() {  // Actually it's not used after deposit
         if (valContractAddress != null)
             return;
-        byte[] address = (byte[]) strategy.constCallCasper("get_validators__addr", getValidatorIndex())[0];
+        byte[] address = (byte[]) casper.constCall("get_validators__addr", getValidatorIndex())[0];
         if (!Arrays.equals(address, new byte[20])) {
             logger.info("Valcode contract found at {}", address);
             this.valContractAddress = address;
@@ -333,10 +338,10 @@ public class CasperValidatorService {
     }
 
     private Transaction makeDepositTx(byte[] valContractAddress, byte[] coinbaseAddress, BigInteger deposit) {
-        byte[] functionCallBytes = strategy.getCasper().getByName("deposit").encode(
+        byte[] functionCallBytes = casper.getContract().getByName("deposit").encode(
                 new ByteArrayWrapper(valContractAddress),
                 new ByteArrayWrapper(coinbaseAddress));
-        Transaction tx = makeTx(strategy.getCasperAddress(), deposit, functionCallBytes, null,
+        Transaction tx = makeTx(casper.getAddress(), deposit, functionCallBytes, null,
                 ByteUtil.longToBytesNoLeadZeroes(1_000_000),
                 null, true);
         return tx;
@@ -344,8 +349,8 @@ public class CasperValidatorService {
     }
 
     private Transaction makeVoteTx(byte[] voteData) {
-        byte[] functionCallBytes = strategy.getCasper().getByName("vote").encode(voteData);
-        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null,
+        byte[] functionCallBytes = casper.getContract().getByName("vote").encode(voteData);
+        Transaction tx = makeTx(casper.getAddress(), null, functionCallBytes, null,
                 ByteUtil.longToBytesNoLeadZeroes(1_000_000),
                 BigInteger.ZERO, false);
         return tx;
@@ -353,16 +358,16 @@ public class CasperValidatorService {
     }
 
     private Transaction makeLogoutTx(byte[] logoutData) {
-        byte[] functionCallBytes = strategy.getCasper().getByName("logout").encode(new ByteArrayWrapper(logoutData));
-        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null, null,
+        byte[] functionCallBytes = casper.getContract().getByName("logout").encode(new ByteArrayWrapper(logoutData));
+        Transaction tx = makeTx(casper.getAddress(), null, functionCallBytes, null, null,
                 null, true);
         return tx;
 
     }
 
     private Transaction makeWithdrawTx(long validatorIndex) {
-        byte[] functionCallBytes = strategy.getCasper().getByName("withdraw").encode(validatorIndex);
-        Transaction tx = makeTx(strategy.getCasperAddress(), null, functionCallBytes, null, null,
+        byte[] functionCallBytes = casper.getContract().getByName("withdraw").encode(validatorIndex);
+        Transaction tx = makeTx(casper.getAddress(), null, functionCallBytes, null, null,
                 null, true);
         return tx;
     }
@@ -509,11 +514,11 @@ public class CasperValidatorService {
     private void logCasperInfo() {
         long curEpoch = getCurrentEpoch();
         long expectedSourceEpoch = constCallCasperForLong("get_expected_source_epoch");
-        BigInteger curDeposits = (BigInteger) strategy.constCallCasper("get_total_curdyn_deposits")[0];
-        BigInteger prevDeposits = (BigInteger) strategy.constCallCasper("get_total_prevdyn_deposits")[0];
-        BigDecimal curVotes = (BigDecimal) strategy.constCallCasper("get_votes__cur_dyn_votes", curEpoch, expectedSourceEpoch)[0];
-        BigDecimal prevVotes = (BigDecimal) strategy.constCallCasper("get_votes__prev_dyn_votes", curEpoch, expectedSourceEpoch)[0];
-        BigDecimal scaleFactor = (BigDecimal) strategy.constCallCasper("get_deposit_scale_factor", curEpoch)[0];
+        BigInteger curDeposits = (BigInteger) casper.constCall("get_total_curdyn_deposits")[0];
+        BigInteger prevDeposits = (BigInteger) casper.constCall("get_total_prevdyn_deposits")[0];
+        BigDecimal curVotes = (BigDecimal) casper.constCall("get_votes__cur_dyn_votes", curEpoch, expectedSourceEpoch)[0];
+        BigDecimal prevVotes = (BigDecimal) casper.constCall("get_votes__prev_dyn_votes", curEpoch, expectedSourceEpoch)[0];
+        BigDecimal scaleFactor = (BigDecimal) casper.constCall("get_deposit_scale_factor", curEpoch)[0];
         BigDecimal curVotesScaled = curVotes.multiply(scaleFactor);
         BigDecimal prevVotesScaled = prevVotes.multiply(scaleFactor);
         BigDecimal curVotesPct = BigDecimal.ZERO;
@@ -527,8 +532,8 @@ public class CasperValidatorService {
 
         long lastFinalizedEpoch = constCallCasperForLong("get_last_finalized_epoch");
         long lastJustifiedEpoch = constCallCasperForLong("get_last_justified_epoch");
-        BigDecimal lastNonvoterRescale = (BigDecimal) strategy.constCallCasper("get_last_nonvoter_rescale")[0];
-        BigDecimal lastVoterRescale = (BigDecimal) strategy.constCallCasper("get_last_voter_rescale")[0];
+        BigDecimal lastNonvoterRescale = (BigDecimal) casper.constCall("get_last_nonvoter_rescale")[0];
+        BigDecimal lastVoterRescale = (BigDecimal) casper.constCall("get_last_voter_rescale")[0];
         String logStr = String.format(
                 "CASPER STATUS: epoch %d, %.3f / %.3f ETH (%.2f %%) voted from current dynasty, " +
                         "%.3f / %.3f ETH (%.2f %%) voted from previous dynasty, last finalized epoch %d justified %d " +
@@ -548,7 +553,7 @@ public class CasperValidatorService {
         logger.info(logStr);
 
         long valIndex = getValidatorIndex();
-        BigDecimal myDeposit = (BigDecimal) strategy.constCallCasper("get_validators__deposit", valIndex)[0];
+        BigDecimal myDeposit = (BigDecimal) casper.constCall("get_validators__deposit", valIndex)[0];
         BigDecimal myDepositScaled = myDeposit.multiply(scaleFactor);
         String myStr = String.format(
                 "MY VALIDATOR STATUS: epoch %d, index #%d, deposit: %.3f ETH",
@@ -569,7 +574,7 @@ public class CasperValidatorService {
         //        target_hash = self.epoch_blockhash(current_epoch)
         // ANSWER: Though, I'll try
 
-        byte[] targetHash = (byte[]) strategy.constCallCasper("get_recommended_target_hash")[0];
+        byte[] targetHash = (byte[]) casper.constCall("get_recommended_target_hash")[0];
         long sourceEpoch = constCallCasperForLong("get_recommended_source_epoch");
 
         if (targetHash == null) {
@@ -587,7 +592,7 @@ public class CasperValidatorService {
     }
 
     private long constCallCasperForLong(String func, Object... funcArgs) {
-        Object[] res = strategy.constCallCasper(func, funcArgs);
+        Object[] res = casper.constCall(func, funcArgs);
         return ((BigInteger) res[0]).longValue();
     }
 
@@ -597,12 +602,17 @@ public class CasperValidatorService {
     }
 
     @Autowired
-    public void setStrategy(ConsensusStrategy strategy) {
-        this.strategy = (CasperHybridConsensusStrategy) strategy;
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
     }
 
     @Autowired
-    public void setBlockchain(Blockchain blockchain) {
-        this.blockchain = blockchain;
+    public void setCasper(CasperFacade casper) {
+        this.casper = casper;
+    }
+
+    @Autowired
+    public void setRepository(Repository repository) {
+        this.repository = repository;
     }
 }

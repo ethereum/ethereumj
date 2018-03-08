@@ -17,19 +17,24 @@
  */
 package org.ethereum.casper.config;
 
+import org.ethereum.casper.core.CasperPendingStateImpl;
+import org.ethereum.casper.manager.CasperWorldManager;
+import org.ethereum.casper.mine.CasperBlockMiner;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.casper.core.CasperBlockchain;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.casper.core.CasperTransactionExecutor;
-import org.ethereum.core.consensus.ConsensusStrategy;
 import org.ethereum.db.BlockStore;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.mine.BlockMiner;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,11 +43,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableTransactionManagement
 public class CasperBeanConfig extends CommonConfig {
-
-    @Override
-    public ConsensusStrategy consensusStrategy() {
-        return new CasperHybridConsensusStrategy(systemProperties(), ctx);
-    }
 
     @Override
     @Bean
@@ -72,5 +72,24 @@ public class CasperBeanConfig extends CommonConfig {
             return new CasperTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
                     listener, gasUsedInTheBlock);
         }
+    }
+
+    @Bean
+    @Override
+    public WorldManager worldManager() {
+        return new CasperWorldManager(systemProperties(), repository(), blockchain());
+    }
+
+    @Bean
+    @Override
+    public PendingState pendingState() {
+        return new CasperPendingStateImpl(ethereumListener);
+    }
+
+    @Bean
+    @Override
+    public BlockMiner blockMiner() {
+        return new CasperBlockMiner(systemProperties(), (CompositeEthereumListener) ethereumListener,
+                blockchain(), pendingState());
     }
 }

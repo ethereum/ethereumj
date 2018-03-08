@@ -19,15 +19,13 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
-import org.ethereum.core.consensus.ConsensusStrategy;
+import org.ethereum.core.genesis.CommonStateInit;
 import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.mine.MinerListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.sync.FastSyncManager;
@@ -57,7 +55,6 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
  * @author Roman Mandeleil
  * @since 01.06.2014
  */
-@Component
 public class WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
@@ -96,47 +93,38 @@ public class WorldManager {
     private DbFlushManager dbFlushManager;
 
     @Autowired
-    private ApplicationContext ctx;
+    protected ApplicationContext ctx;
 
-    private ConsensusStrategy strategy;
+    protected Ethereum ethereum;
 
-    private Ethereum ethereum;
+    protected SystemProperties config;
 
-    private SystemProperties config;
-
+    @Autowired
     private EthereumListener listener;
 
-    private Blockchain blockchain;
+    protected Blockchain blockchain;
 
     private Repository repository;
 
+    @Autowired
     private BlockStore blockStore;
 
     @Autowired
     public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final ConsensusStrategy consensusStrategy,
-                        final Blockchain blockchain, final BlockStore blockStore) {
-        this.listener = listener;
-        this.strategy = consensusStrategy;
+                        final Blockchain blockchain) {
         this.blockchain = blockchain;
         this.repository = repository;
         repository.setBlockchain(blockchain);
-        this.blockStore = blockStore;
         this.config = config;
     }
 
     @PostConstruct
-    private void init() {
-        ethereum = ctx.getBean(Ethereum.class);
+    protected void init() {
+        this.ethereum = ctx.getBean(Ethereum.class);
         ethereum.setWorldManager(this);
-        // FIXME: Bad Spring fix
-        if (strategy instanceof CasperHybridConsensusStrategy) {
-            ((CasperHybridConsensusStrategy) strategy).setEthereum(ethereum);
-        }
-        loadBlockchain(strategy);
+        loadBlockchain();
         channelManager.init(ethereum);
         syncManager.init(channelManager, pool);
-        strategy.init();
     }
 
     public void addListener(EthereumListener listener) {
@@ -185,12 +173,16 @@ public class WorldManager {
         return pendingState;
     }
 
-    public void loadBlockchain(ConsensusStrategy strategy) {
+    protected StateInit createStateInit(Genesis genesis) {
+        return new CommonStateInit(genesis, repository, blockchain);
+    }
+
+    public void loadBlockchain() {
 
         if (!config.databaseReset() || config.databaseResetBlock() != 0)
             blockStore.load();
 
-        StateInit stateInit = strategy.initState(Genesis.getInstance(config));
+        StateInit stateInit = createStateInit(Genesis.getInstance(config));
         if (blockStore.getBestBlock() == null) {
 
             stateInit.initDB();

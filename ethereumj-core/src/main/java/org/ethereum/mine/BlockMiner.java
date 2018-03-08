@@ -23,7 +23,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.casper.core.CasperTransactionExecutor;
-import org.ethereum.casper.core.CasperHybridConsensusStrategy;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -48,7 +47,6 @@ import static java.lang.Math.max;
  *
  * Created by Anton Nashatyrev on 10.12.2015.
  */
-@Component
 public class BlockMiner {
     private static final Logger logger = LoggerFactory.getLogger("mine");
 
@@ -65,7 +63,7 @@ public class BlockMiner {
 
     private CompositeEthereumListener listener;
 
-    private SystemProperties config;
+    protected SystemProperties config;
 
     private List<MinerListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -85,12 +83,11 @@ public class BlockMiner {
 
     @Autowired
     public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
-                      final Blockchain blockchain, final BlockStore blockStore,
-                      final PendingState pendingState) {
+                      final Blockchain blockchain, final PendingState pendingState) {
         this.listener = listener;
         this.config = config;
         this.blockchain = blockchain;
-        this.blockStore = blockStore;
+        this.blockStore = ((BlockchainImpl) blockchain).getBlockStore();
         this.pendingState = pendingState;
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
@@ -188,13 +185,6 @@ public class BlockMiner {
     }
 
     protected boolean isAcceptableTx(Transaction tx) {
-        // FIXME: Shouldn't be there
-        if ((ethereum.getConsensusStrategy() instanceof CasperHybridConsensusStrategy)) {
-            if (CasperTransactionExecutor.isCasperVote(tx, config.getCasperAddress())) {
-                return true;
-            }
-        }
-
         return minGasPrice.compareTo(new BigInteger(1, tx.getGasPrice())) <= 0;
     }
 
