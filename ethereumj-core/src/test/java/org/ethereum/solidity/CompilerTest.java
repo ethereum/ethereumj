@@ -135,6 +135,10 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
+        Assert.assertEquals(2, result.getContractKeys().size());
+        Assert.assertEquals(result.getContract("test3"), result.getContract(source,"test3"));
+        Assert.assertNotNull(result.getContract("test1"));
+
         CompilationResult.ContractMetadata a = result.getContract(source, "test3");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
         System.out.print(contract.functions[0].toString());
