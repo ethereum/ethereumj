@@ -184,6 +184,7 @@ public class CasperValidatorService {
 
     public synchronized void start() {
         if (!started) {
+            logger.info("Starting casper validator with coinbase 0x{}", Hex.toHexString(coinbase.getAddress()));
             // FIXME: Actually we should listen only to HEAD changes
             ethereum.addListener(new EthereumListenerAdapter() {
                 @Override
@@ -192,6 +193,8 @@ public class CasperValidatorService {
                 }
             });
             this.started = true;
+        } else {
+            logger.warn("Attempting to start casper validator but it's already started");
         }
     }
 
@@ -205,6 +208,7 @@ public class CasperValidatorService {
     }
 
     public void reLogin() {
+        logger.info("Attempting to relogin casper validator with coinbase 0x{}", Hex.toHexString(coinbase.getAddress()));
         if (!state.equals(LOGGED_OUT)) {
             throw new RuntimeException(String.format("Validator is not logged, out, cannot relogin. " +
                     "Current state: %s", state));
