@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
  */
 public class PruneManager {
 
+    private static final int LONGEST_CHAIN = 192;
+
     private JournalSource<?> journalSource;
 
     @Autowired
@@ -81,11 +83,11 @@ public class PruneManager {
         JournalSource.Update update = journalSource.commitUpdates(block.getHash());
         pruner.feed(update);
 
-        long pruneBlockNum = block.getNumber() - pruneBlocksCnt;
-        if (pruneBlockNum < 0) return;
+        long forkBlockNum = block.getNumber() - getForkBlocksCnt();
+        if (forkBlockNum < 0) return;
 
-        List<Block> pruneBlocks = blockStore.getBlocksByNumber(pruneBlockNum);
-        Block chainBlock = blockStore.getChainBlockByNumber(pruneBlockNum);
+        List<Block> pruneBlocks = blockStore.getBlocksByNumber(forkBlockNum);
+        Block chainBlock = blockStore.getChainBlockByNumber(forkBlockNum);
 
         if (segment == null) {
             if (pruneBlocks.size() == 1)    // wait for a single chain
@@ -100,21 +102,55 @@ public class PruneManager {
 
         if (segment.isComplete()) {
             if (!pruner.isReady()) {
-                List<byte[]> upcoming = getUpcomingHashes(segment.getRootNumber() + 1);
-                pruner.init(upcoming);
+                List<byte[]> forkWindow = getAllChainsHashes(segment.getRootNumber() + 1, blockStore.getMaxNumber());
+                pruner.init(forkWindow, getForkBlocksCnt());
+
+                int mainChainWindowSize = pruneBlocksCnt - getForkBlocksCnt();
+                if (mainChainWindowSize > 0) {
+                    List<byte[]> mainChainWindow = getMainChainHashes(Math.max(1, segment.getRootNumber() - mainChainWindowSize + 1),
+                            segment.getRootNumber());
+                    pruner.withSecondStep(mainChainWindow, mainChainWindowSize);
+                }
             }
             pruner.prune(segment);
             segment = new Segment(chainBlock);
         }
+
+        long mainBlockNum = block.getNumber() - getMainBlocksCnt();
+        if (mainBlockNum < 0) return;
+
+        byte[] hash = blockStore.getBlockHashByNumber(mainBlockNum);
+        pruner.persist(hash);
     }
 
-    private List<byte[]> getUpcomingHashes(long fromBlock) {
-        List<byte[]> upcomingHashes = new ArrayList<>();
-        for (long num = fromBlock; num <= blockStore.getMaxNumber(); num++) {
+    private int getForkBlocksCnt() {
+        return Math.min(pruneBlocksCnt, 2 * LONGEST_CHAIN);
+    }
+
+    private int getMainBlocksCnt() {
+        if (pruneBlocksCnt <= 2 * LONGEST_CHAIN) {
+            return Integer.MAX_VALUE;
+        } else {
+            return pruneBlocksCnt;
+        }
+    }
+
+    private List<byte[]> getAllChainsHashes(long fromBlock, long toBlock) {
+        List<byte[]> ret = new ArrayList<>();
+        for (long num = fromBlock; num <= toBlock; num++) {
             List<Block> blocks = blockStore.getBlocksByNumber(num);
             List<byte[]> hashes = blocks.stream().map(Block::getHash).collect(Collectors.toList());
-            upcomingHashes.addAll(hashes);
+            ret.addAll(hashes);
         }
-        return upcomingHashes;
+        return ret;
+    }
+
+    private List<byte[]> getMainChainHashes(long fromBlock, long toBlock) {
+        List<byte[]> ret = new ArrayList<>();
+        for (long num = fromBlock; num <= toBlock; num++) {
+            byte[] hash = blockStore.getBlockHashByNumber(num);
+            ret.add(hash);
+        }
+        return ret;
     }
 }
