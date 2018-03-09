@@ -576,14 +576,14 @@ public class TransactionTest {
         ECKey sender = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")).compress();
         System.out.println("address: " + Hex.toHexString(sender.getAddress()));
 
-        if (cres.contracts.get("PsychoKiller") != null) {
+        if (cres.getContract("PsychoKiller") != null) {
             Transaction tx = createTx(blockchain, sender, new byte[0],
-                    Hex.decode(cres.contracts.get("PsychoKiller").bin));
+                    Hex.decode(cres.getContract("PsychoKiller").bin));
             executeTransaction(blockchain, tx);
 
             byte[] contractAddress = tx.getContractAddress();
 
-            CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.contracts.get("PsychoKiller").abi);
+            CallTransaction.Contract contract1 = new CallTransaction.Contract(cres.getContract("PsychoKiller").abi);
             byte[] callData = contract1.getByName("multipleHomocide").encode();
 
             Transaction tx1 = createTx(blockchain, sender, contractAddress, callData, 0l);
@@ -662,7 +662,7 @@ public class TransactionTest {
                     contract.getBytes(), true, SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
             System.out.println(res.errors);
             CompilationResult cres = CompilationResult.parse(res.output);
-            Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.contracts.get("GasConsumer").bin), 0);
+            Transaction tx = createTx(blockchain, sender, new byte[0], Hex.decode(cres.getContract("GasConsumer").bin), 0);
             TransactionReceipt receipt = executeTransaction(blockchain, tx).getReceipt();
             receipt = new TransactionReceipt(receipt.getEncoded());
 
