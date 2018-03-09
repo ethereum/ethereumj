@@ -48,11 +48,11 @@ import static java.lang.Math.max;
  * Created by Anton Nashatyrev on 10.12.2015.
  */
 public class BlockMiner {
-    private static final Logger logger = LoggerFactory.getLogger("mine");
+    protected static final Logger logger = LoggerFactory.getLogger("mine");
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private Blockchain blockchain;
+    protected Blockchain blockchain;
 
     private BlockStore blockStore;
 

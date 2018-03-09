@@ -402,6 +402,7 @@ public class CasperBlockchain extends BlockchainImpl {
 
                 Map<ByteArrayWrapper, BigInteger> curNonce = new HashMap<>();
 
+                boolean votesStarted = false;
                 for (Transaction tx : txs) {
                     byte[] txSender = tx.getSender();
                     ByteArrayWrapper key = new ByteArrayWrapper(txSender);
@@ -420,6 +421,16 @@ public class CasperBlockchain extends BlockchainImpl {
                         logger.warn("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
                                 txNonce, expectedNonce, repo.getNonce(txSender), tx);
                         return false;
+                    }
+
+                    // Casper votes txs should come after regular txs
+                    if (votesStarted && !CasperTransactionExecutor.isCasperVote(tx, casper.getAddress())) {
+                        logger.warn("Invalid transaction: all transactions should be before casper votes: {}", tx);
+                        return false;
+                    }
+
+                    if (!votesStarted && CasperTransactionExecutor.isCasperVote(tx, casper.getAddress())) {
+                        votesStarted = true;
                     }
                 }
             }

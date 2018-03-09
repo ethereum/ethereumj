@@ -18,15 +18,23 @@
 package org.ethereum.casper.mine;
 
 import org.ethereum.casper.config.CasperProperties;
+import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.casper.core.CasperTransactionExecutor;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.PendingState;
+import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Transaction;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.mine.BlockMiner;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 public class CasperBlockMiner extends BlockMiner {
+    @Autowired
+    CasperFacade casper;
 
     public CasperBlockMiner(SystemProperties config, CompositeEthereumListener listener,
                             Blockchain blockchain, PendingState pendingState) {
@@ -39,5 +47,26 @@ public class CasperBlockMiner extends BlockMiner {
             return true;
         }
         return super.isAcceptableTx(tx);
+    }
+
+    @Override
+    protected Block getNewBlockForMining() {
+        Block bestBlockchain = blockchain.getBestBlock();
+        Block bestPendingState = ((PendingStateImpl) pendingState).getBestBlock();
+
+        logger.debug("getNewBlockForMining best blocks: PendingState: " + bestPendingState.getShortDescr() +
+                ", Blockchain: " + bestBlockchain.getShortDescr());
+
+        // Casper txs should come after regular
+        List<Transaction> pendingTxs = getAllPendingTransactions();
+        pendingTxs.sort((tx1, tx2) -> {
+            boolean tx1isVote = CasperTransactionExecutor.isCasperVote(tx1, casper.getAddress());
+            boolean tx2isVote = CasperTransactionExecutor.isCasperVote(tx2, casper.getAddress());
+            return Boolean.compare(tx1isVote, tx2isVote);
+        });
+
+        Block newMiningBlock = blockchain.createNewBlock(bestPendingState, pendingTxs,
+                getUncles(bestPendingState));
+        return newMiningBlock;
     }
 }
