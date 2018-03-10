@@ -166,6 +166,7 @@ public class Channel {
 
         if (SnappyCodec.isSupported(Math.min(config.defaultP2PVersion(), helloRemote.getP2PVersion()))) {
             ctx.pipeline().addLast("snappyCodec", new SnappyCodec(this));
+            messageCodec.setSupportChunkedFrames(false);
             logger.debug("{}: use snappy compression", ctx.channel());
         } else {
             // FIXME: Actually frames are not used by every P2Pv4 client
