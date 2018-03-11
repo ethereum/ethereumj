@@ -194,8 +194,8 @@ public class Eth62 extends EthHandler {
             totalDifficulty = blockchain.getTotalDifficulty();
         }
 
-        StatusMessage msg = new StatusMessage(protocolVersion, networkId,  // Casper genesis from config is not final
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, blockstore.getBlockHashByNumber(0));
+        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, config.getGenesis().getHash());
         sendMessage(msg);
 
         ethState = EthState.STATUS_SENT;
@@ -320,7 +320,7 @@ public class Eth62 extends EthHandler {
 
         try {
 
-            if (!Arrays.equals(msg.getGenesisHash(), blockstore.getBlockHashByNumber(0))) {  // Casper genesis from config is not final
+            if (!Arrays.equals(msg.getGenesisHash(), config.getGenesis().getHash())) {
                 if (!peerDiscoveryMode) {
                     loggerNet.debug("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 }

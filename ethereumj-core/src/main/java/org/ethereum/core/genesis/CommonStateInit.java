@@ -48,6 +48,7 @@ public class CommonStateInit implements StateInit {
         ((org.ethereum.facade.Blockchain)blockchain).getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+
         logger.info("Genesis block loaded");
     }
 

@@ -73,19 +73,10 @@ public class CasperStateInit implements StateInit {
         if (blockchain.getBlockByNumber(0) != null) {
             return;  // Already initialized
         }
-        logger.info("DB is empty - initializing Casper Genesis");
+        logger.info("DB is empty - adding Genesis");
         Genesis.populateRepository(repository, genesis);
-
-        BlockStore blockStore = ((org.ethereum.facade.Blockchain)blockchain).getBlockStore();
-
-
-        // Metropolis dummy
-        repository.saveCode(Hex.decode("0000000000000000000000000000000000000010"), Hex.decode("6000355460205260206020f3"));
-        repository.saveCode(Hex.decode("0000000000000000000000000000000000000020"), Hex.decode("6000355460205260206020f3"));
         repository.commit();
-        genesis.setStateRoot(repository.getRoot());
-
-        blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+        ((org.ethereum.facade.Blockchain)blockchain).getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
 
