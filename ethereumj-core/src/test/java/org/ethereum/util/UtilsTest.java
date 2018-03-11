@@ -18,7 +18,6 @@
 package org.ethereum.util;
 
 import org.junit.Test;
-
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
@@ -104,5 +103,10 @@ public class UtilsTest {
         expected = null;
         result = Utils.addressStringToBytes(HexStr);
         assertEquals(expected, result);
+    }
+
+    @Test
+    public void testLongToTimePeriod() {
+        assertEquals("2.99s", Utils.longToTimePeriod(3000 - 12));
     }
 }
