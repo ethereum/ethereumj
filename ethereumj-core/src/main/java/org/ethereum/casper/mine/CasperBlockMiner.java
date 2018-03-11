@@ -17,9 +17,7 @@
  */
 package org.ethereum.casper.mine;
 
-import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.casper.core.CasperFacade;
-import org.ethereum.casper.core.CasperTransactionExecutor;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
@@ -43,7 +41,7 @@ public class CasperBlockMiner extends BlockMiner {
 
     @Override
     protected boolean isAcceptableTx(Transaction tx) {
-        if (CasperTransactionExecutor.isCasperVote(tx, ((CasperProperties) config).getCasperAddress())) {
+        if (casper.isVote(tx)) {
             return true;
         }
         return super.isAcceptableTx(tx);
@@ -60,8 +58,8 @@ public class CasperBlockMiner extends BlockMiner {
         // Casper txs should come after regular
         List<Transaction> pendingTxs = getAllPendingTransactions();
         pendingTxs.sort((tx1, tx2) -> {
-            boolean tx1isVote = CasperTransactionExecutor.isCasperVote(tx1, casper.getAddress());
-            boolean tx2isVote = CasperTransactionExecutor.isCasperVote(tx2, casper.getAddress());
+            boolean tx1isVote = casper.isVote(tx1);
+            boolean tx2isVote = casper.isVote(tx2);
             return Boolean.compare(tx1isVote, tx2isVote);
         });
 

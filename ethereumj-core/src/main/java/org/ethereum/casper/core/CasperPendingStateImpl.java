@@ -35,7 +35,7 @@ public class CasperPendingStateImpl extends PendingStateImpl {
         boolean isValid = super.receiptIsValid(receipt);
         if (isValid) {
             return true;
-        } else if (CasperTransactionExecutor.isCasperVote(receipt.getTransaction(), ((CasperProperties) config).getCasperAddress())) {
+        } else if (CasperFacade.isVote(receipt.getTransaction(), ((CasperProperties) config).getCasperAddress())) {
             return receipt.isSuccessful();
         }
 
@@ -50,7 +50,7 @@ public class CasperPendingStateImpl extends PendingStateImpl {
             return String.format("Invalid transaction: %s", e.getMessage());
         }
 
-        if (CasperTransactionExecutor.isCasperVote(tx, ((CasperProperties) config).getCasperAddress())) {
+        if (CasperFacade.isVote(tx, ((CasperProperties) config).getCasperAddress())) {
             return null;  // Doesn't require more checks
         }
 

@@ -23,15 +23,19 @@ import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.ProgramResult;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Component
 public class CasperFacade {
+
+    private static final byte[] CASPER_VOTE_DATA_HEAD = Hex.decode("e9dc0614");
 
     private CasperProperties systemProperties;
 
@@ -73,8 +77,24 @@ public class CasperFacade {
         return casper.getByName(func).decodeResult(r.getHReturn());
     }
 
+    public boolean isVote(Transaction transaction) {
+        return isVote(transaction, getAddress());
+    }
+
+    public static boolean isVote(Transaction transaction, byte[] casperAddress) {
+        if (!Arrays.equals(transaction.getSender(), Transaction.NULL_SENDER))
+            return false;
+        if (casperAddress == null)
+            return false;
+        if (!Arrays.equals(transaction.getReceiveAddress(), casperAddress))
+            return false;
+
+        return FastByteComparisons.compareTo(transaction.getData(), 0, CASPER_VOTE_DATA_HEAD.length,
+                CASPER_VOTE_DATA_HEAD, 0, CASPER_VOTE_DATA_HEAD.length) == 0;
+    }
+
     public byte[] getAddress() {
-        return Hex.decode(contractAddress);
+        return systemProperties.getCasperAddress();
     }
 
     public List<Transaction> getInitTxs() {

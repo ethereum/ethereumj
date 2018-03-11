@@ -424,12 +424,12 @@ public class CasperBlockchain extends BlockchainImpl {
                     }
 
                     // Casper votes txs should come after regular txs
-                    if (votesStarted && !CasperTransactionExecutor.isCasperVote(tx, casper.getAddress())) {
+                    if (votesStarted && !casper.isVote(tx)) {
                         logger.warn("Invalid transaction: all transactions should be before casper votes: {}", tx);
                         return false;
                     }
 
-                    if (!votesStarted && CasperTransactionExecutor.isCasperVote(tx, casper.getAddress())) {
+                    if (!votesStarted && casper.isVote(tx)) {
                         votesStarted = true;
                     }
                 }

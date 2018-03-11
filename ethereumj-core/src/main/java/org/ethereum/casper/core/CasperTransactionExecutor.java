@@ -103,20 +103,7 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     }
 
     private boolean isCasperVote() {
-        return isCasperVote(tx, ((CasperProperties) config).getCasperAddress());
-    }
-
-    public static boolean isCasperVote(Transaction transaction, byte[] casperAddress) {
-        if (!Arrays.equals(transaction.getSender(), Transaction.NULL_SENDER))
-            return false;
-        if (casperAddress == null)
-            return false;
-        if (!Arrays.equals(transaction.getReceiveAddress(), casperAddress))
-            return false;
-
-        byte[] dataCopy = new byte[4];
-        System.arraycopy(transaction.getData(), 0, dataCopy, 0, 4);
-        return Arrays.equals(dataCopy, new byte[] {(byte) 0xe9, (byte) 0xdc, 0x06, 0x14});
+        return CasperFacade.isVote(tx, ((CasperProperties) config).getCasperAddress());
     }
 
     @Override
