@@ -1,6 +1,5 @@
 package org.ethereum.casper.manager;
 
-import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.casper.service.CasperValidatorService;
 import org.ethereum.config.SystemProperties;
@@ -33,9 +32,7 @@ public class CasperWorldManager extends WorldManager {
     protected void init() {
         super.init();
         casper.setEthereum(ethereum);
-        if (Boolean.TRUE.equals(((CasperProperties) config).getCasperValidatorEnabled())) {
-            casperValidatorService.start();
-        }
+        casperValidatorService.init();
     }
 
     @Override

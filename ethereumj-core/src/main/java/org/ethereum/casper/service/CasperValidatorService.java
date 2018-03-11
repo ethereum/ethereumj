@@ -179,7 +179,12 @@ public class CasperValidatorService {
         handlers.put(WAITING_FOR_WITHDRAWABLE, this::checkWithdrawable);
         handlers.put(WAITING_FOR_WITHDRAWN, this::checkWithdrawn);
         handlers.put(LOGGED_OUT, this::checkLoggedIn);
+    }
 
+    public void init() {
+        if (Boolean.TRUE.equals(config.getCasperValidatorEnabled())) {
+            start();
+        }
     }
 
     public synchronized void start() {
