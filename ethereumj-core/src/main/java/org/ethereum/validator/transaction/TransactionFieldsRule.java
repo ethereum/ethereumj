@@ -15,36 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator;
+package org.ethereum.validator.transaction;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.config.Constants;
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
 
 /**
- * Checks {@link BlockHeader#gasLimit} against {@link Constants#getMIN_GAS_LIMIT}. <br>
- *
- * This check is NOT run in Frontier
- *
- * @author Mikhail Kalinin
- * @since 02.09.2015
+ * Checks {@link org.ethereum.core.Transaction} fields are with correct length and in allowable range
  */
-public class GasLimitRule extends BlockHeaderRule {
-
-    private final int MIN_GAS_LIMIT;
-
-    public GasLimitRule(SystemProperties config) {
-        MIN_GAS_LIMIT = config.getBlockchainConfig().
-                getCommonConstants().getMIN_GAS_LIMIT();
-    }
+public class TransactionFieldsRule extends TransactionRule {
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
-
-        if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(MIN_GAS_LIMIT)) < 0) {
-            return fault("header.getGasLimit() < MIN_GAS_LIMIT");
+    public ValidationResult validate(Transaction transaction) {
+        try {
+            transaction.verify();
+        } catch (Exception ex) {
+            return fault(ex.getMessage());
         }
 
         return Success;

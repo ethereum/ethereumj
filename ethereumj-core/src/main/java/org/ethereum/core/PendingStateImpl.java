@@ -40,6 +40,10 @@ import org.ethereum.listener.EthereumListener.PendingTransactionState;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+import org.ethereum.validator.EntityValidator;
+import org.ethereum.validator.transaction.TransactionReceiptValidator;
+import org.ethereum.validator.transaction.TransactionRule;
+import org.ethereum.validator.transaction.TransactionValidator;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +83,12 @@ public class PendingStateImpl implements PendingState {
 
     @Autowired
     private Blockchain blockchain;
+
+    @Autowired
+    private TransactionValidator transactionValidator;
+
+    @Autowired
+    private TransactionReceiptValidator receiptValidator;
 
     private BlockStore blockStore;
 
@@ -197,7 +207,8 @@ public class PendingStateImpl implements PendingState {
     }
 
     protected boolean receiptIsValid(TransactionReceipt receipt) {
-        return receipt.isValid();
+        EntityValidator.ValidationResult res = receiptValidator.validate(receipt);
+        return res.success;
     }
 
     public synchronized void trackTransaction(Transaction tx) {
@@ -237,13 +248,13 @@ public class PendingStateImpl implements PendingState {
         TransactionReceipt newReceipt = new TransactionReceipt();
         newReceipt.setTransaction(tx);
 
-        String err = validate(tx);
+        TransactionRule.ValidationResult res = transactionValidator.validate(tx);
 
         TransactionReceipt txReceipt;
-        if (err != null) {
-            txReceipt = createDroppedReceipt(tx, err);
-        } else {
+        if (res.success) {
             txReceipt = executeTx(tx);
+        } else {
+            txReceipt = createDroppedReceipt(tx, res.error);
         }
 
         if (!receiptIsValid(txReceipt)) {
@@ -470,5 +481,13 @@ public class PendingStateImpl implements PendingState {
 
     public void setCommonConfig(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
+    }
+
+    public void setTransactionValidator(TransactionValidator transactionValidator) {
+        this.transactionValidator = transactionValidator;
+    }
+
+    public void setReceiptValidator(TransactionReceiptValidator receiptValidator) {
+        this.receiptValidator = receiptValidator;
     }
 }

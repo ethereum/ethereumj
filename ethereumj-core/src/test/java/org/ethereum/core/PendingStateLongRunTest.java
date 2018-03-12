@@ -22,7 +22,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.validator.block.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -123,15 +123,18 @@ public class PendingStateLongRunTest {
         Repository repository = new RepositoryRoot(new HashMapDB());
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
+        CommonConfig config = new CommonConfig();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+                .withParentBlockHeaderValidator(config.parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
         blockchain.byTest = true;
 
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter());
+        pendingState.setReceiptValidator(config.transactionReceiptValidator());
+        pendingState.setTransactionValidator(config.transactionValidator());
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);

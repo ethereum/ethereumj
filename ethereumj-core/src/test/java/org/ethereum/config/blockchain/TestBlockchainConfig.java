@@ -30,7 +30,7 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
-import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.block.BlockHeaderValidator;
 
 import java.math.BigInteger;
 import java.util.List;

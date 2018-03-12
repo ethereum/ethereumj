@@ -15,26 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator;
+package org.ethereum.validator.transaction;
 
-import org.ethereum.core.BlockHeader;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.validator.EntityValidator;
 
-import java.math.BigInteger;
+import java.util.List;
 
 /**
- * Checks {@link BlockHeader#gasUsed} against {@link BlockHeader#gasLimit}
- *
- * @author Mikhail Kalinin
- * @since 02.09.2015
+ * Composite {@link TransactionReceipt} validator
+ * aggregating list of simple validation rules
  */
-public class GasValueRule extends BlockHeaderRule {
+public class TransactionReceiptValidator extends EntityValidator<TransactionReceiptRule, TransactionReceipt> {
+
+    public TransactionReceiptValidator(List<TransactionReceiptRule> rules) {
+        super(rules);
+    }
+
+    public TransactionReceiptValidator(TransactionReceiptRule... rules) {
+        super(rules);
+    }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
-        if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(header.getGasUsed())) < 0) {
-            return fault("header.getGasLimit() < header.getGasUsed()");
-        }
-
-        return Success;
+    public Class getEntityClass() {
+        return TransactionReceipt.class;
     }
 }

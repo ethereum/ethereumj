@@ -22,7 +22,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.util.*;
-import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.block.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;

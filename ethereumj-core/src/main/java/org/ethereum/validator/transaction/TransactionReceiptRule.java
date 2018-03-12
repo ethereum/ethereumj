@@ -15,18 +15,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator;
+package org.ethereum.validator.transaction;
 
-import org.ethereum.core.BlockHeader;
-
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.validator.EntityRule;
 /**
- * @author Mikhail Kalinin
- * @since 25.09.2015
+ * Parent class for {@link org.ethereum.core.TransactionReceipt} validators
  */
-public class DependentBlockHeaderRuleAdapter extends DependentBlockHeaderRule {
-
+public abstract class TransactionReceiptRule extends EntityRule<TransactionReceipt> {
     @Override
-    public boolean validate(BlockHeader header, BlockHeader dependency) {
-        return true;
+    public Class getEntityClass() {
+        return TransactionReceipt.class;
     }
 }

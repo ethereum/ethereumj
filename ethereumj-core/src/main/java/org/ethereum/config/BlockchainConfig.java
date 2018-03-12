@@ -21,7 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
-import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.block.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;

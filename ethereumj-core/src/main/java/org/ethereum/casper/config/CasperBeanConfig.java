@@ -17,14 +17,12 @@
  */
 package org.ethereum.casper.config;
 
-import org.ethereum.casper.core.CasperPendingStateImpl;
 import org.ethereum.casper.manager.CasperWorldManager;
 import org.ethereum.casper.mine.CasperBlockMiner;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
@@ -79,12 +77,6 @@ public class CasperBeanConfig extends CommonConfig {
     @Override
     public WorldManager worldManager() {
         return new CasperWorldManager(systemProperties(), repository(), blockchain());
-    }
-
-    @Bean
-    @Override
-    public PendingState pendingState() {
-        return new CasperPendingStateImpl(ethereumListener);
     }
 
     @Bean

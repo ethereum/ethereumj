@@ -31,7 +31,7 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.validator.block.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.*;
@@ -895,8 +895,9 @@ public class ImportLightTest {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
+        CommonConfig config = new CommonConfig();
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
+                .withParentBlockHeaderValidator(config.parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
@@ -905,6 +906,8 @@ public class ImportLightTest {
         PendingStateImpl pendingState = new PendingStateImpl(listener);
 
         pendingState.setBlockchain(blockchain);
+        pendingState.setReceiptValidator(config.transactionReceiptValidator());
+        pendingState.setTransactionValidator(config.transactionValidator());
         blockchain.setPendingState(pendingState);
 
         Repository track = repository.startTracking();

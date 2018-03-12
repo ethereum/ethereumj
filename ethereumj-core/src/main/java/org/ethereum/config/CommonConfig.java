@@ -28,18 +28,25 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.mine.BlockMiner;
 import org.ethereum.sync.FastSyncManager;
-import org.ethereum.validator.BlockHashRule;
-import org.ethereum.validator.BlockHeaderRule;
-import org.ethereum.validator.BlockHeaderValidator;
-import org.ethereum.validator.DependentBlockHeaderRule;
-import org.ethereum.validator.DifficultyRule;
-import org.ethereum.validator.ExtraDataRule;
-import org.ethereum.validator.GasLimitRule;
-import org.ethereum.validator.GasValueRule;
-import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.validator.ParentGasLimitRule;
-import org.ethereum.validator.ParentNumberRule;
-import org.ethereum.validator.ProofOfWorkRule;
+import org.ethereum.validator.block.BlockHashRule;
+import org.ethereum.validator.block.BlockHeaderRule;
+import org.ethereum.validator.block.BlockHeaderValidator;
+import org.ethereum.validator.block.DependentBlockHeaderRule;
+import org.ethereum.validator.block.DifficultyRule;
+import org.ethereum.validator.block.ExtraDataRule;
+import org.ethereum.validator.block.GasLimitRule;
+import org.ethereum.validator.block.GasValueRule;
+import org.ethereum.validator.block.ParentBlockHeaderValidator;
+import org.ethereum.validator.block.ParentGasLimitRule;
+import org.ethereum.validator.block.ParentNumberRule;
+import org.ethereum.validator.block.ProofOfWorkRule;
+import org.ethereum.validator.transaction.ReceiptValidityRule;
+import org.ethereum.validator.transaction.TransactionFieldsRule;
+import org.ethereum.validator.transaction.TransactionMineGasPriceRule;
+import org.ethereum.validator.transaction.TransactionReceiptRule;
+import org.ethereum.validator.transaction.TransactionReceiptValidator;
+import org.ethereum.validator.transaction.TransactionRule;
+import org.ethereum.validator.transaction.TransactionValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -52,6 +59,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -277,6 +285,27 @@ public class CommonConfig {
         ));
 
         return new ParentBlockHeaderValidator(rules);
+    }
+
+    @Bean
+    public TransactionValidator transactionValidator() {
+
+        List<TransactionRule> rules = new ArrayList<>(asList(
+                new TransactionFieldsRule(),
+                new TransactionMineGasPriceRule(systemProperties())
+        ));
+
+        return new TransactionValidator(rules);
+    }
+
+    @Bean
+    public TransactionReceiptValidator transactionReceiptValidator() {
+
+        List<TransactionReceiptRule> rules = Collections.singletonList(
+                new ReceiptValidityRule()
+        );
+
+        return new TransactionReceiptValidator(rules);
     }
 
     @Bean

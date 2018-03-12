@@ -15,29 +15,27 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator;
+package org.ethereum.validator.block;
 
 import org.ethereum.core.BlockHeader;
-import org.ethereum.util.FastByteComparisons;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.validator.block.BlockHeaderRule;
+
+import java.math.BigInteger;
 
 /**
- * Created by Stan Reshetnyk on 26.12.16.
+ * Checks {@link BlockHeader#gasUsed} against {@link BlockHeader#gasLimit}
+ *
+ * @author Mikhail Kalinin
+ * @since 02.09.2015
  */
-public class BlockCustomHashRule extends BlockHeaderRule {
-
-    public final byte[] blockHash;
-
-    public BlockCustomHashRule(byte[] blockHash) {
-        this.blockHash = blockHash;
-    }
+public class GasValueRule extends BlockHeaderRule {
 
     @Override
     public ValidationResult validate(BlockHeader header) {
-        if (!FastByteComparisons.equal(header.getHash(), blockHash)) {
-            return fault("Block " + header.getNumber() + " hash constraint violated. Expected:" +
-                    Hex.toHexString(blockHash) + ", got: " + Hex.toHexString(header.getHash()));
+        if (new BigInteger(1, header.getGasLimit()).compareTo(BigInteger.valueOf(header.getGasUsed())) < 0) {
+            return fault("header.getGasLimit() < header.getGasUsed()");
         }
+
         return Success;
     }
 }

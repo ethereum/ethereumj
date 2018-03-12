@@ -17,26 +17,38 @@
  */
 package org.ethereum.validator;
 
-import org.ethereum.core.BlockHeader;
-import org.ethereum.util.FastByteComparisons;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Checks proof value against its boundary for the block header
- *
- * @author Mikhail Kalinin
- * @since 02.09.2015
+ * Composite Entity validator
+ * aggregating list of simple validation rules
  */
-public class ProofOfWorkRule extends BlockHeaderRule {
+public abstract class EntityValidator<R extends EntityRule<E>, E> extends EntityRule<E> {
+
+    protected List<R> rules;
+
+    public EntityValidator(List<R> rules) {
+        this.rules = rules;
+    }
+
+    @SafeVarargs
+    public EntityValidator(R ...rules) {
+        this.rules = Arrays.asList(rules);
+    }
+
+    public void reInit(List<R> rules) {
+        this.rules = rules;
+    }
 
     @Override
-    public ValidationResult validate(BlockHeader header) {
-        byte[] proof = header.calcPowValue();
-        byte[] boundary = header.getPowBoundary();
-
-        if (!header.isGenesis() && FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) > 0) {
-            return fault(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
+    public ValidationResult validate(E entity) {
+        for (R rule : rules) {
+            ValidationResult result = rule.validate(entity);
+            if (!result.success) {
+                return result;
+            }
         }
-
         return Success;
     }
 }

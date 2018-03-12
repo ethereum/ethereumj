@@ -20,7 +20,7 @@ package org.ethereum.sync;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.block.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
