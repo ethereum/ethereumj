@@ -19,7 +19,6 @@ package org.ethereum.core.casper;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
-import org.ethereum.casper.core.genesis.CasperStateInit;
 import org.ethereum.db.ByteArrayWrapper;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,11 +35,7 @@ public class CasperStateInitTest extends CasperBase {
     @Test
     public void genesisPlusBlock() {
         // Init with Genesis
-        final Genesis genesis = Genesis.getInstance(systemProperties);
-
-        CasperStateInit casperStateInit = new CasperStateInit(genesis, repository, blockchain, systemProperties);
-        casperStateInit.initDB();
-        casper.setInitTxs(casperStateInit.makeInitTxes().getValue());
+        loadBlockchain();
 
         // Check after genesis
         assertEquals(new ByteArrayWrapper(Hex.decode("f3f713c5ff3119287ae62861e3fd90d6afc94b57d06151007c409b86bf419d11")),

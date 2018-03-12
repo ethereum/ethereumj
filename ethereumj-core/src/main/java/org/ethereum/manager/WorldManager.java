@@ -19,8 +19,6 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.core.genesis.CommonStateInit;
-import org.ethereum.core.genesis.StateInit;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
@@ -39,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
@@ -172,26 +169,33 @@ public class WorldManager {
         return pendingState;
     }
 
-    protected StateInit createStateInit(Genesis genesis) {
-        return new CommonStateInit(genesis, repository, blockchain);
-    }
-
     public void loadBlockchain() {
 
         if (!config.databaseReset() || config.databaseResetBlock() != 0)
             blockStore.load();
 
-        StateInit stateInit = createStateInit(Genesis.getInstance(config));
         if (blockStore.getBestBlock() == null) {
+            logger.info("DB is empty - adding Genesis");
 
-            stateInit.initDB();
+            Genesis genesis = Genesis.getInstance(config);
+            Genesis.populateRepository(repository, genesis);
+
+//            repository.commitBlock(genesis.getHeader());
+            repository.commit();
+
+            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
+
+            blockchain.setBestBlock(Genesis.getInstance(config));
+            blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
+
             listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
+            logger.info("Genesis block loaded");
         } else {
 
             if (!config.databaseReset() &&
-                    !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), stateInit.getInitGenesis().getHash())) {
+                    !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
                 // fatal exit
                 Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
             }

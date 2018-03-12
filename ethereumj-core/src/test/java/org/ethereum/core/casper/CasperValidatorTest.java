@@ -25,27 +25,25 @@ import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
-import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.casper.core.genesis.CasperStateInit;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.casper.service.CasperValidatorService;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.vm.GasCost;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 @Ignore  // Takes too long to run usually
 public class CasperValidatorTest extends CasperBase {
@@ -106,35 +104,13 @@ public class CasperValidatorTest extends CasperBase {
     }
 
     @Test
-    public void validatorTest() {
-        // Init with Genesis
-        final Genesis genesis = Genesis.getInstance(systemProperties);
-        final ECKey coinbase = new ECKey();
-        final Genesis modifiedGenesis = new Genesis(
-                genesis.getParentHash(),
-                genesis.getUnclesHash(),
-                genesis.getCoinbase(),
-                genesis.getLogBloom(),
-                ByteUtil.longToBytes(1),
-                genesis.getNumber(),
-                ByteUtil.byteArrayToLong(genesis.getGasLimit()),
-                genesis.getGasUsed(),
-                genesis.getTimestamp(),
-                genesis.getExtraData(),
-                genesis.getMixHash(),
-                genesis.getNonce()
-        );
+    public void validatorTest() throws Exception {
+        // Init with light Genesis
+        Resource casperGenesis = new ClassPathResource("/genesis/casper-test.json");
+        systemProperties.useGenesis(casperGenesis.getInputStream());
+        loadBlockchain();
 
-        // We need money
-        Genesis.PremineAccount coinbaseAcc = new Genesis.PremineAccount();
-        coinbaseAcc.accountState = new AccountState(BigInteger.ZERO, EtherUtil.convert(2500, EtherUtil.Unit.ETHER));
-        genesis.getPremine().put(new ByteArrayWrapper(coinbase.getAddress()), coinbaseAcc);
-        modifiedGenesis.setPremine(genesis.getPremine());
-
-        CasperStateInit casperStateInit = new CasperStateInit(modifiedGenesis, repository, blockchain, systemProperties);
-        casperStateInit.initDB();
-
-        casper.setInitTxs(casperStateInit.makeInitTxes().getValue());
+        final ECKey coinbase = ECKey.fromPrivate(sha3("cow".getBytes())); // Premined in light genesis
 
         BigInteger zeroEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
@@ -154,7 +130,10 @@ public class CasperValidatorTest extends CasperBase {
         Mockito.when(syncManager.isSyncDone()).thenReturn(true);
         service.setSyncManager(syncManager);
         service.setCasper(casper);
+        service.setRepository(repository);
         service.start();
+
+        BigInteger initialBalance = ethereum.getRepository().getBalance(coinbase.getAddress());
 
         for (int i = 0; i < 10; ++i) {
             Block block = bc.createBlock();
@@ -170,16 +149,16 @@ public class CasperValidatorTest extends CasperBase {
         BigDecimal increasedDeposit = (BigDecimal) casper.constCall("get_validators__deposit", 1)[0];
         assertTrue(increasedDeposit.compareTo(new BigDecimal("200000000000")) > 0);
 
-        // We've left less than 500 ETH
-        assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(EtherUtil.convert(500, EtherUtil.Unit.ETHER)) < 0);
+        // We've left less than (initial - 2000 ETH)
+        assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(initialBalance.subtract(EtherUtil.convert(2000, EtherUtil.Unit.ETHER))) < 0);
         // Let's logout
         service.voteThenLogout();
         // Withdrawal delay is 5 epochs + 1 vote epoch + overhead
         for (int i = 0; i < 400; ++i) {
             Block block = bc.createBlock();
         }
-        // We should have more than 2500 ETH in the end
-        assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(EtherUtil.convert(2500, EtherUtil.Unit.ETHER)) > 0);
+        // We should have more than initialBalance in the end
+        assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(initialBalance) > 0);
 
         // TODO: add more checking with listeners etc.
         // TODO: add more validators

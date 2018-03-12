@@ -30,7 +30,9 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.EventDispatchThread;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
+import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.CountingBytesSource;
@@ -66,8 +68,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 
 // We have all mocks here and not all of them are used in every test, so strict stubs should be turned off
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -97,8 +104,6 @@ public abstract class CasperBase {
 
     CasperBlockchain blockchain;
 
-    WorldManager worldManager;
-
     private CompositeEthereumListener defaultListener = new CompositeEthereumListener();
 
     @InjectMocks
@@ -107,12 +112,14 @@ public abstract class CasperBase {
     @InjectMocks
     CasperFacade casper = new CasperFacade();
 
+    Repository repository = new RepositoryWrapper();
+
     @InjectMocks
     CasperPendingStateImpl casperPendingState = new CasperPendingStateImpl(defaultListener);
 
     StandaloneBlockchain bc;
 
-    Repository repository;
+    WorldManager worldManager;
 
     @Before
     public void setup() throws Exception {
@@ -190,10 +197,8 @@ public abstract class CasperBase {
         Mockito.when(context.getBean(CasperBlockchain.class)).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockchain()).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockStore()).thenReturn(blockchain.getBlockStore());
-        RepositoryWrapper wrapper = new RepositoryWrapper();
-        wrapper.setBlockchain(bc.getBlockchain());
-        this.repository = wrapper;
-        Mockito.when(worldManager.getRepository()).thenReturn(wrapper);
+        ((RepositoryWrapper) repository).setBlockchain(bc.getBlockchain());
+        Mockito.when(worldManager.getRepository()).thenReturn(repository);
         doAnswer((Answer<Void>) invocation -> {
             Object arg0 = invocation.getArgument(0);
             defaultListener.addListener((EthereumListener) arg0);
@@ -213,6 +218,26 @@ public abstract class CasperBase {
                 }
             }
         });
+    }
+
+    /**
+     * Same logic as in WorldManager.loadBlockchain
+     */
+    protected void loadBlockchain() {
+
+        Genesis genesis = Genesis.getInstance(systemProperties);
+        Genesis.populateRepository(repository, genesis);
+
+//            repository.commitBlock(genesis.getHeader());
+        repository.commit();
+
+        blockchain.getBlockStore().saveBlock(Genesis.getInstance(systemProperties), Genesis.getInstance(systemProperties).getCumulativeDifficulty(), true);
+
+        blockchain.setBestBlock(Genesis.getInstance(systemProperties));
+        blockchain.setTotalDifficulty(Genesis.getInstance(systemProperties).getCumulativeDifficulty());
+
+        defaultListener.onBlock(new BlockSummary(Genesis.getInstance(systemProperties), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
+//            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
     }
 
     BlockchainNetConfig config() {

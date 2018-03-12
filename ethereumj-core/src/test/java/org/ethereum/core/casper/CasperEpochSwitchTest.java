@@ -26,11 +26,10 @@ import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.casper.core.genesis.CasperStateInit;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.GasCost;
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import java.math.BigInteger;
 
@@ -94,29 +93,11 @@ public class CasperEpochSwitchTest extends CasperBase {
     }
 
     @Test
-    public void epochStartTest() {
-        // Init with Genesis
-        final Genesis genesis = Genesis.getInstance(systemProperties);
-        final Genesis modifiedGenesis = new Genesis(
-                genesis.getParentHash(),
-                genesis.getUnclesHash(),
-                genesis.getCoinbase(),
-                genesis.getLogBloom(),
-                ByteUtil.longToBytes(1),
-                genesis.getNumber(),
-                ByteUtil.byteArrayToLong(genesis.getGasLimit()),
-                genesis.getGasUsed(),
-                genesis.getTimestamp(),
-                genesis.getExtraData(),
-                genesis.getMixHash(),
-                genesis.getNonce()
-        );
-        modifiedGenesis.setPremine(genesis.getPremine());
-
-        CasperStateInit casperStateInit = new CasperStateInit(modifiedGenesis, repository, blockchain, systemProperties);
-        casperStateInit.initDB();
-
-        casper.setInitTxs(casperStateInit.makeInitTxes().getValue());
+    public void epochStartTest() throws Exception {
+        // Init with light Genesis
+        Resource casperGenesis = new ClassPathResource("/genesis/casper-test.json");
+        systemProperties.useGenesis(casperGenesis.getInputStream());
+        loadBlockchain();
 
         BigInteger zeroEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
