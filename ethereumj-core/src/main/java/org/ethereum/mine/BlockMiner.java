@@ -272,7 +272,7 @@ public class BlockMiner {
                     try {
                         // wow, block mined!
                         final Block minedBlock = task.get().block;
-                        blockMined(minedBlock);
+                        blockMined(minedBlock, task);
                     } catch (InterruptedException | CancellationException e) {
                         // OK, we've been cancelled, just exit
                     } catch (Exception e) {
@@ -293,13 +293,20 @@ public class BlockMiner {
         return new Block(block.getEncoded());
     }
 
-    protected void blockMined(Block newBlock) throws InterruptedException {
+    protected void blockMined(Block newBlock, ListenableFuture<MiningResult> task) throws InterruptedException {
         long t = System.currentTimeMillis();
         if (t - lastBlockMinedTime < minBlockTimeout) {
             long sleepTime = minBlockTimeout - (t - lastBlockMinedTime);
             logger.debug("Last block was mined " + (t - lastBlockMinedTime) + " ms ago. Sleeping " +
                     sleepTime + " ms before importing...");
             Thread.sleep(sleepTime);
+        }
+
+        synchronized (BlockMiner.class) {
+            if (!currentMiningTasks.contains(task)) {  // Task is removed from current tasks so it's cancelled
+                logger.debug("Discarding block [{}] because mining task was already cancelled", newBlock.getShortDescr());
+                return;
+            }
         }
 
         fireBlockMined(newBlock);
