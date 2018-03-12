@@ -25,6 +25,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.TransactionStore;
@@ -40,7 +41,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.
@@ -50,8 +54,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private final static long REQUEST_TIMEOUT = 15 * 1000;
+    private static final long REQUEST_TIMEOUT = 5 * 1000;
     private static final int MAX_IN_REQUEST = 100;
+    private static final int MIN_IN_REQUEST = 10;
     private int requestLimit = 2000;
 
     @Autowired
@@ -69,11 +74,9 @@ public class ReceiptsDownloader {
     @Autowired @Qualifier("headerSource")
     DataSourceArray<BlockHeader> headerStore;
 
-    long fromBlock, toBlock, queueBlock;
-    Set<Long> completedBlocks = new HashSet<>();
-    Deque<ReceiptsRequest> queue = new LinkedBlockingDeque<>();
-    Map<Integer, ReceiptsRequest> pending = new HashMap<>();
-    int requests = 0;
+    long fromBlock, toBlock;
+    LinkedHashMap<ByteArrayWrapper, QueuedBlock> queuedBlocks = new LinkedHashMap<>();
+    AtomicInteger blocksInMem = new AtomicInteger(0);
 
     long t;
     int cnt;
@@ -86,7 +89,7 @@ public class ReceiptsDownloader {
     private final CircularFifoQueue<Long> lastBlockSizes = new CircularFifoQueue<>(requestLimit);
 
     public ReceiptsDownloader(long fromBlock, long toBlock) {
-        this.queueBlock = this.fromBlock = fromBlock;
+        this.fromBlock = fromBlock;
         this.toBlock = toBlock;
     }
 
@@ -95,24 +98,14 @@ public class ReceiptsDownloader {
         retrieveThread.start();
     }
 
-    private List<ReceiptsRequest> getToDownload(int maxSize) {
-        List<byte[]> toDownload = getHashesForRequest(maxSize);
-        List<ReceiptsRequest> ret = new ArrayList<>();
-        for (int i = 0; i < toDownload.size(); i += MAX_IN_REQUEST) {
-            List<byte[]> payload = toDownload.subList(i, Math.min(toDownload.size(), i + MAX_IN_REQUEST));
-            ret.add(new ReceiptsRequest(payload));
-        }
-        return ret;
-    }
-
-    private List<byte[]> getHashesForRequest(int maxSize) {
+    private synchronized List<byte[]> getHashesForRequest(int maxSize) {
         List<byte[]> ret = new ArrayList<>();
-        for (; queueBlock < toBlock && maxSize > 0; queueBlock++) {
-            BlockHeader header = headerStore.get((int) queueBlock);
+        for (; fromBlock < toBlock && maxSize > 0; fromBlock++) {
+            BlockHeader header = headerStore.get((int) fromBlock);
 
             // Skipping download for blocks with no transactions
             if (FastByteComparisons.equal(header.getReceiptsRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-                finalizeBlock(header.getNumber());
+                finalizeBlock();
                 continue;
             }
 
@@ -122,31 +115,45 @@ public class ReceiptsDownloader {
         return ret;
     }
 
-    private boolean processDownloaded(byte[] blockHash, List<TransactionReceipt> receipts) {
-        Block block = blockStore.getBlockByHash(blockHash);
-        if (validate(block, receipts)) {
-            for (int i = 0; i < receipts.size(); i++) {
-                TransactionReceipt receipt = receipts.get(i);
-                TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), i);
-                txInfo.setTransaction(block.getTransactionsList().get(i));
-                txStore.put(txInfo);
+    private synchronized void processQueue() {
+        Iterator<QueuedBlock> it = queuedBlocks.values().iterator();
+        while (it.hasNext()) {
+            QueuedBlock queuedBlock = it.next();
+            List<TransactionReceipt> receipts = queuedBlock.receipts;
+            if (receipts != null) {
+                Block block = blockStore.getBlockByHash(queuedBlock.hash);
+                if (validate(block, receipts)) {
+                    for (int i = 0; i < queuedBlock.receipts.size(); i++) {
+                        TransactionReceipt receipt = receipts.get(i);
+                        TransactionInfo txInfo = new TransactionInfo(receipt, block.getHash(), i);
+                        txInfo.setTransaction(block.getTransactionsList().get(i));
+                        txStore.put(txInfo);
+                    }
+
+                    estimateBlockSize(receipts, block.getNumber());
+
+                    it.remove();
+                    blocksInMem.decrementAndGet();
+
+                    finalizeBlock();
+                } else {
+                    queuedBlock.reset();
+                }
             }
-
-            finalizeBlock(block.getNumber());
-            estimateBlockSize(receipts, block.getNumber());
-            return true;
         }
-
-        return false;
     }
 
-    private void finalizeBlock(Long blockNumber) {
+    private synchronized void processDownloaded(byte[] blockHash, List<TransactionReceipt> receipts) {
+        QueuedBlock block = queuedBlocks.get(new ByteArrayWrapper(blockHash));
+        if (block != null) {
+            block.receipts = receipts;
+        }
+    }
+
+    private void finalizeBlock() {
         synchronized (this) {
-            completedBlocks.add(blockNumber);
-
-            while (fromBlock < toBlock && completedBlocks.remove(fromBlock)) fromBlock++;
-
-            if (fromBlock >= toBlock) finishDownload();
+            if (fromBlock >= toBlock && queuedBlocks.isEmpty())
+                finishDownload();
 
             cnt++;
             if (cnt % 1000 == 0) logger.info("FastSync: downloaded receipts for " + cnt + " blocks.");
@@ -160,68 +167,41 @@ public class ReceiptsDownloader {
     }
 
     private void retrieveLoop() {
+        List<List<byte[]>> toDownload = Collections.emptyList();
+        long t = 0;
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
-                processTimeouts();
-
-                if (queue.isEmpty()) {
-                    int slotsLeft = getRequestSize() - MAX_IN_REQUEST * (queue.size() + pending.size());
-                    if (slotsLeft >= MAX_IN_REQUEST) {
-                        List<ReceiptsRequest> toQueue = getToDownload(slotsLeft);
-                        queue.addAll(toQueue);
-                        logger.debug("ReceiptsDownloader: {} new requests added, queue grew up to {}, pending {}",
-                                toQueue.size(), queue.size(), pending.size());
+                if (toDownload.isEmpty()) {
+                    if (fillBlockQueue() > 0 || System.currentTimeMillis() - t > REQUEST_TIMEOUT) {
+                        toDownload = getToDownload();
+                        t = System.currentTimeMillis();
                     }
                 }
 
                 Channel idle = getAnyPeer();
-                if (idle != null) {
-                    ReceiptsRequest req = queue.poll();
-
-                    if (req != null) {
-
-                        int requestId = ++requests;
-                        synchronized (this) {
-                            req.sentAt = System.currentTimeMillis();
-                            pending.put(requestId, req);
-                        }
-
-                        ListenableFuture<List<List<TransactionReceipt>>> future =
-                                ((Eth63) idle.getEthHandler()).requestReceipts(req.payload);
-                        if (future != null) {
-                            if (requestId % 10 == 0) {
-                                logger.debug("ReceiptsDownloader: queue size {}, pending {}, total ~{}mb",
-                                        queue.size(), pending.size(),
-                                        (queue.size() + pending.size()) * MAX_IN_REQUEST * estimatedBlockSize / 1024 / 1024);
+                if (idle != null && !toDownload.isEmpty()) {
+                    List<byte[]> list = toDownload.remove(0);
+                    ListenableFuture<List<List<TransactionReceipt>>> future =
+                            ((Eth63) idle.getEthHandler()).requestReceipts(list);
+                    if (future != null) {
+                        Futures.addCallback(future, new FutureCallback<List<List<TransactionReceipt>>>() {
+                            @Override
+                            public void onSuccess(List<List<TransactionReceipt>> result) {
+                                for (int i = 0; i < result.size(); i++) {
+                                    processDownloaded(list.get(i), result.get(i));
+                                }
+                                processQueue();
                             }
-
-                            Futures.addCallback(future, new FutureCallback<List<List<TransactionReceipt>>>() {
-                                @Override
-                                public void onSuccess(List<List<TransactionReceipt>> result) {
-                                    try {
-                                        if (!processResponse(requestId, result)) {
-                                            idle.dropConnection();
-                                        }
-                                    } catch (Throwable t) {
-                                        queueBack(requestId);
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(Throwable t) {
-                                    queueBack(requestId);
-                                }
-                            });
-                        } else {
-                            queueBack(requestId);
-                        }
+                            @Override
+                            public void onFailure(Throwable t) {}
+                        });
                     }
                 } else {
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
-                        break;
+                        Thread.currentThread().interrupt();
                     }
                 }
             } catch (Exception e) {
@@ -230,50 +210,67 @@ public class ReceiptsDownloader {
         }
     }
 
-    private boolean processResponse(int requestId, List<List<TransactionReceipt>> response) {
-        ReceiptsRequest req;
+    private List<List<byte[]>> getToDownload() {
+        List<List<byte[]>> ret = new ArrayList<>();
+
+        int reqSize = getRequestSize();
         synchronized (this) {
-            req = pending.get(requestId);
-        }
-        if (req != null) {
-            for (int i = 0; i < response.size(); i++) {
-                if (!processDownloaded(req.payload.get(i), response.get(i))) {
-                    queueBack(requestId);
-                    return false;
+            List<byte[]> req = new ArrayList<>();
+            for (QueuedBlock b : queuedBlocks.values()) {
+                if (!b.hasResponse()) {
+                    req.add(b.hash);
+                    if (req.size() >= reqSize) {
+                        ret.add(req);
+                        req = new ArrayList<>();
+                    }
                 }
             }
-
-            synchronized (this) {
-                pending.remove(requestId);
+            if (!req.isEmpty()) {
+                ret.add(req);
             }
         }
 
-        return true;
-    }
-
-    private synchronized void queueBack(int requestId) {
-        ReceiptsRequest req = pending.remove(requestId);
-        if (req != null) queue.addFirst(req);
-    }
-
-    private synchronized void processTimeouts() {
-        Iterator<ReceiptsRequest> iter = pending.values().iterator();
-        while (iter.hasNext()) {
-            ReceiptsRequest req = iter.next();
-            if (System.currentTimeMillis() - req.sentAt > REQUEST_TIMEOUT) {
-                iter.remove();
-                queue.addFirst(req);
-            }
-        }
+        logger.debug("ReceiptsDownloader: queue broke down to {} requests, {} blocks in each", ret.size(), reqSize);
+        return ret;
     }
 
     private int getRequestSize() {
+        int reqCnt = max(syncPool.getActivePeersCount() * 3 / 4, 1);
+        int optimalReqSz = queuedBlocks.size() / reqCnt;
+        if (optimalReqSz <= MIN_IN_REQUEST) {
+            return MIN_IN_REQUEST;
+        } else if (optimalReqSz >= MAX_IN_REQUEST) {
+            return MAX_IN_REQUEST;
+        } else {
+            return optimalReqSz;
+        }
+    }
+    
+    private int fillBlockQueue() {
+        int blocksToAdd = getTargetBlocksInMem() - blocksInMem.get();
+        if (blocksToAdd < MAX_IN_REQUEST)
+            return 0;
+
+        List<byte[]> blockHashes = getHashesForRequest(blocksToAdd);
+        synchronized (this) {
+            blockHashes.forEach(hash -> queuedBlocks.put(new ByteArrayWrapper(hash), new QueuedBlock(hash)));
+        }
+        blocksInMem.addAndGet(blockHashes.size());
+
+        logger.debug("ReceiptsDownloader: blocks added {}, in queue {}, in memory {} (~{}mb)",
+                blockHashes.size(), queuedBlocks.size(), blocksInMem.get(),
+                blocksInMem.get() * estimatedBlockSize / 1024 / 1024);
+
+        return blockHashes.size();
+    }
+
+    private int getTargetBlocksInMem() {
         if (estimatedBlockSize == 0) {
             return requestLimit;
         }
 
-        int slotsLeft = Math.max((int) (blockBytesLimit / estimatedBlockSize), 2 * MAX_IN_REQUEST);
-        return Math.min(slotsLeft, requestLimit);
+        int slotsInMem = max((int) (blockBytesLimit / estimatedBlockSize), MAX_IN_REQUEST);
+        return min(slotsInMem, requestLimit);
     }
 
     /**
@@ -325,12 +322,20 @@ public class ReceiptsDownloader {
         this.blockBytesLimit = config.blockQueueSize();
     }
 
-    private static class ReceiptsRequest {
-        long sentAt = 0;
-        List<byte[]> payload;
+    private static class QueuedBlock {
+        byte[] hash;
+        List<TransactionReceipt> receipts;
 
-        public ReceiptsRequest(List<byte[]> payload) {
-            this.payload = payload;
+        public QueuedBlock(byte[] hash) {
+            this.hash = hash;
+        }
+
+        public boolean hasResponse() {
+            return receipts != null;
+        }
+
+        public void reset() {
+            receipts = null;
         }
     }
 }
