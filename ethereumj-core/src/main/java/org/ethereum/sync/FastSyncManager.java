@@ -192,17 +192,17 @@ public class FastSyncManager {
                     return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
                                 pivot.getNumber());
                 } else {
-                    return new SyncStatus(SyncStatus.SyncStage.Headers, 0, pivot.getNumber());
+                    return new SyncStatus(SyncStatus.SyncStage.Headers, pivot.getNumber(), pivot.getNumber());
                 }
             case COMPLETE:
                 if (receiptsDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.Receipts,
                             receiptsDownloader.getDownloadedBlocksCount(), pivot.getNumber());
-                } else if (blockBodiesDownloader!= null) {
+                } else if (blockBodiesDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.BlockBodies,
                             blockBodiesDownloader.getDownloadedCount(), pivot.getNumber());
                 } else {
-                    return new SyncStatus(SyncStatus.SyncStage.BlockBodies, 0, pivot.getNumber());
+                    return new SyncStatus(SyncStatus.SyncStage.Receipts, pivot.getNumber(), pivot.getNumber());
                 }
         }
         return new SyncStatus(SyncStatus.SyncStage.Complete, 0, 0);
