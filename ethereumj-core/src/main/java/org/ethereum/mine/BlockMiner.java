@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.casper.core.CasperTransactionExecutor;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -31,6 +30,7 @@ import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.MinerIfc.MiningResult;
+import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.Math.max;
 
@@ -245,8 +246,30 @@ public class BlockMiner {
         logger.debug("getNewBlockForMining best blocks: PendingState: " + bestPendingState.getShortDescr() +
                 ", Blockchain: " + bestBlockchain.getShortDescr());
 
-        Block newMiningBlock = blockchain.createNewBlock(bestPendingState, getAllPendingTransactions(),
-                getUncles(bestPendingState));
+        return createOptimizedBlock(bestPendingState, getAllPendingTransactions(), getUncles(bestPendingState));
+    }
+
+    protected Block createOptimizedBlock(Block bestPendingBlock, final List<Transaction> txs, List<BlockHeader> uncles) {
+        boolean optimized = false;
+        Block newMiningBlock = null;
+        while(!optimized) {
+            List<Transaction> transactions = new ArrayList<>(txs);
+            BlockSummary summary = blockchain.createNewBlockSummary(bestPendingBlock, transactions, uncles);
+            AtomicBoolean badTxFound = new AtomicBoolean(false);
+            summary.getReceipts().forEach(receipt -> {
+                if (!receipt.isSuccessful() && (receipt.getGasUsed() == null || receipt.getGasUsed().length == 0)) {
+                    transactions.removeIf(transaction -> {
+                        boolean match = FastByteComparisons.equal(transaction.getHash(), receipt.getTransaction().getHash());
+                        badTxFound.set(true);
+                        return match;
+                    });
+                }
+            });
+            if (!badTxFound.get()) {
+                optimized = true;
+                newMiningBlock = summary.getBlock();
+            }
+        }
         return newMiningBlock;
     }
 

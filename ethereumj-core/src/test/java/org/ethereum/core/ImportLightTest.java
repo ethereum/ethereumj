@@ -302,6 +302,40 @@ public class ImportLightTest {
     }
 
     @Test
+    public void gasLimitExceed() throws Exception {
+        // Testing that tx in block when block.gasUsed + tx.gasLimit is not successful
+        // while block is correctly imported
+
+        BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+        blockchain.setMinerCoinbase(Hex.decode("ee0250c19ad59305b2bdb61f34b45b72fe37154f"));
+        Block parent = blockchain.getBestBlock();
+
+        ECKey senderKey = ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c"));
+        byte[] receiverAddr = Hex.decode("31e2e1ed11951c7091dfba62cd4b7145e947219c");
+
+        Transaction tx1 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(0),
+                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
+                ByteUtil.longToBytesNoLeadZeroes(0xfffff),
+                receiverAddr, new byte[]{88}, new byte[0]);
+        tx1.sign(senderKey);
+        Transaction tx2 = new Transaction(ByteUtil.intToBytesNoLeadZeroes(1),
+                ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
+                Hex.decode("1000000000"), // same as block gas limit
+                receiverAddr, new byte[]{88}, new byte[0]);
+        tx2.sign(senderKey);
+
+        Block b = blockchain.createNewBlock(parent, Arrays.asList(tx1, tx2), Collections.EMPTY_LIST);
+        Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
+        Repository repo = blockchain.getRepository().getSnapshotTo(parent.getStateRoot());
+        BlockSummary summary = blockchain.add(repo, b);
+        Assert.assertNotNull(summary);
+        Assert.assertTrue(summary.getReceipts().get(0).isSuccessful());
+        Assert.assertTrue(!summary.getReceipts().get(1).isSuccessful());  // second tx fails because of too big gas limit
+        Assert.assertEquals(0, summary.getReceipts().get(1).getGasUsed().length);  // and no gas is used
+    }
+
+    @Test
     public void invalidBlockTotalDiff() throws Exception {
         // Check that importing invalid block doesn't affect totalDifficulty
 

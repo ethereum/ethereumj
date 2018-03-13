@@ -63,8 +63,6 @@ public class CasperBlockMiner extends BlockMiner {
             return Boolean.compare(tx1isVote, tx2isVote);
         });
 
-        Block newMiningBlock = blockchain.createNewBlock(bestPendingState, pendingTxs,
-                getUncles(bestPendingState));
-        return newMiningBlock;
+        return createOptimizedBlock(bestPendingState, pendingTxs, getUncles(bestPendingState));
     }
 }

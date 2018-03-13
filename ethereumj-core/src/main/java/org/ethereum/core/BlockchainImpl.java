@@ -472,15 +472,23 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return ret;
     }
 
-    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
+    public synchronized BlockSummary createNewBlockSummary(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
         long time = System.currentTimeMillis() / 1000;
         // adjust time to parent block this may happen due to system clocks difference
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
-        return createNewBlock(parent, txs, uncles, time);
+        return createNewBlockSummary(parent, txs, uncles, time);
+    }
+
+    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
+        return createNewBlockSummary(parent, txs, uncles).getBlock();
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+        return createNewBlockSummary(parent, txs, uncles, time).getBlock();
+    }
+
+    public synchronized BlockSummary createNewBlockSummary(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
         final long blockNumber = parent.getNumber() + 1;
 
         final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
@@ -523,7 +531,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         block.getHeader().setGasUsed(receipts.size() > 0 ? receipts.get(receipts.size() - 1).getCumulativeGasLong() : 0);
         block.getHeader().setReceiptsRoot(calcReceiptsTrie(receipts));
 
-        return block;
+        return summary;
     }
 
     @Override

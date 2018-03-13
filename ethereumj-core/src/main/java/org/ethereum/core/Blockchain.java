@@ -77,4 +77,6 @@ public interface Blockchain {
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 
     Block createNewBlock(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);
+
+    BlockSummary createNewBlockSummary(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);
 }
