@@ -181,14 +181,14 @@ public class CasperValidatorService {
 
     public void init() {
         if (Boolean.TRUE.equals(config.getCasperValidatorEnabled())) {
-            this.coinbase = ECKey.fromPrivate(this.config.getCasperValidatorPrivateKey());
-            this.depositSize = EtherUtil.convert(this.config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
             start();
         }
     }
 
     public synchronized void start() {
         if (!started) {
+            this.coinbase = ECKey.fromPrivate(this.config.getCasperValidatorPrivateKey());
+            this.depositSize = EtherUtil.convert(this.config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
             logger.info("Starting casper validator with coinbase 0x{}", Hex.toHexString(coinbase.getAddress()));
             // FIXME: Actually we should listen only to HEAD changes
             ethereum.addListener(new EthereumListenerAdapter() {
