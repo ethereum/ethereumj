@@ -168,8 +168,6 @@ public class CasperValidatorService {
     public CasperValidatorService(Ethereum ethereum, SystemProperties config) {
         this.ethereum = ethereum;
         this.config = (CasperProperties) config;
-        this.coinbase = ECKey.fromPrivate(this.config.getCasperValidatorPrivateKey());
-        this.depositSize = EtherUtil.convert(this.config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
 
         handlers.put(UNINITIATED, this::checkLoggedIn);
         handlers.put(WAITING_FOR_VALCODE, this::checkValcode);
@@ -183,6 +181,8 @@ public class CasperValidatorService {
 
     public void init() {
         if (Boolean.TRUE.equals(config.getCasperValidatorEnabled())) {
+            this.coinbase = ECKey.fromPrivate(this.config.getCasperValidatorPrivateKey());
+            this.depositSize = EtherUtil.convert(this.config.getCasperValidatorDeposit(), EtherUtil.Unit.ETHER);
             start();
         }
     }
