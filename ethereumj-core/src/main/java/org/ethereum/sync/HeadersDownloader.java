@@ -20,6 +20,7 @@ package org.ethereum.sync;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.Blockchain;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -59,6 +60,9 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     DbFlushManager dbFlushManager;
 
+    @Autowired
+    Blockchain blockchain;
+
     byte[] genesisHash;
 
     int headersLoaded  = 0;
@@ -75,7 +79,7 @@ public class HeadersDownloader extends BlockDownloader {
         logger.info("HeaderDownloader init: startHash = " + Hex.toHexString(startFromBlockHash));
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(startFromBlockHash, true);
         super.init(syncQueue, syncPool, "HeadersDownloader");
-        syncPool.init(channelManager);
+        syncPool.init(channelManager, blockchain);
     }
 
     @Override

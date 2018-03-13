@@ -145,7 +145,7 @@ public class SyncManager extends BlockDownloader {
 
         if (pool.getChannelManager() == null) {  // Never were on this stage of init
             logger.info("Initializing SyncManager.");
-            pool.init(channelManager);
+            pool.init(channelManager, blockchain);
 
             if (config.isFastSyncEnabled()) {
                 fastSyncManager.init();
