@@ -15,12 +15,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator.block;
+package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.validator.block.BlockHeaderRule;
 import org.spongycastle.util.encoders.Hex;
 
 /**

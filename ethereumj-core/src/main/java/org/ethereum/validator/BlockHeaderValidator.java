@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator.block;
+package org.ethereum.validator;
 
 import org.ethereum.core.BlockHeader;
-import org.ethereum.validator.EntityValidator;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,18 +29,26 @@ import java.util.List;
  * @author Mikhail Kalinin
  * @since 02.09.2015
  */
-public class BlockHeaderValidator extends EntityValidator<BlockHeaderRule, BlockHeader> {
+public class BlockHeaderValidator extends BlockHeaderRule {
+
+    private List<BlockHeaderRule> rules;
 
     public BlockHeaderValidator(List<BlockHeaderRule> rules) {
-        super(rules);
+        this.rules = rules;
     }
 
     public BlockHeaderValidator(BlockHeaderRule ...rules) {
-        super(rules);
+        this.rules = Arrays.asList(rules);
     }
 
     @Override
-    public Class getEntityClass() {
-        return BlockHeader.class;
+    public ValidationResult validate(BlockHeader header) {
+        for (BlockHeaderRule rule : rules) {
+            ValidationResult result = rule.validate(header);
+            if (!result.success) {
+                return result;
+            }
+        }
+        return Success;
     }
 }

@@ -15,11 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator.block;
+package org.ethereum.validator;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.validator.block.DependentBlockHeaderRule;
 
 import java.math.BigInteger;
 

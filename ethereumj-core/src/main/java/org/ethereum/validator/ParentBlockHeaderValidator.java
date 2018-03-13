@@ -15,29 +15,38 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator.transaction;
+package org.ethereum.validator;
 
-import org.ethereum.core.Transaction;
-import org.ethereum.validator.EntityValidator;
+import org.ethereum.core.BlockHeader;
 
 import java.util.List;
 
 /**
- * Composite {@link org.ethereum.core.Transaction} validator
- * aggregating list of simple validation rules
+ * Composite {@link BlockHeader} validator
+ * aggregating list of simple validation rules depending on parent's block header
+ *
+ * @author Mikhail Kalinin
+ * @since 02.09.2015
  */
-public class TransactionValidator extends EntityValidator<TransactionRule, Transaction> {
+public class ParentBlockHeaderValidator extends DependentBlockHeaderRule {
 
-    public TransactionValidator(List<TransactionRule> rules) {
-        super(rules);
-    }
+    private List<DependentBlockHeaderRule> rules;
 
-    public TransactionValidator(TransactionRule... rules) {
-        super(rules);
+    public ParentBlockHeaderValidator(List<DependentBlockHeaderRule> rules) {
+        this.rules = rules;
     }
 
     @Override
-    public Class getEntityClass() {
-        return Transaction.class;
+    public boolean validate(BlockHeader header, BlockHeader parent) {
+        errors.clear();
+
+        for (DependentBlockHeaderRule rule : rules) {
+            if (!rule.validate(header, parent)) {
+                errors.addAll(rule.getErrors());
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -37,9 +37,10 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
 import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.validator.block.DependentBlockHeaderRuleAdapter;
+import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
@@ -517,10 +518,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         pendingState = new PendingStateImpl(listener);
 
         pendingState.setBlockchain(blockchain);
-        CommonConfig config = CommonConfig.getDefault();
-        pendingState.setReceiptValidator(config.transactionReceiptValidator());
-        pendingState.setTransactionValidator(config.transactionValidator()
-        );
         blockchain.setPendingState(pendingState);
 
         Genesis.populateRepository(repository, genesis);

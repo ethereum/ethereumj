@@ -33,14 +33,6 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.validator.transaction.ReceiptCasperVoteRule;
-import org.ethereum.validator.transaction.ReceiptValidityRule;
-import org.ethereum.validator.transaction.TransactionCasperVoteRule;
-import org.ethereum.validator.transaction.TransactionFieldsRule;
-import org.ethereum.validator.transaction.TransactionMineGasPriceRule;
-import org.ethereum.validator.transaction.TransactionReceiptValidator;
-import org.ethereum.validator.transaction.TransactionRule;
-import org.ethereum.validator.transaction.TransactionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
@@ -49,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +58,6 @@ public class CasperBlockchain extends BlockchainImpl {
 
     @Autowired
     private CasperFacade casper;
-
-    @Autowired
-    private TransactionValidator transactionValidator;
-
-    @Autowired
-    private TransactionReceiptValidator receiptValidator;
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
@@ -379,22 +364,6 @@ public class CasperBlockchain extends BlockchainImpl {
             track.addBalance(casperAddress, track.getBalance(casperAddress).negate());
             track.addBalance(casperAddress, BigInteger.valueOf(10).pow(25));
         });
-        updateValidators();  // as casper contract is in place
-    }
-
-    private void updateValidators() {
-        // Update transaction validator as casper txs are applied
-        transactionValidator.reInit(
-                new ArrayList<TransactionRule>() {{
-                    add(new TransactionFieldsRule());
-                    add(new TransactionCasperVoteRule((CasperProperties) config, new TransactionMineGasPriceRule(config)));
-                }}
-        );
-
-        // Update transaction receipts validator
-        receiptValidator.reInit(Collections.singletonList(
-                new ReceiptCasperVoteRule((CasperProperties) config, new ReceiptValidityRule()))
-        );
     }
 
     /**
@@ -477,13 +446,5 @@ public class CasperBlockchain extends BlockchainImpl {
 
     public void setCasper(CasperFacade casper) {
         this.casper = casper;
-    }
-
-    public void setTransactionValidator(TransactionValidator transactionValidator) {
-        this.transactionValidator = transactionValidator;
-    }
-
-    public void setReceiptValidator(TransactionReceiptValidator receiptValidator) {
-        this.receiptValidator = receiptValidator;
     }
 }

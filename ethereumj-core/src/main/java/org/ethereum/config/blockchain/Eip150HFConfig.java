@@ -29,7 +29,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
 import org.ethereum.util.Utils;
-import org.ethereum.validator.block.BlockHeaderValidator;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.OpCode;

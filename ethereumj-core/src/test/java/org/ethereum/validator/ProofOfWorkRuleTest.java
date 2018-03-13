@@ -18,7 +18,6 @@
 package org.ethereum.validator;
 
 import org.ethereum.core.Block;
-import org.ethereum.validator.block.ProofOfWorkRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;

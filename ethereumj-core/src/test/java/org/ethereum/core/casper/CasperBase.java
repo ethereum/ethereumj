@@ -21,6 +21,7 @@ import org.ethereum.casper.config.CasperBeanConfig;
 import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.casper.core.CasperBlockchain;
 import org.ethereum.casper.core.CasperFacade;
+import org.ethereum.casper.core.CasperPendingStateImpl;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -30,7 +31,6 @@ import org.ethereum.core.BlockSummary;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.Repository;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutorFactory;
@@ -52,9 +52,7 @@ import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.ethereum.validator.block.DependentBlockHeaderRuleAdapter;
-import org.ethereum.validator.transaction.TransactionReceiptValidator;
-import org.ethereum.validator.transaction.TransactionValidator;
+import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.ProgramPrecompile;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
@@ -76,6 +74,7 @@ import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 
 // We have all mocks here and not all of them are used in every test, so strict stubs should be turned off
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -107,12 +106,6 @@ public abstract class CasperBase {
 
     private CompositeEthereumListener defaultListener = new CompositeEthereumListener();
 
-    @Spy
-    TransactionValidator transactionValidator = commonConfig.transactionValidator();
-
-    @Spy
-    TransactionReceiptValidator receiptValidator = commonConfig.transactionReceiptValidator();
-
     @InjectMocks
     EthereumImpl ethereum = new EthereumImpl(systemProperties, defaultListener);
 
@@ -122,7 +115,7 @@ public abstract class CasperBase {
     Repository repository = new RepositoryWrapper();
 
     @InjectMocks
-    PendingStateImpl casperPendingState = new PendingStateImpl(defaultListener);
+    CasperPendingStateImpl casperPendingState = new CasperPendingStateImpl(defaultListener);
 
     StandaloneBlockchain bc;
 
@@ -201,8 +194,6 @@ public abstract class CasperBase {
         this.blockchain = (CasperBlockchain) bc.getBlockchain();
         casper.setEthereum(ethereum);
         blockchain.setCasper(casper);
-        blockchain.setReceiptValidator(receiptValidator);
-        blockchain.setTransactionValidator(transactionValidator);
         Mockito.when(context.getBean(CasperBlockchain.class)).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockchain()).thenReturn(blockchain);
         Mockito.when(worldManager.getBlockStore()).thenReturn(blockchain.getBlockStore());

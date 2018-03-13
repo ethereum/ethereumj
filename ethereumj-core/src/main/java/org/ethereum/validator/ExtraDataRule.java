@@ -15,29 +15,36 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.validator.block;
+package org.ethereum.validator;
 
+import org.ethereum.config.Constants;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.util.FastByteComparisons;
-import org.spongycastle.util.encoders.Hex;
 
 /**
- * Created by Stan Reshetnyk on 26.12.16.
+ * Checks {@link BlockHeader#extraData} size against {@link Constants#getMAXIMUM_EXTRA_DATA_SIZE}
+ *
+ * @author Mikhail Kalinin
+ * @since 02.09.2015
  */
-public class BlockCustomHashRule extends BlockHeaderRule {
+public class ExtraDataRule extends BlockHeaderRule {
 
-    public final byte[] blockHash;
+    private final int MAXIMUM_EXTRA_DATA_SIZE;
 
-    public BlockCustomHashRule(byte[] blockHash) {
-        this.blockHash = blockHash;
+    public ExtraDataRule(SystemProperties config) {
+        MAXIMUM_EXTRA_DATA_SIZE = config.getBlockchainConfig().
+                getCommonConstants().getMAXIMUM_EXTRA_DATA_SIZE();
     }
 
     @Override
     public ValidationResult validate(BlockHeader header) {
-        if (!FastByteComparisons.equal(header.getHash(), blockHash)) {
-            return fault("Block " + header.getNumber() + " hash constraint violated. Expected:" +
-                    Hex.toHexString(blockHash) + ", got: " + Hex.toHexString(header.getHash()));
+        if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
+            return fault(String.format(
+                    "#%d: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE",
+                    header.getNumber()
+            ));
         }
+
         return Success;
     }
 }
