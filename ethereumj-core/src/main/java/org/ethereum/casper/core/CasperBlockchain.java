@@ -52,9 +52,10 @@ import static org.ethereum.core.ImportResult.IMPORTED_BEST;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.INVALID_BLOCK;
 import static org.ethereum.core.ImportResult.NO_PARENT;
-import static org.ethereum.casper.service.CasperValidatorService.DEFAULT_GASLIMIT;
 
 public class CasperBlockchain extends BlockchainImpl {
+
+    private static final long EPOCH_SWITCH_GASLIMIT = 3_141_592;  // Sames as block gas limit
 
     @Autowired
     private CasperFacade casper;
@@ -255,7 +256,7 @@ public class CasperBlockchain extends BlockchainImpl {
             Transaction tx = new Transaction(
                     ByteUtil.bigIntegerToBytes(track.getNonce(NULL_SIGN_SENDER.getAddress())),
                     new byte[0],
-                    ByteUtil.longToBytesNoLeadZeroes(DEFAULT_GASLIMIT),
+                    ByteUtil.longToBytesNoLeadZeroes(EPOCH_SWITCH_GASLIMIT),
                     casper.getAddress(),
                     new byte[0],
                     data

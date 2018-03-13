@@ -81,7 +81,7 @@ public class CasperValidatorService {
 
     private static final int LOGOUT_COOLDOWN = 60 * 1000;  // In millis
 
-    public static final long DEFAULT_GASLIMIT = 3_141_592;  // Just copied it, don't ask!
+    private static final long DEFAULT_GASLIMIT = 2_500_000;  // Enough for deposit and logout
 
     private Map<Long, byte[]> votes = new HashMap<>();
 
