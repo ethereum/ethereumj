@@ -104,7 +104,11 @@ public class Eip150HFConfigTest {
 
     @Test
     public void testRelatedEip() {
-        TestBlockchainConfig parentAllDependentEipTrue = new TestBlockchainConfig(true, true, true, true);
+        TestBlockchainConfig parentAllDependentEipTrue = new TestBlockchainConfig()
+                .enableEip161()
+                .enableEip198()
+                .enableEip212()
+                .enableEip213();
         Eip150HFConfig eip150 = new Eip150HFConfig(parentAllDependentEipTrue);
         // Inherited from parent
         assertTrue(eip150.eip161());
@@ -118,8 +122,11 @@ public class Eip150HFConfigTest {
         assertFalse(eip150.eip214());
         assertFalse(eip150.eip658());
 
-
-        parentAllDependentEipTrue = new TestBlockchainConfig(false, false, false, false);
+        /*
+         * By flipping parent's eip values, we assert that
+         * Eip150 delegates respective eip calls to parent.
+         */
+        parentAllDependentEipTrue = new TestBlockchainConfig();
         eip150 = new Eip150HFConfig(parentAllDependentEipTrue);
         // Inherited from parent
         assertFalse(eip150.eip161());
