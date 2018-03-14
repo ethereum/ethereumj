@@ -39,6 +39,7 @@ public class GitHubTransactionTest {
     @BeforeClass
     public static void setup() throws IOException {
         suite = new TxTestSuite(treeSHA, commitSHA);
+        SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
     }
 
     @After
