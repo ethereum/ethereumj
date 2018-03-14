@@ -30,6 +30,8 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.ProgramResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,6 +50,8 @@ import static org.ethereum.crypto.HashUtil.sha3;
 
 @Component
 public class CasperFacade {
+
+    private static final Logger logger = LoggerFactory.getLogger("casper");
 
     private static final byte[] CASPER_VOTE_DATA_HEAD = Hex.decode("e9dc0614");
 
@@ -76,6 +80,7 @@ public class CasperFacade {
         this.initTxs = res.getValue();
         systemProperties.setCasperAddress(casperAddress);
         this.contractAddress = Hex.toHexString(casperAddress);
+        logger.info("Casper contract address set to [0x{}]", contractAddress);
         String casperAbi = systemProperties.getCasperAbi();
         this.casper = new CallTransaction.Contract(casperAbi);
     }

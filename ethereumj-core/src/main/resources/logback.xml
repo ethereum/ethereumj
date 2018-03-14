@@ -71,6 +71,7 @@
     <logger name="discover" level="DEBUG"/>
     <logger name="hsqldb.db" level="ERROR"/>
     <logger name="casper.validator" level="INFO" />
+    <logger name="casper" level="INFO"/>
 
 
 </configuration>
