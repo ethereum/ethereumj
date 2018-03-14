@@ -592,15 +592,49 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         BlockSummary summary = processBlock(repo, block);
+        final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
-        if(!checkBlockSummary(summary, repo)) {
+
+        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
+            logger.warn("Calculated receipts: " + receipts);
             repo.rollback();
             summary = null;
         }
 
+        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
+            repo.rollback();
+            summary = null;
+        }
+
+        if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
+
+            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(repo.getRoot()));
+            stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+
+//            track.rollback();
+//            repository.rollback();
+            repository = repository.getSnapshotTo(origRoot);
+
+            // block is bad so 'rollback' the state root to the original state
+//            ((RepositoryImpl) repository).setRoot(origRoot);
+
+//            track.rollback();
+            // block is bad so 'rollback' the state root to the original state
+//            ((RepositoryImpl) repository).setRoot(origRoot);
+
+            if (config.exitOnBlockConflict()) {
+                adminInfo.lostConsensus();
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
+                System.exit(1);
+            } else {
+                summary = null;
+            }
+        }
+
         if (summary != null) {
-            final List<TransactionReceipt> receipts = summary.getReceipts();
             repo.commit();
             updateTotalDifficulty(block);
             summary.setTotalDifficulty(getTotalDifficulty());
@@ -616,43 +650,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         return summary;
-    }
-
-    /**
-     * Sanity checks of block import result
-     * @return true if block is good, otherwise false
-     */
-    protected boolean checkBlockSummary(final BlockSummary summary, final Repository track) {
-        Block block = summary.getBlock();
-        final List<TransactionReceipt> receipts = summary.getReceipts();
-
-        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
-            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
-            logger.warn("Calculated receipts: " + receipts);
-            return false;
-        }
-
-        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
-            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
-            return false;
-        }
-
-        if (!FastByteComparisons.equal(block.getStateRoot(), track.getRoot())) {
-
-            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(track.getRoot()));
-            stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
-
-            if (config.exitOnBlockConflict()) {
-                track.rollback();
-                adminInfo.lostConsensus();
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
-                System.exit(1);
-            } else {
-                return false;
-            }
-        }
-
-        return true;  // Everything is good!
     }
 
     @Override
