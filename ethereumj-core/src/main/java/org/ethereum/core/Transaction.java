@@ -257,7 +257,6 @@ public class Transaction {
     }
 
     public byte[] getRawHash() {
-        rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
     }
