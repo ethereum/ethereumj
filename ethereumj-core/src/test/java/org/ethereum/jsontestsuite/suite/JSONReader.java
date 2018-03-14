@@ -98,6 +98,12 @@ public class JSONReader {
                 break;
             } catch (Exception ex) {
                 logger.debug(String.format("Failed to retrieve %s, retry %d/%d", urlToRead, (i + 1), MAX_RETRIES), ex);
+                if (i < (MAX_RETRIES - 1)) {
+                    try {
+                        Thread.sleep(2000);  // adding delay after fail
+                    } catch (InterruptedException e) {
+                    }
+                }
             }
         }
         if (result == null) throw new RuntimeException(String.format("Failed to retrieve file from url %s", urlToRead));
