@@ -71,6 +71,11 @@ public class CasperConfig {
         return indexedBlockStore;
     }
 
+    @Bean(name = "finalizedBlocks")
+    public Source<byte[], byte[]> finalizedBlockStore() {
+        return beanConfig.cachedDbSource("finalized");
+    }
+
     @Bean
     public TransactionStore transactionStore() {
         beanConfig.fastSyncCleanUp();

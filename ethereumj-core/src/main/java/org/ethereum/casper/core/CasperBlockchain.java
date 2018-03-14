@@ -29,17 +29,15 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.db.BlockStore;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -57,16 +55,20 @@ import static org.ethereum.core.ImportResult.NO_PARENT;
 
 public class CasperBlockchain extends BlockchainImpl {
 
-    private static final long EPOCH_SWITCH_GASLIMIT = 3_141_592;  // Sames as block gas limit
-
-    @Autowired
-    private CasperFacade casper;
-
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
     private static final BigInteger PRETTY_BIG = BigInteger.valueOf(10).pow(40);
     private static final BigInteger NON_REVERT_MIN_DEPOSIT = BigInteger.valueOf(10).pow(18);
+
+    private static final long EPOCH_SWITCH_GASLIMIT = 3_141_592;  // Sames as block gas limit
+
+    @Autowired
+    private CasperFacade casper;
+
+    @Autowired
+    @Qualifier("finalizedBlocks")
+    private Source<byte[], byte[]> finalizedBlocks;
 
     public CasperBlockchain()  {
         throw new RuntimeException("Empty constructor not available");
@@ -84,7 +86,7 @@ public class CasperBlockchain extends BlockchainImpl {
 
         // Assuming old head > new head and there are no finalized blocks between
         while (oldHead.getNumber() > newHead.getNumber()) {
-            byte[] finalized = blockStore.loadMeta("finalized" + Hex.toHexString(oldHead.getHash()));
+            byte[] finalized = finalizedBlocks.get(oldHead.getHash());
             if (finalized != null) {
                 logger.warn("Attempt to revert failed: checkpoint {} is finalized", oldHead.getShortDescr());
                 return true;
@@ -103,7 +105,7 @@ public class CasperBlockchain extends BlockchainImpl {
 
         // As we are currently on one height we could be on one chain before any finalized block
         while(!Arrays.areEqual(oldHead.getHash(), newHead.getHash())) {
-            byte[] finalized = blockStore.loadMeta("finalized" + Hex.toHexString(oldHead.getHash()));
+            byte[] finalized = finalizedBlocks.get(oldHead.getHash());
             if (finalized != null) {
                 logger.warn("Attempt to revert failed: checkpoint {} is finalized", oldHead.getShortDescr());
                 return true;
@@ -224,7 +226,7 @@ public class CasperBlockchain extends BlockchainImpl {
                 BigInteger prevDeposits = (BigInteger) res5[0];
                 if (curDeposits.compareTo(NON_REVERT_MIN_DEPOSIT) > 0 &&
                         prevDeposits.compareTo(NON_REVERT_MIN_DEPOSIT) > 0) {
-                    blockStore.saveMeta("finalized" + Hex.toHexString(checkpointHash), RLP.encodeByte((byte) 0x01)); // True
+                    finalizedBlocks.put(checkpointHash, new byte[] {0x01}); // True
                     logger.info("Finalized checkpoint {} {}", finalizedEpoch, Hex.toHexString(checkpointHash));
                 } else {
                     logger.info("Trivially finalized checkpoint {}", finalizedEpoch);

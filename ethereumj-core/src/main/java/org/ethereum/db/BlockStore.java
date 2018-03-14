@@ -64,11 +64,6 @@ public interface BlockStore {
 
     void reBranch(Block forkBlock);
 
-    // FIXME: Do something universal instead like BlockInfoV2
-    void saveMeta(String name, byte[] value);
-
-    byte[] loadMeta(String name);
-
     void load();
 
     void close();

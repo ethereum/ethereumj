@@ -509,14 +509,6 @@ public class IndexedBlockStore extends AbstractBlockstore{
         return null;
     }
 
-    public void saveMeta(String name, byte[] value) {
-        blocksDS.put(RLP.encode(sha3(name.getBytes())), value);
-    }
-
-    public byte[] loadMeta(String name) {
-        return blocksDS.get(RLP.encode(sha3(name.getBytes())));
-    }
-
     @Override
     public synchronized void load() {
     }
