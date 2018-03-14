@@ -23,6 +23,7 @@ import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
@@ -147,7 +148,9 @@ public class CasperFacade {
         txStrs.add(VIPER_RLP_DECODER_TX);
         txStrs.add(SIG_HASHER_TX);
         txStrs.add(PURITY_CHECKER_TX);
-        BigInteger nonce = ethereum.getRepository().getNonce(NULL_SIGN_SENDER.getAddress());
+
+        Repository track = (Repository) ethereum.getSnapshotTo(ethereum.getBlockchain().getBlockByNumber(0).getStateRoot());
+        BigInteger nonce = track.getNonce(NULL_SIGN_SENDER.getAddress());
         List<Transaction> txs = new ArrayList<>();
         final long gasPriceFund = 25_000_000_000L;
         for (int i = 0; i < txStrs.size(); ++i) {
