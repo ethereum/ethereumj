@@ -76,6 +76,9 @@ public interface Blockchain {
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 
+    TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase, Repository track,
+                                                  Block currentBlock, long gasUsedInTheBlock);
+
     Block createNewBlock(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);
 
     BlockSummary createNewBlockSummary(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);

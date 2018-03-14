@@ -884,10 +884,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
-            TransactionExecutor executor = txFactory.createTransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
-                    .withCommonConfig(commonConfig);
+            TransactionExecutor executor = createTransactionExecutor(tx, block.getCoinbase(),
+                    txTrack, block, totalGasUsed);
 
             executor.init();
             executor.execute();
@@ -939,6 +937,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
         return new BlockSummary(block, rewards, receipts, summaries);
+    }
+
+    public TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase, Repository track,
+                                                            Block currentBlock, long gasUsedInTheBlock) {
+        return new CommonTransactionExecutor(transaction, minerCoinbase,
+                track, blockStore, programInvokeFactory, currentBlock, listener, gasUsedInTheBlock)
+                .withCommonConfig(commonConfig);
     }
 
     /**

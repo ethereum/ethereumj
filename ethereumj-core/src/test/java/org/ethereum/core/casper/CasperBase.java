@@ -33,7 +33,6 @@ import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
 import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.CountingBytesSource;
 import org.ethereum.datasource.JournalSource;
@@ -97,10 +96,6 @@ public abstract class CasperBase {
             return systemProperties;
         }
     };
-
-
-    @Spy
-    private TransactionExecutorFactory transactionExecutorFactory = commonConfig.transactionExecutorFactory();
 
     CasperBlockchain blockchain;
 

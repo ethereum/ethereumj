@@ -18,10 +18,14 @@
 package org.ethereum.casper.core;
 
 import org.ethereum.casper.config.CasperProperties;
+import org.ethereum.core.Block;
 import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
 
 public class CasperPendingStateImpl extends PendingStateImpl {
@@ -59,5 +63,14 @@ public class CasperPendingStateImpl extends PendingStateImpl {
         }
 
         return null;
+    }
+
+
+    @Override
+    protected TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase,
+                                                            Repository track, Block currentBlock) {
+        return new CasperTransactionExecutor(transaction, minerCoinbase,
+                track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0)
+                .withCommonConfig(commonConfig);
     }
 }

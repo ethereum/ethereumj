@@ -18,7 +18,6 @@
 package org.ethereum.util.blockchain;
 
 import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.core.*;
@@ -37,7 +36,6 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
 import org.ethereum.solidity.compiler.SolidityCompiler;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -616,8 +614,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
 
             try {
-                TransactionExecutorFactory transactionExecutorFactory = CommonConfig.getDefault().transactionExecutorFactory();
-                org.ethereum.core.TransactionExecutor executor = transactionExecutorFactory.createTransactionExecutor(
+                org.ethereum.core.TransactionExecutor executor = new CommonTransactionExecutor(
                         tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
                                 getBlockchain().getProgramInvokeFactory(), callBlock)
                         .setLocalCall(true);

@@ -28,11 +28,13 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionExecutor;
-import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
@@ -269,10 +271,8 @@ public class CasperBlockchain extends BlockchainImpl {
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
-            TransactionExecutor executor = txFactory.createTransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, getProgramInvokeFactory(), block, listener, totalGasUsed)
-                    .withCommonConfig(commonConfig);
+            TransactionExecutor executor = createTransactionExecutor(tx, block.getCoinbase(), txTrack,
+                    block, totalGasUsed);
 
             executor.init();
             executor.execute();
@@ -326,6 +326,14 @@ public class CasperBlockchain extends BlockchainImpl {
         return new BlockSummary(block, rewards, receipts, summaries);
     }
 
+    @Override
+    public TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase, Repository track,
+                                                            Block currentBlock, long gasUsedInTheBlock) {
+        return new CasperTransactionExecutor(transaction, minerCoinbase,
+                track, blockStore, getProgramInvokeFactory(), currentBlock, listener, gasUsedInTheBlock)
+                .withCommonConfig(commonConfig);
+    }
+
     private void initCasper(Repository track, Block block) {
         // All changes should be applied only just after genesis, before 1st block state changes
         if (block.getNumber() != 1)
@@ -340,10 +348,7 @@ public class CasperBlockchain extends BlockchainImpl {
             track.addBalance(NULL_SIGN_SENDER.getAddress(), BigInteger.valueOf(15).pow(18));
 
             Repository txTrack = track.startTracking();
-            TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
-            TransactionExecutor executor = txFactory.createTransactionExecutor(tx,
-                    coinbase, txTrack, blockStore, getProgramInvokeFactory(), block, listener, 0)
-                    .withCommonConfig(commonConfig);
+            TransactionExecutor executor = createTransactionExecutor(tx, coinbase, txTrack, block, 0);
 
             executor.init();
             executor.execute();

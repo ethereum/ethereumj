@@ -24,10 +24,10 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
+import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
-import org.ethereum.core.TransactionExecutorFactory;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
@@ -49,7 +49,6 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -161,9 +160,6 @@ public class SyncWithLoadTest {
         @Autowired
         SyncManager syncManager;
 
-        @Autowired
-        TransactionExecutorFactory transactionExecutorFactory;
-
         /**
          * The main EthereumJ callback.
          */
@@ -210,7 +206,7 @@ public class SyncWithLoadTest {
                             .getSnapshotTo(block.getStateRoot())
                             .startTracking();
                     try {
-                        TransactionExecutor executor = transactionExecutorFactory.createTransactionExecutor(
+                        TransactionExecutor executor = new CommonTransactionExecutor(
                                 tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
                                         programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                                 .withCommonConfig(commonConfig)

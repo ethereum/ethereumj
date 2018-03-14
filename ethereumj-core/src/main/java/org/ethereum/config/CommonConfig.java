@@ -42,7 +42,6 @@ import org.ethereum.validator.ParentNumberRule;
 import org.ethereum.validator.ProofOfWorkRule;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -290,28 +289,6 @@ public class CommonConfig {
     @Bean
     public Blockchain blockchain() {
         return new BlockchainImpl(systemProperties());
-    }
-
-    @Bean
-    public TransactionExecutorFactory transactionExecutorFactory() {
-        return new CommonTransactionExecutorFactory();
-    }
-
-    class CommonTransactionExecutorFactory implements TransactionExecutorFactory {
-        @Override
-        public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
-                                                             BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
-                                                             Block currentBlock) {
-            return new CommonTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock);
-        }
-
-        @Override
-        public TransactionExecutor createTransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
-                                                             BlockStore blockStore, ProgramInvokeFactory programInvokeFactory,
-                                                             Block currentBlock, EthereumListener listener, long gasUsedInTheBlock) {
-            return new CommonTransactionExecutor(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock,
-                    listener, gasUsedInTheBlock);
-        }
     }
 
     @Bean

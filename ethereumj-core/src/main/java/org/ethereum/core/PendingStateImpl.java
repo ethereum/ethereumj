@@ -73,18 +73,18 @@ public class PendingStateImpl implements PendingState {
     protected SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
+    protected CommonConfig commonConfig = CommonConfig.getDefault();
 
     private EthereumListener listener;
 
     @Autowired
     private Blockchain blockchain;
 
-    private BlockStore blockStore;
+    protected BlockStore blockStore;
 
     private TransactionStore transactionStore;
 
-    private ProgramInvokeFactory programInvokeFactory;
+    protected ProgramInvokeFactory programInvokeFactory;
 
 //    private Repository repository;
 
@@ -423,12 +423,8 @@ public class PendingStateImpl implements PendingState {
         logger.trace("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
 
         Block best = getBestBlock();
-
-        TransactionExecutorFactory txFactory = commonConfig.transactionExecutorFactory();
-        TransactionExecutor executor = txFactory.createTransactionExecutor(
-                tx, best.getCoinbase(), getRepository(),
-                blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
-                .withCommonConfig(commonConfig);
+        TransactionExecutor executor = createTransactionExecutor(tx, best.getCoinbase(), getRepository(),
+                createFakePendingBlock());
 
         executor.init();
         executor.execute();
@@ -436,6 +432,13 @@ public class PendingStateImpl implements PendingState {
         executor.finalization();
 
         return executor.getReceipt();
+    }
+
+    protected TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase,
+                                                            Repository track, Block currentBlock) {
+        return new CommonTransactionExecutor(transaction, minerCoinbase,
+                track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0)
+                .withCommonConfig(commonConfig);
     }
 
     private Block createFakePendingBlock() {
