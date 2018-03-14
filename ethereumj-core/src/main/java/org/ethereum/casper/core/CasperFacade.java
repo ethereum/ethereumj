@@ -49,6 +49,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 public class CasperFacade {
 
     private static final byte[] CASPER_VOTE_DATA_HEAD = Hex.decode("e9dc0614");
+    private static final byte[] CASPER_EPOCH_DATA_HEAD = Hex.decode("5dcffc17");
 
     private CasperProperties systemProperties;
 
@@ -96,8 +97,21 @@ public class CasperFacade {
         return casper.getByName(func).decodeResult(r.getHReturn());
     }
 
+    /**
+     * All service txs shouldn't use gas
+     * Currently it's votes and epoch change
+     */
+    public boolean isServiceTx(Transaction transaction) {
+        return isServiceTx(transaction, getAddress());
+    }
+
     public boolean isVote(Transaction transaction) {
         return isVote(transaction, getAddress());
+    }
+
+    public static boolean isServiceTx(Transaction transaction, byte[] casperAddress) {
+        return isVote(transaction, casperAddress) ||
+                isEpochSwitch(transaction, casperAddress);
     }
 
     public static boolean isVote(Transaction transaction, byte[] casperAddress) {
@@ -110,6 +124,18 @@ public class CasperFacade {
 
         return FastByteComparisons.compareTo(transaction.getData(), 0, CASPER_VOTE_DATA_HEAD.length,
                 CASPER_VOTE_DATA_HEAD, 0, CASPER_VOTE_DATA_HEAD.length) == 0;
+    }
+
+    private static boolean isEpochSwitch(Transaction transaction, byte[] casperAddress) {
+        if (!Arrays.equals(transaction.getSender(), NULL_SIGN_SENDER.getAddress()))
+            return false;
+        if (casperAddress == null)
+            return false;
+        if (!Arrays.equals(transaction.getReceiveAddress(), casperAddress))
+            return false;
+
+        return FastByteComparisons.compareTo(transaction.getData(), 0, CASPER_EPOCH_DATA_HEAD.length,
+                CASPER_EPOCH_DATA_HEAD, 0, CASPER_EPOCH_DATA_HEAD.length) == 0;
     }
 
     public byte[] getAddress() {
