@@ -108,8 +108,8 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
 
     @Override
     protected void payRewards(final TransactionExecutionSummary summary) {
-        if (execError == null && isCasperVote()) {
-            // Return money to sender for succesful Casper vote
+        if (isCasperVote()) {
+            // Return money to sender for Casper vote
             track.addBalance(tx.getSender(), summary.getFee());
             logger.info("Refunded successful Casper Vote from [{}]", Hex.toHexString(tx.getSender()));
         } else {
@@ -123,8 +123,8 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     @Override
     public long getGasUsed() {
         long gasUsed = super.getGasUsed();
-        // Successful Casper vote 0 cost
-        if (getResult() != null && execError == null && isCasperVote()) {
+        // Casper vote 0 cost
+        if (isCasperVote()) {
             gasUsed = 0;
         }
         return gasUsed;

@@ -232,6 +232,33 @@ public class CasperBlockchain extends BlockchainImpl {
     }
 
     @Override
+    protected boolean checkBlockSummary(BlockSummary summary, Repository track) {
+        boolean res = super.checkBlockSummary(summary, track);
+        if (!res) {  // Already bad block
+            return res;
+        }
+
+        // More checks
+
+        // Check for failed casper txs
+        TransactionReceipt failedCasperVote = null;
+        for (int i = 0; i < summary.getReceipts().size(); ++i) {
+            TransactionReceipt receipt = summary.getReceipts().get(i);
+            if(!receipt.isSuccessful() && casper.isVote(receipt.getTransaction())) {
+                failedCasperVote = receipt;
+                break;
+            }
+        }
+        if (failedCasperVote != null) {
+            logger.warn("Block contains failed casper vote (receipt: {}, tx: {})",
+                    failedCasperVote, failedCasperVote.getTransaction());
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     protected BlockSummary applyBlock(Repository track, Block block) {
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
