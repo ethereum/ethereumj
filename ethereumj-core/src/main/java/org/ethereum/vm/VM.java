@@ -320,8 +320,7 @@ public class VM {
                         throw Program.Exception.notEnoughOpGas(op, callGasWord, program.getGas());
                     }
 
-                    DataWord gasLeft = program.getGas().clone();
-                    gasLeft.sub(new DataWord(gasCost));
+                    DataWord gasLeft = program.getGas().sub(new DataWord(gasCost));
                     adjustedCallGas = blockchainConfig.getCallGas(op, callGasWord, gasLeft);
                     gasCost += adjustedCallGas.longValueSafe();
                     break;
@@ -386,8 +385,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " + " + word2.value();
 
-                    word1.add(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.add(word2));
                     program.step();
 
                 }
@@ -399,8 +397,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " * " + word2.value();
 
-                    word1.mul(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.mul(word2));
                     program.step();
                 }
                 break;
@@ -411,8 +408,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " - " + word2.value();
 
-                    word1.sub(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.sub(word2));
                     program.step();
                 }
                 break;
@@ -423,8 +419,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " / " + word2.value();
 
-                    word1.div(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.div(word2));
                     program.step();
                 }
                 break;
@@ -435,8 +430,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.sValue() + " / " + word2.sValue();
 
-                    word1.sDiv(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.sDiv(word2));
                     program.step();
                 }
                 break;
@@ -447,8 +441,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " % " + word2.value();
 
-                    word1.mod(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.mod(word2));
                     program.step();
                 }
                 break;
@@ -459,8 +452,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.sValue() + " #% " + word2.sValue();
 
-                    word1.sMod(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.sMod(word2));
                     program.step();
                 }
                 break;
@@ -471,8 +463,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " ** " + word2.value();
 
-                    word1.exp(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.exp(word2));
                     program.step();
                 }
                 break;
@@ -484,20 +475,19 @@ public class VM {
                         DataWord word2 = program.stackPop();
                         if (logger.isInfoEnabled())
                             hint = word1 + "  " + word2.value();
-                        word2.signExtend(k.byteValue());
-                        program.stackPush(word2);
+                        program.stackPush(word2.signExtend(k.byteValue()));
                     }
                     program.step();
                 }
                 break;
                 case NOT: {
                     DataWord word1 = program.stackPop();
-                    word1.bnot();
+                    DataWord bnot = word1.bnot();
 
                     if (logger.isInfoEnabled())
-                        hint = "" + word1.value();
+                        hint = "" + bnot.value();
 
-                    program.stackPush(word1);
+                    program.stackPush(bnot);
                     program.step();
                 }
                 break;
@@ -509,13 +499,13 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " < " + word2.value();
 
+                    final DataWord result;
                     if (word1.value().compareTo(word2.value()) == -1) {
-                        word1.and(DataWord.ZERO);
-                        word1.getData()[31] = 1;
+                        result = word1.and(DataWord.ZERO).withByte((byte)1, 31);
                     } else {
-                        word1.and(DataWord.ZERO);
+                        result = word1.and(DataWord.ZERO);
                     }
-                    program.stackPush(word1);
+                    program.stackPush(result);
                     program.step();
                 }
                 break;
@@ -527,13 +517,13 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.sValue() + " < " + word2.sValue();
 
+                    final DataWord result;
                     if (word1.sValue().compareTo(word2.sValue()) == -1) {
-                        word1.and(DataWord.ZERO);
-                        word1.getData()[31] = 1;
+                        result = word1.and(DataWord.ZERO).withByte((byte)1, 31);
                     } else {
-                        word1.and(DataWord.ZERO);
+                        result = word1.and(DataWord.ZERO);
                     }
-                    program.stackPush(word1);
+                    program.stackPush(result);
                     program.step();
                 }
                 break;
@@ -545,13 +535,13 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.sValue() + " > " + word2.sValue();
 
+                    final DataWord result;
                     if (word1.sValue().compareTo(word2.sValue()) == 1) {
-                        word1.and(DataWord.ZERO);
-                        word1.getData()[31] = 1;
+                        result = word1.and(DataWord.ZERO).withByte((byte)1, 31);
                     } else {
-                        word1.and(DataWord.ZERO);
+                        result = word1.and(DataWord.ZERO);
                     }
-                    program.stackPush(word1);
+                    program.stackPush(result);
                     program.step();
                 }
                 break;
@@ -563,13 +553,13 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " > " + word2.value();
 
+                    final DataWord result;
                     if (word1.value().compareTo(word2.value()) == 1) {
-                        word1.and(DataWord.ZERO);
-                        word1.getData()[31] = 1;
+                        result = word1.and(DataWord.ZERO).withByte((byte)1, 31);
                     } else {
-                        word1.and(DataWord.ZERO);
+                        result = word1.and(DataWord.ZERO);
                     }
-                    program.stackPush(word1);
+                    program.stackPush(result);
                     program.step();
                 }
                 break;
@@ -580,28 +570,29 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " == " + word2.value();
 
-                    if (word1.xor(word2).isZero()) {
-                        word1.and(DataWord.ZERO);
-                        word1.getData()[31] = 1;
+                    DataWord result = word1.xor(word2);
+                    if (result.isZero()) {
+                        result = result.and(DataWord.ZERO).withByte((byte)1, 31);
                     } else {
-                        word1.and(DataWord.ZERO);
+                        result = result.and(DataWord.ZERO);
                     }
-                    program.stackPush(word1);
+                    program.stackPush(result);
                     program.step();
                 }
                 break;
                 case ISZERO: {
                     DataWord word1 = program.stackPop();
+                    final DataWord result;
                     if (word1.isZero()) {
-                        word1.getData()[31] = 1;
+                        result = word1.withByte((byte)1, 31);
                     } else {
-                        word1.and(DataWord.ZERO);
+                        result = word1.and(DataWord.ZERO);
                     }
 
                     if (logger.isInfoEnabled())
-                        hint = "" + word1.value();
+                        hint = "" + result.value();
 
-                    program.stackPush(word1);
+                    program.stackPush(result);
                     program.step();
                 }
                 break;
@@ -616,8 +607,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " && " + word2.value();
 
-                    word1.and(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.and(word2));
                     program.step();
                 }
                 break;
@@ -628,8 +618,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " || " + word2.value();
 
-                    word1.or(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.or(word2));
                     program.step();
                 }
                 break;
@@ -640,8 +629,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " ^ " + word2.value();
 
-                    word1.xor(word2);
-                    program.stackPush(word1);
+                    program.stackPush(word1.xor(word2));
                     program.step();
                 }
                 break;
@@ -651,9 +639,7 @@ public class VM {
                     final DataWord result;
                     if (word1.value().compareTo(_32_) == -1) {
                         byte tmp = word2.getData()[word1.intValue()];
-                        word2.and(DataWord.ZERO);
-                        word2.getData()[31] = tmp;
-                        result = word2;
+                        result = word2.and(DataWord.ZERO).withByte(tmp, 31);
                     } else {
                         result = new DataWord();
                     }
@@ -669,8 +655,7 @@ public class VM {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord word3 = program.stackPop();
-                    word1.addmod(word2, word3);
-                    program.stackPush(word1);
+                    program.stackPush(word1.addmod(word2, word3));
                     program.step();
                 }
                 break;
@@ -678,8 +663,7 @@ public class VM {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord word3 = program.stackPop();
-                    word1.mulmod(word2, word3);
-                    program.stackPush(word1);
+                    program.stackPush(word1.mulmod(word2, word3));
                     program.step();
                 }
                 break;
@@ -962,7 +946,7 @@ public class VM {
 
                     int n = op.val() - OpCode.DUP1.val() + 1;
                     DataWord word_1 = stack.get(stack.size() - n);
-                    program.stackPush(word_1.clone());
+                    program.stackPush(word_1);
                     program.step();
 
                 }   break;

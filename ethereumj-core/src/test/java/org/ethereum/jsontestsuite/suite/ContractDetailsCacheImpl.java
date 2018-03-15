@@ -55,20 +55,19 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     @Override
     public DataWord get(DataWord key) {
-
         DataWord value = storage.get(key);
-        if (value != null)
-            value = value.clone();
-        else{
-            if (origContract == null) return null;
+        if (value == null) {
+            if (origContract == null) {
+                return null;
+            }
             value = origContract.get(key);
-            storage.put(key.clone(), value == null ? DataWord.ZERO.clone() : value.clone());
+            storage.put(key, value == null ? DataWord.ZERO : value);
         }
 
-        if (value == null || value.isZero())
+        if (value == null || value.isZero()) {
             return null;
-        else
-            return value;
+        }
+        return value;
     }
 
     @Override
