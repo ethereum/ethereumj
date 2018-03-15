@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.math.BigInteger.ZERO;
@@ -137,6 +138,35 @@ public class IndexedBlockStore extends AbstractBlockstore{
         blockInfos.add(blockInfo);
     }
 
+
+    public synchronized BlockInfo getChainBlockInfo(long number) {
+        if (number >= index.size()){
+            return null;
+        }
+
+        List<BlockInfo> blockInfos = index.get((int) number);
+
+        if (blockInfos == null) {
+            return null;
+        }
+
+        for (BlockInfo blockInfo : blockInfos){
+
+            if (blockInfo.isMainChain()){
+                return blockInfo;
+            }
+        }
+
+        return null;
+    }
+
+    public synchronized List<BlockInfo> getBlockInfos(long number) {
+        if (number >= index.size()) {
+            return Collections.emptyList();
+        }
+
+        return index.get((int) number);
+    }
 
     public synchronized List<Block> getBlocksByNumber(long number){
 
