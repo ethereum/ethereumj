@@ -244,6 +244,11 @@ bintrayUpload.onlyIf {
 install {
     repositories.mavenInstaller {
         customizePom(pom, project)
+
+        // excludes artifacts produced by shadow plugin
+        addFilter('shadow') {artifact, file ->
+            !file.getName().contains("shadow")
+        }
     }
 }
 
