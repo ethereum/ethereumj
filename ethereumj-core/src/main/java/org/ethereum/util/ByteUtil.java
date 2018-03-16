@@ -103,8 +103,15 @@ public class ByteUtil {
         return data;
     }
 
+    /**
+     * Cast hex encoded value from byte[] to BigInteger
+     * null is parsed like byte[0]
+     *
+     * @param bb byte array contains the values
+     * @return unsigned positive BigInteger value.
+     */
     public static BigInteger bytesToBigInteger(byte[] bb) {
-        return bb.length == 0 ? BigInteger.ZERO : new BigInteger(1, bb);
+        return (bb == null || bb.length == 0) ? BigInteger.ZERO : new BigInteger(1, bb);
     }
 
     /**
@@ -133,7 +140,7 @@ public class ByteUtil {
      * @return <code>byte[]</code> of length 8, representing the long value
      */
     public static byte[] longToBytes(long val) {
-        return ByteBuffer.allocate(8).putLong(val).array();
+        return ByteBuffer.allocate(Long.BYTES).putLong(val).array();
     }
 
     /**
@@ -147,7 +154,7 @@ public class ByteUtil {
         // todo: improve performance by while strip numbers until (long >> 8 == 0)
         if (val == 0) return EMPTY_BYTE_ARRAY;
 
-        byte[] data = ByteBuffer.allocate(8).putLong(val).array();
+        byte[] data = ByteBuffer.allocate(Long.BYTES).putLong(val).array();
 
         return stripLeadingZeroes(data);
     }
@@ -159,7 +166,7 @@ public class ByteUtil {
      * @return <code>byte[]</code> of length 4, representing the int value
      */
     public static byte[] intToBytes(int val){
-        return ByteBuffer.allocate(4).putInt(val).array();
+        return ByteBuffer.allocate(Integer.BYTES).putInt(val).array();
     }
 
     /**
@@ -226,6 +233,7 @@ public class ByteUtil {
 
     /**
      * Cast hex encoded value from byte[] to int
+     * null is parsed like byte[0]
      *
      * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
      *
@@ -239,9 +247,10 @@ public class ByteUtil {
     }
 
     /**
-     * Cast hex encoded value from byte[] to int
+     * Cast hex encoded value from byte[] to long
+     * null is parsed like byte[0]
      *
-     * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+     * Limited to Long.MAX_VALUE: 2<sup>63</sup>-1 (8 bytes)
      *
      * @param b array contains the values
      * @return unsigned positive long value.
@@ -495,11 +504,9 @@ public class ByteUtil {
      */
     public static byte[] merge(byte[]... arrays)
     {
-        int arrCount = 0;
         int count = 0;
         for (byte[] array: arrays)
         {
-            arrCount++;
             count += array.length;
         }
 

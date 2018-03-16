@@ -212,21 +212,45 @@ public class SystemProperties {
                     .resolve();     // substitute variables in config if any
             validateConfig();
 
-            Properties props = new Properties();
-            InputStream is = getClass().getResourceAsStream("/version.properties");
-            props.load(is);
-            this.projectVersion = props.getProperty("versionNumber");
-            this.projectVersion = this.projectVersion.replaceAll("'", "");
+            // There could be several files with the same name from other packages,
+            // "version.properties" is a very common name
+            List<InputStream> iStreams = loadResources("version.properties", this.getClass().getClassLoader());
+            for (InputStream is : iStreams) {
+                Properties props = new Properties();
+                props.load(is);
+                if (props.getProperty("versionNumber") == null || props.getProperty("databaseVersion") == null) {
+                    continue;
+                }
+                this.projectVersion = props.getProperty("versionNumber");
+                this.projectVersion = this.projectVersion.replaceAll("'", "");
 
-            if (this.projectVersion == null) this.projectVersion = "-.-.-";
+                if (this.projectVersion == null) this.projectVersion = "-.-.-";
 
-            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
+                this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
-            this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
+                this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
+                break;
+            }
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Loads resources using given ClassLoader assuming, there could be several resources
+     * with the same name
+     */
+    public static List<InputStream> loadResources(
+            final String name, final ClassLoader classLoader) throws IOException {
+        final List<InputStream> list = new ArrayList<InputStream>();
+        final Enumeration<URL> systemResources =
+                (classLoader == null ? ClassLoader.getSystemClassLoader() : classLoader)
+                        .getResources(name);
+        while (systemResources.hasMoreElements()) {
+            list.add(systemResources.nextElement().openStream());
+        }
+        return list;
     }
 
     public Config getConfig() {

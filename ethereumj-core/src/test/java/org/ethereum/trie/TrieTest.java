@@ -712,9 +712,8 @@ public class TrieTest {
         }
     }
 
-    @Ignore
     @Test
-    public void testMasiveDetermenisticUpdate() throws IOException, URISyntaxException {
+    public void testMassiveDeterministicUpdate() throws IOException, URISyntaxException {
 
         // should be root: cfd77c0fcb037adefce1f4e2eb94381456a4746379d2896bb8f309c620436d30
 
@@ -773,7 +772,7 @@ public class TrieTest {
 
         System.out.println("root_2:  => " + Hex.toHexString(trie2.getRootHash()));
 
-        assertEquals(trieSingle.getRootHash(), trie2.getRootHash());
+        assertArrayEquals(trieSingle.getRootHash(), trie2.getRootHash());
 
     }
 

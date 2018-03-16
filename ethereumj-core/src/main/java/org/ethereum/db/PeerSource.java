@@ -24,6 +24,7 @@ import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
@@ -65,10 +66,9 @@ public class PeerSource {
             Node node = new Node(nodeRlp);
             node.setDiscoveryNode(nodeIsDiscovery != null);
 
-            return Pair.of(node, savedReputation == null ? 0 : (new BigInteger(1, savedReputation)).intValue());
+            return Pair.of(node, ByteUtil.byteArrayToInt(savedReputation));
         }
     };
-
 
     public PeerSource(Source<byte[], byte[]> src) {
         this.src = src;

@@ -76,7 +76,7 @@ public class Utils {
 
     public static String longToTimePeriod(long msec) {
         if (msec < 1000) return msec + "ms";
-        if (msec < 3000) return String.format("%.2f", msec / 1000d);
+        if (msec < 3000) return String.format("%.2fs", msec / 1000d);
         if (msec < 60 * 1000) return (msec / 1000) + "s";
         long sec = msec / 1000;
         if (sec < 5 * 60) return (sec / 60) +  "m" + (sec % 60) + "s";

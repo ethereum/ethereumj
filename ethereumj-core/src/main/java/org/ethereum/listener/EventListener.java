@@ -24,7 +24,6 @@ import org.ethereum.core.CallTransaction;
 import org.ethereum.core.PendingStateImpl;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.jsonrpc.LogFilter;
 import org.ethereum.listener.EthereumListener.PendingTransactionState;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.Utils;
