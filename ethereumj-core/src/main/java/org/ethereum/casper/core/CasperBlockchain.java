@@ -455,4 +455,8 @@ public class CasperBlockchain extends BlockchainImpl {
     public void setCasper(CasperFacade casper) {
         this.casper = casper;
     }
+
+    public void setFinalizedBlocks(Source<byte[], byte[]> finalizedBlocks) {
+        this.finalizedBlocks = finalizedBlocks;
+    }
 }

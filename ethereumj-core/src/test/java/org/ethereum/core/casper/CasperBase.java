@@ -174,6 +174,7 @@ public abstract class CasperBase {
                 blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
                 blockchain.setProgramInvokeFactory(programInvokeFactory);
                 blockchain.setPruneManager(pruneManager);
+                ((CasperBlockchain) blockchain).setFinalizedBlocks(new HashMapDB<>());
 
                 blockchain.byTest = true;
 
