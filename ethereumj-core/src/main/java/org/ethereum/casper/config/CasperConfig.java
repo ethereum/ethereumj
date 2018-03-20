@@ -86,9 +86,9 @@ public class CasperConfig {
     public PruneManager pruneManager() {
         if (config.databasePruneDepth() >= 0) {
             return new PruneManager((IndexedBlockStore) blockStore(), beanConfig.stateSource().getJournalSource(),
-                    config.databasePruneDepth());
+                    beanConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
         } else {
-            return new PruneManager(null, null, -1); // dummy
+            return new PruneManager(null, null, null, -1); // dummy
         }
     }
 }

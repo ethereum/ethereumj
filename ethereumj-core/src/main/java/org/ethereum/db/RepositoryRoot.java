@@ -45,7 +45,9 @@ public class RepositoryRoot extends RepositoryImpl {
         @Override
         protected synchronized StorageCache create(byte[] key, StorageCache srcCache) {
             AccountState accountState = accountStateCache.get(key);
-            TrieImpl storageTrie = createTrie(trieCache, accountState == null ? null : accountState.getStateRoot());
+            Serializer<byte[], byte[]> keyCompositor = new NodeKeyCompositor(key);
+            Source<byte[], byte[]> composingSrc = new SourceCodec.KeyOnly<>(trieCache, keyCompositor);
+            TrieImpl storageTrie = createTrie(composingSrc, accountState == null ? null : accountState.getStateRoot());
             return new StorageCache(storageTrie);
         }
 
@@ -81,9 +83,9 @@ public class RepositoryRoot extends RepositoryImpl {
     /**
      * Building the following structure for snapshot Repository:
      *
-     * stateDS --> trieCacheCodec --> trieCache --> stateTrie --> accountStateCodec --> accountStateCache
-     *  \                               \
-     *   \                               \-->>>  contractStorageTrie --> storageCodec --> StorageCache
+     * stateDS --> trieCache --> stateTrie --> accountStateCodec --> accountStateCache
+     *  \                 \
+     *   \                 \-->>> storageKeyCompositor --> contractStorageTrie --> storageCodec --> storageCache
      *    \--> codeCache
      *
      *
@@ -152,7 +154,7 @@ public class RepositoryRoot extends RepositoryImpl {
         stateTrie.setRoot(root);
     }
 
-    protected TrieImpl createTrie(CachedSource.BytesKey<byte[]> trieCache, byte[] root) {
+    protected TrieImpl createTrie(Source<byte[], byte[]> trieCache, byte[] root) {
         return new SecureTrie(trieCache, root);
     }
 

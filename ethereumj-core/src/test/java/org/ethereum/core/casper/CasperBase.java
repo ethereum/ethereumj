@@ -157,7 +157,8 @@ public abstract class CasperBase {
 
                 stateDS = new HashMapDB<>();
                 pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));
-                pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
+                pruneManager = new PruneManager(blockStore, pruningStateDS,
+                        stateDS, SystemProperties.getDefault().databasePruneDepth());
 
                 final RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 

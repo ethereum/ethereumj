@@ -23,8 +23,8 @@ import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.util.FileUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
@@ -427,10 +427,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        LevelDbDataSource indexDB = new LevelDbDataSource("index");
+        RocksDbDataSource indexDB = new RocksDbDataSource("index");
         indexDB.init();
 
-        DbSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new RocksDbDataSource("blocks");
         blocksDB.init();
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
@@ -541,10 +541,10 @@ public class IndexedBlockStoreTest {
 
         // testing after: REOPEN
 
-        indexDB = new LevelDbDataSource("index");
+        indexDB = new RocksDbDataSource("index");
         indexDB.init();
 
-        blocksDB = new LevelDbDataSource("blocks");
+        blocksDB = new RocksDbDataSource("blocks");
         blocksDB.init();
 
         indexedBlockStore = new IndexedBlockStore();
@@ -573,10 +573,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        LevelDbDataSource indexDB = new LevelDbDataSource("index");
+        RocksDbDataSource indexDB = new RocksDbDataSource("index");
         indexDB.init();
 
-        DbSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new RocksDbDataSource("blocks");
         blocksDB.init();
 
         try {
@@ -703,10 +703,10 @@ public class IndexedBlockStoreTest {
 
             // testing after: REOPEN
 
-            indexDB = new LevelDbDataSource("index");
+            indexDB = new RocksDbDataSource("index");
             indexDB.init();
 
-            blocksDB = new LevelDbDataSource("blocks");
+            blocksDB = new RocksDbDataSource("blocks");
             blocksDB.init();
 
             indexedBlockStore = new IndexedBlockStore();
@@ -737,10 +737,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        DbSource indexDB = new LevelDbDataSource("index");
+        DbSource indexDB = new RocksDbDataSource("index");
         indexDB.init();
 
-        DbSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new RocksDbDataSource("blocks");
         blocksDB.init();
 
         try {
@@ -846,10 +846,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        DbSource indexDB = new LevelDbDataSource("index");
+        DbSource indexDB = new RocksDbDataSource("index");
         indexDB.init();
 
-        DbSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new RocksDbDataSource("blocks");
         blocksDB.init();
 
         try {
@@ -917,10 +917,10 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.getDefault().setDataBaseDir(testDir);
 
-        DbSource indexDB = new LevelDbDataSource("index");
+        DbSource indexDB = new RocksDbDataSource("index");
         indexDB.init();
 
-        DbSource blocksDB = new LevelDbDataSource("blocks");
+        DbSource blocksDB = new RocksDbDataSource("blocks");
         blocksDB.init();
 
         try {

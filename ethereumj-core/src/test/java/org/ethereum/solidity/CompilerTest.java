@@ -23,8 +23,10 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -66,8 +68,8 @@ public class CompilerTest {
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
-        if (result.contracts.get("a") != null)
-            System.out.println(result.contracts.get("a").bin);
+        if (result.getContract("a") != null)
+            System.out.println(result.getContract("a").bin);
         else
             Assert.fail();
     }
@@ -86,27 +88,91 @@ public class CompilerTest {
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get("a");
+        CompilationResult.ContractMetadata a = result.getContract("a");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
-        System.out.printf(contract.functions[0].toString());
+        System.out.print(contract.functions[0].toString());
     }
 
     @Test
     public void compileFilesTest() throws IOException {
 
-        File source = new File("src/test/resources/solidity/file1.sol");
+        Path source = Paths.get("src","test","resources","solidity","file1.sol");
 
-        SolidityCompiler.Result res = SolidityCompiler.compile(
-                source, true, ABI, BIN, INTERFACE, METADATA);
+        SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA);
         System.out.println("Out: '" + res.output + "'");
         System.out.println("Err: '" + res.errors + "'");
         CompilationResult result = CompilationResult.parse(res.output);
 
-        CompilationResult.ContractMetadata a = result.contracts.get("test1");
+        Assert.assertEquals("test1", result.getContractName());
+        Assert.assertEquals(source.toAbsolutePath(), result.getContractPath());
+
+        CompilationResult.ContractMetadata a = result.getContract(source, "test1");
         CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
-        System.out.printf(contract.functions[0].toString());
+        System.out.print(contract.functions[0].toString());
     }
 
+    @Test public void compileFilesWithImportTest() throws IOException {
+
+        Path source = Paths.get("src","test","resources","solidity","file2.sol");
+
+        SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        CompilationResult.ContractMetadata a = result.getContract(source, "test2");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.print(contract.functions[0].toString());
+    }
+
+    @Test public void compileFilesWithImportFromParentFileTest() throws IOException {
+
+        Path source = Paths.get("src","test","resources","solidity","foo","file3.sol");
+
+        SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().getParent().toFile()));
+        SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA, allowPathsOption);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        Assert.assertEquals(2, result.getContractKeys().size());
+        Assert.assertEquals(result.getContract("test3"), result.getContract(source,"test3"));
+        Assert.assertNotNull(result.getContract("test1"));
+
+        CompilationResult.ContractMetadata a = result.getContract(source, "test3");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.print(contract.functions[0].toString());
+    }
+
+    @Test public void compileFilesWithImportFromParentStringTest() throws IOException {
+
+        Path source = Paths.get("src","test","resources","solidity","foo","file3.sol");
+
+        SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().getParent().toAbsolutePath().toString()));
+        SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA, allowPathsOption);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        CompilationResult.ContractMetadata a = result.getContract(source, "test3");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.print(contract.functions[0].toString());
+    }
+
+    @Test public void compileFilesWithImportFromParentPathTest() throws IOException {
+
+        Path source = Paths.get("src","test","resources","solidity","foo","file3.sol");
+
+        SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().getParent()));
+        SolidityCompiler.Result res = SolidityCompiler.compile(source.toFile(), true, ABI, BIN, INTERFACE, METADATA, allowPathsOption);
+        System.out.println("Out: '" + res.output + "'");
+        System.out.println("Err: '" + res.errors + "'");
+        CompilationResult result = CompilationResult.parse(res.output);
+
+        CompilationResult.ContractMetadata a = result.getContract("test3");
+        CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
+        System.out.print(contract.functions[0].toString());
+    }
 
     public static void main(String[] args) throws Exception {
         new CompilerTest().simpleTest();

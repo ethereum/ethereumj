@@ -86,6 +86,13 @@ public class CallTransaction {
         }
     }
 
+    public enum StateMutabilityType {
+        pure,
+        view,
+        nonpayable,
+        payable
+    }
+
     public enum FunctionType {
         constructor,
         function,
@@ -101,6 +108,7 @@ public class CallTransaction {
         public Param[] inputs = new Param[0];
         public Param[] outputs = new Param[0];
         public FunctionType type;
+        public StateMutabilityType stateMutability;
 
         private Function() {}
 

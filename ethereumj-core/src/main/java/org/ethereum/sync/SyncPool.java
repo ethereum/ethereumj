@@ -83,14 +83,14 @@ public class SyncPool {
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
-    public SyncPool(final SystemProperties config, final Blockchain blockchain) {
+    public SyncPool(final SystemProperties config) {
         this.config = config;
-        this.blockchain = blockchain;
     }
 
-    public void init(final ChannelManager channelManager) {
+    public void init(final ChannelManager channelManager, final Blockchain blockchain) {
         if (this.channelManager != null) return; // inited already
         this.channelManager = channelManager;
+        this.blockchain = blockchain;
         updateLowerUsefulDifficulty();
 
         poolLoopExecutor.scheduleWithFixedDelay(() -> {

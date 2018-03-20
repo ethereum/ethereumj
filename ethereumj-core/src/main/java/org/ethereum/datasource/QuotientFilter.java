@@ -135,7 +135,7 @@ public class QuotientFilter implements Iterable<Long> {
     }
 
     static int TABLE_SIZE(int quotientBits, int remainderBits) {
-        long bits = (1 << quotientBits) * (remainderBits + 3);
+        long bits = (1L << quotientBits) * (remainderBits + 3);
         long longs = bits / 64;
         return Ints.checkedCast((bits % 64) > 0 ? (longs + 1) : longs);
     }
@@ -192,7 +192,7 @@ public class QuotientFilter implements Iterable<Long> {
         INDEX_MASK = LOW_MASK(QUOTIENT_BITS);
         REMAINDER_MASK = LOW_MASK(REMAINDER_BITS);
         ELEMENT_MASK = LOW_MASK(ELEMENT_BITS);
-        MAX_SIZE = 1 << QUOTIENT_BITS;
+        MAX_SIZE = 1L << QUOTIENT_BITS;
         MAX_INSERTIONS = (long) (MAX_SIZE * .75);
         table = new long[TABLE_SIZE(QUOTIENT_BITS, REMAINDER_BITS)];
         entries = 0;
@@ -364,7 +364,7 @@ public class QuotientFilter implements Iterable<Long> {
 //        insert(hashFactory.hash64().hash(data, offset, length, 0));
 //    }
 
-    private long hash(byte[] bytes) {
+    protected long hash(byte[] bytes) {
         return (bytes[0] & 0xFFL) << 56 |
                 (bytes[1] & 0xFFL) << 48 |
                 (bytes[2] & 0xFFL) << 40 |

@@ -1,4 +1,4 @@
-wrapper.gradleVersion = '2.14.1'
+wrapper.gradleVersion = '3.5.1'
 
 allprojects {
     apply plugin: 'eclipse'

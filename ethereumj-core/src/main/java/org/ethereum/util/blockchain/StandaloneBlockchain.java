@@ -401,11 +401,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 	private SolidityContractImpl createContractFromJson(String contractName, String json) throws IOException {
 		CompilationResult result = CompilationResult.parse(json);
 		if (contractName == null) {
-		    if (result.contracts.size() > 1) {
-		        throw new RuntimeException("Source contains more than 1 contact (" + result.contracts.keySet() + "). Please specify the contract name");
-		    } else {
-		        contractName = result.contracts.keySet().iterator().next();
-		    }
+            contractName = result.getContractName();
 		}
 
 		return createContract(contractName, result);
@@ -417,10 +413,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
 	 * @return
 	 */
 	private SolidityContractImpl createContract(String contractName, CompilationResult result) {
-		ContractMetadata cMetaData = result.contracts.get(contractName);
+		ContractMetadata cMetaData = result.getContract(contractName);
 		SolidityContractImpl contract = createContract(cMetaData);
 
-		for (CompilationResult.ContractMetadata metadata : result.contracts.values()) {
+		for (CompilationResult.ContractMetadata metadata : result.getContracts()) {
 		    contract.addRelatedContract(metadata.abi);
 		}
 		return contract;
@@ -497,8 +493,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
         stateDS = new HashMapDB<>();
-        pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));
-        pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
+        pruningStateDS = new JournalSource<>(stateDS);
+        pruneManager = new PruneManager(blockStore, pruningStateDS,
+                stateDS, SystemProperties.getDefault().databasePruneDepth());
 
         final RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 

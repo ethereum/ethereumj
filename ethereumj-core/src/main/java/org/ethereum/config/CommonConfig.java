@@ -22,24 +22,15 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
+import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.mine.BlockMiner;
+import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
-import org.ethereum.validator.BlockHashRule;
-import org.ethereum.validator.BlockHeaderRule;
-import org.ethereum.validator.BlockHeaderValidator;
-import org.ethereum.validator.DependentBlockHeaderRule;
-import org.ethereum.validator.DifficultyRule;
-import org.ethereum.validator.ExtraDataRule;
-import org.ethereum.validator.GasLimitRule;
-import org.ethereum.validator.GasValueRule;
-import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.validator.ParentGasLimitRule;
-import org.ethereum.validator.ParentNumberRule;
-import org.ethereum.validator.ProofOfWorkRule;
+import org.ethereum.validator.*;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
 import org.slf4j.Logger;
@@ -109,12 +100,32 @@ public class CommonConfig {
         return new RepositoryRoot(stateSource(), stateRoot);
     }
 
+    /**
+     * A source of nodes for state trie and all contract storage tries. <br/>
+     * This source provides contract code too. <br/><br/>
+     *
+     * Picks node by 16-bytes prefix of its key. <br/>
+     * Within {@link NodeKeyCompositor} this source is a part of ref counting workaround<br/><br/>
+     *
+     * <b>Note:</b> is eligible as a public node provider, like in {@link Eth63};
+     * {@link StateSource} is intended for inner usage only
+     *
+     * @see NodeKeyCompositor
+     * @see RepositoryRoot#RepositoryRoot(Source, byte[])
+     * @see Eth63
+     */
+    @Bean
+    public Source<byte[], byte[]> trieNodeSource() {
+        DbSource<byte[]> db = blockchainDB();
+        Source<byte[], byte[]> src = new PrefixLookupSource<>(db, NodeKeyCompositor.PREFIX_BYTES);
+        return new XorDataSource<>(src, HashUtil.sha3("state".getBytes()));
+    }
 
     @Bean
     public StateSource stateSource() {
         fastSyncCleanUp();
         StateSource stateSource = new StateSource(blockchainSource("state"),
-                systemProperties().databasePruneDepth() >= 0, systemProperties().getConfig().getInt("cache.maxStateBloomSize") << 20);
+                systemProperties().databasePruneDepth() >= 0);
 
         dbFlushManager().addCache(stateSource.getWriteCache());
 
@@ -160,9 +171,11 @@ public class CommonConfig {
             DbSource<byte[]> dbSource;
             if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
-            } else {
-                dataSource = "leveldb";
+            } else if ("leveldb".equals(dataSource)){
                 dbSource = levelDbDataSource();
+            } else {
+                dataSource = "rocksdb";
+                dbSource = rocksDbDataSource();
             }
             dbSource.setName(name);
             dbSource.init();
@@ -179,9 +192,16 @@ public class CommonConfig {
         return new LevelDbDataSource();
     }
 
+    @Bean
+    @Scope("prototype")
+    protected RocksDbDataSource rocksDbDataSource() {
+        return new RocksDbDataSource();
+    }
+
     public void fastSyncCleanUp() {
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
+        if (!systemProperties().blocksLoader().equals("")) return; // blocks loader enabled
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
 
@@ -198,10 +218,10 @@ public class CommonConfig {
     }
 
     private void resetDataSource(Source source) {
-        if (source instanceof LevelDbDataSource) {
-            ((LevelDbDataSource) source).reset();
+        if (source instanceof DbSource) {
+            ((DbSource) source).reset();
         } else {
-            throw new Error("Cannot cleanup non-LevelDB database");
+            throw new Error("Cannot cleanup non-db Source");
         }
     }
 

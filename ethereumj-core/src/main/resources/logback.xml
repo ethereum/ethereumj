@@ -70,6 +70,7 @@
     <logger name="io.netty" level="ERROR"/>
     <logger name="discover" level="DEBUG"/>
     <logger name="hsqldb.db" level="ERROR"/>
+    <logger name="prune" level="TRACE"/>
     <logger name="casper.validator" level="INFO" />
     <logger name="casper" level="INFO"/>
 

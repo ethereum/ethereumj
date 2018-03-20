@@ -127,7 +127,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     @Override
     public synchronized void saveCode(byte[] addr, byte[] code) {
         byte[] codeHash = HashUtil.sha3(code);
-        codeCache.put(codeHash, code);
+        codeCache.put(codeKey(codeHash, addr), code);
         AccountState accountState = getOrCreateAccountState(addr);
         accountStateCache.put(addr, accountState.withCodeHash(codeHash));
     }
@@ -136,7 +136,12 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     public synchronized byte[] getCode(byte[] addr) {
         byte[] codeHash = getCodeHash(addr);
         return FastByteComparisons.equal(codeHash, HashUtil.EMPTY_DATA_HASH) ?
-                ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeHash);
+                ByteUtil.EMPTY_BYTE_ARRAY : codeCache.get(codeKey(codeHash, addr));
+    }
+
+    // composing a key as there can be several contracts with the same code
+    private byte[] codeKey(byte[] codeHash, byte[] addr) {
+        return NodeKeyCompositor.compose(codeHash, addr);
     }
 
     @Override

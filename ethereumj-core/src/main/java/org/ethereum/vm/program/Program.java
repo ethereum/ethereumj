@@ -843,9 +843,8 @@ public class Program {
             ContractDetails contractDetails = getStorage().
                     getContractDetails(getOwnerAddress().getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
-            // FIXME: fails
-            try {
-                if (contractDetails != null) {
+            if (contractDetails != null) {
+                try {
                     List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
                     Collections.sort(storageKeys);
                     for (DataWord key : storageKeys) {
@@ -853,8 +852,10 @@ public class Program {
                                 append(contractDetails.getStorage().get(key)).append("\n");
                     }
                     if (storageData.length() > 0) storageData.insert(0, "\n");
+                } catch (java.lang.Exception e) {
+                    storageData.append("Failed to print storage: ").append(e.getMessage());
                 }
-            } catch (java.lang.Exception ex) {}
+            }
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
@@ -1180,6 +1181,9 @@ public class Program {
             this.stackPushZero();
             track.rollback();
         } else {
+
+            if (logger.isDebugEnabled())
+                logger.debug("Call {}(data = {})", contract.getClass().getSimpleName(), Hex.toHexString(data));
 
             Pair<Boolean, byte[]> out = contract.execute(data);
 
