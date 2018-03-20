@@ -114,10 +114,12 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 final BlockBasedTableConfig tableCfg;
                 options.setTableFormatConfig(tableCfg = new BlockBasedTableConfig());
                 tableCfg.setBlockSize(16 * 1024);
+                tableCfg.setBlockCacheSize(32 * 1024 * 1024);
                 tableCfg.setCacheIndexAndFilterBlocks(true);
                 tableCfg.setPinL0FilterAndIndexBlocksInCache(true);
                 tableCfg.setFilter(new BloomFilter(10, false));
 
+                // read options
                 readOpts = new ReadOptions().setPrefixSameAsStart(true)
                         .setVerifyChecksums(false);
 
