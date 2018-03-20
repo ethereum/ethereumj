@@ -53,6 +53,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
 
     String name;
     RocksDB db;
+    ReadOptions readOpts;
     boolean alive;
 
     // The native RocksDB insert/update/delete are normally thread-safe
@@ -116,6 +117,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 tableCfg.setCacheIndexAndFilterBlocks(true);
                 tableCfg.setPinL0FilterAndIndexBlocksInCache(true);
                 tableCfg.setFilter(new BloomFilter(10, false));
+
+                readOpts = new ReadOptions().setPrefixSameAsStart(true)
+                        .setVerifyChecksums(false);
 
                 try {
                     logger.debug("Opening database");
@@ -291,7 +295,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
         resetDbLock.readLock().lock();
         try {
             if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key));
-            byte[] ret = db.get(key);
+            byte[] ret = db.get(readOpts, key);
             if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
             return ret;
         } catch (RocksDBException e) {
@@ -335,8 +339,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
             arraycopy(key, 0, prefix, 0, NodeKeyCompositor.PREFIX_BYTES);
 
             byte[] ret = null;
-            try (ReadOptions opts = new ReadOptions().setPrefixSameAsStart(true);
-                 RocksIterator it = db.newIterator(opts)) {
+            try (RocksIterator it = db.newIterator(readOpts)) {
 
                 it.seek(prefix);
                 if (it.isValid())
