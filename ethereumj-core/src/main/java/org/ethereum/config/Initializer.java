@@ -102,6 +102,14 @@ class Initializer implements BeanPostProcessor {
         }
 
         public void process(SystemProperties config) {
+
+            if (config.getKeyValueDataSource().equals("leveldb"))
+                Utils.showWarn(
+                        "Deprecated database engine detected",
+                        "'leveldb' support will be removed in one of the next releases",
+                        "thus it is strongly recommended to stick with 'rocksdb' instead"
+                );
+
             if (config.databaseReset() && config.databaseResetBlock() == 0){
                 FileUtil.recursiveDelete(config.databaseDir());
                 putDatabaseVersion(config, config.databaseVersion());

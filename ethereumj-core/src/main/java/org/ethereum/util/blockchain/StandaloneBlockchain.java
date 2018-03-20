@@ -473,8 +473,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
         stateDS = new HashMapDB<>();
-        pruningStateDS = new JournalSource<>(new CountingBytesSource(stateDS));
-        pruneManager = new PruneManager(blockStore, pruningStateDS, SystemProperties.getDefault().databasePruneDepth());
+        pruningStateDS = new JournalSource<>(stateDS);
+        pruneManager = new PruneManager(blockStore, pruningStateDS,
+                stateDS, SystemProperties.getDefault().databasePruneDepth());
 
         final RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 

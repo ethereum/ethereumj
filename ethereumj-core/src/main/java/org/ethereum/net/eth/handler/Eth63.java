@@ -23,8 +23,8 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -58,8 +58,8 @@ public class Eth63 extends Eth62 {
 
     private static final EthVersion version = V63;
 
-    @Autowired
-    private StateSource stateSource;
+    @Autowired @Qualifier("trieNodeSource")
+    private Source<byte[], byte[]> trieNodeSource;
 
     private List<byte[]> requestedReceipts;
     private SettableFuture<List<List<TransactionReceipt>>> requestReceiptsFuture;
@@ -110,7 +110,7 @@ public class Eth63 extends Eth62 {
 
         List<Value> nodeValues = new ArrayList<>();
         for (byte[] nodeKey : msg.getNodeKeys()) {
-            byte[] rawNode = stateSource.get(nodeKey);
+            byte[] rawNode = trieNodeSource.get(nodeKey);
             if (rawNode != null) {
                 Value value = new Value(rawNode);
                 nodeValues.add(value);

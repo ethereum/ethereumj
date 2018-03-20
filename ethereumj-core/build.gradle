@@ -26,7 +26,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.8
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss4m", "-Xmx2G", "-XX:-OmitStackTraceInFastThrow"]
+applicationDefaultJvmArgs = ["-server", "-Xss2m", "-Xmx2G", "-XX:-OmitStackTraceInFastThrow"]
 
 if ( project.hasProperty('jvmArgs') ) {
     applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
@@ -43,12 +43,6 @@ sourceSets.main.java.srcDirs += generatedSrcDir
 
 tasks.withType(JavaCompile){
     options.warnings = false
-}
-
-task runMorden (type: JavaExec) {
-    main = mainClassName
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
 }
 
 task runRopsten (type: JavaExec) {
@@ -100,6 +94,8 @@ test {
         exceptionFormat "short"
     }
 
+    systemProperties System.properties
+    systemProperty "user.dir", workingDir
     systemProperty "file.encoding", "UTF-8"
 }
 
@@ -120,6 +116,8 @@ dependencies {
     compile "org.iq80.leveldb:leveldb:${leveldbVersion}"     // Java API wrapper around native components
 
     compile "org.ethereum:leveldbjni-all:1.18.3"             // native leveldb components
+
+    compile "org.ethereum:rocksdbjni:5.9.2"                   // RocksDB Java API
 
     compile "org.ethereum:solcJ-all:0.4.19"                  // Solidity Compiler win/mac/linux binaries
 

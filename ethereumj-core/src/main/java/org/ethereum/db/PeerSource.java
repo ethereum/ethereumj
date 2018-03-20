@@ -19,10 +19,10 @@ package org.ethereum.db;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.datasource.DataSourceArray;
+import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
-import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -82,8 +82,8 @@ public class PeerSource {
     }
 
     public void clear() {
-        if (src instanceof LevelDbDataSource) {
-            ((LevelDbDataSource) src).reset();
+        if (src instanceof DbSource) {
+            ((DbSource) src).reset();
             this.nodes = new DataSourceArray<>(
                     new ObjectDataSource<>(src, NODE_SERIALIZER, 512));
         } else {

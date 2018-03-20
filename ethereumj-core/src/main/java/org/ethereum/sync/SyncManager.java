@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -57,9 +58,6 @@ public class SyncManager extends BlockDownloader {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private final static AtomicLong blockQueueByteSize = new AtomicLong(0);
-    private final static int BLOCK_BYTES_ADDON = 4;
-
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
     private ExecutorPipeline<BlockWrapper,BlockWrapper> exec1 = new ExecutorPipeline<>
@@ -73,8 +71,8 @@ public class SyncManager extends BlockDownloader {
     private ExecutorPipeline<BlockWrapper, Void> exec2 = exec1.add(1, 1, new Consumer<BlockWrapper>() {
         @Override
         public void accept(BlockWrapper blockWrapper) {
-            blockQueueByteSize.addAndGet(estimateBlockSize(blockWrapper));
             blockQueue.add(blockWrapper);
+            estimateBlockSize(blockWrapper);
         }
     });
 
@@ -109,6 +107,8 @@ public class SyncManager extends BlockDownloader {
     private long importStart;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
+
+    private AtomicInteger blocksInMem = new AtomicInteger(0);
 
     public SyncManager() {
         super(null);
@@ -145,7 +145,7 @@ public class SyncManager extends BlockDownloader {
 
         if (pool.getChannelManager() == null) {  // Never were on this stage of init
             logger.info("Initializing SyncManager.");
-            pool.init(channelManager);
+            pool.init(channelManager, blockchain);
 
             if (config.isFastSyncEnabled()) {
                 fastSyncManager.init();
@@ -160,7 +160,7 @@ public class SyncManager extends BlockDownloader {
         this.syncDoneType = syncDoneType;
 
         syncQueue = new SyncQueueImpl(blockchain);
-        super.init(syncQueue, pool);
+        super.init(syncQueue, pool, "RegularSync");
 
         Runnable queueProducer = this::produceQueue;
 
@@ -194,6 +194,7 @@ public class SyncManager extends BlockDownloader {
     protected void pushBlocks(List<BlockWrapper> blockWrappers) {
         if (!exec1.isShutdown()) {
             exec1.pushAll(blockWrappers);
+            blocksInMem.addAndGet(blockWrappers.size());
         }
     }
 
@@ -202,23 +203,29 @@ public class SyncManager extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-        int blockQueueSize = blockQueue.size();
-        long blockByteSize = blockQueueByteSize.get();
-        int availableBlockSpace = Math.max(0, getBlockQueueLimit() - blockQueueSize);
-        long availableBytesSpace = Math.max(0, blockBytesLimit - blockByteSize);
-
-        int bytesSpaceInBlocks;
-        if (blockByteSize == 0 || blockQueueSize == 0) {
-            bytesSpaceInBlocks = Integer.MAX_VALUE;
-        } else {
-            bytesSpaceInBlocks = (int) Math.floor(availableBytesSpace / (blockByteSize / blockQueueSize));
-        }
-
-        return Math.min(bytesSpaceInBlocks, availableBlockSpace);
+        return getBlockQueueLimit();
     }
 
-    private long estimateBlockSize(BlockWrapper blockWrapper) {
-        return blockWrapper.getEncoded().length + BLOCK_BYTES_ADDON;
+    @Override
+    protected int getTotalHeadersToRequest() {
+        if (getEstimatedBlockSize() == 0) {
+            // accurately exploring the net
+            if (syncQueue.getHeadersCount() < 2 * MAX_IN_REQUEST) {
+                return 2 * MAX_IN_REQUEST;
+            } else {
+                return 0;
+            }
+        }
+
+        int inMem = blocksInMem.get();
+        int slotsLeft = Math.max(0, (int) (blockBytesLimit / getEstimatedBlockSize()) - inMem);
+
+        if (slotsLeft + inMem < MAX_IN_REQUEST) {
+            slotsLeft = MAX_IN_REQUEST;
+        }
+
+        // adding MAX_IN_REQUEST to overcome dark zone buffer
+        return Math.min(slotsLeft + MAX_IN_REQUEST, getHeaderQueueLimit());
     }
 
     /**
@@ -236,14 +243,17 @@ public class SyncManager extends BlockDownloader {
 
                 long stale = !isSyncDone() && importStart > 0 && blockQueue.isEmpty() ? System.nanoTime() : 0;
                 wrapper = blockQueue.take();
-                blockQueueByteSize.addAndGet(-estimateBlockSize(wrapper));
+
+                blocksInMem.decrementAndGet();
 
                 if (stale > 0) {
                     importIdleTime.addAndGet((System.nanoTime() - stale) / 1_000_000);
                 }
                 if (importStart == 0) importStart = System.currentTimeMillis();
 
-                logger.debug("BlockQueue size: {}, headers queue size: {}", blockQueue.size(), syncQueue.getHeadersCount());
+                logger.debug("BlockQueue size: {}, headers queue size: {}, blocks in mem: {} (~{}mb)",
+                        blockQueue.size(), syncQueue.getHeadersCount(), blocksInMem.get(),
+                        blocksInMem.get() * getEstimatedBlockSize() / 1024 / 1024);
 
                 long s = System.nanoTime();
                 long sl;
@@ -320,6 +330,11 @@ public class SyncManager extends BlockDownloader {
         }
 
         lastKnownBlockNumber = block.getNumber();
+
+        // skip too distant blocks
+        if (block.getNumber() > syncQueue.maxNum + MAX_IN_REQUEST * 2) {
+            return true;
+        }
 
         logger.debug("Adding new block to sync queue: " + block.getShortDescr());
         syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));

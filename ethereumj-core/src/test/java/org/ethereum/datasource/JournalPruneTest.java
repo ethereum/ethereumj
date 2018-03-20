@@ -19,8 +19,12 @@ package org.ethereum.datasource;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.prune.Pruner;
+import org.ethereum.db.prune.Segment;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -39,9 +43,8 @@ public class JournalPruneTest {
         }
 
         private StringJDS(HashMapDB<byte[]> mapDB) {
-            this(mapDB, new CountingBytesSource(mapDB));
+            this(mapDB, mapDB);
         }
-
         private StringJDS(HashMapDB<byte[]> mapDB, Source<byte[], byte[]> db) {
             super(db);
             this.db = db;
@@ -77,25 +80,42 @@ public class JournalPruneTest {
     @Test
     public void simpleTest() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1", "a2");
 
         jds.put("a3");
         jds.delete("a2");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a2");
         jds.delete("a3");
-        jds.commitUpdates(hashInt(2));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
         jds.delete("a2");
-        jds.commitUpdates(hashInt(3));
+        pruner.feed(jds.commitUpdates(hashInt(3)));
 
-        jds.persistUpdate(hashInt(1));
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+             .addMain(1, hashInt(1), hashInt(0))
+             .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a2", "a3");
 
-        jds.persistUpdate(hashInt(2));
+        segment = new Segment(1, hashInt(1), hashInt(0));
+        segment.startTracking()
+                .addMain(2, hashInt(2), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a2");
 
-        jds.persistUpdate(hashInt(3));
+        segment = new Segment(2, hashInt(2), hashInt(1));
+        segment.startTracking()
+                .addMain(3, hashInt(3), hashInt(2))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
@@ -104,23 +124,39 @@ public class JournalPruneTest {
     @Test
     public void forkTest1() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1", "a2", "a3");
+        pruner.feed(jds.commitUpdates(hashInt(0)));
 
         jds.put("a4");
         jds.put("a1");
         jds.delete("a2");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a5");
         jds.delete("a3");
         jds.put("a2");
         jds.put("a1");
-        jds.commitUpdates(hashInt(2));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        pruner.feed(jds.commitUpdates(hashInt(3))); // complete segment
 
         checkDb(jds, "a1", "a2", "a3", "a4", "a5");
 
-        jds.persistUpdate(hashInt(1));
-        jds.revertUpdate(hashInt(2));
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(0, hashInt(0), hashInt(0))
+                .commit();
+        pruner.prune(segment);
+
+        segment = new Segment(0, hashInt(0), hashInt(-1));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addMain(2, hashInt(3), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a3", "a4");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
@@ -129,35 +165,56 @@ public class JournalPruneTest {
     @Test
     public void forkTest2() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1", "a2", "a3");
 
         jds.delete("a1");
         jds.delete("a3");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a4");
-        jds.commitUpdates(hashInt(2));
-        jds.commitUpdates(hashInt(3));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        pruner.feed(jds.commitUpdates(hashInt(3)));
         jds.put("a1");
         jds.delete("a2");
-        jds.commitUpdates(hashInt(4));
+        pruner.feed(jds.commitUpdates(hashInt(4)));
         jds.put("a4");
-        jds.commitUpdates(hashInt(5));
+        pruner.feed(jds.commitUpdates(hashInt(5)));
+        pruner.feed(jds.commitUpdates(hashInt(6)));
+        pruner.feed(jds.commitUpdates(hashInt(7)));
         jds.put("a3");
-        jds.commitUpdates(hashInt(6));
+        pruner.feed(jds.commitUpdates(hashInt(8)));
 
         checkDb(jds, "a1", "a2", "a3", "a4");
 
-        jds.persistUpdate(hashInt(1));
-        jds.revertUpdate(hashInt(2));
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addMain(2, hashInt(3), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a2", "a3", "a4");
 
-        jds.persistUpdate(hashInt(3));
-        jds.revertUpdate(hashInt(4));
-        jds.revertUpdate(hashInt(5));
+        segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(6), hashInt(0))
+                .addItem(1, hashInt(4), hashInt(0))
+                .addItem(1, hashInt(5), hashInt(0))
+                .addMain(2, hashInt(7), hashInt(6))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a2", "a3");
 
-        jds.persistUpdate(hashInt(6));
+        segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(8), hashInt(0))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a2", "a3");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
@@ -166,29 +223,207 @@ public class JournalPruneTest {
     @Test
     public void forkTest3() {
         StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
 
         putKeys(jds, "a1");
 
         jds.put("a2");
-        jds.commitUpdates(hashInt(1));
+        pruner.feed(jds.commitUpdates(hashInt(1)));
         jds.put("a1");
         jds.put("a2");
         jds.put("a3");
-        jds.commitUpdates(hashInt(2));
+        pruner.feed(jds.commitUpdates(hashInt(2)));
         jds.put("a1");
         jds.put("a2");
         jds.put("a3");
-        jds.commitUpdates(hashInt(3));
+        pruner.feed(jds.commitUpdates(hashInt(3)));
+        pruner.feed(jds.commitUpdates(hashInt(4)));
 
         checkDb(jds, "a1", "a2", "a3");
 
-        jds.persistUpdate(hashInt(1));
-        jds.revertUpdate(hashInt(2));
-        jds.revertUpdate(hashInt(3));
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addItem(1, hashInt(3), hashInt(0))
+                .addMain(2, hashInt(4), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
         checkDb(jds, "a1", "a2");
 
         assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
     }
+
+    @Test
+    public void twoStepTest1() {
+        StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
+        pruner.withSecondStep(Collections.emptyList(), 100);
+
+        putKeys(jds, "a1", "a2", "a3");
+        pruner.feed(jds.commitUpdates(hashInt(0)));
+
+        jds.put("a4");
+        jds.put("a1");
+        jds.delete("a2");
+        pruner.feed(jds.commitUpdates(hashInt(1)));
+        jds.put("a5");
+        jds.delete("a3");
+        jds.put("a1");
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        pruner.feed(jds.commitUpdates(hashInt(3))); // complete segment
+
+        checkDb(jds, "a1", "a2", "a3", "a4", "a5");
+
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(0, hashInt(0), hashInt(0))
+                .commit();
+        pruner.prune(segment);
+
+        segment = new Segment(0, hashInt(0), hashInt(-1));
+        segment.startTracking()
+                .addMain(1, hashInt(1), hashInt(0))
+                .addItem(1, hashInt(2), hashInt(0))
+                .addMain(2, hashInt(3), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
+        pruner.persist(hashInt(0));
+        checkDb(jds, "a1", "a2", "a3", "a4");
+
+        pruner.persist(hashInt(1));
+        checkDb(jds, "a1", "a3", "a4");
+
+        pruner.persist(hashInt(3));
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+    }
+
+    @Test
+    public void twoStepTest2() {
+        StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
+        pruner.withSecondStep(Collections.emptyList(), 100);
+
+        putKeys(jds, "a1", "a2", "a3");
+        pruner.feed(jds.commitUpdates(hashInt(0)));
+
+        jds.put("a4");
+        jds.delete("a2");
+        jds.delete("a1");
+        pruner.feed(jds.commitUpdates(hashInt(1)));
+        jds.put("a2");
+        jds.delete("a3");
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        jds.put("a5");
+        jds.delete("a2");
+        pruner.feed(jds.commitUpdates(hashInt(3)));
+        jds.put("a5");
+        jds.put("a6");
+        jds.delete("a4");
+        pruner.feed(jds.commitUpdates(hashInt(31)));
+        pruner.feed(jds.commitUpdates(hashInt(4)));
+
+        checkDb(jds, "a1", "a2", "a3", "a4", "a5", "a6");
+
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(0, hashInt(0), hashInt(0))
+                .addMain(1, hashInt(1), hashInt(0))
+                .addMain(2, hashInt(2), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
+        pruner.persist(hashInt(0));
+        checkDb(jds, "a1", "a2", "a3", "a4", "a5", "a6");
+
+        pruner.persist(hashInt(1));
+        checkDb(jds, "a2", "a3", "a4", "a5", "a6");
+
+        pruner.persist(hashInt(2));
+        checkDb(jds, "a2", "a4", "a5", "a6");
+
+        segment = new Segment(2, hashInt(2), hashInt(1));
+        segment.startTracking()
+                .addMain(3, hashInt(3), hashInt(2))
+                .addItem(3, hashInt(31), hashInt(2))
+                .addMain(4, hashInt(4), hashInt(3))
+                .commit();
+        pruner.prune(segment);
+
+        pruner.persist(hashInt(3));
+        checkDb(jds, "a4", "a5");
+
+        pruner.persist(hashInt(4));
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+    }
+
+
+    @Test
+    public void twoStepTest3() {
+        StringJDS jds = new StringJDS();
+        Pruner pruner = new Pruner(jds.getJournal(), jds.db);
+        pruner.init();
+        pruner.withSecondStep(Collections.emptyList(), 100);
+
+        putKeys(jds, "a1", "a2", "a3");
+        pruner.feed(jds.commitUpdates(hashInt(0)));
+
+        jds.put("a4");
+        jds.delete("a2");
+        jds.delete("a1");
+        pruner.feed(jds.commitUpdates(hashInt(1)));
+        jds.put("a2");
+        jds.delete("a3");
+        pruner.feed(jds.commitUpdates(hashInt(2)));
+        jds.put("a5");
+        jds.put("a1");
+        jds.delete("a2");
+        pruner.feed(jds.commitUpdates(hashInt(3)));
+        jds.put("a5");
+        jds.put("a6");
+        jds.delete("a4");
+        pruner.feed(jds.commitUpdates(hashInt(31)));
+        pruner.feed(jds.commitUpdates(hashInt(4)));
+
+        checkDb(jds, "a1", "a2", "a3", "a4", "a5", "a6");
+
+        Segment segment = new Segment(0, hashInt(0), hashInt(0));
+        segment.startTracking()
+                .addMain(0, hashInt(0), hashInt(0))
+                .addMain(1, hashInt(1), hashInt(0))
+                .addMain(2, hashInt(2), hashInt(1))
+                .commit();
+        pruner.prune(segment);
+
+        pruner.persist(hashInt(0));
+        checkDb(jds, "a1", "a2", "a3", "a4", "a5", "a6");
+
+        pruner.persist(hashInt(1));
+        checkDb(jds, "a1", "a2", "a3", "a4", "a5", "a6");
+
+        pruner.persist(hashInt(2));
+        checkDb(jds, "a1", "a2", "a4", "a5", "a6");
+
+        segment = new Segment(2, hashInt(2), hashInt(1));
+        segment.startTracking()
+                .addMain(3, hashInt(3), hashInt(2))
+                .addItem(3, hashInt(31), hashInt(2))
+                .addMain(4, hashInt(4), hashInt(3))
+                .commit();
+        pruner.prune(segment);
+
+        pruner.persist(hashInt(3));
+        checkDb(jds, "a1", "a4", "a5");
+
+        pruner.persist(hashInt(4));
+        assertEquals(0, ((HashMapDB) jds.journal).getStorage().size());
+    }
+
 
     public byte[] hashInt(int i) {
         return HashUtil.sha3(ByteUtil.intToBytes(i));

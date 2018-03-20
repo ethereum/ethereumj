@@ -43,6 +43,8 @@ public class DataWord implements Comparable<DataWord> {
     public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
     public static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
 
+    public static final long MEM_SIZE = 32 + 16 + 16;
+
     private byte[] data = new byte[32];
 
     public DataWord() {

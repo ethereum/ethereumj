@@ -20,6 +20,7 @@ package org.ethereum.sync;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.core.Blockchain;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -59,6 +60,9 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     DbFlushManager dbFlushManager;
 
+    @Autowired
+    Blockchain blockchain;
+
     byte[] genesisHash;
 
     int headersLoaded  = 0;
@@ -74,8 +78,8 @@ public class HeadersDownloader extends BlockDownloader {
     public void init(byte[] startFromBlockHash) {
         logger.info("HeaderDownloader init: startHash = " + Hex.toHexString(startFromBlockHash));
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(startFromBlockHash, true);
-        super.init(syncQueue, syncPool);
-        syncPool.init(channelManager);
+        super.init(syncQueue, syncPool, "HeadersDownloader");
+        syncPool.init(channelManager, blockchain);
     }
 
     @Override
@@ -89,7 +93,7 @@ public class HeadersDownloader extends BlockDownloader {
         if (headers.get(headers.size() - 1).getNumber() == 1) {
             genesisHash = headers.get(headers.size() - 1).getHeader().getParentHash();
         }
-        logger.info(headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
+        logger.info(name + ": " + headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
         for (BlockHeaderWrapper header : headers) {
             headerStore.set((int) header.getNumber(), header.getHeader());
             headersLoaded++;
@@ -110,6 +114,11 @@ public class HeadersDownloader extends BlockDownloader {
     @Override
     protected int getBlockQueueFreeSize() {
         return Integer.MAX_VALUE;
+    }
+
+    @Override
+    protected int getTotalHeadersToRequest() {
+        return getHeaderQueueLimit();
     }
 
     public int getHeadersLoaded() {

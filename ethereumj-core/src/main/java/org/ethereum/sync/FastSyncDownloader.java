@@ -19,15 +19,12 @@ package org.ethereum.sync;
 
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.Blockchain;
-import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -37,7 +34,7 @@ import java.util.List;
  * Created by Anton Nashatyrev on 27.10.2016.
  */
 @Component
-@Lazy
+@Scope("prototype")
 public class FastSyncDownloader extends BlockDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
@@ -57,9 +54,12 @@ public class FastSyncDownloader extends BlockDownloader {
     }
 
     public void startImporting(byte[] fromHash, int count) {
-        SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
-        init(syncQueueReverse, syncPool);
         this.maxCount = count <= 0 ? Integer.MAX_VALUE : count;
+        setHeaderQueueLimit(maxCount);
+        setBlockQueueLimit(maxCount);
+
+        SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
+        init(syncQueueReverse, syncPool, "FastSync");
     }
 
     @Override
@@ -70,7 +70,7 @@ public class FastSyncDownloader extends BlockDownloader {
                 blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
                 counter++;
                 if (counter >= maxCount) {
-                    logger.info("All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
+                    logger.info("FastSync: All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
                     stop();
                     break;
                 }
@@ -90,7 +90,12 @@ public class FastSyncDownloader extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-        return Integer.MAX_VALUE;
+        return getBlockQueueLimit();
+    }
+
+    @Override
+    protected int getTotalHeadersToRequest() {
+        return getHeaderQueueLimit();
     }
 
     // TODO: receipts loading here

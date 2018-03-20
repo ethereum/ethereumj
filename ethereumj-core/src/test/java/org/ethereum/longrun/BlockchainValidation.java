@@ -28,7 +28,7 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
-import org.ethereum.datasource.Serializers;
+import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
 import org.ethereum.db.BlockStore;
@@ -36,7 +36,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.Value;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +73,8 @@ public class BlockchainValidation {
                             ret.incrementAndGet();
                         }
                         if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-                            ret.addAndGet(getReferencedTrieNodes(stateDS, false, accountState.getStateRoot()));
+                            NodeKeyCompositor nodeKeyCompositor = new NodeKeyCompositor(key);
+                            ret.addAndGet(getReferencedTrieNodes(new SourceCodec.KeyOnly<>(stateDS, nodeKeyCompositor), false, accountState.getStateRoot()));
                         }
                     }
                 }
@@ -87,7 +87,7 @@ public class BlockchainValidation {
         try {
             Source<byte[], byte[]> stateDS = commonConfig.stateSource();
             byte[] stateRoot = ethereum.getBlockchain().getBestBlock().getHeader().getStateRoot();
-            Integer rootsSize = getReferencedTrieNodes(stateDS, true, stateRoot);
+            int rootsSize = TrieTraversal.ofState(stateDS, stateRoot, true).go();
             testLogger.info("Node validation successful");
             testLogger.info("Non-unique node size: {}", rootsSize);
         } catch (Exception | AssertionError ex) {
