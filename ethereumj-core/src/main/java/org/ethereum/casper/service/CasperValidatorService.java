@@ -115,7 +115,7 @@ public class CasperValidatorService {
         return Hex.decode(part1 + Hex.toHexString(address) + part2);
     }
 
-    private byte[] makeVote(long validatorIndex, byte[] targetHash, long targetEpoch, long sourceEpoch, ECKey sender) {
+    protected byte[] makeVote(long validatorIndex, byte[] targetHash, long targetEpoch, long sourceEpoch, ECKey sender) {
         byte[] sigHash = sha3(RLP.smartEncodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch));
         byte[] vrs = make3IntSignature(sigHash, sender);
         return RLP.smartEncodeList(validatorIndex, new ByteArrayWrapper(targetHash), targetEpoch, sourceEpoch, new ByteArrayWrapper(vrs));

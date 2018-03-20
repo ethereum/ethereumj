@@ -37,59 +37,9 @@ import static junit.framework.TestCase.assertEquals;
 
 public class CasperEpochSwitchTest extends CasperBase {
 
-    class CasperEasyConfig extends BaseNetConfig {
-        class CasperGasCost extends Eip150HFConfig.GasCostEip150HF {
-            public int getEXP_BYTE_GAS()        {     return 10;     }      // before spurious dragon hard fork
-        }
-
-        private final GasCost NEW_GAS_COST = new CasperEasyConfig.CasperGasCost();
-
-        private class CasperConfig extends ByzantiumConfig {
-            private final Constants constants;
-            CasperConfig(BlockchainConfig parent) {
-
-                super(parent);
-                constants = new ConstantsAdapter(super.getConstants()) {
-                    private final BigInteger BLOCK_REWARD = new BigInteger("1000000000000000000"); // 1 ETH
-
-                    private final BigInteger MINIMUM_DIFFICULTY = BigInteger.ONE;
-
-                    @Override
-                    public BigInteger getBLOCK_REWARD() {
-                        return BLOCK_REWARD;
-                    }
-
-                    @Override
-                    public BigInteger getMINIMUM_DIFFICULTY() {
-                        return MINIMUM_DIFFICULTY;
-                    }
-                };
-            }
-
-            @Override
-            public GasCost getGasCost() {
-                return NEW_GAS_COST;
-            }
-
-            @Override
-            public boolean eip161() {
-                return false;
-            }
-
-            @Override
-            public Constants getConstants() {
-                return constants;
-            }
-        }
-
-        public CasperEasyConfig() {
-            add(0, new CasperConfig(new FrontierConfig()));
-        }
-    }
-
     @Override
     BlockchainNetConfig config() {
-        return new CasperEasyConfig();
+        return CasperValidatorTest.CASPER_EASY_CONFIG;
     }
 
     @Test

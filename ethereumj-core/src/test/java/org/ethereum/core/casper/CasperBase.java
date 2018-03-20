@@ -99,7 +99,7 @@ public abstract class CasperBase {
 
     CasperBlockchain blockchain;
 
-    private CompositeEthereumListener defaultListener = new CompositeEthereumListener();
+    protected CompositeEthereumListener defaultListener = new CompositeEthereumListener();
 
     @InjectMocks
     EthereumImpl ethereum = new EthereumImpl(systemProperties, defaultListener);
