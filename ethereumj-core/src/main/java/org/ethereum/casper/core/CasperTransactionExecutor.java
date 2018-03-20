@@ -76,7 +76,7 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
 
     @Override
     protected boolean isSignatureValid() {
-        return CasperFacade.isVote(tx, ((CasperProperties) config).getCasperAddress()) || super.isSignatureValid();
+        return isCasperVote() || super.isSignatureValid();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
 
         if (!readyToExecute) return;
 
-        if (!localCall && !isCasperServiceTx()) {
+        if (!localCall && !isCasperVote()) {
             track.increaseNonce(tx.getSender());
 
             BigInteger txGasLimit = toBI(tx.getGasLimit());
@@ -106,9 +106,13 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
         return CasperFacade.isServiceTx(tx, ((CasperProperties) config).getCasperAddress());
     }
 
+    private boolean isCasperVote() {
+        return CasperFacade.isVote(tx, ((CasperProperties) config).getCasperAddress());
+    }
+
     @Override
     protected void payRewards(final TransactionExecutionSummary summary) {
-        if (execError == null && isCasperServiceTx()) {
+        if (isCasperServiceTx()) {
             // Return money to sender for service Casper tx
             track.addBalance(tx.getSender(), summary.getFee());
             logger.info("Refunded successful Casper Vote from [{}]", Hex.toHexString(tx.getSender()));
@@ -123,8 +127,8 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     @Override
     public long getGasUsed() {
         long gasUsed = super.getGasUsed();
-        // Successful Casper vote 0 cost
-        if (getResult() != null && execError == null && isCasperServiceTx()) {
+        // Casper service txs have 0 cost. If it's failed, it'll be discarded on higher level
+        if (isCasperServiceTx()) {
             gasUsed = 0;
         }
         return gasUsed;
