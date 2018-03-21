@@ -212,21 +212,45 @@ public class SystemProperties {
                     .resolve();     // substitute variables in config if any
             validateConfig();
 
-            Properties props = new Properties();
-            InputStream is = getClass().getResourceAsStream("/version.properties");
-            props.load(is);
-            this.projectVersion = props.getProperty("versionNumber");
-            this.projectVersion = this.projectVersion.replaceAll("'", "");
+            // There could be several files with the same name from other packages,
+            // "version.properties" is a very common name
+            List<InputStream> iStreams = loadResources("version.properties", this.getClass().getClassLoader());
+            for (InputStream is : iStreams) {
+                Properties props = new Properties();
+                props.load(is);
+                if (props.getProperty("versionNumber") == null || props.getProperty("databaseVersion") == null) {
+                    continue;
+                }
+                this.projectVersion = props.getProperty("versionNumber");
+                this.projectVersion = this.projectVersion.replaceAll("'", "");
 
-            if (this.projectVersion == null) this.projectVersion = "-.-.-";
+                if (this.projectVersion == null) this.projectVersion = "-.-.-";
 
-            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
+                this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
-            this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
+                this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
+                break;
+            }
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Loads resources using given ClassLoader assuming, there could be several resources
+     * with the same name
+     */
+    public static List<InputStream> loadResources(
+            final String name, final ClassLoader classLoader) throws IOException {
+        final List<InputStream> list = new ArrayList<InputStream>();
+        final Enumeration<URL> systemResources =
+                (classLoader == null ? ClassLoader.getSystemClassLoader() : classLoader)
+                        .getResources(name);
+        while (systemResources.hasMoreElements()) {
+            list.add(systemResources.nextElement().openStream());
+        }
+        return list;
     }
 
     public Config getConfig() {
@@ -268,7 +292,7 @@ public class SystemProperties {
      *
      * @param cliOptions -  command line options to take presidency
      */
-    public void overrideParams(Map<String, ? extends Object> cliOptions) {
+    public void overrideParams(Map<String, ?> cliOptions) {
         Config cliConf = ConfigFactory.parseMap(cliOptions);
         overrideParams(cliConf);
     }
@@ -418,6 +442,11 @@ public class SystemProperties {
     @ValidateMe
     public long databaseResetBlock() {
         return config.getLong("database.resetBlock");
+    }
+
+    @ValidateMe
+    public boolean databaseFromBackup() {
+        return config.getBoolean("database.fromBackup");
     }
 
     @ValidateMe
@@ -783,6 +812,16 @@ public class SystemProperties {
         byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
         if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
         return ret;
+    }
+
+    @ValidateMe
+    public boolean fastSyncBackupState() {
+        return config.getBoolean("sync.fast.backupState");
+    }
+
+    @ValidateMe
+    public boolean fastSyncSkipHistory() {
+        return config.getBoolean("sync.fast.skipHistory");
     }
 
     @ValidateMe

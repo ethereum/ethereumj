@@ -32,30 +32,22 @@ public class QueueTest {
     @Test
     public void simple() throws Exception {
         final PeerConnectionTester.MutablePriorityQueue<String, String> queue =
-                new PeerConnectionTester.MutablePriorityQueue<>(new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                return o1.compareTo(o2);
-            }
-        });
+                new PeerConnectionTester.MutablePriorityQueue<>(String::compareTo);
 
         final int threadCnt = 8;
         final int elemCnt = 1000;
 
-        Runnable adder = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    System.out.println("Adding...");
-                    for (int i = 0; i < elemCnt && !exception; i++) {
-                        queue.add("aaa" + i);
-                        if (i % 100 == 0) Thread.sleep(10);
-                    }
-                    System.out.println("Done.");
-                } catch (Exception e) {
-                    exception = true;
-                    e.printStackTrace();
+        Runnable adder = () -> {
+            try {
+                System.out.println("Adding...");
+                for (int i = 0; i < elemCnt && !exception; i++) {
+                    queue.add("aaa" + i);
+                    if (i % 100 == 0) Thread.sleep(10);
                 }
+                System.out.println("Done.");
+            } catch (Exception e) {
+                exception = true;
+                e.printStackTrace();
             }
         };
 
@@ -69,19 +61,16 @@ public class QueueTest {
         }
 
 
-        Runnable taker = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    System.out.println("Taking...");
-                    for (int i = 0; i < elemCnt && !exception; i++) {
-                        queue.poll(1, TimeUnit.SECONDS);
-                    }
-                    System.out.println("OK: " + queue.size());
-                } catch (Exception e) {
-                    exception = true;
-                    e.printStackTrace();
+        Runnable taker = () -> {
+            try {
+                System.out.println("Taking...");
+                for (int i = 0; i < elemCnt && !exception; i++) {
+                    queue.poll(1, TimeUnit.SECONDS);
                 }
+                System.out.println("OK: " + queue.size());
+            } catch (Exception e) {
+                exception = true;
+                e.printStackTrace();
             }
         };
         Thread t2[] = new Thread[threadCnt];

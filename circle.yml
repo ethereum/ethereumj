@@ -12,17 +12,19 @@ dependencies:
     - for img in `ls ~/.docker`; do docker load -i ~/.docker/$img; done
 
     # Pull in and hive, restore cached ethash DAGs and do a dry run
-    - go get -u github.com/ether-camp/hive
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && mkdir -p workspace/ethash/ ~/.ethash)
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && cp -r ~/.ethash/. workspace/ethash/)
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
+    - go get -u github.com/karalabe/hive
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive && mkdir -p workspace/ethash/ ~/.ethash)
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive && cp -r ~/.ethash/. workspace/ethash/)
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive && hive --docker-noshell --client=NONE --test=. --sim=. --loglevel=6)
+    # Generating DAG
+    - (cd ~/ethereumj && ./gradlew run -PmainClass=org.ethereum.Start -PjvmArgs="-Dethash.dir=~/.go_workspace/src/github.com/karalabe/hive/workspace/ethash -Dethash.blockNumber=0 -Xmx2G")
     # timeout 20 min
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell --client=ethereumj:local --test=NONE --sim=NONE --loglevel=6):
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive && hive --docker-noshell --client=ethereumj:local --test=NONE --sim=NONE --loglevel=6):
         timeout: 1200
 
     # Cache all the docker images and the ethash DAGs
     - for img in `docker images | grep -v "^<none>" | tail -n +2 | awk '{print $1}'`; do docker save $img > ~/.docker/`echo $img | tr '/' ':'`.tar; done
-    - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/ethash/. ~/.ethash
+    - cp -r ~/.go_workspace/src/github.com/karalabe/hive/workspace/ethash/. ~/.ethash
     # Cache gradle artifacts
     - (cd ~/ethereumj && ./gradlew compileJava)
     - (cd ~ && git clone --depth 1 -b develop https://github.com/ether-camp/ethereum-harmony.git)
@@ -31,12 +33,12 @@ dependencies:
 test:
   override:
     # Build app and move into a known folder
-    - (cd ~/ethereumj && ./gradlew install -x test)
-    - (cd ~/ethereum-harmony && ./gradlew stage -x test -PuseMavenLocal)
-    - cp ~/ethereum-harmony/build/distributions/harmony.ether.camp.tar ~/harmony.ether.camp.tar
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive/clients/ethereumj\:local && ./build.sh ~/ethereumj ~/ethereum-harmony ~)
 
     # Run hive and move all generated logs into the public artifacts folder
-    - (cd ~/.go_workspace/src/github.com/ether-camp/hive && hive --docker-noshell=true --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --test=. --sim=dao-hard-fork --loglevel=3):
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar --smoke --loglevel=3):
         timeout: 4000
-    - cp -r ~/.go_workspace/src/github.com/ether-camp/hive/workspace/logs/* $CIRCLE_ARTIFACTS
+    - (cd ~/.go_workspace/src/github.com/karalabe/hive && hive --docker-noshell --client=ethereumj:local --override=$HOME/harmony.ether.camp.tar  --test=. --loglevel=3):
+        timeout: 4000
+    - cp -r ~/.go_workspace/src/github.com/karalabe/hive/workspace/logs/* $CIRCLE_ARTIFACTS
 

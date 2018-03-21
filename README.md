@@ -7,10 +7,9 @@
 
 
 # About
-ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level information about Ethereum and its goals, visit [ethereum.org](https://ethereum.org). The [ethereum white paper](https://github.com/ethereum/wiki/wiki/White-Paper) provides a complete conceptual overview, and the [yellow paper](http://gavwood.com/Paper.pdf) provides a formal definition of the protocol.
+EthereumJ is a pure-Java implementation of the Ethereum protocol. For high-level information about Ethereum and its goals, visit [ethereum.org](https://ethereum.org). The [ethereum white paper](https://github.com/ethereum/wiki/wiki/White-Paper) provides a complete conceptual overview, and the [yellow paper](http://gavwood.com/Paper.pdf) provides a formal definition of the protocol.
 
-# Check our blog 
-http://ethereumj.io
+We keep EthereumJ as thin as possible. For [JSON-RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC) support and other client features check [Ethereum Harmony](https://github.com/ether-camp/ethereum-harmony).
 
 # Running EthereumJ
 
@@ -20,7 +19,7 @@ http://ethereumj.io
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.5.0-RELEASE</version>
+     <version>1.6.3-RELEASE</version>
    </dependency>
 ```
 
@@ -29,8 +28,10 @@ http://ethereumj.io
 ```
    repositories {
        mavenCentral()
+       jcenter()
+       maven { url "https://dl.bintray.com/ethereum/maven/" }
    }
-   compile "org.ethereum:ethereumj-core:1.5.+"
+   compile "org.ethereum:ethereumj-core:1.6.+"
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
@@ -86,6 +87,17 @@ To override needed options you may use one of the following ways:
 * programmatically using by overriding Spring `SystemProperties` bean 
 
 Note that don’t need to put all the options to your custom config, just those you want to override. 
+
+# Special thanks
+YourKit for providing us with their nice profiler absolutely for free.
+
+YourKit supports open source projects with its full-featured Java Profiler.
+YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>
+and <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
+innovative and intelligent tools for profiling Java and .NET applications.
+
+![YourKit Logo](https://www.yourkit.com/images/yklogo.png)
+
 # Contact
 Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj)
 

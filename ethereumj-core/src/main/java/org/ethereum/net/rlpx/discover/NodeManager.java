@@ -25,7 +25,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
-import org.ethereum.util.Functional;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -36,6 +35,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static java.lang.Math.min;
 
@@ -49,7 +50,7 @@ import static java.lang.Math.min;
  * Created by Anton Nashatyrev on 16.07.2015.
  */
 @Component
-public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
+public class NodeManager implements Consumer<DiscoveryEvent>{
     static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
     private final boolean PERSIST;
@@ -64,7 +65,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     EthereumListener ethereumListener;
     SystemProperties config = SystemProperties.getDefault();
 
-    Functional.Consumer<DiscoveryEvent> messageSender;
+    Consumer<DiscoveryEvent> messageSender;
 
     NodeTable table;
     private Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
@@ -174,7 +175,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         logger.info("Write Node statistics to DB: " + peerSource.getNodes().size() + " nodes.");
     }
 
-    public void setMessageSender(Functional.Consumer<DiscoveryEvent> messageSender) {
+    public void setMessageSender(Consumer<DiscoveryEvent> messageSender) {
         this.messageSender = messageSender;
     }
 
@@ -217,12 +218,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
             List<NodeHandler> sorted = new ArrayList<>(nodeHandlerMap.values());
             // reverse sort by reputation
-            Collections.sort(sorted, new Comparator<NodeHandler>() {
-                @Override
-                public int compare(NodeHandler o1, NodeHandler o2) {
-                    return o1.getNodeStatistics().getReputation() - o2.getNodeStatistics().getReputation();
-                }
-            });
+            sorted.sort((o1, o2) -> o1.getNodeStatistics().getReputation() - o2.getNodeStatistics().getReputation());
 
             for (NodeHandler handler : sorted) {
                 nodeHandlerMap.remove(getKey(handler.getNode()));
@@ -314,7 +310,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      * @return list of nodes matching criteria
      */
     public List<NodeHandler> getNodes(
-            Functional.Predicate<NodeHandler> predicate,
+            Predicate<NodeHandler> predicate,
             int limit    ) {
         ArrayList<NodeHandler> filtered = new ArrayList<>();
         synchronized (this) {
@@ -324,13 +320,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 }
             }
         }
-        Collections.sort(filtered, new Comparator<NodeHandler>() {
-            @Override
-            public int compare(NodeHandler o1, NodeHandler o2) {
-                return o2.getNodeStatistics().getEthTotalDifficulty().compareTo(
-                        o1.getNodeStatistics().getEthTotalDifficulty());
-            }
-        });
+        filtered.sort((o1, o2) -> o2.getNodeStatistics().getEthTotalDifficulty().compareTo(
+                o1.getNodeStatistics().getEthTotalDifficulty()));
         return CollectionUtils.truncate(filtered, limit);
     }
 
@@ -348,7 +339,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      * Add a listener which is notified when the node statistics starts or stops meeting
      * the criteria specified by [filter] param.
      */
-    public synchronized void addDiscoverListener(DiscoverListener listener, Functional.Predicate<NodeStatistics> filter) {
+    public synchronized void addDiscoverListener(DiscoverListener listener, Predicate<NodeStatistics> filter) {
         listeners.put(listener, new ListenerHandler(listener, filter));
     }
 
@@ -358,11 +349,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     public synchronized String dumpAllStatistics() {
         List<NodeHandler> l = new ArrayList<>(nodeHandlerMap.values());
-        Collections.sort(l, new Comparator<NodeHandler>() {
-            public int compare(NodeHandler o1, NodeHandler o2) {
-                return -(o1.getNodeStatistics().getReputation() - o2.getNodeStatistics().getReputation());
-            }
-        });
+        l.sort((o1, o2) -> -(o1.getNodeStatistics().getReputation() - o2.getNodeStatistics().getReputation()));
 
         StringBuilder sb = new StringBuilder();
         int zeroReputCount = 0;
@@ -371,7 +358,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 sb.append(nodeHandler).append("\t").append(nodeHandler.getNodeStatistics()).append("\n");
             } else {
                 zeroReputCount++;
-        }
+            }
         }
         sb.append("0 reputation: ").append(zeroReputCount).append(" nodes.\n");
         return sb.toString();
@@ -419,9 +406,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private class ListenerHandler {
         Map<NodeHandler, Object> discoveredNodes = new IdentityHashMap<>();
         DiscoverListener listener;
-        Functional.Predicate<NodeStatistics> filter;
+        Predicate<NodeStatistics> filter;
 
-        ListenerHandler(DiscoverListener listener, Functional.Predicate<NodeStatistics> filter) {
+        ListenerHandler(DiscoverListener listener, Predicate<NodeStatistics> filter) {
             this.listener = listener;
             this.filter = filter;
         }

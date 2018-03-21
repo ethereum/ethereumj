@@ -50,12 +50,7 @@ public class DefaultConfig {
     SystemProperties config;
 
     public DefaultConfig() {
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                logger.error("Uncaught exception", e);
-            }
-        });
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
     }
 
     @Bean
@@ -79,9 +74,9 @@ public class DefaultConfig {
     public PruneManager pruneManager() {
         if (config.databasePruneDepth() >= 0) {
             return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
-                    config.databasePruneDepth());
+                    commonConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
         } else {
-            return new PruneManager(null, null, -1); // dummy
+            return new PruneManager(null, null, null, -1); // dummy
         }
     }
 }

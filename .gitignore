@@ -27,6 +27,7 @@ target/
 
 # Output
 database*
+out
 logs
 test_db*
 testnetSampleDb
@@ -41,3 +42,6 @@ sampleDB*
 **/test-user.conf
 **/out.log
 **/user.log4j.properties
+
+# jenv
+.java-version

@@ -58,17 +58,13 @@ public class PendingStateImpl implements PendingState {
 
     public static class TransactionSortedSet extends TreeSet<Transaction> {
         public TransactionSortedSet() {
-            super(new Comparator<Transaction>() {
-
-                @Override
-                public int compare(Transaction tx1, Transaction tx2) {
-                    long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
-                            ByteUtil.byteArrayToLong(tx2.getNonce());
-                    if (nonceDiff != 0) {
-                        return nonceDiff > 0 ? 1 : -1;
-                    }
-                    return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
+            super((tx1, tx2) -> {
+                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
+                        ByteUtil.byteArrayToLong(tx2.getNonce());
+                if (nonceDiff != 0) {
+                    return nonceDiff > 0 ? 1 : -1;
                 }
+                return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
             });
         }
     }
@@ -399,10 +395,15 @@ public class PendingStateImpl implements PendingState {
 
         pendingState = getOrigRepository().startTracking();
 
+        long t = System.nanoTime();
+
         for (PendingTransaction tx : pendingTransactions) {
             TransactionReceipt receipt = executeTx(tx.getTransaction());
             fireTxUpdate(receipt, PENDING, block);
         }
+
+        logger.debug("Successfully processed #{}, txs: {}, time: {}s", block.getNumber(), pendingTransactions.size(),
+                String.format("%.3f", (System.nanoTime() - t) / 1_000_000_000d));
     }
 
     private TransactionReceipt executeTx(Transaction tx) {

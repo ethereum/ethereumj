@@ -75,10 +75,10 @@ public class CreateContractSample extends TestNetSample {
             throw new RuntimeException("Contract compilation failed:\n" + result.errors);
         }
         CompilationResult res = CompilationResult.parse(result.output);
-        if (res.contracts.isEmpty()) {
+        if (res.getContracts().isEmpty()) {
             throw new RuntimeException("Compilation failed, no contracts returned:\n" + result.errors);
         }
-        CompilationResult.ContractMetadata metadata = res.contracts.values().iterator().next();
+        CompilationResult.ContractMetadata metadata = res.getContracts().iterator().next();
         if (metadata.bin == null || metadata.bin.isEmpty()) {
             throw new RuntimeException("Compilation failed, no binary returned:\n" + result.errors);
         }

@@ -381,7 +381,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             this.fork = false;
         }
 
-        if (isMoreThan(this.totalDifficulty, savedState.savedTD)) {
+        if (summary.betterThan(savedState.savedTD)) {
 
             logger.info("Rebranching: {} ~> {}", savedState.savedBest.getShortHash(), block.getShortHash());
 
@@ -443,7 +443,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 summary = tryConnectAndFork(block);
 
                 ret = summary == null ? INVALID_BLOCK :
-                        (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
+                        (summary.betterThan(oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
             } else {
                 summary = null;
                 ret = NO_PARENT;
@@ -456,12 +456,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
-                eventDispatchThread.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        pendingState.processBest(block, summary.getReceipts());
-                    }
-                });
+                eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
             }
         }
 
@@ -540,7 +535,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
             stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
             if (summary1 != null) {
-                if (config.exitOnBlockConflict()) {
+                if (config.exitOnBlockConflict() && !byTest) {
                     stateLogger.error("Inconsistent behavior, exiting...");
                     System.exit(-1);
                 } else {
@@ -613,7 +608,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             // block is bad so 'rollback' the state root to the original state
 //            ((RepositoryImpl) repository).setRoot(origRoot);
 
-            if (config.exitOnBlockConflict()) {
+            if (config.exitOnBlockConflict() && !byTest) {
                 adminInfo.lostConsensus();
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
                 System.exit(1);
@@ -628,12 +623,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             summary.setTotalDifficulty(getTotalDifficulty());
 
             if (!byTest) {
-                dbFlushManager.commit(new Runnable() {
-                    @Override
-                    public void run() {
-                        storeBlock(block, receipts);
-                        repository.commit();
-                    }
+                dbFlushManager.commit(() -> {
+                    storeBlock(block, receipts);
+                    repository.commit();
                 });
             } else {
                 storeBlock(block, receipts);
@@ -680,8 +672,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (receipts == null || receipts.isEmpty())
             return retBloomFilter.getData();
 
-        for (int i = 0; i < receipts.size(); i++) {
-            retBloomFilter.or(receipts.get(i).getBloomFilter());
+        for (TransactionReceipt receipt : receipts) {
+            retBloomFilter.or(receipt.getBloomFilter());
         }
 
         return retBloomFilter.getData();

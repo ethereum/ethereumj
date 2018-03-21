@@ -102,28 +102,25 @@ public class SyncWithLoadTest {
         }
         if (overrideConfigPath != null) configPath.setValue(overrideConfigPath);
 
-        statTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                // Adds error if no successfully imported blocks for LAST_IMPORT_TIMEOUT
-                long currentMillis = System.currentTimeMillis();
-                if (lastImport.get() != 0 && currentMillis - lastImport.get() > LAST_IMPORT_TIMEOUT) {
-                    testLogger.error("No imported block for {} seconds", LAST_IMPORT_TIMEOUT / 1000);
-                    fatalErrors.incrementAndGet();
-                }
-
-                try {
-                    if (fatalErrors.get() > 0) {
-                        statTimer.shutdownNow();
-                        errorLatch.countDown();
-                    }
-                } catch (Throwable t) {
-                    SyncWithLoadTest.testLogger.error("Unhandled exception", t);
-                }
-
-                if (lastImport.get() == 0 && isRunning.get()) lastImport.set(currentMillis);
-                if (lastImport.get() != 0 && !isRunning.get()) lastImport.set(0);
+        statTimer.scheduleAtFixedRate(() -> {
+            // Adds error if no successfully imported blocks for LAST_IMPORT_TIMEOUT
+            long currentMillis = System.currentTimeMillis();
+            if (lastImport.get() != 0 && currentMillis - lastImport.get() > LAST_IMPORT_TIMEOUT) {
+                testLogger.error("No imported block for {} seconds", LAST_IMPORT_TIMEOUT / 1000);
+                fatalErrors.incrementAndGet();
             }
+
+            try {
+                if (fatalErrors.get() > 0) {
+                    statTimer.shutdownNow();
+                    errorLatch.countDown();
+                }
+            } catch (Throwable t) {
+                SyncWithLoadTest.testLogger.error("Unhandled exception", t);
+            }
+
+            if (lastImport.get() == 0 && isRunning.get()) lastImport.set(currentMillis);
+            if (lastImport.get() != 0 && !isRunning.get()) lastImport.set(0);
         }, 0, 15, TimeUnit.SECONDS);
     }
 
@@ -263,11 +260,7 @@ public class SyncWithLoadTest {
     private final static AtomicInteger fatalErrors = new AtomicInteger(0);
 
     private static ScheduledExecutorService statTimer =
-            Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "StatTimer");
-                }
-            });
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "StatTimer"));
 
     private static boolean logStats() {
         testLogger.info("---------====---------");
@@ -290,9 +283,7 @@ public class SyncWithLoadTest {
 
         runEthereum();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
             try {
                 while(firstRun.get()) {
                     sleep(1000);
@@ -312,7 +303,6 @@ public class SyncWithLoadTest {
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
-            }
             }
         }).start();
 

@@ -23,18 +23,19 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
-import org.ethereum.util.Functional;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static java.lang.Math.min;
+import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
 
 /**
  * Created by Anton Nashatyrev on 27.05.2016.
  */
 public class SyncQueueImpl implements SyncQueueIfc {
-    static int MAX_CHAIN_LEN = 192;
+    static int MAX_CHAIN_LEN = MAX_IN_REQUEST;
 
     static class HeadersRequestImpl implements HeadersRequest {
         public HeadersRequestImpl(long start, int count, boolean reverse) {
@@ -188,7 +189,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     public SyncQueueImpl(Blockchain bc) {
         Block bestBlock = bc.getBestBlock();
-        long start = bestBlock.getNumber() - MAX_CHAIN_LEN;
+        long start = bestBlock.getNumber() - MAX_CHAIN_LEN + 1;
         start = start < 0 ? 0 : start;
         List<Block> initBlocks = new ArrayList<>();
         for (long i = start; i <= bestBlock.getNumber(); i++) {
@@ -446,7 +447,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
         private Visitor<T> handler;
         boolean downUp = true;
 
-        public ChildVisitor(Functional.Function<HeaderElement, List<T>> handler) {
+        public ChildVisitor(Function<HeaderElement, List<T>> handler) {
 //            this.handler = handler;
         }
 

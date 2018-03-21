@@ -57,6 +57,7 @@ public class BlockchainTestSuite {
     }
 
     public void setSubDir(String subDir) {
+        if (!subDir.endsWith("/")) subDir = subDir + "/";
         this.subDir = subDir;
     }
 
@@ -137,7 +138,11 @@ public class BlockchainTestSuite {
 
         List<String> testCaseFiles = new ArrayList<>();
         for (String file : files) {
-            if (file.startsWith(testCaseRoot + "/")) testCaseFiles.add(subDir + file);
+            if (file.startsWith(testCaseRoot + "/")) {
+                testCaseFiles.add(subDir + file);
+            } else if (file.startsWith(subDir + testCaseRoot + "/")) {
+                testCaseFiles.add(file);
+            }
         }
 
         Set<String> toExclude = new HashSet<>();

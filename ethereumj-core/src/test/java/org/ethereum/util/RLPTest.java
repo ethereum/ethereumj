@@ -112,7 +112,7 @@ public class RLPTest {
         BigInteger peerId = decodeBigInteger(payload, nextIndex);
 
         BigInteger expectedPeerId =
-                new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+                new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
         assertEquals(expectedPeerId, peerId);
 
         nextIndex = getNextElementIndex(payload, nextIndex);
@@ -128,7 +128,7 @@ public class RLPTest {
         peerId = decodeBigInteger(payload, nextIndex);
 
         expectedPeerId =
-                new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+                new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
 
         assertEquals(expectedPeerId, peerId);
 
@@ -177,10 +177,6 @@ public class RLPTest {
         byte[] expected5 = {(byte) 0x82, (byte) 0x4E, (byte) 0xEA};
         data = encodeShort((short) 20202);
         assertArrayEquals(expected5, data);
-
-        byte[] expected6 = {(byte) 0x82, (byte) 0x9D, (byte) 0x0A};
-        data = encodeShort((short) 40202);
-        assertArrayEquals(expected6, data);
     }
 
     @Test
@@ -225,21 +221,36 @@ public class RLPTest {
         assertArrayEquals(expected6, data);
         assertEquals(65536, RLP.decodeInt(data, 0));
 
-        byte[] expected7 = {(byte) 0x84, (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-        data = encodeInt(Integer.MIN_VALUE);
-        assertArrayEquals(expected7, data);
-        assertEquals(Integer.MIN_VALUE, RLP.decodeInt(data, 0));
-
         byte[] expected8 = {(byte) 0x84, (byte) 0x7F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
         data = encodeInt(Integer.MAX_VALUE);
         assertArrayEquals(expected8, data);
         assertEquals(Integer.MAX_VALUE, RLP.decodeInt(data, 0));
+    }
 
-        byte[] expected9 = {(byte) 0x84, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-        data = encodeInt(0xFFFFFFFF);
-        assertArrayEquals(expected9, data);
-        assertEquals(0xFFFFFFFF, RLP.decodeInt(data, 0));
+    @Test(expected = RuntimeException.class)
+    public void incorrectZero() {
+        RLP.decodeInt(new byte[]{0x00}, 0);
+    }
 
+    /**
+     * NOTE: While negative numbers are not used in RLP, we usually use RLP
+     * for encoding all data and sometime use -1 in primitive fields as null.
+     * So, currently negative numbers encoding is allowed
+     */
+    @Ignore
+    @Test(expected = RuntimeException.class)
+    public void cannotEncodeNegativeNumbers() {
+        encodeInt(Integer.MIN_VALUE);
+    }
+
+    @Test
+    public void testMaxNumerics() {
+        int expected1 = Integer.MAX_VALUE;
+        assertEquals(expected1, decodeInt(encodeInt(expected1), 0));
+        short expected2 = Short.MAX_VALUE;
+        assertEquals(expected2, decodeShort(encodeShort(expected2), 0));
+        long expected3 = Long.MAX_VALUE;
+        assertEquals(expected3, decodeLong(encodeBigInteger(BigInteger.valueOf(expected3)), 0));
     }
 
     @Test
@@ -1149,5 +1160,14 @@ public class RLPTest {
         byte[] rlpEncoded = encode(testString);
         String res = new String((byte[])decode(rlpEncoded, 0).getDecoded());
         assertEquals(testString, res); //Fails
+    }
+
+    @Test
+    public void encodeDecodeBigInteger() {
+        BigInteger expected = new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+        byte[] encoded = encodeBigInteger(expected);
+        BigInteger decoded = decodeBigInteger(encoded, 0);
+        assertNotNull(decoded);
+        assertEquals(expected, decoded);
     }
 }

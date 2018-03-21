@@ -19,10 +19,7 @@ package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
+import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -43,7 +40,7 @@ public class BlockHeader {
     public static final int NONCE_LENGTH = 8;
     public static final int HASH_LENGTH = 32;
     public static final int ADDRESS_LENGTH = 20;
-    public static final int MAX_HEADER_SIZE = 592;
+    public static final int MAX_HEADER_SIZE = 800;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     private byte[] parentHash;
@@ -65,8 +62,9 @@ public class BlockHeader {
      * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_recipe)]
      * of the block */
     private byte[] receiptTrieRoot;
-
-    /*todo: comment it when you know what the fuck it is*/
+    /* The Bloom filter composed from indexable information 
+     * (logger address and log topics) contained in each log entry 
+     * from the receipt of each transaction in the transactions list */
     private byte[] logsBloom;
     /* A scalar value corresponding to the difficulty level of this block.
      * This can be calculated from the previous block’s difficulty level
@@ -122,11 +120,11 @@ public class BlockHeader {
         byte[] guBytes = rlpHeader.get(10).getRLPData();
         byte[] tsBytes = rlpHeader.get(11).getRLPData();
 
-        this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
+        this.number = ByteUtil.byteArrayToLong(nrBytes);
 
         this.gasLimit = glBytes;
-        this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
-        this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
+        this.gasUsed = ByteUtil.byteArrayToLong(guBytes);
+        this.timestamp = ByteUtil.byteArrayToLong(tsBytes);
 
         this.extraData = rlpHeader.get(12).getRLPData();
         this.mixHash = rlpHeader.get(13).getRLPData();

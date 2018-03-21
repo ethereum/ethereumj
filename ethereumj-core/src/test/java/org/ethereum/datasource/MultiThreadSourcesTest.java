@@ -89,99 +89,87 @@ public class MultiThreadSourcesTest {
             this.noDelete = noDelete;
         }
 
-        final Thread readThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while(running) {
-                        int curMax = putCnt.get() - 1;
-                        if (checkCnt.get() >= curMax) {
-                            sleep(10);
-                            continue;
-                        }
-                        assertEquals(str(intToValue(curMax)), str(cache.get(intToKey(curMax))));
-                        checkCnt.set(curMax);
+        final Thread readThread = new Thread(() -> {
+            try {
+                while(running) {
+                    int curMax = putCnt.get() - 1;
+                    if (checkCnt.get() >= curMax) {
+                        sleep(10);
+                        continue;
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    failSema.countDown();
+                    assertEquals(str(intToValue(curMax)), str(cache.get(intToKey(curMax))));
+                    checkCnt.set(curMax);
                 }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                failSema.countDown();
             }
         });
 
-        final Thread delThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while(running) {
-                        int toDelete = delCnt.get();
-                        int curMax = putCnt.get() - 1;
+        final Thread delThread = new Thread(() -> {
+            try {
+                while(running) {
+                    int toDelete = delCnt.get();
+                    int curMax = putCnt.get() - 1;
 
-                        if (toDelete > checkCnt.get() || toDelete >= curMax) {
-                            sleep(10);
-                            continue;
-                        }
-                        assertEquals(str(intToValue(toDelete)), str(cache.get(intToKey(toDelete))));
-
-                        if (isCounting) {
-                            for (int i = 0; i < (toDelete % 5); ++i) {
-                                cache.delete(intToKey(toDelete));
-                                assertEquals(str(intToValue(toDelete)), str(cache.get(intToKey(toDelete))));
-                            }
-                        }
-
-                        cache.delete(intToKey(toDelete));
-                        if (isCounting) cache.flush();
-                        assertNull(cache.get(intToKey(toDelete)));
-                        delCnt.getAndIncrement();
+                    if (toDelete > checkCnt.get() || toDelete >= curMax) {
+                        sleep(10);
+                        continue;
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    failSema.countDown();
+                    assertEquals(str(intToValue(toDelete)), str(cache.get(intToKey(toDelete))));
+
+                    if (isCounting) {
+                        for (int i = 0; i < (toDelete % 5); ++i) {
+                            cache.delete(intToKey(toDelete));
+                            assertEquals(str(intToValue(toDelete)), str(cache.get(intToKey(toDelete))));
+                        }
+                    }
+
+                    cache.delete(intToKey(toDelete));
+                    if (isCounting) cache.flush();
+                    assertNull(cache.get(intToKey(toDelete)));
+                    delCnt.getAndIncrement();
                 }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                failSema.countDown();
             }
         });
 
         public void run(long timeout) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        while(running) {
-                            int curCnt = putCnt.get();
-                            cache.put(intToKey(curCnt), intToValue(curCnt));
-                            if (isCounting) {
-                                for (int i = 0; i < (curCnt % 5); ++i) {
-                                    cache.put(intToKey(curCnt), intToValue(curCnt));
-                                }
-                            }
-                            putCnt.getAndIncrement();
-                            if (curCnt == 1) {
-                                readThread.start();
-                                if (!noDelete) {
-                                    delThread.start();
-                                }
+            new Thread(() -> {
+                try {
+                    while(running) {
+                        int curCnt = putCnt.get();
+                        cache.put(intToKey(curCnt), intToValue(curCnt));
+                        if (isCounting) {
+                            for (int i = 0; i < (curCnt % 5); ++i) {
+                                cache.put(intToKey(curCnt), intToValue(curCnt));
                             }
                         }
-                    } catch (Throwable e) {
-                        e.printStackTrace();
-                        failSema.countDown();
+                        putCnt.getAndIncrement();
+                        if (curCnt == 1) {
+                            readThread.start();
+                            if (!noDelete) {
+                                delThread.start();
+                            }
+                        }
                     }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    failSema.countDown();
                 }
             }).start();
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        while(running) {
-                            sleep(10);
-                            cache.flush();
-                        }
-                    } catch (Throwable e) {
-                        e.printStackTrace();
-                        failSema.countDown();
+            new Thread(() -> {
+                try {
+                    while(running) {
+                        sleep(10);
+                        cache.flush();
                     }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    failSema.countDown();
                 }
             }).start();
 

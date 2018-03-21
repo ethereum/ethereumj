@@ -44,21 +44,18 @@ public class JSONReader {
 
     static ExecutorService threadPool;
 
+    private static int MAX_RETRIES = 3;
+
     public static List<String> loadJSONsFromCommit(List<String> filenames, final String shacommit) {
 
-        int threads = 64;
+        int threads = 16;
         if (threadPool == null) {
             threadPool = Executors.newFixedThreadPool(threads);
         }
 
         List<Future<String>> retF = new ArrayList<>();
         for (final String filename : filenames) {
-            Future<String> f = threadPool.submit(new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return loadJSONFromCommit(filename, shacommit);
-                }
-            });
+            Future<String> f = threadPool.submit(() -> loadJSONFromCommit(filename, shacommit));
             retF.add(f);
         }
 
@@ -67,7 +64,8 @@ public class JSONReader {
             try {
                 ret.add(f.get());
             } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(String.format("Failed to retrieve %d files from commit %s",
+                        filenames.size(), shacommit), e);
             }
         }
 
@@ -93,6 +91,27 @@ public class JSONReader {
     }
 
     public static String getFromUrl(String urlToRead) {
+        String result = null;
+        for (int i = 0; i < MAX_RETRIES; ++i) {
+            try {
+                result = getFromUrlImpl(urlToRead);
+                break;
+            } catch (Exception ex) {
+                logger.debug(String.format("Failed to retrieve %s, retry %d/%d", urlToRead, (i + 1), MAX_RETRIES), ex);
+                if (i < (MAX_RETRIES - 1)) {
+                    try {
+                        Thread.sleep(2000);  // adding delay after fail
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
+        }
+        if (result == null) throw new RuntimeException(String.format("Failed to retrieve file from url %s", urlToRead));
+
+        return result;
+    }
+
+    private static String getFromUrlImpl(String urlToRead) throws Exception {
         URL url;
         HttpURLConnection conn;
         BufferedReader rd;
@@ -113,7 +132,8 @@ public class JSONReader {
             }
             rd.close();
         } catch (Throwable e) {
-            e.printStackTrace();
+            logger.debug("Failed to retrieve file.", e);
+            throw e;
         }
         return result.toString();
     }

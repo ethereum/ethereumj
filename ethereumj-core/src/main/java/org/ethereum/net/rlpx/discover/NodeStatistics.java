@@ -160,7 +160,9 @@ public class NodeStatistics {
                 rlpxLastLocalDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL ||
                 rlpxLastRemoteDisconnectReason == ReasonCode.INCOMPATIBLE_PROTOCOL ||
                 rlpxLastLocalDisconnectReason == ReasonCode.USELESS_PEER ||
-                rlpxLastRemoteDisconnectReason == ReasonCode.USELESS_PEER;
+                rlpxLastRemoteDisconnectReason == ReasonCode.USELESS_PEER ||
+                rlpxLastLocalDisconnectReason == ReasonCode.BAD_PROTOCOL ||
+                rlpxLastRemoteDisconnectReason == ReasonCode.BAD_PROTOCOL;
     }
 
     public void nodeDisconnectedRemote(ReasonCode reason) {

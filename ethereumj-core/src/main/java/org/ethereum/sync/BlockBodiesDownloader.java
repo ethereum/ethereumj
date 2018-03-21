@@ -17,6 +17,7 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DataSourceArray;
@@ -68,9 +69,12 @@ public class BlockBodiesDownloader extends BlockDownloader {
     Thread headersThread;
     int downloadCnt = 0;
 
+    private long blockBytesLimit = 32 * 1024 * 1024;
+
     @Autowired
-    public BlockBodiesDownloader(BlockHeaderValidator headerValidator) {
+    public BlockBodiesDownloader(final SystemProperties config, BlockHeaderValidator headerValidator) {
         super(headerValidator);
+        blockBytesLimit = config.blockQueueSize();
     }
 
     public void startImporting() {
@@ -78,24 +82,19 @@ public class BlockBodiesDownloader extends BlockDownloader {
         syncQueue = new SyncQueueImpl(Collections.singletonList(genesis));
         curTotalDiff = genesis.getDifficultyBI();
 
-        headersThread = new Thread("FastsyncHeadersFetchThread") {
-            @Override
-            public void run() {
-                headerLoop();
-            }
-        };
+        headersThread = new Thread(this::headerLoop, "FastsyncHeadersFetchThread");
         headersThread.start();
 
         setHeadersDownload(false);
 
-        init(syncQueue, syncPool);
+        init(syncQueue, syncPool, "BlockBodiesDownloader");
     }
 
     private void headerLoop() {
         while (curBlockIdx < headerStore.size() && !Thread.currentThread().isInterrupted()) {
             List<BlockHeaderWrapper> wrappers = new ArrayList<>();
             List<BlockHeader> emptyBodyHeaders =  new ArrayList<>();
-            for (int i = 0; i < 10000 - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
+            for (int i = 0; i < getTotalHeadersToRequest() - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
                 BlockHeader header = headerStore.get(curBlockIdx++);
                 wrappers.add(new BlockHeaderWrapper(header, new byte[0]));
 
@@ -154,6 +153,10 @@ public class BlockBodiesDownloader extends BlockDownloader {
             }
             dbFlushManager.commit();
 
+            estimateBlockSize(blockWrappers);
+            logger.debug("{}: header queue size {} (~{}mb)", name, syncQueue.getHeadersCount(),
+                    syncQueue.getHeadersCount() * getEstimatedBlockSize() / 1024 / 1024);
+
             long c = System.currentTimeMillis();
             if (c - t > 5000) {
                 t = c;
@@ -178,6 +181,16 @@ public class BlockBodiesDownloader extends BlockDownloader {
     @Override
     protected int getBlockQueueFreeSize() {
         return Integer.MAX_VALUE;
+    }
+
+    @Override
+    protected int getTotalHeadersToRequest() {
+        if (getEstimatedBlockSize() == 0) {
+            return getHeaderQueueLimit();
+        }
+
+        int slotsLeft = Math.max((int) (blockBytesLimit / getEstimatedBlockSize()), MAX_IN_REQUEST);
+        return Math.min(slotsLeft + MAX_IN_REQUEST, getHeaderQueueLimit());
     }
 
     public int getDownloadedCount() {

@@ -23,15 +23,18 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.sync.SyncManager;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
+import java.util.EnumSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +61,7 @@ public class FastSyncSanityTest {
 
     private Ethereum regularNode;
     private static AtomicBoolean firstRun = new AtomicBoolean(true);
-    private static AtomicBoolean secondRun = new AtomicBoolean(true);
+    private static EnumSet<EthereumListener.SyncState> statesCompleted = EnumSet.noneOf(EthereumListener.SyncState.class);
     private static final Logger testLogger = LoggerFactory.getLogger("TestLogger");
     private static final MutableObject<String> configPath = new MutableObject<>("longrun/conf/ropsten-fast.conf");
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
@@ -75,16 +78,13 @@ public class FastSyncSanityTest {
         }
         if (overrideConfigPath != null) configPath.setValue(overrideConfigPath);
 
-        statTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (fatalErrors.get() > 0) {
-                        statTimer.shutdownNow();
-                    }
-                } catch (Throwable t) {
-                    FastSyncSanityTest.testLogger.error("Unhandled exception", t);
+        statTimer.scheduleAtFixedRate(() -> {
+            try {
+                if (fatalErrors.get() > 0) {
+                    statTimer.shutdownNow();
                 }
+            } catch (Throwable t) {
+                FastSyncSanityTest.testLogger.error("Unhandled exception", t);
             }
         }, 0, 15, TimeUnit.SECONDS);
     }
@@ -119,6 +119,10 @@ public class FastSyncSanityTest {
      * Just regular EthereumJ node
      */
     static class RegularNode extends BasicNode {
+
+        @Autowired
+        SyncManager syncManager;
+
         public RegularNode() {
             super("sampleNode");
         }
@@ -128,6 +132,27 @@ public class FastSyncSanityTest {
             config.setDiscoveryEnabled(false);
             ethereum.getChannelManager().close();
             syncPool.close();
+            syncManager.close();
+        }
+
+        private void firstRunChecks() throws InterruptedException {
+
+            if (!statesCompleted.containsAll(EnumSet.of(EthereumListener.SyncState.UNSECURE,
+                    EthereumListener.SyncState.SECURE)))
+                return;
+
+            sleep(60000);
+            stopSync();
+
+            testLogger.info("Validating nodes: Start");
+            BlockchainValidation.checkNodes(ethereum, commonConfig, fatalErrors);
+            testLogger.info("Validating nodes: End");
+
+            testLogger.info("Validating block headers: Start");
+            BlockchainValidation.checkFastHeaders(ethereum, commonConfig, fatalErrors);
+            testLogger.info("Validating block headers: End");
+
+            firstRun.set(false);
         }
 
         @Override
@@ -139,20 +164,16 @@ public class FastSyncSanityTest {
 
                 switch (syncState) {
                     case UNSECURE:
-                        if (!firstRun.get()) break;
+                        if (!firstRun.get() || statesCompleted.contains(EthereumListener.SyncState.UNSECURE)) break;
                         testLogger.info("[v] Unsecure sync completed");
-                        sleep(60000);
-                        stopSync();
-                        BlockchainValidation.checkNodes(ethereum, commonConfig, fatalErrors);
-                        firstRun.set(false);
+                        statesCompleted.add(EthereumListener.SyncState.UNSECURE);
+                        firstRunChecks();
                         break;
                     case SECURE:
-                        if (!secondRun.get()) break;
+                        if (!firstRun.get() || statesCompleted.contains(EthereumListener.SyncState.SECURE)) break;
                         testLogger.info("[v] Secure sync completed");
-                        sleep(60000);
-                        stopSync();
-                        BlockchainValidation.checkFastHeaders(ethereum, commonConfig, fatalErrors);
-                        secondRun.set(false);
+                        statesCompleted.add(EthereumListener.SyncState.SECURE);
+                        firstRunChecks();
                         break;
                     case COMPLETE:
                         testLogger.info("[v] Sync complete! The best block: " + bestBlock.getShortDescr());
@@ -171,14 +192,10 @@ public class FastSyncSanityTest {
 
     private final static AtomicInteger fatalErrors = new AtomicInteger(0);
 
-    private final static long MAX_RUN_MINUTES = 180L;
+    private final static long MAX_RUN_MINUTES = 1440L;
 
     private static ScheduledExecutorService statTimer =
-            Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "StatTimer");
-                }
-            });
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "StatTimer"));
 
     private static boolean logStats() {
         testLogger.info("---------====---------");
@@ -200,9 +217,7 @@ public class FastSyncSanityTest {
 
         runEthereum();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
             try {
                 while(firstRun.get()) {
                     sleep(1000);
@@ -213,24 +228,14 @@ public class FastSyncSanityTest {
                 sleep(10_000);
                 testLogger.info("Starting second run");
                 runEthereum();
-                while(secondRun.get()) {
+                while(!allChecksAreOver.get()) {
                     sleep(1000);
                 }
                 testLogger.info("Stopping second run");
                 regularNode.close();
-                testLogger.info("Second run stopped");
-                sleep(10_000);
-                testLogger.info("Starting third run");
-                runEthereum();
-                while(!allChecksAreOver.get()) {
-                    sleep(1000);
-                }
-                testLogger.info("Stopping third run");
-                regularNode.close();
                 testLogger.info("All checks are finished");
             } catch (Throwable e) {
                 e.printStackTrace();
-            }
             }
         }).start();
 

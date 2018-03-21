@@ -55,14 +55,11 @@ public class JsonRpcWhisper extends Whisper {
     public JsonRpcWhisper(URL rpcUrl) {
         this.rpcUrl = rpcUrl;
 
-        poller.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    pollFilters();
-                } catch (Exception e) {
-                    logger.error("Unhandled exception", e);
-                }
+        poller.scheduleAtFixedRate(() -> {
+            try {
+                pollFilters();
+            } catch (Exception e) {
+                logger.error("Unhandled exception", e);
             }
         }, 1, 1, TimeUnit.SECONDS);
     }
@@ -173,23 +170,24 @@ public class JsonRpcWhisper extends Whisper {
 
             // Send post request
             con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParams);
-            wr.flush();
-            wr.close();
+            try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+                wr.writeBytes(urlParams);
+                wr.flush();
+            }
 
             int responseCode = con.getResponseCode();
             if (responseCode != 200) {
                 throw new RuntimeException("HTTP Response: " + responseCode);
             }
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
+            final StringBuffer response;
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+                String inputLine;
+                response = new StringBuffer();
 
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
             }
-            in.close();
             return response.toString();
         } catch (IOException e) {
             throw new RuntimeException("Error sending POST to " + rpcUrl, e);

@@ -131,10 +131,16 @@ public class LevelDbDataSource implements DbSource<byte[]> {
         return Paths.get(config.databaseDir(), name);
     }
 
+    @Override
     public void reset() {
         close();
         FileUtil.recursiveDelete(getPath().toString());
         init();
+    }
+
+    @Override
+    public byte[] prefixLookup(byte[] key, int prefixBytes) {
+        throw new RuntimeException("LevelDbDataSource.prefixLookup() is not supported");
     }
 
     @Override

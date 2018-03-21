@@ -48,6 +48,7 @@
     <logger name="gas" level="ERROR"/>
     <logger name="txs" level="ERROR"/>
     <logger name="wallet" level="ERROR"/>
+    <logger name="prune" level="TRACE"/>
 
 </configuration>
 

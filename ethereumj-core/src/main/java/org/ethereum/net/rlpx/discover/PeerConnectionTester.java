@@ -105,13 +105,10 @@ public class PeerConnectionTester {
         ReconnectMaxPeers = config.peerDiscoveryTouchMaxNodes();
         peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
                 ConnectThreads, 0L, TimeUnit.SECONDS,
-                new MutablePriorityQueue<Runnable, ConnectTask>(new Comparator<ConnectTask>() {
-                    @Override
-                    public int compare(ConnectTask h1, ConnectTask h2) {
-                        return h2.nodeHandler.getNodeStatistics().getReputation() -
-                                h1.nodeHandler.getNodeStatistics().getReputation();
-                    }
-                }), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("discovery-tester-%d").build());
+                new MutablePriorityQueue<>((Comparator<ConnectTask>) (h1, h2) ->
+                        h2.nodeHandler.getNodeStatistics().getReputation() -
+                                h1.nodeHandler.getNodeStatistics().getReputation()),
+                new ThreadFactoryBuilder().setDaemon(true).setNameFormat("discovery-tester-%d").build());
     }
 
     public void close() {

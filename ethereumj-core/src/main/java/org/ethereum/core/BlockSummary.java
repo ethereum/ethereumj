@@ -17,7 +17,7 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.Functional;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 public class BlockSummary {
@@ -99,7 +99,17 @@ public class BlockSummary {
         );
     }
 
-    private static <T> byte[] encodeList(List<T> entries, Functional.Function<T, byte[]> encoder) {
+    /**
+     * Whether this block could be new best block
+     * for the chain with provided old total difficulty
+     * @param oldTotDifficulty Total difficulty for the suggested chain
+     * @return True - best, False - not best
+     */
+    public boolean betterThan(BigInteger oldTotDifficulty) {
+        return getTotalDifficulty().compareTo(oldTotDifficulty) > 0;
+    }
+
+    private static <T> byte[] encodeList(List<T> entries, Function<T, byte[]> encoder) {
         byte[][] result = new byte[entries.size()][];
         for (int i = 0; i < entries.size(); i++) {
             result[i] = encoder.apply(entries.get(i));
@@ -108,7 +118,7 @@ public class BlockSummary {
         return RLP.encodeList(result);
     }
 
-    private static <T> List<T> decodeList(RLPList list, Functional.Function<byte[], T> decoder) {
+    private static <T> List<T> decodeList(RLPList list, Function<byte[], T> decoder) {
         List<T> result = new ArrayList<>();
         for (RLPElement item : list) {
             result.add(decoder.apply(item.getRLPData()));
@@ -116,7 +126,7 @@ public class BlockSummary {
         return result;
     }
 
-    private static <K, V> byte[] encodeMap(Map<K, V> map, Functional.Function<K, byte[]> keyEncoder, Functional.Function<V, byte[]> valueEncoder) {
+    private static <K, V> byte[] encodeMap(Map<K, V> map, Function<K, byte[]> keyEncoder, Function<V, byte[]> valueEncoder) {
         byte[][] result = new byte[map.size()][];
         int i = 0;
         for (Map.Entry<K, V> entry : map.entrySet()) {
@@ -127,7 +137,7 @@ public class BlockSummary {
         return RLP.encodeList(result);
     }
 
-    private static <K, V> Map<K, V> decodeMap(RLPList list, Functional.Function<byte[], K> keyDecoder, Functional.Function<byte[], V> valueDecoder) {
+    private static <K, V> Map<K, V> decodeMap(RLPList list, Function<byte[], K> keyDecoder, Function<byte[], V> valueDecoder) {
         Map<K, V> result = new HashMap<>();
         for (RLPElement entry : list) {
             K key = keyDecoder.apply(((RLPList) entry).get(0).getRLPData());
@@ -138,21 +148,11 @@ public class BlockSummary {
     }
 
     private static byte[] encodeSummaries(final List<TransactionExecutionSummary> summaries) {
-        return encodeList(summaries, new Functional.Function<TransactionExecutionSummary, byte[]>() {
-            @Override
-            public byte[] apply(TransactionExecutionSummary summary) {
-                return summary.getEncoded();
-            }
-        });
+        return encodeList(summaries, TransactionExecutionSummary::getEncoded);
     }
 
     private static List<TransactionExecutionSummary> decodeSummaries(RLPList summaries) {
-        return decodeList(summaries, new Functional.Function<byte[], TransactionExecutionSummary>() {
-            @Override
-            public TransactionExecutionSummary apply(byte[] encoded) {
-                return new TransactionExecutionSummary(encoded);
-            }
-        });
+        return decodeList(summaries, TransactionExecutionSummary::new);
     }
 
     private static byte[] encodeReceipts(List<TransactionReceipt> receipts) {
@@ -161,58 +161,20 @@ public class BlockSummary {
             receiptByTxHash.put(toHexString(receipt.getTransaction().getHash()), receipt);
         }
 
-        return encodeMap(receiptByTxHash, new Functional.Function<String, byte[]>() {
-            @Override
-            public byte[] apply(String txHash) {
-                return RLP.encodeString(txHash);
-            }
-        }, new Functional.Function<TransactionReceipt, byte[]>() {
-            @Override
-            public byte[] apply(TransactionReceipt receipt) {
-                return receipt.getEncoded();
-            }
-        });
+        return encodeMap(receiptByTxHash, RLP::encodeString, TransactionReceipt::getEncoded);
     }
 
     private static Map<String, TransactionReceipt> decodeReceipts(RLPList receipts) {
-        return decodeMap(receipts, new Functional.Function<byte[], String>() {
-            @Override
-            public String apply(byte[] bytes) {
-                return new String(bytes);
-            }
-        }, new Functional.Function<byte[], TransactionReceipt>() {
-            @Override
-            public TransactionReceipt apply(byte[] encoded) {
-                return new TransactionReceipt(encoded);
-            }
-        });
+        return decodeMap(receipts, String::new, TransactionReceipt::new);
     }
 
     private static byte[] encodeRewards(Map<byte[], BigInteger> rewards) {
-        return encodeMap(rewards, new Functional.Function<byte[], byte[]>() {
-            @Override
-            public byte[] apply(byte[] bytes) {
-                return RLP.encodeElement(bytes);
-            }
-        }, new Functional.Function<BigInteger, byte[]>() {
-            @Override
-            public byte[] apply(BigInteger reward) {
-                return RLP.encodeBigInteger(reward);
-            }
-        });
+        return encodeMap(rewards, RLP::encodeElement, RLP::encodeBigInteger);
     }
 
     private static Map<byte[], BigInteger> decodeRewards(RLPList rewards) {
-        return decodeMap(rewards, new Functional.Function<byte[], byte[]>() {
-            @Override
-            public byte[] apply(byte[] bytes) {
-                return bytes;
-            }
-        }, new Functional.Function<byte[], BigInteger>() {
-            @Override
-            public BigInteger apply(byte[] bytes) {
-                return isEmpty(bytes) ? BigInteger.ZERO : new BigInteger(1, bytes);
-            }
-        });
+        return decodeMap(rewards, bytes -> bytes, bytes ->
+                ByteUtil.bytesToBigInteger(bytes)
+        );
     }
 }

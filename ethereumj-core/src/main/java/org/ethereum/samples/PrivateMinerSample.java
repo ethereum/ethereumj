@@ -187,14 +187,11 @@ public class PrivateMinerSample {
 
         @Override
         public void onSyncDone() {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        generateTransactions();
-                    } catch (Exception e) {
-                        logger.error("Error generating tx: ", e);
-                    }
+            new Thread(() -> {
+                try {
+                    generateTransactions();
+                } catch (Exception e) {
+                    logger.error("Error generating tx: ", e);
                 }
             }).start();
         }

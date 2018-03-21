@@ -43,6 +43,8 @@ public class DataWord implements Comparable<DataWord> {
     public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
     public static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
 
+    public static final long MEM_SIZE = 32 + 16 + 16;
+
     private byte[] data = new byte[32];
 
     public DataWord() {
@@ -110,9 +112,8 @@ public class DataWord implements Comparable<DataWord> {
     public int intValue() {
         int intVal = 0;
 
-        for (int i = 0; i < data.length; i++)
-        {
-            intVal = (intVal << 8) + (data[i] & 0xff);
+        for (byte aData : data) {
+            intVal = (intVal << 8) + (aData & 0xff);
         }
 
         return intVal;
@@ -140,9 +141,8 @@ public class DataWord implements Comparable<DataWord> {
     public long longValue() {
 
         long longVal = 0;
-        for (int i = 0; i < data.length; i++)
-        {
-            longVal = (longVal << 8) + (data[i] & 0xff);
+        for (byte aData : data) {
+            longVal = (longVal << 8) + (aData & 0xff);
         }
 
         return longVal;

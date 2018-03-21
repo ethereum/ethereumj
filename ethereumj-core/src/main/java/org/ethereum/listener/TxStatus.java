@@ -15,24 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.jsonrpc;
-
-import org.ethereum.core.Block;
-import org.ethereum.core.TransactionInfo;
-
-import static org.ethereum.jsonrpc.TypeConverter.toJsonHex;
+package org.ethereum.listener;
 
 /**
- * Created by Anton Nashatyrev on 05.08.2016.
+ * Created by Anton Nashatyrev on 15.07.2016.
  */
-public class TransactionReceiptDTOExt extends TransactionReceiptDTO {
+public class TxStatus {
 
-    public String returnData;
-    public String error;
+    public static final TxStatus REJECTED = new TxStatus(0);
+    public static final TxStatus PENDING = new TxStatus(0);
+    public static TxStatus getConfirmed(int blocks) {
+        return new TxStatus(blocks);
+    }
 
-    public TransactionReceiptDTOExt(Block block, TransactionInfo txInfo) {
-        super(block, txInfo);
-        returnData = toJsonHex(txInfo.getReceipt().getExecutionResult());
-        error = txInfo.getReceipt().getError();
+    public final int confirmed;
+
+    private TxStatus(int confirmed) {
+        this.confirmed = confirmed;
+    }
+
+    @Override
+    public String toString() {
+        if (this == REJECTED) return "REJECTED";
+        if (this == PENDING) return "PENDING";
+        return "CONFIRMED_" + confirmed;
     }
 }
