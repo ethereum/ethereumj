@@ -3,11 +3,11 @@ import java.text.SimpleDateFormat
 buildscript {
     repositories {
         jcenter()
-        maven { url 'http://repo.spring.io/plugins-release-local' }
+        maven { url 'http://repo.spring.io/plugins-release' }
     }
     dependencies {
-        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.1'
+        classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.7.0'
     }
 }
 
@@ -21,7 +21,7 @@ plugins {
 }
 
 apply plugin: 'propdeps-maven'
-apply plugin: 'com.jfrog.artifactory-upload'
+apply plugin: 'com.jfrog.artifactory'
 
 sourceCompatibility = 1.8
 
@@ -241,12 +241,13 @@ bintrayUpload.onlyIf {
 
 install {
     repositories.mavenInstaller {
-        customizePom(pom, project)
-
         // excludes artifacts produced by shadow plugin
-        addFilter('shadow') {artifact, file ->
+        addFilter('default') {artifact, file ->
             !file.getName().contains("shadow")
         }
+        pom('default').version = 'pom-default';
+
+        customizePom(pom('default'), project)
     }
 }
 
