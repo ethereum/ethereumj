@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.7.0'
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.1'
     }
 }
 
@@ -20,7 +20,7 @@ plugins {
 }
 
 apply plugin: 'propdeps-maven'
-apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'com.jfrog.artifactory-upload'
 
 sourceCompatibility = 1.8
 
