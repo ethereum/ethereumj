@@ -15,7 +15,6 @@ buildscript {
 plugins {
     id 'application'
     id 'jacoco'
-    id 'com.github.johnrengelman.shadow' version '2.0.1'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.jfrog.bintray' version '1.0'
 }
@@ -241,13 +240,7 @@ bintrayUpload.onlyIf {
 
 install {
     repositories.mavenInstaller {
-        // excludes artifacts produced by shadow plugin
-        addFilter('default') {artifact, file ->
-            !file.getName().contains("shadow")
-        }
-        pom('default').version = 'pom-default';
-
-        customizePom(pom('default'), project)
+        customizePom(pom, project)
     }
 }
 
