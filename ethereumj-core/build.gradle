@@ -305,6 +305,24 @@ def customizePom(pom, gradleProject) {
                     name = "Roman Mandeleil"
                     email = "roman.mandeleil@gmail.com"
                 }
+
+                developer {
+                    id = "Nashatyrev"
+                    name = "Anton Nashatyrev"
+                    email = "Anton.nashatyrev@gmail.com"
+                }
+
+                developer {
+                    id = "zilm13"
+                    name = "Dmitry Shmatko"
+                    email = "zilm@zilm.net"
+                }
+
+                developer {
+                    id = "mkalinin"
+                    name = "Mikhail Kalinin"
+                    email = "noblesse.knight@gmail.com"
+                }
             }
             issueManagement {
                 system = "GitHub Issues"
