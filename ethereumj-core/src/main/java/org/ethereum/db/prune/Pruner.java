@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * <p>
  *     Each prune session uses a certain chain {@link Segment}
  *     which is going to be 'pruned'. To be confident that live nodes won't be removed,
- *     pruner must be initialized with the top of the chain, see {@link ##init(List, int)}}.
+ *     pruner must be initialized with the top of the chain, see {@link #init(List, int)}}.
  *     And after that it must be fed with each newly processed block, see {@link #feed(JournalSource.Update)}.
  *     {@link QuotientFilter} ({@link CountingQuotientFilter} implementation in particular) instance is used to
  *     efficiently keep upcoming inserts in memory and protect newly inserted nodes from being deleted during
