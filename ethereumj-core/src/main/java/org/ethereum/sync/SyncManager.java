@@ -207,7 +207,7 @@ public class SyncManager extends BlockDownloader {
     }
 
     @Override
-    protected int getTotalHeadersToRequest() {
+    protected int getMaxHeadersInQueue() {
         if (getEstimatedBlockSize() == 0) {
             // accurately exploring the net
             if (syncQueue.getHeadersCount() < 2 * MAX_IN_REQUEST) {
@@ -224,8 +224,8 @@ public class SyncManager extends BlockDownloader {
             slotsLeft = MAX_IN_REQUEST;
         }
 
-        // adding MAX_IN_REQUEST to overcome dark zone buffer
-        return Math.min(slotsLeft + MAX_IN_REQUEST, getHeaderQueueLimit());
+        // adding 2 * MAX_IN_REQUEST to overcome dark zone buffer
+        return Math.min(slotsLeft + 2 * MAX_IN_REQUEST, getHeaderQueueLimit());
     }
 
     /**

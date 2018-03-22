@@ -81,7 +81,7 @@ public abstract class BlockDownloader {
     protected abstract void pushBlocks(List<BlockWrapper> blockWrappers);
     protected abstract void pushHeaders(List<BlockHeaderWrapper> headers);
     protected abstract int getBlockQueueFreeSize();
-    protected abstract int getTotalHeadersToRequest();
+    protected abstract int getMaxHeadersInQueue();
 
     protected void finishDownload() {}
 
@@ -151,7 +151,7 @@ public abstract class BlockDownloader {
             try {
                     if (hReq.isEmpty()) {
                         synchronized (this) {
-                            hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, getTotalHeadersToRequest());
+                            hReq = syncQueue.requestHeaders(MAX_IN_REQUEST, 128, getMaxHeadersInQueue());
                             if (hReq == null) {
                                 logger.info("{}: Headers download complete.", name);
                                 headersDownloadComplete = true;
