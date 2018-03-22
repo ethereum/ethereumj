@@ -117,7 +117,7 @@ public class HeadersDownloader extends BlockDownloader {
     }
 
     @Override
-    protected int getTotalHeadersToRequest() {
+    protected int getMaxHeadersInQueue() {
         return getHeaderQueueLimit();
     }
 

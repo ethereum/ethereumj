@@ -94,7 +94,7 @@ public class FastSyncDownloader extends BlockDownloader {
     }
 
     @Override
-    protected int getTotalHeadersToRequest() {
+    protected int getMaxHeadersInQueue() {
         return getHeaderQueueLimit();
     }
 
