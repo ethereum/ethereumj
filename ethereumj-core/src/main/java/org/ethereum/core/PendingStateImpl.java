@@ -24,10 +24,10 @@ import static org.ethereum.listener.EthereumListener.PendingTransactionState.PEN
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * Keeps logic providing pending state management
@@ -53,7 +52,6 @@ import org.springframework.stereotype.Component;
  * @author Mikhail Kalinin
  * @since 28.09.2015
  */
-@Component
 public class PendingStateImpl implements PendingState {
 
     public static class TransactionSortedSet extends TreeSet<Transaction> {
@@ -72,25 +70,21 @@ public class PendingStateImpl implements PendingState {
     private static final Logger logger = LoggerFactory.getLogger("pending");
 
     @Autowired
-    private SystemProperties config = SystemProperties.getDefault();
+    protected SystemProperties config = SystemProperties.getDefault();
 
     @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
+    protected CommonConfig commonConfig = CommonConfig.getDefault();
 
-    @Autowired
     private EthereumListener listener;
 
     @Autowired
-    private BlockchainImpl blockchain;
+    private Blockchain blockchain;
 
-    @Autowired
-    private BlockStore blockStore;
+    protected BlockStore blockStore;
 
-    @Autowired
     private TransactionStore transactionStore;
 
-    @Autowired
-    private ProgramInvokeFactory programInvokeFactory;
+    protected ProgramInvokeFactory programInvokeFactory;
 
 //    private Repository repository;
 
@@ -106,13 +100,9 @@ public class PendingStateImpl implements PendingState {
     private Block best = null;
 
     @Autowired
-    public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
+    public PendingStateImpl(final EthereumListener listener) {
         this.listener = listener;
-        this.blockchain = blockchain;
 //        this.repository = blockchain.getRepository();
-        this.blockStore = blockchain.getBlockStore();
-        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
-        this.transactionStore = blockchain.getTransactionStore();
     }
 
     public void init() {
@@ -120,7 +110,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private Repository getOrigRepository() {
-        return blockchain.getRepositorySnapshot();
+        return ((BlockchainImpl) blockchain).getRepositorySnapshot();
     }
 
     @Override
@@ -160,13 +150,36 @@ public class PendingStateImpl implements PendingState {
     }
 
     @Override
+    public void addPendingTransaction(Transaction tx, Consumer<Throwable> errorConsumer) {
+        int unknownTx = 0;
+        List<Transaction> newPending = new ArrayList<>();
+        if (addNewTxIfNotExist(tx)) {
+            unknownTx++;
+            TransactionReceipt receipt = addPendingTransactionImpl(tx);
+            if (receiptIsValid(receipt)) {
+                newPending.add(tx);
+            } else {
+                errorConsumer.accept(new Throwable("Tx execution simulation failed: " + receipt.getError()));
+            }
+        }
+
+        logger.debug("Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
+                1, unknownTx, newPending, receivedTxs.size());
+
+        if (!newPending.isEmpty()) {
+            listener.onPendingTransactionsReceived(newPending);
+            listener.onPendingStateChanged(PendingStateImpl.this);
+        }
+    }
+
+    @Override
     public synchronized List<Transaction> addPendingTransactions(List<Transaction> transactions) {
         int unknownTx = 0;
         List<Transaction> newPending = new ArrayList<>();
         for (Transaction tx : transactions) {
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                if (addPendingTransactionImpl(tx)) {
+                if (receiptIsValid(addPendingTransactionImpl(tx))) {
                     newPending.add(tx);
                 }
             }
@@ -181,6 +194,10 @@ public class PendingStateImpl implements PendingState {
         }
 
         return newPending;
+    }
+
+    protected boolean receiptIsValid(TransactionReceipt receipt) {
+        return receipt.isValid();
     }
 
     public synchronized void trackTransaction(Transaction tx) {
@@ -214,9 +231,9 @@ public class PendingStateImpl implements PendingState {
      * Executes pending tx on the latest best block
      * Fires pending state update
      * @param tx    Transaction
-     * @return True if transaction gets NEW_PENDING state, False if DROPPED
+     * @return execution receipt
      */
-    private boolean addPendingTransactionImpl(final Transaction tx) {
+    private TransactionReceipt addPendingTransactionImpl(final Transaction tx) {
         TransactionReceipt newReceipt = new TransactionReceipt();
         newReceipt.setTransaction(tx);
 
@@ -229,13 +246,13 @@ public class PendingStateImpl implements PendingState {
             txReceipt = executeTx(tx);
         }
 
-        if (!txReceipt.isValid()) {
+        if (!receiptIsValid(txReceipt)) {
             fireTxUpdate(txReceipt, DROPPED, getBestBlock());
         } else {
             pendingTransactions.add(new PendingTransaction(tx, getBestBlock().getNumber()));
             fireTxUpdate(txReceipt, NEW_PENDING, getBestBlock());
         }
-        return txReceipt.isValid();
+        return txReceipt;
     }
 
     private TransactionReceipt createDroppedReceipt(Transaction tx, String error) {
@@ -246,7 +263,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     // validations which are not performed within executeTx
-    private String validate(Transaction tx) {
+    protected String validate(Transaction tx) {
         try {
             tx.verify();
         } catch (Exception e) {
@@ -411,11 +428,8 @@ public class PendingStateImpl implements PendingState {
         logger.trace("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
 
         Block best = getBestBlock();
-
-        TransactionExecutor executor = new TransactionExecutor(
-                tx, best.getCoinbase(), getRepository(),
-                blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
-                .withCommonConfig(commonConfig);
+        TransactionExecutor executor = createTransactionExecutor(tx, best.getCoinbase(), getRepository(),
+                createFakePendingBlock());
 
         executor.init();
         executor.execute();
@@ -423,6 +437,13 @@ public class PendingStateImpl implements PendingState {
         executor.finalization();
 
         return executor.getReceipt();
+    }
+
+    protected TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase,
+                                                            Repository track, Block currentBlock) {
+        return new CommonTransactionExecutor(transaction, minerCoinbase,
+                track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0)
+                .withCommonConfig(commonConfig);
     }
 
     private Block createFakePendingBlock() {
@@ -447,7 +468,15 @@ public class PendingStateImpl implements PendingState {
         return block;
     }
 
+    @Autowired
     public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
+        this.blockStore = blockchain.getBlockStore();
+        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
+        this.transactionStore = blockchain.getTransactionStore();
+    }
+
+    public void setCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
     }
 }

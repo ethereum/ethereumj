@@ -20,8 +20,8 @@ package org.ethereum.manager;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
@@ -53,7 +52,6 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
  * @author Roman Mandeleil
  * @since 01.06.2014
  */
-@Component
 public class WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
@@ -92,32 +90,36 @@ public class WorldManager {
     private DbFlushManager dbFlushManager;
 
     @Autowired
-    private ApplicationContext ctx;
+    protected ApplicationContext ctx;
 
-    private SystemProperties config;
+    protected Ethereum ethereum;
 
+    protected SystemProperties config;
+
+    @Autowired
     private EthereumListener listener;
 
-    private Blockchain blockchain;
+    protected Blockchain blockchain;
 
     private Repository repository;
 
+    @Autowired
     private BlockStore blockStore;
 
     @Autowired
     public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final Blockchain blockchain,
-                        final BlockStore blockStore) {
-        this.listener = listener;
+                        final Blockchain blockchain) {
         this.blockchain = blockchain;
         this.repository = repository;
-        this.blockStore = blockStore;
         this.config = config;
-        loadBlockchain();
     }
 
     @PostConstruct
-    private void init() {
+    protected void init() {
+        this.ethereum = ctx.getBean(Ethereum.class);
+        ethereum.setWorldManager(this);
+        loadBlockchain();
+        channelManager.init(ethereum);
         syncManager.init(channelManager, pool);
     }
 

@@ -124,11 +124,6 @@ public class Util {
 
     public static long curTime() { return TIMER.curTime();}
 
-    public static byte[] rlpEncodeLong(long n) {
-        // TODO for now leaving int cast
-        return RLP.encodeInt((int) n);
-    }
-
     public static byte rlpDecodeByte(RLPElement elem) {
         return (byte) rlpDecodeInt(elem);
     }
@@ -147,26 +142,6 @@ public class Util {
         byte[] b = elem.getRLPData();
         if (b == null) return null;
         return new String(b);
-    }
-
-    public static byte[] rlpEncodeList(Object ... elems) {
-        byte[][] encodedElems = new byte[elems.length][];
-        for (int i =0; i < elems.length; i++) {
-            if (elems[i] instanceof Byte) {
-                encodedElems[i] = RLP.encodeByte((Byte) elems[i]);
-            } else if (elems[i] instanceof Integer) {
-                encodedElems[i] = RLP.encodeInt((Integer) elems[i]);
-            } else if (elems[i] instanceof Long) {
-                encodedElems[i] = rlpEncodeLong((Long) elems[i]);
-            } else if (elems[i] instanceof String) {
-                encodedElems[i] = RLP.encodeString((String) elems[i]);
-            } else if (elems[i] instanceof byte[]) {
-                encodedElems[i] = ((byte[]) elems[i]);
-            } else {
-                throw new RuntimeException("Unsupported object: " + elems[i]);
-            }
-        }
-        return RLP.encodeList(encodedElems);
     }
 
     public static SectionReader stringToReader(String s) {

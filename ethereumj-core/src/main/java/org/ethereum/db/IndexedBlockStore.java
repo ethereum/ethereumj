@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.math.BigInteger.ZERO;
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.spongycastle.util.Arrays.areEqual;
 

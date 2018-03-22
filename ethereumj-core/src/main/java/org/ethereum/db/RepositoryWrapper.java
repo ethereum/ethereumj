@@ -19,6 +19,7 @@ package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
@@ -40,7 +41,6 @@ import java.util.Set;
 @Component
 public class RepositoryWrapper implements Repository {
 
-    @Autowired
     BlockchainImpl blockchain;
 
     public RepositoryWrapper() {
@@ -214,5 +214,10 @@ public class RepositoryWrapper implements Repository {
     @Override
     public Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys) {
         return blockchain.getRepository().getStorage(addr, keys);
+    }
+
+    @Autowired
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = (BlockchainImpl) blockchain;
     }
 }

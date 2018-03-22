@@ -27,7 +27,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -36,6 +38,11 @@ import org.springframework.context.annotation.Import;
  * Created on: 27/01/2015 01:05
  */
 @Configuration
+@ComponentScan(
+        basePackages = "org.ethereum",
+        excludeFilters = {@ComponentScan.Filter(NoAutoscan.class),
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.ethereum\\.casper\\..*")}
+)
 @Import(CommonConfig.class)
 public class DefaultConfig {
     private static Logger logger = LoggerFactory.getLogger("general");

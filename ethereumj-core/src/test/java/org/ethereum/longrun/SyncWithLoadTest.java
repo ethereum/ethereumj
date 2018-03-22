@@ -24,12 +24,12 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
+import org.ethereum.core.CommonTransactionExecutor;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
@@ -49,7 +49,6 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -207,8 +206,8 @@ public class SyncWithLoadTest {
                             .getSnapshotTo(block.getStateRoot())
                             .startTracking();
                     try {
-                        TransactionExecutor executor = new TransactionExecutor
-                                (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
+                        TransactionExecutor executor = new CommonTransactionExecutor(
+                                tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
                                         programInvokeFactory, block, new EthereumListenerAdapter(), 0)
                                 .withCommonConfig(commonConfig)
                                 .setLocalCall(true);

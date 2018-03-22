@@ -22,6 +22,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.casper.config.net.CasperTestNetConfig;
 import org.ethereum.config.blockchain.OlympicConfig;
 import org.ethereum.config.net.*;
 import org.ethereum.core.Genesis;
@@ -70,7 +71,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @since 22.05.2014
  */
 public class SystemProperties {
-    private static Logger logger = LoggerFactory.getLogger("general");
+    protected static Logger logger = LoggerFactory.getLogger("general");
 
     public final static String PROPERTY_DB_DIR = "database.dir";
     public final static String PROPERTY_LISTEN_PORT = "peer.listen.port";
@@ -132,7 +133,7 @@ public class SystemProperties {
     private @interface ValidateMe {};
 
 
-    private Config config;
+    protected Config config;
 
     // mutable options for tests
     private String databaseDir = null;
@@ -150,7 +151,7 @@ public class SystemProperties {
     private Boolean discoveryEnabled = null;
 
     private GenesisJson genesisJson;
-    private BlockchainNetConfig blockchainConfig;
+    protected BlockchainNetConfig blockchainConfig;
     private Genesis genesis;
     private Boolean vmTrace;
     private Boolean recordInternalTransactionsData;
@@ -341,6 +342,9 @@ public class SystemProperties {
                             break;
                         case "testnet":
                             blockchainConfig = new TestNetConfig();
+                            break;
+                        case "casper":
+                            blockchainConfig = new CasperTestNetConfig();
                             break;
                         default:
                             throw new RuntimeException("Unknown value for 'blockchain.config.name': '" + config.getString("blockchain.config.name") + "'");

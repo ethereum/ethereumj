@@ -17,6 +17,7 @@
  */
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.*;
@@ -108,6 +109,15 @@ public class RepositoryRoot extends RepositoryImpl {
         init(accountStateCache, codeCache, storageCache);
     }
 
+    /**
+     * Same as {@link #RepositoryRoot(Source, byte[])} but more correct
+     * when autowiring is not active as you get default SystemProperties otherwise
+     */
+    public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root, final SystemProperties props) {
+        this(stateDS, root);
+        this.config = props;
+    }
+
     @Override
     public synchronized void commit() {
         super.commit();
@@ -131,7 +141,7 @@ public class RepositoryRoot extends RepositoryImpl {
 
     @Override
     public Repository getSnapshotTo(byte[] root) {
-        return new RepositoryRoot(stateDS, root);
+        return new RepositoryRoot(stateDS, root, config);
     }
 
     @Override

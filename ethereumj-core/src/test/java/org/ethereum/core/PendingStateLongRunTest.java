@@ -20,7 +20,6 @@ package org.ethereum.core;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.RepositoryRoot;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -132,7 +131,7 @@ public class PendingStateLongRunTest {
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter());
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);

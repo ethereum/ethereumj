@@ -19,6 +19,7 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;

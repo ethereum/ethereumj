@@ -19,12 +19,15 @@ package org.ethereum.solidity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +66,8 @@ public abstract class SolidityType {
         if ("bytes".equals(typeName)) return new BytesType();
         if ("function".equals(typeName)) return new FunctionType();
         if (typeName.startsWith("bytes")) return new Bytes32Type(typeName);
+        // FIXME: actually we have 'fixedNM' in Solidity and 'decimal' in Vyper
+        if (typeName.startsWith("decimal")) return new DecimalType(typeName);
         throw new RuntimeException("Unknown type: " + typeName);
     }
 
@@ -256,6 +261,8 @@ public abstract class SolidityType {
             byte[] bb;
             if (value instanceof byte[]) {
                 bb = (byte[]) value;
+            } else if (value instanceof ByteArrayWrapper) {
+                bb = ((ByteArrayWrapper) value).getData();
             } else if (value instanceof String) {
                 bb = ((String) value).getBytes();
             } else {
@@ -387,6 +394,8 @@ public abstract class SolidityType {
                 bigInt = (BigInteger) value;
             } else  if (value instanceof Number) {
                 bigInt = new BigInteger(value.toString());
+            } else if (value instanceof ByteArrayWrapper) {
+                bigInt = ByteUtil.bytesToBigInteger(((ByteArrayWrapper) value).getData());
             } else  if (value instanceof byte[]) {
                 bigInt = ByteUtil.bytesToBigInteger((byte[]) value);
             } else {
@@ -407,6 +416,70 @@ public abstract class SolidityType {
             return encodeInt(new BigInteger("" + i));
         }
         public static byte[] encodeInt(BigInteger bigInt) {
+            return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
+        }
+    }
+
+    public static class DecimalType extends SolidityType {
+
+        // FIXME: what if it's not 10 digits after point
+        private static int DECIMAL_PLACES = 10;
+
+        public DecimalType(String name) {
+            super(name);
+        }
+
+        @Override
+        public String getCanonicalName() {
+            if (getName().equals("decimal")) return "decimal10";
+            return super.getCanonicalName();
+        }
+
+        @Override
+        public byte[] encode(Object value) {
+            BigDecimal bigDecimal;
+
+            if (value instanceof String) {
+                String s = ((String)value).toLowerCase().trim();
+                int radix = 10;
+                if (s.startsWith("0x")) {
+                    s = s.substring(2);
+                    radix = 16;
+                } else if (s.contains("a") || s.contains("b") || s.contains("c") ||
+                        s.contains("d") || s.contains("e") || s.contains("f")) {
+                    radix = 16;
+                }
+
+                BigInteger bigInt = new BigInteger(s, radix);
+                bigDecimal = fromBigInt(bigInt, DECIMAL_PLACES);
+            } else  if (value instanceof BigDecimal) {
+                bigDecimal = (BigDecimal) value;
+            } else  if (value instanceof Number) {
+                bigDecimal = new BigDecimal(value.toString());
+            } else  if (value instanceof byte[]) {
+                BigInteger bigInt = ByteUtil.bytesToBigInteger((byte[]) value);
+                bigDecimal = fromBigInt(bigInt, DECIMAL_PLACES);
+            } else {
+                throw new RuntimeException("Invalid value for type '" + this + "': " + value + " (" + value.getClass() + ")");
+            }
+            return encodeFixed(bigDecimal);
+        }
+
+        private static BigDecimal fromBigInt(final BigInteger bigInt, final int decimalDigits) {
+            // FIXME: is it really rounding down?? cannot find Solidity/Vyper practice
+            return new BigDecimal(bigInt).divide(BigDecimal.valueOf(Math.pow(10, decimalDigits)), RoundingMode.DOWN);
+        }
+
+        @Override
+        public Object decode(byte[] encoded, int offset) {
+            return decodeFixed(encoded, offset);
+        }
+
+        public static BigDecimal decodeFixed(byte[] encoded, int offset) {
+            return fromBigInt(new BigInteger(Arrays.copyOfRange(encoded, offset, offset + 32)), DECIMAL_PLACES);
+        }
+        public static byte[] encodeFixed(BigDecimal bigDecimal) {
+            BigInteger bigInt = bigDecimal.multiply(BigDecimal.valueOf(Math.pow(10, DECIMAL_PLACES))).toBigInteger();
             return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
         }
     }

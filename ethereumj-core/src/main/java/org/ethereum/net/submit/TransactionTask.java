@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Thread.sleep;
 
@@ -41,6 +42,7 @@ public class TransactionTask implements Callable<List<Transaction>> {
     private final List<Transaction> tx;
     private final ChannelManager channelManager;
     private final Channel receivedFrom;
+    private final CompletableFuture<Transaction> future;
 
     public TransactionTask(Transaction tx, ChannelManager channelManager) {
         this(Collections.singletonList(tx), channelManager);
@@ -54,6 +56,14 @@ public class TransactionTask implements Callable<List<Transaction>> {
         this.tx = tx;
         this.channelManager = channelManager;
         this.receivedFrom = receivedFrom;
+        this.future = null;
+    }
+
+    public TransactionTask(Transaction tx, ChannelManager channelManager, CompletableFuture<Transaction> future) {
+        this.tx = Collections.singletonList(tx);
+        this.channelManager = channelManager;
+        this.future = future;
+        this.receivedFrom = null;
     }
 
     @Override
@@ -62,10 +72,16 @@ public class TransactionTask implements Callable<List<Transaction>> {
         try {
             logger.info("submit tx: {}", tx.toString());
             channelManager.sendTransaction(tx, receivedFrom);
+            if (future != null) {
+                future.complete(tx.get(0));
+            }
             return tx;
 
         } catch (Throwable th) {
             logger.warn("Exception caught: {}", th);
+            if (future != null) {
+                future.completeExceptionally(th);
+            }
         }
         return null;
     }

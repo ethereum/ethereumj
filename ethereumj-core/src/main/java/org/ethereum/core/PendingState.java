@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author Mikhail Kalinin
@@ -42,6 +43,16 @@ public interface PendingState extends org.ethereum.facade.PendingState {
      * @param tx transaction
      */
     void addPendingTransaction(Transaction tx);
+
+    /**
+     * Adds transaction to the list of pending state txs  <br>
+     * For the moment this list is populated with txs sent by our peer only <br>
+     * Triggers an update of pending state
+     *
+     * @param tx                transaction
+     * @param errorConsumer     Fires if tx execution failed on current state in PendingState
+     */
+    void addPendingTransaction(Transaction tx, Consumer<Throwable> errorConsumer);
 
     /**
      * It should be called on each block imported as <b>BEST</b> <br>

@@ -45,7 +45,7 @@ public class Eip150HFConfig implements BlockchainConfig, BlockchainNetConfig {
     protected BlockchainConfig parent;
 
 
-    static class GasCostEip150HF extends GasCost {
+    public static class GasCostEip150HF extends GasCost {
         public int getBALANCE()             {     return 400;     }
         public int getEXT_CODE_SIZE()       {     return 700;     }
         public int getEXT_CODE_COPY()       {     return 700;     }

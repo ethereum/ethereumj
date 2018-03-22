@@ -56,6 +56,12 @@ task runTest (type: JavaExec) {
     jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=test.conf'
 }
 
+task runCasper (type: JavaExec) {
+    main = 'org.ethereum.casper.Start'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=casper.conf'
+}
+
 /**
  *  This is TCK test command line option,
  *  to run the test:
@@ -214,7 +220,8 @@ artifactoryPublish.onlyIf {
             project.version.endsWith('-SNAPSHOT') &&
             (branchName.startsWith('master') ||
                     branchName.startsWith('develop') ||
-                    branchName.startsWith('stage'))
+                    branchName.startsWith('stage') ||
+                    branchName.startsWith('research/casper'))
 }
 
 bintray {

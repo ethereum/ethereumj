@@ -24,7 +24,10 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.mine.BlockMiner;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
@@ -32,7 +35,9 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.ProgramPrecompile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -45,12 +50,15 @@ import static java.util.Arrays.asList;
 
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(
-        basePackages = "org.ethereum",
-        excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
     private static final Logger logger = LoggerFactory.getLogger("general");
     private Set<DbSource> dbSources = new HashSet<>();
+
+    @Autowired
+    protected ApplicationContext ctx;
+
+    @Autowired
+    protected EthereumListener ethereumListener;
 
     private static CommonConfig defaultInstance;
 
@@ -68,7 +76,7 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.getSpringDefault();
+        return SystemProperties.getDefault();
     }
 
     @Bean
@@ -296,5 +304,25 @@ public class CommonConfig {
         DbSource<byte[]> dbSource = keyValueDataSource("peers");
         dbSources.add(dbSource);
         return new PeerSource(dbSource);
+    }
+
+    @Bean
+    public Blockchain blockchain() {
+        return new BlockchainImpl(systemProperties());
+    }
+
+    @Bean
+    public WorldManager worldManager() {
+        return new WorldManager(systemProperties(), repository(), blockchain());
+    }
+
+    @Bean
+    public PendingState pendingState() {
+        return new PendingStateImpl(ethereumListener);
+    }
+
+    @Bean
+    public BlockMiner blockMiner() {
+        return new BlockMiner(systemProperties(), (CompositeEthereumListener) ethereumListener, blockchain(), pendingState());
     }
 }

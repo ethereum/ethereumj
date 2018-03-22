@@ -34,6 +34,7 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
+import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -93,7 +94,6 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, Frame frame, List<Object> out) throws Exception {
-        Frame completeFrame = null;
         if (frame.isChunked()) {
             if (!supportChunkedFrames && frame.totalFrameSize > 0) {
                 throw new RuntimeException("Faming is not supported in this configuration.");
@@ -157,14 +157,13 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         Message msg;
         try {
             msg = createMessage((byte) frameType, payload);
+            if (loggerNet.isDebugEnabled())
+                loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
         } catch (Exception ex) {
             loggerNet.debug("Incorrectly encoded message from: \t{}, dropping peer", channel);
             channel.disconnect(ReasonCode.BAD_PROTOCOL);
             return null;
         }
-
-        if (loggerNet.isDebugEnabled())
-            loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
 
         ethereumListener.onRecvMessage(channel, msg);
 
@@ -201,14 +200,18 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             int newPos = min(curPos + maxFramePayloadSize, bytes.length);
             byte[] frameBytes = curPos == 0 && newPos == bytes.length ? bytes :
                     Arrays.copyOfRange(bytes, curPos, newPos);
-            ret.add(new Frame(code, frameBytes));
+            if (curPos == 0) {  // 1st frame needs type
+                ret.add(new Frame(code, frameBytes));
+            } else {    // Next frames don't need type
+                ret.add(new Frame(-1, frameBytes));
+            }
             curPos = newPos;
         }
 
         if (ret.size() > 1) {
             // frame has been split
             int contextId = contextIdCounter.getAndIncrement();
-            ret.get(0).totalFrameSize = bytes.length;
+            ret.get(0).totalFrameSize = bytes.length + RLP.encodeLong(code).length; // type is part of the body
             loggerWire.debug("Message (size " + bytes.length + ") split to " + ret.size() + " frames. Context-id: " + contextId);
             for (Frame frame : ret) {
                 frame.contextId = contextId;

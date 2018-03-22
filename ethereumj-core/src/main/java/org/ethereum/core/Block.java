@@ -386,6 +386,7 @@ public class Block {
     }
 
     public boolean isGenesis() {
+        parseRLP();
         return this.header.isGenesis();
     }
 

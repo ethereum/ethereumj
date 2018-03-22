@@ -17,7 +17,6 @@
  */
 package org.ethereum.core;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -29,7 +28,6 @@ import org.ethereum.trie.TrieImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
@@ -40,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,9 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.*;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
@@ -66,7 +61,6 @@ import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
@@ -97,7 +91,6 @@ import static org.ethereum.util.BIUtil.isMoreThan;
  * @author Nick Savers
  * @since 20.05.2014
  */
-@Component
 public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchain {
 
 
@@ -123,13 +116,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BigInteger totalDifficulty = ZERO;
 
     @Autowired
-    private EthereumListener listener;
+    protected EthereumListener listener;
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
 
     @Autowired
-    private AdminInfo adminInfo;
+    protected AdminInfo adminInfo;
 
     @Autowired
     private DependentBlockHeaderRule parentHeaderValidator;
@@ -138,13 +131,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private PendingState pendingState;
 
     @Autowired
-    EventDispatchThread eventDispatchThread;
+    protected EventDispatchThread eventDispatchThread;
 
     @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
-
-    @Autowired
-    SyncManager syncManager;
+    protected CommonConfig commonConfig = CommonConfig.getDefault();
 
     @Autowired
     PruneManager pruneManager;
@@ -155,7 +145,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     DbFlushManager dbFlushManager;
 
-    SystemProperties config = SystemProperties.getDefault();
+    protected SystemProperties config = SystemProperties.getDefault();
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -163,7 +153,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     long exitOn = Long.MAX_VALUE;
 
     public boolean byTest = false;
-    private boolean fork = false;
+    protected boolean fork = false;
 
     private byte[] minerCoinbase;
     private byte[] minerExtraData;
@@ -211,13 +201,23 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return this;
     }
 
-    public BlockchainImpl withSyncManager(SyncManager syncManager) {
-        this.syncManager = syncManager;
+    public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
+        this.parentHeaderValidator = parentHeaderValidator;
         return this;
     }
 
-    public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
-        this.parentHeaderValidator = parentHeaderValidator;
+    public BlockchainImpl withEventDispatchThread(EventDispatchThread eventDispatchThread) {
+        this.eventDispatchThread = eventDispatchThread;
+        return this;
+    }
+
+    public BlockchainImpl withCommonConfig(CommonConfig commonConfig) {
+        this.commonConfig = commonConfig;
+        return this;
+    }
+
+    public BlockchainImpl withBlockStore(BlockStore blockStore) {
+        this.blockStore = blockStore;
         return this;
     }
 
@@ -340,7 +340,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return programInvokeFactory;
     }
 
-    private State pushState(byte[] bestBlockHash) {
+    protected State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
         this.bestBlock = blockStore.getBlockByHash(bestBlockHash);
         totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlockHash);
@@ -348,7 +348,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return push;
     }
 
-    private void popState() {
+    protected void popState() {
         State state = stateStack.pop();
         this.repository = repository.getSnapshotTo(state.root);
         this.bestBlock = state.savedBest;
@@ -411,6 +411,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
+        if (blockExists(block)) return EXIST; // retry of well known block
+
+        return tryToConnectImpl(block);
+    }
+
+    protected boolean blockExists(final Block block) {
         if (blockStore.getMaxNumber() >= block.getNumber() &&
                 blockStore.isBlockExist(block.getHash())) {
 
@@ -419,9 +425,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                         Hex.toHexString(block.getHash()).substring(0, 6),
                         block.getNumber());
 
-            // retry of well known block
-            return EXIST;
+            return true;
         }
+        return  false;
+    }
+
+    protected ImportResult tryToConnectImpl(final Block block) {
 
         final ImportResult ret;
 
@@ -463,15 +472,23 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return ret;
     }
 
-    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
+    public synchronized BlockSummary createNewBlockSummary(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
         long time = System.currentTimeMillis() / 1000;
         // adjust time to parent block this may happen due to system clocks difference
         if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
-        return createNewBlock(parent, txs, uncles, time);
+        return createNewBlockSummary(parent, txs, uncles, time);
+    }
+
+    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
+        return createNewBlockSummary(parent, txs, uncles).getBlock();
     }
 
     public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+        return createNewBlockSummary(parent, txs, uncles, time).getBlock();
+    }
+
+    public synchronized BlockSummary createNewBlockSummary(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
         final long blockNumber = parent.getNumber() + 1;
 
         final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
@@ -514,7 +531,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         block.getHeader().setGasUsed(receipts.size() > 0 ? receipts.get(receipts.size() - 1).getCumulativeGasLong() : 0);
         block.getHeader().setReceiptsRoot(calcReceiptsTrie(receipts));
 
-        return block;
+        return summary;
     }
 
     @Override
@@ -575,49 +592,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         BlockSummary summary = processBlock(repo, block);
-        final List<TransactionReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
-
-        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
-            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
-            logger.warn("Calculated receipts: " + receipts);
+        if(!checkBlockSummary(summary, repo)) {
             repo.rollback();
             summary = null;
-        }
-
-        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
-            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
-            repo.rollback();
-            summary = null;
-        }
-
-        if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
-
-            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(repo.getRoot()));
-            stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
-
-//            track.rollback();
-//            repository.rollback();
-            repository = repository.getSnapshotTo(origRoot);
-
-            // block is bad so 'rollback' the state root to the original state
-//            ((RepositoryImpl) repository).setRoot(origRoot);
-
-//            track.rollback();
-            // block is bad so 'rollback' the state root to the original state
-//            ((RepositoryImpl) repository).setRoot(origRoot);
-
-            if (config.exitOnBlockConflict() && !byTest) {
-                adminInfo.lostConsensus();
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
-                System.exit(1);
-            } else {
-                summary = null;
-            }
         }
 
         if (summary != null) {
+            final List<TransactionReceipt> receipts = summary.getReceipts();
             repo.commit();
             updateTotalDifficulty(block);
             summary.setTotalDifficulty(getTotalDifficulty());
@@ -633,6 +616,43 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         return summary;
+    }
+
+    /**
+     * Sanity checks of block import result
+     * @return true if block is good, otherwise false
+     */
+    protected boolean checkBlockSummary(final BlockSummary summary, final Repository track) {
+        Block block = summary.getBlock();
+        final List<TransactionReceipt> receipts = summary.getReceipts();
+
+        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
+            logger.warn("Calculated receipts: " + receipts);
+            return false;
+        }
+
+        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
+            return false;
+        }
+
+        if (!FastByteComparisons.equal(block.getStateRoot(), track.getRoot())) {
+
+            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(track.getRoot()));
+            stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+
+            if (config.exitOnBlockConflict() && !byTest) {
+                track.rollback();
+                adminInfo.lostConsensus();
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
+                System.exit(1);
+            } else {
+                return false;
+            }
+        }
+
+        return true;  // Everything is good!
     }
 
     @Override
@@ -708,7 +728,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
      * likely next period. Conversely, if the period is too large, the difficulty,
      * and expected time to the next block, is reduced.
      */
-    private boolean isValid(Repository repo, Block block) {
+    protected boolean isValid(Repository repo, Block block) {
 
         boolean isValid = true;
 
@@ -850,7 +870,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    private BlockSummary applyBlock(Repository track, Block block) {
+    protected BlockSummary applyBlock(Repository track, Block block) {
 
         logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
@@ -867,9 +887,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
-                    .withCommonConfig(commonConfig);
+            TransactionExecutor executor = createTransactionExecutor(tx, block.getCoinbase(),
+                    txTrack, block, totalGasUsed);
 
             executor.init();
             executor.execute();
@@ -923,13 +942,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return new BlockSummary(block, rewards, receipts, summaries);
     }
 
+    public TransactionExecutor createTransactionExecutor(Transaction transaction, byte[] minerCoinbase, Repository track,
+                                                            Block currentBlock, long gasUsedInTheBlock) {
+        return new CommonTransactionExecutor(transaction, minerCoinbase,
+                track, blockStore, programInvokeFactory, currentBlock, listener, gasUsedInTheBlock)
+                .withCommonConfig(commonConfig);
+    }
+
     /**
      * Add reward to block- and every uncle coinbase
      * assuming the entire block is valid.
      *
      * @param block object containing the header and uncles
      */
-    private Map<byte[], BigInteger> addReward(Repository track, Block block, List<TransactionExecutionSummary> summaries) {
+    protected Map<byte[], BigInteger> addReward(Repository track, Block block, List<TransactionExecutionSummary> summaries) {
 
         Map<byte[], BigInteger> rewards = new HashMap<>();
 
@@ -1046,7 +1072,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.totalDifficulty = totalDifficulty;
     }
 
-    private void recordBlock(Block block) {
+    protected void recordBlock(Block block) {
 
         if (!config.recordBlocks()) return;
 
@@ -1285,7 +1311,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return bodies;
     }
 
-    private class State {
+    protected class State {
 //        Repository savedRepo = repository;
         byte[] root = repository.getRoot();
         Block savedBest = bestBlock;

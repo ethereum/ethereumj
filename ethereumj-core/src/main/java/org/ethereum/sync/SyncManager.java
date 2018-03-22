@@ -274,9 +274,7 @@ public class SyncManager extends BlockDownloader {
                             wrapper.getBlock().getTransactionsList().size(), ts);
 
                     if (wrapper.isNewBlock() && !syncDone) {
-                        syncDone = true;
-                        channelManager.onSyncDone(true);
-                        compositeEthereumListener.onSyncDone(syncDoneType);
+                        makeSyncDone();
                     }
                 }
 
@@ -308,6 +306,14 @@ public class SyncManager extends BlockDownloader {
                     logger.error("Error processing unknown block", e);
                 }
             }
+        }
+    }
+
+    public synchronized void makeSyncDone() {
+        if(!syncDone) {
+            syncDone = true;
+            channelManager.onSyncDone(true);
+            compositeEthereumListener.onSyncDone(syncDoneType);
         }
     }
 

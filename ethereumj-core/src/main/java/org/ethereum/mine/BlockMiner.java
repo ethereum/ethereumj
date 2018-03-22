@@ -30,6 +30,7 @@ import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.MinerIfc.MiningResult;
+import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.Math.max;
 
@@ -46,13 +48,12 @@ import static java.lang.Math.max;
  *
  * Created by Anton Nashatyrev on 10.12.2015.
  */
-@Component
 public class BlockMiner {
-    private static final Logger logger = LoggerFactory.getLogger("mine");
+    protected static final Logger logger = LoggerFactory.getLogger("mine");
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private Blockchain blockchain;
+    protected Blockchain blockchain;
 
     private BlockStore blockStore;
 
@@ -63,7 +64,7 @@ public class BlockMiner {
 
     private CompositeEthereumListener listener;
 
-    private SystemProperties config;
+    protected SystemProperties config;
 
     private List<MinerListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -83,12 +84,11 @@ public class BlockMiner {
 
     @Autowired
     public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
-                      final Blockchain blockchain, final BlockStore blockStore,
-                      final PendingState pendingState) {
+                      final Blockchain blockchain, final PendingState pendingState) {
         this.listener = listener;
         this.config = config;
         this.blockchain = blockchain;
-        this.blockStore = blockStore;
+        this.blockStore = ((BlockchainImpl) blockchain).getBlockStore();
         this.pendingState = pendingState;
         UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
         UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
@@ -246,8 +246,30 @@ public class BlockMiner {
         logger.debug("getNewBlockForMining best blocks: PendingState: " + bestPendingState.getShortDescr() +
                 ", Blockchain: " + bestBlockchain.getShortDescr());
 
-        Block newMiningBlock = blockchain.createNewBlock(bestPendingState, getAllPendingTransactions(),
-                getUncles(bestPendingState));
+        return createOptimizedBlock(bestPendingState, getAllPendingTransactions(), getUncles(bestPendingState));
+    }
+
+    protected Block createOptimizedBlock(Block bestPendingBlock, final List<Transaction> txs, List<BlockHeader> uncles) {
+        boolean optimized = false;
+        Block newMiningBlock = null;
+        while(!optimized) {
+            List<Transaction> transactions = new ArrayList<>(txs);
+            BlockSummary summary = blockchain.createNewBlockSummary(bestPendingBlock, transactions, uncles);
+            AtomicBoolean badTxFound = new AtomicBoolean(false);
+            summary.getReceipts().forEach(receipt -> {
+                if (!receipt.isSuccessful() && (receipt.getGasUsed() == null || receipt.getGasUsed().length == 0)) {
+                    transactions.removeIf(transaction -> {
+                        boolean match = FastByteComparisons.equal(transaction.getHash(), receipt.getTransaction().getHash());
+                        badTxFound.set(true);
+                        return match;
+                    });
+                }
+            });
+            if (!badTxFound.get()) {
+                optimized = true;
+                newMiningBlock = summary.getBlock();
+            }
+        }
         return newMiningBlock;
     }
 
@@ -273,7 +295,7 @@ public class BlockMiner {
                     try {
                         // wow, block mined!
                         final Block minedBlock = task.get().block;
-                        blockMined(minedBlock);
+                        blockMined(minedBlock, task);
                     } catch (InterruptedException | CancellationException e) {
                         // OK, we've been cancelled, just exit
                     } catch (Exception e) {
@@ -294,13 +316,20 @@ public class BlockMiner {
         return new Block(block.getEncoded());
     }
 
-    protected void blockMined(Block newBlock) throws InterruptedException {
+    protected void blockMined(Block newBlock, ListenableFuture<MiningResult> task) throws InterruptedException {
         long t = System.currentTimeMillis();
         if (t - lastBlockMinedTime < minBlockTimeout) {
             long sleepTime = minBlockTimeout - (t - lastBlockMinedTime);
             logger.debug("Last block was mined " + (t - lastBlockMinedTime) + " ms ago. Sleeping " +
                     sleepTime + " ms before importing...");
             Thread.sleep(sleepTime);
+        }
+
+        synchronized (BlockMiner.class) {
+            if (!currentMiningTasks.contains(task)) {  // Task is removed from current tasks so it's cancelled
+                logger.debug("Discarding block [{}] because mining task was already cancelled", newBlock.getShortDescr());
+                return;
+            }
         }
 
         fireBlockMined(newBlock);

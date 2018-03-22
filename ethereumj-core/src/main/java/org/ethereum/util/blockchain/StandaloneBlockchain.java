@@ -36,7 +36,6 @@ import org.ethereum.mine.Ethash;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
 import org.ethereum.solidity.compiler.SolidityCompiler;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
@@ -61,9 +60,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     Genesis genesis;
     byte[] coinbase;
-    BlockchainImpl blockchain;
-    PendingStateImpl pendingState;
-    CompositeEthereumListener listener;
+    protected BlockchainImpl blockchain;
+    protected PendingStateImpl pendingState;
+    protected CompositeEthereumListener listener;
     ECKey txSender;
     long gasPrice;
     long gasLimit;
@@ -77,11 +76,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
     long time = 0;
     long timeIncrement = 13;
 
-    private HashMapDB<byte[]> stateDS;
-    JournalSource<byte[]> pruningStateDS;
-    PruneManager pruneManager;
+    protected HashMapDB<byte[]> stateDS;
+    protected JournalSource<byte[]> pruningStateDS;
+    protected PruneManager pruneManager;
 
-    private BlockSummary lastSummary;
+    protected BlockSummary lastSummary;
 
     class PendingTx {
         ECKey sender;
@@ -206,7 +205,13 @@ public class StandaloneBlockchain implements LocalBlockchain {
                     BigInteger bcNonce = repoSnapshot.getNonce(tx.sender.getAddress());
                     nonce = bcNonce.longValue();
                 }
-                nonces.put(senderW, nonce + 1);
+                // FIXME: Casper only
+                // Increase nonce only for non-casper txs
+                Long newNonce = nonce;
+                if (!Arrays.equals(tx.sender.getAddress(), Transaction.NULL_SENDER)) {
+                    ++newNonce;
+                }
+                nonces.put(senderW, newNonce);
 
                 byte[] toAddress = tx.targetContract != null ? tx.targetContract.getAddress() : tx.toAddress;
 
@@ -228,6 +233,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return pendingState;
     }
 
+    public CompositeEthereumListener getListener() {
+        return listener;
+    }
+
     public void generatePendingTransactions() {
         pendingState.addPendingTransactions(new ArrayList<>(createTransactions(getBlockchain().getBestBlock()).values()));
     }
@@ -235,6 +244,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public Block createBlock() {
         return createForkBlock(getBlockchain().getBestBlock());
+    }
+
+    public Block createBlock(byte[] minerCoinbase) {
+        byte[] curCoinbase = coinbase;
+        getBlockchain().setMinerCoinbase(minerCoinbase);
+        Block block = createForkBlock(getBlockchain().getBestBlock());
+        getBlockchain().setMinerCoinbase(curCoinbase);
+        return block;
     }
 
     @Override
@@ -259,12 +276,15 @@ public class StandaloneBlockchain implements LocalBlockchain {
             }
 
             List<PendingTx> pendingTxes = new ArrayList<>(txes.keySet());
-            for (int i = 0; i < lastSummary.getReceipts().size(); i++) {
-                pendingTxes.get(i).txResult.receipt = lastSummary.getReceipts().get(i);
-                pendingTxes.get(i).txResult.executionSummary = getTxSummary(lastSummary, i);
+            // FIXME: Not sure it's correct for non-casper cases
+            // The issue is that Casper has background txs. It's not included in txs but it affects receipts
+            for (int i = 0; i < pendingTxes.size(); i++) {
+                final PendingTx currentTx = pendingTxes.get(i);
+                currentTx.txResult.receipt = lastSummary.getReceipts().get(i);
+                currentTx.txResult.executionSummary = getTxSummary(lastSummary, i);
+                submittedTxes.removeIf(tx -> tx == currentTx);  // same object
             }
 
-            submittedTxes.clear();
             return b;
         } catch (InterruptedException|ExecutionException e) {
             throw new RuntimeException(e);
@@ -483,15 +503,14 @@ public class StandaloneBlockchain implements LocalBlockchain {
         listener = new CompositeEthereumListener();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
-                .withEthereumListener(listener)
-                .withSyncManager(new SyncManager());
+                .withEthereumListener(listener);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         blockchain.setPruneManager(pruneManager);
 
         blockchain.byTest = true;
 
-        pendingState = new PendingStateImpl(listener, blockchain);
+        pendingState = new PendingStateImpl(listener);
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);
@@ -592,8 +611,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
 
             try {
-                org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
-                        (tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
+                org.ethereum.core.TransactionExecutor executor = new CommonTransactionExecutor(
+                        tx, callBlock.getCoinbase(), repository, getBlockchain().getBlockStore(),
                                 getBlockchain().getProgramInvokeFactory(), callBlock)
                         .setLocalCall(true);
 

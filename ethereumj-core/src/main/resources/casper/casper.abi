@@ -1,0 +1,545 @@
+[{
+  "name": "__init__",
+  "outputs": [],
+  "inputs": [{
+    "type": "int128",
+    "name": "_epoch_length"
+  }, {
+    "type": "int128",
+    "name": "_withdrawal_delay"
+  }, {
+    "type": "address",
+    "name": "_owner"
+  }, {
+    "type": "address",
+    "name": "_sighasher"
+  }, {
+    "type": "address",
+    "name": "_purity_checker"
+  }, {
+    "type": "decimal10",
+    "name": "_base_interest_factor"
+  }, {
+    "type": "decimal10",
+    "name": "_base_penalty_factor"
+  }, {
+    "type": "int128",
+    "name": "_min_deposit_size"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "constructor"
+}, {
+  "name": "get_main_hash_voted_frac",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_deposit_size",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "validator_index"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_total_curdyn_deposits",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_total_prevdyn_deposits",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_recommended_source_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_recommended_target_hash",
+  "outputs": [{
+    "type": "bytes32",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "initialize_epoch",
+  "outputs": [],
+  "inputs": [{
+    "type": "int128",
+    "name": "epoch"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "deposit",
+  "outputs": [],
+  "inputs": [{
+    "type": "address",
+    "name": "validation_addr"
+  }, {
+    "type": "address",
+    "name": "withdrawal_addr"
+  }],
+  "constant": false,
+  "payable": true,
+  "type": "function"
+}, {
+  "name": "logout",
+  "outputs": [],
+  "inputs": [{
+    "type": "bytes",
+    "name": "logout_msg"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "withdraw",
+  "outputs": [],
+  "inputs": [{
+    "type": "int128",
+    "name": "validator_index"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "vote",
+  "outputs": [],
+  "inputs": [{
+    "type": "bytes",
+    "name": "vote_msg"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "slash",
+  "outputs": [],
+  "inputs": [{
+    "type": "bytes",
+    "name": "vote_msg_1"
+  }, {
+    "type": "bytes",
+    "name": "vote_msg_2"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "owner_withdraw",
+  "outputs": [],
+  "inputs": [],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "change_owner",
+  "outputs": [],
+  "inputs": [{
+    "type": "address",
+    "name": "new_owner"
+  }],
+  "constant": false,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_validators__deposit",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_validators__start_dynasty",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_validators__end_dynasty",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_validators__addr",
+  "outputs": [{
+    "type": "address",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_validators__withdrawal_addr",
+  "outputs": [{
+    "type": "address",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_checkpoint_hashes",
+  "outputs": [{
+    "type": "bytes32",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_nextValidatorIndex",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_validator_indexes",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "address",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_dynasty",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_next_dynasty_wei_delta",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_second_next_dynasty_wei_delta",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_dynasty_start_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_dynasty_in_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_votes__cur_dyn_votes",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }, {
+    "type": "int128",
+    "name": "arg1"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_votes__prev_dyn_votes",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }, {
+    "type": "int128",
+    "name": "arg1"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_votes__vote_bitmap",
+  "outputs": [{
+    "type": "uint256",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }, {
+    "type": "bytes32",
+    "name": "arg1"
+  }, {
+    "type": "int128",
+    "name": "arg2"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_votes__is_justified",
+  "outputs": [{
+    "type": "bool",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_votes__is_finalized",
+  "outputs": [{
+    "type": "bool",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_main_hash_justified",
+  "outputs": [{
+    "type": "bool",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_deposit_scale_factor",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [{
+    "type": "int128",
+    "name": "arg0"
+  }],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_last_nonvoter_rescale",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_last_voter_rescale",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_epoch_length",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_withdrawal_delay",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_current_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_last_finalized_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_last_justified_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_expected_source_epoch",
+  "outputs": [{
+    "type": "int128",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_reward_factor",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_base_interest_factor",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}, {
+  "name": "get_base_penalty_factor",
+  "outputs": [{
+    "type": "decimal10",
+    "name": "out"
+  }],
+  "inputs": [],
+  "constant": true,
+  "payable": false,
+  "type": "function"
+}]

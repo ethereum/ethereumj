@@ -161,14 +161,17 @@ public class Channel {
 
         logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
 
-        messageCodec.setSupportChunkedFrames(false);
-
         FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
         ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
 
         if (SnappyCodec.isSupported(Math.min(config.defaultP2PVersion(), helloRemote.getP2PVersion()))) {
             ctx.pipeline().addLast("snappyCodec", new SnappyCodec(this));
+            messageCodec.setSupportChunkedFrames(false);
             logger.debug("{}: use snappy compression", ctx.channel());
+        } else {
+            // FIXME: Actually frames are not used by every P2Pv4 client
+            // only Pyethereum is known
+            messageCodec.setSupportChunkedFrames(true);
         }
 
         ctx.pipeline().addLast("messageCodec", messageCodec);
