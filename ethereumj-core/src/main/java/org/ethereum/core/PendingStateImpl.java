@@ -106,13 +106,9 @@ public class PendingStateImpl implements PendingState {
     private Block best = null;
 
     @Autowired
-    public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
+    public PendingStateImpl(final EthereumListener listener) {
         this.listener = listener;
-        this.blockchain = blockchain;
 //        this.repository = blockchain.getRepository();
-        this.blockStore = blockchain.getBlockStore();
-        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
-        this.transactionStore = blockchain.getTransactionStore();
     }
 
     public void init() {
@@ -447,7 +443,11 @@ public class PendingStateImpl implements PendingState {
         return block;
     }
 
+    @Autowired
     public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
+        this.blockStore = blockchain.getBlockStore();
+        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
+        this.transactionStore = blockchain.getTransactionStore();
     }
 }
