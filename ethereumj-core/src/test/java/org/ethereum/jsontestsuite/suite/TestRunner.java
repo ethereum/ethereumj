@@ -103,7 +103,7 @@ public class TestRunner {
                 .withParentBlockHeaderValidator(CommonConfig.getDefault().parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter(), blockchain);
+        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter());
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
