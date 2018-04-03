@@ -52,7 +52,7 @@ public class FutureTest {
             } catch (ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, MoreExecutors.sameThreadExecutor());
+        }, MoreExecutors.directExecutor());
 
         Thread.sleep(1000);
         future.cancel(true);
