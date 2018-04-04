@@ -279,7 +279,7 @@ public class BlockMiner {
                     } catch (Exception e) {
                         logger.warn("Exception during mining: ", e);
                     }
-                }, MoreExecutors.sameThreadExecutor());
+                }, MoreExecutors.directExecutor());
             }
         }
         fireBlockStarted(newMiningBlock);
