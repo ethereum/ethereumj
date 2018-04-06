@@ -26,7 +26,7 @@ import org.spongycastle.crypto.KeyGenerationParameters;
 import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
 import org.spongycastle.crypto.digests.SHA1Digest;
 import org.spongycastle.crypto.digests.SHA256Digest;
-import org.spongycastle.crypto.engines.AESFastEngine;
+import org.spongycastle.crypto.engines.AESEngine;
 import org.spongycastle.crypto.generators.ECKeyPairGenerator;
 import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
 import org.spongycastle.crypto.macs.HMac;
@@ -72,7 +72,7 @@ public class ECIESCoder {
     }
 
     public static byte[] decrypt(ECPoint ephem, BigInteger prv, byte[] IV, byte[] cipher, byte[] macData) throws InvalidCipherTextException {
-        AESFastEngine aesFastEngine = new AESFastEngine();
+        AESEngine aesFastEngine = new AESEngine();
 
         EthereumIESEngine iesEngine = new EthereumIESEngine(
                 new ECDHBasicAgreement(),
@@ -220,7 +220,7 @@ public class ECIESCoder {
 
 
     private static EthereumIESEngine makeIESEngine(boolean isEncrypt, ECPoint pub, BigInteger prv, byte[] IV) {
-        AESFastEngine aesFastEngine = new AESFastEngine();
+        AESEngine aesFastEngine = new AESEngine();
 
         EthereumIESEngine iesEngine = new EthereumIESEngine(
                 new ECDHBasicAgreement(),
