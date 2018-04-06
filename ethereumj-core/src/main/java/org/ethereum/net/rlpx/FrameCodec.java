@@ -23,9 +23,10 @@ import io.netty.buffer.ByteBufOutputStream;
 import org.ethereum.net.swarm.Util;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.StreamCipher;
 import org.spongycastle.crypto.digests.KeccakDigest;
-import org.spongycastle.crypto.engines.AESFastEngine;
+import org.spongycastle.crypto.engines.AESEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
@@ -54,18 +55,18 @@ public class FrameCodec {
 
     public FrameCodec(EncryptionHandshake.Secrets secrets) {
         this.mac = secrets.mac;
-        int blockSize = secrets.aes.length * 8;
-        enc = new SICBlockCipher(new AESFastEngine());
-        enc.init(true, new ParametersWithIV(new KeyParameter(secrets.aes), new byte[blockSize / 8]));
-        dec = new SICBlockCipher(new AESFastEngine());
-        dec.init(false, new ParametersWithIV(new KeyParameter(secrets.aes), new byte[blockSize / 8]));
+        BlockCipher cipher;
+        enc = new SICBlockCipher(cipher = new AESEngine());
+        enc.init(true, new ParametersWithIV(new KeyParameter(secrets.aes), new byte[cipher.getBlockSize()]));
+        dec = new SICBlockCipher(cipher = new AESEngine());
+        dec.init(false, new ParametersWithIV(new KeyParameter(secrets.aes), new byte[cipher.getBlockSize()]));
         egressMac = secrets.egressMac;
         ingressMac = secrets.ingressMac;
     }
 
-    private AESFastEngine makeMacCipher() {
+    private AESEngine makeMacCipher() {
         // Stateless AES encryption
-        AESFastEngine macc = new AESFastEngine();
+        AESEngine macc = new AESEngine();
         macc.init(true, new KeyParameter(mac));
         return macc;
     }

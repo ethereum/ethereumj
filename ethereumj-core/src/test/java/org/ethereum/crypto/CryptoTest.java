@@ -29,7 +29,7 @@ import org.spongycastle.crypto.KeyEncoder;
 import org.spongycastle.crypto.KeyGenerationParameters;
 import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
 import org.spongycastle.crypto.digests.SHA256Digest;
-import org.spongycastle.crypto.engines.AESFastEngine;
+import org.spongycastle.crypto.engines.AESEngine;
 import org.spongycastle.crypto.engines.IESEngine;
 import org.spongycastle.crypto.generators.ECKeyPairGenerator;
 import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
@@ -152,7 +152,7 @@ public class CryptoTest {
         KeyParameter key = new KeyParameter(keyBytes);
         ParametersWithIV params = new ParametersWithIV(key, new byte[16]);
 
-        AESFastEngine engine = new AESFastEngine();
+        AESEngine engine = new AESEngine();
         SICBlockCipher ctrEngine = new SICBlockCipher(engine);
 
         ctrEngine.init(true, params);
@@ -174,7 +174,7 @@ public class CryptoTest {
     @Test  // big packet encryption
     public void test12() throws Throwable {
 
-        AESFastEngine engine = new AESFastEngine();
+        AESEngine engine = new AESEngine();
         SICBlockCipher ctrEngine = new SICBlockCipher(engine);
 
         byte[] keyBytes = Hex.decode("a4627abc2a3c25315bff732cb22bc128f203912dd2a840f31e66efb27a47d2b1");
@@ -237,7 +237,7 @@ public class CryptoTest {
     @Test  // ECIES_AES128_SHA256 + No Ephemeral Key + IV(all zeroes)
     public void test14() throws Throwable{
 
-        AESFastEngine aesFastEngine = new AESFastEngine();
+        AESEngine aesFastEngine = new AESEngine();
 
         IESEngine iesEngine = new IESEngine(
                 new ECDHBasicAgreement(),
@@ -307,7 +307,7 @@ public class CryptoTest {
         AsymmetricCipherKeyPair myKey = new AsymmetricCipherKeyPair(ecPubKey, ecPrivKey);
 
 
-        AESFastEngine aesFastEngine = new AESFastEngine();
+        AESEngine aesFastEngine = new AESEngine();
 
         IESEngine iesEngine = new IESEngine(
                 new ECDHBasicAgreement(),
