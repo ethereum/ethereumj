@@ -17,8 +17,8 @@
  */
 package org.ethereum.casper.core;
 
-import javafx.util.Pair;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.casper.config.CasperProperties;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -248,6 +248,6 @@ public class CasperFacade {
             throw new RuntimeException("Failed to generate Casper init transactions", ex);
         }
 
-        return new Pair<>(casperAddress, txs);
+        return Pair.of(casperAddress, txs);
     }
 }
