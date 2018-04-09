@@ -128,6 +128,7 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     public long getGasUsed() {
         long gasUsed = super.getGasUsed();
         // Casper service txs have 0 cost. If it's failed, it'll be discarded on higher level
+        // FIXME: NOTE: (gasLeftOver + gasRefund) is used in rewards debug, so adjusting only gasUsed may produce some bugs in the future
         if (isCasperServiceTx()) {
             gasUsed = 0;
         }
