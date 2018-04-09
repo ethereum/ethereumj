@@ -299,13 +299,13 @@ public class CasperValidatorService {
 
 
     private long getValidatorIndex() {
-        return constCallCasperForLong("get_validator_indexes", new ByteArrayWrapper(coinbase.getAddress()));
+        return constCallCasperForLong("validator_indexes", new ByteArrayWrapper(coinbase.getAddress()));
     }
 
     private void initValContractAddress() {  // Actually it's not used after deposit
         if (valContractAddress != null)
             return;
-        byte[] address = (byte[]) casper.constCall("get_validators__addr", getValidatorIndex())[0];
+        byte[] address = (byte[]) casper.constCall("validators__addr", getValidatorIndex())[0];
         if (!Arrays.equals(address, new byte[20])) {
             logger.info("Valcode contract found at {}", address);
             this.valContractAddress = address;
@@ -380,9 +380,9 @@ public class CasperValidatorService {
     }
 
     private boolean isLoggedIn(long targetEpoch, long validatorIndex) {
-        long startDynasty = constCallCasperForLong("get_validators__start_dynasty", validatorIndex);
-        long endDynasty = constCallCasperForLong("get_validators__end_dynasty", validatorIndex);
-        long currentDynasty = constCallCasperForLong("get_dynasty_in_epoch", targetEpoch);
+        long startDynasty = constCallCasperForLong("validators__start_dynasty", validatorIndex);
+        long endDynasty = constCallCasperForLong("validators__end_dynasty", validatorIndex);
+        long currentDynasty = constCallCasperForLong("dynasty_in_epoch", targetEpoch);
         long pastDynasty = currentDynasty - 1;
         boolean inCurrentDynasty = ((startDynasty <= currentDynasty) &&
                 (currentDynasty < endDynasty));
@@ -426,7 +426,7 @@ public class CasperValidatorService {
     }
 
     private long getCurrentEpoch() {  // FIXME: WHY there are 2 methods for the same thing???
-        return constCallCasperForLong("get_current_epoch");
+        return constCallCasperForLong("current_epoch");
     }
 
     private boolean vote() {
@@ -492,12 +492,12 @@ public class CasperValidatorService {
             setState(LOGGED_OUT);
             return;
         }
-        long validatorEndDynasty = constCallCasperForLong("get_validators__end_dynasty", validatorIndex);
-        long endEpoch = constCallCasperForLong("get_dynasty_start_epoch", validatorEndDynasty + 1);
+        long validatorEndDynasty = constCallCasperForLong("validators__end_dynasty", validatorIndex);
+        long endEpoch = constCallCasperForLong("dynasty_start_epoch", validatorEndDynasty + 1);
 
         // Check Casper to see if we can withdraw
         long curEpoch = getCurrentEpoch();
-        long withdrawalDelay = constCallCasperForLong("get_withdrawal_delay");
+        long withdrawalDelay = constCallCasperForLong("withdrawal_delay");
         if (curEpoch >= (endEpoch + withdrawalDelay)) {
             // Make withdraw tx & broadcast
             Transaction withdrawTx = makeWithdrawTx(validatorIndex);
@@ -513,44 +513,44 @@ public class CasperValidatorService {
 
     private void checkWithdrawn() {
         // Check that we have been withdrawn--validator index will now be zero
-        if (constCallCasperForLong("get_validator_indexes", new ByteArrayWrapper(coinbase.getAddress())) == 0) {
+        if (constCallCasperForLong("validator_indexes", new ByteArrayWrapper(coinbase.getAddress())) == 0) {
             setState(LOGGED_OUT);
         }
     }
 
     private void logCasperInfo() {
         long curEpoch = getCurrentEpoch();
-        long expectedSourceEpoch = constCallCasperForLong("get_expected_source_epoch");
-        BigInteger curDeposits = (BigInteger) casper.constCall("get_total_curdyn_deposits")[0];
-        BigInteger prevDeposits = (BigInteger) casper.constCall("get_total_prevdyn_deposits")[0];
-        BigDecimal curVotes = (BigDecimal) casper.constCall("get_votes__cur_dyn_votes", curEpoch, expectedSourceEpoch)[0];
-        BigDecimal prevVotes = (BigDecimal) casper.constCall("get_votes__prev_dyn_votes", curEpoch, expectedSourceEpoch)[0];
-        BigDecimal scaleFactor = (BigDecimal) casper.constCall("get_deposit_scale_factor", curEpoch)[0];
+        long expectedSourceEpoch = constCallCasperForLong("expected_source_epoch");
+        BigInteger curDepositsScaled = (BigInteger) casper.constCall("total_curdyn_deposits_scaled")[0];
+        BigInteger prevDepositsScaled = (BigInteger) casper.constCall("total_prevdyn_deposits_scaled")[0];
+        BigDecimal curVotes = (BigDecimal) casper.constCall("votes__cur_dyn_votes", curEpoch, expectedSourceEpoch)[0];
+        BigDecimal prevVotes = (BigDecimal) casper.constCall("votes__prev_dyn_votes", curEpoch, expectedSourceEpoch)[0];
+        BigDecimal scaleFactor = (BigDecimal) casper.constCall("deposit_scale_factor", curEpoch)[0];
         BigDecimal curVotesScaled = curVotes.multiply(scaleFactor);
         BigDecimal prevVotesScaled = prevVotes.multiply(scaleFactor);
         BigDecimal curVotesPct = BigDecimal.ZERO;
         BigDecimal prevVotesPct = BigDecimal.ZERO;
-        if (curDeposits.compareTo(BigInteger.ZERO) > 0 ) {
-            curVotesPct = curVotesScaled.multiply(BigDecimal.valueOf(100)).divide(new BigDecimal(curDeposits), MathContext.DECIMAL32);
+        if (curDepositsScaled.compareTo(BigInteger.ZERO) > 0 ) {
+            curVotesPct = curVotesScaled.multiply(BigDecimal.valueOf(100)).divide(new BigDecimal(curDepositsScaled), MathContext.DECIMAL32);
         }
-        if (prevDeposits.compareTo(BigInteger.ZERO) > 0 ) {
-            prevVotesPct = prevVotesScaled.multiply(BigDecimal.valueOf(100)).divide(new BigDecimal(prevDeposits), MathContext.DECIMAL32);
+        if (prevDepositsScaled.compareTo(BigInteger.ZERO) > 0 ) {
+            prevVotesPct = prevVotesScaled.multiply(BigDecimal.valueOf(100)).divide(new BigDecimal(prevDepositsScaled), MathContext.DECIMAL32);
         }
 
-        long lastFinalizedEpoch = constCallCasperForLong("get_last_finalized_epoch");
-        long lastJustifiedEpoch = constCallCasperForLong("get_last_justified_epoch");
-        BigDecimal lastNonvoterRescale = (BigDecimal) casper.constCall("get_last_nonvoter_rescale")[0];
-        BigDecimal lastVoterRescale = (BigDecimal) casper.constCall("get_last_voter_rescale")[0];
+        long lastFinalizedEpoch = constCallCasperForLong("last_finalized_epoch");
+        long lastJustifiedEpoch = constCallCasperForLong("last_justified_epoch");
+        BigDecimal lastNonvoterRescale = (BigDecimal) casper.constCall("last_nonvoter_rescale")[0];
+        BigDecimal lastVoterRescale = (BigDecimal) casper.constCall("last_voter_rescale")[0];
         String logStr = String.format(
                 "CASPER STATUS: epoch %d, %.3f / %.3f ETH (%.2f %%) voted from current dynasty, " +
                         "%.3f / %.3f ETH (%.2f %%) voted from previous dynasty, last finalized epoch %d justified %d " +
                         "expected source %d. Nonvoter deposits last rescaled %.5fx, voter deposits %.5fx",
                 curEpoch,
                 curVotesScaled.divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32),
-                new BigDecimal(curDeposits).divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32),
+                new BigDecimal(curDepositsScaled).divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32),
                 curVotesPct,
                 prevVotesScaled.divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32),
-                new BigDecimal(prevDeposits).divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32),
+                new BigDecimal(prevDepositsScaled).divide(BigDecimal.TEN.pow(18), MathContext.DECIMAL32),
                 prevVotesPct,
                 lastFinalizedEpoch,
                 lastJustifiedEpoch,
@@ -560,7 +560,7 @@ public class CasperValidatorService {
         logger.info(logStr);
 
         long valIndex = getValidatorIndex();
-        BigDecimal myDeposit = (BigDecimal) casper.constCall("get_validators__deposit", valIndex)[0];
+        BigDecimal myDeposit = (BigDecimal) casper.constCall("validators__deposit", valIndex)[0];
         BigDecimal myDepositScaled = myDeposit.multiply(scaleFactor);
         String myStr = String.format(
                 "MY VALIDATOR STATUS: epoch %d, index #%d, deposit: %.3f ETH",
@@ -581,8 +581,8 @@ public class CasperValidatorService {
         //        target_hash = self.epoch_blockhash(current_epoch)
         // ANSWER: Though, I'll try
 
-        byte[] targetHash = (byte[]) casper.constCall("get_recommended_target_hash")[0];
-        long sourceEpoch = constCallCasperForLong("get_recommended_source_epoch");
+        byte[] targetHash = (byte[]) casper.constCall("recommended_target_hash")[0];
+        long sourceEpoch = constCallCasperForLong("recommended_source_epoch");
 
         if (targetHash == null) {
             return null;

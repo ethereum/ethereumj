@@ -49,6 +49,8 @@ import java.math.BigInteger;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.DYNASTY_LOGOUT_DELAY;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.WITHDRAWAL_DELAY;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 @Ignore  // Takes too long to run usually
@@ -131,7 +133,7 @@ public class CasperValidatorTest extends CasperBase {
 
 
 
-        BigInteger zeroEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
+        BigInteger zeroEpoch = (BigInteger) casper.constCall("current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
 
         systemProperties.overrideParams(
@@ -176,16 +178,16 @@ public class CasperValidatorTest extends CasperBase {
                 .compareTo(initialBalance.subtract(EtherUtil.convert(DEPOSIT_SIZE_ETH, EtherUtil.Unit.ETHER))) < 0);
         // Let's logout
         service.voteThenLogout();
-        // Withdrawal delay is 5 epochs + 1 vote epoch + overhead
-        for (int i = 0; i < 400; ++i) {
+        // Withdrawal delay is 5 logout epochs delay + 5 withdrawal  + 1 overhead epoch
+        for (int i = 0; i < 50 * (DYNASTY_LOGOUT_DELAY + WITHDRAWAL_DELAY + 1); ++i) {
             Block block = bc.createBlock();
         }
         // We should have more than initialBalance in the end
         assertTrue(ethereum.getRepository().getBalance(coinbase.getAddress()).compareTo(initialBalance) > 0);
 
         // Check that assertCasperReceipts was called
-        assertEquals(14, totalEpochs); // floor division (300 + 400 + 10) / 50
-        assertEquals(6, totalVotes);
+        assertEquals(17, totalEpochs); // floor division (300 + 550 + 10) / 50
+        assertEquals(9, totalVotes); // 5 votes for first 300 blocks (5 epochs as validator) + 4 votes for logout delay, last epoch is w/o vote
 
         // TODO: add more validators
     }
@@ -195,9 +197,9 @@ public class CasperValidatorTest extends CasperBase {
     }
 
     protected static BigDecimal calculateCurrentDepositSize(long validatorIndex, CasperFacade casperFacade) {
-        BigDecimal scaleFactor = (BigDecimal) casperFacade.constCall("get_deposit_scale_factor",
-                (BigInteger) casperFacade.constCall("get_current_epoch")[0])[0];
-        BigDecimal curDeposit = (BigDecimal) casperFacade.constCall("get_validators__deposit", validatorIndex)[0];
+        BigDecimal scaleFactor = (BigDecimal) casperFacade.constCall("deposit_scale_factor",
+                (BigInteger) casperFacade.constCall("current_epoch")[0])[0];
+        BigDecimal curDeposit = (BigDecimal) casperFacade.constCall("validators__deposit", validatorIndex)[0];
         BigDecimal scaledDepositWei = curDeposit.multiply(scaleFactor);
         return scaledDepositWei;
     }

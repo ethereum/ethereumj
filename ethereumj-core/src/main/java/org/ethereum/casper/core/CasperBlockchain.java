@@ -121,7 +121,7 @@ public class CasperBlockchain extends BlockchainImpl {
     }
 
     private BigInteger getScore(final Block block) {
-        Object[] res = casper.constCall(block, "get_last_justified_epoch");
+        Object[] res = casper.constCall(block, "last_justified_epoch");
         return ((BigInteger) res[0]).multiply(PRETTY_BIG).add(getPoWDifficulty(block));
     }
 
@@ -210,19 +210,19 @@ public class CasperBlockchain extends BlockchainImpl {
      * Finalizes Casper epoch checkpoint if needed
      */
     private void finalizeCheckpoint(final Block block) {
-        Object[] res = casper.constCall(block, "get_last_finalized_epoch");
+        Object[] res = casper.constCall(block, "last_finalized_epoch");
         long finalizedEpoch = ((BigInteger) res[0]).longValue();
-        Object[] res2 = casper.constCall(block, "get_current_epoch");
+        Object[] res2 = casper.constCall(block, "current_epoch");
         long currentEpoch = ((BigInteger) res2[0]).longValue();
         if (finalizedEpoch == currentEpoch - 1) {
             // Actually one hash per epoch, just the getter for array
-            Object[] res3 = casper.constCall(block, "get_checkpoint_hashes", finalizedEpoch);
+            Object[] res3 = casper.constCall(block, "checkpoint_hashes", finalizedEpoch);
             byte[] checkpointHash = (byte[]) res3[0];
             if (!Arrays.areEqual(checkpointHash, new byte[32])) {  // new byte[32] == 00-filled
                 Block histBlock = getBlockByHash(checkpointHash);
-                Object[] res4 = casper.constCall(histBlock, "get_total_curdyn_deposits");
+                Object[] res4 = casper.constCall(histBlock, "total_curdyn_deposits_scaled");
                 BigInteger curDeposits = (BigInteger) res4[0];
-                Object[] res5 = casper.constCall(histBlock, "get_total_prevdyn_deposits");
+                Object[] res5 = casper.constCall(histBlock, "total_prevdyn_deposits_scaled");
                 BigInteger prevDeposits = (BigInteger) res5[0];
                 if (curDeposits.compareTo(NON_REVERT_MIN_DEPOSIT) > 0 &&
                         prevDeposits.compareTo(NON_REVERT_MIN_DEPOSIT) > 0) {

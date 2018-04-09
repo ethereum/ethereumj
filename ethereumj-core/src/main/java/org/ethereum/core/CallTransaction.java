@@ -26,6 +26,7 @@ import static org.ethereum.util.ByteUtil.hexStringToBytes;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -100,6 +101,7 @@ public class CallTransaction {
         fallback
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Function {
         public boolean anonymous;
         public boolean constant;

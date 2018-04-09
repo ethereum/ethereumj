@@ -70,7 +70,7 @@ public class BadCasperValidatorTest extends CasperBase {
 
 
 
-        BigInteger zeroEpoch = (BigInteger) casper.constCall("get_current_epoch")[0];
+        BigInteger zeroEpoch = (BigInteger) casper.constCall("current_epoch")[0];
         assertEquals(0, zeroEpoch.longValue());
 
         systemProperties.overrideParams(

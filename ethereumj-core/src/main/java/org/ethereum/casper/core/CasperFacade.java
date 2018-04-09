@@ -43,6 +43,7 @@ import java.util.List;
 
 import static org.ethereum.casper.config.net.CasperTestNetConfig.BASE_INTEREST_FACTOR;
 import static org.ethereum.casper.config.net.CasperTestNetConfig.BASE_PENALTY_FACTOR;
+import static org.ethereum.casper.config.net.CasperTestNetConfig.DYNASTY_LOGOUT_DELAY;
 import static org.ethereum.casper.config.net.CasperTestNetConfig.MIN_DEPOSIT_ETH;
 import static org.ethereum.casper.config.net.CasperTestNetConfig.NULL_SIGN_SENDER;
 import static org.ethereum.casper.config.net.CasperTestNetConfig.WITHDRAWAL_DELAY;
@@ -223,6 +224,7 @@ public class CasperFacade {
             byte[] casperInit = contract.getConstructor().encodeArguments(
                     systemProperties.getCasperEpochLength(),  // Epoch length
                     WITHDRAWAL_DELAY, // Withdrawal delay
+                    DYNASTY_LOGOUT_DELAY, // Logout delay
                     ECKey.fromPrivate(sha3("0".getBytes())).getAddress(),  // Owner
                     sigHasherContract,  // Signature hasher contract
                     purityCheckerContract,  // Purity checker contract

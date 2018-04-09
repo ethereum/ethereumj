@@ -27,6 +27,7 @@ import org.spongycastle.util.encoders.Hex;
 import static junit.framework.TestCase.assertEquals;
 
 @Ignore  // Takes too long to run usually
+// FIXME: Update it with new casper address and state init from Pyeth when available
 public class CasperStateInitTest extends CasperBase {
 
     /**

@@ -34,6 +34,7 @@ public class CasperTestNetConfig extends BaseNetConfig {
 
     public static final int EPOCH_LENGTH = 50;
     public static final int WITHDRAWAL_DELAY = 5;
+    public static final int DYNASTY_LOGOUT_DELAY = 5;
     public static final double BASE_INTEREST_FACTOR = 0.1;
     public static final double BASE_PENALTY_FACTOR = 0.0001;
     public static final int MIN_DEPOSIT_ETH = 1500;
