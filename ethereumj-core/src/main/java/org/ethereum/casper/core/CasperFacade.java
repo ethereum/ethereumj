@@ -20,6 +20,8 @@ package org.ethereum.casper.core;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.casper.config.CasperProperties;
+import org.ethereum.casper.config.net.CasperTestNetConfig;
+import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
@@ -81,6 +83,10 @@ public class CasperFacade {
         byte[] casperAddress = res.getKey();
         this.initTxs = res.getValue();
         systemProperties.setCasperAddress(casperAddress);
+        BlockchainNetConfig netConfig = systemProperties.getBlockchainConfig();
+        if (netConfig instanceof CasperTestNetConfig) {
+            ((CasperTestNetConfig) netConfig).setCasperAddress(casperAddress);
+        }
         this.contractAddress = Hex.toHexString(casperAddress);
         logger.info("Casper contract address set to [0x{}]", contractAddress);
         String casperAbi = systemProperties.getCasperAbi();

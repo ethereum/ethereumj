@@ -17,6 +17,7 @@
  */
 package org.ethereum.casper.config.net;
 
+import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
@@ -24,11 +25,15 @@ import org.ethereum.config.blockchain.ByzantiumConfig;
 import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
+import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.vm.GasCost;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Objects;
+
+import static org.ethereum.config.blockchain.HomesteadConfig.SECP256K1N_HALF;
 
 public class CasperTestNetConfig extends BaseNetConfig {
 
@@ -38,6 +43,7 @@ public class CasperTestNetConfig extends BaseNetConfig {
     public static final double BASE_INTEREST_FACTOR = 0.1;
     public static final double BASE_PENALTY_FACTOR = 0.0001;
     public static final int MIN_DEPOSIT_ETH = 1500;
+    private byte[] casperAddress = null;
 
     public final static ECKey NULL_SIGN_SENDER = ECKey.fromPrivate(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
@@ -85,9 +91,25 @@ public class CasperTestNetConfig extends BaseNetConfig {
         public Constants getConstants() {
             return constants;
         }
+
+        @Override
+        public boolean acceptTransactionSignature(Transaction tx) {
+            if (tx.getSignature() != null) {
+                // Homestead-like check
+                if (!tx.getSignature().validateComponents() ||
+                        tx.getSignature().s.compareTo(SECP256K1N_HALF) > 0) return false;
+            } else {
+                if (casperAddress == null || !CasperFacade.isVote(tx, casperAddress)) return false;
+            }
+            return  tx.getChainId() == null || Objects.equals(getChainId(), tx.getChainId());
+        }
     }
 
     public CasperTestNetConfig() {
         add(0, new CasperConfig(new FrontierConfig()));
+    }
+
+    public void setCasperAddress(byte[] casperAddress) {
+        this.casperAddress = casperAddress;
     }
 }

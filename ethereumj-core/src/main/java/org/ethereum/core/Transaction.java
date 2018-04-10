@@ -160,7 +160,8 @@ public class Transaction {
     }
 
 
-    private Integer extractChainIdFromV(BigInteger bv) {
+    private Integer extractChainIdFromRawSignature(BigInteger bv, byte[] r, byte[] s) {
+        if (r == null && s == null) return bv.intValue();  // EIP 86
         if (bv.bitLength() > 31) return Integer.MAX_VALUE; // chainId is limited to 31 bits, longer are not valid for now
         long v = bv.longValue();
         if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;
@@ -213,10 +214,12 @@ public class Transaction {
             if (transaction.get(6).getRLPData() != null) {
                 byte[] vData =  transaction.get(6).getRLPData();
                 BigInteger v = ByteUtil.bytesToBigInteger(vData);
-                this.chainId = extractChainIdFromV(v);
                 byte[] r = transaction.get(7).getRLPData();
                 byte[] s = transaction.get(8).getRLPData();
-                this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
+                this.chainId = extractChainIdFromRawSignature(v, r, s);
+                if (r != null && s != null) {
+                    this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
+                }
             } else {
                 logger.debug("RLP encoded tx is not signed!");
             }
@@ -381,7 +384,7 @@ public class Transaction {
             if (sendAddress == null && getSignature() != null) {
                 sendAddress = ECKey.signatureToAddress(getRawHash(), getSignature());
             }
-            // FIXME: Casper votes, we shouldn't do it this for Transaction itself
+            // TODO: check for side-effects
             return  sendAddress == null ? NULL_SENDER : sendAddress;
         } catch (SignatureException e) {
             logger.error(e.getMessage(), e);

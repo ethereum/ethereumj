@@ -75,16 +75,11 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
     }
 
     @Override
-    protected boolean isSignatureValid() {
-        return isCasperVote() || super.isSignatureValid();
-    }
-
-    @Override
     public void execute() {
 
         if (!readyToExecute) return;
 
-        if (!localCall && !isCasperVote()) {
+        if (!localCall && !isCasperServiceTx()) {
             track.increaseNonce(tx.getSender());
 
             BigInteger txGasLimit = toBI(tx.getGasLimit());
@@ -104,10 +99,6 @@ public class CasperTransactionExecutor extends CommonTransactionExecutor {
 
     private boolean isCasperServiceTx() {
         return CasperFacade.isServiceTx(tx, ((CasperProperties) config).getCasperAddress());
-    }
-
-    private boolean isCasperVote() {
-        return CasperFacade.isVote(tx, ((CasperProperties) config).getCasperAddress());
     }
 
     @Override
