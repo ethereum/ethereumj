@@ -289,7 +289,8 @@ public class CasperValidatorService {
                 gasLimit,
                 receiveAddress,
                 ByteUtil.bigIntegerToBytes(value),
-                data);
+                data,
+                ethereum.getChainIdForNextBlock());
 
         if (signed) tx.sign(coinbase);
 

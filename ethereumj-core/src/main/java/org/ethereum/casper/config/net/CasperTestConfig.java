@@ -92,6 +92,11 @@ public class CasperTestConfig extends ByzantiumConfig {
     }
 
     @Override
+    public Integer getChainId() {
+        return null;
+    }
+
+    @Override
     public boolean acceptTransactionSignature(Transaction tx) {
         if (tx.getSignature() != null) {
             // Homestead-like check

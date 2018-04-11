@@ -90,6 +90,11 @@ public class CasperValidatorTest extends CasperBase {
             public Constants getConstants() {
                 return constants;
             }
+
+            @Override
+            public Integer getChainId() {
+                return 345;
+            }
         }
 
         public CasperEasyNetConfig() {
