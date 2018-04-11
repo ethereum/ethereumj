@@ -1,13 +1,7 @@
 package org.ethereum.casper.config;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.ethereum.casper.config.net.CasperTestNetConfig;
-import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.genesis.GenesisConfig;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.validator.BlockCustomHashRule;
-import org.ethereum.validator.BlockHeaderValidator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
-import static org.ethereum.casper.config.net.CasperTestNetConfig.EPOCH_LENGTH;
+import static org.ethereum.casper.config.net.CasperTestConfig.EPOCH_LENGTH;
 
 public class CasperProperties extends SystemProperties {
 

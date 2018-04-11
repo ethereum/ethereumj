@@ -17,13 +17,12 @@
  */
 package org.ethereum.core.casper;
 
+import org.ethereum.casper.config.net.CasperTestConfig;
 import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
-import org.ethereum.config.blockchain.ByzantiumConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.Block;
@@ -35,7 +34,6 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.EtherUtil;
-import org.ethereum.vm.GasCost;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,11 +47,11 @@ import java.math.BigInteger;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.DYNASTY_LOGOUT_DELAY;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.WITHDRAWAL_DELAY;
+import static org.ethereum.casper.config.net.CasperTestConfig.DYNASTY_LOGOUT_DELAY;
+import static org.ethereum.casper.config.net.CasperTestConfig.WITHDRAWAL_DELAY;
 import static org.ethereum.crypto.HashUtil.sha3;
 
-@Ignore  // Takes too long to run usually
+@Ignore  // Takes too long to run regularly
 public class CasperValidatorTest extends CasperBase {
 
     private int totalVotes = 0;
@@ -65,16 +63,10 @@ public class CasperValidatorTest extends CasperBase {
 
     final ECKey coinbase = ECKey.fromPrivate(sha3("cow".getBytes())); // Premined in light genesis
 
-    private static class CasperEasyConfig extends BaseNetConfig {
-        class CasperGasCost extends Eip150HFConfig.GasCostEip150HF {
-            public int getEXP_BYTE_GAS()        {     return 10;     }      // before spurious dragon hard fork
-        }
-
-        private final GasCost NEW_GAS_COST = new CasperEasyConfig.CasperGasCost();
-
-        private class CasperConfig extends ByzantiumConfig {
+    protected static class CasperEasyNetConfig extends BaseNetConfig {
+        private class CasperEasyConfig extends CasperTestConfig {
             private final Constants constants;
-            CasperConfig(BlockchainConfig parent) {
+            CasperEasyConfig(BlockchainConfig parent) {
 
                 super(parent);
                 constants = new ConstantsAdapter(super.getConstants()) {
@@ -95,27 +87,17 @@ public class CasperValidatorTest extends CasperBase {
             }
 
             @Override
-            public GasCost getGasCost() {
-                return NEW_GAS_COST;
-            }
-
-            @Override
-            public boolean eip161() {
-                return false;
-            }
-
-            @Override
             public Constants getConstants() {
                 return constants;
             }
         }
 
-        public CasperEasyConfig() {
-            add(0, new CasperConfig(new FrontierConfig()));
+        public CasperEasyNetConfig() {
+            add(0, new CasperEasyConfig(new FrontierConfig()));
         }
     }
 
-    protected final static BlockchainNetConfig CASPER_EASY_CONFIG = new CasperEasyConfig();
+    protected final static BlockchainNetConfig CASPER_EASY_CONFIG = new CasperEasyNetConfig();
 
     @Override
     BlockchainNetConfig config() {

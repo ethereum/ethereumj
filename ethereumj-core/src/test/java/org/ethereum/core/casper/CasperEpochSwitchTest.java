@@ -17,16 +17,8 @@
  */
 package org.ethereum.core.casper;
 
-import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.Constants;
-import org.ethereum.config.ConstantsAdapter;
-import org.ethereum.config.blockchain.ByzantiumConfig;
-import org.ethereum.config.blockchain.Eip150HFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.BaseNetConfig;
 import org.ethereum.core.Block;
-import org.ethereum.vm.GasCost;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;

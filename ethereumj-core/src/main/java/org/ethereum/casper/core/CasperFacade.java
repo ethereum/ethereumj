@@ -20,8 +20,7 @@ package org.ethereum.casper.core;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.casper.config.CasperProperties;
-import org.ethereum.casper.config.net.CasperTestNetConfig;
-import org.ethereum.config.BlockchainNetConfig;
+import org.ethereum.casper.config.net.CasperTestConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
@@ -31,6 +30,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+import org.ethereum.casper.validator.NullSenderTxValidator;
 import org.ethereum.vm.program.ProgramResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +43,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.ethereum.casper.config.net.CasperTestNetConfig.BASE_INTEREST_FACTOR;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.BASE_PENALTY_FACTOR;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.DYNASTY_LOGOUT_DELAY;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.MIN_DEPOSIT_ETH;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.NULL_SIGN_SENDER;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.WITHDRAWAL_DELAY;
+import static org.ethereum.casper.config.net.CasperTestConfig.BASE_INTEREST_FACTOR;
+import static org.ethereum.casper.config.net.CasperTestConfig.BASE_PENALTY_FACTOR;
+import static org.ethereum.casper.config.net.CasperTestConfig.DYNASTY_LOGOUT_DELAY;
+import static org.ethereum.casper.config.net.CasperTestConfig.MIN_DEPOSIT_ETH;
+import static org.ethereum.casper.config.net.CasperTestConfig.NULL_SIGN_SENDER;
+import static org.ethereum.casper.config.net.CasperTestConfig.WITHDRAWAL_DELAY;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 @Component
@@ -83,10 +83,8 @@ public class CasperFacade {
         byte[] casperAddress = res.getKey();
         this.initTxs = res.getValue();
         systemProperties.setCasperAddress(casperAddress);
-        BlockchainNetConfig netConfig = systemProperties.getBlockchainConfig();
-        if (netConfig instanceof CasperTestNetConfig) {
-            ((CasperTestNetConfig) netConfig).setCasperAddress(casperAddress);
-        }
+        CasperTestConfig config = (CasperTestConfig) systemProperties.getBlockchainConfig().getConfigForBlock(0);
+        config.addNullSenderTxValidators(new NullSenderTxValidator(this::isVote));
         this.contractAddress = Hex.toHexString(casperAddress);
         logger.info("Casper contract address set to [0x{}]", contractAddress);
         String casperAbi = systemProperties.getCasperAbi();

@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.math.BigInteger.ONE;
-import static org.ethereum.casper.config.net.CasperTestNetConfig.NULL_SIGN_SENDER;
+import static org.ethereum.casper.config.net.CasperTestConfig.NULL_SIGN_SENDER;
 import static org.ethereum.core.ImportResult.EXIST;
 import static org.ethereum.core.ImportResult.IMPORTED_BEST;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;

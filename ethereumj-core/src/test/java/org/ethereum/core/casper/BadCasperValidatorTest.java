@@ -42,7 +42,7 @@ import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 import static org.ethereum.crypto.HashUtil.sha3;
 
-@Ignore  // Takes too long to run usually
+@Ignore  // Takes too long to run regularly
 public class BadCasperValidatorTest extends CasperBase {
 
     private int totalVotes = 0;

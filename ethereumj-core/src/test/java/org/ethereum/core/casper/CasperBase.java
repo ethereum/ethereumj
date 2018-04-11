@@ -19,6 +19,7 @@ package org.ethereum.core.casper;
 
 import org.ethereum.casper.config.CasperBeanConfig;
 import org.ethereum.casper.config.CasperProperties;
+import org.ethereum.casper.config.net.CasperTestConfig;
 import org.ethereum.casper.core.CasperBlockchain;
 import org.ethereum.casper.core.CasperFacade;
 import org.ethereum.casper.core.CasperPendingStateImpl;
@@ -52,6 +53,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.casper.validator.NullSenderTxValidator;
 import org.ethereum.vm.program.ProgramPrecompile;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
@@ -73,7 +75,6 @@ import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doCallRealMethod;
 
 // We have all mocks here and not all of them are used in every test, so strict stubs should be turned off
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -121,7 +122,9 @@ public abstract class CasperBase {
         // Just trust me!
         // FIXME: Make it a little bit readable
 
-        systemProperties.setBlockchainConfig(config());
+        BlockchainNetConfig config = config();
+        ((CasperTestConfig) config.getConfigForBlock(0)).addNullSenderTxValidators(new NullSenderTxValidator(casper::isVote));
+        systemProperties.setBlockchainConfig(config);
         Resource casperGenesis = new ClassPathResource("/genesis/casper.json");
         systemProperties.useGenesis(casperGenesis.getInputStream());
         systemProperties.overrideParams(

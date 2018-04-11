@@ -15,16 +15,34 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.casper.config.net;
+package org.ethereum.casper.validator;
 
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.BaseNetConfig;
+import java.util.function.Function;
+import org.ethereum.core.Transaction;
+import org.ethereum.validator.AbstractValidationRule;
 
-public class CasperTestNetConfig extends BaseNetConfig {
+/**
+ * Customizable validator for checking NULL_SENDER tx for acceptance
+ */
+public class NullSenderTxValidator extends AbstractValidationRule {
 
-    public static final CasperTestNetConfig INSTANCE = new CasperTestNetConfig();
+    private Function<Transaction, Boolean> validator;
 
-    public CasperTestNetConfig() {
-        add(0, new CasperTestConfig(new FrontierConfig()));
+    public NullSenderTxValidator(Function<Transaction, Boolean> validator) {
+        this.validator = validator;
+    }
+
+    @Override
+    public Class getEntityClass() {
+        return Transaction.class;
+    }
+
+    /**
+     * Runs transaction validation and returns its result
+     *
+     * @param transaction
+     */
+    public Boolean validate(Transaction transaction) {
+        return validator.apply(transaction);
     }
 }
