@@ -27,7 +27,7 @@ dependencies:
     - cp -r ~/.go_workspace/src/github.com/karalabe/hive/workspace/ethash/. ~/.ethash
     # Cache gradle artifacts
     - (cd ~/ethereumj && ./gradlew compileJava)
-    - (cd ~ && git clone --depth 1 -b develop https://github.com/ether-camp/ethereum-harmony.git)
+    - (cd ~ && git clone --depth 1 -b research/casper https://github.com/ether-camp/ethereum-harmony.git)
     - (cd ~/ethereum-harmony && ./gradlew dependencyManagement)
 
 test:
