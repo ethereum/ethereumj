@@ -56,6 +56,7 @@ import org.springframework.util.concurrent.FutureAdapter;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -378,6 +379,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         BlockchainConfig nextBlockConfig = config.getBlockchainConfig().getConfigForBlock(getBlockchain()
                 .getBestBlock().getNumber() + 1);
         return nextBlockConfig.getChainId();
+    }
+
+    public CompletableFuture<Void> switchToShortSync() {
+        return syncManager.switchToShortSync();
     }
 
     @Override

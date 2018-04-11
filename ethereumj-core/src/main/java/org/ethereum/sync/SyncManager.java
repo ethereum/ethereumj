@@ -274,9 +274,7 @@ public class SyncManager extends BlockDownloader {
                             wrapper.getBlock().getTransactionsList().size(), ts);
 
                     if (wrapper.isNewBlock() && !syncDone) {
-                        syncDone = true;
-                        channelManager.onSyncDone(true);
-                        compositeEthereumListener.onSyncDone(syncDoneType);
+                        makeSyncDone();
                     }
                 }
 
@@ -309,6 +307,34 @@ public class SyncManager extends BlockDownloader {
                 }
             }
         }
+    }
+
+    private synchronized void makeSyncDone() {
+        if (syncDone) return;
+        syncDone = true;
+        channelManager.onSyncDone(true);
+        compositeEthereumListener.onSyncDone(syncDoneType);
+    }
+
+    public CompletableFuture<Void> switchToShortSync() {
+        final CompletableFuture<Void> syncDoneF = new CompletableFuture<>();
+        if(!syncDone) {
+            new Thread(() -> {
+                while(!blockQueue.isEmpty() && !syncDone) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        syncDoneF.completeExceptionally(e);
+                    }
+                }
+                makeSyncDone();
+                syncDoneF.complete(null);
+            }).start();
+        } else {
+            syncDoneF.complete(null);
+        }
+
+        return syncDoneF;
     }
 
     /**
