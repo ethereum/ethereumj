@@ -327,7 +327,9 @@ public class SyncManager extends BlockDownloader {
                         syncDoneF.completeExceptionally(e);
                     }
                 }
-                makeSyncDone();
+                if (config.isSyncEnabled()) {
+                    makeSyncDone();
+                }
                 syncDoneF.complete(null);
             }).start();
         } else {
