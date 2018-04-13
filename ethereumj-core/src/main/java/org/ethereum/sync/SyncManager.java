@@ -318,7 +318,7 @@ public class SyncManager extends BlockDownloader {
 
     public CompletableFuture<Void> switchToShortSync() {
         final CompletableFuture<Void> syncDoneF = new CompletableFuture<>();
-        if(!syncDone) {
+        if(!syncDone && config.isSyncEnabled()) {
             new Thread(() -> {
                 while(!blockQueue.isEmpty() && !syncDone) {
                     try {
@@ -327,9 +327,7 @@ public class SyncManager extends BlockDownloader {
                         syncDoneF.completeExceptionally(e);
                     }
                 }
-                if (config.isSyncEnabled()) {
-                    makeSyncDone();
-                }
+                makeSyncDone();
                 syncDoneF.complete(null);
             }).start();
         } else {
