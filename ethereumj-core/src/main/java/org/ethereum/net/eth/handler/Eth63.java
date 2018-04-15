@@ -190,7 +190,7 @@ public class Eth63 extends Eth62 {
 
         for (Value nodeVal : msg.getDataList()) {
             byte[] hash = nodeVal.hash();
-            if (!requestedNodes.contains(hash)) {
+            if (requestedNodes == null || !requestedNodes.contains(hash)) {
                 String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer " + channel;
                 dropUselessPeer(err);
                 return;

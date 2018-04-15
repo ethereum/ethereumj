@@ -230,8 +230,12 @@ public enum EthMessageCodes {
     }
 
     public static boolean inRange(byte code, EthVersion v) {
-        EthMessageCodes[] codes = values(v);
-        return code >= codes[0].asByte() && code <= codes[codes.length - 1].asByte();
+        for (EthMessageCodes refCode: values(v)) {
+            if (code == refCode.asByte()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public byte asByte() {

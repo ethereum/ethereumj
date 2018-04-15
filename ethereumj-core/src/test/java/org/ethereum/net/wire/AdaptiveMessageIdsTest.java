@@ -34,6 +34,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 import static org.ethereum.net.eth.EthVersion.*;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Roman Mandeleil
@@ -148,5 +149,18 @@ public class AdaptiveMessageIdsTest {
         assertEquals(0x18 + 0, messageCodesResolver.withShhOffset(ShhMessageCodes.STATUS.asByte()));
         assertEquals(0x18 + 1, messageCodesResolver.withShhOffset(ShhMessageCodes.MESSAGE.asByte()));
         assertEquals(0x18 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.FILTER.asByte()));
+    }
+
+    @Test
+    public void ShhCodeShouldNotBeResolvedAsEthOne() {
+        List<Capability> capabilities = Arrays.asList(
+                new Capability(Capability.ETH, EthVersion.V63.getCode()),
+                new Capability(Capability.SHH, ShhHandler.VERSION));
+
+        messageCodesResolver.init(capabilities);
+
+        byte shhCode = messageCodesResolver.withShhOffset(ShhMessageCodes.STATUS.asByte());
+        byte ethCode = messageCodesResolver.resolveEth(shhCode);
+        assertFalse(EthMessageCodes.inRange(ethCode, EthVersion.V63));
     }
 }
