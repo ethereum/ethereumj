@@ -171,9 +171,9 @@ public class CLIInterface {
         System.out.println("-listen  <port>       -- port to listen on for incoming connections ");
         System.out.println("-connect <enode://pubKey@host:port>  -- address actively connect to  ");
         System.out.println("-connectOnly <enode://pubKey@host:port>  -- like 'connect', but will not attempt to connect to other peers  ");
-        System.out.println("");
+        System.out.println();
         System.out.println("e.g: cli -reset no -db db-1 -listen 20202 -connect enode://0be5b4@poc-7.ethdev.com:30300 ");
-        System.out.println("");
+        System.out.println();
 
     }
 
