@@ -47,13 +47,12 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
     private static final int PERCENTILE_SHARE = 4;
 
     private CircularFifoQueue<long[]> blockGasPrices;
-    private CircularFifoQueue<Long> blockGasPricesExtra = new CircularFifoQueue<>(getMinTransactions());
 
     private int idx = 0;
     private Long recommendedGasPrice = getDefaultPrice();
 
     public RecommendedGasPriceTracker() {
-        blockGasPrices = new CircularFifoQueue<>(getMinBlocks());
+        blockGasPrices = new CircularFifoQueue<>(Math.max(getMinTransactions(), getMinBlocks()));
     }
 
     @Override
@@ -64,7 +63,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
     private void onBlock(Block block) {
         onTransactions(block.getTransactionsList());
         ++idx;
-        if (idx % getBlocksRecount() == 0) {
+        if (idx == getBlocksRecount()) {
             Long newGasPrice = getGasPrice();
             if (newGasPrice != null) {
                 this.recommendedGasPrice = newGasPrice;
@@ -74,23 +73,29 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
     }
 
     private synchronized void onTransactions(List<Transaction> txs) {
+        if (txs.isEmpty()) return;
+
         long[] gasPrices = new long[txs.size()];
         for (int i = 0; i < txs.size(); ++i) {
             gasPrices[i] = ByteUtil.byteArrayToLong(txs.get(i).getGasPrice());
         }
-        if ((blockGasPrices.size() == blockGasPrices.maxSize()) && blockGasPrices.get(0).length > 0) {
-            for (int i = 0; i < blockGasPrices.get(0).length; ++i) {
-                blockGasPricesExtra.add(blockGasPrices.get(0)[i]);
-            }
+
+        while (blockGasPrices.size() >= getMinBlocks() &&
+                (calcGasPricesSize() - blockGasPrices.get(0).length + gasPrices.length) >= getMinTransactions()) {
+            blockGasPrices.remove(blockGasPrices.get(0));
         }
         blockGasPrices.add(gasPrices);
     }
 
+    private int calcGasPricesSize() {
+        return blockGasPrices.stream().map(Array::getLength).mapToInt(Integer::intValue).sum();
+    }
+
     private synchronized Long getGasPrice() {
-        int size = blockGasPrices.stream().map(Array::getLength).mapToInt(Integer::intValue).sum();
+        int size = calcGasPricesSize();
         // Don't override default value until we have minTransactions and minBlocks
-        if ((size + blockGasPricesExtra.size()) < getMinTransactions() ||
-                blockGasPrices.size() < blockGasPrices.maxSize()) return null;
+        if (size < getMinTransactions() ||
+                blockGasPrices.size() < getMinBlocks()) return null;
 
         long[] difficulties = new long[size > getMinTransactions() ? size : getMinTransactions()];
         int index = 0;
@@ -100,9 +105,6 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
                 difficulties[index] = currentDifficulty;
                 ++index;
             }
-        }
-        for (int i = blockGasPricesExtra.size(); i > 0 && index < getMinTransactions(); --i) {
-            difficulties[index] = blockGasPricesExtra.get(i - 1);
         }
         Arrays.sort(difficulties);
 
