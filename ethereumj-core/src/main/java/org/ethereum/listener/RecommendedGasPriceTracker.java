@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
 
-    private static final long DEFAULT_PRICE = 1_000_000_000L;
+    private static final Long DEFAULT_PRICE = null;
     private static final int MIN_BLOCKS = 128;
     private static final int BLOCKS_RECOUNT = 1;
     private static final int MIN_TRANSACTIONS = 512;
@@ -50,7 +50,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
     private CircularFifoQueue<Long> blockGasPricesExtra = new CircularFifoQueue<>(getMinTransactions());
 
     private int idx = 0;
-    private long recommendedGasPrice = getDefaultPrice();
+    private Long recommendedGasPrice = getDefaultPrice();
 
     public RecommendedGasPriceTracker() {
         blockGasPrices = new CircularFifoQueue<>(getMinBlocks());
@@ -115,7 +115,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * Until this {@link #getDefaultPrice()} is returned
      * @return recommended gas price for transaction
      */
-    public long getRecommendedGasPrice() {
+    public Long getRecommendedGasPrice() {
         return recommendedGasPrice;
     }
 
@@ -137,7 +137,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * Used when not enough data gathered
      * @return default transaction price
      */
-    public static long getDefaultPrice() {
+    public static Long getDefaultPrice() {
         return DEFAULT_PRICE;
     }
 
