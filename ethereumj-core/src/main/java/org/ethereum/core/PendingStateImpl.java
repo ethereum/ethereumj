@@ -106,13 +106,9 @@ public class PendingStateImpl implements PendingState {
     private Block best = null;
 
     @Autowired
-    public PendingStateImpl(final EthereumListener listener, final BlockchainImpl blockchain) {
+    public PendingStateImpl(final EthereumListener listener) {
         this.listener = listener;
-        this.blockchain = blockchain;
 //        this.repository = blockchain.getRepository();
-        this.blockStore = blockchain.getBlockStore();
-        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
-        this.transactionStore = blockchain.getTransactionStore();
     }
 
     public void init() {
@@ -395,10 +391,15 @@ public class PendingStateImpl implements PendingState {
 
         pendingState = getOrigRepository().startTracking();
 
+        long t = System.nanoTime();
+
         for (PendingTransaction tx : pendingTransactions) {
             TransactionReceipt receipt = executeTx(tx.getTransaction());
             fireTxUpdate(receipt, PENDING, block);
         }
+
+        logger.debug("Successfully processed #{}, txs: {}, time: {}s", block.getNumber(), pendingTransactions.size(),
+                String.format("%.3f", (System.nanoTime() - t) / 1_000_000_000d));
     }
 
     private TransactionReceipt executeTx(Transaction tx) {
@@ -442,7 +443,11 @@ public class PendingStateImpl implements PendingState {
         return block;
     }
 
+    @Autowired
     public void setBlockchain(BlockchainImpl blockchain) {
         this.blockchain = blockchain;
+        this.blockStore = blockchain.getBlockStore();
+        this.programInvokeFactory = blockchain.getProgramInvokeFactory();
+        this.transactionStore = blockchain.getTransactionStore();
     }
 }

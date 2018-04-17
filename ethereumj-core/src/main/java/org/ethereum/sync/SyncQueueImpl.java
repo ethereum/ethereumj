@@ -189,7 +189,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     public SyncQueueImpl(Blockchain bc) {
         Block bestBlock = bc.getBestBlock();
-        long start = bestBlock.getNumber() - MAX_CHAIN_LEN;
+        long start = bestBlock.getNumber() - MAX_CHAIN_LEN + 1;
         start = start < 0 ? 0 : start;
         List<Block> initBlocks = new ArrayList<>();
         for (long i = start; i <= bestBlock.getNumber(); i++) {

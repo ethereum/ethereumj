@@ -37,7 +37,7 @@ public class AnyFuture<V> extends AbstractFuture<V> {
     public synchronized void add(final ListenableFuture<V> f) {
         if (isCancelled() || isDone()) return;
 
-        f.addListener(() -> futureCompleted(f),  MoreExecutors.sameThreadExecutor());
+        f.addListener(() -> futureCompleted(f),  MoreExecutors.directExecutor());
         futures.add(f);
     }
 

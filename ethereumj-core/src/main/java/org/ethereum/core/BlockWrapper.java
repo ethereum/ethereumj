@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -177,4 +178,14 @@ public class BlockWrapper {
 
         return block.isEqual(wrapper.block);
     }
+
+    public long estimateMemSize() {
+        return MemEstimator.estimateSize(this);
+    }
+
+    public static final MemSizeEstimator<BlockWrapper> MemEstimator = wrapper ->
+            Block.MemEstimator.estimateSize(wrapper.block) +
+            MemSizeEstimator.ByteArrayEstimator.estimateSize(wrapper.nodeId) +
+            8 + 8 + 1 + // importFailedAt + receivedAt + newBlock
+            16; // Object header + ref
 }

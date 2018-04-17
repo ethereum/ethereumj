@@ -23,10 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.AbstractCachedSource;
-import org.ethereum.datasource.AsyncFlushable;
-import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.WriteCache;
+import org.ethereum.datasource.*;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.slf4j.Logger;
@@ -45,7 +42,8 @@ import java.util.concurrent.*;
 public class DbFlushManager {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    List<AbstractCachedSource<byte[], byte[]>> writeCaches = new ArrayList<>();
+    List<AbstractCachedSource<byte[], ?>> writeCaches = new ArrayList<>();
+    List<Source<byte[], ?>> sources = new ArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
     AbstractCachedSource<byte[], byte[]> stateDbCache;
 
@@ -90,13 +88,17 @@ public class DbFlushManager {
         this.sizeThreshold = sizeThreshold;
     }
 
-    public void addCache(AbstractCachedSource<byte[], byte[]> cache) {
+    public void addCache(AbstractCachedSource<byte[], ?> cache) {
         writeCaches.add(cache);
+    }
+
+    public void addSource(Source<byte[], ?> src) {
+        sources.add(src);
     }
 
     public long getCacheSize() {
         long ret = 0;
-        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], ?> writeCache : writeCaches) {
             ret += writeCache.estimateCacheSize();
         }
         return ret;
@@ -141,7 +143,7 @@ public class DbFlushManager {
             }
         }
         logger.debug("Flipping async storages");
-        for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+        for (AbstractCachedSource<byte[], ?> writeCache : writeCaches) {
             try {
                 if (writeCache instanceof AsyncFlushable) {
                     ((AsyncFlushable) writeCache).flipStorage();
@@ -157,7 +159,9 @@ public class DbFlushManager {
             long s = System.nanoTime();
             logger.info("Flush started");
 
-            for (AbstractCachedSource<byte[], byte[]> writeCache : writeCaches) {
+            sources.forEach(Source::flush);
+
+            for (AbstractCachedSource<byte[], ?> writeCache : writeCaches) {
                 if (writeCache instanceof AsyncFlushable) {
                     try {
                         ret |= ((AsyncFlushable) writeCache).flushAsync().get();

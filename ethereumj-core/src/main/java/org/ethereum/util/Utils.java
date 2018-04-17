@@ -76,7 +76,7 @@ public class Utils {
 
     public static String longToTimePeriod(long msec) {
         if (msec < 1000) return msec + "ms";
-        if (msec < 3000) return String.format("%.2f", msec / 1000d);
+        if (msec < 3000) return String.format("%.2fs", msec / 1000d);
         if (msec < 60 * 1000) return (msec / 1000) + "s";
         long sec = msec / 1000;
         if (sec < 5 * 60) return (sec / 60) +  "m" + (sec % 60) + "s";
@@ -255,6 +255,24 @@ public class Utils {
         System.err.println(ANSI_RESET);
 
         throw new RuntimeException(message);
+    }
+
+    /**
+     * Show std warning messages in red.
+     */
+    public static void showWarn(String message, String... messages) {
+        LoggerFactory.getLogger("general").warn(message);
+        final String ANSI_RED = "\u001B[31m";
+        final String ANSI_RESET = "\u001B[0m";
+
+        System.err.println(ANSI_RED);
+        System.err.println("");
+        System.err.println("        " + message);
+        for (String msg : messages) {
+            System.err.println("        " + msg);
+        }
+        System.err.println("");
+        System.err.println(ANSI_RESET);
     }
 
     public static String sizeToStr(long size) {

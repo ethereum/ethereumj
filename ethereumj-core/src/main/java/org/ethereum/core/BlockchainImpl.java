@@ -535,7 +535,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
             stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
             if (summary1 != null) {
-                if (config.exitOnBlockConflict()) {
+                if (config.exitOnBlockConflict() && !byTest) {
                     stateLogger.error("Inconsistent behavior, exiting...");
                     System.exit(-1);
                 } else {
@@ -608,7 +608,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             // block is bad so 'rollback' the state root to the original state
 //            ((RepositoryImpl) repository).setRoot(origRoot);
 
-            if (config.exitOnBlockConflict()) {
+            if (config.exitOnBlockConflict() && !byTest) {
                 adminInfo.lostConsensus();
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
                 System.exit(1);

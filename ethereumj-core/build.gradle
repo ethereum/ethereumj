@@ -3,10 +3,10 @@ import java.text.SimpleDateFormat
 buildscript {
     repositories {
         jcenter()
-        maven { url 'http://repo.spring.io/plugins-release-local' }
+        maven { url 'http://repo.spring.io/plugins-release' }
     }
     dependencies {
-        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+        classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
         classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.1'
     }
 }
@@ -15,7 +15,6 @@ buildscript {
 plugins {
     id 'application'
     id 'jacoco'
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.jfrog.bintray' version '1.0'
 }
@@ -26,7 +25,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.8
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss4m", "-Xmx2G", "-XX:-OmitStackTraceInFastThrow"]
+applicationDefaultJvmArgs = ["-server", "-Xss2m", "-Xmx2G", "-XX:-OmitStackTraceInFastThrow"]
 
 if ( project.hasProperty('jvmArgs') ) {
     applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
@@ -43,12 +42,6 @@ sourceSets.main.java.srcDirs += generatedSrcDir
 
 tasks.withType(JavaCompile){
     options.warnings = false
-}
-
-task runMorden (type: JavaExec) {
-    main = mainClassName
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=morden.conf'
 }
 
 task runRopsten (type: JavaExec) {
@@ -100,13 +93,15 @@ test {
         exceptionFormat "short"
     }
 
+    systemProperties System.properties
+    systemProperty "user.dir", workingDir
     systemProperty "file.encoding", "UTF-8"
 }
 
 ext {
     slf4jVersion = '1.7.7'
     leveldbVersion = '0.7'
-    scastleVersion = '1.53.0.0'
+    scastleVersion = '1.58.0.0'
     springVersion = '4.2.0.RELEASE'
     hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
@@ -121,7 +116,11 @@ dependencies {
 
     compile "org.ethereum:leveldbjni-all:1.18.3"             // native leveldb components
 
-    compile "org.ethereum:solcJ-all:0.4.8"                   // Solidity Compiler win/mac/linux binaries
+    compile "org.ethereum:rocksdbjni:5.9.2"                   // RocksDB Java API
+
+    compile "org.ethereum:solcJ-all:0.4.19"                  // Solidity Compiler win/mac/linux binaries
+
+    compile "com.google.guava:guava:24.1-jre"
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.javassist:javassist:3.15.0-GA"
@@ -300,6 +299,24 @@ def customizePom(pom, gradleProject) {
                     id = "rmandeleil"
                     name = "Roman Mandeleil"
                     email = "roman.mandeleil@gmail.com"
+                }
+
+                developer {
+                    id = "Nashatyrev"
+                    name = "Anton Nashatyrev"
+                    email = "Anton.nashatyrev@gmail.com"
+                }
+
+                developer {
+                    id = "zilm13"
+                    name = "Dmitry Shmatko"
+                    email = "zilm@zilm.net"
+                }
+
+                developer {
+                    id = "mkalinin"
+                    name = "Mikhail Kalinin"
+                    email = "noblesse.knight@gmail.com"
                 }
             }
             issueManagement {

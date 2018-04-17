@@ -32,6 +32,7 @@ import org.ethereum.vm.program.ProgramResult;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
@@ -215,6 +216,13 @@ public interface Ethereum {
      * @return chain id or null
      */
     Integer getChainIdForNextBlock();
+
+    /**
+     * Manual switch to Short Sync mode
+     * Maybe useful in small private and detached networks when automatic detection fails
+     * @return Future, which completes when syncDone is turned to True in {@link org.ethereum.sync.SyncManager}
+     */
+    CompletableFuture<Void> switchToShortSync();
 
     void exitOn(long number);
 }

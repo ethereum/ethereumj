@@ -450,6 +450,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean databaseFromBackup() {
+        return config.getBoolean("database.fromBackup");
+    }
+
+    @ValidateMe
     public int databasePruneDepth() {
         return config.getBoolean("database.prune.enabled") ? config.getInt("database.prune.maxDepth") : -1;
     }
@@ -812,6 +817,16 @@ public class SystemProperties {
         byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
         if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
         return ret;
+    }
+
+    @ValidateMe
+    public boolean fastSyncBackupState() {
+        return config.getBoolean("sync.fast.backupState");
+    }
+
+    @ValidateMe
+    public boolean fastSyncSkipHistory() {
+        return config.getBoolean("sync.fast.skipHistory");
     }
 
     @ValidateMe

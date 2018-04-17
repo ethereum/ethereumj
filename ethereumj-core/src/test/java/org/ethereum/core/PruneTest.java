@@ -23,6 +23,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.prune.Pruner;
+import org.ethereum.db.prune.Segment;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.FastByteComparisons;
@@ -37,7 +39,6 @@ import java.util.*;
 import static org.ethereum.util.ByteUtil.intToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -53,50 +54,60 @@ public class PruneTest {
     @Test
     public void testJournal1() throws Exception {
         HashMapDB<byte[]> db = new HashMapDB<>();
-        CountingBytesSource countDB = new CountingBytesSource(db);
-        JournalSource<byte[]> journalDB = new JournalSource<>(countDB);
+        JournalSource<byte[]> journalDB = new JournalSource<>(db);
+        Pruner pruner = new Pruner(journalDB.getJournal(), db);
+        pruner.init();
 
         put(journalDB, "11");
         put(journalDB, "22");
         put(journalDB, "33");
-        journalDB.commitUpdates(intToBytes(1));
+        pruner.feed(journalDB.commitUpdates(intToBytes(1)));
         checkKeys(db.getStorage(), "11", "22", "33");
 
         put(journalDB, "22");
         delete(journalDB, "33");
         put(journalDB, "44");
-        journalDB.commitUpdates(intToBytes(2));
+        pruner.feed(journalDB.commitUpdates(intToBytes(2)));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.persistUpdate(intToBytes(1));
-        checkKeys(db.getStorage(), "11", "22", "33", "44");
+        pruner.feed(journalDB.commitUpdates(intToBytes(12)));
 
-        journalDB.revertUpdate(intToBytes(2));
+        Segment segment = new Segment(0, intToBytes(0), intToBytes(0));
+        segment.startTracking()
+                .addMain(1, intToBytes(1), intToBytes(0))
+                .addItem(1, intToBytes(2), intToBytes(0))
+                .addMain(2, intToBytes(12), intToBytes(1))
+                .commit();
+        pruner.prune(segment);
+
         checkKeys(db.getStorage(), "11", "22", "33");
 
         put(journalDB, "22");
         delete(journalDB, "33");
         put(journalDB, "44");
-        journalDB.commitUpdates(intToBytes(3));
+        pruner.feed(journalDB.commitUpdates(intToBytes(3)));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
         delete(journalDB, "22");
         put(journalDB, "33");
         delete(journalDB, "44");
-        journalDB.commitUpdates(intToBytes(4));
+        pruner.feed(journalDB.commitUpdates(intToBytes(4)));
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.persistUpdate(intToBytes(3));
+        segment = new Segment(0, intToBytes(0), intToBytes(0));
+        segment.startTracking()
+                .addMain(1, intToBytes(3), intToBytes(0))
+                .commit();
+        pruner.prune(segment);
+
         checkKeys(db.getStorage(), "11", "22", "33", "44");
 
-        journalDB.persistUpdate(intToBytes(4));
-        checkKeys(db.getStorage(), "11", "22", "33");
+        segment = new Segment(0, intToBytes(0), intToBytes(0));
+        segment.startTracking()
+                .addMain(1, intToBytes(4), intToBytes(0))
+                .commit();
+        pruner.prune(segment);
 
-        delete(journalDB, "22");
-        journalDB.commitUpdates(intToBytes(5));
-        checkKeys(db.getStorage(), "11", "22", "33");
-
-        journalDB.persistUpdate(intToBytes(5));
         checkKeys(db.getStorage(), "11", "33");
 
     }
@@ -104,6 +115,7 @@ public class PruneTest {
     private static void put(Source<byte[], byte[]> db, String key) {
         db.put(Hex.decode(key), Hex.decode(key));
     }
+
     private static void delete(Source<byte[], byte[]> db, String key) {
         db.delete(Hex.decode(key));
     }
@@ -193,7 +205,7 @@ public class PruneTest {
 
         {
             // this state should be pruned already
-            Block b1 = bc.getBlockchain().getBlockByNumber(bestBlockNum - 4);
+            Block b1 = bc.getBlockchain().getBlockByNumber(bestBlockNum - 6);
             Repository r1 = bc.getBlockchain().getRepository().getSnapshotTo(b1.getStateRoot());
             Assert.assertEquals(BigInteger.ZERO, r1.getBalance(alice.getAddress()));
             Assert.assertEquals(BigInteger.ZERO, r1.getBalance(bob.getAddress()));
@@ -235,6 +247,10 @@ public class PruneTest {
         bc.createBlock();
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
         // force prune
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
         bc.createBlock();
         bc.createBlock();
         bc.createBlock();
@@ -390,6 +406,10 @@ public class PruneTest {
         bc.createBlock();
         bc.createBlock();
         bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
+        bc.createBlock();
 
         Assert.assertEquals(BigInteger.valueOf(0xaaaaaaaaaaaaL), contr.callConstFunction("n")[0]);
     }
@@ -521,7 +541,8 @@ public class PruneTest {
                             ret.add(new ByteArrayWrapper(accountState.getCodeHash()));
                         }
                         if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-                            ret.addAll(getReferencedTrieNodes(stateDS, false, accountState.getStateRoot()));
+                            NodeKeyCompositor nodeKeyCompositor = new NodeKeyCompositor(key);
+                            ret.addAll(getReferencedTrieNodes(new SourceCodec.KeyOnly<>(stateDS, nodeKeyCompositor), false, accountState.getStateRoot()));
                         }
                     }
                 }
@@ -548,7 +569,8 @@ public class PruneTest {
                         ret.append("    CodeHash: " + Hex.toHexString(accountState.getCodeHash()) + "\n");
                     }
                     if (!FastByteComparisons.equal(accountState.getStateRoot(), HashUtil.EMPTY_TRIE_HASH)) {
-                        ret.append(dumpState(stateDS, false, accountState.getStateRoot()));
+                        NodeKeyCompositor nodeKeyCompositor = new NodeKeyCompositor(key);
+                        ret.append(dumpState(new SourceCodec.KeyOnly<>(stateDS, nodeKeyCompositor), false, accountState.getStateRoot()));
                     }
                 } else {
                     ret.append("    " + Hex.toHexString(nodeHash) + ": " + Hex.toHexString(key) + " = " + Hex.toHexString(value) + "\n");
