@@ -61,19 +61,20 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
     }
 
     private void onBlock(Block block) {
-        onTransactions(block.getTransactionsList());
-        ++idx;
-        if (idx == getBlocksRecount()) {
-            Long newGasPrice = getGasPrice();
-            if (newGasPrice != null) {
-                this.recommendedGasPrice = newGasPrice;
+        if (onTransactions(block.getTransactionsList())) {
+            ++idx;
+            if (idx == getBlocksRecount()) {
+                Long newGasPrice = getGasPrice();
+                if (newGasPrice != null) {
+                    this.recommendedGasPrice = newGasPrice;
+                }
+                idx = 0;
             }
-            idx = 0;
         }
     }
 
-    private synchronized void onTransactions(List<Transaction> txs) {
-        if (txs.isEmpty()) return;
+    private synchronized boolean onTransactions(List<Transaction> txs) {
+        if (txs.isEmpty()) return false;
 
         long[] gasPrices = new long[txs.size()];
         for (int i = 0; i < txs.size(); ++i) {
@@ -85,6 +86,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
             blockGasPrices.remove(blockGasPrices.get(0));
         }
         blockGasPrices.add(gasPrices);
+        return true;
     }
 
     private int calcGasPricesSize() {
