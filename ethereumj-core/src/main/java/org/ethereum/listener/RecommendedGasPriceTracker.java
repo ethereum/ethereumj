@@ -40,20 +40,20 @@ import java.util.List;
  */
 public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
 
-    private static final long DEFAULT_PRICE = 2_000_000_000L;
+    private static final long DEFAULT_PRICE = 1_000_000_000L;
     private static final int MIN_BLOCKS = 128;
-    private static final int BLOCKS_RECOUNT = 16;
+    private static final int BLOCKS_RECOUNT = 1;
     private static final int MIN_TRANSACTIONS = 512;
     private static final int PERCENTILE_SHARE = 4;
 
-    private CircularFifoQueue<long[]> blockDifficulties;
-    private CircularFifoQueue<Long> blockDifficultiesExtra = new CircularFifoQueue<>(getMinTransactions());
+    private CircularFifoQueue<long[]> blockGasPrices;
+    private CircularFifoQueue<Long> blockGasPricesExtra = new CircularFifoQueue<>(getMinTransactions());
 
     private int idx = 0;
     private long recommendedGasPrice = getDefaultPrice();
 
     public RecommendedGasPriceTracker() {
-        blockDifficulties = new CircularFifoQueue<>(getMinBlocks());
+        blockGasPrices = new CircularFifoQueue<>(getMinBlocks());
     }
 
     @Override
@@ -78,29 +78,31 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
         for (int i = 0; i < txs.size(); ++i) {
             gasPrices[i] = ByteUtil.byteArrayToLong(txs.get(i).getGasPrice());
         }
-        if ((blockDifficulties.size() == blockDifficulties.maxSize()) && blockDifficulties.get(0).length > 0) {
-            for (int i = 0; i < blockDifficulties.get(0).length; ++i) {
-                blockDifficultiesExtra.add(blockDifficulties.get(0)[i]);
+        if ((blockGasPrices.size() == blockGasPrices.maxSize()) && blockGasPrices.get(0).length > 0) {
+            for (int i = 0; i < blockGasPrices.get(0).length; ++i) {
+                blockGasPricesExtra.add(blockGasPrices.get(0)[i]);
             }
         }
-        blockDifficulties.add(gasPrices);
+        blockGasPrices.add(gasPrices);
     }
 
     private synchronized Long getGasPrice() {
-        int size = blockDifficulties.stream().map(Array::getLength).mapToInt(Integer::intValue).sum();
-        if ((size + blockDifficultiesExtra.size()) < getMinTransactions()) return null;
+        int size = blockGasPrices.stream().map(Array::getLength).mapToInt(Integer::intValue).sum();
+        // Don't override default value until we have minTransactions and minBlocks
+        if ((size + blockGasPricesExtra.size()) < getMinTransactions() ||
+                blockGasPrices.size() < blockGasPrices.maxSize()) return null;
 
         long[] difficulties = new long[size > getMinTransactions() ? size : getMinTransactions()];
         int index = 0;
-        for (int i = 0; i < blockDifficulties.size(); ++i) {
-            long[] current = blockDifficulties.get(i);
+        for (int i = 0; i < blockGasPrices.size(); ++i) {
+            long[] current = blockGasPrices.get(i);
             for (long currentDifficulty : current) {
                 difficulties[index] = currentDifficulty;
                 ++index;
             }
         }
-        for (int i = blockDifficultiesExtra.size(); i > 0 && index < getMinTransactions(); --i) {
-            difficulties[index] = blockDifficultiesExtra.get(i - 1);
+        for (int i = blockGasPricesExtra.size(); i > 0 && index < getMinTransactions(); --i) {
+            difficulties[index] = blockGasPricesExtra.get(i - 1);
         }
         Arrays.sort(difficulties);
 
