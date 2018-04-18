@@ -79,7 +79,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
 
         blockGasPrices.add(gasPrices);
         while (blockGasPrices.size() > getMinBlocks() &&
-                (calcGasPricesSize() - blockGasPrices.getFirst().length + gasPrices.length) >= getMinTransactions()) {
+                (calcGasPricesSize() - blockGasPrices.getFirst().length) >= getMinTransactions()) {
             blockGasPrices.removeFirst();
         }
         return true;
