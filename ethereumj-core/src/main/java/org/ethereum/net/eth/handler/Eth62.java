@@ -35,7 +35,8 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
+import org.ethereum.util.slicer.ByteListSlicer;
+import org.ethereum.util.slicer.EncodedListSlicer;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -69,6 +70,8 @@ import static org.spongycastle.util.encoders.Hex.toHexString;
 public class Eth62 extends EthHandler {
 
     protected static final int MAX_HASHES_TO_SEND = 65536;
+
+    public static final int MAX_MESSAGE_SIZE = 32 * 1024 * 1024;
 
     protected final static Logger logger = LoggerFactory.getLogger("sync");
     protected final static Logger loggerNet = LoggerFactory.getLogger("net");
@@ -214,7 +217,13 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized void sendTransaction(List<Transaction> txs) {
-        TransactionsMessage msg = new TransactionsMessage(txs);
+        // Not purging data because txs will still live in PendingStateImpl
+        EncodedListSlicer<Transaction> slicer = new EncodedListSlicer<>(txs, MAX_MESSAGE_SIZE, tx -> {})
+                .withMemSizeEstimator(Transaction.MemEstimator::estimateSize);
+        List<Transaction> sliced = slicer.getEntities();
+        TransactionsMessage msg = new TransactionsMessage(sliced);
+        msg.getEncoded();
+        sliced.forEach(Transaction::purgeEncoded);
         sendMessage(msg);
     }
 
@@ -410,14 +419,15 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {
-        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(
+        Iterator<BlockHeader> headers = blockchain.getIteratorOfHeadersStartFrom(
                 msg.getBlockIdentifier(),
                 msg.getSkipBlocks(),
                 min(msg.getMaxHeaders(), MAX_HASHES_TO_SEND),
                 msg.isReverse()
         );
-
-        BlockHeadersMessage response = new BlockHeadersMessage(headers);
+        EncodedListSlicer<BlockHeader> slicer = new EncodedListSlicer<>(headers, MAX_MESSAGE_SIZE, h -> {})
+                .withMemSizeEstimator(BlockHeader.MemEstimator::estimateSize);
+        BlockHeadersMessage response = new BlockHeadersMessage(slicer.getEntities());
         sendMessage(response);
     }
 
@@ -453,9 +463,9 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockBodies(GetBlockBodiesMessage msg) {
-        List<byte[]> bodies = blockchain.getListOfBodiesByHashes(msg.getBlockHashes());
-
-        BlockBodiesMessage response = new BlockBodiesMessage(bodies);
+        Iterator<byte[]> bodies = blockchain.getIteratorOfBodiesByHashes(msg.getBlockHashes());
+        ByteListSlicer slicer = new ByteListSlicer(bodies, MAX_MESSAGE_SIZE);
+        BlockBodiesMessage response = new BlockBodiesMessage(slicer.getEntities());
         sendMessage(response);
     }
 

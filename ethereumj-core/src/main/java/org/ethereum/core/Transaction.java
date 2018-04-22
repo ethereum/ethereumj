@@ -50,7 +50,7 @@ import org.spongycastle.util.encoders.Hex;
  * There are two types of transactions: those which result in message calls
  * and those which result in the creation of new contracts.
  */
-public class Transaction {
+public class Transaction implements Encoded {
 
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
@@ -159,7 +159,8 @@ public class Transaction {
     }
 
 
-    private Integer extractChainIdFromV(BigInteger bv) {
+    private Integer extractChainIdFromRawSignature(BigInteger bv, byte[] r, byte[] s) {
+        if (r == null && s == null) return bv.intValue();  // EIP 86
         if (bv.bitLength() > 31) return Integer.MAX_VALUE; // chainId is limited to 31 bits, longer are not valid for now
         long v = bv.longValue();
         if (v == LOWER_REAL_V || v == (LOWER_REAL_V + 1)) return null;
@@ -212,15 +213,17 @@ public class Transaction {
             if (transaction.get(6).getRLPData() != null) {
                 byte[] vData =  transaction.get(6).getRLPData();
                 BigInteger v = ByteUtil.bytesToBigInteger(vData);
-                this.chainId = extractChainIdFromV(v);
                 byte[] r = transaction.get(7).getRLPData();
                 byte[] s = transaction.get(8).getRLPData();
-                this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
+                this.chainId = extractChainIdFromRawSignature(v, r, s);
+                if (r != null && s != null) {
+                    this.signature = ECDSASignature.fromComponents(r, s, getRealV(v));
+                }
             } else {
                 logger.debug("RLP encoded tx is not signed!");
             }
+            this.hash = HashUtil.sha3(rlpEncoded);
             this.parsed = true;
-            this.hash = getHash();
         } catch (Exception e) {
             throw new RuntimeException("Error on parsing RLP", e);
         }
@@ -252,10 +255,9 @@ public class Transaction {
 
     public byte[] getHash() {
         if (!isEmpty(hash)) return hash;
-
         rlpParse();
-        byte[] plainMsg = this.getEncoded();
-        return HashUtil.sha3(plainMsg);
+        getEncoded();
+        return hash;
     }
 
     public byte[] getRawHash() {
@@ -511,9 +513,30 @@ public class Transaction {
         this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
                 receiveAddress, value, data, v, r, s);
 
-        this.hash = this.getHash();
+        this.hash = HashUtil.sha3(rlpEncoded);
 
         return rlpEncoded;
+    }
+
+    @Override
+    public synchronized void purgeData() {
+        getEncoded();
+        this.parsed = false;
+        this.nonce = null;
+        this.gasPrice = null;
+        this.gasLimit = null;
+        this.receiveAddress = null;
+        this.value = null;
+        this.data = null;
+        this.signature = null;
+        this.chainId = null;
+    }
+
+    @Override
+    public synchronized void purgeEncoded() {
+        rlpParse();
+        this.rlpEncoded = null;
+        this.hash = null;
     }
 
     @Override

@@ -35,7 +35,9 @@ import org.ethereum.net.eth.message.ReceiptsMessage;
 
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
+import org.ethereum.util.slicer.EncodedListOfListsSlicer;
 import org.ethereum.util.Value;
+import org.ethereum.util.slicer.EncodedListSlicer;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,7 +48,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
 
 /**
@@ -108,17 +109,17 @@ public class Eth63 extends Eth62 {
                 msg.getNodeKeys().size()
         );
 
-        List<Value> nodeValues = new ArrayList<>();
+        EncodedListSlicer<Value> slicer = new EncodedListSlicer<>(MAX_MESSAGE_SIZE, Value::purgeData);
         for (byte[] nodeKey : msg.getNodeKeys()) {
             byte[] rawNode = trieNodeSource.get(nodeKey);
             if (rawNode != null) {
                 Value value = new Value(rawNode);
-                nodeValues.add(value);
+                if (!slicer.add(value)) break;
                 logger.trace("Eth63: " + Hex.toHexString(nodeKey).substring(0, 8) + " -> " + value);
             }
         }
 
-        sendMessage(new NodeDataMessage(nodeValues));
+        sendMessage(new NodeDataMessage(slicer.getEntities()));
     }
 
     protected synchronized void processGetReceipts(GetReceiptsMessage msg) {
@@ -129,7 +130,7 @@ public class Eth63 extends Eth62 {
                 msg.getBlockHashes().size()
         );
 
-        List<List<TransactionReceipt>> receipts = new ArrayList<>();
+        EncodedListOfListsSlicer<TransactionReceipt> slicer = new EncodedListOfListsSlicer<>(MAX_MESSAGE_SIZE, tr -> {});
         for (byte[] blockHash : msg.getBlockHashes()) {
             Block block = blockchain.getBlockByHash(blockHash);
             if (block == null) continue;
@@ -140,10 +141,10 @@ public class Eth63 extends Eth62 {
                 if (transactionInfo == null) break;
                 blockReceipts.add(transactionInfo.getReceipt());
             }
-            receipts.add(blockReceipts);
+            if(!slicer.add(blockReceipts)) break;
         }
 
-        sendMessage(new ReceiptsMessage(receipts));
+        sendMessage(new ReceiptsMessage(slicer.getEntityLists()));
     }
 
     public synchronized ListenableFuture<List<Pair<byte[], byte[]>>> requestTrieNodes(List<byte[]> hashes) {

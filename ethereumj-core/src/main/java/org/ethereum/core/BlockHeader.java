@@ -19,6 +19,7 @@ package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
@@ -29,13 +30,14 @@ import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Block header is a value object containing
  * the basic information of a block
  */
-public class BlockHeader {
+public class BlockHeader implements Encoded {
 
     public static final int NONCE_LENGTH = 8;
     public static final int HASH_LENGTH = 32;
@@ -301,6 +303,16 @@ public class BlockHeader {
         return this.getEncoded(true); // with nonce
     }
 
+    @Override
+    public synchronized void purgeData() {
+        // Cannot purge data because encoded is not cached
+    }
+
+    @Override
+    public synchronized void purgeEncoded() {
+        // Encoded not cached
+    }
+
     public byte[] getEncodedWithoutNonce() {
         return this.getEncoded(false);
     }
@@ -423,4 +435,23 @@ public class BlockHeader {
     public int hashCode() {
         return Arrays.hashCode(getHash());
     }
+
+    public static final MemSizeEstimator<BlockHeader> MemEstimator = bh ->
+            ByteArrayEstimator.estimateSize(bh.parentHash) +
+                    ByteArrayEstimator.estimateSize(bh.unclesHash) +
+                    ByteArrayEstimator.estimateSize(bh.coinbase) +
+                    ByteArrayEstimator.estimateSize(bh.stateRoot) +
+                    ByteArrayEstimator.estimateSize(bh.txTrieRoot) +
+                    ByteArrayEstimator.estimateSize(bh.receiptTrieRoot) +
+                    ByteArrayEstimator.estimateSize(bh.logsBloom) +
+                    ByteArrayEstimator.estimateSize(bh.difficulty) +
+                    8 + // timestamp
+                    8 + // number
+                    ByteArrayEstimator.estimateSize(bh.gasLimit) +
+                    8 + // gasUsed
+                    ByteArrayEstimator.estimateSize(bh.mixHash) +
+                    ByteArrayEstimator.estimateSize(bh.extraData) +
+                    ByteArrayEstimator.estimateSize(bh.nonce) +
+                    ByteArrayEstimator.estimateSize(bh.hashCache) +
+                    16; // Object header + ref
 }
