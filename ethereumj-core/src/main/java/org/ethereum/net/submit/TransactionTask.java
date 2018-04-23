@@ -38,7 +38,7 @@ public class TransactionTask implements Callable<List<Transaction>> {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    private final List<Transaction> tx;
+    private final List<Transaction> txs;
     private final ChannelManager channelManager;
     private final Channel receivedFrom;
 
@@ -46,12 +46,12 @@ public class TransactionTask implements Callable<List<Transaction>> {
         this(Collections.singletonList(tx), channelManager);
     }
 
-    public TransactionTask(List<Transaction> tx, ChannelManager channelManager) {
-        this(tx, channelManager, null);
+    public TransactionTask(List<Transaction> txs, ChannelManager channelManager) {
+        this(txs, channelManager, null);
     }
 
-    public TransactionTask(List<Transaction> tx, ChannelManager channelManager, Channel receivedFrom) {
-        this.tx = tx;
+    public TransactionTask(List<Transaction> txs, ChannelManager channelManager, Channel receivedFrom) {
+        this.txs = txs;
         this.channelManager = channelManager;
         this.receivedFrom = receivedFrom;
     }
@@ -60,9 +60,9 @@ public class TransactionTask implements Callable<List<Transaction>> {
     public List<Transaction> call() throws Exception {
 
         try {
-            logger.info("submit tx: {}", tx.toString());
-            channelManager.sendTransaction(tx, receivedFrom);
-            return tx;
+            logger.info("submit txs: {}", txs.toString());
+            channelManager.sendTransaction(txs, receivedFrom);
+            return txs;
 
         } catch (Throwable th) {
             logger.warn("Exception caught: {}", th);
