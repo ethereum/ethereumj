@@ -142,10 +142,10 @@ public class PendingStateLongRunTest {
 
         track.commit();
 
-        blockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+        blockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getDifficultyBI(), true);
 
         blockchain.setBestBlock(Genesis.getInstance());
-        blockchain.setTotalDifficulty(Genesis.getInstance().getCumulativeDifficulty());
+        blockchain.setTotalDifficulty(Genesis.getInstance().getDifficultyBI());
 
         return blockchain;
     }

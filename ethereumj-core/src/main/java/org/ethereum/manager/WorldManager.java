@@ -181,10 +181,10 @@ public class WorldManager {
 //            repository.commitBlock(genesis.getHeader());
             repository.commit();
 
-            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
+            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getDifficultyBI(), true);
 
             blockchain.setBestBlock(Genesis.getInstance(config));
-            blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
+            blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
 
             listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);

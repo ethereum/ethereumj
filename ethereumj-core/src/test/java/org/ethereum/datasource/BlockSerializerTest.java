@@ -44,7 +44,7 @@ public class BlockSerializerTest {
         for (int i = 0; i < count; i++) {
             BlockInfo blockInfo = new BlockInfo();
             blockInfo.setHash(sha3(ByteUtil.intToBytes(i)));
-            blockInfo.setCummDifficulty(BigInteger.probablePrime(512, rnd));
+            blockInfo.setTotalDifficulty(BigInteger.probablePrime(512, rnd));
             blockInfo.setMainChain(rnd.nextBoolean());
             blockInfos.add(blockInfo);
         }
@@ -62,7 +62,7 @@ public class BlockSerializerTest {
         assert blockInfoList.size() == blockInfoList2.size();
         for (int i = 0; i < blockInfoList2.size(); i++) {
             assert FastByteComparisons.equal(blockInfoList2.get(i).getHash(), blockInfoList.get(i).getHash());
-            assert blockInfoList2.get(i).getCummDifficulty().compareTo(blockInfoList.get(i).getCummDifficulty()) == 0;
+            assert blockInfoList2.get(i).getTotalDifficulty().compareTo(blockInfoList.get(i).getTotalDifficulty()) == 0;
             assert blockInfoList2.get(i).isMainChain() == blockInfoList.get(i).isMainChain();
         }
     }
@@ -85,37 +85,37 @@ public class BlockSerializerTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testNullCummDifficulty() {
+    public void testNullTotalDifficulty() {
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setMainChain(true);
-        blockInfo.setCummDifficulty(null);
+        blockInfo.setTotalDifficulty(null);
         blockInfo.setHash(new byte[0]);
         byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(blockInfo));
         List<BlockInfo> blockInfos = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
     }
 
     @Test(expected = RuntimeException.class)
-    public void testNegativeCummDifficulty() {
+    public void testNegativeTotalDifficulty() {
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setMainChain(true);
-        blockInfo.setCummDifficulty(BigInteger.valueOf(-1));
+        blockInfo.setTotalDifficulty(BigInteger.valueOf(-1));
         blockInfo.setHash(new byte[0]);
         byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(blockInfo));
         List<BlockInfo> blockInfos = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
     }
 
     @Test
-    public void testZeroCummDifficultyEmptyHash() {
+    public void testZeroTotalDifficultyEmptyHash() {
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setMainChain(true);
-        blockInfo.setCummDifficulty(BigInteger.ZERO);
+        blockInfo.setTotalDifficulty(BigInteger.ZERO);
         blockInfo.setHash(new byte[0]);
         byte[] data = IndexedBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(blockInfo));
         List<BlockInfo> blockInfos = IndexedBlockStore.BLOCK_INFO_SERIALIZER.deserialize(data);
         assert blockInfos.size() == 1;
         BlockInfo actualBlockInfo = blockInfos.get(0);
         assert actualBlockInfo.isMainChain();
-        assert actualBlockInfo.getCummDifficulty().compareTo(BigInteger.ZERO) == 0;
+        assert actualBlockInfo.getTotalDifficulty().compareTo(BigInteger.ZERO) == 0;
         assert actualBlockInfo.getHash().length == 0;
     }
 }

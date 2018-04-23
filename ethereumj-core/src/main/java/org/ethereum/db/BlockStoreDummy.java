@@ -74,7 +74,7 @@ public class BlockStoreDummy implements BlockStore {
     }
 
     @Override
-    public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain) {
+    public void saveBlock(Block block, BigInteger totalDifficulty, boolean mainChain) {
 
     }
 
