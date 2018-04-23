@@ -35,9 +35,7 @@ import org.ethereum.net.eth.message.ReceiptsMessage;
 
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
-import org.ethereum.util.slicer.EncodedListOfListsSlicer;
 import org.ethereum.util.Value;
-import org.ethereum.util.slicer.EncodedListSlicer;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -109,17 +107,18 @@ public class Eth63 extends Eth62 {
                 msg.getNodeKeys().size()
         );
 
-        EncodedListSlicer<Value> slicer = new EncodedListSlicer<>(MAX_MESSAGE_SIZE, Value::purgeData);
+        List<Value> nodeValues = new ArrayList<>();
         for (byte[] nodeKey : msg.getNodeKeys()) {
             byte[] rawNode = trieNodeSource.get(nodeKey);
             if (rawNode != null) {
                 Value value = new Value(rawNode);
-                if (!slicer.add(value)) break;
+                nodeValues.add(value);
+                if (nodeValues.size() >= MAX_HASHES_TO_SEND) break;
                 logger.trace("Eth63: " + Hex.toHexString(nodeKey).substring(0, 8) + " -> " + value);
             }
         }
 
-        sendMessage(new NodeDataMessage(slicer.getEntities()));
+        sendMessage(new NodeDataMessage(nodeValues));
     }
 
     protected synchronized void processGetReceipts(GetReceiptsMessage msg) {
@@ -130,21 +129,25 @@ public class Eth63 extends Eth62 {
                 msg.getBlockHashes().size()
         );
 
-        EncodedListOfListsSlicer<TransactionReceipt> slicer = new EncodedListOfListsSlicer<>(MAX_MESSAGE_SIZE, tr -> {});
+        List<List<TransactionReceipt>> receipts = new ArrayList<>();
+        int sizeSum = 80; // ArrayList skeleton
         for (byte[] blockHash : msg.getBlockHashes()) {
             Block block = blockchain.getBlockByHash(blockHash);
             if (block == null) continue;
 
             List<TransactionReceipt> blockReceipts = new ArrayList<>();
+            sizeSum += 80; // Nested ArrayList skeleton
             for (Transaction transaction : block.getTransactionsList()) {
                 TransactionInfo transactionInfo = blockchain.getTransactionInfo(transaction.getHash());
                 if (transactionInfo == null) break;
                 blockReceipts.add(transactionInfo.getReceipt());
+                sizeSum += TransactionReceipt.MemEstimator.estimateSize(transactionInfo.getReceipt());
             }
-            if(!slicer.add(blockReceipts)) break;
+            receipts.add(blockReceipts);
+            if (sizeSum >= MAX_MESSAGE_SIZE) break;
         }
 
-        sendMessage(new ReceiptsMessage(slicer.getEntityLists()));
+        sendMessage(new ReceiptsMessage(receipts));
     }
 
     public synchronized ListenableFuture<List<Pair<byte[], byte[]>>> requestTrieNodes(List<byte[]> hashes) {

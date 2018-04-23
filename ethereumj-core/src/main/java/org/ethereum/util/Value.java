@@ -19,7 +19,6 @@ package org.ethereum.util;
 
 import com.cedarsoftware.util.DeepEquals;
 
-import org.ethereum.core.Encoded;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
@@ -31,7 +30,7 @@ import java.util.List;
 /**
  * Class to encapsulate an object and provide utilities for conversion
  */
-public class Value implements Encoded {
+public class Value {
 
     private Object value;
     private byte[] rlp;
@@ -176,24 +175,6 @@ public class Value implements Encoded {
         if (rlp == null)
             rlp = RLP.encode(value);
         return rlp;
-    }
-
-    @Override
-    public byte[] getEncoded() {
-        return encode();
-    }
-
-    @Override
-    public void purgeData() {
-        encode();
-        this.value = null;
-        this.decoded = false;
-    }
-
-    @Override
-    public void purgeEncoded() {
-        decode();
-        this.rlp = null;
     }
 
     public byte[] hash(){

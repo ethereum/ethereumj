@@ -42,7 +42,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  * and the cumulative gas used in the block containing the transaction receipt
  * as of immediately after the transaction has happened,
  */
-public class TransactionReceipt implements Encoded {
+public class TransactionReceipt {
 
     private Transaction transaction;
 
@@ -175,16 +175,6 @@ public class TransactionReceipt implements Encoded {
         }
 
         return rlpEncoded;
-    }
-
-    @Override
-    public void purgeData() {
-        // No parse function, so should not purge anything here
-    }
-
-    @Override
-    public void purgeEncoded() {
-        this.rlpEncoded = null;
     }
 
     public byte[] getEncoded(boolean receiptTrie) {

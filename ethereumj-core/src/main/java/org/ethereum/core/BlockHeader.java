@@ -37,7 +37,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * Block header is a value object containing
  * the basic information of a block
  */
-public class BlockHeader implements Encoded {
+public class BlockHeader {
 
     public static final int NONCE_LENGTH = 8;
     public static final int HASH_LENGTH = 32;
@@ -301,16 +301,6 @@ public class BlockHeader implements Encoded {
 
     public byte[] getEncoded() {
         return this.getEncoded(true); // with nonce
-    }
-
-    @Override
-    public synchronized void purgeData() {
-        // Cannot purge data because encoded is not cached
-    }
-
-    @Override
-    public synchronized void purgeEncoded() {
-        // Encoded not cached
     }
 
     public byte[] getEncodedWithoutNonce() {

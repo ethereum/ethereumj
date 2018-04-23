@@ -50,7 +50,7 @@ import org.spongycastle.util.encoders.Hex;
  * There are two types of transactions: those which result in message calls
  * and those which result in the creation of new contracts.
  */
-public class Transaction implements Encoded {
+public class Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
@@ -518,25 +518,9 @@ public class Transaction implements Encoded {
         return rlpEncoded;
     }
 
-    @Override
-    public synchronized void purgeData() {
-        getEncoded();
-        this.parsed = false;
-        this.nonce = null;
-        this.gasPrice = null;
-        this.gasLimit = null;
-        this.receiveAddress = null;
-        this.value = null;
-        this.data = null;
-        this.signature = null;
-        this.chainId = null;
-    }
-
-    @Override
     public synchronized void purgeEncoded() {
         rlpParse();
         this.rlpEncoded = null;
-        this.hash = null;
     }
 
     @Override

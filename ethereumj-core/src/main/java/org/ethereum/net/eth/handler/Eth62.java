@@ -35,8 +35,6 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.slicer.ByteListSlicer;
-import org.ethereum.util.slicer.EncodedListSlicer;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -52,6 +50,7 @@ import java.util.*;
 
 import static java.lang.Math.min;
 import static java.util.Collections.singletonList;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
@@ -69,7 +68,7 @@ import static org.spongycastle.util.encoders.Hex.toHexString;
 @Scope("prototype")
 public class Eth62 extends EthHandler {
 
-    protected static final int MAX_HASHES_TO_SEND = 65536;
+    protected static final int MAX_HASHES_TO_SEND = 1024;
 
     public static final int MAX_MESSAGE_SIZE = 32 * 1024 * 1024;
 
@@ -217,13 +216,7 @@ public class Eth62 extends EthHandler {
 
     @Override
     public synchronized void sendTransaction(List<Transaction> txs) {
-        // Not purging data because txs will still live in PendingStateImpl
-        EncodedListSlicer<Transaction> slicer = new EncodedListSlicer<>(txs, MAX_MESSAGE_SIZE, tx -> {})
-                .withMemSizeEstimator(Transaction.MemEstimator::estimateSize);
-        List<Transaction> sliced = slicer.getEntities();
-        TransactionsMessage msg = new TransactionsMessage(sliced);
-        msg.getEncoded();
-        sliced.forEach(Transaction::purgeEncoded);
+        TransactionsMessage msg = new TransactionsMessage(txs);
         sendMessage(msg);
     }
 
@@ -419,15 +412,13 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {
-        Iterator<BlockHeader> headers = blockchain.getIteratorOfHeadersStartFrom(
+        Iterator<BlockHeader> headersIterator = blockchain.getIteratorOfHeadersStartFrom(
                 msg.getBlockIdentifier(),
                 msg.getSkipBlocks(),
                 min(msg.getMaxHeaders(), MAX_HASHES_TO_SEND),
                 msg.isReverse()
         );
-        EncodedListSlicer<BlockHeader> slicer = new EncodedListSlicer<>(headers, MAX_MESSAGE_SIZE, h -> {})
-                .withMemSizeEstimator(BlockHeader.MemEstimator::estimateSize);
-        BlockHeadersMessage response = new BlockHeadersMessage(slicer.getEntities());
+        BlockHeadersMessage response = new BlockHeadersMessage(headersIterator);
         sendMessage(response);
     }
 
@@ -463,9 +454,16 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockBodies(GetBlockBodiesMessage msg) {
-        Iterator<byte[]> bodies = blockchain.getIteratorOfBodiesByHashes(msg.getBlockHashes());
-        ByteListSlicer slicer = new ByteListSlicer(bodies, MAX_MESSAGE_SIZE);
-        BlockBodiesMessage response = new BlockBodiesMessage(slicer.getEntities());
+        Iterator<byte[]> bodiesIterator = blockchain.getIteratorOfBodiesByHashes(msg.getBlockHashes());
+        List<byte[]> bodies = new ArrayList<>();
+        int sizeSum = 80; // ArrayList skeleton
+        while (bodiesIterator.hasNext()) {
+            byte[] body = bodiesIterator.next();
+            sizeSum += ByteArrayEstimator.estimateSize(body);
+            bodies.add(body);
+            if (sizeSum >= MAX_MESSAGE_SIZE) break;
+        }
+        BlockBodiesMessage response = new BlockBodiesMessage(bodies);
         sendMessage(response);
     }
 

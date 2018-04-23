@@ -23,6 +23,7 @@ import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -46,6 +47,14 @@ public class BlockHeadersMessage extends EthMessage {
 
     public BlockHeadersMessage(List<BlockHeader> headers) {
         this.blockHeaders = headers;
+        parsed = true;
+    }
+
+    public BlockHeadersMessage(Iterator<BlockHeader> headersIterator) {
+        this.blockHeaders = new ArrayList<>();
+        while (headersIterator.hasNext()) {
+            blockHeaders.add(headersIterator.next());
+        }
         parsed = true;
     }
 
