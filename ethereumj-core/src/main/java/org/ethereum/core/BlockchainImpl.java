@@ -1084,7 +1084,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    public void updateBlockTotDifficulties(int startFrom) {
+    public void updateBlockTotDifficulties(long startFrom) {
         // no synchronization here not to lock instance for long period
         while(true) {
             synchronized (this) {
