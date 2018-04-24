@@ -231,7 +231,7 @@ public class ChannelManager {
     public void sendTransaction(List<Transaction> txs, Channel receivedFrom) {
         for (Channel channel : activePeers.values()) {
             if (channel != receivedFrom) {
-                channel.sendTransaction(txs);
+                channel.sendTransactionsSafely(txs);
             }
         }
     }
@@ -289,7 +289,7 @@ public class ChannelManager {
                 channel = newActivePeers.take();
                 List<Transaction> pendingTransactions = pendingState.getPendingTransactions();
                 if (!pendingTransactions.isEmpty()) {
-                    channel.sendTransaction(pendingTransactions);
+                    channel.sendTransactionsSafely(pendingTransactions);
                 }
             } catch (InterruptedException e) {
                 break;
