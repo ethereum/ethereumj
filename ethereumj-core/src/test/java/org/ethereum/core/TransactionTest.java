@@ -780,26 +780,11 @@ public class TransactionTest {
     }
 
     @Test
-    public void purgeSignedTransactionTest() {
-        byte[] rlpSignedTx = Hex.decode("f871830617428504a817c80083015f90940123286bd94beecd40905321f5c3202c7628d685880ecab7b2bae2c27080819ea021355678b1aa704f6ad4706fb8647f5125beadd1d84c6f9cf37dda1b62f24b1aa06b4a64fd29bb6e54a2c5107e8be42ac039a8ffb631e16e7bcbd15cdfc0015ee2");
-        Transaction tx = new Transaction(rlpSignedTx);
-        assertEquals(147, Transaction.MemEstimator.estimateSize(tx));
-        assertEquals(61, (long) tx.getChainId());
-        assertEquals(510, Transaction.MemEstimator.estimateSize(tx));
-        tx.purgeEncoded();
-        assertEquals(379, Transaction.MemEstimator.estimateSize(tx));
-        assertArrayEquals(rlpSignedTx, tx.getEncoded());
-    }
-
-    @Test
-    public void purgeUnsignedTransactionTest() {
+    public void unsignedChainIdTransactionTest() {
         byte[] rlpUnsignedTx = Hex.decode("ef098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080830516158080");
         Transaction tx = new Transaction(rlpUnsignedTx);
-        assertEquals(80, Transaction.MemEstimator.estimateSize(tx));
         assertEquals(333333, (long) tx.getChainId());
-        assertEquals(232, Transaction.MemEstimator.estimateSize(tx));
-        tx.purgeEncoded();
-        assertEquals(168, Transaction.MemEstimator.estimateSize(tx));
-        assertArrayEquals(rlpUnsignedTx, tx.getEncoded());
+        Transaction copyTx = new Transaction(tx.getNonce(), tx.getGasPrice(), tx.getGasLimit(), tx.getReceiveAddress(), tx.getValue(), tx.getData(), tx.getChainId());
+        assertArrayEquals(rlpUnsignedTx, copyTx.getEncoded());
     }
 }

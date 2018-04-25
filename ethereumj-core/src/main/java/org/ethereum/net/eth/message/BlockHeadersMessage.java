@@ -50,14 +50,6 @@ public class BlockHeadersMessage extends EthMessage {
         parsed = true;
     }
 
-    public BlockHeadersMessage(Iterator<BlockHeader> headersIterator) {
-        this.blockHeaders = new ArrayList<>();
-        while (headersIterator.hasNext()) {
-            blockHeaders.add(headersIterator.next());
-        }
-        parsed = true;
-    }
-
     private synchronized void parse() {
         if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);

@@ -19,7 +19,6 @@ package org.ethereum.core;
 
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
@@ -30,7 +29,6 @@ import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -425,23 +423,4 @@ public class BlockHeader {
     public int hashCode() {
         return Arrays.hashCode(getHash());
     }
-
-    public static final MemSizeEstimator<BlockHeader> MemEstimator = bh ->
-            ByteArrayEstimator.estimateSize(bh.parentHash) +
-                    ByteArrayEstimator.estimateSize(bh.unclesHash) +
-                    ByteArrayEstimator.estimateSize(bh.coinbase) +
-                    ByteArrayEstimator.estimateSize(bh.stateRoot) +
-                    ByteArrayEstimator.estimateSize(bh.txTrieRoot) +
-                    ByteArrayEstimator.estimateSize(bh.receiptTrieRoot) +
-                    ByteArrayEstimator.estimateSize(bh.logsBloom) +
-                    ByteArrayEstimator.estimateSize(bh.difficulty) +
-                    8 + // timestamp
-                    8 + // number
-                    ByteArrayEstimator.estimateSize(bh.gasLimit) +
-                    8 + // gasUsed
-                    ByteArrayEstimator.estimateSize(bh.mixHash) +
-                    ByteArrayEstimator.estimateSize(bh.extraData) +
-                    ByteArrayEstimator.estimateSize(bh.nonce) +
-                    ByteArrayEstimator.estimateSize(bh.hashCache) +
-                    16; // Object header + ref
 }
