@@ -35,7 +35,6 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -51,6 +50,7 @@ import java.util.*;
 
 import static java.lang.Math.min;
 import static java.util.Collections.singletonList;
+import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
@@ -68,7 +68,9 @@ import static org.spongycastle.util.encoders.Hex.toHexString;
 @Scope("prototype")
 public class Eth62 extends EthHandler {
 
-    protected static final int MAX_HASHES_TO_SEND = 65536;
+    protected static final int MAX_HASHES_TO_SEND = 1024;
+
+    public static final int MAX_MESSAGE_SIZE = 32 * 1024 * 1024;
 
     protected final static Logger logger = LoggerFactory.getLogger("sync");
     protected final static Logger loggerNet = LoggerFactory.getLogger("net");
@@ -410,14 +412,17 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockHeaders(GetBlockHeadersMessage msg) {
-        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(
+        Iterator<BlockHeader> headersIterator = blockchain.getIteratorOfHeadersStartFrom(
                 msg.getBlockIdentifier(),
                 msg.getSkipBlocks(),
                 min(msg.getMaxHeaders(), MAX_HASHES_TO_SEND),
                 msg.isReverse()
         );
-
-        BlockHeadersMessage response = new BlockHeadersMessage(headers);
+        List<BlockHeader> blockHeaders = new ArrayList<>();
+        while (headersIterator.hasNext()) {
+            blockHeaders.add(headersIterator.next());
+        }
+        BlockHeadersMessage response = new BlockHeadersMessage(blockHeaders);
         sendMessage(response);
     }
 
@@ -453,8 +458,15 @@ public class Eth62 extends EthHandler {
     }
 
     protected synchronized void processGetBlockBodies(GetBlockBodiesMessage msg) {
-        List<byte[]> bodies = blockchain.getListOfBodiesByHashes(msg.getBlockHashes());
-
+        Iterator<byte[]> bodiesIterator = blockchain.getIteratorOfBodiesByHashes(msg.getBlockHashes());
+        List<byte[]> bodies = new ArrayList<>();
+        int sizeSum = 0;
+        while (bodiesIterator.hasNext()) {
+            byte[] body = bodiesIterator.next();
+            sizeSum += ByteArrayEstimator.estimateSize(body);
+            bodies.add(body);
+            if (sizeSum >= MAX_MESSAGE_SIZE) break;
+        }
         BlockBodiesMessage response = new BlockBodiesMessage(bodies);
         sendMessage(response);
     }

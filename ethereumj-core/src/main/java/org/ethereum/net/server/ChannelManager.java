@@ -224,14 +224,14 @@ public class ChannelManager {
     /**
      * Propagates the transactions message across active peers with exclusion of
      * 'receivedFrom' peer.
-     * @param tx  transactions to be sent
+     * @param txs  transactions to be sent
      * @param receivedFrom the peer which sent original message or null if
      *                     the transactions were originated by this peer
      */
-    public void sendTransaction(List<Transaction> tx, Channel receivedFrom) {
+    public void sendTransaction(List<Transaction> txs, Channel receivedFrom) {
         for (Channel channel : activePeers.values()) {
             if (channel != receivedFrom) {
-                channel.sendTransaction(tx);
+                channel.sendTransactionsCapped(txs);
             }
         }
     }
@@ -289,7 +289,7 @@ public class ChannelManager {
                 channel = newActivePeers.take();
                 List<Transaction> pendingTransactions = pendingState.getPendingTransactions();
                 if (!pendingTransactions.isEmpty()) {
-                    channel.sendTransaction(pendingTransactions);
+                    channel.sendTransactionsCapped(pendingTransactions);
                 }
             } catch (InterruptedException e) {
                 break;

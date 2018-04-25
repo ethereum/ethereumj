@@ -778,4 +778,13 @@ public class TransactionTest {
         assertArrayEquals(tx2.getSender(), key.getAddress());
 
     }
+
+    @Test
+    public void unsignedChainIdTransactionTest() {
+        byte[] rlpUnsignedTx = Hex.decode("ef098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080830516158080");
+        Transaction tx = new Transaction(rlpUnsignedTx);
+        assertEquals(333333, (long) tx.getChainId());
+        Transaction copyTx = new Transaction(tx.getNonce(), tx.getGasPrice(), tx.getGasLimit(), tx.getReceiveAddress(), tx.getValue(), tx.getData(), tx.getChainId());
+        assertArrayEquals(rlpUnsignedTx, copyTx.getEncoded());
+    }
 }

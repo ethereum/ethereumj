@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
 
 /**
@@ -114,6 +113,7 @@ public class Eth63 extends Eth62 {
             if (rawNode != null) {
                 Value value = new Value(rawNode);
                 nodeValues.add(value);
+                if (nodeValues.size() >= MAX_HASHES_TO_SEND) break;
                 logger.trace("Eth63: " + Hex.toHexString(nodeKey).substring(0, 8) + " -> " + value);
             }
         }
@@ -130,6 +130,7 @@ public class Eth63 extends Eth62 {
         );
 
         List<List<TransactionReceipt>> receipts = new ArrayList<>();
+        int sizeSum = 0;
         for (byte[] blockHash : msg.getBlockHashes()) {
             Block block = blockchain.getBlockByHash(blockHash);
             if (block == null) continue;
@@ -139,8 +140,10 @@ public class Eth63 extends Eth62 {
                 TransactionInfo transactionInfo = blockchain.getTransactionInfo(transaction.getHash());
                 if (transactionInfo == null) break;
                 blockReceipts.add(transactionInfo.getReceipt());
+                sizeSum += TransactionReceipt.MemEstimator.estimateSize(transactionInfo.getReceipt());
             }
             receipts.add(blockReceipts);
+            if (sizeSum >= MAX_MESSAGE_SIZE) break;
         }
 
         sendMessage(new ReceiptsMessage(receipts));

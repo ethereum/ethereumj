@@ -17,7 +17,7 @@
  */
 package org.ethereum.core;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -49,15 +49,16 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.*;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ONE;
@@ -66,7 +67,6 @@ import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
@@ -1139,17 +1139,19 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return pendingState;
     }
 
-    /**
-     * Returns up to limit headers found with following search parameters
-     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
-     * @param identifier        Identifier of start block, by number of by hash
-     * @param skip              Number of blocks to skip between consecutive headers
-     * @param limit             Maximum number of headers in return
-     * @param reverse           Is search reverse or not
-     * @return  {@link BlockHeader}'s list or empty list if none found
-     */
     @Override
     public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+        List<BlockHeader> headers = new ArrayList<>();
+        Iterator<BlockHeader> iterator = getIteratorOfHeadersStartFrom(identifier, skip, limit, reverse);
+        while (iterator.hasNext()) {
+            headers.add(iterator.next());
+        }
+
+        return headers;
+    }
+
+    @Override
+    public Iterator<BlockHeader> getIteratorOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
 
         // Identifying block we'll move from
         Block startBlock;
@@ -1161,117 +1163,97 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         // If nothing found or provided hash is not on main chain, return empty array
         if (startBlock == null) {
-            return emptyList();
+            return EmptyBlockHeadersIterator.INSTANCE;
         }
         if (identifier.getHash() != null) {
             Block mainChainBlock = blockStore.getChainBlockByNumber(startBlock.getNumber());
-            if (!startBlock.equals(mainChainBlock)) return emptyList();
+            if (!startBlock.equals(mainChainBlock)) return EmptyBlockHeadersIterator.INSTANCE;
         }
 
-        List<BlockHeader> headers;
-        if (skip == 0) {
-            long bestNumber = blockStore.getBestBlock().getNumber();
-            headers = getContinuousHeaders(bestNumber, startBlock.getNumber(), limit, reverse);
-        } else {
-            headers = getGapedHeaders(startBlock, skip, limit, reverse);
-        }
-
-        return headers;
+        return new BlockHeadersIterator(startBlock, skip, limit, reverse);
     }
 
-    /**
-     * Finds up to limit blocks starting from blockNumber on main chain
-     * @param bestNumber        Number of best block
-     * @param blockNumber       Number of block to start search (included in return)
-     * @param limit             Maximum number of headers in response
-     * @param reverse           Order of search
-     * @return  headers found by query or empty list if none
-     */
-    private List<BlockHeader> getContinuousHeaders(long bestNumber, long blockNumber, int limit, boolean reverse) {
-        int qty = getQty(blockNumber, bestNumber, limit, reverse);
+    static class EmptyBlockHeadersIterator implements Iterator<BlockHeader> {
+        final static EmptyBlockHeadersIterator INSTANCE = new EmptyBlockHeadersIterator();
 
-        byte[] startHash = getStartHash(blockNumber, qty, reverse);
-
-        if (startHash == null) {
-            return emptyList();
+        @Override
+        public boolean hasNext() {
+            return false;
         }
 
-        List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
-
-        // blocks come with falling numbers
-        if (!reverse) {
-            Collections.reverse(headers);
+        @Override
+        public BlockHeader next() {
+            throw new NoSuchElementException("Nothing left");
         }
-
-        return headers;
     }
 
-    /**
-     * Gets blocks from main chain with gaps between
-     * @param startBlock        Block to start from (included in return)
-     * @param skip              Number of blocks skipped between every header in return
-     * @param limit             Maximum number of headers in return
-     * @param reverse           Order of search
-     * @return  headers found by query or empty list if none
-     */
-    private List<BlockHeader> getGapedHeaders(Block startBlock, int skip, int limit, boolean reverse) {
-        List<BlockHeader> headers = new ArrayList<>();
-        headers.add(startBlock.getHeader());
-        int offset = skip + 1;
-        if (reverse) offset = -offset;
-        long currentNumber = startBlock.getNumber();
-        boolean finished = false;
+    class BlockHeadersIterator implements Iterator<BlockHeader> {
+        private final Block startBlock;
+        private final int skip;
+        private final int limit;
+        private final boolean reverse;
+        private Integer position = 0;
+        private Pair<Integer, BlockHeader> cachedNext = null;
 
-        while(!finished && headers.size() < limit) {
-            currentNumber += offset;
-            Block nextBlock = blockStore.getChainBlockByNumber(currentNumber);
-            if (nextBlock == null) {
-                finished = true;
+        BlockHeadersIterator(Block startBlock, int skip, int limit, boolean reverse) {
+            this.startBlock = startBlock;
+            this.skip = skip;
+            this.limit = limit;
+            this.reverse = reverse;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (startBlock == null || position >= limit) {
+                return false;
+            }
+
+            if (position == 0) {
+                // First
+                cachedNext = Pair.of(0, startBlock.getHeader());
+                return true;
+            } else if (cachedNext.getLeft().equals(position)) {
+                // Already cached
+                return true;
             } else {
-                headers.add(nextBlock.getHeader());
+                // Main logic
+                BlockHeader prevHeader = cachedNext.getRight();
+                long nextBlockNumber;
+                if (reverse) {
+                    nextBlockNumber = prevHeader.getNumber() - 1 - skip;
+                } else {
+                    nextBlockNumber = prevHeader.getNumber() + 1 + skip;
+                }
+
+                Block nextBlock = null;
+                if (nextBlockNumber >= 0 && nextBlockNumber <= blockStore.getBestBlock().getNumber()) {
+                    nextBlock = blockStore.getChainBlockByNumber(nextBlockNumber);
+                }
+
+                if (nextBlock == null) {
+                    return false;
+                } else {
+                    cachedNext = Pair.of(position, nextBlock.getHeader());
+                    return true;
+                }
             }
         }
 
-        return headers;
-    }
-
-    private int getQty(long blockNumber, long bestNumber, int limit, boolean reverse) {
-        if (reverse) {
-            return blockNumber - limit + 1 < 0 ? (int) (blockNumber + 1) : limit;
-        } else {
-            if (blockNumber + limit - 1 > bestNumber) {
-                return (int) (bestNumber - blockNumber + 1);
-            } else {
-                return limit;
+        @Override
+        public BlockHeader next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException("Nothing left");
             }
+
+            if (cachedNext == null || !cachedNext.getLeft().equals(position)) {
+                throw new ConcurrentModificationException("Concurrent modification");
+            }
+            ++position;
+
+            return cachedNext.getRight();
         }
     }
 
-    private byte[] getStartHash(long blockNumber, int qty, boolean reverse) {
-
-        long startNumber;
-
-        if (reverse) {
-            startNumber = blockNumber;
-        } else {
-            startNumber = blockNumber + qty - 1;
-        }
-
-        Block block = blockStore.getChainBlockByNumber(startNumber);
-
-        if (block == null) {
-            return null;
-        }
-
-        return block.getHash();
-    }
-
-    /**
-     * Returns list of block bodies by block hashes, stopping on first not found block
-     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
-     * @param hashes List of hashes
-     * @return List of RLP encoded block bodies
-     */
     @Override
     public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
         List<byte[]> bodies = new ArrayList<>(hashes.size());
@@ -1283,6 +1265,41 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         return bodies;
+    }
+
+    @Override
+    public Iterator<byte[]> getIteratorOfBodiesByHashes(List<byte[]> hashes) {
+        return new BlockBodiesIterator(hashes);
+    }
+
+    class BlockBodiesIterator implements Iterator<byte[]> {
+        private final List<byte[]> hashes;
+        private Integer position = 0;
+
+
+        BlockBodiesIterator(List<byte[]> hashes) {
+            this.hashes = new ArrayList<>(hashes);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return position < hashes.size() && blockStore.getBlockByHash(hashes.get(position)) != null;
+        }
+
+        @Override
+        public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException("Nothing left");
+            }
+
+            Block block = blockStore.getBlockByHash(hashes.get(position));
+            if (block == null) {
+                throw new NoSuchElementException("Nothing left");
+            }
+            ++position;
+
+            return block.getEncodedBody();
+        }
     }
 
     private class State {

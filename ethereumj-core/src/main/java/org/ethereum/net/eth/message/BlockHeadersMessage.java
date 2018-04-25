@@ -23,6 +23,7 @@ import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
