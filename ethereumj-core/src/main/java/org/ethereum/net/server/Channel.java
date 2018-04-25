@@ -377,7 +377,7 @@ public class Channel {
 
     /**
      * Send transactions from input to peer corresponded with channel
-     * Using {@link #sendTransactionsSafely(List)} is recommended instead
+     * Using {@link #sendTransactionsCapped(List)} is recommended instead
      * @param txs   Transactions
      */
     public void sendTransactions(List<Transaction> txs) {
@@ -386,10 +386,10 @@ public class Channel {
 
     /**
      * Sames as {@link #sendTransactions(List)} but input list is randomly sliced to
-     * contain not more than {@link MAX_SAFE_TXS} if needed
+     * contain not more than {@link #MAX_SAFE_TXS} if needed
      * @param txs   List of txs to send
      */
-    public void sendTransactionsSafely(List<Transaction> txs) {
+    public void sendTransactionsCapped(List<Transaction> txs) {
         List<Transaction> slicedTxs;
         if (txs.size() <= MAX_SAFE_TXS) {
             slicedTxs = txs;

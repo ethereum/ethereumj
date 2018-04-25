@@ -130,13 +130,13 @@ public class Eth63 extends Eth62 {
         );
 
         List<List<TransactionReceipt>> receipts = new ArrayList<>();
-        int sizeSum = 80; // ArrayList skeleton
+        int sizeSum = 0;
         for (byte[] blockHash : msg.getBlockHashes()) {
             Block block = blockchain.getBlockByHash(blockHash);
             if (block == null) continue;
 
             List<TransactionReceipt> blockReceipts = new ArrayList<>();
-            sizeSum += 80; // Nested ArrayList skeleton
+            sizeSum += 0;
             for (Transaction transaction : block.getTransactionsList()) {
                 TransactionInfo transactionInfo = blockchain.getTransactionInfo(transaction.getHash());
                 if (transactionInfo == null) break;

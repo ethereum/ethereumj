@@ -518,11 +518,6 @@ public class Transaction {
         return rlpEncoded;
     }
 
-    public synchronized void purgeEncoded() {
-        rlpParse();
-        this.rlpEncoded = null;
-    }
-
     @Override
     public int hashCode() {
 

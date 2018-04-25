@@ -418,7 +418,11 @@ public class Eth62 extends EthHandler {
                 min(msg.getMaxHeaders(), MAX_HASHES_TO_SEND),
                 msg.isReverse()
         );
-        BlockHeadersMessage response = new BlockHeadersMessage(headersIterator);
+        List<BlockHeader> blockHeaders = new ArrayList<>();
+        while (headersIterator.hasNext()) {
+            blockHeaders.add(headersIterator.next());
+        }
+        BlockHeadersMessage response = new BlockHeadersMessage(blockHeaders);
         sendMessage(response);
     }
 
@@ -456,7 +460,7 @@ public class Eth62 extends EthHandler {
     protected synchronized void processGetBlockBodies(GetBlockBodiesMessage msg) {
         Iterator<byte[]> bodiesIterator = blockchain.getIteratorOfBodiesByHashes(msg.getBlockHashes());
         List<byte[]> bodies = new ArrayList<>();
-        int sizeSum = 80; // ArrayList skeleton
+        int sizeSum = 0;
         while (bodiesIterator.hasNext()) {
             byte[] body = bodiesIterator.next();
             sizeSum += ByteArrayEstimator.estimateSize(body);
