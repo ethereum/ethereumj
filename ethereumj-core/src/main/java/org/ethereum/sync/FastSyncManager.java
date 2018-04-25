@@ -24,11 +24,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
@@ -619,6 +619,7 @@ public class FastSyncManager {
             logger.info("Fixing total difficulty which is usually updated during block bodies download");
             fixTotalDiff();
             logger.info("Total difficulty fixed for full blocks");
+            blockchain.setHeaderStore(applicationContext.getBean(HeaderStore.class));
         }
 
         if (!config.fastSyncSkipHistory()) {
@@ -658,10 +659,10 @@ public class FastSyncManager {
             --firstFullBlockNum;
         }
         Block firstFullBlock = blockStore.getChainBlockByNumber(firstFullBlockNum);
-        DataSourceArray<BlockHeader> headersStore = (DataSourceArray<BlockHeader>) applicationContext.getBean("headerSource");
+        HeaderStore headersStore = applicationContext.getBean(HeaderStore.class);
         BigInteger totalDifficulty = blockStore.getChainBlockByNumber(0).getDifficultyBI();
         for (int i = 1; i < firstFullBlockNum; ++i) {
-            totalDifficulty = totalDifficulty.add(headersStore.get(i).getDifficultyBI());
+            totalDifficulty = totalDifficulty.add(headersStore.getHeaderByNumber(i).getDifficultyBI());
         }
         blockStore.saveBlock(firstFullBlock, totalDifficulty.add(firstFullBlock.getDifficultyBI()), true);
         blockchain.updateBlockTotDifficulties(firstFullBlockNum + 1);
@@ -895,6 +896,10 @@ public class FastSyncManager {
         }
 
         return null;
+    }
+
+    public boolean isEndedOrNotStarted() {
+        return blockchainDB.get(FASTSYNC_DB_KEY_PIVOT) == null;
     }
 
     public void close() {

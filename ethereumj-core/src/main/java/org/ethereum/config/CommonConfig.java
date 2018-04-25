@@ -124,10 +124,14 @@ public class CommonConfig {
         return stateSource;
     }
 
+    public Source<byte[], byte[]> cachedDbSource(String name) {
+        return cachedDbSource(name, blockchainSource(name));
+    }
+
     @Bean
     @Scope("prototype")
-    public Source<byte[], byte[]> cachedDbSource(String name) {
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
+    public Source<byte[], byte[]> cachedDbSource(String name,  Source<byte[], byte[]> source) {
+        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(source) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -217,6 +221,11 @@ public class CommonConfig {
         }
     }
 
+    /**
+     * @deprecated
+     * Remove alone with migration from {@link org.ethereum.manager.WorldManager}
+     */
+    @Deprecated
     @Bean
     @Lazy
     public DataSourceArray<BlockHeader> headerSource() {
@@ -228,6 +237,24 @@ public class CommonConfig {
         ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
         DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
         return dataSourceArray;
+    }
+
+    @Bean
+    @Lazy
+    public HeaderStore headerStore() {
+        DbSource<byte[]> dataSource = keyValueDataSource("headers");
+
+        WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
+                new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
+        cache.setFlushSource(true);
+        dbFlushManager().addCache(cache);
+
+        HeaderStore headerStore = new HeaderStore();
+        Source<byte[], byte[]> headers = cachedDbSource("header", new XorDataSource<>(cache, HashUtil.sha3("header".getBytes())));
+        Source<byte[], byte[]> index = cachedDbSource("index", new XorDataSource<>(cache, HashUtil.sha3("index".getBytes())));
+        headerStore.init(index, headers);
+
+        return headerStore;
     }
 
     @Bean

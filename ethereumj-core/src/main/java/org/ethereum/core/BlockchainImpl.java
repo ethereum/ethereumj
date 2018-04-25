@@ -115,6 +115,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     protected BlockStore blockStore;
 
+    private HeaderStore headerStore = null;
+
     @Autowired
     private TransactionStore transactionStore;
 
@@ -1153,24 +1155,63 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public Iterator<BlockHeader> getIteratorOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
 
-        // Identifying block we'll move from
-        Block startBlock;
+        // Identifying block header we'll move from
+        BlockHeader startHeader;
         if (identifier.getHash() != null) {
-            startBlock = blockStore.getBlockByHash(identifier.getHash());
+            startHeader = findHeaderByHash(identifier.getHash());
         } else {
-            startBlock = blockStore.getChainBlockByNumber(identifier.getNumber());
+            startHeader = findHeaderByNumber(identifier.getNumber());
         }
 
         // If nothing found or provided hash is not on main chain, return empty array
-        if (startBlock == null) {
+        if (startHeader == null) {
             return EmptyBlockHeadersIterator.INSTANCE;
         }
+
         if (identifier.getHash() != null) {
-            Block mainChainBlock = blockStore.getChainBlockByNumber(startBlock.getNumber());
-            if (!startBlock.equals(mainChainBlock)) return EmptyBlockHeadersIterator.INSTANCE;
+            BlockHeader mainChainHeader = findHeaderByNumber(startHeader.getNumber());
+            if (!startHeader.equals(mainChainHeader)) return EmptyBlockHeadersIterator.INSTANCE;
         }
 
-        return new BlockHeadersIterator(startBlock, skip, limit, reverse);
+        return new BlockHeadersIterator(startHeader, skip, limit, reverse);
+    }
+
+    /**
+     * Searches block in blockStore, if it's not found there
+     * and headerStore is defined, searches blockHeader in it.
+     * @param number block number
+     * @return  Block header
+     */
+    private BlockHeader findHeaderByNumber(long number) {
+        Block block = blockStore.getChainBlockByNumber(number);
+        if (block == null) {
+            if (headerStore != null) {
+                return headerStore.getHeaderByNumber(number);
+            } else {
+                return null;
+            }
+        } else {
+            return block.getHeader();
+        }
+    }
+
+    /**
+     * Searches block in blockStore, if it's not found there
+     * and headerStore is defined, searches blockHeader in it.
+     * @param hash block hash
+     * @return Block header
+     */
+    private BlockHeader findHeaderByHash(byte[] hash) {
+        Block block = blockStore.getBlockByHash(hash);
+        if (block == null) {
+            if (headerStore != null) {
+                return headerStore.getHeaderByHash(hash);
+            } else {
+                return null;
+            }
+        } else {
+            return block.getHeader();
+        }
     }
 
     static class EmptyBlockHeadersIterator implements Iterator<BlockHeader> {
@@ -1188,15 +1229,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     class BlockHeadersIterator implements Iterator<BlockHeader> {
-        private final Block startBlock;
+        private final BlockHeader startHeader;
         private final int skip;
         private final int limit;
         private final boolean reverse;
         private Integer position = 0;
         private Pair<Integer, BlockHeader> cachedNext = null;
 
-        BlockHeadersIterator(Block startBlock, int skip, int limit, boolean reverse) {
-            this.startBlock = startBlock;
+        BlockHeadersIterator(BlockHeader startHeader, int skip, int limit, boolean reverse) {
+            this.startHeader = startHeader;
             this.skip = skip;
             this.limit = limit;
             this.reverse = reverse;
@@ -1204,13 +1245,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         @Override
         public boolean hasNext() {
-            if (startBlock == null || position >= limit) {
+            if (startHeader == null || position >= limit) {
                 return false;
             }
 
             if (position == 0) {
                 // First
-                cachedNext = Pair.of(0, startBlock.getHeader());
+                cachedNext = Pair.of(0, startHeader);
                 return true;
             } else if (cachedNext.getLeft().equals(position)) {
                 // Already cached
@@ -1225,15 +1266,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                     nextBlockNumber = prevHeader.getNumber() + 1 + skip;
                 }
 
-                Block nextBlock = null;
+                BlockHeader nextHeader = null;
                 if (nextBlockNumber >= 0 && nextBlockNumber <= blockStore.getBestBlock().getNumber()) {
-                    nextBlock = blockStore.getChainBlockByNumber(nextBlockNumber);
+                    nextHeader = findHeaderByNumber(nextBlockNumber);
                 }
 
-                if (nextBlock == null) {
+                if (nextHeader == null) {
                     return false;
                 } else {
-                    cachedNext = Pair.of(position, nextBlock.getHeader());
+                    cachedNext = Pair.of(position, nextHeader);
                     return true;
                 }
             }
@@ -1311,5 +1352,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public void setPruneManager(PruneManager pruneManager) {
         this.pruneManager = pruneManager;
+    }
+
+    public void setHeaderStore(HeaderStore headerStore) {
+        this.headerStore = headerStore;
     }
 }
