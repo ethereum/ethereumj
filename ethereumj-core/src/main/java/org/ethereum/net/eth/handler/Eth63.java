@@ -136,7 +136,6 @@ public class Eth63 extends Eth62 {
             if (block == null) continue;
 
             List<TransactionReceipt> blockReceipts = new ArrayList<>();
-            sizeSum += 0;
             for (Transaction transaction : block.getTransactionsList()) {
                 TransactionInfo transactionInfo = blockchain.getTransactionInfo(transaction.getHash());
                 if (transactionInfo == null) break;
