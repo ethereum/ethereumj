@@ -56,7 +56,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
         onBlock(blockSummary.getBlock());
     }
 
-    private void onBlock(Block block) {
+    protected void onBlock(Block block) {
         if (onTransactions(block.getTransactionsList())) {
             ++idx;
             if (idx >= getBlocksRecount()) {
@@ -126,7 +126,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * data for blocks before last {@link #getMinBlocks()} is used when available
      * @return minimum number of blocks
      */
-    public static int getMinBlocks() {
+    public int getMinBlocks() {
         return MIN_BLOCKS;
     }
 
@@ -136,7 +136,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * Used when not enough data gathered
      * @return default transaction price
      */
-    public static Long getDefaultPrice() {
+    public Long getDefaultPrice() {
         return DEFAULT_PRICE;
     }
 
@@ -146,7 +146,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * Recount every N blocks
      * @return number of blocks
      */
-    public static int getBlocksRecount() {
+    public int getBlocksRecount() {
         return BLOCKS_RECOUNT;
     }
 
@@ -157,7 +157,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * to override default value on recount
      * @return minimum number of transactions for calculation
      */
-    public static int getMinTransactions() {
+    public int getMinTransactions() {
         return MIN_TRANSACTIONS;
     }
 
@@ -168,7 +168,7 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
      * So 4 means lowest 25%, 8 lowest 12.5% etc
      * @return percentile share
      */
-    public static int getPercentileShare() {
+    public int getPercentileShare() {
         return PERCENTILE_SHARE;
     }
 }
