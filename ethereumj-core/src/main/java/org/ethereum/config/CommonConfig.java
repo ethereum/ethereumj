@@ -124,14 +124,10 @@ public class CommonConfig {
         return stateSource;
     }
 
-    public Source<byte[], byte[]> cachedDbSource(String name) {
-        return cachedDbSource(name, blockchainSource(name));
-    }
-
     @Bean
     @Scope("prototype")
-    public Source<byte[], byte[]> cachedDbSource(String name,  Source<byte[], byte[]> source) {
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(source) {
+    public Source<byte[], byte[]> cachedDbSource(String name) {
+        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -221,28 +217,16 @@ public class CommonConfig {
         }
     }
 
-    /**
-     * @deprecated
-     * Remove alone with migration from {@link org.ethereum.manager.WorldManager}
-     */
-    @Deprecated
     @Bean
     @Lazy
-    public DataSourceArray<BlockHeader> headerSource() {
-        DbSource<byte[]> dataSource = keyValueDataSource("headers");
-        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
-        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
-        writeCache.setFlushSource(true);
-        ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
-        DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
-        return dataSourceArray;
+    public DbSource<byte[]> headerSource() {
+        return keyValueDataSource("headers");
     }
 
     @Bean
     @Lazy
     public HeaderStore headerStore() {
-        DbSource<byte[]> dataSource = keyValueDataSource("headers");
+        DbSource<byte[]> dataSource = headerSource();
 
         WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
                 new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
@@ -250,8 +234,8 @@ public class CommonConfig {
         dbFlushManager().addCache(cache);
 
         HeaderStore headerStore = new HeaderStore();
-        Source<byte[], byte[]> headers = cachedDbSource("header", new XorDataSource<>(cache, HashUtil.sha3("header".getBytes())));
-        Source<byte[], byte[]> index = cachedDbSource("index", new XorDataSource<>(cache, HashUtil.sha3("index".getBytes())));
+        Source<byte[], byte[]> headers = new XorDataSource<>(cache, HashUtil.sha3("header".getBytes()));
+        Source<byte[], byte[]> index = new XorDataSource<>(cache, HashUtil.sha3("index".getBytes()));
         headerStore.init(index, headers);
 
         return headerStore;

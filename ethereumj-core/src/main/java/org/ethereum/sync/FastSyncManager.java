@@ -898,8 +898,8 @@ public class FastSyncManager {
         return null;
     }
 
-    public boolean isEndedOrNotStarted() {
-        return blockchainDB.get(FASTSYNC_DB_KEY_PIVOT) == null;
+    public boolean isInProgress() {
+        return blockchainDB.get(FASTSYNC_DB_KEY_PIVOT) != null;
     }
 
     public void close() {

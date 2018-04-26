@@ -27,11 +27,11 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.TrieImpl;
@@ -120,14 +120,14 @@ public class BlockchainValidation {
     }
 
     public static void checkFastHeaders(Ethereum ethereum, CommonConfig commonConfig, AtomicInteger fatalErrors) {
-        DataSourceArray<BlockHeader> headerStore = commonConfig.headerSource();
+        HeaderStore headerStore = commonConfig.headerStore();
         int blockNumber = headerStore.size() - 1;
         byte[] lastParentHash = null;
 
         try {
             testLogger.info("Checking fast headers from best block: {}", blockNumber);
             while (blockNumber > 0) {
-                BlockHeader header = headerStore.get(blockNumber);
+                BlockHeader header = headerStore.getHeaderByNumber(blockNumber);
                 if (lastParentHash != null) {
                     assert FastByteComparisons.equal(header.getHash(), lastParentHash);
                 }

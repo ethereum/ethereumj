@@ -121,9 +121,9 @@ public class Serializers {
     };
 
     /**
-     * Dummy serializer (doesn't change anything)
+     * No change serializer (doesn't change anything)
      */
-    public final static Serializer<byte[], byte[]> DummySerializer = new Serializer<byte[], byte[]>() {
+    public final static Serializer<byte[], byte[]> NoChangeSerializer = new Serializer<byte[], byte[]>() {
         @Override
         public byte[] serialize(byte[] object) {
             return object;

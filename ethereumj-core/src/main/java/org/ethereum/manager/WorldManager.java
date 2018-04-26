@@ -19,10 +19,10 @@ package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.HeaderStore;
+import org.ethereum.db.migrate.MigrateHeaderSourceTotalDiff;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
@@ -32,7 +32,6 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
-import org.ethereum.util.FileUtil;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +42,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,9 +73,6 @@ public class WorldManager {
 
     @Autowired
     private SyncManager syncManager;
-
-    @Autowired
-    private FastSyncManager fastSyncManager;
 
     @Autowired
     private SyncPool pool;
@@ -259,7 +252,7 @@ public class WorldManager {
 
     /**
      * After introducing skipHistory in FastSync this method
-     * adds additional headerSource to Blockchain
+     * adds additional header storage to Blockchain
      * as Blockstore is incomplete in this mode
      */
     private void fastSyncDbJobs() {
@@ -267,91 +260,14 @@ public class WorldManager {
         if (blockStore.getBestBlock().getNumber() > 0 &&
                 blockStore.getChainBlockByNumber(1) == null) {
             FastSyncManager fastSyncManager = ctx.getBean(FastSyncManager.class);
-            if (!fastSyncManager.isEndedOrNotStarted()) {
+            if (fastSyncManager.isInProgress()) {
                 return;
             }
             logger.info("DB is filled using Fast Sync with skipHistory, adopting headerStore");
             ((BlockchainImpl) blockchain).setHeaderStore(ctx.getBean(HeaderStore.class));
         }
-        fastSyncDbMigrateHeadersUpdateTotalDiff();
-    }
-
-    /**
-     * @deprecated
-     * TODO: Remove after a few versions (current: 1.7.3) or with DB version update
-     * Also remove CommonConfig.headerSource with it as no more used
-     *
-     * - Repairs Headers DB after FastSync with skipHistory to be usable
-     *    a) Updates incorrect total difficulty
-     *    b) Migrates headers without index to usable scheme with index
-     * - Removes headers DB otherwise as it's not needed
-     *   TODO: move DB removal to main logic. Not done yet to prevent any conflicts
-     */
-    @Deprecated
-    private void fastSyncDbMigrateHeadersUpdateTotalDiff() {
-        // checking whether we should do any kind of migration:
-        if (!config.isFastSyncEnabled()) {
-            return;
-        }
-
-        FastSyncManager fastSyncManager = ctx.getBean(FastSyncManager.class);
-        if (!fastSyncManager.isEndedOrNotStarted()|| blockStore.getBestBlock().getNumber() == 0) { // Fast sync is not over
-            return;
-        }
-
-        logger.info("Fast Sync was used. Checking if migration required.");
-        if (blockStore.getBestBlock().getNumber() > 0 &&
-                blockStore.getChainBlockByNumber(1) != null) {
-            // Everything is cool but maybe we could remove unused DB?
-            Path headersDbPath = Paths.get(config.databaseDir(), "headers");
-            if (Files.exists(headersDbPath)) {
-                logger.info("Headers DB was used during FastSync but not required any more. Removing.");
-                FileUtil.recursiveDelete(headersDbPath.toString());
-                logger.info("Headers DB removed. Migration is over");
-            } else {
-                logger.info("No migration required.");
-                return;
-            }
-        } else if (blockStore.getBestBlock().getNumber() > 0) {
-            // Maybe migration of headerStore and totalDifficulty is required?
-            HeaderStore headerStore = ctx.getBean(HeaderStore.class);
-            if (headerStore.getHeaderByNumber(1) != null) {
-                logger.info("No migration required.");
-                return;
-            }
-
-            logger.info("Migration required. Updating total difficulty.");
-            logger.info("=== Don't stop or exit from application, migration could not be resumed ===");
-            long firstFullBlockNum = blockStore.getMaxNumber();
-            while (blockStore.getChainBlockByNumber(firstFullBlockNum - 1) != null) {
-                --firstFullBlockNum;
-            }
-            Block firstFullBlock = blockStore.getChainBlockByNumber(firstFullBlockNum);
-            DataSourceArray<BlockHeader> headerSource = (DataSourceArray<BlockHeader>) ctx.getBean("headerSource");
-            BigInteger totalDifficulty = blockStore.getChainBlockByNumber(0).getDifficultyBI();
-            for (int i = 1; i < firstFullBlockNum; ++i) {
-                totalDifficulty = totalDifficulty.add(headerSource.get(i).getDifficultyBI());
-            }
-            blockStore.saveBlock(firstFullBlock, totalDifficulty.add(firstFullBlock.getDifficultyBI()), true);
-            ((BlockchainImpl) blockchain).updateBlockTotDifficulties(firstFullBlockNum + 1);
-            logger.info("Total difficulty updated");
-            logger.info("Migrating headerStore");
-            int maxHeaderNumber = headerSource.size() - 1;
-            DbFlushManager flushManager = ctx.getBean(DbFlushManager.class);
-            for (int i = 1; i < headerSource.size(); ++i) {
-                BlockHeader curHeader = headerSource.get(i);
-                headerStore.saveHeader(curHeader);
-                headerSource.set(i, null);
-                if (i % 10000 == 0) {
-                    logger.info("#{} of {} headers moved. Flushing...", i, maxHeaderNumber);
-                    flushManager.commit();
-                    flushManager.flush();
-                }
-            }
-            flushManager.commit();
-            flushManager.flush();
-            logger.info("headerStore migration finished. No more migrations required");
-        }
+        MigrateHeaderSourceTotalDiff tempMigration = new MigrateHeaderSourceTotalDiff(ctx, blockStore, blockchain, config);
+        tempMigration.run();
     }
 
     public void close() {
