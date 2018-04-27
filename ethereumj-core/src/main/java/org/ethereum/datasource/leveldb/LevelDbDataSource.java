@@ -18,6 +18,7 @@
 package org.ethereum.datasource.leveldb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSettings;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.util.FileUtil;
 import org.iq80.leveldb.*;
@@ -54,6 +55,8 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     DB db;
     boolean alive;
 
+    DbSettings settings = DbSettings.DEFAULT;
+
     // The native LevelDB insert/update/delete are normally thread-safe
     // However close operation is not thread-safe and may lead to a native crash when
     // accessing a closed DB.
@@ -71,7 +74,8 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     }
 
     @Override
-    public void init() {
+    public void init(DbSettings settings) {
+        this.settings = settings;
         resetDbLock.writeLock().lock();
         try {
             logger.debug("~> LevelDbDataSource.init(): " + name);
@@ -135,7 +139,7 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     public void reset() {
         close();
         FileUtil.recursiveDelete(getPath().toString());
-        init();
+        init(settings);
     }
 
     @Override

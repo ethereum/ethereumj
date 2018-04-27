@@ -154,10 +154,14 @@ public class CommonConfig {
         return ret;
     }
 
+    public DbSource<byte[]> keyValueDataSource(String name) {
+        return keyValueDataSource(name, DbSettings.DEFAULT);
+    }
+
     @Bean
     @Scope("prototype")
     @Primary
-    public DbSource<byte[]> keyValueDataSource(String name) {
+    public DbSource<byte[]> keyValueDataSource(String name, DbSettings settings) {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             DbSource<byte[]> dbSource;
@@ -170,7 +174,7 @@ public class CommonConfig {
                 dbSource = rocksDbDataSource();
             }
             dbSource.setName(name);
-            dbSource.init();
+            dbSource.init(settings);
             dbSources.add(dbSource);
             return dbSource;
         } finally {
