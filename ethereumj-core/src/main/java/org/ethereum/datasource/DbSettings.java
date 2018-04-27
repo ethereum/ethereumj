@@ -8,10 +8,22 @@ package org.ethereum.datasource;
  */
 public class DbSettings {
 
-    public static final DbSettings DEFAULT = new DbSettings();
+    public static final DbSettings DEFAULT = new DbSettings()
+            .withMaxThreads(1)
+            .withMaxOpenFiles(32);
 
-    int maxOpenFiles = 32;
-    int maxThreads = 1;
+    int maxOpenFiles;
+    int maxThreads;
+
+    private DbSettings() {
+    }
+
+    public static DbSettings newInstance() {
+        DbSettings settings = new DbSettings();
+        settings.maxOpenFiles = DEFAULT.maxOpenFiles;
+        settings.maxThreads = DEFAULT.maxThreads;
+        return settings;
+    }
 
     public int getMaxOpenFiles() {
         return maxOpenFiles;

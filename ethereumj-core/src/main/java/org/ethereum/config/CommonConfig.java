@@ -271,7 +271,7 @@ public class CommonConfig {
 
     @Bean
     public DbSource<byte[]> blockchainDB() {
-        DbSettings settings = new DbSettings()
+        DbSettings settings = DbSettings.newInstance()
                 .withMaxOpenFiles(systemProperties().getConfig().getInt("database.maxOpenFiles"))
                 .withMaxThreads(Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
 
