@@ -28,6 +28,7 @@ import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
@@ -615,6 +616,10 @@ public class FastSyncManager {
             logger.info("FastSync: Block bodies downloaded");
         } else {
             logger.info("FastSync: skip bodies downloading");
+            logger.info("Fixing total difficulty which is usually updated during block bodies download");
+            fixTotalDiff();
+            logger.info("Total difficulty fixed for full blocks");
+            blockchain.setHeaderStore(applicationContext.getBean(HeaderStore.class));
         }
 
         if (!config.fastSyncSkipHistory()) {
@@ -632,7 +637,7 @@ public class FastSyncManager {
         }
 
         logger.info("FastSync: updating totDifficulties starting from the pivot block...");
-        blockchain.updateBlockTotDifficulties((int) pivot.getNumber());
+        blockchain.updateBlockTotDifficulties(pivot.getNumber());
         synchronized (blockchain) {
             Block bestBlock = blockchain.getBestBlock();
             BigInteger totalDifficulty = blockchain.getTotalDifficulty();
@@ -642,6 +647,25 @@ public class FastSyncManager {
         blockchainDB.delete(FASTSYNC_DB_KEY_PIVOT);
         dbFlushManager.commit();
         dbFlushManager.flush();
+    }
+
+    /**
+     * Fixing total difficulty which is usually updated during block bodies download
+     * Executed if {@link BlockBodiesDownloader} stage is skipped
+     */
+    private void fixTotalDiff() {
+        long firstFullBlockNum = pivot.getNumber();
+        while (blockStore.getChainBlockByNumber(firstFullBlockNum - 1) != null) {
+            --firstFullBlockNum;
+        }
+        Block firstFullBlock = blockStore.getChainBlockByNumber(firstFullBlockNum);
+        HeaderStore headersStore = applicationContext.getBean(HeaderStore.class);
+        BigInteger totalDifficulty = blockStore.getChainBlockByNumber(0).getDifficultyBI();
+        for (int i = 1; i < firstFullBlockNum; ++i) {
+            totalDifficulty = totalDifficulty.add(headersStore.getHeaderByNumber(i).getDifficultyBI());
+        }
+        blockStore.saveBlock(firstFullBlock, totalDifficulty.add(firstFullBlock.getDifficultyBI()), true);
+        blockchain.updateBlockTotDifficulties(firstFullBlockNum + 1);
     }
 
     public void main() {
@@ -872,6 +896,10 @@ public class FastSyncManager {
         }
 
         return null;
+    }
+
+    public boolean isInProgress() {
+        return blockchainDB.get(FASTSYNC_DB_KEY_PIVOT) != null;
     }
 
     public void close() {

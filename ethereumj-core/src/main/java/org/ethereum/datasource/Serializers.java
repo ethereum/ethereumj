@@ -119,4 +119,19 @@ public class Serializers {
             return stream == null ? null : new BlockHeader(stream);
         }
     };
+
+    /**
+     * AS IS serializer (doesn't change anything)
+     */
+    public final static Serializer<byte[], byte[]> AsIsSerializer = new Serializer<byte[], byte[]>() {
+        @Override
+        public byte[] serialize(byte[] object) {
+            return object;
+        }
+
+        @Override
+        public byte[] deserialize(byte[] stream) {
+            return stream;
+        }
+    };
 }

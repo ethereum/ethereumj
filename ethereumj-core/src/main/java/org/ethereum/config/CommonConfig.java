@@ -219,15 +219,26 @@ public class CommonConfig {
 
     @Bean
     @Lazy
-    public DataSourceArray<BlockHeader> headerSource() {
-        DbSource<byte[]> dataSource = keyValueDataSource("headers");
-        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
-        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
-        writeCache.setFlushSource(true);
-        ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
-        DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
-        return dataSourceArray;
+    public DbSource<byte[]> headerSource() {
+        return keyValueDataSource("headers");
+    }
+
+    @Bean
+    @Lazy
+    public HeaderStore headerStore() {
+        DbSource<byte[]> dataSource = headerSource();
+
+        WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
+                new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
+        cache.setFlushSource(true);
+        dbFlushManager().addCache(cache);
+
+        HeaderStore headerStore = new HeaderStore();
+        Source<byte[], byte[]> headers = new XorDataSource<>(cache, HashUtil.sha3("header".getBytes()));
+        Source<byte[], byte[]> index = new XorDataSource<>(cache, HashUtil.sha3("index".getBytes()));
+        headerStore.init(index, headers);
+
+        return headerStore;
     }
 
     @Bean

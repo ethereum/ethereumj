@@ -20,8 +20,9 @@ package org.ethereum.manager;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
+import org.ethereum.db.migrate.MigrateHeaderSourceTotalDiff;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
@@ -74,9 +75,6 @@ public class WorldManager {
     private SyncManager syncManager;
 
     @Autowired
-    private FastSyncManager fastSyncManager;
-
-    @Autowired
     private SyncPool pool;
 
     @Autowired
@@ -118,6 +116,7 @@ public class WorldManager {
 
     @PostConstruct
     private void init() {
+        fastSyncDbJobs();
         syncManager.init(channelManager, pool);
     }
 
@@ -181,10 +180,10 @@ public class WorldManager {
 //            repository.commitBlock(genesis.getHeader());
             repository.commit();
 
-            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getCumulativeDifficulty(), true);
+            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getDifficultyBI(), true);
 
             blockchain.setBestBlock(Genesis.getInstance(config));
-            blockchain.setTotalDifficulty(Genesis.getInstance(config).getCumulativeDifficulty());
+            blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
 
             listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()));
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
@@ -249,6 +248,26 @@ public class WorldManager {
             System.exit(-1); //  todo: reset the repository and blockchain
         }
 */
+    }
+
+    /**
+     * After introducing skipHistory in FastSync this method
+     * adds additional header storage to Blockchain
+     * as Blockstore is incomplete in this mode
+     */
+    private void fastSyncDbJobs() {
+        // checking if fast sync ran sometime ago with "skipHistory flag"
+        if (blockStore.getBestBlock().getNumber() > 0 &&
+                blockStore.getChainBlockByNumber(1) == null) {
+            FastSyncManager fastSyncManager = ctx.getBean(FastSyncManager.class);
+            if (fastSyncManager.isInProgress()) {
+                return;
+            }
+            logger.info("DB is filled using Fast Sync with skipHistory, adopting headerStore");
+            ((BlockchainImpl) blockchain).setHeaderStore(ctx.getBean(HeaderStore.class));
+        }
+        MigrateHeaderSourceTotalDiff tempMigration = new MigrateHeaderSourceTotalDiff(ctx, blockStore, blockchain, config);
+        tempMigration.run();
     }
 
     public void close() {

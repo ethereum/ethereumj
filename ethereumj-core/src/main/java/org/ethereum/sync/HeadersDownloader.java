@@ -17,12 +17,11 @@
  */
 package org.ethereum.sync;
 
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
@@ -31,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -54,8 +52,8 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
+    @Autowired
+    HeaderStore headerStore;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -95,7 +93,7 @@ public class HeadersDownloader extends BlockDownloader {
         }
         logger.info(name + ": " + headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
         for (BlockHeaderWrapper header : headers) {
-            headerStore.set((int) header.getNumber(), header.getHeader());
+            headerStore.saveHeader(header.getHeader());
             headersLoaded++;
         }
         dbFlushManager.commit();
