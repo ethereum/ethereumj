@@ -271,7 +271,11 @@ public class CommonConfig {
 
     @Bean
     public DbSource<byte[]> blockchainDB() {
-        return keyValueDataSource("blockchain");
+        DbSettings settings = new DbSettings()
+                .withMaxOpenFiles(systemProperties().getConfig().getInt("database.maxOpenFiles"))
+                .withMaxThreads(Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
+
+        return keyValueDataSource("blockchain", settings);
     }
 
     @Bean
