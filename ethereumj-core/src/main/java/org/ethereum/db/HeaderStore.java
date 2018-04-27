@@ -46,7 +46,7 @@ public class HeaderStore {
     public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> headers) {
         indexDS = index;
         this.index = new DataSourceArray<>(
-                new ObjectDataSource<>(index,Serializers.NoChangeSerializer, 2048));
+                new ObjectDataSource<>(index,Serializers.AsIsSerializer, 2048));
         this.headersDS = headers;
         this.headers = new ObjectDataSource<>(headers, Serializers.BlockHeaderSerializer, 512);
     }
