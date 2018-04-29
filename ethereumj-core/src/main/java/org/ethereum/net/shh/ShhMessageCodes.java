@@ -72,4 +72,14 @@ public enum ShhMessageCodes {
     public byte asByte() {
         return (byte) (cmd);
     }
+
+    public static int maxCode(byte version) {
+
+        int max = 0;
+        for (ShhMessageCodes cd : ShhMessageCodes.values())
+            if (max < cd.asByte())
+                max = cd.asByte();
+
+        return max;
+    }
 }

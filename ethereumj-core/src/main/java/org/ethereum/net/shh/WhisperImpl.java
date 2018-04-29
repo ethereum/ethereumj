@@ -18,17 +18,21 @@
 package org.ethereum.net.shh;
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.collections4.map.LRUMap;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.stereotype.Component;
-
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 @Component
 public class WhisperImpl extends Whisper {
@@ -37,7 +41,8 @@ public class WhisperImpl extends Whisper {
     private Set<MessageWatcher> filters = new HashSet<>();
     private List<Topic> knownTopics = new ArrayList<>();
 
-    private Map<WhisperMessage, ?> known = new LRUMap<>(1024); // essentially Set
+    private Map<WhisperMessage, ?> known = Collections.synchronizedMap(
+            new LRUMap<WhisperMessage, Object>(1024)); // essentially Set
 
     private Map<String, ECKey> identities = new HashMap<>();
 

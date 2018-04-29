@@ -72,4 +72,14 @@ public enum BzzMessageCodes {
     public byte asByte() {
         return (byte) (cmd);
     }
+
+    public static int maxCode(byte version) {
+
+        int max = 0;
+        for (BzzMessageCodes cd : BzzMessageCodes.values())
+            if (max < cd.asByte())
+                max = cd.asByte();
+
+        return max;
+    }
 }
