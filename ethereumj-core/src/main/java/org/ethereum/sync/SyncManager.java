@@ -361,6 +361,10 @@ public class SyncManager extends BlockDownloader {
         if (block.getNumber() > syncQueue.maxNum + MAX_IN_REQUEST * 2) {
             return true;
         }
+        // skip if memory limit is already hit
+        if ((blocksInMem.get() * getEstimatedBlockSize()) > blockBytesLimit) {
+            return true;
+        }
 
         logger.debug("Adding new block to sync queue: " + block.getShortDescr());
         syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));

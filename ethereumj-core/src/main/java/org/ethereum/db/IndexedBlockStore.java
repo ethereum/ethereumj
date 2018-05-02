@@ -67,7 +67,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
             public Block deserialize(byte[] bytes) {
                 return bytes == null ? null : new Block(bytes);
             }
-        }, 512);
+        }, 256);
     }
 
     public synchronized Block getBestBlock(){

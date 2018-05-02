@@ -49,6 +49,7 @@ public class BlockBodiesMessage extends EthMessage {
     private synchronized void parse() {
         if (parsed) return;
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        this.encoded = null;
 
         blockBodies = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
