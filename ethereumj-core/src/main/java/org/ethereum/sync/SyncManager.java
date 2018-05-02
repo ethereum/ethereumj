@@ -362,7 +362,7 @@ public class SyncManager extends BlockDownloader {
             return true;
         }
         // skip if memory limit is already hit
-        if (blocksInMem.get() > blockBytesLimit) {
+        if ((blocksInMem.get() * getEstimatedBlockSize()) > blockBytesLimit) {
             return true;
         }
 
