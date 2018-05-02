@@ -292,11 +292,11 @@ public abstract class BlockDownloader {
                         }
                     }
                     receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter - 2, 1));
+                    receivedBlocksLatch.await(1000, TimeUnit.MILLISECONDS);
                 } else {
                     logger.debug("{} blockRetrieveLoop: BlockQueue is full", name);
-                    receivedBlocksLatch = new CountDownLatch(1);
+                    Thread.sleep(200);
                 }
-                receivedBlocksLatch.await(200, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
