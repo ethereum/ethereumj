@@ -50,6 +50,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -647,6 +650,7 @@ public class FastSyncManager {
         blockchainDB.delete(FASTSYNC_DB_KEY_PIVOT);
         dbFlushManager.commit();
         dbFlushManager.flush();
+        removeHeadersDb(logger);
     }
 
     /**
@@ -666,6 +670,26 @@ public class FastSyncManager {
         }
         blockStore.saveBlock(firstFullBlock, totalDifficulty.add(firstFullBlock.getDifficultyBI()), true);
         blockchain.updateBlockTotDifficulties(firstFullBlockNum + 1);
+    }
+
+    /**
+     * Physically removes headers DB if fast sync was performed without skipHistory
+     */
+    public boolean removeHeadersDb(Logger logger) {
+        if (blockStore.getBestBlock().getNumber() > 0 &&
+                blockStore.getChainBlockByNumber(1) != null) {
+            // Everything is cool but maybe we could remove unused DB?
+            Path headersDbPath = Paths.get(config.databaseDir(), "headers");
+            if (Files.exists(headersDbPath)) {
+                logger.info("Headers DB was used during FastSync but not required any more. Removing.");
+                DbSource<byte[]> headerSource = (DbSource<byte[]>) applicationContext.getBean("headerSource");
+                headerSource.close();
+                FileUtil.recursiveDelete(headersDbPath.toString());
+                logger.info("Headers DB removed. Migration is over");
+                return true;
+            }
+        }
+        return false;
     }
 
     public void main() {

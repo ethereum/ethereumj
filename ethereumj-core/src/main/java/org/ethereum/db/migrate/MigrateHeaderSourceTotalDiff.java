@@ -43,13 +43,13 @@ import java.nio.file.Paths;
 /**
  * @deprecated
  * TODO: Remove after a few versions (current: 1.7.3) or with DB version update
+ * TODO: Make {@link FastSyncManager#removeHeadersDb(Logger)} private after removing
  * Also remove CommonConfig.headerSource with it as no more used
  *
  * - Repairs Headers DB after FastSync with skipHistory to be usable
  *    a) Updates incorrect total difficulty
  *    b) Migrates headers without index to usable scheme with index
  * - Removes headers DB otherwise as it's not needed
- *   TODO: move DB removal to main logic. Not done yet to prevent any conflicts
  */
 @Deprecated
 public class MigrateHeaderSourceTotalDiff implements Runnable {
@@ -85,19 +85,12 @@ public class MigrateHeaderSourceTotalDiff implements Runnable {
         }
 
         logger.info("Fast Sync was used. Checking if migration required.");
-        if (blockStore.getBestBlock().getNumber() > 0 &&
-                blockStore.getChainBlockByNumber(1) != null) {
-            // Everything is cool but maybe we could remove unused DB?
-            Path headersDbPath = Paths.get(systemProperties.databaseDir(), "headers");
-            if (Files.exists(headersDbPath)) {
-                logger.info("Headers DB was used during FastSync but not required any more. Removing.");
-                FileUtil.recursiveDelete(headersDbPath.toString());
-                logger.info("Headers DB removed. Migration is over");
-            } else {
-                logger.info("No migration required.");
-                return;
-            }
-        } else if (blockStore.getBestBlock().getNumber() > 0) {
+        boolean dbRemoved = fastSyncManager.removeHeadersDb(logger);
+        if (dbRemoved) {
+            logger.info("Migration finished.");
+            return;
+        }
+        if (blockStore.getBestBlock().getNumber() > 0 && blockStore.getChainBlockByNumber(1) == null) {
             // Maybe migration of headerStore and totalDifficulty is required?
             HeaderStore headerStore = ctx.getBean(HeaderStore.class);
             if (headerStore.getHeaderByNumber(1) != null) {
@@ -138,6 +131,8 @@ public class MigrateHeaderSourceTotalDiff implements Runnable {
             flushManager.commit();
             flushManager.flush();
             logger.info("headerStore migration finished. No more migrations required");
+        } else {
+            logger.info("No migration required.");
         }
     }
 }
