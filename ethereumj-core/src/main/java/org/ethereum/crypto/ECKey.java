@@ -1107,6 +1107,9 @@ public class ECKey implements Serializable {
         BigInteger srInv = rInv.multiply(sig.s).mod(n);
         BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
         ECPoint.Fp q = (ECPoint.Fp) ECAlgorithms.sumOfTwoMultiplies(CURVE.getG(), eInvrInv, R, srInv);
+        // result sanity check: point must not be at infinity
+        if (q.isInfinity())
+            return null;
         return q.getEncoded(/* compressed */ false);
     }
 
