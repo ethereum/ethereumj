@@ -34,7 +34,7 @@ public class LevelDbDataSourceTest {
     @Test
     public void testBatchUpdating() {
         LevelDbDataSource dataSource = new LevelDbDataSource("test");
-        dataSource.init();
+        dataSource.init(DbSettings.DEFAULT);
 
         final int batchSize = 100;
         Map<byte[], byte[]> batch = createBatch(batchSize);
@@ -49,7 +49,7 @@ public class LevelDbDataSourceTest {
     @Test
     public void testPutting() {
         LevelDbDataSource dataSource = new LevelDbDataSource("test");
-        dataSource.init();
+        dataSource.init(DbSettings.DEFAULT);
 
         byte[] key = randomBytes(32);
         dataSource.put(key, randomBytes(32));
