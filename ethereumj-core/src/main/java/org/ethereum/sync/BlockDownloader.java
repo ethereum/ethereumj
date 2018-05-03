@@ -178,7 +178,7 @@ public abstract class BlockDownloader {
                             logger.debug("{} headerRetrieveLoop: No IDLE peers found", name);
                             break;
                         } else {
-                            logger.debug("{} headerRetrieveLoop: request headers (" + headersRequest.getStart() + ") from " + any.getNode(), name);
+                            logger.debug("{} headerRetrieveLoop: request headers (" + headersRequest.toString() + ") from " + any.getNode(), name);
                             ListenableFuture<List<BlockHeader>> futureHeaders = headersRequest.getHash() == null ?
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getStart(), headersRequest.getCount(), headersRequest.isReverse()) :
                                     any.getEthHandler().sendGetBlockHeaders(headersRequest.getHash(), headersRequest.getCount(), headersRequest.getStep(), headersRequest.isReverse());
