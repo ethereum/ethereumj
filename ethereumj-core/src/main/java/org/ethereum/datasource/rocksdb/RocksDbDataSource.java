@@ -18,6 +18,7 @@
 package org.ethereum.datasource.rocksdb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSettings;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.util.FileUtil;
@@ -56,6 +57,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     ReadOptions readOpts;
     boolean alive;
 
+    DbSettings settings = DbSettings.DEFAULT;
+
     // The native RocksDB insert/update/delete are normally thread-safe
     // However close operation is not thread-safe.
     // This ReadWriteLock still permits concurrent execution of insert/delete/update operations
@@ -85,7 +88,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     }
 
     @Override
-    public void init() {
+    public void init(DbSettings settings) {
+        this.settings = settings;
         resetDbLock.writeLock().lock();
         try {
             logger.debug("~> RocksDbDataSource.init(): " + name);
@@ -103,9 +107,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 options.setCompressionType(CompressionType.LZ4_COMPRESSION);
                 options.setBottommostCompressionType(CompressionType.ZSTD_COMPRESSION);
                 options.setLevelCompactionDynamicLevelBytes(true);
-                options.setMaxBackgroundCompactions(4);
-                options.setMaxBackgroundFlushes(2);
-                options.setMaxOpenFiles(32);
+                options.setMaxOpenFiles(settings.getMaxOpenFiles());
+                options.setIncreaseParallelism(settings.getMaxThreads());
 
                 // key prefix for state node lookups
                 options.useFixedLengthPrefixExtractor(NodeKeyCompositor.PREFIX_BYTES);
@@ -237,7 +240,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public void reset() {
         close();
         FileUtil.recursiveDelete(getPath().toString());
-        init();
+        init(settings);
     }
 
     private Path getPath() {

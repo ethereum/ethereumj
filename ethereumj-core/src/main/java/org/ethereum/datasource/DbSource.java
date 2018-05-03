@@ -38,7 +38,7 @@ public interface DbSource<V> extends BatchSource<byte[], V> {
     /**
      * Initializes DB (open table, connection, etc)
      */
-    void init();
+    void init(DbSettings settings);
 
     /**
      * @return true if DB connection is alive
