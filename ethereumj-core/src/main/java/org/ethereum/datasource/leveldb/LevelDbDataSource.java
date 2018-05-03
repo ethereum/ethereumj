@@ -92,7 +92,7 @@ public class LevelDbDataSource implements DbSource<byte[]> {
             options.cacheSize(0);
             options.paranoidChecks(true);
             options.verifyChecksums(true);
-            options.maxOpenFiles(32);
+            options.maxOpenFiles(settings.getMaxOpenFiles());
 
             try {
                 logger.debug("Opening database");
