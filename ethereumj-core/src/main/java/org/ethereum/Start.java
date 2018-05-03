@@ -37,7 +37,7 @@ public class Start {
         CLIInterface.call(args);
 
         final SystemProperties config = SystemProperties.getDefault();
-        final boolean actionBlocksLoader = !config.blocksLoader().equals("");
+        final boolean actionBlocksLoader = !config.blocksLoader().isEmpty();
         final boolean actionGenerateDag = !StringUtils.isEmpty(System.getProperty("ethash.blockNumber"));
 
         if (actionBlocksLoader || actionGenerateDag) {
