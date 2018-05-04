@@ -34,6 +34,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
 
     MinMaxMap<BlockHeaderWrapper> headers = new MinMaxMap<>();
     long minValidated = -1;
+    long finishValidated = 0;
 
     ByteArrayMap<Block> blocks = new ByteArrayMap<>();
 
@@ -41,6 +42,11 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
 
     public SyncQueueReverseImpl(byte[] startHash) {
         this.curHeaderHash = startHash;
+    }
+
+    public SyncQueueReverseImpl(byte[] startHash, long finishValidated) {
+        this.curHeaderHash = startHash;
+        this.finishValidated = finishValidated;
     }
 
     public SyncQueueReverseImpl(byte[] startHash, boolean headersOnly) {
@@ -58,7 +64,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
             ret.add(new SyncQueueImpl.HeadersRequestImpl(curHeaderHash, maxSize, true, maxSize - 1));
             totalHeaders += maxSize;
             if (totalHeaders >= maxTotalHeaders) return ret;
-        } else if (minValidated == 0) {
+        } else if (minValidated == finishValidated) {
             // genesis reached
             return null;
         } else {
@@ -103,7 +109,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
         }
 
         // start header not found or we are already done
-        if (minValidated <= 0) return Collections.emptyList();
+        if (minValidated <= finishValidated) return Collections.emptyList();
 
         for (BlockHeaderWrapper header : newHeaders) {
             if (header.getNumber() < minValidated) {
@@ -111,12 +117,12 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
             }
         }
 
-        for (; minValidated >= headers.getMin() ; minValidated--) {
+        for (; minValidated >= headers.getMin() && minValidated >= finishValidated; minValidated--) {
             BlockHeaderWrapper header = headers.get(minValidated);
             BlockHeaderWrapper parent = headers.get(minValidated - 1);
             if (parent == null) {
                 // Some peers doesn't return 0 block header
-                if (minValidated == 1) minValidated = 0;
+                if (minValidated == 1 && finishValidated == 0) minValidated = 0;
                 break;
             }
             if (!FastByteComparisons.equal(header.getHeader().getParentHash(), parent.getHash())) {

@@ -17,6 +17,7 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -55,12 +56,12 @@ public class FastSyncDownloader extends BlockDownloader {
         super(headerValidator);
     }
 
-    public void startImporting(byte[] fromHash, int count) {
+    public void startImporting(BlockHeader start, int count) {
         this.maxCount = count <= 0 ? Integer.MAX_VALUE : count;
         setHeaderQueueLimit(maxCount);
         setBlockQueueLimit(maxCount);
 
-        syncQueueReverse = new SyncQueueReverseImpl(fromHash);
+        syncQueueReverse = new SyncQueueReverseImpl(start.getHash(), start.getNumber() - count);
         init(syncQueueReverse, syncPool, "FastSync");
     }
 

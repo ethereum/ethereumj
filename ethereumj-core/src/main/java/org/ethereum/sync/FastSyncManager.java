@@ -544,7 +544,7 @@ public class FastSyncManager {
 
         logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
         FastSyncDownloader downloader = applicationContext.getBean(FastSyncDownloader.class);
-        downloader.startImporting(pivot.getHash(), 260);
+        downloader.startImporting(pivot, 260);
         downloader.waitForStop();
 
         logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
