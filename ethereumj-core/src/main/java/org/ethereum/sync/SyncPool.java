@@ -282,6 +282,7 @@ public class SyncPool {
 
     private synchronized void prepareActive() {
         List<Channel> managerActive = new ArrayList<>(channelManager.getActivePeers());
+        logger.debug("Preparing active peers from {} channelManager peers", managerActive.size());
 
         // Filtering out with nodeSelector because server-connected nodes were not tested
         NodeSelector nodeSelector = new NodeSelector(BigInteger.ZERO);
@@ -292,6 +293,7 @@ public class SyncPool {
             }
         }
 
+        logger.debug("After filtering out with node selector, {} peers remaining", active.size());
         if (active.isEmpty()) return;
 
         // filtering by 20% from top difficulty
@@ -317,6 +319,7 @@ public class SyncPool {
                 ethereumListener.onPeerAddedToSyncPool(channel);
             }
         }
+        logger.debug("{} peers set to be active in SyncPool", filtered.size());
 
         activePeers.clear();
         activePeers.addAll(filtered);
