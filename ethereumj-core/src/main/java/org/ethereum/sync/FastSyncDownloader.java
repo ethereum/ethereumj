@@ -94,12 +94,12 @@ public class FastSyncDownloader extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-        return Math.max(Math.min(getBlockQueueLimit(), maxCount) - counter, MAX_IN_REQUEST);
+        return Math.max(maxCount - counter, MAX_IN_REQUEST);
     }
 
     @Override
     protected int getMaxHeadersInQueue() {
-        return Math.max(Math.min(getHeaderQueueLimit(), maxCount) - syncQueueReverse.getValidatedHeadersCount(), 0);
+        return Math.max(maxCount - syncQueueReverse.getValidatedHeadersCount(), 0);
     }
 
     // TODO: receipts loading here
