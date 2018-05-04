@@ -347,6 +347,10 @@ public class ChannelManager {
         return activePeers.get(new ByteArrayWrapper(nodeId));
     }
 
+    public SyncManager getSyncManager() {
+        return syncManager;
+    }
+
     public void close() {
         try {
             logger.info("Shutting down block and tx distribute threads...");
