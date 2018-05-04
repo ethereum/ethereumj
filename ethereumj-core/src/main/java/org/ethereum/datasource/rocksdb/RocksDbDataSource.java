@@ -88,6 +88,11 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     }
 
     @Override
+    public void init() {
+        init(DbSettings.DEFAULT);
+    }
+
+    @Override
     public void init(DbSettings settings) {
         this.settings = settings;
         resetDbLock.writeLock().lock();

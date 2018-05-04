@@ -73,6 +73,9 @@ public class HashMapDBSimple<V> implements DbSource<V> {
     }
 
     @Override
+    public void init() {}
+
+    @Override
     public void init(DbSettings settings) {}
 
     @Override
