@@ -437,7 +437,7 @@ public class TransactionTest {
 
                     Transaction txConst = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
                             "095e7baea6a6c7c4c2dfeb977efac326af552d87", 0, CallTransaction.Function.fromSignature("get"));
-                    txConst.sign(ECKey.fromPrivate(new byte[32]));
+                    txConst.sign(new ECKey());
 
                     Block bestBlock = block;
 

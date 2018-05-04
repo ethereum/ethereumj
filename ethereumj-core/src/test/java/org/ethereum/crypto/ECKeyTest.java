@@ -250,6 +250,22 @@ public class ECKeyTest {
         // todo: add test assertion when the sign/verify part actually works.
     }
 
+    @Test // result is a point at infinity
+    public void testVerifySignature4() {
+
+        byte[] hash = Hex.decode("acb1c19ac0832320815b5e886c6b73ad7d6177853d44b026f2a7a9e11bb899fc");
+        byte[] r = Hex.decode("89ea49159b334f9aebbf54481b69d000d285baa341899db355a4030f6838394e");
+        byte[] s = Hex.decode("540e9f9fa17bef441e32d98d5f4554cfefdc6a56101352e4b92efafd0d9646e8");
+        byte v = (byte) 28;
+
+        ECDSASignature sig = ECKey.ECDSASignature.fromComponents(r, s, v);
+
+        try {
+            ECKey.signatureToKey(hash, sig);
+            fail("Result is a point at infinity, recovery must fail");
+        } catch (SignatureException e) {
+        }
+    }
 
     @Test
     public void testSValue() throws Exception {
