@@ -129,11 +129,5 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
 
     @PreDestroy
     public void close() {
-//        try {
-//            logger.info("Closing TransactionStore...");
-//            super.close();
-//        } catch (Exception e) {
-//            logger.warn("Problems closing TransactionStore", e);
-//        }
     }
 }

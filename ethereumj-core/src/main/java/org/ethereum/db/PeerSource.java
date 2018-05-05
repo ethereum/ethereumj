@@ -27,15 +27,12 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 
 /**
  * Source for {@link org.ethereum.net.rlpx.Node} also known as Peers
  */
 public class PeerSource {
-    private static final Logger logger = LoggerFactory.getLogger("db");
 
     // for debug purposes
     public static PeerSource INST;

@@ -302,12 +302,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
     @Override
     public void setSender(ECKey senderPrivateKey) {
         txSender = senderPrivateKey;
-//        if (!getBlockchain().getRepository().isExist(senderPrivateKey.getAddress())) {
-//            Repository repository = getBlockchain().getRepository();
-//            Repository track = repository.startTracking();
-//            track.createAccount(senderPrivateKey.getAddress());
-//            track.commit();
-//        }
     }
 
     public ECKey getSender() {

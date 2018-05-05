@@ -359,7 +359,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 logger.error("Failed to seek by prefix in db '{}'", name, e);
                 throw new RuntimeException(e);
             }
-
+            readOpts.close();
+            
             if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
 
             return ret;

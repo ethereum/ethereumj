@@ -19,8 +19,6 @@ package org.ethereum.util;
 
 import java.io.ByteArrayOutputStream;
 
-import java.nio.ByteBuffer;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

@@ -63,22 +63,17 @@ package org.ethereum.datasource;
 import com.google.common.base.Preconditions;
 import com.google.common.math.LongMath;
 import com.google.common.primitives.Ints;
-import org.ethereum.util.ByteUtil;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import static java.lang.System.arraycopy;
-import static java.lang.System.in;
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
 import static org.ethereum.util.ByteUtil.longToBytes;
 
-//import net.jpountz.xxhash.XXHashFactory;
-
 public class QuotientFilter implements Iterable<Long> {
-//    static final XXHashFactory hashFactory = XXHashFactory.fastestInstance();
     byte QUOTIENT_BITS;
     byte REMAINDER_BITS;
     byte ELEMENT_BITS;
@@ -789,38 +784,6 @@ public class QuotientFilter implements Iterable<Long> {
             throw new NoSuchElementException();
         }
     }
-
-//    @Override
-//    public String toString() {
-//        StringBuilder sb = new StringBuilder();
-//
-//        int pad = ((int) (Math.ceil(QUOTIENT_BITS / Math.log(10.0)))) + 1;
-//
-//        for (int i = 0; i < pad; ++i) {
-//            sb.append(' ');
-//        }
-//
-//        sb.append(String.format("| is_shifted | is_continuation | is_occupied | remainder"
-//                + " nel=%d\n", entries));
-//
-//        for (long idx = 0; idx < MAX_SIZE; ++idx) {
-//            String idxString = Long.toString(idx);
-//            sb.append(idx);
-//
-//            int fillspace = pad - idxString.length();
-//            for (int i = 0; i < fillspace; ++i) {
-//                sb.append(' ');
-//            }
-//            sb.append("| ");
-//
-//            long elt = getElement(idx);
-//            sb.append(String.format("%d          | ", isElementShifted(elt) == false ? 0 : 1));
-//            sb.append(String.format("%d               | ", isElementContinuation(elt) == false ? 0 : 1));
-//            sb.append(String.format("%d           | ", isElementOccupied(elt) == false ? 0 : 1));
-//            sb.append(getElementRemainder(elt)).append(System.lineSeparator());
-//        }
-//        return sb.toString();
-//    }
 
     public class OverflowedError extends AssertionError {
 

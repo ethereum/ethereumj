@@ -73,6 +73,7 @@ public class Solc {
             }
             targetFile.deleteOnExit();
         }
+        scanner.close();
     }
 
     private String getOS() {

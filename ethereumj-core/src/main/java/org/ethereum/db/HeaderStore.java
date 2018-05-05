@@ -22,9 +22,6 @@ import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializers;
 import org.ethereum.datasource.Source;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * BlockHeaders store
@@ -32,8 +29,6 @@ import org.slf4j.LoggerFactory;
  * Uses indexes by header hash and block number
  */
 public class HeaderStore {
-
-    private static final Logger logger = LoggerFactory.getLogger("general");
 
     Source<byte[], byte[]> indexDS;
     DataSourceArray<byte[]> index;

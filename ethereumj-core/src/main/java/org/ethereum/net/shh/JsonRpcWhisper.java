@@ -337,8 +337,5 @@ public class JsonRpcWhisper extends Whisper {
         });
 
         Thread.sleep(1000000000);
-//        String resp = rpcWhisper.sendPost(json);
-//        System.out.println("Resp: " + resp);
-
     }
 }
