@@ -271,7 +271,7 @@ public class Value {
         if (isNull()) return true;
         if (isBytes() && asBytes().length == 0) return true;
         if (isList() && asList().isEmpty()) return true;
-        if (isString() && asString().equals("")) return true;
+        if (isString() && asString().isEmpty()) return true;
 
         return false;
     }

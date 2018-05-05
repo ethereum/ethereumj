@@ -197,7 +197,7 @@ public class CommonConfig {
     public void fastSyncCleanUp() {
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
-        if (!systemProperties().blocksLoader().equals("")) return; // blocks loader enabled
+        if (!systemProperties().blocksLoader().isEmpty()) return; // blocks loader enabled
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
 

@@ -33,12 +33,12 @@ import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 public class Utils {
 
     public static byte[] parseVarData(String data){
-        if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
+        if (data == null || data.isEmpty()) return EMPTY_BYTE_ARRAY;
 
         byte[] bytes;
         if (data.startsWith("0x")) {
             data = data.substring(2);
-            if (data.equals("")) return EMPTY_BYTE_ARRAY;
+            if (data.isEmpty()) return EMPTY_BYTE_ARRAY;
 
             if (data.length() % 2 == 1) data = "0" + data;
 
@@ -64,7 +64,7 @@ public class Utils {
 
     public static byte[] parseNumericData(String data){
 
-        if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
+        if (data == null || data.isEmpty()) return EMPTY_BYTE_ARRAY;
         byte[] dataB = unifiedNumericToBigInteger(data).toByteArray();
         return ByteUtil.stripLeadingZeroes(dataB);
     }
@@ -72,16 +72,16 @@ public class Utils {
     public static long parseLong(String data) {
         boolean hex = data.startsWith("0x");
         if (hex) data = data.substring(2);
-        if (data.equals("")) return 0;
+        if (data.isEmpty()) return 0;
         return new BigInteger(data, hex ? 16 : 10).longValue();
     }
 
     public static byte parseByte(String data) {
         if (data.startsWith("0x")) {
             data = data.substring(2);
-            return data.equals("") ? 0 : Byte.parseByte(data, 16);
+            return data.isEmpty() ? 0 : Byte.parseByte(data, 16);
         } else
-            return data.equals("") ? 0 : Byte.parseByte(data);
+            return data.isEmpty() ? 0 : Byte.parseByte(data);
     }
 
 
