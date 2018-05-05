@@ -17,8 +17,6 @@
  */
 package org.ethereum.trie;
 
-import org.ethereum.util.Value;
-
 /**
  * @author Roman Mandeleil
  * @since 29.08.2014

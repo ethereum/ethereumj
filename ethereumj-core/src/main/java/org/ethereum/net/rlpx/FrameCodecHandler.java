@@ -58,8 +58,6 @@ public class FrameCodecHandler extends NettyByteToMessageCodec<FrameCodec.Frame>
         if (frames == null || frames.isEmpty()) return;
 
         for (int i = 0; i < frames.size(); i++) {
-            FrameCodec.Frame frame = frames.get(i);
-
             channel.getNodeStatistics().rlpxInMessages.add();
         }
 

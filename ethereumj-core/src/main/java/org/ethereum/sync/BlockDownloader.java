@@ -250,8 +250,6 @@ public abstract class BlockDownloader {
 
                 int blocksToAsk = getBlockQueueFreeSize();
                 if (blocksToAsk >= MAX_IN_REQUEST) {
-//                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
-
                     if (bReqs.size() == 1 && bReqs.get(0).getBlockHeaders().size() <= 3) {
                         // new blocks are better to request from the header senders first
                         // to get more chances to receive block body promptly

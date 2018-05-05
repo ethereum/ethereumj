@@ -105,7 +105,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
     // to avoid using minGasPrice=0 from Genesis for the wallet
-    private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
     private static final int MAGIC_REWARD_OFFSET = 8;
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
@@ -562,15 +561,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return null;
         }
 
-//        Repository track = repo.startTracking();
         byte[] origRoot = repo.getRoot();
-
-        if (block == null)
-            return null;
-
-        // keep chain continuity
-//        if (!Arrays.equals(bestBlock.getHash(),
-//                block.getParentHash())) return null;
 
         if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
             AdvancedDeviceUtils.adjustDetailedTracing(config, block.getNumber());
@@ -599,16 +590,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(repo.getRoot()));
             stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
 
-//            track.rollback();
-//            repository.rollback();
             repository = repository.getSnapshotTo(origRoot);
-
-            // block is bad so 'rollback' the state root to the original state
-//            ((RepositoryImpl) repository).setRoot(origRoot);
-
-//            track.rollback();
-            // block is bad so 'rollback' the state root to the original state
-//            ((RepositoryImpl) repository).setRoot(origRoot);
 
             if (config.exitOnBlockConflict() && !byTest) {
                 adminInfo.lostConsensus();
@@ -639,20 +621,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public void flush() {
-//        repository.flush();
-//        stateDataSource.flush();
-//        blockStore.flush();
-//        transactionStore.flush();
-//
-//        repository = repository.getSnapshotTo(repository.getRoot());
-//
-//        if (isMemoryBoundFlush()) {
-//            System.gc();
-//        }
-    }
-
-    private boolean needFlushByMemory(double maxMemoryPercents) {
-        return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
     }
 
     public static byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {

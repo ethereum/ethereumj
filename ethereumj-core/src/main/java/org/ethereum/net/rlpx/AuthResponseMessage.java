@@ -21,8 +21,6 @@ import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
-
 /**
  * Authentication response message, to be wrapped inside
  *

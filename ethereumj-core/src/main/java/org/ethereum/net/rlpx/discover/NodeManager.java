@@ -38,8 +38,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static java.lang.Math.min;
-
 /**
  * The central class for Peer Discovery machinery.
  *

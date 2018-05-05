@@ -19,7 +19,6 @@ package org.ethereum.solidity.compiler;
 
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -53,10 +52,6 @@ public class SourceArtifact {
         String[] deps = substringsBetween(source, "import \"", "\";");
         return deps == null ? Collections.<String>emptyList() : asList(deps);
     }
-
-//    public SourceArtifact(MultipartFile srcFile) throws IOException {
-//        this(srcFile.getOriginalFilename(), new String(srcFile.getBytes(), "UTF-8"));
-//    }
 
     public void injectDependency(SourceArtifact srcArtifact) {
         injectedDependencies.add(srcArtifact);

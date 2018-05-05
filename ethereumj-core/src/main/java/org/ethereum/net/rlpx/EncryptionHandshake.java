@@ -268,10 +268,6 @@ public class EncryptionHandshake {
         secrets.aes = aesSecret;
         secrets.mac = sha3(agreedSecret, aesSecret);
         secrets.token = sha3(sharedSecret);
-//        System.out.println("mac " + Hex.toHexString(secrets.mac));
-//        System.out.println("aes " + Hex.toHexString(secrets.aes));
-//        System.out.println("shared " + Hex.toHexString(sharedSecret));
-//        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
 
         KeccakDigest mac1 = new KeccakDigest(MAC_SIZE);
         mac1.update(xor(secrets.mac, responderNonce), 0, secrets.mac.length);

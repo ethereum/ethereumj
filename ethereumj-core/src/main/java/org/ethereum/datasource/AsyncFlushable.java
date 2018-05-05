@@ -19,8 +19,6 @@ package org.ethereum.datasource;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.util.concurrent.Future;
-
 /**
  * Represents cache Source which is able to do asynchronous flush
  *

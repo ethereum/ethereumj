@@ -28,8 +28,6 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -41,8 +39,6 @@ import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.spongycastle.util.Arrays.areEqual;
 
 public class IndexedBlockStore extends AbstractBlockstore{
-
-    private static final Logger logger = LoggerFactory.getLogger("general");
 
     Source<byte[], byte[]> indexDS;
     DataSourceArray<List<BlockInfo>> index;

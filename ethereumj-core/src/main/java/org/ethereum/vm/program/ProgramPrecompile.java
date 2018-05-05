@@ -17,10 +17,8 @@
  */
 package org.ethereum.vm.program;
 
-import org.ethereum.datasource.Source;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.OpCode;
 

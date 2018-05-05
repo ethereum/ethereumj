@@ -1086,7 +1086,6 @@ public class Program {
         int index = 0;
         StringBuilder sb = new StringBuilder();
         BitSet mask = buildReachableBytecodesMask(code);
-        String binData = "";
 
         while (index < code.length) {
             final byte opCode = code[index];

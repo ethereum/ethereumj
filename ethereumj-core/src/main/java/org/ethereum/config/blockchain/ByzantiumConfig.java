@@ -20,10 +20,7 @@ package org.ethereum.config.blockchain;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
