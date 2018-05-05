@@ -17,13 +17,11 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
 

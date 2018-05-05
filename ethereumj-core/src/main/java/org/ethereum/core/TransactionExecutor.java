@@ -53,7 +53,6 @@ import static org.ethereum.vm.VMUtils.zipAndEncode;
 public class TransactionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger("execute");
-    private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
     SystemProperties config;
     CommonConfig commonConfig;

@@ -20,12 +20,8 @@ package org.ethereum.config.blockchain;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.validator.BlockCustomHashRule;
-import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by Anton Nashatyrev on 21.11.2016.

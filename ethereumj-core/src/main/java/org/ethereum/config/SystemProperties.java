@@ -457,7 +457,7 @@ public class SystemProperties {
     @ValidateMe
     public List<Node> peerActive() {
         if (!config.hasPath("peer.active")) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         List<Node> ret = new ArrayList<>();
         List<? extends ConfigObject> list = config.getObjectList("peer.active");

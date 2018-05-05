@@ -50,8 +50,6 @@ public class Genesis extends Block {
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long NUMBER = 0;
 
-    private static Block instance;
-
     public Genesis(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
                    byte[] difficulty, long number, long gasLimit,
                    long gasUsed, long timestamp,
