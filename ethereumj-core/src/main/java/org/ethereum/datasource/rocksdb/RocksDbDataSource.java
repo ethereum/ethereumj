@@ -187,6 +187,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
             if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.backup(): " + name + " done");
         } catch (RocksDBException e) {
             logger.error("Failed to backup database '{}'", name, e);
+            hintOnTooManyOpenFiles(e);
             throw new RuntimeException(e);
         } finally {
             resetDbLock.readLock().unlock();
@@ -234,6 +235,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 return result;
             } catch (Exception e) {
                 logger.error("Error iterating db '{}'", name, e);
+                hintOnTooManyOpenFiles(e);
                 throw new RuntimeException(e);
             }
         } finally {
@@ -274,6 +276,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.updateBatch(): " + name + ", " + rows.size());
             } catch (RocksDBException e) {
                 logger.error("Error in batch update on db '{}'", name, e);
+                hintOnTooManyOpenFiles(e);
                 throw new RuntimeException(e);
             }
         } finally {
@@ -294,6 +297,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
             if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (val == null ? "null" : val.length));
         } catch (RocksDBException e) {
             logger.error("Failed to put into db '{}'", name, e);
+            hintOnTooManyOpenFiles(e);
             throw new RuntimeException(e);
         } finally {
             resetDbLock.readLock().unlock();
@@ -310,6 +314,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
             return ret;
         } catch (RocksDBException e) {
             logger.error("Failed to get from db '{}'", name, e);
+            hintOnTooManyOpenFiles(e);
             throw new RuntimeException(e);
         } finally {
             resetDbLock.readLock().unlock();
@@ -357,6 +362,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
 
             } catch (Exception e) {
                 logger.error("Failed to seek by prefix in db '{}'", name, e);
+                hintOnTooManyOpenFiles(e);
                 throw new RuntimeException(e);
             }
 
@@ -372,5 +378,15 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     @Override
     public boolean flush() {
         return false;
+    }
+
+    private void hintOnTooManyOpenFiles(Exception e) {
+        if (e.getMessage() != null && e.getMessage().toLowerCase().contains("too many open files")) {
+            logger.info("");
+            logger.info("       Options for mitigating 'Too many open files':");
+            logger.info("       1) decrease value of database.maxOpenFiles parameter in ethereumj.conf");
+            logger.info("       2) set higher limit by using 'ulimit -n' command in command line");
+            logger.info("");
+        }
     }
 }
