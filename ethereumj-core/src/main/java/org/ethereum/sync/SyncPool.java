@@ -329,6 +329,13 @@ public class SyncPool {
                         c.disconnect(ReasonCode.TOO_MANY_PEERS);
                         dropped.getAndIncrement();
                     });
+            managerActive.stream()
+                    .filter(channel -> !active.contains(channel))
+                    .filter(Channel::isIdle)
+                    .forEach(c -> {
+                        c.disconnect(ReasonCode.TOO_MANY_PEERS);
+                        dropped.getAndIncrement();
+                    });
             logger.debug("Dropped {} peers useless for sync", dropped.get());
         }
 
