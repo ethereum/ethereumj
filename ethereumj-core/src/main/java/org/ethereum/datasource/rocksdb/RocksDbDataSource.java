@@ -383,9 +383,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     private void hintOnTooManyOpenFiles(Exception e) {
         if (e.getMessage() != null && e.getMessage().toLowerCase().contains("too many open files")) {
             logger.info("");
-            logger.info("       Options for mitigating 'Too many open files':");
-            logger.info("       1) decrease value of database.maxOpenFiles parameter in ethereumj.conf");
-            logger.info("       2) set higher limit by using 'ulimit -n' command in command line");
+            logger.info("       Mitigating 'Too many open files':");
+            logger.info("       either decrease value of database.maxOpenFiles parameter in ethereumj.conf");
+            logger.info("       or set higher limit by using 'ulimit -n' command in command line");
             logger.info("");
         }
     }
