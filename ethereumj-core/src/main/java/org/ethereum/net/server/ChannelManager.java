@@ -192,7 +192,7 @@ public class ChannelManager {
         newPeers.removeAll(processed);
     }
 
-    private void disconnect(Channel peer, ReasonCode reason) {
+    public void disconnect(Channel peer, ReasonCode reason) {
         logger.debug("Disconnecting peer with reason " + reason + ": " + peer);
         peer.disconnect(reason);
         recentlyDisconnected.put(peer.getInetSocketAddress().getAddress(), new Date());
