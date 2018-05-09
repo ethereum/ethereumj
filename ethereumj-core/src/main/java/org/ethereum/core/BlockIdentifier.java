@@ -17,15 +17,15 @@
  */
 package org.ethereum.core;
 
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
+import static org.ethereum.util.ByteUtil.toHexString;
+
 
 /**
  * Block identifier holds block hash and number <br>
@@ -75,7 +75,7 @@ public class BlockIdentifier {
     @Override
     public String toString() {
         return "BlockIdentifier {" +
-                "hash=" + Hex.toHexString(hash) +
+                "hash=" + toHexString(hash) +
                 ", number=" + number +
                 '}';
     }

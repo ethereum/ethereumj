@@ -19,9 +19,10 @@ package org.ethereum.net.rlpx;
 
 import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Authentication response message, to be wrapped inside
@@ -73,7 +74,7 @@ public class AuthResponseMessage {
     public String toString() {
         return "AuthResponseMessage{" +
                 "\n  ephemeralPublicKey=" + ephemeralPublicKey +
-                "\n  nonce=" + Hex.toHexString(nonce) +
+                "\n  nonce=" + toHexString(nonce) +
                 "\n  isTokenUsed=" + isTokenUsed +
                 '}';
     }

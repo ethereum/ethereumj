@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
@@ -221,7 +222,7 @@ public class WorldManager {
             logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",
                     blockchain.getBestBlock().getNumber(),
                     blockchain.getTotalDifficulty().toString(),
-                    Hex.toHexString(blockchain.getBestBlock().getStateRoot()));
+                    toHexString(blockchain.getBestBlock().getStateRoot()));
         }
 
         if (config.rootHashStart() != null) {

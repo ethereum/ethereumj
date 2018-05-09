@@ -43,7 +43,6 @@ import org.ethereum.trie.TrieKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -59,6 +58,7 @@ import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
 import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
 import static org.ethereum.trie.TrieKey.fromPacked;
 import static org.ethereum.util.CompactEncoder.hasTerminator;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.
@@ -331,7 +331,7 @@ public class FastSyncManager {
         public String toString() {
             return "TrieNodeRequest{" +
                     "type=" + type +
-                    ", nodeHash=" + Hex.toHexString(nodeHash) +
+                    ", nodeHash=" + toHexString(nodeHash) +
                     ", nodePath=" + nodePath +
                     '}';
         }
@@ -413,7 +413,7 @@ public class FastSyncManager {
                                     TrieNodeRequest request = pendingNodes.get(pair.getKey());
                                     if (request == null) {
                                         long t = System.currentTimeMillis();
-                                        logger.debug("Received node which was not requested: " + Hex.toHexString(pair.getKey()) + " from " + idle);
+                                        logger.debug("Received node which was not requested: " + toHexString(pair.getKey()) + " from " + idle);
                                         return;
                                     }
                                     Set<Long> intersection = request.requestIdsSnapshot();
@@ -591,7 +591,7 @@ public class FastSyncManager {
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
-                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
+                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + toHexString(headersDownloader.getGenesisHash()));
             logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
             System.exit(-666);
         }
@@ -737,7 +737,7 @@ public class FastSyncManager {
         long s = start;
 
         if (pivotBlockHash != null) {
-            logger.info("FastSync: fetching trusted pivot block with hash " + Hex.toHexString(pivotBlockHash));
+            logger.info("FastSync: fetching trusted pivot block with hash " + toHexString(pivotBlockHash));
         } else {
             logger.info("FastSync: looking for best block number...");
             BlockIdentifier bestKnownBlock;
@@ -827,7 +827,7 @@ public class FastSyncManager {
                         return ret;
                     }
                     logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
-                            Hex.toHexString(ret.getHash()) + " Dropping the peer.");
+                            toHexString(ret.getHash()) + " Dropping the peer.");
                     bestIdle.disconnect(ReasonCode.USELESS_PEER);
                 } else {
                     logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");

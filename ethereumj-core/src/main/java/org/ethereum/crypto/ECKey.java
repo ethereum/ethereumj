@@ -91,6 +91,7 @@ import javax.crypto.KeyAgreement;
 
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * <p>Represents an elliptic curve public and (optionally) private key, usable for digital signatures but not encryption.
@@ -553,7 +554,7 @@ public class ECKey implements Serializable {
 
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append("pub:").append(Hex.toHexString(pub.getEncoded(false)));
+        b.append("pub:").append(toHexString(pub.getEncoded(false)));
         return b.toString();
     }
 
@@ -568,7 +569,7 @@ public class ECKey implements Serializable {
         StringBuilder b = new StringBuilder();
         b.append(toString());
         if (privKey != null && privKey instanceof BCECPrivateKey) {
-            b.append(" priv:").append(Hex.toHexString(((BCECPrivateKey) privKey).getD().toByteArray()));
+            b.append(" priv:").append(toHexString(((BCECPrivateKey) privKey).getD().toByteArray()));
         }
         return b.toString();
     }

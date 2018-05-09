@@ -36,7 +36,6 @@ import org.ethereum.net.eth.message.ReceiptsMessage;
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
@@ -47,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.ethereum.net.eth.EthVersion.V63;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Fast synchronization (PV63) Handler
@@ -114,7 +114,7 @@ public class Eth63 extends Eth62 {
                 Value value = new Value(rawNode);
                 nodeValues.add(value);
                 if (nodeValues.size() >= MAX_HASHES_TO_SEND) break;
-                logger.trace("Eth63: " + Hex.toHexString(nodeKey).substring(0, 8) + " -> " + value);
+                logger.trace("Eth63: " + toHexString(nodeKey).substring(0, 8) + " -> " + value);
             }
         }
 
@@ -194,7 +194,7 @@ public class Eth63 extends Eth62 {
         for (Value nodeVal : msg.getDataList()) {
             byte[] hash = nodeVal.hash();
             if (!requestedNodes.contains(hash)) {
-                String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer " + channel;
+                String err = "Received NodeDataMessage contains non-requested node with hash :" + toHexString(hash) + " . Dropping peer " + channel;
                 dropUselessPeer(err);
                 return;
             }

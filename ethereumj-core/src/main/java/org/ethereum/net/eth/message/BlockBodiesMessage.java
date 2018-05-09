@@ -20,10 +20,10 @@ package org.ethereum.net.eth.message;
 import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Wrapper around an Ethereum BlockBodies message on the network
@@ -99,7 +99,7 @@ public class BlockBodiesMessage extends EthMessage {
         if (logger.isTraceEnabled()) {
             payload.append(" ");
             for (byte[] body : blockBodies) {
-                payload.append(Hex.toHexString(body)).append(" | ");
+                payload.append(toHexString(body)).append(" | ");
             }
             if (!blockBodies.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());

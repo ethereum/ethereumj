@@ -32,6 +32,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.ethereum.util.ByteUtil.bytesToIp;
 import static org.ethereum.util.ByteUtil.hostToBytes;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class Node implements Serializable {
     private static final long serialVersionUID = -4267600517925770636L;
@@ -183,7 +184,7 @@ public class Node implements Serializable {
         return "Node{" +
                 " host='" + host + '\'' +
                 ", port=" + port +
-                ", id=" + Hex.toHexString(id) +
+                ", id=" + toHexString(id) +
                 '}';
     }
 

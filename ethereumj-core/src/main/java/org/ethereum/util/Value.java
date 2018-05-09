@@ -27,6 +27,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 /**
  * Class to encapsulate an object and provide utilities for conversion
  */
@@ -337,7 +339,7 @@ public class Value {
 
             StringBuilder output = new StringBuilder();
             if (isHashCode()) {
-                output.append(Hex.toHexString(asBytes()));
+                output.append(toHexString(asBytes()));
             } else if (isReadableString()) {
                 output.append("'");
                 for (byte oneByte : asBytes()) {
@@ -350,7 +352,7 @@ public class Value {
                 output.append("'");
                 return output.toString();
             }
-            return Hex.toHexString(this.asBytes());
+            return toHexString(this.asBytes());
         } else if (isString()) {
             return asString();
         }

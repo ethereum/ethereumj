@@ -25,6 +25,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 /**
  * Wrapper around an Ethereum GetBlockBodies message on the network
  *
@@ -99,7 +101,7 @@ public class GetBlockBodiesMessage extends EthMessage {
 
         if (logger.isDebugEnabled()) {
             for (byte[] hash : blockHashes) {
-                payload.append(Hex.toHexString(hash).substring(0, 6)).append(" | ");
+                payload.append(toHexString(hash).substring(0, 6)).append(" | ");
             }
             if (!blockHashes.isEmpty()) {
                 payload.delete(payload.length() - 3, payload.length());

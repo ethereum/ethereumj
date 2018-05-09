@@ -53,6 +53,7 @@ import java.net.URL;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files
@@ -810,7 +811,7 @@ public class SystemProperties {
     public byte[] getFastSyncPivotBlockHash() {
         if (!config.hasPath("sync.fast.pivotBlockHash")) return null;
         byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
-        if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
+        if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + toHexString(ret));
         return ret;
     }
 
