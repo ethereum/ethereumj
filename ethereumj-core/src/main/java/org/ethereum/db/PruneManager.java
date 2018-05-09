@@ -89,6 +89,13 @@ public class PruneManager {
         List<Block> pruneBlocks = blockStore.getBlocksByNumber(forkBlockNum);
         Block chainBlock = blockStore.getChainBlockByNumber(forkBlockNum);
 
+        // reset segment and return
+        // if chainBlock is accidentally null
+        if (chainBlock == null) {
+            segment = null;
+            return;
+        }
+
         if (segment == null) {
             if (pruneBlocks.size() == 1)    // wait for a single chain
                 segment = new Segment(chainBlock);
