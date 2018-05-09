@@ -19,6 +19,7 @@ package org.ethereum.samples;
 
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
@@ -75,7 +76,7 @@ public class SendTransaction extends BasicSample {
 
     private TransactionReceipt sendTxAndWait(byte[] receiveAddress, byte[] data) throws InterruptedException {
 
-        byte[] senderPrivateKey = Hex.decode("");
+        byte[] senderPrivateKey = HashUtil.sha3("cow".getBytes());
         byte[] fromAddress = ECKey.fromPrivate(senderPrivateKey).getAddress();
         BigInteger nonce = ethereum.getRepository().getNonce(fromAddress);
         Transaction tx = new Transaction(

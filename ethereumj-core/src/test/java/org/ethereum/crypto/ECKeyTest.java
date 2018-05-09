@@ -107,6 +107,12 @@ public class ECKeyTest {
         fail("Expecting an IllegalArgumentException for using an non EC private key");
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidPrivateKey2() throws Exception {
+        ECKey.fromPrivate(new byte[32]);
+        fail("Expecting an IllegalArgumentException for using an non EC private key");
+    }
+
     @Test
     public void testIsPubKeyOnly() {
         ECKey key = ECKey.fromPublicOnly(pubKey);

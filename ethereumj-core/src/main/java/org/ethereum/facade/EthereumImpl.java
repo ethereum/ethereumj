@@ -224,7 +224,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public TransactionReceipt callConstant(Transaction tx, Block block) {
         if (tx.getSignature() == null) {
-            tx.sign(ECKey.fromPrivate(new byte[32]));
+            tx.sign(ECKey.fromPrivate(BigInteger.ONE));
         }
         return callConstantImpl(tx, block).getReceipt();
     }
@@ -300,7 +300,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public ProgramResult callConstantFunction(String receiveAddress,
                                               CallTransaction.Function function, Object... funcArgs) {
-        return callConstantFunction(receiveAddress, ECKey.fromPrivate(new byte[32]), function, funcArgs);
+        return callConstantFunction(receiveAddress, ECKey.fromPrivate(BigInteger.ONE), function, funcArgs);
     }
 
     @Override
