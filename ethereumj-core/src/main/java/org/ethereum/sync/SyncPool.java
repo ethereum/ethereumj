@@ -320,7 +320,7 @@ public class SyncPool {
                 && !managerActive.isEmpty() && getAllIdle().size() < 3;
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         int oneFifth = Math.max(config.maxActivePeers() / 5, 1);
-        // If we are in sync and there no slots for active peers, drop other peers
+        // If we are in long sync and there are no slots for active peers, drop other peers
         if (syncMode && lackSize < oneFifth) {
             AtomicInteger dropped = new AtomicInteger(0);
             managerActive.stream()
