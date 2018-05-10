@@ -323,19 +323,14 @@ public class SyncPool {
         // If we are in sync and there no slots for active peers, drop other peers
         if (syncMode && lackSize < oneFifth) {
             AtomicInteger dropped = new AtomicInteger(0);
-            AtomicInteger postponed = new AtomicInteger(0);
             managerActive.stream()
                     .filter(channel -> !filtered.contains(channel))
+                    .filter(Channel::isIdle)
                     .forEach(c -> {
-                        if (c.isIdle()) {
-                            channelManager.disconnect(c, ReasonCode.TOO_MANY_PEERS);
-                            dropped.getAndIncrement();
-                        } else {
-                            postponed.getAndIncrement();
-                        }
+                        channelManager.disconnect(c, ReasonCode.TOO_MANY_PEERS);
+                        dropped.getAndIncrement();
                     });
-            logger.debug("Dropped {} peers useless for sync, couldn't drop: {} channels",
-                    dropped.get(), postponed.get());
+            logger.debug("Dropped {} peers useless for sync", dropped.get());
         }
 
         for (Channel channel : filtered) {
