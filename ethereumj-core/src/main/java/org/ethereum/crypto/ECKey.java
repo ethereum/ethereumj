@@ -237,9 +237,13 @@ public class ECKey implements Serializable {
 
         if (pub == null) {
             throw new IllegalArgumentException("Public key may not be null");
-        } else {
-            this.pub = pub;
         }
+
+        if (pub.isInfinity()) {
+            throw new IllegalArgumentException("Public key must not be a point at infinity, probably your private key is incorrect");
+        }
+
+        this.pub = pub;
     }
 
     /* Convert a BigInteger into a PrivateKey object
