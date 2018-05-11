@@ -703,7 +703,7 @@ public class RLP {
     private static void verifyLength(int suppliedLength, int availableLength) {
         if (suppliedLength > availableLength) {
             throw new RuntimeException(String.format("Length parsed from RLP (%s bytes) is greater " +
-                            "than remaining size of data (%s bytes)", suppliedLength, availableLength));
+                            "than possible size of data (%s bytes)", suppliedLength, availableLength));
         }
     }
 
