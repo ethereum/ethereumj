@@ -820,6 +820,8 @@ public class RLP {
             } else if (prefix < OFFSET_SHORT_LIST) {  // [0xb8, 0xbf]
                 int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
                 int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+                // check that length is in payload bounds
+                verifyLength(lenbytes, data.length - pos - 1 - lenlen);
                 ret.add(pos + 1 + lenlen, lenbytes, false);
                 pos += 1 + lenlen + lenbytes;
             } else if (prefix <= OFFSET_LONG_LIST) {  // [0xc0, 0xf7]
@@ -829,6 +831,8 @@ public class RLP {
             } else if (prefix <= 0xFF) {  // [0xf8, 0xff]
                 int lenlen = prefix - OFFSET_LONG_LIST; // length of length the encoded list
                 int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+                // check that length is in payload bounds
+                verifyLength(lenlist, data.length - pos - 1 - lenlen);
                 ret.add(pos + 1 + lenlen, lenlist, true);
                 pos += 1 + lenlen + lenlist; // start at position of first element in list
             } else {
