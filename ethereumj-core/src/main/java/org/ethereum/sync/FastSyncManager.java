@@ -685,7 +685,7 @@ public class FastSyncManager {
                 DbSource<byte[]> headerSource = (DbSource<byte[]>) applicationContext.getBean("headerSource");
                 headerSource.close();
                 FileUtil.recursiveDelete(headersDbPath.toString());
-                logger.info("Headers DB removed. Migration is over");
+                logger.info("Headers DB removed.");
                 return true;
             }
         }
