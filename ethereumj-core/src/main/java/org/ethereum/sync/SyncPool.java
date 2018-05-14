@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
@@ -315,22 +316,28 @@ public class SyncPool {
 
         List<Channel> filtered = active.subList(0, thresholdIdx + 1);
 
-        // Act more aggressive in getting new good peers until sync is done
-        boolean syncMode = !channelManager.getSyncManager().isSyncDone()
-                && !managerActive.isEmpty() && getAllIdle().size() < 3;
         int lackSize = config.maxActivePeers() - channelManager.getActivePeers().size();
         int oneFifth = Math.max(config.maxActivePeers() / 5, 1);
-        // If we are in long sync and there are no slots for active peers, drop other peers
-        if (syncMode && lackSize < oneFifth) {
-            AtomicInteger dropped = new AtomicInteger(0);
-            managerActive.stream()
-                    .filter(channel -> !filtered.contains(channel))
-                    .filter(Channel::isIdle)
-                    .forEach(c -> {
-                        channelManager.disconnect(c, ReasonCode.TOO_MANY_PEERS);
-                        dropped.getAndIncrement();
-                    });
-            logger.debug("Dropped {} peers useless for sync", dropped.get());
+        // Keep some slots for active peers, drop other peers
+        if (lackSize < oneFifth) {
+            int dropCap = config.maxActivePeers();
+            // Act less aggressive when sync is done
+            if (channelManager.getSyncManager().isSyncDone()) {
+                dropCap = (config.maxActivePeers() / 2) - filtered.size();
+            }
+
+            if (dropCap > 0) {
+                AtomicInteger dropped = new AtomicInteger(0);
+                for (Channel channel : managerActive) {
+                    if (!filtered.contains(channel)) {
+                        if (channel.isIdle()) {
+                            channelManager.disconnect(channel, ReasonCode.TOO_MANY_PEERS);
+                            if (dropped.incrementAndGet() >= dropCap) break;
+                        }
+                    }
+                }
+                logger.debug("Dropped {} peers useless for sync", dropped.get());
+            }
         }
 
         for (Channel channel : filtered) {
