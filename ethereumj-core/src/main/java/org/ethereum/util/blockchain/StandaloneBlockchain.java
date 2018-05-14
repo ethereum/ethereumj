@@ -587,7 +587,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
             if (func == null) throw new RuntimeException("No function with name '" + functionName + "'");
             Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
                     Hex.toHexString(getAddress()), 0, func, convertArgs(args));
-            tx.sign(new ECKey());
+            tx.sign(ECKey.DUMMY);
 
             Repository repository = getBlockchain().getRepository().getSnapshotTo(callBlock.getStateRoot()).startTracking();
 

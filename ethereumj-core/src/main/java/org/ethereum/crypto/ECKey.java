@@ -125,6 +125,8 @@ public class ECKey implements Serializable {
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
+    public static final ECKey DUMMY;
+
     private static final SecureRandom secureRandom;
     private static final long serialVersionUID = -728224901792295832L;
 
@@ -135,6 +137,7 @@ public class ECKey implements Serializable {
         CURVE_SPEC = new ECParameterSpec(params.getCurve(), params.getG(), params.getN(), params.getH());
         HALF_CURVE_ORDER = params.getN().shiftRight(1);
         secureRandom = new SecureRandom();
+        DUMMY = fromPrivate(BigInteger.ONE);
     }
 
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
