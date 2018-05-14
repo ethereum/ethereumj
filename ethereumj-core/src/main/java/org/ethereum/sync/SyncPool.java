@@ -318,7 +318,9 @@ public class SyncPool {
 
         // Dropping other peers to free up slots for active
         // Act more aggressive until sync is done
-        int cap = channelManager.getSyncManager().isSyncDone() ? config.maxActivePeers() / 2 : config.maxActivePeers() / 6;
+        int cap = channelManager.getSyncManager().isSyncDone() ?
+                // 10 peers are enough for variance in data on short sync
+                Math.max(config.maxActivePeers() / 2, config.maxActivePeers() - 10) : config.maxActivePeers() / 6;
         int otherCount = managerActive.size() - filtered.size();
         int killCount = max(0, otherCount - cap);
         if (killCount > 0) {
