@@ -96,7 +96,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         Frame completeFrame = null;
         if (frame.isChunked()) {
             if (!supportChunkedFrames && frame.totalFrameSize > 0) {
-                throw new RuntimeException("Faming is not supported in this configuration.");
+                throw new RuntimeException("Framing is not supported in this configuration.");
             }
 
             Pair<? extends List<Frame>, AtomicInteger> frameParts = incompleteFrames.get(frame.contextId);
@@ -157,14 +157,14 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         Message msg;
         try {
             msg = createMessage((byte) frameType, payload);
+
+            if (loggerNet.isDebugEnabled())
+                loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
         } catch (Exception ex) {
             loggerNet.debug("Incorrectly encoded message from: \t{}, dropping peer", channel);
             channel.disconnect(ReasonCode.BAD_PROTOCOL);
             return null;
         }
-
-        if (loggerNet.isDebugEnabled())
-            loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
 
         ethereumListener.onRecvMessage(channel, msg);
 

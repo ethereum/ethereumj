@@ -54,9 +54,11 @@ public class ChannelManager {
     // If the inbound peer connection was dropped by us with a reason message
     // then we ban that peer IP on any connections for some time to protect from
     // too active peers
-    private static final int inboundConnectionBanTimeout = 10 * 1000;
+    public static final int INBOUND_CONNECTION_BAN_TIMEOUT = 120 * 1000;
 
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
+    // Limiting number of new peers to avoid delays in processing
+    private static final int MAX_NEW_PEERS = 128;
     private final Map<ByteArrayWrapper, Channel> activePeers = new ConcurrentHashMap<>();
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
@@ -201,7 +203,7 @@ public class ChannelManager {
     public boolean isRecentlyDisconnected(InetAddress peerAddr) {
         Date disconnectTime = recentlyDisconnected.get(peerAddr);
         if (disconnectTime != null &&
-                System.currentTimeMillis() - disconnectTime.getTime() < inboundConnectionBanTimeout) {
+                System.currentTimeMillis() - disconnectTime.getTime() < INBOUND_CONNECTION_BAN_TIMEOUT) {
             return true;
         } else {
             recentlyDisconnected.remove(peerAddr);
@@ -341,6 +343,15 @@ public class ChannelManager {
 
     public Collection<Channel> getActivePeers() {
         return new ArrayList<>(activePeers.values());
+    }
+
+    /**
+     * Checks whether newPeers is not full
+     * newPeers are used to fill up active peers
+     * @return True if there are free slots for new peers
+     */
+    public boolean acceptingNewPeers() {
+        return newPeers.size() < Math.max(config.maxActivePeers(), MAX_NEW_PEERS);
     }
 
     public Channel getActivePeer(byte[] nodeId) {

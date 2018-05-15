@@ -412,11 +412,14 @@ public class FastSyncManager {
                         try {
                             synchronized (FastSyncManager.this) {
                                 logger.trace("Received " + result.size() + " nodes (of " + hashes.size() + ") from peer: " + idle);
+                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                                 for (Pair<byte[], byte[]> pair : result) {
                                     TrieNodeRequest request = pendingNodes.get(pair.getKey());
                                     if (request == null) {
                                         long t = System.currentTimeMillis();
                                         logger.debug("Received node which was not requested: " + Hex.toHexString(pair.getKey()) + " from " + idle);
+                                        idle.disconnect(ReasonCode.USELESS_PEER);
                                         return;
                                     }
                                     Set<Long> intersection = request.requestIdsSnapshot();
@@ -431,10 +434,7 @@ public class FastSyncManager {
                                 }
 
                                 FastSyncManager.this.notifyAll();
-
-                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
                                 idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                             }
                         } catch (Exception e) {
                             logger.error("Unexpected error processing nodes", e);
@@ -444,6 +444,8 @@ public class FastSyncManager {
                     @Override
                     public void onFailure(Throwable t) {
                         logger.warn("Error with Trie Node request: " + t);
+                        idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+                        idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                         synchronized (FastSyncManager.this) {
                             for (byte[] hash : hashes) {
                                 final TrieNodeRequest request = pendingNodes.get(hash);

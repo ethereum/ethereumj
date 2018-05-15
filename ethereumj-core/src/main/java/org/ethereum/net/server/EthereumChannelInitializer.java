@@ -19,6 +19,8 @@ package org.ethereum.net.server;
 
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,9 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     @Autowired
     ChannelManager channelManager;
 
+    @Autowired
+    NodeManager nodeManager;
+
     private String remoteId;
 
     private boolean peerDiscoveryMode = false;
@@ -57,11 +62,30 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
                 logger.debug("Open {} connection, channel: {}", isInbound() ? "inbound" : "outbound", ch.toString());
             }
 
-            if (isInbound() && channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
-                // avoid too frequent connection attempts
-                logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
-                ch.disconnect();
-                return;
+            // For incoming connection drop if..
+            if (isInbound()) {
+                boolean needToDrop = false;
+                // Avoid too frequent connection attempts
+                if (channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
+                    logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
+                    needToDrop = true;
+                }
+                // Drop bad peers before creating channel
+                if (nodeManager.getNodeStatistics(new Node(new byte[0], ch.remoteAddress().getHostString(),
+                                ch.remoteAddress().getPort())).isReputationPenalized()) {
+                    logger.debug("Drop connection - bad peer, channel: {}", ch.toString());
+                    needToDrop = true;
+                }
+                // Drop if we have long waiting queue already
+                if (!channelManager.acceptingNewPeers()) {
+                    logger.debug("Drop connection - many new peers are not processed, channel: {}", ch.toString());
+                    needToDrop = true;
+                }
+
+                if (needToDrop) {
+                    ch.disconnect();
+                    return;
+                }
             }
 
             final Channel channel = ctx.getBean(Channel.class);

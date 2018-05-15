@@ -314,6 +314,7 @@ public class Channel {
     }
 
     public void disconnect(ReasonCode reason) {
+        getNodeStatistics().nodeDisconnectedLocal(reason);
         msgQueue.disconnect(reason);
     }
 
