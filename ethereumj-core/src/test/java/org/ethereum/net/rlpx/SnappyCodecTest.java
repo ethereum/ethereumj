@@ -23,6 +23,8 @@ package org.ethereum.net.rlpx;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -32,6 +34,9 @@ import java.util.List;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.ethereum.net.message.ReasonCode.BAD_PROTOCOL;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,6 +65,10 @@ public class SnappyCodecTest {
         Channel shouldBeDropped = mock(Channel.class);
         when(shouldBeDropped.getNodeStatistics())
                 .thenReturn(new NodeStatistics(new Node(new byte[0], "", 0)));
+        doAnswer(invocation -> {
+            shouldBeDropped.getNodeStatistics().nodeDisconnectedLocal(invocation.getArgument(0));
+            return null;
+        }).when(shouldBeDropped).disconnect(any());
 
         snappyDecode(frameBytes, shouldBeDropped);
 
