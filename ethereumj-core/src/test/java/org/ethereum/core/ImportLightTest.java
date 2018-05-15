@@ -839,7 +839,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
 
-        ECKey key = ECKey.fromPrivate(BigInteger.ONE);
+        ECKey key = ECKey.DUMMY;
         byte[] hash = new byte[32];
         ECKey.ECDSASignature signature = key.sign(hash);
 
