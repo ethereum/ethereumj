@@ -33,8 +33,8 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
@@ -56,7 +56,7 @@ public class BlockLoader {
 
     Scanner scanner = null;
 
-    DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
+    DateTimeFormatter df = DateTimeFormatter.ofPattern("HH:mm:ss.SSSS");
 
     private void blockWork(Block block) {
         if (block.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber() || blockchain.getBlockStore().getBlockByHash(block.getHash()) == null) {
@@ -69,7 +69,7 @@ public class BlockLoader {
             ImportResult result = blockchain.tryToConnect(block);
 
             if (block.getNumber() % 10 == 0) {
-                System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
+                System.out.println(LocalDateTime.now().format(df) + " Imported block " + block.getShortDescr() + ": " + result + " (prework: "
                         + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: " + exec1.getOrderMap().size() + ") in " +
                         (System.currentTimeMillis() - s) + " ms");
             }
