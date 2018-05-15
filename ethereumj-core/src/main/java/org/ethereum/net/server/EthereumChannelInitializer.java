@@ -65,19 +65,24 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             // For incoming connection drop if..
             if (isInbound()) {
                 boolean needToDrop = false;
+                // Bad remote address
+                if (ch.remoteAddress() == null) {
+                    logger.debug("Drop connection - bad remote address, channel: {}", ch.toString());
+                    needToDrop = true;
+                }
                 // Avoid too frequent connection attempts
-                if (channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
+                if (!needToDrop && channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
                     logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
                     needToDrop = true;
                 }
                 // Drop bad peers before creating channel
-                if (nodeManager.getNodeStatistics(new Node(new byte[0], ch.remoteAddress().getHostString(),
+                if (!needToDrop && nodeManager.getNodeStatistics(new Node(new byte[0], ch.remoteAddress().getHostString(),
                                 ch.remoteAddress().getPort())).isReputationPenalized()) {
                     logger.debug("Drop connection - bad peer, channel: {}", ch.toString());
                     needToDrop = true;
                 }
                 // Drop if we have long waiting queue already
-                if (!channelManager.acceptingNewPeers()) {
+                if (!needToDrop && !channelManager.acceptingNewPeers()) {
                     logger.debug("Drop connection - many new peers are not processed, channel: {}", ch.toString());
                     needToDrop = true;
                 }
