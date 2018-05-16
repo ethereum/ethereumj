@@ -30,6 +30,7 @@ import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class TransactionBomb extends EthereumListenerAdapter {
 
@@ -93,7 +94,7 @@ public class TransactionBomb extends EthereumListenerAdapter {
         tx.sign(privKey);
 
         ethereum.getChannelManager().sendTransaction(Collections.singletonList(tx), null);
-        System.err.println("Sending tx: " + Hex.toHexString(tx.getHash()));
+        System.err.println("Sending tx: " + toHexString(tx.getHash()));
     }
 
     private void sleep(int millis){

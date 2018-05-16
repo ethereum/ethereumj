@@ -26,7 +26,6 @@ import org.ethereum.net.server.Channel;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -34,6 +33,7 @@ import java.util.concurrent.*;
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.
@@ -366,7 +366,7 @@ public abstract class BlockDownloader {
             if (!isValid(header)) {
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("{}: Invalid header RLP: {}", Hex.toHexString(header.getEncoded()), name);
+                    logger.debug("{}: Invalid header RLP: {}", toHexString(header.getEncoded()), name);
                 }
 
                 return false;

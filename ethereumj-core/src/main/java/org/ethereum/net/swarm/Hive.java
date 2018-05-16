@@ -90,7 +90,7 @@ public class Hive {
         ArrayList<BzzProtocol> ret = new ArrayList<>();
         for (Node node : closestNodes) {
             // TODO connect to Node
-//            ret.add(thisPeer.getPeer(new PeerAddress(node)));
+            // ret.add(thisPeer.getPeer(new PeerAddress(node)));
             BzzProtocol peer = connectedPeers.get(node);
             if (peer != null) {
                 ret.add(peer);

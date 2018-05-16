@@ -22,10 +22,10 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.math.ec.ECPoint;
-import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.util.ByteUtil.merge;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Auth Initiate message defined by EIP-8
@@ -101,9 +101,9 @@ public class AuthInitiateMessageV4 {
                 asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
         return "AuthInitiateMessage{" +
-                "\n  sigBytes=" + Hex.toHexString(sigBytes) +
-                "\n  publicKey=" + Hex.toHexString(publicKey.getEncoded(false)) +
-                "\n  nonce=" + Hex.toHexString(nonce) +
+                "\n  sigBytes=" + toHexString(sigBytes) +
+                "\n  publicKey=" + toHexString(publicKey.getEncoded(false)) +
+                "\n  nonce=" + toHexString(nonce) +
                 "\n  version=" + version +
                 "\n}";
     }

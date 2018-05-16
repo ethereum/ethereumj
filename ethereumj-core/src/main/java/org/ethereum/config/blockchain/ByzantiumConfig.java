@@ -23,7 +23,6 @@ import org.ethereum.config.ConstantsAdapter;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Repository;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 

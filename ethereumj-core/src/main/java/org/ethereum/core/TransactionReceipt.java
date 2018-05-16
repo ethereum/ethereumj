@@ -25,7 +25,6 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.LogInfo;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +34,7 @@ import java.util.List;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * The transaction receipt is a tuple of three items
@@ -278,11 +278,11 @@ public class TransactionReceipt {
 
         return "TransactionReceipt[" +
                 "\n  , " + (hasTxStatus() ? ("txStatus=" + (isTxStatusOK() ? "OK" : "FAILED"))
-                                        : ("postTxState=" + Hex.toHexString(postTxState))) +
-                "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
-                "\n  , gasUsed=" + Hex.toHexString(gasUsed) +
+                                        : ("postTxState=" + toHexString(postTxState))) +
+                "\n  , cumulativeGas=" + toHexString(cumulativeGas) +
+                "\n  , gasUsed=" + toHexString(gasUsed) +
                 "\n  , error=" + error +
-                "\n  , executionResult=" + Hex.toHexString(executionResult) +
+                "\n  , executionResult=" + toHexString(executionResult) +
                 "\n  , bloom=" + bloomFilter.toString() +
                 "\n  , logs=" + logInfoList +
                 ']';

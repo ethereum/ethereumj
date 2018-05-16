@@ -28,12 +28,13 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.
@@ -74,7 +75,7 @@ public class HeadersDownloader extends BlockDownloader {
     }
 
     public void init(byte[] startFromBlockHash) {
-        logger.info("HeaderDownloader init: startHash = " + Hex.toHexString(startFromBlockHash));
+        logger.info("HeaderDownloader init: startHash = " + toHexString(startFromBlockHash));
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(startFromBlockHash, true);
         super.init(syncQueue, syncPool, "HeadersDownloader");
         syncPool.init(channelManager, blockchain);

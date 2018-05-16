@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +34,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.swarm.Util.rlpDecodeInt;
 import static org.ethereum.util.ByteUtil.merge;
 import static org.ethereum.util.ByteUtil.xor;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.
@@ -440,7 +440,7 @@ public class WhisperMessage extends ShhMessage {
                 "topics=" + Arrays.toString(topics) +
                 ", payload=" + (encrypted ? "<encrypted " + payload.length + " bytes>" : new String(payload)) +
                 ", to=" + (to == null ? "null" : to.substring(0, 16) + "...") +
-                ", from=" + (from == null ? "null" : Hex.toHexString(from.getPubKey()).substring(0,16) + "...") +
+                ", from=" + (from == null ? "null" : toHexString(from.getPubKey()).substring(0,16) + "...") +
                 ", expire=" + expire +
                 ", ttl=" + ttl +
                 ", nonce=" + nonce +

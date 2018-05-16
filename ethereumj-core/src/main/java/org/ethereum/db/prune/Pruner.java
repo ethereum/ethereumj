@@ -8,13 +8,14 @@ import org.ethereum.datasource.Source;
 import org.ethereum.util.ByteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * This class is responsible for state pruning.
@@ -91,7 +92,7 @@ public class Pruner {
         if (ready) return true;
 
         if (!forkWindow.isEmpty() && journal.get(forkWindow.get(0)) == null) {
-            logger.debug("pruner init aborted: can't fetch update " + Hex.toHexString(forkWindow.get(0)));
+            logger.debug("pruner init aborted: can't fetch update " + toHexString(forkWindow.get(0)));
             return false;
         }
 
@@ -99,7 +100,7 @@ public class Pruner {
         for (byte[] hash : forkWindow) {
             JournalSource.Update update = journal.get(hash);
             if (update == null) {
-                logger.debug("pruner init aborted: can't fetch update " + Hex.toHexString(hash));
+                logger.debug("pruner init aborted: can't fetch update " + toHexString(hash));
                 return false;
             }
             update.getInsertedKeys().forEach(filter::insert);
@@ -129,7 +130,7 @@ public class Pruner {
                 update.getInsertedKeys().forEach(filter::insert);
             }
             logger.debug("distant filter initialized with set of " + (i < 0 ? mainChainWindow.size() : mainChainWindow.size() - i) +
-                    " hashes, last hash " + Hex.toHexString(mainChainWindow.get(i < 0 ? 0 : i)));
+                    " hashes, last hash " + toHexString(mainChainWindow.get(i < 0 ? 0 : i)));
         } else {
             logger.debug("distant filter initialized with empty set");
         }
@@ -216,7 +217,7 @@ public class Pruner {
     public void persist(byte[] hash) {
         if (!ready || !withSecondStep()) return;
 
-        logger.trace("persist [{}]", Hex.toHexString(hash));
+        logger.trace("persist [{}]", toHexString(hash));
 
         long t = System.currentTimeMillis();
         JournalSource.Update update = journal.get(hash);
@@ -276,7 +277,7 @@ public class Pruner {
         for (byte[] hash : chain.getHashes()) {
             JournalSource.Update update = journal.get(hash);
             if (update == null) {
-                logger.debug("postponing: can't fetch update " + Hex.toHexString(hash));
+                logger.debug("postponing: can't fetch update " + toHexString(hash));
                 continue;
             }
             // feed distant filter
@@ -298,7 +299,7 @@ public class Pruner {
         for (byte[] hash : chain.getHashes()) {
             JournalSource.Update update = journal.get(hash);
             if (update == null) {
-                logger.debug("pruning aborted: can't fetch update of main chain " + Hex.toHexString(hash));
+                logger.debug("pruning aborted: can't fetch update of main chain " + toHexString(hash));
                 return 0;
             }
             // persist deleted keys
@@ -339,7 +340,7 @@ public class Pruner {
             for (byte[] hash : chain.getHashes()) {
                 JournalSource.Update update = journal.get(hash);
                 if (update == null) {
-                    logger.debug("reverting chain " + chain + " aborted: can't fetch update " + Hex.toHexString(hash));
+                    logger.debug("reverting chain " + chain + " aborted: can't fetch update " + toHexString(hash));
                     return;
                 }
                 // clean up filter

@@ -26,13 +26,13 @@ import org.ethereum.net.swarm.Util;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Class similar for {@link Node} used in the swarm
@@ -133,7 +133,7 @@ public class PeerAddress {
         return "PeerAddress{" +
                 "ip=" + Util.ipBytesToString(ip) +
                 ", port=" + port +
-                ", id=" + Hex.toHexString(id) +
+                ", id=" + toHexString(id) +
                 '}';
     }
 }
