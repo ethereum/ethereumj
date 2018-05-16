@@ -97,7 +97,7 @@ public class PongMessage extends Message {
         long currTime = System.currentTimeMillis() / 1000;
 
         String out = String.format("[PongMessage] \n token: %s \n expires in %d seconds \n %s\n",
-        ByteUtil.toHexString(token), (expires - currTime), super.toString());
+                ByteUtil.toHexString(token), (expires - currTime), super.toString());
 
         return out;
     }

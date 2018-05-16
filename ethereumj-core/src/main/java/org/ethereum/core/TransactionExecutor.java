@@ -44,7 +44,6 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
 import static org.ethereum.vm.VMUtils.zipAndEncode;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Roman Mandeleil
