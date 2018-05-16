@@ -161,7 +161,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             if (loggerNet.isDebugEnabled())
                 loggerNet.debug("From: {}    Recv:  {}", channel, msg.toString());
         } catch (Exception ex) {
-            loggerNet.debug("Incorrectly encoded message from: \t{}, dropping peer", channel);
+            loggerNet.debug(String.format("Incorrectly encoded message from: \t%s, dropping peer", channel), ex);
             channel.disconnect(ReasonCode.BAD_PROTOCOL);
             return null;
         }
