@@ -96,12 +96,12 @@ public class Serializers {
     public final static Serializer<Value, byte[]> TrieNodeSerializer = new Serializer<Value, byte[]>() {
         @Override
         public byte[] serialize(Value object) {
-            return object.encode();
+            return object.asBytes();
         }
 
         @Override
         public Value deserialize(byte[] stream) {
-            return Value.fromRlpEncoded(stream);
+            return new Value(stream);
         }
     };
 

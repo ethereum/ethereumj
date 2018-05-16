@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
 
 /**
@@ -196,13 +197,13 @@ public class Eth63 extends Eth62 {
         }
 
         for (Value nodeVal : msg.getDataList()) {
-            byte[] hash = nodeVal.hash();
+            byte[] hash = sha3(nodeVal.asBytes());
             if (!requestedNodes.contains(hash)) {
                 String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer " + channel;
                 dropUselessPeer(err);
                 return;
             }
-            ret.add(Pair.of(hash, nodeVal.encode()));
+            ret.add(Pair.of(hash, nodeVal.asBytes()));
         }
         requestNodesFuture.set(ret);
 
