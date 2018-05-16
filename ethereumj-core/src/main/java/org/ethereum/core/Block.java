@@ -34,6 +34,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information
@@ -69,7 +70,7 @@ public class Block {
     }
 
     public Block(byte[] rawData) {
-        logger.debug("new from [" + Hex.toHexString(rawData) + "]");
+        logger.debug("new from [" + toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
     }
 
@@ -304,7 +305,7 @@ public class Block {
         parseRLP();
 
         toStringBuff.setLength(0);
-        toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
+        toStringBuff.append(toHexString(this.getEncoded())).append("\n");
         toStringBuff.append("BlockData [ ");
         toStringBuff.append(header.toString());
 

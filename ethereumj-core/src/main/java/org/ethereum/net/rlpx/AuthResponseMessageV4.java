@@ -22,7 +22,8 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.math.ec.ECPoint;
-import org.spongycastle.util.encoders.Hex;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Auth Response message defined by EIP-8
@@ -73,7 +74,7 @@ public class AuthResponseMessageV4 {
     public String toString() {
         return "AuthResponseMessage{" +
                 "\n  ephemeralPublicKey=" + ephemeralPublicKey +
-                "\n  nonce=" + Hex.toHexString(nonce) +
+                "\n  nonce=" + toHexString(nonce) +
                 "\n  version=" + version +
                 '}';
     }

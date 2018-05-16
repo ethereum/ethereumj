@@ -67,6 +67,7 @@ import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
@@ -268,7 +269,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
         }
         if (txInfo == null) {
-            logger.warn("Can't find block from main chain for transaction " + Hex.toHexString(hash));
+            logger.warn("Can't find block from main chain for transaction " + toHexString(hash));
             return null;
         }
 
@@ -410,7 +411,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (logger.isDebugEnabled())
             logger.debug("Try connect block hash: {}, number: {}",
-                    Hex.toHexString(block.getHash()).substring(0, 6),
+                    toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
         if (blockStore.getMaxNumber() >= block.getNumber() &&
@@ -418,7 +419,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             if (logger.isDebugEnabled())
                 logger.debug("Block already exist hash: {}, number: {}",
-                        Hex.toHexString(block.getHash()).substring(0, 6),
+                        toHexString(block.getHash()).substring(0, 6),
                         block.getNumber());
 
             // retry of well known block
@@ -582,22 +583,22 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // Sanity checks
 
         if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
-            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", Hex.toHexString(block.getReceiptsRoot()), Hex.toHexString(calcReceiptsTrie(receipts)));
+            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", toHexString(block.getReceiptsRoot()), toHexString(calcReceiptsTrie(receipts)));
             logger.warn("Calculated receipts: " + receipts);
             repo.rollback();
             summary = null;
         }
 
         if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
-            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", Hex.toHexString(block.getLogBloom()), Hex.toHexString(calcLogBloom(receipts)));
+            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", toHexString(block.getLogBloom()), toHexString(calcLogBloom(receipts)));
             repo.rollback();
             summary = null;
         }
 
         if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
 
-            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), Hex.toHexString(repo.getRoot()));
-            stateLogger.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), toHexString(repo.getRoot()));
+            stateLogger.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
 
 //            track.rollback();
 //            repository.rollback();
@@ -612,7 +613,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             if (config.exitOnBlockConflict() && !byTest) {
                 adminInfo.lostConsensus();
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + toHexString(block.getEncoded()));
                 System.exit(1);
             } else {
                 summary = null;
@@ -718,8 +719,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             isValid = isValid(block.getHeader());
 
             // Sanity checks
-            String trieHash = Hex.toHexString(block.getTxTrieRoot());
-            String trieListHash = Hex.toHexString(calcTxTrie(block.getTransactionsList()));
+            String trieHash = toHexString(block.getTxTrieRoot());
+            String trieListHash = toHexString(calcTxTrie(block.getTransactionsList()));
 
 
             if (!trieHash.equals(trieListHash)) {
@@ -760,8 +761,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public boolean validateUncles(Block block) {
-        String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
-        String unclesListHash = Hex.toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
+        String unclesHash = toHexString(block.getHeader().getUnclesHash());
+        String unclesListHash = toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
 
         if (!unclesHash.equals(unclesListHash)) {
             logger.warn("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
@@ -792,18 +793,18 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             ByteArrayWrapper uncleHash = new ByteArrayWrapper(uncle.getHash());
             if (ancestors.contains(uncleHash)) {
-                logger.warn("Uncle is direct ancestor: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle is direct ancestor: " + toHexString(uncle.getHash()));
                 return false;
             }
 
             if (usedUncles.contains(uncleHash)) {
-                logger.warn("Uncle is not unique: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle is not unique: " + toHexString(uncle.getHash()));
                 return false;
             }
 
             Block uncleParent = blockStore.getBlockByHash(uncle.getParentHash());
             if (!ancestors.contains(new ByteArrayWrapper(uncleParent.getHash()))) {
-                logger.warn("Uncle has no common parent: " + Hex.toHexString(uncle.getHash()));
+                logger.warn("Uncle has no common parent: " + toHexString(uncle.getHash()));
                 return false;
             }
         }
@@ -890,12 +891,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             }
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
-                    Hex.toHexString(track.getRoot()));
+                    toHexString(track.getRoot()));
 
             stateLogger.info("[{}] ", receipt.toString());
 
             if (stateLogger.isInfoEnabled())
-                stateLogger.info("tx[{}].receipt: [{}] ", i, Hex.toHexString(receipt.getEncoded()));
+                stateLogger.info("tx[{}].receipt: [{}] ", i, toHexString(receipt.getEncoded()));
 
             // TODO
 //            if (block.getNumber() >= config.traceStartBlock())
@@ -911,7 +912,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
                 block.getNumber(),
-                Hex.toHexString(track.getRoot()));
+                toHexString(track.getRoot()));
 
 
         // TODO

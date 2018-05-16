@@ -43,9 +43,10 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Keeps logic providing pending state management
@@ -199,7 +200,7 @@ public class PendingStateImpl implements PendingState {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]",
                     getPendingTransactions().size(),
-                    state, Hex.toHexString(txReceipt.getTransaction().getSender()).substring(0, 8),
+                    state, toHexString(txReceipt.getTransaction().getSender()).substring(0, 8),
                     ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
                     block.getShortDescr(), txReceipt.getError()));
         }
@@ -351,7 +352,7 @@ public class PendingStateImpl implements PendingState {
                 logger.trace(
                         "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
                         tx.getBlockNumber(),
-                        Hex.toHexString(tx.getHash())
+                        toHexString(tx.getHash())
                 );
 
         pendingTransactions.removeAll(outdated);
@@ -364,7 +365,7 @@ public class PendingStateImpl implements PendingState {
 
             if (pendingTransactions.remove(pend)) {
                 try {
-                    logger.trace("Clear pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+                    logger.trace("Clear pending transaction, hash: [{}]", toHexString(tx.getHash()));
                     TransactionReceipt receipt;
                     if (receipts != null) {
                         receipt = receipts.get(i);
@@ -404,7 +405,7 @@ public class PendingStateImpl implements PendingState {
 
     private TransactionReceipt executeTx(Transaction tx) {
 
-        logger.trace("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
+        logger.trace("Apply pending state tx: {}", toHexString(tx.getHash()));
 
         Block best = getBestBlock();
 

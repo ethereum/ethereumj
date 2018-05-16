@@ -35,6 +35,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 /**
  * Created by devrandom on 2015-04-09.
  */
@@ -54,7 +56,7 @@ public class Handshaker {
     public Handshaker() {
         myKey = new ECKey();
         nodeId = myKey.getNodeId();
-        System.out.println("Node ID " + Hex.toHexString(nodeId));
+        System.out.println("Node ID " + toHexString(nodeId));
     }
 
     /**

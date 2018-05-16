@@ -39,7 +39,6 @@ import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -56,7 +55,7 @@ import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
 import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
 import static org.ethereum.util.Utils.longToTimePeriod;
-import static org.spongycastle.util.encoders.Hex.toHexString;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Eth 62
@@ -740,7 +739,7 @@ public class Eth62 extends EthHandler {
 
         if (bodies.hasNext()) {
             logger.info("Peer {}: invalid BLOCK_BODIES response: at least one block body doesn't correspond to any of requested headers: ",
-                    channel.getPeerIdShort(), Hex.toHexString(bodies.next()));
+                    channel.getPeerIdShort(), toHexString(bodies.next()));
             return null;
         }
 

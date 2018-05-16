@@ -28,7 +28,6 @@ import org.rocksdb.Options;
 import org.rocksdb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -40,6 +39,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.System.arraycopy;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Mikhail Kalinin
@@ -288,13 +288,13 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public void put(byte[] key, byte[] val) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (val == null ? "null" : val.length));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.put(): " + name + ", key: " + toHexString(key) + ", " + (val == null ? "null" : val.length));
             if (val != null) {
                 db.put(key, val);
             } else {
                 db.delete(key);
             }
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (val == null ? "null" : val.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.put(): " + name + ", key: " + toHexString(key) + ", " + (val == null ? "null" : val.length));
         } catch (RocksDBException e) {
             logger.error("Failed to put into db '{}'", name, e);
             hintOnTooManyOpenFiles(e);
@@ -308,9 +308,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public byte[] get(byte[] key) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.get(): " + name + ", key: " + toHexString(key));
             byte[] ret = db.get(readOpts, key);
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.get(): " + name + ", key: " + toHexString(key) + ", " + (ret == null ? "null" : ret.length));
             return ret;
         } catch (RocksDBException e) {
             logger.error("Failed to get from db '{}'", name, e);
@@ -325,9 +325,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public void delete(byte[] key) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.delete(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.delete(): " + name + ", key: " + toHexString(key));
             db.delete(key);
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.delete(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.delete(): " + name + ", key: " + toHexString(key));
         } catch (RocksDBException e) {
             logger.error("Failed to delete from db '{}'", name, e);
             throw new RuntimeException(e);
@@ -345,7 +345,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
         resetDbLock.readLock().lock();
         try {
 
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.prefixLookup(): " + name + ", key: " + toHexString(key));
 
             // RocksDB sets initial position of iterator to the first key which is greater or equal to the seek key
             // since keys in RocksDB are ordered in asc order iterator must be initiated with the lowest key
@@ -366,7 +366,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 throw new RuntimeException(e);
             }
 
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.prefixLookup(): " + name + ", key: " + toHexString(key) + ", " + (ret == null ? "null" : ret.length));
 
             return ret;
 

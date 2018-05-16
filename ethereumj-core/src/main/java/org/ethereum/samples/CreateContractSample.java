@@ -36,6 +36,8 @@ import org.springframework.context.annotation.Bean;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 /**
  * Created by Anton Nashatyrev on 03.03.2016.
  */
@@ -92,7 +94,7 @@ public class CreateContractSample extends TestNetSample {
         }
 
         byte[] contractAddress = receipt.getTransaction().getContractAddress();
-        logger.info("Contract created: " + Hex.toHexString(contractAddress));
+        logger.info("Contract created: " + toHexString(contractAddress));
 
         logger.info("Calling the contract function 'inc'");
         CallTransaction.Contract contract = new CallTransaction.Contract(metadata.abi);

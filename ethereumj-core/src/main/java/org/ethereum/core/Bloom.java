@@ -18,9 +18,10 @@
 package org.ethereum.core;
 
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * See http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html.
@@ -85,7 +86,7 @@ public class Bloom {
 
     @Override
     public String toString() {
-        return Hex.toHexString(data);
+        return toHexString(data);
     }
 
     @Override

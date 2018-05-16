@@ -20,9 +20,9 @@ package org.ethereum.net.shh;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.net.shh.ShhMessageCodes.FILTER;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author by Konstantin Shabalin
@@ -81,7 +81,7 @@ public class ShhFilterMessage extends ShhMessage {
     public String toString() {
         if (!parsed) parse();
         return "[" + this.getCommand().name() +
-            " hash=" + Hex.toHexString(bloomFilter) + "]";
+            " hash=" + toHexString(bloomFilter) + "]";
     }
 
 }

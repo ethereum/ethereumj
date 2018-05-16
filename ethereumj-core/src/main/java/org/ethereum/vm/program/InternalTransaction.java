@@ -17,11 +17,6 @@
  */
 package org.ethereum.vm.program;
 
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
-import static org.ethereum.util.ByteUtil.toHexString;
-
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 

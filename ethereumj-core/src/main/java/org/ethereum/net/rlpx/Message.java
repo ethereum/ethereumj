@@ -20,12 +20,12 @@ package org.ethereum.net.rlpx;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.security.SignatureException;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public abstract class Message {
 
@@ -164,10 +164,10 @@ public abstract class Message {
     @Override
     public String toString() {
         return "{" +
-                "mdc=" + Hex.toHexString(mdc) +
-                ", signature=" + Hex.toHexString(signature) +
-                ", type=" + Hex.toHexString(type) +
-                ", data=" + Hex.toHexString(data) +
+                "mdc=" + toHexString(mdc) +
+                ", signature=" + toHexString(signature) +
+                ", type=" + toHexString(type) +
+                ", data=" + toHexString(data) +
                 '}';
     }
 }

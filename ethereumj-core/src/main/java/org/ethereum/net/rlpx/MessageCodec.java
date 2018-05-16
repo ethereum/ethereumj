@@ -36,7 +36,6 @@ import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -47,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.min;
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * The Netty codec which encodes/decodes RPLx frames to subprotocol Messages
@@ -152,7 +152,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         }
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Recv: Encoded: {} [{}]", frameType, Hex.toHexString(payload));
+            loggerWire.debug("Recv: Encoded: {} [{}]", frameType, toHexString(payload));
 
         Message msg;
         try {
@@ -183,7 +183,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         byte[] encoded = msg.getEncoded();
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Send: Encoded: {} [{}]", getCode(msg.getCommand()), Hex.toHexString(encoded));
+            loggerWire.debug("Send: Encoded: {} [{}]", getCode(msg.getCommand()), toHexString(encoded));
 
         List<Frame> frames = splitMessageToFrames(msg);
 
@@ -271,7 +271,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             return bzzMessageFactory.create(resolved, payload);
         }
 
-        throw new IllegalArgumentException("No such message: " + code + " [" + Hex.toHexString(payload) + "]");
+        throw new IllegalArgumentException("No such message: " + code + " [" + toHexString(payload) + "]");
     }
 
     public void setChannel(Channel channel){

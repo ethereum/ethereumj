@@ -29,7 +29,6 @@ import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +47,7 @@ import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.util.Utils.longToTimePeriod;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Mikhail Kalinin
@@ -284,7 +284,7 @@ public class SyncManager extends BlockDownloader {
                             wrapper.getBlock().getTransactionsList().size(), ts);
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
-                    if (logger.isDebugEnabled()) logger.debug("Block dump: " + Hex.toHexString(wrapper.getBlock().getEncoded()));
+                    if (logger.isDebugEnabled()) logger.debug("Block dump: " + toHexString(wrapper.getBlock().getEncoded()));
                     // Propagate block to the net after successful import asynchronously
                     if (wrapper.isNewBlock()) channelManager.onNewForeignBlock(wrapper);
                 }
@@ -301,7 +301,7 @@ public class SyncManager extends BlockDownloader {
             } catch (Throwable e) {
                 if (wrapper != null) {
                     logger.error("Error processing block {}: ", wrapper.getBlock().getShortDescr(), e);
-                    logger.error("Block dump: {}", Hex.toHexString(wrapper.getBlock().getEncoded()));
+                    logger.error("Block dump: {}", toHexString(wrapper.getBlock().getEncoded()));
                 } else {
                     logger.error("Error processing unknown block", e);
                 }

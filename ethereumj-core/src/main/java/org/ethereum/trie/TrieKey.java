@@ -17,9 +17,8 @@
  */
 package org.ethereum.trie;
 
-import org.spongycastle.util.encoders.Hex;
-
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 13.02.2017.
@@ -180,6 +179,6 @@ public final class TrieKey {
 
     @Override
     public String toString() {
-        return Hex.toHexString(key).substring(off) + (isTerminal() ? "T" : "");
+        return toHexString(key).substring(off) + (isTerminal() ? "T" : "");
     }
 }

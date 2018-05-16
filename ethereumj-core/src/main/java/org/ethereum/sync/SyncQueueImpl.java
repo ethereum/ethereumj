@@ -23,13 +23,13 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.Math.min;
 import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 27.05.2016.
@@ -82,7 +82,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
         @Override
         public String toString() {
             return "HeadersRequest{" +
-                    (hash == null ? "start=" + getStart() : "hash=" + Hex.toHexString(hash).substring(0, 8))+
+                    (hash == null ? "start=" + getStart() : "hash=" + toHexString(hash).substring(0, 8))+
                     ", count=" + getCount() +
                     ", reverse=" + isReverse() +
                     ", step=" + getStep() +

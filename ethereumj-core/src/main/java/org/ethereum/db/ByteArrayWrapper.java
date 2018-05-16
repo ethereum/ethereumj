@@ -19,10 +19,10 @@ package org.ethereum.db;
 
 import org.ethereum.util.FastByteComparisons;
 
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.Serializable;
 import java.util.Arrays;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Roman Mandeleil
@@ -67,6 +67,6 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
 
     @Override
     public String toString() {
-        return Hex.toHexString(data);
+        return toHexString(data);
     }
 }

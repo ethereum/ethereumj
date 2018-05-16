@@ -25,9 +25,10 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Message;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class PacketDecoder extends MessageToMessageDecoder<DatagramPacket> {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
@@ -42,7 +43,7 @@ public class PacketDecoder extends MessageToMessageDecoder<DatagramPacket> {
             DiscoveryEvent event = new DiscoveryEvent(msg, packet.sender());
             out.add(event);
         } catch (Exception e) {
-            throw new RuntimeException("Exception processing inbound message from " + ctx.channel().remoteAddress() + ": " + Hex.toHexString(encoded), e);
+            throw new RuntimeException("Exception processing inbound message from " + ctx.channel().remoteAddress() + ": " + toHexString(encoded), e);
         }
     }
 }

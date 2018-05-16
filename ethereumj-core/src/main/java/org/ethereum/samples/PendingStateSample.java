@@ -26,12 +26,13 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
 import java.util.*;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * PendingState is the ability to track the changes made by transaction immediately and not wait for
@@ -137,7 +138,7 @@ public class PendingStateSample extends TestNetSample {
         if (Arrays.equals(tx.getSender(), senderAddress)) {
             BigInteger receiverBalance = ethereum.getRepository().getBalance(receiverAddress);
             BigInteger receiverBalancePending = pendingState.getRepository().getBalance(receiverAddress);
-            logger.info(" + New pending transaction 0x" + Hex.toHexString(tx.getHash()).substring(0, 8));
+            logger.info(" + New pending transaction 0x" + toHexString(tx.getHash()).substring(0, 8));
 
             pendingTxs.put(new ByteArrayWrapper(tx.getHash()), tx);
 
@@ -156,7 +157,7 @@ public class PendingStateSample extends TestNetSample {
             ByteArrayWrapper txHash = new ByteArrayWrapper(tx.getHash());
             Transaction ptx = pendingTxs.get(txHash);
             if (ptx != null) {
-                logger.info(" - Pending transaction cleared 0x" + Hex.toHexString(tx.getHash()).substring(0, 8) +
+                logger.info(" - Pending transaction cleared 0x" + toHexString(tx.getHash()).substring(0, 8) +
                         " in block " + block.getShortDescr());
 
                 pendingTxs.remove(txHash);

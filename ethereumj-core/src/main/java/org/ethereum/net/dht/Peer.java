@@ -19,9 +19,9 @@ package org.ethereum.net.dht;
 
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class Peer {
     byte[] id;
@@ -70,7 +70,7 @@ public class Peer {
 
     @Override
     public String toString() {
-        return String.format("Peer {\n id=%s, \n host=%s, \n port=%d\n}", Hex.toHexString(id), host, port);
+        return String.format("Peer {\n id=%s, \n host=%s, \n port=%d\n}", toHexString(id), host, port);
     }
 
     public String toBinaryString() {

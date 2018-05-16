@@ -24,6 +24,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 /**
  * Created by devrandom on 2015-04-12.
  */
@@ -57,14 +59,14 @@ public class RlpxConnection {
             // TODO handle disconnect
             byte[] wire = new byte[frame.size];
             frame.payload.read(wire);
-            System.out.println("packet " + Hex.toHexString(wire));
+            System.out.println("packet " + toHexString(wire));
             handshakeMessage = HandshakeMessage.parse(wire);
             logger.info(" ===> " + handshakeMessage);
         } else {
             System.out.println("packet type " + frame.type);
             byte[] wire = new byte[frame.size];
             frame.payload.read(wire);
-            System.out.println("packet " + Hex.toHexString(wire));
+            System.out.println("packet " + toHexString(wire));
         }
     }
 
