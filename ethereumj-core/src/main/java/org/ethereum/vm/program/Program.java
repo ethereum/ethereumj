@@ -54,6 +54,7 @@ import static java.math.BigInteger.ZERO;
 import static org.apache.commons.lang3.ArrayUtils.*;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Roman Mandeleil
@@ -375,7 +376,7 @@ public class Program {
 
         if (logger.isInfoEnabled())
             logger.info("Transfer to: [{}] heritage: [{}]",
-                    Hex.toHexString(obtainer),
+                    toHexString(obtainer),
                     balance);
 
         addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
@@ -414,7 +415,7 @@ public class Program {
         byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
 
         if (logger.isInfoEnabled())
-            logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
+            logger.info("creating a new contract inside contract run: [{}]", toHexString(senderAddress));
 
         BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue());
         //  actual gas subtract
@@ -468,7 +469,7 @@ public class Program {
         ProgramResult result = ProgramResult.createEmpty();
 
         if (contractAlreadyExists) {
-            result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newAddress)));
+            result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
@@ -500,7 +501,7 @@ public class Program {
 
         if (result.getException() != null || result.isRevert()) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                    Hex.toHexString(newAddress),
+                    toHexString(newAddress),
                     result.getException());
 
             internalTx.reject();
@@ -528,7 +529,7 @@ public class Program {
             refundGas(refundGas, "remain gas from the internal call");
             if (logger.isInfoEnabled()) {
                 logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
-                        Hex.toHexString(getOwnerAddress().getLast20Bytes()),
+                        toHexString(getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
         }
@@ -560,7 +561,7 @@ public class Program {
 
         if (logger.isInfoEnabled())
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
-                    Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
+                    toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         Repository track = getStorage().startTracking();
 
@@ -611,7 +612,7 @@ public class Program {
 
             if (result.getException() != null || result.isRevert()) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                        Hex.toHexString(contextAddress),
+                        toHexString(contextAddress),
                         result.getException());
 
                 internalTx.reject();
@@ -658,7 +659,7 @@ public class Program {
                 refundGas(refundGas.longValue(), "remaining gas from the internal call");
                 if (logger.isInfoEnabled())
                     logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
-                            Hex.toHexString(senderAddress),
+                            toHexString(senderAddress),
                             refundGas.toString());
             }
         } else {
@@ -1183,7 +1184,7 @@ public class Program {
         } else {
 
             if (logger.isDebugEnabled())
-                logger.debug("Call {}(data = {})", contract.getClass().getSimpleName(), Hex.toHexString(data));
+                logger.debug("Call {}(data = {})", contract.getClass().getSimpleName(), toHexString(data));
 
             Pair<Boolean, byte[]> out = contract.execute(data);
 

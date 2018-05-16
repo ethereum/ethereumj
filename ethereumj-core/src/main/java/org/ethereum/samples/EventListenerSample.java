@@ -225,7 +225,7 @@ public class EventListenerSample extends TestNetSample {
     }
 
     public void requestFreeEther(byte[] addressBytes) {
-        String address = "0x" + Hex.toHexString(addressBytes);
+        String address = "0x" + toHexString(addressBytes);
         logger.info("Checking address {} for available ether.", address);
         BigInteger balance = ethereum.getRepository().getBalance(addressBytes);
         logger.info("Address {} balance: {} wei", address, balance);
