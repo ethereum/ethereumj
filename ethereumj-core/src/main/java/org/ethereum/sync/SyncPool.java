@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 
 import static java.lang.Math.min;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * <p>Encapsulates logic which manages peers involved in blockchain sync</p>
@@ -337,7 +338,7 @@ public class SyncPool {
     private void logDiscoveredNodes(List<NodeHandler> nodes) {
         StringBuilder sb = new StringBuilder();
         for(NodeHandler n : nodes) {
-            sb.append(Utils.getNodeIdShort(Hex.toHexString(n.getNode().getId())));
+            sb.append(Utils.getNodeIdShort(toHexString(n.getNode().getId())));
             sb.append(", ");
         }
         if(sb.length() > 0) {
