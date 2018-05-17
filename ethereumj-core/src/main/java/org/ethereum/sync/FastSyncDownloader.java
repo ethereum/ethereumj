@@ -17,6 +17,7 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.IndexedBlockStore;
@@ -44,6 +45,8 @@ public class FastSyncDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
+    private SyncQueueReverseImpl syncQueueReverse;
+
     int counter;
     int maxCount;
     long t;
@@ -53,12 +56,12 @@ public class FastSyncDownloader extends BlockDownloader {
         super(headerValidator);
     }
 
-    public void startImporting(byte[] fromHash, int count) {
+    public void startImporting(BlockHeader start, int count) {
         this.maxCount = count <= 0 ? Integer.MAX_VALUE : count;
         setHeaderQueueLimit(maxCount);
         setBlockQueueLimit(maxCount);
 
-        SyncQueueReverseImpl syncQueueReverse = new SyncQueueReverseImpl(fromHash);
+        syncQueueReverse = new SyncQueueReverseImpl(start.getHash(), start.getNumber() - count);
         init(syncQueueReverse, syncPool, "FastSync");
     }
 
@@ -70,7 +73,8 @@ public class FastSyncDownloader extends BlockDownloader {
                 blockStore.saveBlock(blockWrapper.getBlock(), BigInteger.ZERO, true);
                 counter++;
                 if (counter >= maxCount) {
-                    logger.info("FastSync: All requested " + counter + " blocks are downloaded. (last " + blockWrapper.getBlock().getShortDescr() + ")");
+                    logger.info("FastSync: All requested " + counter + " blocks are downloaded. (last " +
+                            blockWrapper.getBlock().getShortDescr() + ")");
                     stop();
                     break;
                 }
@@ -79,7 +83,8 @@ public class FastSyncDownloader extends BlockDownloader {
             long c = System.currentTimeMillis();
             if (c - t > 5000) {
                 t = c;
-                logger.info("FastSync: downloaded " + counter + " blocks so far. Last: " + blockWrappers.get(0).getBlock().getShortDescr());
+                logger.info("FastSync: downloaded " + counter + " blocks so far. Last: " +
+                        blockWrappers.get(blockWrappers.size() - 1).getBlock().getShortDescr());
                 blockStore.flush();
             }
         }
@@ -90,12 +95,12 @@ public class FastSyncDownloader extends BlockDownloader {
 
     @Override
     protected int getBlockQueueFreeSize() {
-        return getBlockQueueLimit();
+        return Math.max(maxCount - counter, MAX_IN_REQUEST);
     }
 
     @Override
     protected int getMaxHeadersInQueue() {
-        return getHeaderQueueLimit();
+        return Math.max(maxCount - syncQueueReverse.getValidatedHeadersCount(), 0);
     }
 
     // TODO: receipts loading here

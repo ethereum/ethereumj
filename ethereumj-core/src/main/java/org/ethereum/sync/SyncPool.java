@@ -20,6 +20,7 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -38,8 +39,10 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -98,8 +101,8 @@ public class SyncPool {
             try {
                 heartBeat();
                 updateLowerUsefulDifficulty();
-                fillUp();
                 prepareActive();
+                fillUp();
                 cleanupActive();
             } catch (Throwable t) {
                 logger.error("Unhandled exception", t);
@@ -283,6 +286,8 @@ public class SyncPool {
 
     private synchronized void prepareActive() {
         List<Channel> managerActive = new ArrayList<>(channelManager.getActivePeers());
+        if (logger.isTraceEnabled())
+            logger.trace("Preparing active peers from {} channelManager peers", managerActive.size());
 
         // Filtering out with nodeSelector because server-connected nodes were not tested
         NodeSelector nodeSelector = new NodeSelector(BigInteger.ZERO);
@@ -293,6 +298,8 @@ public class SyncPool {
             }
         }
 
+        if (logger.isTraceEnabled())
+            logger.trace("After filtering out with node selector, {} peers remaining", active.size());
         if (active.isEmpty()) return;
 
         // filtering by 20% from top difficulty
@@ -310,14 +317,33 @@ public class SyncPool {
 
         List<Channel> filtered = active.subList(0, thresholdIdx + 1);
 
-        // sorting by latency in asc order
-        filtered.sort(Comparator.comparingDouble(c -> c.getPeerStats().getAvgLatency()));
+        // Dropping other peers to free up slots for active
+        // Act more aggressive until sync is done
+        int cap = channelManager.getSyncManager().isSyncDone() ?
+                // 10 peers are enough for variance in data on short sync
+                Math.max(config.maxActivePeers() / 2, config.maxActivePeers() - 10) : config.maxActivePeers() / 6;
+        int otherCount = managerActive.size() - filtered.size();
+        int killCount = max(0, otherCount - cap);
+        if (killCount > 0) {
+            AtomicInteger dropped = new AtomicInteger(0);
+            for (Channel channel : managerActive) {
+                if (!filtered.contains(channel)) {
+                    if (channel.isIdle()) {
+                        channelManager.disconnect(channel, ReasonCode.TOO_MANY_PEERS);
+                        if (dropped.incrementAndGet() >= killCount) break;
+                    }
+                }
+            }
+            logger.debug("Dropped {} other peers to free up sync slots", dropped.get());
+        }
 
         for (Channel channel : filtered) {
             if (!activePeers.contains(channel)) {
                 ethereumListener.onPeerAddedToSyncPool(channel);
             }
         }
+        if (logger.isTraceEnabled())
+            logger.trace("{} peers set to be active in SyncPool", filtered.size());
 
         activePeers.clear();
         activePeers.addAll(filtered);

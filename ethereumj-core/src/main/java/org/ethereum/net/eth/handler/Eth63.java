@@ -33,6 +33,7 @@ import org.ethereum.net.eth.message.GetReceiptsMessage;
 import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
 
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -186,19 +188,22 @@ public class Eth63 extends Eth62 {
 
         List<Pair<byte[], byte[]>> ret = new ArrayList<>();
         if(msg.getDataList().isEmpty()) {
-            String err = "Received NodeDataMessage contains empty node data. Dropping peer " + channel;
-            dropUselessPeer(err);
+            String err = String.format("Received NodeDataMessage contains empty node data. Dropping peer %s", channel);
+            logger.debug(err);
+            requestNodesFuture.setException(new RuntimeException(err));
+            // Not fatal but let us touch it later
+            channel.getChannelManager().disconnect(channel, ReasonCode.TOO_MANY_PEERS);
             return;
         }
 
         for (Value nodeVal : msg.getDataList()) {
-            byte[] hash = nodeVal.hash();
+            byte[] hash = sha3(nodeVal.asBytes());
             if (!requestedNodes.contains(hash)) {
                 String err = "Received NodeDataMessage contains non-requested node with hash :" + toHexString(hash) + " . Dropping peer " + channel;
                 dropUselessPeer(err);
                 return;
             }
-            ret.add(Pair.of(hash, nodeVal.encode()));
+            ret.add(Pair.of(hash, nodeVal.asBytes()));
         }
         requestNodesFuture.set(ret);
 
