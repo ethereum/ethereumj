@@ -58,7 +58,7 @@ public class NodeDataMessage extends EthMessage {
         List<byte[]> dataListRLP = new ArrayList<>();
         for (Value value: dataList) {
             if (value == null) continue; // Bad sign
-            dataListRLP.add(value.asBytes());
+            dataListRLP.add(RLP.encodeElement(value.asBytes()));
         }
         byte[][] encodedElementArray = dataListRLP.toArray(new byte[dataListRLP.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);

@@ -76,8 +76,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
                     needToDrop = true;
                 }
                 // Drop bad peers before creating channel
-                if (!needToDrop && nodeManager.getNodeStatistics(new Node(new byte[0], ch.remoteAddress().getHostString(),
-                                ch.remoteAddress().getPort())).isReputationPenalized()) {
+                if (!needToDrop && nodeManager.isReputationPenalized(ch.remoteAddress())) {
                     logger.debug("Drop connection - bad peer, channel: {}", ch.toString());
                     needToDrop = true;
                 }

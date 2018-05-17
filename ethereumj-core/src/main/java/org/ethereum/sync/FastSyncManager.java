@@ -419,7 +419,7 @@ public class FastSyncManager {
                                     if (request == null) {
                                         long t = System.currentTimeMillis();
                                         logger.debug("Received node which was not requested: " + toHexString(pair.getKey()) + " from " + idle);
-                                        idle.disconnect(ReasonCode.USELESS_PEER);
+                                        idle.disconnect(ReasonCode.TOO_MANY_PEERS); // We need better peers for this stage
                                         return;
                                     }
                                     Set<Long> intersection = request.requestIdsSnapshot();
