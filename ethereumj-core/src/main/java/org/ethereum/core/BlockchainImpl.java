@@ -1092,8 +1092,37 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         while(true) {
             synchronized (this) {
                 ((IndexedBlockStore) blockStore).updateTotDifficulties(startFrom);
+
                 if (startFrom == bestBlock.getNumber()) {
                     totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
+                }
+
+                if (startFrom == blockStore.getMaxNumber()) {
+                    Block bestStoredBlock = bestBlock;
+                    BigInteger maxTD = totalDifficulty;
+
+                    // traverse blocks toward max known number to get the best block
+                    for (long num = bestBlock.getNumber() + 1; num <= blockStore.getMaxNumber(); num++) {
+                        List<Block> blocks = ((IndexedBlockStore) blockStore).getBlocksByNumber(num);
+                        for (Block block : blocks) {
+                            BigInteger td = blockStore.getTotalDifficultyForHash(block.getHash());
+                            if (maxTD.compareTo(td) < 0) {
+                                maxTD = td;
+                                bestStoredBlock = block;
+                            }
+                        }
+                    }
+
+                    if (totalDifficulty.compareTo(maxTD) < 0)  {
+                        blockStore.reBranch(bestStoredBlock);
+                        bestBlock = bestStoredBlock;
+                        totalDifficulty = maxTD;
+                        repository = repository.getSnapshotTo(bestBlock.getStateRoot());
+
+                        logger.info("totDifficulties update: re-branch to block {}, totalDifficulty {}",
+                                bestBlock.getHeader().getShortDescr(), totalDifficulty);
+                    }
+
                     break;
                 }
                 startFrom++;
