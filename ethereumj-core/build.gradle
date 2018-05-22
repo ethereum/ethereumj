@@ -165,6 +165,16 @@ javadoc {
     )
 }
 
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    classifier = 'all'
+    manifest {
+        attributes 'Main-Class' : mainClassName
+        attributes 'Class-Path' : configurations.compile.collect { 'lib/' + it.getName() }.join(' ')
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
