@@ -42,8 +42,8 @@ import java.util.concurrent.*;
 public class DbFlushManager {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    List<AbstractCachedSource<byte[], ?>> writeCaches = new ArrayList<>();
-    List<Source<byte[], ?>> sources = new ArrayList<>();
+    List<AbstractCachedSource<byte[], ?>> writeCaches = new CopyOnWriteArrayList<>();
+    List<Source<byte[], ?>> sources = new CopyOnWriteArrayList<>();
     Set<DbSource> dbSources = new HashSet<>();
     AbstractCachedSource<byte[], byte[]> stateDbCache;
 
