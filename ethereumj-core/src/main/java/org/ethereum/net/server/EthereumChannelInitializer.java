@@ -108,16 +108,14 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             return true;
         }
         // Refuse connections from ips that are already in connection queue
-        if (channelManager.ipAlreadyWaiting(ch.remoteAddress().getAddress())) {
-            try { // Local addresses are still welcome!
-                if (!InetAddress.getLocalHost().getHostAddress().equals(ch.remoteAddress().getAddress().getHostAddress())) {
-                    logger.debug("Drop connection - already processing connection from this host, channel: {}", ch.toString());
-                    return true;
-                }
-            } catch (UnknownHostException ex) {
-                logger.debug("Failed to identify local address", ex);
-            }
+        // Local and private network addresses are still welcome!
+        if (!ch.remoteAddress().getAddress().isLoopbackAddress() &&
+                !ch.remoteAddress().getAddress().isSiteLocalAddress() &&
+                channelManager.ipAlreadyWaiting(ch.remoteAddress().getAddress())) {
+            logger.debug("Drop connection - already processing connection from this host, channel: {}", ch.toString());
+            return true;
         }
+
         // Avoid too frequent connection attempts
         if (channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
             logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
