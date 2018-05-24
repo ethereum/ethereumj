@@ -200,6 +200,21 @@ public class ChannelManager {
         recentlyDisconnected.put(peer.getInetSocketAddress().getAddress(), new Date());
     }
 
+    /**
+     * Whether peer with the same ip is in newPeers, waiting for processing
+     * @param peerAddr      Peer address
+     * @return true if we already have connection from this address, otherwise false
+     */
+    public boolean ipAlreadyWaiting(InetAddress peerAddr) {
+        for (Channel peer: newPeers) {
+            if (peer.getInetSocketAddress().getAddress().getHostAddress().equals(peerAddr.getHostAddress())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public boolean isRecentlyDisconnected(InetAddress peerAddr) {
         Date disconnectTime = recentlyDisconnected.get(peerAddr);
         if (disconnectTime != null &&
