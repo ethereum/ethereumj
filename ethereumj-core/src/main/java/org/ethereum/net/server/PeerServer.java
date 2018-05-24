@@ -107,7 +107,7 @@ public class PeerServer {
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
-            logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.error("Peer server error: {} ({})", e.getMessage(), e.getClass().getName());
             throw new Error("Server Disconnected");
         } finally {
             workerGroup.shutdownGracefully();
