@@ -27,9 +27,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 /**
  * @author Roman Mandeleil
  * @since 01.11.2014
@@ -64,7 +61,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
                 logger.debug("Open {} connection, channel: {}", isInbound() ? "inbound" : "outbound", ch.toString());
             }
 
-            if (shouldRefuseIncoming(ch)) {
+            if (notEligibleForIncomingConnection(ch)) {
                 ch.disconnect();
                 return;
             }
@@ -92,8 +89,13 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             logger.error("Unexpected error: ", e);
         }
     }
-    
-    private boolean shouldRefuseIncoming(NioSocketChannel ch) {
+
+    /**
+     * Tests incoming connection channel for usual abuse/attack vectors
+     * @param ch    Channel
+     * @return true if we should refuse this connection, otherwise false
+     */
+    private boolean notEligibleForIncomingConnection(NioSocketChannel ch) {
         if(!isInbound()) return false;
         // For incoming connection drop if..
         
@@ -111,7 +113,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         // Local and private network addresses are still welcome!
         if (!ch.remoteAddress().getAddress().isLoopbackAddress() &&
                 !ch.remoteAddress().getAddress().isSiteLocalAddress() &&
-                channelManager.ipAlreadyWaiting(ch.remoteAddress().getAddress())) {
+                channelManager.isAddressInQueue(ch.remoteAddress().getAddress())) {
             logger.debug("Drop connection - already processing connection from this host, channel: {}", ch.toString());
             return true;
         }

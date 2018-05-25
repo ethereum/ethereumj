@@ -205,7 +205,7 @@ public class ChannelManager {
      * @param peerAddr      Peer address
      * @return true if we already have connection from this address, otherwise false
      */
-    public boolean ipAlreadyWaiting(InetAddress peerAddr) {
+    public boolean isAddressInQueue(InetAddress peerAddr) {
         for (Channel peer: newPeers) {
             if (peer.getInetSocketAddress().getAddress().getHostAddress().equals(peerAddr.getHostAddress())) {
                 return true;
