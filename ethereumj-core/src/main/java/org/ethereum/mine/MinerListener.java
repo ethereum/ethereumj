@@ -23,9 +23,30 @@ import org.ethereum.core.Block;
  * Created by Anton Nashatyrev on 10.12.2015.
  */
 public interface MinerListener {
+
+    enum MinerStatus {
+        /**
+         * Indicates start of light DAG generation
+         */
+        LIGHT_DAG_GENERATE_START,
+        /**
+         * Indicates end of light DAG generation
+         */
+        LIGHT_DAG_GENERATE_END,
+        /**
+         * Indicates start of full DAG generation
+         */
+        FULL_DAG_GENERATE_START,
+        /**
+         * Indicates end of light DAG generation
+         */
+        FULL_DAG_GENERATE_END,
+    }
+
     void miningStarted();
     void miningStopped();
     void blockMiningStarted(Block block);
     void blockMined(Block block);
     void blockMiningCanceled(Block block);
+    void onMinerStatusUpdate(MinerStatus minerStatus);
 }

@@ -265,6 +265,7 @@ public class BlockMiner {
                 MinerIfc localMiner = config.getBlockchainConfig()
                         .getConfigForBlock(miningBlock.getNumber())
                         .getMineAlgorithm(config);
+                localMiner.setListeners(listeners);
                 currentMiningTasks.add(localMiner.mine(cloneBlock(miningBlock)));
             }
 

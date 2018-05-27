@@ -110,6 +110,11 @@ public class PrivateMinerSample {
         }
 
         @Override
+        public void onMinerStatusUpdate(MinerStatus minerStatus) {
+            logger.info("Miner status updated: {}", minerStatus);
+        }
+
+        @Override
         public void miningStarted() {
             logger.info("Miner started");
         }

@@ -312,6 +312,11 @@ public class BlockTxForwardTest {
         public void blockMiningCanceled(Block block) {
             logger.info("Cancel mining block: " + block.getShortDescr());
         }
+
+        @Override
+        public void onMinerStatusUpdate(MinerStatus minerStatus) {
+            logger.info("Miner status updated: {}", minerStatus);
+        }
     }
 
     /**

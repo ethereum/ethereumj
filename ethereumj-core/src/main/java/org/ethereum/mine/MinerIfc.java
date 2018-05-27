@@ -21,6 +21,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 
+import java.util.List;
+
 import static org.ethereum.util.ByteUtil.longToBytes;
 
 /**
@@ -41,6 +43,11 @@ public interface MinerIfc {
      * Validates the Proof of Work for the block
      */
     boolean validate(BlockHeader blockHeader);
+
+    /**
+     * Adds listeners
+     */
+    void setListeners(List<MinerListener> listeners);
 
     final class MiningResult {
 
