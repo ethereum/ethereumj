@@ -23,7 +23,6 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.mine.Ethash;
 import org.ethereum.mine.MinerListener;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
@@ -97,14 +96,6 @@ public class PrivateMinerSample {
         // networking or sync events
         @Override
         public void run() {
-            if (config.isMineFullDataset()) {
-                logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
-                // calling this just for indication of the dataset generation
-                // basically this is not required
-                Ethash ethash = Ethash.getForBlock(config, ethereum.getBlockchain().getBestBlock().getNumber());
-                ethash.getFullDataset();
-                logger.info("Full dataset generated (loaded).");
-            }
             ethereum.getBlockMiner().addListener(this);
             ethereum.getBlockMiner().startMining();
         }
@@ -112,6 +103,12 @@ public class PrivateMinerSample {
         @Override
         public void onMinerStatusUpdate(MinerStatus minerStatus) {
             logger.info("Miner status updated: {}", minerStatus);
+            if (minerStatus.equals(MinerStatus.FULL_DAG_GENERATE_START)) {
+                logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
+            }
+            if (minerStatus.equals(MinerStatus.FULL_DAG_GENERATE_END)) {
+                logger.info("Full dataset generated (loaded).");
+            }
         }
 
         @Override
