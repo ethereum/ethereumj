@@ -260,11 +260,6 @@ public class MinerTest {
             public void blockMiningCanceled(Block block) {
                 System.out.println("=== MinerTest.blockMiningCanceled " + blockInfo(block));
             }
-
-            @Override
-            public void onMinerStatusUpdate(MinerStatus minerStatus) {
-                System.out.println("=== MinerTest.onMinerStatusUpdate " + minerStatus);
-            }
         });
         Ethash.fileCacheEnabled = true;
         blockMiner.setFullMining(true);

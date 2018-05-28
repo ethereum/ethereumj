@@ -17,16 +17,27 @@
  */
 package org.ethereum.mine;
 
-import org.ethereum.core.Block;
-
 /**
- * Created by Anton Nashatyrev on 10.12.2015.
+ * {@link MinerListener} designed for use with {@link EthashMiner}
  */
-public interface MinerListener {
+public interface EthashMinerListener extends MinerListener {
 
-    void miningStarted();
-    void miningStopped();
-    void blockMiningStarted(Block block);
-    void blockMined(Block block);
-    void blockMiningCanceled(Block block);
+    enum DatasetStatus {
+        /**
+         * Indicates start of light DAG generation
+         */
+        LIGHT_DATASET_GENERATE_START,
+        /**
+         * Indicates start of full DAG generation
+         * Full DAG generation is a heavy procedure
+         * which could take a lot of time
+         */
+        FULL_DATASET_GENERATE_START,
+        /**
+         * Indicates end of DAG generation stage
+         */
+        DATASET_GENERATED,
+    }
+
+    void onDatasetUpdate(DatasetStatus datasetStatus);
 }

@@ -43,7 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
 import java.math.BigInteger;
-import java.util.List;
 
 import static java.util.Collections.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -107,11 +106,6 @@ public class ExternalMinerTest {
             @Override
             public boolean validate(BlockHeader blockHeader) {
                 return true;
-            }
-
-            @Override
-            public void setListeners(List<MinerListener> listeners) {
-
             }
         });
         Block b = bc.getBlockchain().createNewBlock(startBestBlock, EMPTY_LIST, EMPTY_LIST);

@@ -22,8 +22,9 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Collection;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The adapter of Ethash for MinerIfc
@@ -36,7 +37,7 @@ public class EthashMiner implements MinerIfc {
 
     private int cpuThreads;
     private boolean fullMining = true;
-    private List<MinerListener> listeners = new CopyOnWriteArrayList<>();
+    private Set<EthashMinerListener> listeners = new CopyOnWriteArraySet<>();
 
     public EthashMiner(SystemProperties config) {
         this.config = config;
@@ -56,8 +57,28 @@ public class EthashMiner implements MinerIfc {
         return Ethash.getForBlock(config, blockHeader.getNumber(), listeners).validate(blockHeader);
     }
 
-    @Override
-    public void setListeners(List<MinerListener> listeners) {
-        this.listeners = listeners;
+    /**
+     * Listeners changes affects only future {@link #mine(Block)} and
+     * {@link #validate(BlockHeader)} calls
+     */
+    public void setListeners(Collection<EthashMinerListener> listeners) {
+        this.listeners.clear();
+        this.listeners.addAll(listeners);
+    }
+
+    /**
+     * Listeners changes affects only future {@link #mine(Block)} and
+     * {@link #validate(BlockHeader)} calls
+     */
+    public boolean addListener(EthashMinerListener listener) {
+        return listeners.add(listener);
+    }
+
+    /**
+     * Listeners changes affects only future {@link #mine(Block)} and
+     * {@link #validate(BlockHeader)} calls
+     */
+    public boolean removeListener(EthashMinerListener listener){
+        return listeners.remove(listener);
     }
 }

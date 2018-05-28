@@ -31,12 +31,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.List;
+import java.util.Collection;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.mine.EthashMinerListener.DatasetStatus.DATASET_GENERATED;
+import static org.ethereum.mine.EthashMinerListener.DatasetStatus.FULL_DATASET_GENERATE_START;
+import static org.ethereum.mine.EthashMinerListener.DatasetStatus.LIGHT_DATASET_GENERATE_START;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.mine.MinerIfc.MiningResult;
 
@@ -58,7 +62,7 @@ public class Ethash {
 
     public static boolean fileCacheEnabled = true;
 
-    private List<MinerListener> listeners = new CopyOnWriteArrayList<>();
+    private Set<EthashMinerListener> listeners = new CopyOnWriteArraySet <>();
 
     /**
      * Returns instance for the specified block number
@@ -78,10 +82,19 @@ public class Ethash {
      * either from cache or calculates a new one
      * and adds listeners to Ethash
      */
-    public static Ethash getForBlock(SystemProperties config, long blockNumber, List<MinerListener> listeners) {
+    public static Ethash getForBlock(SystemProperties config, long blockNumber, Collection<EthashMinerListener> listeners) {
         Ethash ethash = getForBlock(config, blockNumber);
-        ethash.listeners = listeners;
+        ethash.listeners.clear();
+        ethash.listeners.addAll(listeners);
         return ethash;
+    }
+
+    public boolean addListener(EthashMinerListener listener) {
+        return listeners.add(listener);
+    }
+
+    public boolean removeListener(EthashMinerListener listener){
+        return listeners.remove(listener);
     }
 
     private EthashAlgo ethashAlgo = new EthashAlgo(ethashParams);
@@ -100,7 +113,19 @@ public class Ethash {
         }
     }
 
-    public synchronized int[] getCacheLight() {
+    public int[] getCacheLight() {
+        return getCacheLight(true);
+    }
+
+    /**
+     * Checks whether light DAG is already generated and loads it
+     * from cache, otherwise generates it
+     *
+     * @param fireFinished whether to fire {@link EthashMinerListener.DatasetStatus#DATASET_GENERATED}
+     *                     after light DAG generation is finished
+     * @return  Light DAG
+     */
+    private synchronized int[] getCacheLight(boolean fireFinished) {
         if (cacheLight == null) {
             File file = new File(config.ethashDir(), "mine-dag-light.dat");
             if (fileCacheEnabled && file.canRead()) {
@@ -120,7 +145,7 @@ public class Ethash {
 
             if (cacheLight == null) {
                 logger.info("Calculating light dataset...");
-                fireMinerStatusUpdate(MinerListener.MinerStatus.LIGHT_DAG_GENERATE_START);
+                fireDatatasetStatusUpdate(LIGHT_DATASET_GENERATE_START);
                 cacheLight = getEthashAlgo().makeCache(getEthashAlgo().getParams().getCacheSize(blockNumber),
                         getEthashAlgo().getSeedHash(blockNumber));
                 logger.info("Light dataset calculated.");
@@ -135,7 +160,9 @@ public class Ethash {
                         throw new RuntimeException(e);
                     }
                 }
-                fireMinerStatusUpdate(MinerListener.MinerStatus.LIGHT_DAG_GENERATE_END);
+                if (fireFinished) {
+                    fireDatatasetStatusUpdate(DATASET_GENERATED);
+                }
             }
         }
         return cacheLight;
@@ -162,8 +189,9 @@ public class Ethash {
             if (fullData == null){
 
                 logger.info("Calculating full dataset...");
-                fireMinerStatusUpdate(MinerListener.MinerStatus.FULL_DAG_GENERATE_START);
-                fullData = getEthashAlgo().calcDataset(getFullSize(), getCacheLight());
+                int[] cacheLight = getCacheLight(false);
+                fireDatatasetStatusUpdate(FULL_DATASET_GENERATE_START);
+                fullData = getEthashAlgo().calcDataset(getFullSize(),cacheLight);
                 logger.info("Full dataset calculated.");
 
                 if (fileCacheEnabled) {
@@ -176,7 +204,7 @@ public class Ethash {
                         throw new RuntimeException(e);
                     }
                 }
-                fireMinerStatusUpdate(MinerListener.MinerStatus.FULL_DAG_GENERATE_END);
+                fireDatatasetStatusUpdate(DATASET_GENERATED);
             }
         }
         return fullData;
@@ -280,9 +308,9 @@ public class Ethash {
         return FastByteComparisons.compareTo(hash, 0, 32, boundary, 0, 32) < 0;
     }
 
-    private void fireMinerStatusUpdate(MinerListener.MinerStatus status) {
-        for (MinerListener l : listeners) {
-            l.onMinerStatusUpdate(status);
+    private void fireDatatasetStatusUpdate(EthashMinerListener.DatasetStatus status) {
+        for (EthashMinerListener l : listeners) {
+            l.onDatasetUpdate(status);
         }
     }
 
