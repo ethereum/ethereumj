@@ -191,7 +191,7 @@ public class Ethash {
                 logger.info("Calculating full dataset...");
                 int[] cacheLight = getCacheLight(false);
                 fireDatatasetStatusUpdate(FULL_DATASET_GENERATE_START);
-                fullData = getEthashAlgo().calcDataset(getFullSize(),cacheLight);
+                fullData = getEthashAlgo().calcDataset(getFullSize(), cacheLight);
                 logger.info("Full dataset calculated.");
 
                 if (fileCacheEnabled) {
