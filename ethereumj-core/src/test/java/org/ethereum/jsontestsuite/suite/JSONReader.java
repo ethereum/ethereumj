@@ -33,6 +33,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import org.slf4j.Logger;
@@ -41,6 +43,11 @@ import org.slf4j.LoggerFactory;
 public class JSONReader {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
+
+    private static final String CACHE_DIR = SystemProperties.getDefault().githubTestsPath();
+    private static final boolean USE_CACHE = SystemProperties.getDefault().githubTestsLoadLocal();
+    private static final String CACHE_INDEX = "index.prop";
+    private static final String CACHE_FILES_SUB_DIR = "files";
 
     static ExecutorService threadPool;
 
@@ -74,10 +81,9 @@ public class JSONReader {
 
     public static String loadJSONFromCommit(String filename, String shacommit) throws IOException {
         String json = "";
-        if (!SystemProperties.getDefault().githubTestsLoadLocal())
-            json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
+        json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
         if (!json.isEmpty()) json = json.replaceAll("//", "data");
-        return json.isEmpty() ? getFromLocal(filename) : json;
+        return json;
     }
 
     public static String getFromLocal(String filename) throws IOException {
@@ -94,7 +100,15 @@ public class JSONReader {
         String result = null;
         for (int i = 0; i < MAX_RETRIES; ++i) {
             try {
-                result = getFromUrlImpl(urlToRead);
+                if (USE_CACHE) {
+                    result = getFromCacheImpl(urlToRead);
+                    if (result == null) {
+                        result = getFromUrlImpl(urlToRead);
+                        recordCache(urlToRead, result);
+                    }
+                } else {
+                    result = getFromUrlImpl(urlToRead);
+                }
                 break;
             } catch (Exception ex) {
                 logger.debug(String.format("Failed to retrieve %s, retry %d/%d", urlToRead, (i + 1), MAX_RETRIES), ex);
@@ -138,25 +152,67 @@ public class JSONReader {
         return result.toString();
     }
 
-    public static List<String> listJsonBlobsForTreeSha(String sha, String testRoot) throws IOException {
-
-        if (SystemProperties.getDefault().githubTestsLoadLocal()) {
-
-            String path = SystemProperties.getDefault().githubTestsPath() +
-                    System.getProperty("file.separator") + testRoot.replaceAll("/", "");
-
-            List<String> files = FileUtil.recursiveList(path);
-
-            List<String> jsons = new ArrayList<>();
-            for (String f : files) {
-                if (f.endsWith(".json"))
-                    jsons.add(
-                            f.replace(path + System.getProperty("file.separator"), "")
-                             .replaceAll(System.getProperty("file.separator"), "/"));
-            }
-
-            return jsons;
+    private static String getFromCacheImpl(String urlToRead) {
+        String result = null;
+        String filename = null;
+        try (InputStream input = new FileInputStream(CACHE_DIR + System.getProperty("file.separator") + CACHE_INDEX)) {
+            Properties prop = new Properties();
+            prop.load(input);
+            filename = prop.getProperty(urlToRead);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
+        if (filename != null) {
+            try {
+                result = new String(Files.readAllBytes(new File(CACHE_DIR + System.getProperty("file.separator") +
+                        CACHE_FILES_SUB_DIR + System.getProperty("file.separator") + filename).toPath()));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return result;
+    }
+
+    private synchronized static void recordCache(String urlToRead, String data) {
+        String filename = UUID.randomUUID().toString();
+        File targetFile = new File(CACHE_DIR + System.getProperty("file.separator") +
+                CACHE_FILES_SUB_DIR + System.getProperty("file.separator") + filename);
+
+        // Ensure we have directories created
+        File parent = targetFile.getParentFile();
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw new IllegalStateException("Couldn't create dir: " + parent);
+        }
+
+        // Load index
+        Properties prop = new Properties();
+        String propFile = CACHE_DIR + System.getProperty("file.separator") + CACHE_INDEX;
+        try (InputStream input = new FileInputStream(propFile)) {
+            prop.load(input);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        // Save with new entry
+        prop.setProperty(urlToRead, filename);
+        try (OutputStream output = new FileOutputStream(propFile)) {
+            prop.store(output, null);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        // Save data
+        try (OutputStream output = new FileOutputStream(targetFile)) {
+            output.write(data.getBytes());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static List<String> listJsonBlobsForTreeSha(String sha, String testRoot) throws IOException {
 
         String result = getFromUrl("https://api.github.com/repos/ethereum/tests/git/trees/" + sha + "?recursive=1");
 
