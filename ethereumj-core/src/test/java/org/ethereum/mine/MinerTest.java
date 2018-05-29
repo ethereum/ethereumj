@@ -42,10 +42,6 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static org.ethereum.crypto.HashUtil.sha3;
-
 /**
  * Long running test
  *

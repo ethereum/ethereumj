@@ -259,12 +259,14 @@ public class BlockMiner {
             miningBlock = newMiningBlock;
 
             if (externalMiner != null) {
+                externalMiner.setListeners(listeners);
                 currentMiningTasks.add(externalMiner.mine(cloneBlock(miningBlock)));
             }
             if (isLocalMining) {
                 MinerIfc localMiner = config.getBlockchainConfig()
                         .getConfigForBlock(miningBlock.getNumber())
                         .getMineAlgorithm(config);
+                localMiner.setListeners(listeners);
                 currentMiningTasks.add(localMiner.mine(cloneBlock(miningBlock)));
             }
 

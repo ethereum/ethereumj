@@ -23,8 +23,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.mine.Ethash;
-import org.ethereum.mine.MinerListener;
+import org.ethereum.mine.EthashListener;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
@@ -87,7 +86,7 @@ public class PrivateMinerSample {
     /**
      * Miner bean, which just start a miner upon creation and prints miner events
      */
-    static class MinerNode extends BasicSample implements MinerListener{
+    static class MinerNode extends BasicSample implements EthashListener {
         public MinerNode() {
             // peers need different loggers
             super("sampleMiner");
@@ -97,16 +96,19 @@ public class PrivateMinerSample {
         // networking or sync events
         @Override
         public void run() {
-            if (config.isMineFullDataset()) {
-                logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
-                // calling this just for indication of the dataset generation
-                // basically this is not required
-                Ethash ethash = Ethash.getForBlock(config, ethereum.getBlockchain().getBestBlock().getNumber());
-                ethash.getFullDataset();
-                logger.info("Full dataset generated (loaded).");
-            }
             ethereum.getBlockMiner().addListener(this);
             ethereum.getBlockMiner().startMining();
+        }
+
+        @Override
+        public void onDatasetUpdate(EthashListener.DatasetStatus minerStatus) {
+            logger.info("Miner status updated: {}", minerStatus);
+            if (minerStatus.equals(EthashListener.DatasetStatus.FULL_DATASET_GENERATE_START)) {
+                logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
+            }
+            if (minerStatus.equals(EthashListener.DatasetStatus.DATASET_GENERATED)) {
+                logger.info("Full dataset generated (loaded).");
+            }
         }
 
         @Override
