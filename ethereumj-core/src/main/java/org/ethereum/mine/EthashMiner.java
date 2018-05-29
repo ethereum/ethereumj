@@ -60,7 +60,10 @@ public class EthashMiner implements MinerIfc {
     /**
      * Listeners changes affects only future {@link #mine(Block)} and
      * {@link #validate(BlockHeader)} calls
+     * Only instances of {@link EthashListener} are used, because EthashMiner
+     * produces only events compatible with it
      */
+    @Override
     public void setListeners(Collection<MinerListener> listeners) {
         this.listeners.clear();
         listeners.stream()

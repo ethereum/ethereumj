@@ -21,6 +21,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 
+import java.util.Collection;
+
 /**
  * Mine algorithm interface
  *
@@ -39,6 +41,11 @@ public interface MinerIfc {
      * Validates the Proof of Work for the block
      */
     boolean validate(BlockHeader blockHeader);
+
+    /**
+     * Passes {@link MinerListener}'s to miner
+     */
+    void setListeners(Collection<MinerListener> listeners);
 
     final class MiningResult {
 
