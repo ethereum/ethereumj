@@ -259,15 +259,14 @@ public class BlockMiner {
             miningBlock = newMiningBlock;
 
             if (externalMiner != null) {
+                externalMiner.setListeners(listeners);
                 currentMiningTasks.add(externalMiner.mine(cloneBlock(miningBlock)));
             }
             if (isLocalMining) {
                 MinerIfc localMiner = config.getBlockchainConfig()
                         .getConfigForBlock(miningBlock.getNumber())
                         .getMineAlgorithm(config);
-                if (localMiner instanceof EthashMiner) {
-                    ((EthashMiner) localMiner).setListeners(listeners);
-                }
+                localMiner.setListeners(listeners);
                 currentMiningTasks.add(localMiner.mine(cloneBlock(miningBlock)));
             }
 
