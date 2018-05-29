@@ -167,6 +167,7 @@ public class JSONReader {
             try {
                 result = new String(Files.readAllBytes(new File(CACHE_DIR + System.getProperty("file.separator") +
                         CACHE_FILES_SUB_DIR + System.getProperty("file.separator") + filename).toPath()));
+                System.out.println("Loaded from cache url: " + urlToRead + ", data size: " + result.length());
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -176,6 +177,7 @@ public class JSONReader {
     }
 
     private synchronized static void recordCache(String urlToRead, String data) {
+        System.out.println("Record cache for url: " + urlToRead);
         String filename = UUID.randomUUID().toString();
         File targetFile = new File(CACHE_DIR + System.getProperty("file.separator") +
                 CACHE_FILES_SUB_DIR + System.getProperty("file.separator") + filename);
@@ -194,6 +196,7 @@ public class JSONReader {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        System.out.println("Props loaded, size: " + prop.size());
 
         // Save with new entry
         prop.setProperty(urlToRead, filename);
